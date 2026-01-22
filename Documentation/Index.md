@@ -18,6 +18,7 @@ The **Domain Registration module** enables programmatic management of domain nam
   - **Update Nameservers & Privacy Settings:** Maintain control over DNS delegation and WHOIS privacy.  
   - **Auto-Renewal:** Optional automation to ensure uninterrupted domain ownership.
 - **DNS Management:** Add, update, or remove DNS records programmatically. Full support for zone updates ensures that domains remain correctly configured for web and mail services.
+
 See [Domain registration](Features/Domain-registration.md) for more information.
 
 ---
@@ -34,6 +35,9 @@ The **Hosting module** (detailed in DR_Admin documentation) provides tools for m
 - Monitor server status, usage metrics, and alerts.  
 - Support for reseller operations, enabling control over multiple end-users.
 
+See [Hosting](Features/Hosting.md) for more information.
+
+
 ---
 
 ## 3. Email Delivery
@@ -48,6 +52,9 @@ The **Mailing module** allows applications to send emails asynchronously with su
   - **Attachments:** Include one or more files with outgoing emails.  
 - **Asynchronous Operations:** All methods are fully async for integration with modern applications, improving performance and responsiveness.  
 - **Error Handling:** Built-in exception support for invalid addresses, network failures, or authentication issues.
+
+
+See [Mailing](Features/Mailing.md) for more information.
 
 ---
 
