@@ -1,4 +1,6 @@
 using HostingPanelLib.Models;
+using System.Net.Http.Json;
+using System.Text.Json;
 
 namespace HostingPanelLib.Implementations
 {
@@ -16,111 +18,1166 @@ namespace HostingPanelLib.Implementations
             _useHttps = useHttps;
 
             _httpClient.DefaultRequestHeaders.Add("X-API-Key", _apiKey);
+            _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
         }
 
         public override async Task<HostingAccountResult> CreateWebHostingAccountAsync(HostingAccountRequest request)
         {
-            // TODO: Implement CloudPanel site creation API
-            await Task.CompletedTask;
-            return CreateHostingErrorResult("Not yet implemented", "NOT_IMPLEMENTED");
+            try
+            {
+                if (string.IsNullOrWhiteSpace(request.Domain))
+                {
+                    return CreateHostingErrorResult("Domain name is required", "INVALID_DOMAIN");
+                }
+
+                if (string.IsNullOrWhiteSpace(request.Username))
+                {
+                    return CreateHostingErrorResult("Username is required", "INVALID_USERNAME");
+                }
+
+                if (string.IsNullOrWhiteSpace(request.Password))
+                {
+                    return CreateHostingErrorResult("Password is required", "INVALID_PASSWORD");
+                }
+
+                // CloudPanel API endpoint for site creation
+                var endpoint = "/api/v1/sites";
+
+                // Build request payload
+                var payload = new
+                {
+                    domainName = request.Domain,
+                    userName = request.Username,
+                    userPassword = request.Password,
+                    userEmail = request.Email ?? "",
+                    phpVersion = request.AdditionalSettings?.GetValueOrDefault("phpVersion") ?? "8.2",
+                    vhostTemplate = request.AdditionalSettings?.GetValueOrDefault("vhostTemplate") ?? "Generic",
+                    siteUser = request.Username,
+                    siteUserPassword = request.Password
+                };
+
+                var response = await _httpClient.PostAsJsonAsync(endpoint, payload);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return CreateHostingErrorResult(
+                        $"CloudPanel API request failed: {response.StatusCode} - {responseContent}",
+                        response.StatusCode.ToString()
+                    );
+                }
+
+                // Parse CloudPanel response
+                using var jsonDoc = JsonDocument.Parse(responseContent);
+                var root = jsonDoc.RootElement;
+
+                // CloudPanel typically returns success with site data
+                if (root.TryGetProperty("success", out var successElement) && successElement.GetBoolean())
+                {
+                    var siteId = root.TryGetProperty("data", out var dataElement) && 
+                                 dataElement.TryGetProperty("id", out var idElement)
+                        ? idElement.GetInt32().ToString()
+                        : request.Domain;
+
+                    var message = root.TryGetProperty("message", out var msgElement)
+                        ? msgElement.GetString()
+                        : "Site created successfully";
+
+                    return new HostingAccountResult
+                    {
+                        Success = true,
+                        Message = message ?? "Site created successfully",
+                        AccountId = siteId,
+                        Username = request.Username,
+                        Domain = request.Domain,
+                        PlanName = request.Plan,
+                        CreatedDate = DateTime.UtcNow
+                    };
+                }
+                else if (root.TryGetProperty("error", out var errorElement))
+                {
+                    var errorMessage = errorElement.GetString() ?? "Unknown error occurred";
+                    return CreateHostingErrorResult(errorMessage, "CLOUDPANEL_ERROR");
+                }
+                else if (root.TryGetProperty("message", out var messageElement))
+                {
+                    var message = messageElement.GetString() ?? "Unknown error occurred";
+                    return CreateHostingErrorResult(message, "CLOUDPANEL_ERROR");
+                }
+
+                return CreateHostingErrorResult("Invalid response format from CloudPanel", "INVALID_RESPONSE");
+            }
+            catch (HttpRequestException ex)
+            {
+                return CreateHostingErrorResult(
+                    $"Network error while connecting to CloudPanel: {ex.Message}",
+                    "NETWORK_ERROR"
+                );
+            }
+            catch (JsonException ex)
+            {
+                return CreateHostingErrorResult(
+                    $"Failed to parse CloudPanel response: {ex.Message}",
+                    "JSON_PARSE_ERROR"
+                );
+            }
+            catch (Exception ex)
+            {
+                return CreateHostingErrorResult(
+                    $"Unexpected error: {ex.Message}",
+                    "UNEXPECTED_ERROR"
+                );
+            }
         }
 
         public override async Task<AccountUpdateResult> UpdateWebHostingAccountAsync(string accountId, HostingAccountRequest request)
         {
-            // TODO: Implement CloudPanel site update API
-            await Task.CompletedTask;
-            return CreateUpdateErrorResult("Not yet implemented", "NOT_IMPLEMENTED");
+            try
+            {
+                if (string.IsNullOrWhiteSpace(accountId))
+                {
+                    return CreateUpdateErrorResult("Account ID (site ID) is required", "INVALID_ACCOUNT_ID");
+                }
+
+                // CloudPanel API endpoint for site update
+                var endpoint = $"/api/v1/sites/{accountId}";
+
+                // Build request payload - only include fields to update
+                var payload = new Dictionary<string, object>();
+
+                if (!string.IsNullOrWhiteSpace(request.Domain))
+                    payload["domainName"] = request.Domain;
+                
+                if (request.AdditionalSettings?.ContainsKey("phpVersion") == true)
+                    payload["phpVersion"] = request.AdditionalSettings["phpVersion"];
+
+                if (request.AdditionalSettings?.ContainsKey("vhostTemplate") == true)
+                    payload["vhostTemplate"] = request.AdditionalSettings["vhostTemplate"];
+
+                var response = await _httpClient.PutAsJsonAsync(endpoint, payload);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return CreateUpdateErrorResult(
+                        $"CloudPanel API request failed: {response.StatusCode} - {responseContent}",
+                        response.StatusCode.ToString()
+                    );
+                }
+
+                // Parse CloudPanel response
+                using var jsonDoc = JsonDocument.Parse(responseContent);
+                var root = jsonDoc.RootElement;
+
+                if (root.TryGetProperty("success", out var successElement) && successElement.GetBoolean())
+                {
+                    var message = root.TryGetProperty("message", out var msgElement)
+                        ? msgElement.GetString()
+                        : "Site updated successfully";
+
+                    return new AccountUpdateResult
+                    {
+                        Success = true,
+                        Message = message ?? "Site updated successfully",
+                        AccountId = accountId,
+                        UpdatedField = "SiteConfiguration",
+                        UpdatedDate = DateTime.UtcNow
+                    };
+                }
+                else if (root.TryGetProperty("error", out var errorElement))
+                {
+                    var errorMessage = errorElement.GetString() ?? "Unknown error occurred";
+                    return CreateUpdateErrorResult(errorMessage, "CLOUDPANEL_ERROR");
+                }
+
+                return CreateUpdateErrorResult("Invalid response format from CloudPanel", "INVALID_RESPONSE");
+            }
+            catch (HttpRequestException ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Network error while connecting to CloudPanel: {ex.Message}",
+                    "NETWORK_ERROR"
+                );
+            }
+            catch (JsonException ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Failed to parse CloudPanel response: {ex.Message}",
+                    "JSON_PARSE_ERROR"
+                );
+            }
+            catch (Exception ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Unexpected error: {ex.Message}",
+                    "UNEXPECTED_ERROR"
+                );
+            }
         }
 
         public override async Task<AccountUpdateResult> SuspendWebHostingAccountAsync(string accountId)
         {
-            // TODO: Implement CloudPanel site suspend API
-            await Task.CompletedTask;
-            return CreateUpdateErrorResult("Not yet implemented", "NOT_IMPLEMENTED");
+            try
+            {
+                if (string.IsNullOrWhiteSpace(accountId))
+                {
+                    return CreateUpdateErrorResult("Account ID (site ID) is required", "INVALID_ACCOUNT_ID");
+                }
+
+                // CloudPanel API endpoint for site suspension
+                var endpoint = $"/api/v1/sites/{accountId}/disable";
+
+                var response = await _httpClient.PostAsync(endpoint, null);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return CreateUpdateErrorResult(
+                        $"CloudPanel API request failed: {response.StatusCode} - {responseContent}",
+                        response.StatusCode.ToString()
+                    );
+                }
+
+                // Parse CloudPanel response
+                using var jsonDoc = JsonDocument.Parse(responseContent);
+                var root = jsonDoc.RootElement;
+
+                if (root.TryGetProperty("success", out var successElement) && successElement.GetBoolean())
+                {
+                    var message = root.TryGetProperty("message", out var msgElement)
+                        ? msgElement.GetString()
+                        : "Site suspended successfully";
+
+                    return new AccountUpdateResult
+                    {
+                        Success = true,
+                        Message = message ?? "Site suspended successfully",
+                        AccountId = accountId,
+                        UpdatedField = "Status",
+                        OldValue = "Active",
+                        NewValue = "Suspended",
+                        UpdatedDate = DateTime.UtcNow
+                    };
+                }
+                else if (root.TryGetProperty("error", out var errorElement))
+                {
+                    var errorMessage = errorElement.GetString() ?? "Unknown error occurred";
+                    return CreateUpdateErrorResult(errorMessage, "CLOUDPANEL_ERROR");
+                }
+
+                return CreateUpdateErrorResult("Invalid response format from CloudPanel", "INVALID_RESPONSE");
+            }
+            catch (HttpRequestException ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Network error while connecting to CloudPanel: {ex.Message}",
+                    "NETWORK_ERROR"
+                );
+            }
+            catch (JsonException ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Failed to parse CloudPanel response: {ex.Message}",
+                    "JSON_PARSE_ERROR"
+                );
+            }
+            catch (Exception ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Unexpected error: {ex.Message}",
+                    "UNEXPECTED_ERROR"
+                );
+            }
         }
 
         public override async Task<AccountUpdateResult> UnsuspendWebHostingAccountAsync(string accountId)
         {
-            // TODO: Implement CloudPanel site enable API
-            await Task.CompletedTask;
-            return CreateUpdateErrorResult("Not yet implemented", "NOT_IMPLEMENTED");
+            try
+            {
+                if (string.IsNullOrWhiteSpace(accountId))
+                {
+                    return CreateUpdateErrorResult("Account ID (site ID) is required", "INVALID_ACCOUNT_ID");
+                }
+
+                // CloudPanel API endpoint for site activation
+                var endpoint = $"/api/v1/sites/{accountId}/enable";
+
+                var response = await _httpClient.PostAsync(endpoint, null);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return CreateUpdateErrorResult(
+                        $"CloudPanel API request failed: {response.StatusCode} - {responseContent}",
+                        response.StatusCode.ToString()
+                    );
+                }
+
+                // Parse CloudPanel response
+                using var jsonDoc = JsonDocument.Parse(responseContent);
+                var root = jsonDoc.RootElement;
+
+                if (root.TryGetProperty("success", out var successElement) && successElement.GetBoolean())
+                {
+                    var message = root.TryGetProperty("message", out var msgElement)
+                        ? msgElement.GetString()
+                        : "Site unsuspended successfully";
+
+                    return new AccountUpdateResult
+                    {
+                        Success = true,
+                        Message = message ?? "Site unsuspended successfully",
+                        AccountId = accountId,
+                        UpdatedField = "Status",
+                        OldValue = "Suspended",
+                        NewValue = "Active",
+                        UpdatedDate = DateTime.UtcNow
+                    };
+                }
+                else if (root.TryGetProperty("error", out var errorElement))
+                {
+                    var errorMessage = errorElement.GetString() ?? "Unknown error occurred";
+                    return CreateUpdateErrorResult(errorMessage, "CLOUDPANEL_ERROR");
+                }
+
+                return CreateUpdateErrorResult("Invalid response format from CloudPanel", "INVALID_RESPONSE");
+            }
+            catch (HttpRequestException ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Network error while connecting to CloudPanel: {ex.Message}",
+                    "NETWORK_ERROR"
+                );
+            }
+            catch (JsonException ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Failed to parse CloudPanel response: {ex.Message}",
+                    "JSON_PARSE_ERROR"
+                );
+            }
+            catch (Exception ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Unexpected error: {ex.Message}",
+                    "UNEXPECTED_ERROR"
+                );
+            }
         }
 
         public override async Task<AccountUpdateResult> DeleteWebHostingAccountAsync(string accountId)
         {
-            // TODO: Implement CloudPanel site deletion API
-            await Task.CompletedTask;
-            return CreateUpdateErrorResult("Not yet implemented", "NOT_IMPLEMENTED");
+            try
+            {
+                if (string.IsNullOrWhiteSpace(accountId))
+                {
+                    return CreateUpdateErrorResult("Account ID (site ID) is required", "INVALID_ACCOUNT_ID");
+                }
+
+                // CloudPanel API endpoint for site deletion
+                var endpoint = $"/api/v1/sites/{accountId}";
+
+                var response = await _httpClient.DeleteAsync(endpoint);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return CreateUpdateErrorResult(
+                        $"CloudPanel API request failed: {response.StatusCode} - {responseContent}",
+                        response.StatusCode.ToString()
+                    );
+                }
+
+                // Parse CloudPanel response
+                using var jsonDoc = JsonDocument.Parse(responseContent);
+                var root = jsonDoc.RootElement;
+
+                if (root.TryGetProperty("success", out var successElement) && successElement.GetBoolean())
+                {
+                    var message = root.TryGetProperty("message", out var msgElement)
+                        ? msgElement.GetString()
+                        : "Site deleted successfully";
+
+                    return new AccountUpdateResult
+                    {
+                        Success = true,
+                        Message = message ?? "Site deleted successfully",
+                        AccountId = accountId,
+                        UpdatedField = "Status",
+                        OldValue = "Active",
+                        NewValue = "Deleted",
+                        UpdatedDate = DateTime.UtcNow
+                    };
+                }
+                else if (root.TryGetProperty("error", out var errorElement))
+                {
+                    var errorMessage = errorElement.GetString() ?? "Unknown error occurred";
+                    return CreateUpdateErrorResult(errorMessage, "CLOUDPANEL_ERROR");
+                }
+
+                return CreateUpdateErrorResult("Invalid response format from CloudPanel", "INVALID_RESPONSE");
+            }
+            catch (HttpRequestException ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Network error while connecting to CloudPanel: {ex.Message}",
+                    "NETWORK_ERROR"
+                );
+            }
+            catch (JsonException ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Failed to parse CloudPanel response: {ex.Message}",
+                    "JSON_PARSE_ERROR"
+                );
+            }
+            catch (Exception ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Unexpected error: {ex.Message}",
+                    "UNEXPECTED_ERROR"
+                );
+            }
         }
 
         public override async Task<AccountInfoResult> GetWebHostingAccountInfoAsync(string accountId)
         {
-            // TODO: Implement CloudPanel site info API
-            await Task.CompletedTask;
-            return CreateInfoErrorResult("Not yet implemented", "NOT_IMPLEMENTED");
+            try
+            {
+                if (string.IsNullOrWhiteSpace(accountId))
+                {
+                    return CreateInfoErrorResult("Account ID (site ID) is required", "INVALID_ACCOUNT_ID");
+                }
+
+                // CloudPanel API endpoint for site details
+                var endpoint = $"/api/v1/sites/{accountId}";
+
+                var response = await _httpClient.GetAsync(endpoint);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return CreateInfoErrorResult(
+                        $"CloudPanel API request failed: {response.StatusCode} - {responseContent}",
+                        response.StatusCode.ToString()
+                    );
+                }
+
+                // Parse CloudPanel response
+                using var jsonDoc = JsonDocument.Parse(responseContent);
+                var root = jsonDoc.RootElement;
+
+                if (root.TryGetProperty("success", out var successElement) && successElement.GetBoolean() &&
+                    root.TryGetProperty("data", out var data))
+                {
+                    return new AccountInfoResult
+                    {
+                        Success = true,
+                        Message = "Site information retrieved successfully",
+                        AccountId = accountId,
+                        Domain = data.TryGetProperty("domainName", out var domainElement) ? domainElement.GetString() : null,
+                        Username = data.TryGetProperty("userName", out var userElement) ? userElement.GetString() : null,
+                        Email = data.TryGetProperty("userEmail", out var emailElement) ? emailElement.GetString() : null,
+                        Status = data.TryGetProperty("status", out var statusElement) ? statusElement.GetString() : "Unknown",
+                        DiskUsageMB = data.TryGetProperty("diskUsed", out var diskUsedElement) ? (int?)diskUsedElement.GetInt32() : null,
+                        DiskQuotaMB = data.TryGetProperty("diskQuota", out var diskQuotaElement) ? (int?)diskQuotaElement.GetInt32() : null,
+                        IpAddress = data.TryGetProperty("ipAddress", out var ipElement) ? ipElement.GetString() : null,
+                        CreatedDate = data.TryGetProperty("createdAt", out var createdElement) 
+                            ? DateTime.Parse(createdElement.GetString() ?? DateTime.UtcNow.ToString())
+                            : null,
+                        AdditionalInfo = new Dictionary<string, object>
+                        {
+                            ["phpVersion"] = data.TryGetProperty("phpVersion", out var phpElement) ? phpElement.GetString() ?? "Unknown" : "Unknown",
+                            ["vhostTemplate"] = data.TryGetProperty("vhostTemplate", out var templateElement) ? templateElement.GetString() ?? "Generic" : "Generic"
+                        }
+                    };
+                }
+                else if (root.TryGetProperty("error", out var errorElement))
+                {
+                    var errorMessage = errorElement.GetString() ?? "Unknown error occurred";
+                    return CreateInfoErrorResult(errorMessage, "CLOUDPANEL_ERROR");
+                }
+
+                return CreateInfoErrorResult("Invalid response format from CloudPanel", "INVALID_RESPONSE");
+            }
+            catch (HttpRequestException ex)
+            {
+                return CreateInfoErrorResult(
+                    $"Network error while connecting to CloudPanel: {ex.Message}",
+                    "NETWORK_ERROR"
+                );
+            }
+            catch (JsonException ex)
+            {
+                return CreateInfoErrorResult(
+                    $"Failed to parse CloudPanel response: {ex.Message}",
+                    "JSON_PARSE_ERROR"
+                );
+            }
+            catch (Exception ex)
+            {
+                return CreateInfoErrorResult(
+                    $"Unexpected error: {ex.Message}",
+                    "UNEXPECTED_ERROR"
+                );
+            }
         }
 
         public override async Task<List<AccountInfoResult>> ListWebHostingAccountsAsync()
         {
-            // TODO: Implement CloudPanel list sites API
-            await Task.CompletedTask;
-            return new List<AccountInfoResult>();
+            try
+            {
+                // CloudPanel API endpoint for listing sites
+                var endpoint = "/api/v1/sites";
+
+                var response = await _httpClient.GetAsync(endpoint);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return new List<AccountInfoResult>();
+                }
+
+                // Parse CloudPanel response
+                using var jsonDoc = JsonDocument.Parse(responseContent);
+                var root = jsonDoc.RootElement;
+
+                var results = new List<AccountInfoResult>();
+
+                if (root.TryGetProperty("success", out var successElement) && successElement.GetBoolean() &&
+                    root.TryGetProperty("data", out var dataArray) && dataArray.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var site in dataArray.EnumerateArray())
+                    {
+                        var siteId = site.TryGetProperty("id", out var idElement) 
+                            ? idElement.GetInt32().ToString() 
+                            : null;
+
+                        if (!string.IsNullOrEmpty(siteId))
+                        {
+                            results.Add(new AccountInfoResult
+                            {
+                                Success = true,
+                                AccountId = siteId,
+                                Domain = site.TryGetProperty("domainName", out var domainElement) ? domainElement.GetString() : null,
+                                Username = site.TryGetProperty("userName", out var userElement) ? userElement.GetString() : null,
+                                Email = site.TryGetProperty("userEmail", out var emailElement) ? emailElement.GetString() : null,
+                                Status = site.TryGetProperty("status", out var statusElement) ? statusElement.GetString() : "Unknown",
+                                DiskUsageMB = site.TryGetProperty("diskUsed", out var diskUsedElement) ? (int?)diskUsedElement.GetInt32() : null,
+                                DiskQuotaMB = site.TryGetProperty("diskQuota", out var diskQuotaElement) ? (int?)diskQuotaElement.GetInt32() : null,
+                                IpAddress = site.TryGetProperty("ipAddress", out var ipElement) ? ipElement.GetString() : null
+                            });
+                        }
+                    }
+                }
+
+                return results;
+            }
+            catch (Exception)
+            {
+                return new List<AccountInfoResult>();
+            }
         }
 
         public override async Task<MailAccountResult> CreateMailAccountAsync(MailAccountRequest request)
         {
-            // TODO: Implement CloudPanel email account creation API
-            await Task.CompletedTask;
-            return CreateMailErrorResult("Not yet implemented", "NOT_IMPLEMENTED");
+            try
+            {
+                if (string.IsNullOrWhiteSpace(request.EmailAddress))
+                {
+                    return CreateMailErrorResult("Email address is required", "INVALID_EMAIL");
+                }
+
+                if (string.IsNullOrWhiteSpace(request.Password))
+                {
+                    return CreateMailErrorResult("Password is required", "INVALID_PASSWORD");
+                }
+
+                if (string.IsNullOrWhiteSpace(request.Domain))
+                {
+                    return CreateMailErrorResult("Domain is required", "INVALID_DOMAIN");
+                }
+
+                var emailParts = request.EmailAddress.Split('@');
+                if (emailParts.Length != 2)
+                {
+                    return CreateMailErrorResult("Invalid email address format", "INVALID_EMAIL_FORMAT");
+                }
+
+                // CloudPanel API endpoint for email account creation
+                var endpoint = "/api/v1/email-accounts";
+
+                // Build request payload
+                var payload = new
+                {
+                    emailAddress = request.EmailAddress,
+                    password = request.Password,
+                    quota = request.QuotaMB ?? 1024, // Default 1GB quota
+                    domain = request.Domain
+                };
+
+                var response = await _httpClient.PostAsJsonAsync(endpoint, payload);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return CreateMailErrorResult(
+                        $"CloudPanel API request failed: {response.StatusCode} - {responseContent}",
+                        response.StatusCode.ToString()
+                    );
+                }
+
+                // Parse CloudPanel response
+                using var jsonDoc = JsonDocument.Parse(responseContent);
+                var root = jsonDoc.RootElement;
+
+                if (root.TryGetProperty("success", out var successElement) && successElement.GetBoolean())
+                {
+                    var message = root.TryGetProperty("message", out var msgElement)
+                        ? msgElement.GetString()
+                        : "Email account created successfully";
+
+                    var accountId = root.TryGetProperty("data", out var dataElement) && 
+                                   dataElement.TryGetProperty("id", out var idElement)
+                        ? idElement.GetInt32().ToString()
+                        : request.EmailAddress;
+
+                    return new MailAccountResult
+                    {
+                        Success = true,
+                        Message = message ?? "Email account created successfully",
+                        AccountId = accountId,
+                        EmailAddress = request.EmailAddress,
+                        Domain = request.Domain,
+                        QuotaMB = request.QuotaMB ?? 1024,
+                        CreatedDate = DateTime.UtcNow
+                    };
+                }
+                else if (root.TryGetProperty("error", out var errorElement))
+                {
+                    var errorMessage = errorElement.GetString() ?? "Unknown error occurred";
+                    return CreateMailErrorResult(errorMessage, "CLOUDPANEL_ERROR");
+                }
+
+                return CreateMailErrorResult("Invalid response format from CloudPanel", "INVALID_RESPONSE");
+            }
+            catch (HttpRequestException ex)
+            {
+                return CreateMailErrorResult(
+                    $"Network error while connecting to CloudPanel: {ex.Message}",
+                    "NETWORK_ERROR"
+                );
+            }
+            catch (JsonException ex)
+            {
+                return CreateMailErrorResult(
+                    $"Failed to parse CloudPanel response: {ex.Message}",
+                    "JSON_PARSE_ERROR"
+                );
+            }
+            catch (Exception ex)
+            {
+                return CreateMailErrorResult(
+                    $"Unexpected error: {ex.Message}",
+                    "UNEXPECTED_ERROR"
+                );
+            }
         }
 
         public override async Task<AccountUpdateResult> UpdateMailAccountAsync(string accountId, MailAccountRequest request)
         {
-            // TODO: Implement CloudPanel email account update API
-            await Task.CompletedTask;
-            return CreateUpdateErrorResult("Not yet implemented", "NOT_IMPLEMENTED");
+            try
+            {
+                if (string.IsNullOrWhiteSpace(accountId))
+                {
+                    return CreateUpdateErrorResult("Account ID (email account ID) is required", "INVALID_ACCOUNT_ID");
+                }
+
+                // CloudPanel API endpoint for email account update
+                var endpoint = $"/api/v1/email-accounts/{accountId}";
+
+                // Build request payload
+                var payload = new Dictionary<string, object>();
+
+                if (request.QuotaMB.HasValue)
+                    payload["quota"] = request.QuotaMB.Value;
+
+                if (!string.IsNullOrWhiteSpace(request.Password))
+                    payload["password"] = request.Password;
+
+                var response = await _httpClient.PutAsJsonAsync(endpoint, payload);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return CreateUpdateErrorResult(
+                        $"CloudPanel API request failed: {response.StatusCode} - {responseContent}",
+                        response.StatusCode.ToString()
+                    );
+                }
+
+                // Parse CloudPanel response
+                using var jsonDoc = JsonDocument.Parse(responseContent);
+                var root = jsonDoc.RootElement;
+
+                if (root.TryGetProperty("success", out var successElement) && successElement.GetBoolean())
+                {
+                    var message = root.TryGetProperty("message", out var msgElement)
+                        ? msgElement.GetString()
+                        : "Email account updated successfully";
+
+                    return new AccountUpdateResult
+                    {
+                        Success = true,
+                        Message = message ?? "Email account updated successfully",
+                        AccountId = accountId,
+                        UpdatedField = "EmailConfiguration",
+                        NewValue = request.QuotaMB,
+                        UpdatedDate = DateTime.UtcNow
+                    };
+                }
+                else if (root.TryGetProperty("error", out var errorElement))
+                {
+                    var errorMessage = errorElement.GetString() ?? "Unknown error occurred";
+                    return CreateUpdateErrorResult(errorMessage, "CLOUDPANEL_ERROR");
+                }
+
+                return CreateUpdateErrorResult("Invalid response format from CloudPanel", "INVALID_RESPONSE");
+            }
+            catch (HttpRequestException ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Network error while connecting to CloudPanel: {ex.Message}",
+                    "NETWORK_ERROR"
+                );
+            }
+            catch (JsonException ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Failed to parse CloudPanel response: {ex.Message}",
+                    "JSON_PARSE_ERROR"
+                );
+            }
+            catch (Exception ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Unexpected error: {ex.Message}",
+                    "UNEXPECTED_ERROR"
+                );
+            }
         }
 
         public override async Task<AccountUpdateResult> DeleteMailAccountAsync(string accountId)
         {
-            // TODO: Implement CloudPanel email account deletion API
-            await Task.CompletedTask;
-            return CreateUpdateErrorResult("Not yet implemented", "NOT_IMPLEMENTED");
+            try
+            {
+                if (string.IsNullOrWhiteSpace(accountId))
+                {
+                    return CreateUpdateErrorResult("Account ID (email account ID) is required", "INVALID_ACCOUNT_ID");
+                }
+
+                // CloudPanel API endpoint for email account deletion
+                var endpoint = $"/api/v1/email-accounts/{accountId}";
+
+                var response = await _httpClient.DeleteAsync(endpoint);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return CreateUpdateErrorResult(
+                        $"CloudPanel API request failed: {response.StatusCode} - {responseContent}",
+                        response.StatusCode.ToString()
+                    );
+                }
+
+                // Parse CloudPanel response
+                using var jsonDoc = JsonDocument.Parse(responseContent);
+                var root = jsonDoc.RootElement;
+
+                if (root.TryGetProperty("success", out var successElement) && successElement.GetBoolean())
+                {
+                    var message = root.TryGetProperty("message", out var msgElement)
+                        ? msgElement.GetString()
+                        : "Email account deleted successfully";
+
+                    return new AccountUpdateResult
+                    {
+                        Success = true,
+                        Message = message ?? "Email account deleted successfully",
+                        AccountId = accountId,
+                        UpdatedField = "Status",
+                        OldValue = "Active",
+                        NewValue = "Deleted",
+                        UpdatedDate = DateTime.UtcNow
+                    };
+                }
+                else if (root.TryGetProperty("error", out var errorElement))
+                {
+                    var errorMessage = errorElement.GetString() ?? "Unknown error occurred";
+                    return CreateUpdateErrorResult(errorMessage, "CLOUDPANEL_ERROR");
+                }
+
+                return CreateUpdateErrorResult("Invalid response format from CloudPanel", "INVALID_RESPONSE");
+            }
+            catch (HttpRequestException ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Network error while connecting to CloudPanel: {ex.Message}",
+                    "NETWORK_ERROR"
+                );
+            }
+            catch (JsonException ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Failed to parse CloudPanel response: {ex.Message}",
+                    "JSON_PARSE_ERROR"
+                );
+            }
+            catch (Exception ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Unexpected error: {ex.Message}",
+                    "UNEXPECTED_ERROR"
+                );
+            }
         }
 
         public override async Task<AccountInfoResult> GetMailAccountInfoAsync(string accountId)
         {
-            // TODO: Implement CloudPanel email account info API
-            await Task.CompletedTask;
-            return CreateInfoErrorResult("Not yet implemented", "NOT_IMPLEMENTED");
+            try
+            {
+                if (string.IsNullOrWhiteSpace(accountId))
+                {
+                    return CreateInfoErrorResult("Account ID (email account ID) is required", "INVALID_ACCOUNT_ID");
+                }
+
+                // CloudPanel API endpoint for email account details
+                var endpoint = $"/api/v1/email-accounts/{accountId}";
+
+                var response = await _httpClient.GetAsync(endpoint);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return CreateInfoErrorResult(
+                        $"CloudPanel API request failed: {response.StatusCode} - {responseContent}",
+                        response.StatusCode.ToString()
+                    );
+                }
+
+                // Parse CloudPanel response
+                using var jsonDoc = JsonDocument.Parse(responseContent);
+                var root = jsonDoc.RootElement;
+
+                if (root.TryGetProperty("success", out var successElement) && successElement.GetBoolean() &&
+                    root.TryGetProperty("data", out var data))
+                {
+                    return new AccountInfoResult
+                    {
+                        Success = true,
+                        Message = "Email account information retrieved successfully",
+                        AccountId = accountId,
+                        Email = data.TryGetProperty("emailAddress", out var emailElement) ? emailElement.GetString() : null,
+                        Domain = data.TryGetProperty("domain", out var domainElement) ? domainElement.GetString() : null,
+                        DiskQuotaMB = data.TryGetProperty("quota", out var quotaElement) ? (int?)quotaElement.GetInt32() : null,
+                        DiskUsageMB = data.TryGetProperty("diskUsed", out var usedElement) ? (int?)usedElement.GetInt32() : null,
+                        CreatedDate = data.TryGetProperty("createdAt", out var createdElement) 
+                            ? DateTime.Parse(createdElement.GetString() ?? DateTime.UtcNow.ToString())
+                            : null
+                    };
+                }
+                else if (root.TryGetProperty("error", out var errorElement))
+                {
+                    var errorMessage = errorElement.GetString() ?? "Unknown error occurred";
+                    return CreateInfoErrorResult(errorMessage, "CLOUDPANEL_ERROR");
+                }
+
+                return CreateInfoErrorResult("Invalid response format from CloudPanel", "INVALID_RESPONSE");
+            }
+            catch (HttpRequestException ex)
+            {
+                return CreateInfoErrorResult(
+                    $"Network error while connecting to CloudPanel: {ex.Message}",
+                    "NETWORK_ERROR"
+                );
+            }
+            catch (JsonException ex)
+            {
+                return CreateInfoErrorResult(
+                    $"Failed to parse CloudPanel response: {ex.Message}",
+                    "JSON_PARSE_ERROR"
+                );
+            }
+            catch (Exception ex)
+            {
+                return CreateInfoErrorResult(
+                    $"Unexpected error: {ex.Message}",
+                    "UNEXPECTED_ERROR"
+                );
+            }
         }
 
         public override async Task<List<AccountInfoResult>> ListMailAccountsAsync(string domain)
         {
-            // TODO: Implement CloudPanel list email accounts API
-            await Task.CompletedTask;
-            return new List<AccountInfoResult>();
+            try
+            {
+                if (string.IsNullOrWhiteSpace(domain))
+                {
+                    return new List<AccountInfoResult>();
+                }
+
+                // CloudPanel API endpoint for listing email accounts
+                var endpoint = $"/api/v1/email-accounts?domain={domain}";
+
+                var response = await _httpClient.GetAsync(endpoint);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return new List<AccountInfoResult>();
+                }
+
+                // Parse CloudPanel response
+                using var jsonDoc = JsonDocument.Parse(responseContent);
+                var root = jsonDoc.RootElement;
+
+                var results = new List<AccountInfoResult>();
+
+                if (root.TryGetProperty("success", out var successElement) && successElement.GetBoolean() &&
+                    root.TryGetProperty("data", out var dataArray) && dataArray.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var emailAccount in dataArray.EnumerateArray())
+                    {
+                        var accountId = emailAccount.TryGetProperty("id", out var idElement) 
+                            ? idElement.GetInt32().ToString() 
+                            : null;
+
+                        if (!string.IsNullOrEmpty(accountId))
+                        {
+                            results.Add(new AccountInfoResult
+                            {
+                                Success = true,
+                                AccountId = accountId,
+                                Email = emailAccount.TryGetProperty("emailAddress", out var emailElement) ? emailElement.GetString() : null,
+                                Domain = domain,
+                                DiskQuotaMB = emailAccount.TryGetProperty("quota", out var quotaElement) ? (int?)quotaElement.GetInt32() : null,
+                                DiskUsageMB = emailAccount.TryGetProperty("diskUsed", out var usedElement) ? (int?)usedElement.GetInt32() : null
+                            });
+                        }
+                    }
+                }
+
+                return results;
+            }
+            catch (Exception)
+            {
+                return new List<AccountInfoResult>();
+            }
         }
 
         public override async Task<AccountUpdateResult> ChangeMailPasswordAsync(string accountId, string newPassword)
         {
-            // TODO: Implement CloudPanel change email password API
-            await Task.CompletedTask;
-            return CreateUpdateErrorResult("Not yet implemented", "NOT_IMPLEMENTED");
+            try
+            {
+                if (string.IsNullOrWhiteSpace(accountId))
+                {
+                    return CreateUpdateErrorResult("Account ID (email account ID) is required", "INVALID_ACCOUNT_ID");
+                }
+
+                if (string.IsNullOrWhiteSpace(newPassword))
+                {
+                    return CreateUpdateErrorResult("New password is required", "INVALID_PASSWORD");
+                }
+
+                // CloudPanel API endpoint for changing email password
+                var endpoint = $"/api/v1/email-accounts/{accountId}/password";
+
+                // Build request payload
+                var payload = new
+                {
+                    password = newPassword
+                };
+
+                var response = await _httpClient.PutAsJsonAsync(endpoint, payload);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return CreateUpdateErrorResult(
+                        $"CloudPanel API request failed: {response.StatusCode} - {responseContent}",
+                        response.StatusCode.ToString()
+                    );
+                }
+
+                // Parse CloudPanel response
+                using var jsonDoc = JsonDocument.Parse(responseContent);
+                var root = jsonDoc.RootElement;
+
+                if (root.TryGetProperty("success", out var successElement) && successElement.GetBoolean())
+                {
+                    var message = root.TryGetProperty("message", out var msgElement)
+                        ? msgElement.GetString()
+                        : "Email password changed successfully";
+
+                    return new AccountUpdateResult
+                    {
+                        Success = true,
+                        Message = message ?? "Email password changed successfully",
+                        AccountId = accountId,
+                        UpdatedField = "Password",
+                        UpdatedDate = DateTime.UtcNow
+                    };
+                }
+                else if (root.TryGetProperty("error", out var errorElement))
+                {
+                    var errorMessage = errorElement.GetString() ?? "Unknown error occurred";
+                    return CreateUpdateErrorResult(errorMessage, "CLOUDPANEL_ERROR");
+                }
+
+                return CreateUpdateErrorResult("Invalid response format from CloudPanel", "INVALID_RESPONSE");
+            }
+            catch (HttpRequestException ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Network error while connecting to CloudPanel: {ex.Message}",
+                    "NETWORK_ERROR"
+                );
+            }
+            catch (JsonException ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Failed to parse CloudPanel response: {ex.Message}",
+                    "JSON_PARSE_ERROR"
+                );
+            }
+            catch (Exception ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Unexpected error: {ex.Message}",
+                    "UNEXPECTED_ERROR"
+                );
+            }
         }
 
         public override async Task<AccountUpdateResult> SetDiskQuotaAsync(string accountId, int quotaMB)
         {
-            // TODO: Implement CloudPanel set disk quota API
-            await Task.CompletedTask;
-            return CreateUpdateErrorResult("Not yet implemented", "NOT_IMPLEMENTED");
+            try
+            {
+                if (string.IsNullOrWhiteSpace(accountId))
+                {
+                    return CreateUpdateErrorResult("Account ID (site ID) is required", "INVALID_ACCOUNT_ID");
+                }
+
+                if (quotaMB < 0)
+                {
+                    return CreateUpdateErrorResult("Quota must be a positive value", "INVALID_QUOTA");
+                }
+
+                // CloudPanel API endpoint for updating site quota
+                var endpoint = $"/api/v1/sites/{accountId}/quota";
+
+                // Build request payload
+                var payload = new
+                {
+                    quota = quotaMB
+                };
+
+                var response = await _httpClient.PutAsJsonAsync(endpoint, payload);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return CreateUpdateErrorResult(
+                        $"CloudPanel API request failed: {response.StatusCode} - {responseContent}",
+                        response.StatusCode.ToString()
+                    );
+                }
+
+                // Parse CloudPanel response
+                using var jsonDoc = JsonDocument.Parse(responseContent);
+                var root = jsonDoc.RootElement;
+
+                if (root.TryGetProperty("success", out var successElement) && successElement.GetBoolean())
+                {
+                    var message = root.TryGetProperty("message", out var msgElement)
+                        ? msgElement.GetString()
+                        : "Disk quota updated successfully";
+
+                    return new AccountUpdateResult
+                    {
+                        Success = true,
+                        Message = message ?? "Disk quota updated successfully",
+                        AccountId = accountId,
+                        UpdatedField = "DiskQuota",
+                        NewValue = quotaMB,
+                        UpdatedDate = DateTime.UtcNow
+                    };
+                }
+                else if (root.TryGetProperty("error", out var errorElement))
+                {
+                    var errorMessage = errorElement.GetString() ?? "Unknown error occurred";
+                    return CreateUpdateErrorResult(errorMessage, "CLOUDPANEL_ERROR");
+                }
+
+                return CreateUpdateErrorResult("Invalid response format from CloudPanel", "INVALID_RESPONSE");
+            }
+            catch (HttpRequestException ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Network error while connecting to CloudPanel: {ex.Message}",
+                    "NETWORK_ERROR"
+                );
+            }
+            catch (JsonException ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Failed to parse CloudPanel response: {ex.Message}",
+                    "JSON_PARSE_ERROR"
+                );
+            }
+            catch (Exception ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Unexpected error: {ex.Message}",
+                    "UNEXPECTED_ERROR"
+                );
+            }
         }
 
         public override async Task<AccountUpdateResult> SetBandwidthLimitAsync(string accountId, int bandwidthMB)
         {
-            // TODO: Implement CloudPanel set bandwidth limit API
-            await Task.CompletedTask;
-            return CreateUpdateErrorResult("Not yet implemented", "NOT_IMPLEMENTED");
+            try
+            {
+                if (string.IsNullOrWhiteSpace(accountId))
+                {
+                    return CreateUpdateErrorResult("Account ID (site ID) is required", "INVALID_ACCOUNT_ID");
+                }
+
+                if (bandwidthMB < 0)
+                {
+                    return CreateUpdateErrorResult("Bandwidth must be a positive value", "INVALID_BANDWIDTH");
+                }
+
+                // Note: CloudPanel does not natively support per-site bandwidth limits
+                // This would typically need to be implemented via server-level tools like nginx limit_rate
+                // or external monitoring tools
+                
+                // For now, we'll return a not supported response
+                // If CloudPanel adds this feature in the future, update this endpoint
+                await Task.CompletedTask;
+                return CreateUpdateErrorResult(
+                    "CloudPanel does not support per-site bandwidth limits through the API. " +
+                    "Bandwidth management should be configured at the server level using nginx or similar tools.",
+                    "NOT_SUPPORTED"
+                );
+            }
+            catch (Exception ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Unexpected error: {ex.Message}",
+                    "UNEXPECTED_ERROR"
+                );
+            }
         }
     }
 }
