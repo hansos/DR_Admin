@@ -60,3 +60,6 @@ Sends an email with one or more file attachments.
 - The `to` parameter can typically be a single email address; if multiple recipients are needed, use a comma-separated string or extend the implementation.
 - Attachments must be accessible file paths on the local system.
 - Exceptions should be handled to capture sending errors, such as invalid addresses, network issues, or authentication failures.
+
+
+[Return to Index](../Index.md)
