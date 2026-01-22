@@ -51,6 +51,9 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.PasswordHash).IsRequired();
             entity.Property(e => e.Email).IsRequired().HasMaxLength(200);
             
+            entity.HasIndex(e => e.Username).IsUnique();
+            entity.HasIndex(e => e.Email).IsUnique();
+            
             entity.HasOne(e => e.Customer)
                 .WithMany(c => c.Users)
                 .HasForeignKey(e => e.CustomerId)

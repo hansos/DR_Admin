@@ -67,6 +67,7 @@ builder.Services.AddAuthentication(options =>
 
 // Add services to the container.
 builder.Services.AddTransient<IAuthService, AuthService>();
+builder.Services.AddTransient<IInitializationService, InitializationService>();
 builder.Services.AddTransient<IMyAccountService, MyAccountService>();
 builder.Services.AddTransient<ICustomerService, CustomerService>();
 builder.Services.AddTransient<IUserService, UserService>();
@@ -178,9 +179,21 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var context = services.GetRequiredService<ApplicationDbContext>();
-        log.Information("Applying database migrations...");
-        context.Database.Migrate();
-        log.Information("Database migrations applied successfully");
+        
+        // Check for pending migrations
+        var pendingMigrations = await context.Database.GetPendingMigrationsAsync();
+        var pendingCount = pendingMigrations.Count();
+        
+        if (pendingCount > 0)
+        {
+            log.Information("Applying {Count} pending database migration(s)...", pendingCount);
+            await context.Database.MigrateAsync();
+            log.Information("Database migrations applied successfully");
+        }
+        else
+        {
+            log.Information("Database is up to date. No pending migrations");
+        }
 
         // Synchronize roles from controller attributes
         log.Information("Synchronizing roles from controller attributes...");

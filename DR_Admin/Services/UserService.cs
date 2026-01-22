@@ -70,6 +70,25 @@ public class UserService : IUserService
         {
             _log.Information("Creating new user with username: {Username}", createDto.Username);
 
+            // Check for duplicate username
+            var existingUsername = await _context.Users
+                .AnyAsync(u => u.Username == createDto.Username);
+            
+            if (existingUsername)
+            {
+                _log.Warning("Attempt to create user with duplicate username: {Username}", createDto.Username);
+                throw new InvalidOperationException($"Username '{createDto.Username}' is already taken");
+            }
+
+            // Check for duplicate email
+            var existingEmail = await _context.Users
+                .AnyAsync(u => u.Email == createDto.Email);
+            
+            if (existingEmail)
+            {
+                _log.Warning("Attempt to create user with duplicate email: {Email}", createDto.Email);
+                throw new InvalidOperationException($"Email '{createDto.Email}' is already registered");
+            }
 
             var user = new User
             {
@@ -107,6 +126,26 @@ public class UserService : IUserService
             {
                 _log.Warning("User with ID {UserId} not found for update", id);
                 return null;
+            }
+
+            // Check for duplicate username (excluding current user)
+            var existingUsername = await _context.Users
+                .AnyAsync(u => u.Username == updateDto.Username && u.Id != id);
+            
+            if (existingUsername)
+            {
+                _log.Warning("Attempt to update user {UserId} with duplicate username: {Username}", id, updateDto.Username);
+                throw new InvalidOperationException($"Username '{updateDto.Username}' is already taken");
+            }
+
+            // Check for duplicate email (excluding current user)
+            var existingEmail = await _context.Users
+                .AnyAsync(u => u.Email == updateDto.Email && u.Id != id);
+            
+            if (existingEmail)
+            {
+                _log.Warning("Attempt to update user {UserId} with duplicate email: {Email}", id, updateDto.Email);
+                throw new InvalidOperationException($"Email '{updateDto.Email}' is already registered");
             }
 
             user.CustomerId = updateDto.CustomerId;
