@@ -27,12 +27,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Features/Domain registration.md",
+                "file": "Features/Domain-registration.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Domain registration"
+              "title": "Domain-registration"
             }
           }
         ]
@@ -201,7 +201,6 @@
   "lastOpenFiles": [
     "Features/Domain-registration.md",
     "Index.md",
-    "Features/Domain registration.md",
     "Features/Hosting.md",
     "Features/Mailing.md",
     "Untitled",
