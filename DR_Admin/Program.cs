@@ -63,6 +63,8 @@ builder.Services.AddAuthentication(options =>
 });
 
 // Add services to the container.
+builder.Services.AddTransient<IAuthService, AuthService>();
+builder.Services.AddTransient<IMyAccountService, MyAccountService>();
 builder.Services.AddTransient<ICustomerService, CustomerService>();
 builder.Services.AddTransient<IUserService, UserService>();
 builder.Services.AddTransient<IRoleService, RoleService>();
@@ -72,6 +74,58 @@ builder.Services.AddTransient<IServiceTypeService, ServiceTypeService>();
 builder.Services.AddTransient<IBillingCycleService, BillingCycleService>();
 builder.Services.AddTransient<IOrderService, OrderService>();
 builder.Services.AddTransient<IInvoiceService, InvoiceService>();
+
+// Configure CORS from appsettings
+var corsSettings = builder.Configuration.GetSection("CorsSettings");
+var policyName = corsSettings["PolicyName"] ?? "AllowSpecificOrigins";
+var allowedOrigins = corsSettings.GetSection("AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
+var allowedMethods = corsSettings.GetSection("AllowedMethods").Get<string[]>() ?? Array.Empty<string>();
+var allowedHeaders = corsSettings.GetSection("AllowedHeaders").Get<string[]>() ?? Array.Empty<string>();
+var allowCredentials = corsSettings.GetValue<bool>("AllowCredentials");
+var maxAge = corsSettings.GetValue<int>("MaxAge");
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(policyName, policy =>
+    {
+        if (allowedOrigins.Length > 0 && allowedOrigins[0] != "*")
+        {
+            policy.WithOrigins(allowedOrigins);
+        }
+        else
+        {
+            policy.AllowAnyOrigin();
+        }
+
+        if (allowedMethods.Length > 0 && allowedMethods[0] != "*")
+        {
+            policy.WithMethods(allowedMethods);
+        }
+        else
+        {
+            policy.AllowAnyMethod();
+        }
+
+        if (allowedHeaders.Length > 0 && allowedHeaders[0] != "*")
+        {
+            policy.WithHeaders(allowedHeaders);
+        }
+        else
+        {
+            policy.AllowAnyHeader();
+        }
+
+        if (allowCredentials)
+        {
+            policy.AllowCredentials();
+        }
+
+        if (maxAge > 0)
+        {
+            policy.SetPreflightMaxAge(TimeSpan.FromSeconds(maxAge));
+        }
+    });
+});
 
 builder.Services.AddControllers();
 
@@ -124,6 +178,22 @@ using (var scope = app.Services.CreateScope())
         log.Information("Applying database migrations...");
         context.Database.Migrate();
         log.Information("Database migrations applied successfully");
+
+        // Synchronize roles from controller attributes
+        log.Information("Synchronizing roles from controller attributes...");
+        var roleService = services.GetRequiredService<IRoleService>();
+        var controllerRoles = RoleInitializationService.GetAllRolesFromControllers();
+        
+        log.Information("Found {Count} unique roles in controllers: {Roles}", 
+            controllerRoles.Count, 
+            string.Join(", ", controllerRoles));
+
+        foreach (var roleName in controllerRoles)
+        {
+            await roleService.EnsureRoleExistsAsync(roleName);
+        }
+
+        log.Information("Role synchronization completed successfully");
     }
     catch (Exception ex)
     {
@@ -143,6 +213,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Enable CORS - must be before UseAuthentication and UseAuthorization
+var corsPolicy = builder.Configuration.GetSection("CorsSettings")["PolicyName"] ?? "AllowSpecificOrigins";
+app.UseCors(corsPolicy);
 
 app.UseAuthentication(); // Add this BEFORE UseAuthorization
 app.UseAuthorization();

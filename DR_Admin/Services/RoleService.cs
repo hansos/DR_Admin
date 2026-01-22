@@ -146,6 +146,42 @@ public class RoleService : IRoleService
         }
     }
 
+    public async Task EnsureRoleExistsAsync(string roleName, string description = "")
+    {
+        try
+        {
+            var existingRole = await _context.Roles
+                .FirstOrDefaultAsync(r => r.Name == roleName);
+
+            if (existingRole == null)
+            {
+                _logger.Information("Creating role: {RoleName}", roleName);
+                
+                var role = new Role
+                {
+                    Name = roleName,
+                    Description = string.IsNullOrWhiteSpace(description) 
+                        ? $"{roleName} role" 
+                        : description
+                };
+
+                _context.Roles.Add(role);
+                await _context.SaveChangesAsync();
+                
+                _logger.Information("Successfully created role: {RoleName} with ID: {RoleId}", roleName, role.Id);
+            }
+            else
+            {
+                _logger.Debug("Role {RoleName} already exists with ID: {RoleId}", roleName, existingRole.Id);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "Error occurred while ensuring role exists: {RoleName}", roleName);
+            throw;
+        }
+    }
+
     private static RoleDto MapToDto(Role role)
     {
         return new RoleDto
