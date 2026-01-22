@@ -22,7 +22,9 @@ public class ApplicationDbContext : DbContext
     public DbSet<InvoiceLine> InvoiceLines { get; set; }
     public DbSet<PaymentTransaction> PaymentTransactions { get; set; }
     public DbSet<Domain> Domains { get; set; }
-    public DbSet<DomainProvider> DomainProviders { get; set; }
+    public DbSet<Tld> Tlds { get; set; }
+    public DbSet<Registrar> Registrars { get; set; }
+    public DbSet<RegistrarTld> RegistrarTlds { get; set; }
     public DbSet<DnsRecord> DnsRecords { get; set; }
     public DbSet<HostingAccount> HostingAccounts { get; set; }
     public DbSet<AuditLog> AuditLogs { get; set; }
@@ -181,13 +183,13 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<Invoice>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.Amount).HasPrecision(18, 2);
-            entity.Property(e => e.Status).IsRequired().HasMaxLength(50);
-            
-            entity.HasOne(e => e.Order)
-                .WithMany(o => o.Invoices)
-                .HasForeignKey(e => e.OrderId)
-                .OnDelete(DeleteBehavior.Restrict);
+            entity.Property(e => e.InvoiceNumber).IsRequired().HasMaxLength(50);
+            entity.HasIndex(e => e.InvoiceNumber).IsUnique();
+            entity.Property(e => e.Status).IsRequired();
+            entity.Property(e => e.CurrencyCode).HasMaxLength(3);
+            entity.Property(e => e.TaxName).HasMaxLength(50);
+            entity.Property(e => e.CustomerName).HasMaxLength(200);
+            entity.Property(e => e.PaymentMethod).HasMaxLength(100);
             
             entity.HasOne(e => e.Customer)
                 .WithMany()
@@ -235,26 +237,28 @@ public class ApplicationDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Name).IsRequired().HasMaxLength(255);
             entity.Property(e => e.Status).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.RegistrationPrice).HasPrecision(18, 2);
+            entity.Property(e => e.RenewalPrice).HasPrecision(18, 2);
+            entity.Property(e => e.Notes).HasMaxLength(1000);
+            
+            entity.HasIndex(e => e.Name);
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.ExpirationDate);
             
             entity.HasOne(e => e.Customer)
                 .WithMany(c => c.Domains)
                 .HasForeignKey(e => e.CustomerId)
                 .OnDelete(DeleteBehavior.Restrict);
             
-            entity.HasOne(e => e.Provider)
-                .WithMany(p => p.Domains)
-                .HasForeignKey(e => e.ProviderId)
+            entity.HasOne(e => e.Registrar)
+                .WithMany(r => r.Domains)
+                .HasForeignKey(e => e.RegistrarId)
                 .OnDelete(DeleteBehavior.Restrict);
-        });
-
-        // DomainProvider configuration
-        modelBuilder.Entity<DomainProvider>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.ApiEndpoint).HasMaxLength(500);
-            entity.Property(e => e.ApiKey).HasMaxLength(500);
-            entity.Property(e => e.ApiSecret).HasMaxLength(500);
+            
+            entity.HasOne(e => e.RegistrarTld)
+                .WithMany(rt => rt.Domains)
+                .HasForeignKey(e => e.RegistrarTldId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         // DnsRecord configuration
@@ -338,6 +342,68 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => e.Code).IsUnique();
             entity.HasIndex(e => e.Tld);
             entity.HasIndex(e => e.EnglishName);
+        });
+
+        // Tld configuration
+        modelBuilder.Entity<Tld>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Extension).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.Description).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.Notes).HasMaxLength(1000);
+            
+            entity.HasIndex(e => e.Extension).IsUnique();
+            entity.HasIndex(e => e.IsActive);
+        });
+
+        // Registrar configuration
+        modelBuilder.Entity<Registrar>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Code).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.ApiUrl).HasMaxLength(500);
+            entity.Property(e => e.ApiKey).HasMaxLength(500);
+            entity.Property(e => e.ApiSecret).HasMaxLength(500);
+            entity.Property(e => e.ApiUsername).HasMaxLength(200);
+            entity.Property(e => e.ApiPassword).HasMaxLength(500);
+            entity.Property(e => e.ContactEmail).HasMaxLength(200);
+            entity.Property(e => e.ContactPhone).HasMaxLength(50);
+            entity.Property(e => e.Website).HasMaxLength(500);
+            entity.Property(e => e.Notes).HasMaxLength(1000);
+            
+            entity.HasIndex(e => e.Code).IsUnique();
+            entity.HasIndex(e => e.Name);
+            entity.HasIndex(e => e.IsActive);
+        });
+
+        // RegistrarTld configuration
+        modelBuilder.Entity<RegistrarTld>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.RegistrationCost).HasPrecision(18, 2);
+            entity.Property(e => e.RegistrationPrice).HasPrecision(18, 2);
+            entity.Property(e => e.RenewalCost).HasPrecision(18, 2);
+            entity.Property(e => e.RenewalPrice).HasPrecision(18, 2);
+            entity.Property(e => e.TransferCost).HasPrecision(18, 2);
+            entity.Property(e => e.TransferPrice).HasPrecision(18, 2);
+            entity.Property(e => e.PrivacyCost).HasPrecision(18, 2);
+            entity.Property(e => e.PrivacyPrice).HasPrecision(18, 2);
+            entity.Property(e => e.Currency).IsRequired().HasMaxLength(3);
+            entity.Property(e => e.Notes).HasMaxLength(1000);
+            
+            entity.HasIndex(e => new { e.RegistrarId, e.TldId }).IsUnique();
+            entity.HasIndex(e => e.IsAvailable);
+            
+            entity.HasOne(e => e.Registrar)
+                .WithMany(r => r.RegistrarTlds)
+                .HasForeignKey(e => e.RegistrarId)
+                .OnDelete(DeleteBehavior.Restrict);
+            
+            entity.HasOne(e => e.Tld)
+                .WithMany(t => t.RegistrarTlds)
+                .HasForeignKey(e => e.TldId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         // PostalCode configuration
