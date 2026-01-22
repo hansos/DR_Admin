@@ -33,7 +33,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DomainRegistration\DomainRegistrationLib.csproj" />
     <ProjectReference Include="..\EmailSenderLib\EmailSenderLib.csproj" />
   </ItemGroup>
 
