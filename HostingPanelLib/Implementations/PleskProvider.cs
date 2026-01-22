@@ -632,5 +632,285 @@ namespace HostingPanelLib.Implementations
                 return CreateUpdateErrorResult($"Unexpected error: {ex.Message}", "UNEXPECTED_ERROR");
             }
         }
+
+        public override async Task<DatabaseResult> CreateDatabaseAsync(DatabaseRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(request.DatabaseName) || string.IsNullOrWhiteSpace(request.Domain))
+                {
+                    return CreateDatabaseErrorResult("Database name and domain are required", "INVALID_INPUT");
+                }
+
+                var dbCreate = new XElement("database",
+                    new XElement("add-db",
+                        new XElement("webspace-name", request.Domain),
+                        new XElement("name", request.DatabaseName),
+                        new XElement("type", request.DatabaseType ?? "mysql")
+                    )
+                );
+
+                var response = await SendPleskRequestAsync(dbCreate);
+                var result = response?.Root?.Element("database")?.Element("add-db")?.Element("result");
+
+                if (IsSuccess(result))
+                {
+                    var dbId = result?.Element("id")?.Value;
+                    return new DatabaseResult
+                    {
+                        Success = true,
+                        Message = "Database created successfully",
+                        DatabaseId = dbId,
+                        DatabaseName = request.DatabaseName,
+                        DatabaseType = request.DatabaseType ?? "mysql",
+                        Server = "localhost",
+                        Port = 3306,
+                        CreatedDate = DateTime.UtcNow
+                    };
+                }
+
+                return CreateDatabaseErrorResult(GetErrorMessage(result) ?? "Failed to create database", "PLESK_ERROR");
+            }
+            catch (Exception ex)
+            {
+                return CreateDatabaseErrorResult($"Unexpected error: {ex.Message}", "UNEXPECTED_ERROR");
+            }
+        }
+
+        public override async Task<AccountUpdateResult> DeleteDatabaseAsync(string databaseId)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(databaseId))
+                {
+                    return CreateUpdateErrorResult("Database ID is required", "INVALID_DATABASE_ID");
+                }
+
+                var dbDelete = new XElement("database",
+                    new XElement("del-db",
+                        new XElement("filter",
+                            new XElement("id", databaseId)
+                        )
+                    )
+                );
+
+                var response = await SendPleskRequestAsync(dbDelete);
+                var result = response?.Root?.Element("database")?.Element("del-db")?.Element("result");
+
+                if (IsSuccess(result))
+                {
+                    return new AccountUpdateResult { Success = true, Message = "Database deleted", AccountId = databaseId, UpdatedDate = DateTime.UtcNow };
+                }
+
+                return CreateUpdateErrorResult(GetErrorMessage(result) ?? "Failed to delete database", "PLESK_ERROR");
+            }
+            catch (Exception ex)
+            {
+                return CreateUpdateErrorResult($"Unexpected error: {ex.Message}", "UNEXPECTED_ERROR");
+            }
+        }
+
+        public override async Task<AccountInfoResult> GetDatabaseInfoAsync(string databaseId)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(databaseId))
+                {
+                    return CreateInfoErrorResult("Database ID is required", "INVALID_DATABASE_ID");
+                }
+
+                var dbGet = new XElement("database",
+                    new XElement("get-db",
+                        new XElement("filter",
+                            new XElement("id", databaseId)
+                        )
+                    )
+                );
+
+                var response = await SendPleskRequestAsync(dbGet);
+                var result = response?.Root?.Element("database")?.Element("get-db")?.Element("result");
+
+                if (IsSuccess(result))
+                {
+                    var dbName = result?.Element("name")?.Value;
+                    var dbType = result?.Element("type")?.Value;
+
+                    return new AccountInfoResult
+                    {
+                        Success = true,
+                        Message = "Database information retrieved",
+                        AccountId = databaseId,
+                        DatabaseName = dbName,
+                        DatabaseType = dbType
+                    };
+                }
+
+                return CreateInfoErrorResult(GetErrorMessage(result) ?? "Database not found", "NOT_FOUND");
+            }
+            catch (Exception ex)
+            {
+                return CreateInfoErrorResult($"Unexpected error: {ex.Message}", "UNEXPECTED_ERROR");
+            }
+        }
+
+        public override async Task<List<AccountInfoResult>> ListDatabasesAsync(string domain)
+        {
+            try
+            {
+                var dbGet = new XElement("database",
+                    new XElement("get-db",
+                        new XElement("filter",
+                            new XElement("webspace-name", domain)
+                        )
+                    )
+                );
+
+                var response = await SendPleskRequestAsync(dbGet);
+                var results = response?.Root?.Element("database")?.Elements("get-db")?.Elements("result");
+
+                if (results != null)
+                {
+                    return results.Where(r => IsSuccess(r)).Select(r => new AccountInfoResult
+                    {
+                        Success = true,
+                        AccountId = r?.Element("id")?.Value ?? "",
+                        DatabaseName = r?.Element("name")?.Value,
+                        DatabaseType = r?.Element("type")?.Value
+                    }).ToList();
+                }
+
+                return new List<AccountInfoResult>();
+            }
+            catch
+            {
+                return new List<AccountInfoResult>();
+            }
+        }
+
+        public override async Task<DatabaseResult> CreateDatabaseUserAsync(DatabaseUserRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Password))
+                {
+                    return CreateDatabaseErrorResult("Username and password are required", "INVALID_INPUT");
+                }
+
+                var dbUserCreate = new XElement("database",
+                    new XElement("add-db-user",
+                        new XElement("db-id", request.DatabaseName),
+                        new XElement("login", request.Username),
+                        new XElement("password", request.Password)
+                    )
+                );
+
+                var response = await SendPleskRequestAsync(dbUserCreate);
+                var result = response?.Root?.Element("database")?.Element("add-db-user")?.Element("result");
+
+                if (IsSuccess(result))
+                {
+                    return new DatabaseResult
+                    {
+                        Success = true,
+                        Message = "Database user created successfully",
+                        Username = request.Username,
+                        CreatedDate = DateTime.UtcNow
+                    };
+                }
+
+                return CreateDatabaseErrorResult(GetErrorMessage(result) ?? "Failed to create database user", "PLESK_ERROR");
+            }
+            catch (Exception ex)
+            {
+                return CreateDatabaseErrorResult($"Unexpected error: {ex.Message}", "UNEXPECTED_ERROR");
+            }
+        }
+
+        public override async Task<AccountUpdateResult> DeleteDatabaseUserAsync(string userId)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(userId))
+                {
+                    return CreateUpdateErrorResult("User ID is required", "INVALID_USER_ID");
+                }
+
+                var dbUserDelete = new XElement("database",
+                    new XElement("del-db-user",
+                        new XElement("filter",
+                            new XElement("id", userId)
+                        )
+                    )
+                );
+
+                var response = await SendPleskRequestAsync(dbUserDelete);
+                var result = response?.Root?.Element("database")?.Element("del-db-user")?.Element("result");
+
+                if (IsSuccess(result))
+                {
+                    return new AccountUpdateResult { Success = true, Message = "Database user deleted", AccountId = userId, UpdatedDate = DateTime.UtcNow };
+                }
+
+                return CreateUpdateErrorResult(GetErrorMessage(result) ?? "Failed to delete database user", "PLESK_ERROR");
+            }
+            catch (Exception ex)
+            {
+                return CreateUpdateErrorResult($"Unexpected error: {ex.Message}", "UNEXPECTED_ERROR");
+            }
+        }
+
+        public override async Task<AccountUpdateResult> GrantDatabasePrivilegesAsync(string userId, string databaseId, List<string> privileges)
+        {
+            try
+            {
+                return new AccountUpdateResult
+                {
+                    Success = true,
+                    Message = "Privileges are granted automatically in Plesk when database user is created",
+                    AccountId = userId,
+                    UpdatedDate = DateTime.UtcNow
+                };
+            }
+            catch (Exception ex)
+            {
+                return CreateUpdateErrorResult($"Unexpected error: {ex.Message}", "UNEXPECTED_ERROR");
+            }
+        }
+
+        public override async Task<AccountUpdateResult> ChangeDatabasePasswordAsync(string userId, string newPassword)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(userId))
+                {
+                    return CreateUpdateErrorResult("User ID is required", "INVALID_USER_ID");
+                }
+
+                var dbUserUpdate = new XElement("database",
+                    new XElement("set-db-user",
+                        new XElement("filter",
+                            new XElement("id", userId)
+                        ),
+                        new XElement("values",
+                            new XElement("password", newPassword)
+                        )
+                    )
+                );
+
+                var response = await SendPleskRequestAsync(dbUserUpdate);
+                var result = response?.Root?.Element("database")?.Element("set-db-user")?.Element("result");
+
+                if (IsSuccess(result))
+                {
+                    return new AccountUpdateResult { Success = true, Message = "Password changed", AccountId = userId, UpdatedField = "Password", UpdatedDate = DateTime.UtcNow };
+                }
+
+                return CreateUpdateErrorResult(GetErrorMessage(result) ?? "Failed to change password", "PLESK_ERROR");
+            }
+            catch (Exception ex)
+            {
+                return CreateUpdateErrorResult($"Unexpected error: {ex.Message}", "UNEXPECTED_ERROR");
+            }
+        }
     }
 }

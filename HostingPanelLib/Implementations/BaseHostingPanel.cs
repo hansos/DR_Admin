@@ -32,6 +32,14 @@ namespace HostingPanelLib.Implementations
         public abstract Task<AccountUpdateResult> ChangeMailPasswordAsync(string accountId, string newPassword);
         public abstract Task<AccountUpdateResult> SetDiskQuotaAsync(string accountId, int quotaMB);
         public abstract Task<AccountUpdateResult> SetBandwidthLimitAsync(string accountId, int bandwidthMB);
+        public abstract Task<DatabaseResult> CreateDatabaseAsync(DatabaseRequest request);
+        public abstract Task<AccountUpdateResult> DeleteDatabaseAsync(string databaseId);
+        public abstract Task<AccountInfoResult> GetDatabaseInfoAsync(string databaseId);
+        public abstract Task<List<AccountInfoResult>> ListDatabasesAsync(string domain);
+        public abstract Task<DatabaseResult> CreateDatabaseUserAsync(DatabaseUserRequest request);
+        public abstract Task<AccountUpdateResult> DeleteDatabaseUserAsync(string userId);
+        public abstract Task<AccountUpdateResult> GrantDatabasePrivilegesAsync(string userId, string databaseId, List<string> privileges);
+        public abstract Task<AccountUpdateResult> ChangeDatabasePasswordAsync(string userId, string newPassword);
 
         protected virtual HostingAccountResult CreateHostingErrorResult(string message, string? errorCode = null)
         {
@@ -69,6 +77,17 @@ namespace HostingPanelLib.Implementations
         protected virtual AccountInfoResult CreateInfoErrorResult(string message, string? errorCode = null)
         {
             return new AccountInfoResult
+            {
+                Success = false,
+                Message = message,
+                ErrorCode = errorCode,
+                Errors = new List<string> { message }
+            };
+        }
+
+        protected virtual DatabaseResult CreateDatabaseErrorResult(string message, string? errorCode = null)
+        {
+            return new DatabaseResult
             {
                 Success = false,
                 Message = message,

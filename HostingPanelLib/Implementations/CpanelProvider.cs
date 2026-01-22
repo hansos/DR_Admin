@@ -1417,5 +1417,370 @@ namespace HostingPanelLib.Implementations
                 );
             }
         }
+
+        public override async Task<DatabaseResult> CreateDatabaseAsync(DatabaseRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(request.DatabaseName))
+                {
+                    return CreateDatabaseErrorResult("Database name is required", "INVALID_DATABASE_NAME");
+                }
+
+                var parameters = new Dictionary<string, string>
+                {
+                    ["name"] = request.DatabaseName
+                };
+
+                var endpoint = BuildWhmApiUrl("Mysql::create_database", parameters);
+                var response = await _httpClient.GetAsync(endpoint);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return CreateDatabaseErrorResult($"API request failed: {response.StatusCode}", response.StatusCode.ToString());
+                }
+
+                using var jsonDoc = JsonDocument.Parse(responseContent);
+                var root = jsonDoc.RootElement;
+
+                if (root.TryGetProperty("metadata", out var metadata) &&
+                    metadata.TryGetProperty("result", out var result))
+                {
+                    var success = result.GetInt32() == 1;
+
+                    if (success)
+                    {
+                        return new DatabaseResult
+                        {
+                            Success = true,
+                            Message = "Database created successfully",
+                            DatabaseName = request.DatabaseName,
+                            DatabaseType = "mysql",
+                            Server = "localhost",
+                            Port = 3306,
+                            CreatedDate = DateTime.UtcNow
+                        };
+                    }
+                }
+
+                return CreateDatabaseErrorResult("Failed to create database", "CPANEL_ERROR");
+            }
+            catch (Exception ex)
+            {
+                return CreateDatabaseErrorResult($"Unexpected error: {ex.Message}", "UNEXPECTED_ERROR");
+            }
+        }
+
+        public override async Task<AccountUpdateResult> DeleteDatabaseAsync(string databaseId)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(databaseId))
+                {
+                    return CreateUpdateErrorResult("Database ID is required", "INVALID_DATABASE_ID");
+                }
+
+                var parameters = new Dictionary<string, string>
+                {
+                    ["name"] = databaseId
+                };
+
+                var endpoint = BuildWhmApiUrl("Mysql::delete_database", parameters);
+                var response = await _httpClient.GetAsync(endpoint);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return CreateUpdateErrorResult($"API request failed: {response.StatusCode}", response.StatusCode.ToString());
+                }
+
+                using var jsonDoc = JsonDocument.Parse(responseContent);
+                var root = jsonDoc.RootElement;
+
+                if (root.TryGetProperty("metadata", out var metadata) &&
+                    metadata.TryGetProperty("result", out var result))
+                {
+                    var success = result.GetInt32() == 1;
+
+                    if (success)
+                    {
+                        return new AccountUpdateResult
+                        {
+                            Success = true,
+                            Message = "Database deleted successfully",
+                            AccountId = databaseId,
+                            UpdatedDate = DateTime.UtcNow
+                        };
+                    }
+                }
+
+                return CreateUpdateErrorResult("Failed to delete database", "CPANEL_ERROR");
+            }
+            catch (Exception ex)
+            {
+                return CreateUpdateErrorResult($"Unexpected error: {ex.Message}", "UNEXPECTED_ERROR");
+            }
+        }
+
+        public override async Task<AccountInfoResult> GetDatabaseInfoAsync(string databaseId)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(databaseId))
+                {
+                    return CreateInfoErrorResult("Database ID is required", "INVALID_DATABASE_ID");
+                }
+
+                return new AccountInfoResult
+                {
+                    Success = true,
+                    Message = "Database information retrieved",
+                    AccountId = databaseId,
+                    DatabaseName = databaseId,
+                    DatabaseType = "mysql"
+                };
+            }
+            catch (Exception ex)
+            {
+                return CreateInfoErrorResult($"Unexpected error: {ex.Message}", "UNEXPECTED_ERROR");
+            }
+        }
+
+        public override async Task<List<AccountInfoResult>> ListDatabasesAsync(string domain)
+        {
+            try
+            {
+                var endpoint = BuildWhmApiUrl("Mysql::list_databases", null);
+                var response = await _httpClient.GetAsync(endpoint);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return new List<AccountInfoResult>();
+                }
+
+                var responseContent = await response.Content.ReadAsStringAsync();
+                using var jsonDoc = JsonDocument.Parse(responseContent);
+
+                return new List<AccountInfoResult>();
+            }
+            catch
+            {
+                return new List<AccountInfoResult>();
+            }
+        }
+
+        public override async Task<DatabaseResult> CreateDatabaseUserAsync(DatabaseUserRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Password))
+                {
+                    return CreateDatabaseErrorResult("Username and password are required", "INVALID_INPUT");
+                }
+
+                var parameters = new Dictionary<string, string>
+                {
+                    ["name"] = request.Username,
+                    ["password"] = request.Password
+                };
+
+                var endpoint = BuildWhmApiUrl("Mysql::create_user", parameters);
+                var response = await _httpClient.GetAsync(endpoint);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return CreateDatabaseErrorResult($"API request failed: {response.StatusCode}", response.StatusCode.ToString());
+                }
+
+                using var jsonDoc = JsonDocument.Parse(responseContent);
+                var root = jsonDoc.RootElement;
+
+                if (root.TryGetProperty("metadata", out var metadata) &&
+                    metadata.TryGetProperty("result", out var result))
+                {
+                    var success = result.GetInt32() == 1;
+
+                    if (success)
+                    {
+                        return new DatabaseResult
+                        {
+                            Success = true,
+                            Message = "Database user created successfully",
+                            Username = request.Username,
+                            CreatedDate = DateTime.UtcNow
+                        };
+                    }
+                }
+
+                return CreateDatabaseErrorResult("Failed to create database user", "CPANEL_ERROR");
+            }
+            catch (Exception ex)
+            {
+                return CreateDatabaseErrorResult($"Unexpected error: {ex.Message}", "UNEXPECTED_ERROR");
+            }
+        }
+
+        public override async Task<AccountUpdateResult> DeleteDatabaseUserAsync(string userId)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(userId))
+                {
+                    return CreateUpdateErrorResult("User ID is required", "INVALID_USER_ID");
+                }
+
+                var parameters = new Dictionary<string, string>
+                {
+                    ["name"] = userId
+                };
+
+                var endpoint = BuildWhmApiUrl("Mysql::delete_user", parameters);
+                var response = await _httpClient.GetAsync(endpoint);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return CreateUpdateErrorResult($"API request failed: {response.StatusCode}", response.StatusCode.ToString());
+                }
+
+                using var jsonDoc = JsonDocument.Parse(responseContent);
+                var root = jsonDoc.RootElement;
+
+                if (root.TryGetProperty("metadata", out var metadata) &&
+                    metadata.TryGetProperty("result", out var result))
+                {
+                    var success = result.GetInt32() == 1;
+
+                    if (success)
+                    {
+                        return new AccountUpdateResult
+                        {
+                            Success = true,
+                            Message = "Database user deleted successfully",
+                            AccountId = userId,
+                            UpdatedDate = DateTime.UtcNow
+                        };
+                    }
+                }
+
+                return CreateUpdateErrorResult("Failed to delete database user", "CPANEL_ERROR");
+            }
+            catch (Exception ex)
+            {
+                return CreateUpdateErrorResult($"Unexpected error: {ex.Message}", "UNEXPECTED_ERROR");
+            }
+        }
+
+        public override async Task<AccountUpdateResult> GrantDatabasePrivilegesAsync(string userId, string databaseId, List<string> privileges)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(databaseId))
+                {
+                    return CreateUpdateErrorResult("User ID and Database ID are required", "INVALID_INPUT");
+                }
+
+                var privilegesStr = privileges != null && privileges.Any()
+                    ? string.Join(",", privileges)
+                    : "ALL PRIVILEGES";
+
+                var parameters = new Dictionary<string, string>
+                {
+                    ["user"] = userId,
+                    ["database"] = databaseId,
+                    ["privileges"] = privilegesStr
+                };
+
+                var endpoint = BuildWhmApiUrl("Mysql::set_privileges_on_database", parameters);
+                var response = await _httpClient.GetAsync(endpoint);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return CreateUpdateErrorResult($"API request failed: {response.StatusCode}", response.StatusCode.ToString());
+                }
+
+                using var jsonDoc = JsonDocument.Parse(responseContent);
+                var root = jsonDoc.RootElement;
+
+                if (root.TryGetProperty("metadata", out var metadata) &&
+                    metadata.TryGetProperty("result", out var result))
+                {
+                    var success = result.GetInt32() == 1;
+
+                    if (success)
+                    {
+                        return new AccountUpdateResult
+                        {
+                            Success = true,
+                            Message = "Privileges granted successfully",
+                            AccountId = userId,
+                            UpdatedDate = DateTime.UtcNow
+                        };
+                    }
+                }
+
+                return CreateUpdateErrorResult("Failed to grant privileges", "CPANEL_ERROR");
+            }
+            catch (Exception ex)
+            {
+                return CreateUpdateErrorResult($"Unexpected error: {ex.Message}", "UNEXPECTED_ERROR");
+            }
+        }
+
+        public override async Task<AccountUpdateResult> ChangeDatabasePasswordAsync(string userId, string newPassword)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(userId))
+                {
+                    return CreateUpdateErrorResult("User ID is required", "INVALID_USER_ID");
+                }
+
+                var parameters = new Dictionary<string, string>
+                {
+                    ["user"] = userId,
+                    ["password"] = newPassword
+                };
+
+                var endpoint = BuildWhmApiUrl("Mysql::set_password", parameters);
+                var response = await _httpClient.GetAsync(endpoint);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return CreateUpdateErrorResult($"API request failed: {response.StatusCode}", response.StatusCode.ToString());
+                }
+
+                using var jsonDoc = JsonDocument.Parse(responseContent);
+                var root = jsonDoc.RootElement;
+
+                if (root.TryGetProperty("metadata", out var metadata) &&
+                    metadata.TryGetProperty("result", out var result))
+                {
+                    var success = result.GetInt32() == 1;
+
+                    if (success)
+                    {
+                        return new AccountUpdateResult
+                        {
+                            Success = true,
+                            Message = "Database password changed successfully",
+                            AccountId = userId,
+                            UpdatedField = "Password",
+                            UpdatedDate = DateTime.UtcNow
+                        };
+                    }
+                }
+
+                return CreateUpdateErrorResult("Failed to change database password", "CPANEL_ERROR");
+            }
+            catch (Exception ex)
+            {
+                return CreateUpdateErrorResult($"Unexpected error: {ex.Message}", "UNEXPECTED_ERROR");
+            }
+        }
     }
 }

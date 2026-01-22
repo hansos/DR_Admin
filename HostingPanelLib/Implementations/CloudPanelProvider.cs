@@ -1179,5 +1179,649 @@ namespace HostingPanelLib.Implementations
                 );
             }
         }
+
+        public override async Task<DatabaseResult> CreateDatabaseAsync(DatabaseRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(request.DatabaseName))
+                {
+                    return CreateDatabaseErrorResult("Database name is required", "INVALID_DATABASE_NAME");
+                }
+
+                if (string.IsNullOrWhiteSpace(request.Domain))
+                {
+                    return CreateDatabaseErrorResult("Domain is required", "INVALID_DOMAIN");
+                }
+
+                // CloudPanel API endpoint for database creation
+                var endpoint = "/api/v1/databases";
+
+                // Build request payload
+                var payload = new
+                {
+                    databaseName = request.DatabaseName,
+                    domain = request.Domain,
+                    databaseType = request.DatabaseType ?? "mysql",
+                    databaseUser = request.Username ?? request.DatabaseName,
+                    databasePassword = request.Password ?? Guid.NewGuid().ToString("N").Substring(0, 16)
+                };
+
+                var response = await _httpClient.PostAsJsonAsync(endpoint, payload);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return CreateDatabaseErrorResult(
+                        $"CloudPanel API request failed: {response.StatusCode} - {responseContent}",
+                        response.StatusCode.ToString()
+                    );
+                }
+
+                // Parse CloudPanel response
+                using var jsonDoc = JsonDocument.Parse(responseContent);
+                var root = jsonDoc.RootElement;
+
+                if (root.TryGetProperty("success", out var successElement) && successElement.GetBoolean())
+                {
+                    var message = root.TryGetProperty("message", out var msgElement)
+                        ? msgElement.GetString()
+                        : "Database created successfully";
+
+                    var databaseId = root.TryGetProperty("data", out var dataElement) && 
+                                    dataElement.TryGetProperty("id", out var idElement)
+                        ? idElement.GetInt32().ToString()
+                        : request.DatabaseName;
+
+                    return new DatabaseResult
+                    {
+                        Success = true,
+                        Message = message ?? "Database created successfully",
+                        DatabaseId = databaseId,
+                        DatabaseName = request.DatabaseName,
+                        DatabaseType = request.DatabaseType ?? "mysql",
+                        Server = "localhost",
+                        Port = 3306,
+                        Username = request.Username ?? request.DatabaseName,
+                        CreatedDate = DateTime.UtcNow
+                    };
+                }
+                else if (root.TryGetProperty("error", out var errorElement))
+                {
+                    var errorMessage = errorElement.GetString() ?? "Unknown error occurred";
+                    return CreateDatabaseErrorResult(errorMessage, "CLOUDPANEL_ERROR");
+                }
+
+                return CreateDatabaseErrorResult("Invalid response format from CloudPanel", "INVALID_RESPONSE");
+            }
+            catch (HttpRequestException ex)
+            {
+                return CreateDatabaseErrorResult(
+                    $"Network error while connecting to CloudPanel: {ex.Message}",
+                    "NETWORK_ERROR"
+                );
+            }
+            catch (JsonException ex)
+            {
+                return CreateDatabaseErrorResult(
+                    $"Failed to parse CloudPanel response: {ex.Message}",
+                    "JSON_PARSE_ERROR"
+                );
+            }
+            catch (Exception ex)
+            {
+                return CreateDatabaseErrorResult(
+                    $"Unexpected error: {ex.Message}",
+                    "UNEXPECTED_ERROR"
+                );
+            }
+        }
+
+        public override async Task<AccountUpdateResult> DeleteDatabaseAsync(string databaseId)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(databaseId))
+                {
+                    return CreateUpdateErrorResult("Database ID is required", "INVALID_DATABASE_ID");
+                }
+
+                // CloudPanel API endpoint for database deletion
+                var endpoint = $"/api/v1/databases/{databaseId}";
+
+                var response = await _httpClient.DeleteAsync(endpoint);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return CreateUpdateErrorResult(
+                        $"CloudPanel API request failed: {response.StatusCode} - {responseContent}",
+                        response.StatusCode.ToString()
+                    );
+                }
+
+                // Parse CloudPanel response
+                using var jsonDoc = JsonDocument.Parse(responseContent);
+                var root = jsonDoc.RootElement;
+
+                if (root.TryGetProperty("success", out var successElement) && successElement.GetBoolean())
+                {
+                    var message = root.TryGetProperty("message", out var msgElement)
+                        ? msgElement.GetString()
+                        : "Database deleted successfully";
+
+                    return new AccountUpdateResult
+                    {
+                        Success = true,
+                        Message = message ?? "Database deleted successfully",
+                        AccountId = databaseId,
+                        UpdatedField = "Status",
+                        OldValue = "Active",
+                        NewValue = "Deleted",
+                        UpdatedDate = DateTime.UtcNow
+                    };
+                }
+                else if (root.TryGetProperty("error", out var errorElement))
+                {
+                    var errorMessage = errorElement.GetString() ?? "Unknown error occurred";
+                    return CreateUpdateErrorResult(errorMessage, "CLOUDPANEL_ERROR");
+                }
+
+                return CreateUpdateErrorResult("Invalid response format from CloudPanel", "INVALID_RESPONSE");
+            }
+            catch (HttpRequestException ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Network error while connecting to CloudPanel: {ex.Message}",
+                    "NETWORK_ERROR"
+                );
+            }
+            catch (JsonException ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Failed to parse CloudPanel response: {ex.Message}",
+                    "JSON_PARSE_ERROR"
+                );
+            }
+            catch (Exception ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Unexpected error: {ex.Message}",
+                    "UNEXPECTED_ERROR"
+                );
+            }
+        }
+
+        public override async Task<AccountInfoResult> GetDatabaseInfoAsync(string databaseId)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(databaseId))
+                {
+                    return CreateInfoErrorResult("Database ID is required", "INVALID_DATABASE_ID");
+                }
+
+                // CloudPanel API endpoint for database details
+                var endpoint = $"/api/v1/databases/{databaseId}";
+
+                var response = await _httpClient.GetAsync(endpoint);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return CreateInfoErrorResult(
+                        $"CloudPanel API request failed: {response.StatusCode} - {responseContent}",
+                        response.StatusCode.ToString()
+                    );
+                }
+
+                // Parse CloudPanel response
+                using var jsonDoc = JsonDocument.Parse(responseContent);
+                var root = jsonDoc.RootElement;
+
+                if (root.TryGetProperty("success", out var successElement) && successElement.GetBoolean() &&
+                    root.TryGetProperty("data", out var data))
+                {
+                    return new AccountInfoResult
+                    {
+                        Success = true,
+                        Message = "Database information retrieved successfully",
+                        AccountId = databaseId,
+                        DatabaseName = data.TryGetProperty("databaseName", out var dbNameElement) ? dbNameElement.GetString() : null,
+                        DatabaseUser = data.TryGetProperty("databaseUser", out var userElement) ? userElement.GetString() : null,
+                        DatabaseType = data.TryGetProperty("databaseType", out var typeElement) ? typeElement.GetString() : "mysql",
+                        CreatedDate = data.TryGetProperty("createdAt", out var createdElement) 
+                            ? DateTime.Parse(createdElement.GetString() ?? DateTime.UtcNow.ToString())
+                            : null
+                    };
+                }
+                else if (root.TryGetProperty("error", out var errorElement))
+                {
+                    var errorMessage = errorElement.GetString() ?? "Unknown error occurred";
+                    return CreateInfoErrorResult(errorMessage, "CLOUDPANEL_ERROR");
+                }
+
+                return CreateInfoErrorResult("Invalid response format from CloudPanel", "INVALID_RESPONSE");
+            }
+            catch (HttpRequestException ex)
+            {
+                return CreateInfoErrorResult(
+                    $"Network error while connecting to CloudPanel: {ex.Message}",
+                    "NETWORK_ERROR"
+                );
+            }
+            catch (JsonException ex)
+            {
+                return CreateInfoErrorResult(
+                    $"Failed to parse CloudPanel response: {ex.Message}",
+                    "JSON_PARSE_ERROR"
+                );
+            }
+            catch (Exception ex)
+            {
+                return CreateInfoErrorResult(
+                    $"Unexpected error: {ex.Message}",
+                    "UNEXPECTED_ERROR"
+                );
+            }
+        }
+
+        public override async Task<List<AccountInfoResult>> ListDatabasesAsync(string domain)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(domain))
+                {
+                    return new List<AccountInfoResult>();
+                }
+
+                // CloudPanel API endpoint for listing databases
+                var endpoint = $"/api/v1/databases?domain={domain}";
+
+                var response = await _httpClient.GetAsync(endpoint);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return new List<AccountInfoResult>();
+                }
+
+                // Parse CloudPanel response
+                using var jsonDoc = JsonDocument.Parse(responseContent);
+                var root = jsonDoc.RootElement;
+
+                var results = new List<AccountInfoResult>();
+
+                if (root.TryGetProperty("success", out var successElement) && successElement.GetBoolean() &&
+                    root.TryGetProperty("data", out var dataArray) && dataArray.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var database in dataArray.EnumerateArray())
+                    {
+                        var databaseId = database.TryGetProperty("id", out var idElement) 
+                            ? idElement.GetInt32().ToString() 
+                            : null;
+
+                        if (!string.IsNullOrEmpty(databaseId))
+                        {
+                            results.Add(new AccountInfoResult
+                            {
+                                Success = true,
+                                AccountId = databaseId,
+                                DatabaseName = database.TryGetProperty("databaseName", out var dbNameElement) ? dbNameElement.GetString() : null,
+                                DatabaseUser = database.TryGetProperty("databaseUser", out var userElement) ? userElement.GetString() : null,
+                                DatabaseType = database.TryGetProperty("databaseType", out var typeElement) ? typeElement.GetString() : "mysql"
+                            });
+                        }
+                    }
+                }
+
+                return results;
+            }
+            catch (Exception)
+            {
+                return new List<AccountInfoResult>();
+            }
+        }
+
+        public override async Task<DatabaseResult> CreateDatabaseUserAsync(DatabaseUserRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(request.Username))
+                {
+                    return CreateDatabaseErrorResult("Username is required", "INVALID_USERNAME");
+                }
+
+                if (string.IsNullOrWhiteSpace(request.Password))
+                {
+                    return CreateDatabaseErrorResult("Password is required", "INVALID_PASSWORD");
+                }
+
+                if (string.IsNullOrWhiteSpace(request.DatabaseName))
+                {
+                    return CreateDatabaseErrorResult("Database name is required", "INVALID_DATABASE_NAME");
+                }
+
+                // CloudPanel API endpoint for database user creation
+                var endpoint = "/api/v1/database-users";
+
+                // Build request payload
+                var payload = new
+                {
+                    username = request.Username,
+                    password = request.Password,
+                    databaseName = request.DatabaseName,
+                    privileges = request.Privileges ?? new List<string> { "ALL PRIVILEGES" }
+                };
+
+                var response = await _httpClient.PostAsJsonAsync(endpoint, payload);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return CreateDatabaseErrorResult(
+                        $"CloudPanel API request failed: {response.StatusCode} - {responseContent}",
+                        response.StatusCode.ToString()
+                    );
+                }
+
+                // Parse CloudPanel response
+                using var jsonDoc = JsonDocument.Parse(responseContent);
+                var root = jsonDoc.RootElement;
+
+                if (root.TryGetProperty("success", out var successElement) && successElement.GetBoolean())
+                {
+                    var message = root.TryGetProperty("message", out var msgElement)
+                        ? msgElement.GetString()
+                        : "Database user created successfully";
+
+                    var userId = root.TryGetProperty("data", out var dataElement) && 
+                                dataElement.TryGetProperty("id", out var idElement)
+                        ? idElement.GetInt32().ToString()
+                        : request.Username;
+
+                    return new DatabaseResult
+                    {
+                        Success = true,
+                        Message = message ?? "Database user created successfully",
+                        DatabaseId = userId,
+                        Username = request.Username,
+                        CreatedDate = DateTime.UtcNow
+                    };
+                }
+                else if (root.TryGetProperty("error", out var errorElement))
+                {
+                    var errorMessage = errorElement.GetString() ?? "Unknown error occurred";
+                    return CreateDatabaseErrorResult(errorMessage, "CLOUDPANEL_ERROR");
+                }
+
+                return CreateDatabaseErrorResult("Invalid response format from CloudPanel", "INVALID_RESPONSE");
+            }
+            catch (HttpRequestException ex)
+            {
+                return CreateDatabaseErrorResult(
+                    $"Network error while connecting to CloudPanel: {ex.Message}",
+                    "NETWORK_ERROR"
+                );
+            }
+            catch (JsonException ex)
+            {
+                return CreateDatabaseErrorResult(
+                    $"Failed to parse CloudPanel response: {ex.Message}",
+                    "JSON_PARSE_ERROR"
+                );
+            }
+            catch (Exception ex)
+            {
+                return CreateDatabaseErrorResult(
+                    $"Unexpected error: {ex.Message}",
+                    "UNEXPECTED_ERROR"
+                );
+            }
+        }
+
+        public override async Task<AccountUpdateResult> DeleteDatabaseUserAsync(string userId)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(userId))
+                {
+                    return CreateUpdateErrorResult("User ID is required", "INVALID_USER_ID");
+                }
+
+                // CloudPanel API endpoint for database user deletion
+                var endpoint = $"/api/v1/database-users/{userId}";
+
+                var response = await _httpClient.DeleteAsync(endpoint);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return CreateUpdateErrorResult(
+                        $"CloudPanel API request failed: {response.StatusCode} - {responseContent}",
+                        response.StatusCode.ToString()
+                    );
+                }
+
+                // Parse CloudPanel response
+                using var jsonDoc = JsonDocument.Parse(responseContent);
+                var root = jsonDoc.RootElement;
+
+                if (root.TryGetProperty("success", out var successElement) && successElement.GetBoolean())
+                {
+                    var message = root.TryGetProperty("message", out var msgElement)
+                        ? msgElement.GetString()
+                        : "Database user deleted successfully";
+
+                    return new AccountUpdateResult
+                    {
+                        Success = true,
+                        Message = message ?? "Database user deleted successfully",
+                        AccountId = userId,
+                        UpdatedField = "Status",
+                        OldValue = "Active",
+                        NewValue = "Deleted",
+                        UpdatedDate = DateTime.UtcNow
+                    };
+                }
+                else if (root.TryGetProperty("error", out var errorElement))
+                {
+                    var errorMessage = errorElement.GetString() ?? "Unknown error occurred";
+                    return CreateUpdateErrorResult(errorMessage, "CLOUDPANEL_ERROR");
+                }
+
+                return CreateUpdateErrorResult("Invalid response format from CloudPanel", "INVALID_RESPONSE");
+            }
+            catch (HttpRequestException ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Network error while connecting to CloudPanel: {ex.Message}",
+                    "NETWORK_ERROR"
+                );
+            }
+            catch (JsonException ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Failed to parse CloudPanel response: {ex.Message}",
+                    "JSON_PARSE_ERROR"
+                );
+            }
+            catch (Exception ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Unexpected error: {ex.Message}",
+                    "UNEXPECTED_ERROR"
+                );
+            }
+        }
+
+        public override async Task<AccountUpdateResult> GrantDatabasePrivilegesAsync(string userId, string databaseId, List<string> privileges)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(userId))
+                {
+                    return CreateUpdateErrorResult("User ID is required", "INVALID_USER_ID");
+                }
+
+                if (string.IsNullOrWhiteSpace(databaseId))
+                {
+                    return CreateUpdateErrorResult("Database ID is required", "INVALID_DATABASE_ID");
+                }
+
+                // CloudPanel API endpoint for granting privileges
+                var endpoint = $"/api/v1/database-users/{userId}/privileges";
+
+                // Build request payload
+                var payload = new
+                {
+                    databaseId = databaseId,
+                    privileges = privileges ?? new List<string> { "ALL PRIVILEGES" }
+                };
+
+                var response = await _httpClient.PutAsJsonAsync(endpoint, payload);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return CreateUpdateErrorResult(
+                        $"CloudPanel API request failed: {response.StatusCode} - {responseContent}",
+                        response.StatusCode.ToString()
+                    );
+                }
+
+                // Parse CloudPanel response
+                using var jsonDoc = JsonDocument.Parse(responseContent);
+                var root = jsonDoc.RootElement;
+
+                if (root.TryGetProperty("success", out var successElement) && successElement.GetBoolean())
+                {
+                    var message = root.TryGetProperty("message", out var msgElement)
+                        ? msgElement.GetString()
+                        : "Privileges granted successfully";
+
+                    return new AccountUpdateResult
+                    {
+                        Success = true,
+                        Message = message ?? "Privileges granted successfully",
+                        AccountId = userId,
+                        UpdatedField = "Privileges",
+                        UpdatedDate = DateTime.UtcNow
+                    };
+                }
+                else if (root.TryGetProperty("error", out var errorElement))
+                {
+                    var errorMessage = errorElement.GetString() ?? "Unknown error occurred";
+                    return CreateUpdateErrorResult(errorMessage, "CLOUDPANEL_ERROR");
+                }
+
+                return CreateUpdateErrorResult("Invalid response format from CloudPanel", "INVALID_RESPONSE");
+            }
+            catch (HttpRequestException ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Network error while connecting to CloudPanel: {ex.Message}",
+                    "NETWORK_ERROR"
+                );
+            }
+            catch (JsonException ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Failed to parse CloudPanel response: {ex.Message}",
+                    "JSON_PARSE_ERROR"
+                );
+            }
+            catch (Exception ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Unexpected error: {ex.Message}",
+                    "UNEXPECTED_ERROR"
+                );
+            }
+        }
+
+        public override async Task<AccountUpdateResult> ChangeDatabasePasswordAsync(string userId, string newPassword)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(userId))
+                {
+                    return CreateUpdateErrorResult("User ID is required", "INVALID_USER_ID");
+                }
+
+                if (string.IsNullOrWhiteSpace(newPassword))
+                {
+                    return CreateUpdateErrorResult("New password is required", "INVALID_PASSWORD");
+                }
+
+                // CloudPanel API endpoint for changing database user password
+                var endpoint = $"/api/v1/database-users/{userId}/password";
+
+                // Build request payload
+                var payload = new
+                {
+                    password = newPassword
+                };
+
+                var response = await _httpClient.PutAsJsonAsync(endpoint, payload);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return CreateUpdateErrorResult(
+                        $"CloudPanel API request failed: {response.StatusCode} - {responseContent}",
+                        response.StatusCode.ToString()
+                    );
+                }
+
+                // Parse CloudPanel response
+                using var jsonDoc = JsonDocument.Parse(responseContent);
+                var root = jsonDoc.RootElement;
+
+                if (root.TryGetProperty("success", out var successElement) && successElement.GetBoolean())
+                {
+                    var message = root.TryGetProperty("message", out var msgElement)
+                        ? msgElement.GetString()
+                        : "Database password changed successfully";
+
+                    return new AccountUpdateResult
+                    {
+                        Success = true,
+                        Message = message ?? "Database password changed successfully",
+                        AccountId = userId,
+                        UpdatedField = "Password",
+                        UpdatedDate = DateTime.UtcNow
+                    };
+                }
+                else if (root.TryGetProperty("error", out var errorElement))
+                {
+                    var errorMessage = errorElement.GetString() ?? "Unknown error occurred";
+                    return CreateUpdateErrorResult(errorMessage, "CLOUDPANEL_ERROR");
+                }
+
+                return CreateUpdateErrorResult("Invalid response format from CloudPanel", "INVALID_RESPONSE");
+            }
+            catch (HttpRequestException ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Network error while connecting to CloudPanel: {ex.Message}",
+                    "NETWORK_ERROR"
+                );
+            }
+            catch (JsonException ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Failed to parse CloudPanel response: {ex.Message}",
+                    "JSON_PARSE_ERROR"
+                );
+            }
+            catch (Exception ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Unexpected error: {ex.Message}",
+                    "UNEXPECTED_ERROR"
+                );
+            }
+        }
     }
 }

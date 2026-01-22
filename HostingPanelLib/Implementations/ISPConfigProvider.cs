@@ -733,5 +733,306 @@ namespace HostingPanelLib.Implementations
                 return CreateUpdateErrorResult($"Unexpected error: {ex.Message}", "UNEXPECTED_ERROR");
             }
         }
+
+        public override async Task<DatabaseResult> CreateDatabaseAsync(DatabaseRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(request.DatabaseName))
+                {
+                    return CreateDatabaseErrorResult("Database name is required", "INVALID_DATABASE_NAME");
+                }
+
+                if (!await LoginAsync())
+                {
+                    return CreateDatabaseErrorResult("Failed to authenticate with ISPConfig", "AUTH_FAILED");
+                }
+
+                var parameters = new
+                {
+                    server_id = 1,
+                    database_name = request.DatabaseName,
+                    database_user = request.Username ?? request.DatabaseName,
+                    database_password = request.Password ?? Guid.NewGuid().ToString("N").Substring(0, 16),
+                    database_charset = request.Charset ?? "utf8mb4",
+                    remote_access = "n",
+                    remote_ips = "",
+                    database_quota = request.QuotaMB ?? -1
+                };
+
+                var result = await CallRemoteApiAsync<Dictionary<string, object>>("sites_database_add", parameters);
+
+                if (result != null && result.ContainsKey("database_id"))
+                {
+                    return new DatabaseResult
+                    {
+                        Success = true,
+                        Message = "Database created successfully",
+                        DatabaseId = result["database_id"].ToString(),
+                        DatabaseName = request.DatabaseName,
+                        DatabaseType = request.DatabaseType ?? "mysql",
+                        Server = request.Server ?? "localhost",
+                        Port = 3306,
+                        Username = request.Username ?? request.DatabaseName,
+                        CreatedDate = DateTime.UtcNow
+                    };
+                }
+
+                return CreateDatabaseErrorResult("Failed to create database", "ISPCONFIG_ERROR");
+            }
+            catch (Exception ex)
+            {
+                return CreateDatabaseErrorResult($"Unexpected error: {ex.Message}", "UNEXPECTED_ERROR");
+            }
+        }
+
+        public override async Task<AccountUpdateResult> DeleteDatabaseAsync(string databaseId)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(databaseId))
+                {
+                    return CreateUpdateErrorResult("Database ID is required", "INVALID_DATABASE_ID");
+                }
+
+                if (!await LoginAsync())
+                {
+                    return CreateUpdateErrorResult("Failed to authenticate with ISPConfig", "AUTH_FAILED");
+                }
+
+                var parameters = new { primary_id = int.Parse(databaseId) };
+                var result = await CallRemoteApiAsync<bool>("sites_database_delete", parameters);
+
+                if (result)
+                {
+                    return new AccountUpdateResult
+                    {
+                        Success = true,
+                        Message = "Database deleted successfully",
+                        AccountId = databaseId,
+                        UpdatedDate = DateTime.UtcNow
+                    };
+                }
+
+                return CreateUpdateErrorResult("Failed to delete database", "ISPCONFIG_ERROR");
+            }
+            catch (Exception ex)
+            {
+                return CreateUpdateErrorResult($"Unexpected error: {ex.Message}", "UNEXPECTED_ERROR");
+            }
+        }
+
+        public override async Task<AccountInfoResult> GetDatabaseInfoAsync(string databaseId)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(databaseId))
+                {
+                    return CreateInfoErrorResult("Database ID is required", "INVALID_DATABASE_ID");
+                }
+
+                if (!await LoginAsync())
+                {
+                    return CreateInfoErrorResult("Failed to authenticate with ISPConfig", "AUTH_FAILED");
+                }
+
+                var parameters = new { primary_id = int.Parse(databaseId) };
+                var result = await CallRemoteApiAsync<Dictionary<string, object>>("sites_database_get", parameters);
+
+                if (result != null)
+                {
+                    return new AccountInfoResult
+                    {
+                        Success = true,
+                        Message = "Database information retrieved successfully",
+                        AccountId = databaseId,
+                        DatabaseName = result.GetValueOrDefault("database_name", null)?.ToString(),
+                        DatabaseUser = result.GetValueOrDefault("database_user", null)?.ToString(),
+                        DatabaseType = "mysql"
+                    };
+                }
+
+                return CreateInfoErrorResult("Database not found", "NOT_FOUND");
+            }
+            catch (Exception ex)
+            {
+                return CreateInfoErrorResult($"Unexpected error: {ex.Message}", "UNEXPECTED_ERROR");
+            }
+        }
+
+        public override async Task<List<AccountInfoResult>> ListDatabasesAsync(string domain)
+        {
+            try
+            {
+                if (!await LoginAsync())
+                {
+                    return new List<AccountInfoResult>();
+                }
+
+                var result = await CallRemoteApiAsync<List<Dictionary<string, object>>>("sites_database_get", new { });
+
+                if (result != null)
+                {
+                    return result.Select(db => new AccountInfoResult
+                    {
+                        Success = true,
+                        AccountId = db.GetValueOrDefault("database_id", "")?.ToString() ?? "",
+                        DatabaseName = db.GetValueOrDefault("database_name", null)?.ToString(),
+                        DatabaseUser = db.GetValueOrDefault("database_user", null)?.ToString(),
+                        DatabaseType = "mysql"
+                    }).ToList();
+                }
+
+                return new List<AccountInfoResult>();
+            }
+            catch
+            {
+                return new List<AccountInfoResult>();
+            }
+        }
+
+        public override async Task<DatabaseResult> CreateDatabaseUserAsync(DatabaseUserRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(request.Username))
+                {
+                    return CreateDatabaseErrorResult("Username is required", "INVALID_USERNAME");
+                }
+
+                if (!await LoginAsync())
+                {
+                    return CreateDatabaseErrorResult("Failed to authenticate with ISPConfig", "AUTH_FAILED");
+                }
+
+                var parameters = new
+                {
+                    server_id = 1,
+                    database_user = request.Username,
+                    database_password = request.Password
+                };
+
+                var result = await CallRemoteApiAsync<Dictionary<string, object>>("sites_database_user_add", parameters);
+
+                if (result != null && result.ContainsKey("database_user_id"))
+                {
+                    return new DatabaseResult
+                    {
+                        Success = true,
+                        Message = "Database user created successfully",
+                        DatabaseId = result["database_user_id"].ToString(),
+                        Username = request.Username,
+                        CreatedDate = DateTime.UtcNow
+                    };
+                }
+
+                return CreateDatabaseErrorResult("Failed to create database user", "ISPCONFIG_ERROR");
+            }
+            catch (Exception ex)
+            {
+                return CreateDatabaseErrorResult($"Unexpected error: {ex.Message}", "UNEXPECTED_ERROR");
+            }
+        }
+
+        public override async Task<AccountUpdateResult> DeleteDatabaseUserAsync(string userId)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(userId))
+                {
+                    return CreateUpdateErrorResult("User ID is required", "INVALID_USER_ID");
+                }
+
+                if (!await LoginAsync())
+                {
+                    return CreateUpdateErrorResult("Failed to authenticate with ISPConfig", "AUTH_FAILED");
+                }
+
+                var parameters = new { primary_id = int.Parse(userId) };
+                var result = await CallRemoteApiAsync<bool>("sites_database_user_delete", parameters);
+
+                if (result)
+                {
+                    return new AccountUpdateResult
+                    {
+                        Success = true,
+                        Message = "Database user deleted successfully",
+                        AccountId = userId,
+                        UpdatedDate = DateTime.UtcNow
+                    };
+                }
+
+                return CreateUpdateErrorResult("Failed to delete database user", "ISPCONFIG_ERROR");
+            }
+            catch (Exception ex)
+            {
+                return CreateUpdateErrorResult($"Unexpected error: {ex.Message}", "UNEXPECTED_ERROR");
+            }
+        }
+
+        public override async Task<AccountUpdateResult> GrantDatabasePrivilegesAsync(string userId, string databaseId, List<string> privileges)
+        {
+            try
+            {
+                if (!await LoginAsync())
+                {
+                    return CreateUpdateErrorResult("Failed to authenticate with ISPConfig", "AUTH_FAILED");
+                }
+
+                return new AccountUpdateResult
+                {
+                    Success = true,
+                    Message = "Privileges are granted automatically in ISPConfig when database user is created",
+                    AccountId = userId,
+                    UpdatedDate = DateTime.UtcNow
+                };
+            }
+            catch (Exception ex)
+            {
+                return CreateUpdateErrorResult($"Unexpected error: {ex.Message}", "UNEXPECTED_ERROR");
+            }
+        }
+
+        public override async Task<AccountUpdateResult> ChangeDatabasePasswordAsync(string userId, string newPassword)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(userId))
+                {
+                    return CreateUpdateErrorResult("User ID is required", "INVALID_USER_ID");
+                }
+
+                if (!await LoginAsync())
+                {
+                    return CreateUpdateErrorResult("Failed to authenticate with ISPConfig", "AUTH_FAILED");
+                }
+
+                var parameters = new
+                {
+                    primary_id = int.Parse(userId),
+                    database_password = newPassword
+                };
+
+                var result = await CallRemoteApiAsync<bool>("sites_database_user_update", parameters);
+
+                if (result)
+                {
+                    return new AccountUpdateResult
+                    {
+                        Success = true,
+                        Message = "Database password changed successfully",
+                        AccountId = userId,
+                        UpdatedField = "Password",
+                        UpdatedDate = DateTime.UtcNow
+                    };
+                }
+
+                return CreateUpdateErrorResult("Failed to change database password", "ISPCONFIG_ERROR");
+            }
+            catch (Exception ex)
+            {
+                return CreateUpdateErrorResult($"Unexpected error: {ex.Message}", "UNEXPECTED_ERROR");
+            }
+        }
     }
 }

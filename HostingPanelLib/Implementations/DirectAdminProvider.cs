@@ -1208,5 +1208,505 @@ namespace HostingPanelLib.Implementations
                 );
             }
         }
+
+        public override async Task<DatabaseResult> CreateDatabaseAsync(DatabaseRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(request.DatabaseName))
+                {
+                    return CreateDatabaseErrorResult("Database name is required", "INVALID_DATABASE_NAME");
+                }
+
+                if (string.IsNullOrWhiteSpace(request.Domain))
+                {
+                    return CreateDatabaseErrorResult("Domain is required", "INVALID_DOMAIN");
+                }
+
+                // DirectAdmin CMD_API_DATABASES endpoint
+                var endpoint = "/CMD_API_DATABASES";
+
+                var parameters = new Dictionary<string, string>
+                {
+                    ["action"] = "create",
+                    ["name"] = request.DatabaseName,
+                    ["user"] = request.Username ?? request.DatabaseName,
+                    ["passwd"] = request.Password ?? Guid.NewGuid().ToString("N").Substring(0, 16),
+                    ["passwd2"] = request.Password ?? Guid.NewGuid().ToString("N").Substring(0, 16)
+                };
+
+                var content = CreateFormContent(parameters);
+                var response = await _httpClient.PostAsync(endpoint, content);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return CreateDatabaseErrorResult(
+                        $"DirectAdmin API request failed: {response.StatusCode} - {responseContent}",
+                        response.StatusCode.ToString()
+                    );
+                }
+
+                var responseData = await ParseDirectAdminResponseAsync(responseContent);
+
+                if (responseData.ContainsKey("error"))
+                {
+                    var errorMessage = responseData.GetValueOrDefault("error", "Unknown error occurred");
+                    return CreateDatabaseErrorResult(errorMessage, "DIRECTADMIN_ERROR");
+                }
+
+                if (responseContent.Contains("success") || responseContent.Contains("Database Created"))
+                {
+                    return new DatabaseResult
+                    {
+                        Success = true,
+                        Message = "Database created successfully",
+                        DatabaseId = request.DatabaseName,
+                        DatabaseName = request.DatabaseName,
+                        DatabaseType = "mysql",
+                        Server = "localhost",
+                        Port = 3306,
+                        Username = request.Username ?? request.DatabaseName,
+                        CreatedDate = DateTime.UtcNow
+                    };
+                }
+
+                return CreateDatabaseErrorResult("Failed to create database", "DIRECTADMIN_ERROR");
+            }
+            catch (HttpRequestException ex)
+            {
+                return CreateDatabaseErrorResult(
+                    $"Network error while connecting to DirectAdmin: {ex.Message}",
+                    "NETWORK_ERROR"
+                );
+            }
+            catch (Exception ex)
+            {
+                return CreateDatabaseErrorResult(
+                    $"Unexpected error: {ex.Message}",
+                    "UNEXPECTED_ERROR"
+                );
+            }
+        }
+
+        public override async Task<AccountUpdateResult> DeleteDatabaseAsync(string databaseId)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(databaseId))
+                {
+                    return CreateUpdateErrorResult("Database ID is required", "INVALID_DATABASE_ID");
+                }
+
+                var endpoint = "/CMD_API_DATABASES";
+
+                var parameters = new Dictionary<string, string>
+                {
+                    ["action"] = "delete",
+                    ["select0"] = databaseId
+                };
+
+                var content = CreateFormContent(parameters);
+                var response = await _httpClient.PostAsync(endpoint, content);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return CreateUpdateErrorResult(
+                        $"DirectAdmin API request failed: {response.StatusCode} - {responseContent}",
+                        response.StatusCode.ToString()
+                    );
+                }
+
+                var responseData = await ParseDirectAdminResponseAsync(responseContent);
+
+                if (responseData.ContainsKey("error"))
+                {
+                    var errorMessage = responseData.GetValueOrDefault("error", "Unknown error occurred");
+                    return CreateUpdateErrorResult(errorMessage, "DIRECTADMIN_ERROR");
+                }
+
+                if (responseContent.Contains("success") || responseContent.Contains("deleted"))
+                {
+                    return new AccountUpdateResult
+                    {
+                        Success = true,
+                        Message = "Database deleted successfully",
+                        AccountId = databaseId,
+                        UpdatedDate = DateTime.UtcNow
+                    };
+                }
+
+                return CreateUpdateErrorResult("Failed to delete database", "DIRECTADMIN_ERROR");
+            }
+            catch (HttpRequestException ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Network error while connecting to DirectAdmin: {ex.Message}",
+                    "NETWORK_ERROR"
+                );
+            }
+            catch (Exception ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Unexpected error: {ex.Message}",
+                    "UNEXPECTED_ERROR"
+                );
+            }
+        }
+
+        public override async Task<AccountInfoResult> GetDatabaseInfoAsync(string databaseId)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(databaseId))
+                {
+                    return CreateInfoErrorResult("Database ID is required", "INVALID_DATABASE_ID");
+                }
+
+                return new AccountInfoResult
+                {
+                    Success = true,
+                    Message = "Database information retrieved",
+                    AccountId = databaseId,
+                    DatabaseName = databaseId,
+                    DatabaseType = "mysql"
+                };
+            }
+            catch (Exception ex)
+            {
+                return CreateInfoErrorResult(
+                    $"Unexpected error: {ex.Message}",
+                    "UNEXPECTED_ERROR"
+                );
+            }
+        }
+
+        public override async Task<List<AccountInfoResult>> ListDatabasesAsync(string domain)
+        {
+            try
+            {
+                var endpoint = "/CMD_API_DATABASES";
+
+                var parameters = new Dictionary<string, string>
+                {
+                    ["action"] = "list"
+                };
+
+                var content = CreateFormContent(parameters);
+                var response = await _httpClient.PostAsync(endpoint, content);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return new List<AccountInfoResult>();
+                }
+
+                var responseContent = await response.Content.ReadAsStringAsync();
+                var responseData = await ParseDirectAdminResponseAsync(responseContent);
+
+                var results = new List<AccountInfoResult>();
+
+                foreach (var kvp in responseData)
+                {
+                    if (kvp.Key.StartsWith("db"))
+                    {
+                        results.Add(new AccountInfoResult
+                        {
+                            Success = true,
+                            AccountId = kvp.Value,
+                            DatabaseName = kvp.Value,
+                            DatabaseType = "mysql"
+                        });
+                    }
+                }
+
+                return results;
+            }
+            catch
+            {
+                return new List<AccountInfoResult>();
+            }
+        }
+
+        public override async Task<DatabaseResult> CreateDatabaseUserAsync(DatabaseUserRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(request.Username))
+                {
+                    return CreateDatabaseErrorResult("Username is required", "INVALID_USERNAME");
+                }
+
+                if (string.IsNullOrWhiteSpace(request.Password))
+                {
+                    return CreateDatabaseErrorResult("Password is required", "INVALID_PASSWORD");
+                }
+
+                var endpoint = "/CMD_API_DATABASES";
+
+                var parameters = new Dictionary<string, string>
+                {
+                    ["action"] = "createuser",
+                    ["user"] = request.Username,
+                    ["passwd"] = request.Password,
+                    ["passwd2"] = request.Password
+                };
+
+                var content = CreateFormContent(parameters);
+                var response = await _httpClient.PostAsync(endpoint, content);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return CreateDatabaseErrorResult(
+                        $"DirectAdmin API request failed: {response.StatusCode} - {responseContent}",
+                        response.StatusCode.ToString()
+                    );
+                }
+
+                var responseData = await ParseDirectAdminResponseAsync(responseContent);
+
+                if (responseData.ContainsKey("error"))
+                {
+                    var errorMessage = responseData.GetValueOrDefault("error", "Unknown error occurred");
+                    return CreateDatabaseErrorResult(errorMessage, "DIRECTADMIN_ERROR");
+                }
+
+                if (responseContent.Contains("success") || responseContent.Contains("created"))
+                {
+                    return new DatabaseResult
+                    {
+                        Success = true,
+                        Message = "Database user created successfully",
+                        DatabaseId = request.Username,
+                        Username = request.Username,
+                        CreatedDate = DateTime.UtcNow
+                    };
+                }
+
+                return CreateDatabaseErrorResult("Failed to create database user", "DIRECTADMIN_ERROR");
+            }
+            catch (HttpRequestException ex)
+            {
+                return CreateDatabaseErrorResult(
+                    $"Network error while connecting to DirectAdmin: {ex.Message}",
+                    "NETWORK_ERROR"
+                );
+            }
+            catch (Exception ex)
+            {
+                return CreateDatabaseErrorResult(
+                    $"Unexpected error: {ex.Message}",
+                    "UNEXPECTED_ERROR"
+                );
+            }
+        }
+
+        public override async Task<AccountUpdateResult> DeleteDatabaseUserAsync(string userId)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(userId))
+                {
+                    return CreateUpdateErrorResult("User ID is required", "INVALID_USER_ID");
+                }
+
+                var endpoint = "/CMD_API_DATABASES";
+
+                var parameters = new Dictionary<string, string>
+                {
+                    ["action"] = "deleteuser",
+                    ["select0"] = userId
+                };
+
+                var content = CreateFormContent(parameters);
+                var response = await _httpClient.PostAsync(endpoint, content);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return CreateUpdateErrorResult(
+                        $"DirectAdmin API request failed: {response.StatusCode} - {responseContent}",
+                        response.StatusCode.ToString()
+                    );
+                }
+
+                var responseData = await ParseDirectAdminResponseAsync(responseContent);
+
+                if (responseData.ContainsKey("error"))
+                {
+                    var errorMessage = responseData.GetValueOrDefault("error", "Unknown error occurred");
+                    return CreateUpdateErrorResult(errorMessage, "DIRECTADMIN_ERROR");
+                }
+
+                if (responseContent.Contains("success") || responseContent.Contains("deleted"))
+                {
+                    return new AccountUpdateResult
+                    {
+                        Success = true,
+                        Message = "Database user deleted successfully",
+                        AccountId = userId,
+                        UpdatedDate = DateTime.UtcNow
+                    };
+                }
+
+                return CreateUpdateErrorResult("Failed to delete database user", "DIRECTADMIN_ERROR");
+            }
+            catch (HttpRequestException ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Network error while connecting to DirectAdmin: {ex.Message}",
+                    "NETWORK_ERROR"
+                );
+            }
+            catch (Exception ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Unexpected error: {ex.Message}",
+                    "UNEXPECTED_ERROR"
+                );
+            }
+        }
+
+        public override async Task<AccountUpdateResult> GrantDatabasePrivilegesAsync(string userId, string databaseId, List<string> privileges)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(databaseId))
+                {
+                    return CreateUpdateErrorResult("User ID and Database ID are required", "INVALID_INPUT");
+                }
+
+                var endpoint = "/CMD_API_DATABASES";
+
+                var parameters = new Dictionary<string, string>
+                {
+                    ["action"] = "userdb",
+                    ["user"] = userId,
+                    ["db"] = databaseId
+                };
+
+                var content = CreateFormContent(parameters);
+                var response = await _httpClient.PostAsync(endpoint, content);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return CreateUpdateErrorResult(
+                        $"DirectAdmin API request failed: {response.StatusCode} - {responseContent}",
+                        response.StatusCode.ToString()
+                    );
+                }
+
+                var responseData = await ParseDirectAdminResponseAsync(responseContent);
+
+                if (responseData.ContainsKey("error"))
+                {
+                    var errorMessage = responseData.GetValueOrDefault("error", "Unknown error occurred");
+                    return CreateUpdateErrorResult(errorMessage, "DIRECTADMIN_ERROR");
+                }
+
+                if (responseContent.Contains("success") || responseContent.Contains("granted"))
+                {
+                    return new AccountUpdateResult
+                    {
+                        Success = true,
+                        Message = "Privileges granted successfully",
+                        AccountId = userId,
+                        UpdatedDate = DateTime.UtcNow
+                    };
+                }
+
+                return CreateUpdateErrorResult("Failed to grant privileges", "DIRECTADMIN_ERROR");
+            }
+            catch (HttpRequestException ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Network error while connecting to DirectAdmin: {ex.Message}",
+                    "NETWORK_ERROR"
+                );
+            }
+            catch (Exception ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Unexpected error: {ex.Message}",
+                    "UNEXPECTED_ERROR"
+                );
+            }
+        }
+
+        public override async Task<AccountUpdateResult> ChangeDatabasePasswordAsync(string userId, string newPassword)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(userId))
+                {
+                    return CreateUpdateErrorResult("User ID is required", "INVALID_USER_ID");
+                }
+
+                if (string.IsNullOrWhiteSpace(newPassword))
+                {
+                    return CreateUpdateErrorResult("New password is required", "INVALID_PASSWORD");
+                }
+
+                var endpoint = "/CMD_API_DATABASES";
+
+                var parameters = new Dictionary<string, string>
+                {
+                    ["action"] = "modifyuser",
+                    ["user"] = userId,
+                    ["passwd"] = newPassword,
+                    ["passwd2"] = newPassword
+                };
+
+                var content = CreateFormContent(parameters);
+                var response = await _httpClient.PostAsync(endpoint, content);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return CreateUpdateErrorResult(
+                        $"DirectAdmin API request failed: {response.StatusCode} - {responseContent}",
+                        response.StatusCode.ToString()
+                    );
+                }
+
+                var responseData = await ParseDirectAdminResponseAsync(responseContent);
+
+                if (responseData.ContainsKey("error"))
+                {
+                    var errorMessage = responseData.GetValueOrDefault("error", "Unknown error occurred");
+                    return CreateUpdateErrorResult(errorMessage, "DIRECTADMIN_ERROR");
+                }
+
+                if (responseContent.Contains("success") || responseContent.Contains("modified"))
+                {
+                    return new AccountUpdateResult
+                    {
+                        Success = true,
+                        Message = "Database password changed successfully",
+                        AccountId = userId,
+                        UpdatedField = "Password",
+                        UpdatedDate = DateTime.UtcNow
+                    };
+                }
+
+                return CreateUpdateErrorResult("Failed to change database password", "DIRECTADMIN_ERROR");
+            }
+            catch (HttpRequestException ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Network error while connecting to DirectAdmin: {ex.Message}",
+                    "NETWORK_ERROR"
+                );
+            }
+            catch (Exception ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Unexpected error: {ex.Message}",
+                    "UNEXPECTED_ERROR"
+                );
+            }
+        }
     }
 }

@@ -78,5 +78,45 @@ namespace HostingPanelLib.Interfaces
         /// Sets bandwidth limit for an account
         /// </summary>
         Task<AccountUpdateResult> SetBandwidthLimitAsync(string accountId, int bandwidthMB);
+
+        /// <summary>
+        /// Creates a new database
+        /// </summary>
+        Task<DatabaseResult> CreateDatabaseAsync(DatabaseRequest request);
+
+        /// <summary>
+        /// Deletes a database
+        /// </summary>
+        Task<AccountUpdateResult> DeleteDatabaseAsync(string databaseId);
+
+        /// <summary>
+        /// Gets information about a database
+        /// </summary>
+        Task<AccountInfoResult> GetDatabaseInfoAsync(string databaseId);
+
+        /// <summary>
+        /// Lists all databases for a domain
+        /// </summary>
+        Task<List<AccountInfoResult>> ListDatabasesAsync(string domain);
+
+        /// <summary>
+        /// Creates a new database user
+        /// </summary>
+        Task<DatabaseResult> CreateDatabaseUserAsync(DatabaseUserRequest request);
+
+        /// <summary>
+        /// Deletes a database user
+        /// </summary>
+        Task<AccountUpdateResult> DeleteDatabaseUserAsync(string userId);
+
+        /// <summary>
+        /// Grants privileges to a database user on a specific database
+        /// </summary>
+        Task<AccountUpdateResult> GrantDatabasePrivilegesAsync(string userId, string databaseId, List<string> privileges);
+
+        /// <summary>
+        /// Changes password for a database user
+        /// </summary>
+        Task<AccountUpdateResult> ChangeDatabasePasswordAsync(string userId, string newPassword);
     }
 }

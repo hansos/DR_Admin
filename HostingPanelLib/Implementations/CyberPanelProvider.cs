@@ -1422,5 +1422,658 @@ namespace HostingPanelLib.Implementations
                 );
             }
         }
+
+        public override async Task<DatabaseResult> CreateDatabaseAsync(DatabaseRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(request.DatabaseName))
+                {
+                    return CreateDatabaseErrorResult("Database name is required", "INVALID_DATABASE_NAME");
+                }
+
+                if (string.IsNullOrWhiteSpace(request.Domain))
+                {
+                    return CreateDatabaseErrorResult("Domain is required", "INVALID_DOMAIN");
+                }
+
+                // CyberPanel createDatabase API endpoint
+                var endpoint = "/api/createDatabase";
+
+                // Build request payload
+                var payload = new
+                {
+                    adminUser = _adminUsername,
+                    adminPass = _adminPassword,
+                    databaseWebsite = request.Domain,
+                    dbName = request.DatabaseName,
+                    dbUsername = request.Username ?? request.DatabaseName,
+                    dbPassword = request.Password ?? Guid.NewGuid().ToString("N").Substring(0, 16)
+                };
+
+                var response = await _httpClient.PostAsJsonAsync(endpoint, payload);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return CreateDatabaseErrorResult(
+                        $"CyberPanel API request failed: {response.StatusCode} - {responseContent}",
+                        response.StatusCode.ToString()
+                    );
+                }
+
+                // Parse CyberPanel response
+                using var jsonDoc = JsonDocument.Parse(responseContent);
+                var root = jsonDoc.RootElement;
+
+                if (root.TryGetProperty("status", out var statusElement))
+                {
+                    var status = statusElement.GetInt32();
+
+                    if (status == 1)
+                    {
+                        var message = root.TryGetProperty("message", out var msgElement)
+                            ? msgElement.GetString()
+                            : "Database created successfully";
+
+                        return new DatabaseResult
+                        {
+                            Success = true,
+                            Message = message ?? "Database created successfully",
+                            DatabaseId = request.DatabaseName,
+                            DatabaseName = request.DatabaseName,
+                            DatabaseType = "mysql",
+                            Server = "localhost",
+                            Port = 3306,
+                            Username = request.Username ?? request.DatabaseName,
+                            CreatedDate = DateTime.UtcNow
+                        };
+                    }
+                    else
+                    {
+                        var errorMessage = root.TryGetProperty("error_message", out var errMsgElement)
+                            ? errMsgElement.GetString()
+                            : root.TryGetProperty("message", out var msgElement2)
+                                ? msgElement2.GetString()
+                                : "Unknown error occurred";
+
+                        return CreateDatabaseErrorResult(
+                            errorMessage ?? "Failed to create database",
+                            "CYBERPANEL_ERROR"
+                        );
+                    }
+                }
+
+                return CreateDatabaseErrorResult("Invalid response format from CyberPanel", "INVALID_RESPONSE");
+            }
+            catch (HttpRequestException ex)
+            {
+                return CreateDatabaseErrorResult(
+                    $"Network error while connecting to CyberPanel: {ex.Message}",
+                    "NETWORK_ERROR"
+                );
+            }
+            catch (JsonException ex)
+            {
+                return CreateDatabaseErrorResult(
+                    $"Failed to parse CyberPanel response: {ex.Message}",
+                    "JSON_PARSE_ERROR"
+                );
+            }
+            catch (Exception ex)
+            {
+                return CreateDatabaseErrorResult(
+                    $"Unexpected error: {ex.Message}",
+                    "UNEXPECTED_ERROR"
+                );
+            }
+        }
+
+        public override async Task<AccountUpdateResult> DeleteDatabaseAsync(string databaseId)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(databaseId))
+                {
+                    return CreateUpdateErrorResult("Database ID is required", "INVALID_DATABASE_ID");
+                }
+
+                // CyberPanel deleteDatabase API endpoint
+                var endpoint = "/api/deleteDatabase";
+
+                // Database ID format: domain:dbname
+                var parts = databaseId.Split(':');
+                var domain = parts.Length > 1 ? parts[0] : databaseId;
+                var dbName = parts.Length > 1 ? parts[1] : databaseId;
+
+                // Build request payload
+                var payload = new
+                {
+                    adminUser = _adminUsername,
+                    adminPass = _adminPassword,
+                    databaseWebsite = domain,
+                    dbName = dbName
+                };
+
+                var response = await _httpClient.PostAsJsonAsync(endpoint, payload);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return CreateUpdateErrorResult(
+                        $"CyberPanel API request failed: {response.StatusCode} - {responseContent}",
+                        response.StatusCode.ToString()
+                    );
+                }
+
+                // Parse CyberPanel response
+                using var jsonDoc = JsonDocument.Parse(responseContent);
+                var root = jsonDoc.RootElement;
+
+                if (root.TryGetProperty("status", out var statusElement))
+                {
+                    var status = statusElement.GetInt32();
+
+                    if (status == 1)
+                    {
+                        var message = root.TryGetProperty("message", out var msgElement)
+                            ? msgElement.GetString()
+                            : "Database deleted successfully";
+
+                        return new AccountUpdateResult
+                        {
+                            Success = true,
+                            Message = message ?? "Database deleted successfully",
+                            AccountId = databaseId,
+                            UpdatedField = "Status",
+                            OldValue = "Active",
+                            NewValue = "Deleted",
+                            UpdatedDate = DateTime.UtcNow
+                        };
+                    }
+                    else
+                    {
+                        var errorMessage = root.TryGetProperty("error_message", out var errMsgElement)
+                            ? errMsgElement.GetString()
+                            : root.TryGetProperty("message", out var msgElement2)
+                                ? msgElement2.GetString()
+                                : "Unknown error occurred";
+
+                        return CreateUpdateErrorResult(
+                            errorMessage ?? "Failed to delete database",
+                            "CYBERPANEL_ERROR"
+                        );
+                    }
+                }
+
+                return CreateUpdateErrorResult("Invalid response format from CyberPanel", "INVALID_RESPONSE");
+            }
+            catch (HttpRequestException ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Network error while connecting to CyberPanel: {ex.Message}",
+                    "NETWORK_ERROR"
+                );
+            }
+            catch (JsonException ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Failed to parse CyberPanel response: {ex.Message}",
+                    "JSON_PARSE_ERROR"
+                );
+            }
+            catch (Exception ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Unexpected error: {ex.Message}",
+                    "UNEXPECTED_ERROR"
+                );
+            }
+        }
+
+        public override async Task<AccountInfoResult> GetDatabaseInfoAsync(string databaseId)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(databaseId))
+                {
+                    return CreateInfoErrorResult("Database ID is required", "INVALID_DATABASE_ID");
+                }
+
+                // CyberPanel doesn't have a specific getDatabaseInfo endpoint
+                // We'll use listDatabases and filter for the specific database
+                var parts = databaseId.Split(':');
+                var domain = parts.Length > 1 ? parts[0] : databaseId;
+
+                var databases = await ListDatabasesAsync(domain);
+                var dbInfo = databases.FirstOrDefault(d => d.DatabaseName?.Equals(parts.Length > 1 ? parts[1] : databaseId, StringComparison.OrdinalIgnoreCase) == true);
+
+                if (dbInfo != null && dbInfo.Success)
+                {
+                    return dbInfo;
+                }
+
+                return CreateInfoErrorResult("Database not found", "NOT_FOUND");
+            }
+            catch (Exception ex)
+            {
+                return CreateInfoErrorResult(
+                    $"Unexpected error: {ex.Message}",
+                    "UNEXPECTED_ERROR"
+                );
+            }
+        }
+
+        public override async Task<List<AccountInfoResult>> ListDatabasesAsync(string domain)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(domain))
+                {
+                    return new List<AccountInfoResult>();
+                }
+
+                // CyberPanel listDatabases API endpoint
+                var endpoint = "/api/listDatabases";
+
+                // Build request payload
+                var payload = new
+                {
+                    adminUser = _adminUsername,
+                    adminPass = _adminPassword,
+                    databaseWebsite = domain
+                };
+
+                var response = await _httpClient.PostAsJsonAsync(endpoint, payload);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return new List<AccountInfoResult>();
+                }
+
+                // Parse CyberPanel response
+                using var jsonDoc = JsonDocument.Parse(responseContent);
+                var root = jsonDoc.RootElement;
+
+                var results = new List<AccountInfoResult>();
+
+                if (root.TryGetProperty("status", out var statusElement) && statusElement.GetInt32() == 1)
+                {
+                    // CyberPanel returns array of databases in "data" property
+                    if (root.TryGetProperty("data", out var dataElement) && dataElement.ValueKind == JsonValueKind.Array)
+                    {
+                        foreach (var database in dataElement.EnumerateArray())
+                        {
+                            var dbName = database.TryGetProperty("dbName", out var dbNameElement) ? dbNameElement.GetString() : null;
+
+                            if (!string.IsNullOrEmpty(dbName))
+                            {
+                                results.Add(new AccountInfoResult
+                                {
+                                    Success = true,
+                                    AccountId = $"{domain}:{dbName}",
+                                    DatabaseName = dbName,
+                                    DatabaseUser = database.TryGetProperty("dbUser", out var userElement) ? userElement.GetString() : null,
+                                    DatabaseType = "mysql"
+                                });
+                            }
+                        }
+                    }
+                }
+
+                return results;
+            }
+            catch (Exception)
+            {
+                return new List<AccountInfoResult>();
+            }
+        }
+
+        public override async Task<DatabaseResult> CreateDatabaseUserAsync(DatabaseUserRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(request.Username))
+                {
+                    return CreateDatabaseErrorResult("Username is required", "INVALID_USERNAME");
+                }
+
+                if (string.IsNullOrWhiteSpace(request.Password))
+                {
+                    return CreateDatabaseErrorResult("Password is required", "INVALID_PASSWORD");
+                }
+
+                if (string.IsNullOrWhiteSpace(request.DatabaseName))
+                {
+                    return CreateDatabaseErrorResult("Database name is required", "INVALID_DATABASE_NAME");
+                }
+
+                // CyberPanel creates database users together with databases
+                // This endpoint is for adding additional users to existing database
+                var endpoint = "/api/createDatabaseUser";
+
+                // Build request payload
+                var payload = new
+                {
+                    adminUser = _adminUsername,
+                    adminPass = _adminPassword,
+                    databaseWebsite = request.Domain,
+                    dbName = request.DatabaseName,
+                    dbUsername = request.Username,
+                    dbPassword = request.Password
+                };
+
+                var response = await _httpClient.PostAsJsonAsync(endpoint, payload);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return CreateDatabaseErrorResult(
+                        $"CyberPanel API request failed: {response.StatusCode} - {responseContent}",
+                        response.StatusCode.ToString()
+                    );
+                }
+
+                // Parse CyberPanel response
+                using var jsonDoc = JsonDocument.Parse(responseContent);
+                var root = jsonDoc.RootElement;
+
+                if (root.TryGetProperty("status", out var statusElement))
+                {
+                    var status = statusElement.GetInt32();
+
+                    if (status == 1)
+                    {
+                        var message = root.TryGetProperty("message", out var msgElement)
+                            ? msgElement.GetString()
+                            : "Database user created successfully";
+
+                        return new DatabaseResult
+                        {
+                            Success = true,
+                            Message = message ?? "Database user created successfully",
+                            DatabaseId = request.Username,
+                            Username = request.Username,
+                            CreatedDate = DateTime.UtcNow
+                        };
+                    }
+                    else
+                    {
+                        var errorMessage = root.TryGetProperty("error_message", out var errMsgElement)
+                            ? errMsgElement.GetString()
+                            : root.TryGetProperty("message", out var msgElement2)
+                                ? msgElement2.GetString()
+                                : "Unknown error occurred";
+
+                        return CreateDatabaseErrorResult(
+                            errorMessage ?? "Failed to create database user",
+                            "CYBERPANEL_ERROR"
+                        );
+                    }
+                }
+
+                return CreateDatabaseErrorResult("Invalid response format from CyberPanel", "INVALID_RESPONSE");
+            }
+            catch (HttpRequestException ex)
+            {
+                return CreateDatabaseErrorResult(
+                    $"Network error while connecting to CyberPanel: {ex.Message}",
+                    "NETWORK_ERROR"
+                );
+            }
+            catch (JsonException ex)
+            {
+                return CreateDatabaseErrorResult(
+                    $"Failed to parse CyberPanel response: {ex.Message}",
+                    "JSON_PARSE_ERROR"
+                );
+            }
+            catch (Exception ex)
+            {
+                return CreateDatabaseErrorResult(
+                    $"Unexpected error: {ex.Message}",
+                    "UNEXPECTED_ERROR"
+                );
+            }
+        }
+
+        public override async Task<AccountUpdateResult> DeleteDatabaseUserAsync(string userId)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(userId))
+                {
+                    return CreateUpdateErrorResult("User ID is required", "INVALID_USER_ID");
+                }
+
+                // CyberPanel deleteDatabaseUser API endpoint
+                var endpoint = "/api/deleteDatabaseUser";
+
+                // User ID format: domain:dbname:username
+                var parts = userId.Split(':');
+                var domain = parts.Length > 2 ? parts[0] : userId;
+                var dbName = parts.Length > 2 ? parts[1] : userId;
+                var username = parts.Length > 2 ? parts[2] : userId;
+
+                // Build request payload
+                var payload = new
+                {
+                    adminUser = _adminUsername,
+                    adminPass = _adminPassword,
+                    databaseWebsite = domain,
+                    dbName = dbName,
+                    dbUsername = username
+                };
+
+                var response = await _httpClient.PostAsJsonAsync(endpoint, payload);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return CreateUpdateErrorResult(
+                        $"CyberPanel API request failed: {response.StatusCode} - {responseContent}",
+                        response.StatusCode.ToString()
+                    );
+                }
+
+                // Parse CyberPanel response
+                using var jsonDoc = JsonDocument.Parse(responseContent);
+                var root = jsonDoc.RootElement;
+
+                if (root.TryGetProperty("status", out var statusElement))
+                {
+                    var status = statusElement.GetInt32();
+
+                    if (status == 1)
+                    {
+                        var message = root.TryGetProperty("message", out var msgElement)
+                            ? msgElement.GetString()
+                            : "Database user deleted successfully";
+
+                        return new AccountUpdateResult
+                        {
+                            Success = true,
+                            Message = message ?? "Database user deleted successfully",
+                            AccountId = userId,
+                            UpdatedField = "Status",
+                            OldValue = "Active",
+                            NewValue = "Deleted",
+                            UpdatedDate = DateTime.UtcNow
+                        };
+                    }
+                    else
+                    {
+                        var errorMessage = root.TryGetProperty("error_message", out var errMsgElement)
+                            ? errMsgElement.GetString()
+                            : root.TryGetProperty("message", out var msgElement2)
+                                ? msgElement2.GetString()
+                                : "Unknown error occurred";
+
+                        return CreateUpdateErrorResult(
+                            errorMessage ?? "Failed to delete database user",
+                            "CYBERPANEL_ERROR"
+                        );
+                    }
+                }
+
+                return CreateUpdateErrorResult("Invalid response format from CyberPanel", "INVALID_RESPONSE");
+            }
+            catch (HttpRequestException ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Network error while connecting to CyberPanel: {ex.Message}",
+                    "NETWORK_ERROR"
+                );
+            }
+            catch (JsonException ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Failed to parse CyberPanel response: {ex.Message}",
+                    "JSON_PARSE_ERROR"
+                );
+            }
+            catch (Exception ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Unexpected error: {ex.Message}",
+                    "UNEXPECTED_ERROR"
+                );
+            }
+        }
+
+        public override async Task<AccountUpdateResult> GrantDatabasePrivilegesAsync(string userId, string databaseId, List<string> privileges)
+        {
+            try
+            {
+                // CyberPanel automatically grants all privileges when creating database users
+                // This is a placeholder implementation
+                await Task.CompletedTask;
+
+                return new AccountUpdateResult
+                {
+                    Success = true,
+                    Message = "Privileges are granted automatically in CyberPanel when database user is created",
+                    AccountId = userId,
+                    UpdatedField = "Privileges",
+                    UpdatedDate = DateTime.UtcNow
+                };
+            }
+            catch (Exception ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Unexpected error: {ex.Message}",
+                    "UNEXPECTED_ERROR"
+                );
+            }
+        }
+
+        public override async Task<AccountUpdateResult> ChangeDatabasePasswordAsync(string userId, string newPassword)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(userId))
+                {
+                    return CreateUpdateErrorResult("User ID is required", "INVALID_USER_ID");
+                }
+
+                if (string.IsNullOrWhiteSpace(newPassword))
+                {
+                    return CreateUpdateErrorResult("New password is required", "INVALID_PASSWORD");
+                }
+
+                // CyberPanel changeDatabasePassword API endpoint
+                var endpoint = "/api/changeDatabasePassword";
+
+                // User ID format: domain:dbname:username
+                var parts = userId.Split(':');
+                var domain = parts.Length > 2 ? parts[0] : userId;
+                var dbName = parts.Length > 2 ? parts[1] : userId;
+                var username = parts.Length > 2 ? parts[2] : userId;
+
+                // Build request payload
+                var payload = new
+                {
+                    adminUser = _adminUsername,
+                    adminPass = _adminPassword,
+                    databaseWebsite = domain,
+                    dbName = dbName,
+                    dbUsername = username,
+                    dbPassword = newPassword
+                };
+
+                var response = await _httpClient.PostAsJsonAsync(endpoint, payload);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return CreateUpdateErrorResult(
+                        $"CyberPanel API request failed: {response.StatusCode} - {responseContent}",
+                        response.StatusCode.ToString()
+                    );
+                }
+
+                // Parse CyberPanel response
+                using var jsonDoc = JsonDocument.Parse(responseContent);
+                var root = jsonDoc.RootElement;
+
+                if (root.TryGetProperty("status", out var statusElement))
+                {
+                    var status = statusElement.GetInt32();
+
+                    if (status == 1)
+                    {
+                        var message = root.TryGetProperty("message", out var msgElement)
+                            ? msgElement.GetString()
+                            : "Database password changed successfully";
+
+                        return new AccountUpdateResult
+                        {
+                            Success = true,
+                            Message = message ?? "Database password changed successfully",
+                            AccountId = userId,
+                            UpdatedField = "Password",
+                            UpdatedDate = DateTime.UtcNow
+                        };
+                    }
+                    else
+                    {
+                        var errorMessage = root.TryGetProperty("error_message", out var errMsgElement)
+                            ? errMsgElement.GetString()
+                            : root.TryGetProperty("message", out var msgElement2)
+                                ? msgElement2.GetString()
+                                : "Unknown error occurred";
+
+                        return CreateUpdateErrorResult(
+                            errorMessage ?? "Failed to change database password",
+                            "CYBERPANEL_ERROR"
+                        );
+                    }
+                }
+
+                return CreateUpdateErrorResult("Invalid response format from CyberPanel", "INVALID_RESPONSE");
+            }
+            catch (HttpRequestException ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Network error while connecting to CyberPanel: {ex.Message}",
+                    "NETWORK_ERROR"
+                );
+            }
+            catch (JsonException ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Failed to parse CyberPanel response: {ex.Message}",
+                    "JSON_PARSE_ERROR"
+                );
+            }
+            catch (Exception ex)
+            {
+                return CreateUpdateErrorResult(
+                    $"Unexpected error: {ex.Message}",
+                    "UNEXPECTED_ERROR"
+                );
+            }
+        }
     }
 }

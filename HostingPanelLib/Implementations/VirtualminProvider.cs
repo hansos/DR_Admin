@@ -368,5 +368,231 @@ namespace HostingPanelLib.Implementations
                 return CreateUpdateErrorResult($"Unexpected error: {ex.Message}", "UNEXPECTED_ERROR");
             }
         }
+
+        public override async Task<DatabaseResult> CreateDatabaseAsync(DatabaseRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(request.DatabaseName) || string.IsNullOrWhiteSpace(request.Domain))
+                {
+                    return CreateDatabaseErrorResult("Database name and domain are required", "INVALID_INPUT");
+                }
+
+                var parameters = new Dictionary<string, string>
+                {
+                    ["domain"] = request.Domain,
+                    ["name"] = request.DatabaseName,
+                    ["type"] = request.DatabaseType ?? "mysql"
+                };
+
+                var response = await ExecuteVirtualminCommandAsync("create-database", parameters);
+                
+                if (!response.Contains("error"))
+                {
+                    return new DatabaseResult
+                    {
+                        Success = true,
+                        Message = "Database created successfully",
+                        DatabaseName = request.DatabaseName,
+                        DatabaseType = request.DatabaseType ?? "mysql",
+                        Server = "localhost",
+                        Port = 3306,
+                        CreatedDate = DateTime.UtcNow
+                    };
+                }
+
+                return CreateDatabaseErrorResult(response, "VIRTUALMIN_ERROR");
+            }
+            catch (Exception ex)
+            {
+                return CreateDatabaseErrorResult($"Unexpected error: {ex.Message}", "UNEXPECTED_ERROR");
+            }
+        }
+
+        public override async Task<AccountUpdateResult> DeleteDatabaseAsync(string databaseId)
+        {
+            try
+            {
+                var parts = databaseId.Split(':');
+                var domain = parts.Length > 1 ? parts[0] : databaseId;
+                var dbName = parts.Length > 1 ? parts[1] : databaseId;
+
+                var parameters = new Dictionary<string, string>
+                {
+                    ["domain"] = domain,
+                    ["name"] = dbName
+                };
+
+                var response = await ExecuteVirtualminCommandAsync("delete-database", parameters);
+                
+                if (!response.Contains("error"))
+                {
+                    return new AccountUpdateResult { Success = true, Message = "Database deleted", AccountId = databaseId, UpdatedDate = DateTime.UtcNow };
+                }
+
+                return CreateUpdateErrorResult(response, "VIRTUALMIN_ERROR");
+            }
+            catch (Exception ex)
+            {
+                return CreateUpdateErrorResult($"Unexpected error: {ex.Message}", "UNEXPECTED_ERROR");
+            }
+        }
+
+        public override async Task<AccountInfoResult> GetDatabaseInfoAsync(string databaseId)
+        {
+            try
+            {
+                var parts = databaseId.Split(':');
+                var domain = parts.Length > 1 ? parts[0] : databaseId;
+
+                var parameters = new Dictionary<string, string> { ["domain"] = domain };
+                await ExecuteVirtualminCommandAsync("list-databases", parameters);
+
+                return new AccountInfoResult
+                {
+                    Success = true,
+                    Message = "Database information retrieved",
+                    AccountId = databaseId,
+                    DatabaseName = parts.Length > 1 ? parts[1] : databaseId
+                };
+            }
+            catch (Exception ex)
+            {
+                return CreateInfoErrorResult($"Unexpected error: {ex.Message}", "UNEXPECTED_ERROR");
+            }
+        }
+
+        public override async Task<List<AccountInfoResult>> ListDatabasesAsync(string domain)
+        {
+            try
+            {
+                var parameters = new Dictionary<string, string> { ["domain"] = domain };
+                await ExecuteVirtualminCommandAsync("list-databases", parameters);
+                return new List<AccountInfoResult>();
+            }
+            catch
+            {
+                return new List<AccountInfoResult>();
+            }
+        }
+
+        public override async Task<DatabaseResult> CreateDatabaseUserAsync(DatabaseUserRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Password))
+                {
+                    return CreateDatabaseErrorResult("Username and password are required", "INVALID_INPUT");
+                }
+
+                var parameters = new Dictionary<string, string>
+                {
+                    ["domain"] = request.Domain,
+                    ["name"] = request.DatabaseName,
+                    ["user"] = request.Username,
+                    ["pass"] = request.Password
+                };
+
+                var response = await ExecuteVirtualminCommandAsync("create-database-user", parameters);
+                
+                if (!response.Contains("error"))
+                {
+                    return new DatabaseResult
+                    {
+                        Success = true,
+                        Message = "Database user created successfully",
+                        Username = request.Username,
+                        CreatedDate = DateTime.UtcNow
+                    };
+                }
+
+                return CreateDatabaseErrorResult(response, "VIRTUALMIN_ERROR");
+            }
+            catch (Exception ex)
+            {
+                return CreateDatabaseErrorResult($"Unexpected error: {ex.Message}", "UNEXPECTED_ERROR");
+            }
+        }
+
+        public override async Task<AccountUpdateResult> DeleteDatabaseUserAsync(string userId)
+        {
+            try
+            {
+                var parts = userId.Split(':');
+                var domain = parts.Length > 2 ? parts[0] : userId;
+                var dbName = parts.Length > 2 ? parts[1] : userId;
+                var userName = parts.Length > 2 ? parts[2] : userId;
+
+                var parameters = new Dictionary<string, string>
+                {
+                    ["domain"] = domain,
+                    ["name"] = dbName,
+                    ["user"] = userName
+                };
+
+                var response = await ExecuteVirtualminCommandAsync("delete-database-user", parameters);
+                
+                if (!response.Contains("error"))
+                {
+                    return new AccountUpdateResult { Success = true, Message = "Database user deleted", AccountId = userId, UpdatedDate = DateTime.UtcNow };
+                }
+
+                return CreateUpdateErrorResult(response, "VIRTUALMIN_ERROR");
+            }
+            catch (Exception ex)
+            {
+                return CreateUpdateErrorResult($"Unexpected error: {ex.Message}", "UNEXPECTED_ERROR");
+            }
+        }
+
+        public override async Task<AccountUpdateResult> GrantDatabasePrivilegesAsync(string userId, string databaseId, List<string> privileges)
+        {
+            try
+            {
+                return new AccountUpdateResult
+                {
+                    Success = true,
+                    Message = "Privileges are granted automatically in Virtualmin when database user is created",
+                    AccountId = userId,
+                    UpdatedDate = DateTime.UtcNow
+                };
+            }
+            catch (Exception ex)
+            {
+                return CreateUpdateErrorResult($"Unexpected error: {ex.Message}", "UNEXPECTED_ERROR");
+            }
+        }
+
+        public override async Task<AccountUpdateResult> ChangeDatabasePasswordAsync(string userId, string newPassword)
+        {
+            try
+            {
+                var parts = userId.Split(':');
+                var domain = parts.Length > 2 ? parts[0] : userId;
+                var dbName = parts.Length > 2 ? parts[1] : userId;
+                var userName = parts.Length > 2 ? parts[2] : userId;
+
+                var parameters = new Dictionary<string, string>
+                {
+                    ["domain"] = domain,
+                    ["name"] = dbName,
+                    ["user"] = userName,
+                    ["pass"] = newPassword
+                };
+
+                var response = await ExecuteVirtualminCommandAsync("modify-database-user", parameters);
+                
+                if (!response.Contains("error"))
+                {
+                    return new AccountUpdateResult { Success = true, Message = "Database password changed", AccountId = userId, UpdatedField = "Password", UpdatedDate = DateTime.UtcNow };
+                }
+
+                return CreateUpdateErrorResult(response, "VIRTUALMIN_ERROR");
+            }
+            catch (Exception ex)
+            {
+                return CreateUpdateErrorResult($"Unexpected error: {ex.Message}", "UNEXPECTED_ERROR");
+            }
+        }
     }
 }

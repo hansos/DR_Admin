@@ -20,5 +20,8 @@ namespace HostingPanelLib.Models
         public Dictionary<string, object>? AdditionalInfo { get; set; }
         public string? ErrorCode { get; set; }
         public List<string> Errors { get; set; } = new();
+        public string? DatabaseName { get; internal set; }
+        public string? DatabaseType { get; internal set; }
+        public string? DatabaseUser { get; internal set; }
     }
 }
