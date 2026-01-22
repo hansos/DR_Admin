@@ -4,7 +4,7 @@
 
 ---
 
-## 1. [Domain Registration](Domain-registration.md)
+## 1. Domain Registration
 
 The **Domain Registration module** enables programmatic management of domain names across a wide range of registrars. Through the `IDomainRegistrar` interface, applications can check domain availability, register, renew, and transfer domains, as well as manage DNS and domain settings.  
 
@@ -18,10 +18,11 @@ The **Domain Registration module** enables programmatic management of domain nam
   - **Update Nameservers & Privacy Settings:** Maintain control over DNS delegation and WHOIS privacy.  
   - **Auto-Renewal:** Optional automation to ensure uninterrupted domain ownership.
 - **DNS Management:** Add, update, or remove DNS records programmatically. Full support for zone updates ensures that domains remain correctly configured for web and mail services.
+See [Domain registration](Features/Domain-registration.md) for more information.
 
 ---
 
-## 2. [Hosting Management](Features/Hosting.md)
+## 2. Hosting Management
 
 The **Hosting module** (detailed in DR_Admin documentation) provides tools for managing web hosting accounts, services, and server resources. It is designed to allow administrators to provision, update, and monitor hosting services efficiently.  
 
@@ -35,7 +36,7 @@ The **Hosting module** (detailed in DR_Admin documentation) provides tools for m
 
 ---
 
-## 3. [Email Delivery](Features/Mailing.md)
+## 3. Email Delivery
 
 The **Mailing module** allows applications to send emails asynchronously with support for plain text, HTML, and attachments, through the `IEmailSender` interface. DR_Admin supports multiple providers to give maximum flexibility for different email environments.
 
@@ -54,3 +55,7 @@ The **Mailing module** allows applications to send emails asynchronously with su
 
 DR_Admin is a unified platform designed to manage the critical aspects of online services: domain registration, hosting management, and email delivery. Its modular approach, support for multiple providers, and asynchronous operations make it an ideal solution for resellers, developers, and IT administrators who require automation, flexibility, and reliability in managing web services.
 
+See 
+- [Domain registration](Features/Domain-registration.md)
+- [Hosting](Features/Hosting.md)
+- [Mailing](Features/Mailing.md)
