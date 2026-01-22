@@ -14,6 +14,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Role> Roles { get; set; }
     public DbSet<UserRole> UserRoles { get; set; }
     public DbSet<Token> Tokens { get; set; }
+    public DbSet<Unit> Units { get; set; }
     public DbSet<Service> Services { get; set; }
     public DbSet<ServiceType> ServiceTypes { get; set; }
     public DbSet<BillingCycle> BillingCycles { get; set; }
