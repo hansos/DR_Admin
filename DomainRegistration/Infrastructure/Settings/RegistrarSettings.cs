@@ -18,12 +18,6 @@ namespace DomainRegistrationLib.Infrastructure.Settings
         public RegtonsSettings? Regtons { get; set; }
         public DomainNameApiSettings? DomainNameApi { get; set; }
         public AwsSettings? Aws { get; set; }
-        
-        // Manual/External tracking
-        public ManualSettings? Manual { get; set; }
-        
-        // Generic fallback
-        public GenericSettings? Generic { get; set; }
     }
 }
 

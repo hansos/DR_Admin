@@ -42,16 +42,6 @@ namespace DomainRegistrationLib.Factories
                     )
                     : throw new InvalidOperationException("Cloudflare settings are not configured"),
 
-                "generic" => _registrarSettings.Generic is not null
-                    ? new GenericRegistrar(
-                        _registrarSettings.Generic.ApiUrl,
-                        _registrarSettings.Generic.ApiKey,
-                        _registrarSettings.Generic.ApiSecret,
-                        _registrarSettings.Generic.Username,
-                        _registrarSettings.Generic.Password
-                    )
-                    : throw new InvalidOperationException("Generic registrar settings are not configured"),
-
                 "opensrs" => _registrarSettings.OpenSrs is not null
                     ? new OpenSrsRegistrar(
                         _registrarSettings.OpenSrs.Username,
@@ -68,12 +58,6 @@ namespace DomainRegistrationLib.Factories
                         _registrarSettings.CentralNic.UseLiveEnvironment
                     )
                     : throw new InvalidOperationException("CentralNic settings are not configured"),
-
-                "manual" => _registrarSettings.Manual is not null
-                    ? new ManualRegistrar(
-                        _registrarSettings.Manual.AllowOperations
-                    )
-                    : throw new InvalidOperationException("Manual registrar settings are not configured"),
 
                 "dnsimple" => _registrarSettings.DnSimple is not null
                     ? new DnSimpleRegistrar(
