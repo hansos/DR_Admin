@@ -2,4 +2,5 @@
   <Project Path="DomainRegistration/DomainRegistrationLib.csproj" Id="bd4216ec-09b7-43a3-b7f7-a09f203bd75e" />
   <Project Path="DR_Admin/ISPAdmin.csproj" />
   <Project Path="EmailSenderLib/EmailSenderLib.csproj" Id="70cada2c-63e7-4433-b4d9-3003b17354f3" />
+  <Project Path="HostingPanelLib/HostingPanelLib.csproj" Id="5062074a-d52e-48c5-9b37-ae0509b39aad" />
 </Solution>
