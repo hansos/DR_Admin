@@ -55,6 +55,6 @@ The **Mailing module** allows applications to send emails asynchronously with su
 DR_Admin is a unified platform designed to manage the critical aspects of online services: domain registration, hosting management, and email delivery. Its modular approach, support for multiple providers, and asynchronous operations make it an ideal solution for resellers, developers, and IT administrators who require automation, flexibility, and reliability in managing web services.
 
 See 
-- [[Domain registration]]
+- [Domain registration](features/Domain_registration)
 - [[Hosting]]
 - [[Mailing]]
