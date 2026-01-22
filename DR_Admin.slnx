@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/Documentation/">
+    <File Path="Documentation/Index.md" />
+  </Folder>
   <Project Path="DomainRegistrationLib/DomainRegistrationLib.csproj" />
   <Project Path="DR_Admin/ISPAdmin.csproj" />
   <Project Path="EmailSenderLib/EmailSenderLib.csproj" Id="70cada2c-63e7-4433-b4d9-3003b17354f3" />
