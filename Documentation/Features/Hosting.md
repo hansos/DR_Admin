@@ -276,3 +276,5 @@ Changes the password for a database user.
 - All methods are asynchronous and should be awaited.
 - All operations return result objects containing success/failure status and error messages where applicable.
 - IDs (`accountId`, `databaseId`, `userId`) are returned from the creation methods and must be stored for further operations.
+
+[Return to Index](../Index.md)
