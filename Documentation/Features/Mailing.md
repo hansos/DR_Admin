@@ -6,7 +6,8 @@ The `IEmailSender` interface provides asynchronous methods for sending emails, s
 
 ## Table of Contents
 
-1. [Sending Emails](#sending-emails)
+1. [Methods and providers](#Methods_and_providers)
+2. [Sending Emails](#sending-emails)
     - Basic Email
     - Email with Attachments
 

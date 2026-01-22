@@ -6,7 +6,7 @@ The `IDomainRegistrar` interface provides asynchronous methods for managing doma
 
 ## Table of Contents
 
-1. [[#Supported registrars]]
+1. [Supported registrars](#Supported_registrars)
 2. [Domain Availability](#domain-availability)
     - Check Availability
 2. [Domain Management](#domain-management)

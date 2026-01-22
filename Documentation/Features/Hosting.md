@@ -6,7 +6,7 @@ The `IHostingPanel` interface provides a standardized way to manage web hosting 
 
 ## Table of Contents
 
-1. [[#Supported hosting panels]]
+1. [Supported hosting panels](#Supported_ hosting_panels)
 2. [Web Hosting Accounts](#web-hosting-accounts)
     - Create
     - Update
@@ -39,15 +39,15 @@ The `IHostingPanel` interface provides a standardized way to manage web hosting 
 ---
 
 ## Supported hosting panels
-|Hosting Panel|Implementation Class|Key Features / Requirements|External Link|
-|---|---|---|---|
-|cPanel|`CpanelHostingPanel`|Web hosting account management, email accounts, databases, DNS, quotas, bandwidth|[cPanel](https://www.cpanel.net/)|
-|Plesk|`PleskHostingPanel`|Similar to cPanel, supports Windows/Linux, email, web, databases, security|[Plesk](https://www.plesk.com/)|
-|DirectAdmin|`DirectAdminHostingPanel`|Lightweight hosting panel, web/email/db management, multi-user, quota/bandwidth control|[DirectAdmin](https://www.directadmin.com/)|
-|ISPConfig|`ISPConfigHostingPanel`|Open-source, multi-server, Linux hosting management, web/email/db accounts, DNS|[ISPConfig](https://www.ispconfig.org/)|
-|Webmin/Virtualmin|`VirtualminHostingPanel`|Open-source, Linux hosting, multi-domain management, web/email/db accounts, firewall support|[Virtualmin](https://www.virtualmin.com/)|
-|VestaCP|`VestaCPHostingPanel`|Free, lightweight Linux hosting panel, web/email/db management|[VestaCP](https://vestacp.com/)|
-|cWP (CentOS Web Panel)|`CwpHostingPanel`|Free Linux hosting panel, web/email/db management, security, firewall|[CentOS Web Panel](https://centos-webpanel.com/)|
+| Hosting Panel          | Implementation Class      | Key Features / Requirements                                                                  | External Link                                    |
+| ---------------------- | ------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| cPanel                 | `CpanelHostingPanel`      | Web hosting account management, email accounts, databases, DNS, quotas, bandwidth            | [cPanel](https://www.cpanel.net/)                |
+| Plesk                  | `PleskHostingPanel`       | Similar to cPanel, supports Windows/Linux, email, web, databases, security                   | [Plesk](https://www.plesk.com/)                  |
+| DirectAdmin            | `DirectAdminHostingPanel` | Lightweight hosting panel, web/email/db management, multi-user, quota/bandwidth control      | [DirectAdmin](https://www.directadmin.com/)      |
+| ISPConfig              | `ISPConfigHostingPanel`   | Open-source, multi-server, Linux hosting management, web/email/db accounts, DNS              | [ISPConfig](https://www.ispconfig.org/)          |
+| Webmin/Virtualmin      | `VirtualminHostingPanel`  | Open-source, Linux hosting, multi-domain management, web/email/db accounts, firewall support | [Virtualmin](https://www.virtualmin.com/)        |
+| VestaCP                | `VestaCPHostingPanel`     | Free, lightweight Linux hosting panel, web/email/db management                               | [VestaCP](https://vestacp.com/)                  |
+| cWP (CentOS Web Panel) | `CwpHostingPanel`         | Free Linux hosting panel, web/email/db management, security, firewall                        | [CentOS Web Panel](https://centos-webpanel.com/) |
 ## Web Hosting Accounts
 
 ### `CreateWebHostingAccountAsync(HostingAccountRequest request)`
