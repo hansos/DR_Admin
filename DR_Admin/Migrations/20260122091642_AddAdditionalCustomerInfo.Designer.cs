@@ -3,6 +3,7 @@ using System;
 using ISPAdmin.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ISPAdmin.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260122091642_AddAdditionalCustomerInfo")]
+    partial class AddAdditionalCustomerInfo
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.2");
@@ -117,53 +120,6 @@ namespace ISPAdmin.Migrations
                     b.ToTable("BillingCycles");
                 });
 
-            modelBuilder.Entity("ISPAdmin.Data.Entities.Country", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasMaxLength(2)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("EnglishName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("LocalName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Tld")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Code")
-                        .IsUnique();
-
-                    b.HasIndex("EnglishName");
-
-                    b.HasIndex("Tld");
-
-                    b.ToTable("Countries");
-                });
-
             modelBuilder.Entity("ISPAdmin.Data.Entities.Customer", b =>
                 {
                     b.Property<int>("Id")
@@ -196,8 +152,9 @@ namespace ISPAdmin.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("CountryCode")
-                        .HasMaxLength(2)
+                    b.Property<string>("Country")
+                        .IsRequired()
+                        .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAt")
@@ -263,8 +220,6 @@ namespace ISPAdmin.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CountryCode");
 
                     b.HasIndex("Email");
 
@@ -584,67 +539,6 @@ namespace ISPAdmin.Migrations
                     b.ToTable("PaymentTransactions");
                 });
 
-            modelBuilder.Entity("ISPAdmin.Data.Entities.PostalCode", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("City")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("CountryCode")
-                        .IsRequired()
-                        .HasMaxLength(2)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("District")
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<decimal?>("Latitude")
-                        .HasPrecision(10, 7)
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal?>("Longitude")
-                        .HasPrecision(10, 7)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Region")
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("State")
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("City");
-
-                    b.HasIndex("CountryCode");
-
-                    b.HasIndex("Code", "CountryCode");
-
-                    b.ToTable("PostalCodes");
-                });
-
             modelBuilder.Entity("ISPAdmin.Data.Entities.Role", b =>
                 {
                     b.Property<int>("Id")
@@ -865,17 +759,6 @@ namespace ISPAdmin.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("ISPAdmin.Data.Entities.Customer", b =>
-                {
-                    b.HasOne("ISPAdmin.Data.Entities.Country", "Country")
-                        .WithMany("Customers")
-                        .HasForeignKey("CountryCode")
-                        .HasPrincipalKey("Code")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("Country");
-                });
-
             modelBuilder.Entity("ISPAdmin.Data.Entities.DnsRecord", b =>
                 {
                     b.HasOne("ISPAdmin.Data.Entities.Domain", "Domain")
@@ -996,18 +879,6 @@ namespace ISPAdmin.Migrations
                     b.Navigation("Invoice");
                 });
 
-            modelBuilder.Entity("ISPAdmin.Data.Entities.PostalCode", b =>
-                {
-                    b.HasOne("ISPAdmin.Data.Entities.Country", "Country")
-                        .WithMany("PostalCodes")
-                        .HasForeignKey("CountryCode")
-                        .HasPrincipalKey("Code")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Country");
-                });
-
             modelBuilder.Entity("ISPAdmin.Data.Entities.Service", b =>
                 {
                     b.HasOne("ISPAdmin.Data.Entities.BillingCycle", "BillingCycle")
@@ -1070,13 +941,6 @@ namespace ISPAdmin.Migrations
             modelBuilder.Entity("ISPAdmin.Data.Entities.BillingCycle", b =>
                 {
                     b.Navigation("Services");
-                });
-
-            modelBuilder.Entity("ISPAdmin.Data.Entities.Country", b =>
-                {
-                    b.Navigation("Customers");
-
-                    b.Navigation("PostalCodes");
                 });
 
             modelBuilder.Entity("ISPAdmin.Data.Entities.Customer", b =>

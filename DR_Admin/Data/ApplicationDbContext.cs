@@ -28,6 +28,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<AuditLog> AuditLogs { get; set; }
     public DbSet<SystemSetting> SystemSettings { get; set; }
     public DbSet<BackupSchedule> BackupSchedules { get; set; }
+    public DbSet<Country> Countries { get; set; }
+    public DbSet<PostalCode> PostalCodes { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -41,6 +43,32 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Email).IsRequired().HasMaxLength(200);
             entity.Property(e => e.Phone).HasMaxLength(50);
             entity.Property(e => e.Address).HasMaxLength(500);
+            entity.Property(e => e.City).HasMaxLength(100);
+            entity.Property(e => e.State).HasMaxLength(100);
+            entity.Property(e => e.PostalCode).HasMaxLength(20);
+            entity.Property(e => e.CountryCode).HasMaxLength(2);
+            entity.Property(e => e.CompanyName).HasMaxLength(200);
+            entity.Property(e => e.TaxId).HasMaxLength(50);
+            entity.Property(e => e.VatNumber).HasMaxLength(50);
+            entity.Property(e => e.ContactPerson).HasMaxLength(200);
+            entity.Property(e => e.Status).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Balance).HasPrecision(18, 2);
+            entity.Property(e => e.CreditLimit).HasPrecision(18, 2);
+            entity.Property(e => e.Notes).HasMaxLength(2000);
+            entity.Property(e => e.BillingEmail).HasMaxLength(200);
+            entity.Property(e => e.PreferredPaymentMethod).HasMaxLength(50);
+            
+            entity.HasIndex(e => e.Email);
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.TaxId);
+            entity.HasIndex(e => e.VatNumber);
+            entity.HasIndex(e => e.IsActive);
+            
+            entity.HasOne(e => e.Country)
+                .WithMany(c => c.Customers)
+                .HasForeignKey(e => e.CountryCode)
+                .HasPrincipalKey(c => c.Code)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         // User configuration
@@ -296,6 +324,43 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.DatabaseName).IsRequired().HasMaxLength(200);
             entity.Property(e => e.Frequency).IsRequired().HasMaxLength(50);
             entity.Property(e => e.Status).IsRequired().HasMaxLength(50);
+        });
+
+        // Country configuration
+        modelBuilder.Entity<Country>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Code).IsRequired().HasMaxLength(2);
+            entity.Property(e => e.Tld).IsRequired().HasMaxLength(10);
+            entity.Property(e => e.EnglishName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.LocalName).IsRequired().HasMaxLength(100);
+            
+            entity.HasIndex(e => e.Code).IsUnique();
+            entity.HasIndex(e => e.Tld);
+            entity.HasIndex(e => e.EnglishName);
+        });
+
+        // PostalCode configuration
+        modelBuilder.Entity<PostalCode>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Code).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.CountryCode).IsRequired().HasMaxLength(2);
+            entity.Property(e => e.City).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.State).HasMaxLength(100);
+            entity.Property(e => e.Region).HasMaxLength(100);
+            entity.Property(e => e.District).HasMaxLength(100);
+            entity.Property(e => e.Latitude).HasPrecision(10, 7);
+            entity.Property(e => e.Longitude).HasPrecision(10, 7);
+            
+            entity.HasIndex(e => new { e.Code, e.CountryCode });
+            entity.HasIndex(e => e.City);
+            
+            entity.HasOne(e => e.Country)
+                .WithMany(c => c.PostalCodes)
+                .HasForeignKey(e => e.CountryCode)
+                .HasPrincipalKey(c => c.Code)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

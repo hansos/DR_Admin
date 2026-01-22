@@ -76,6 +76,22 @@ public class CustomerService : ICustomerService
                 Email = createDto.Email,
                 Phone = createDto.Phone,
                 Address = createDto.Address,
+                City = createDto.City,
+                State = createDto.State,
+                PostalCode = createDto.PostalCode,
+                CountryCode = createDto.CountryCode,
+                CompanyName = createDto.CompanyName,
+                TaxId = createDto.TaxId,
+                VatNumber = createDto.VatNumber,
+                ContactPerson = createDto.ContactPerson,
+                IsCompany = createDto.IsCompany,
+                IsActive = createDto.IsActive,
+                Status = createDto.Status,
+                Balance = 0,
+                CreditLimit = createDto.CreditLimit,
+                Notes = createDto.Notes,
+                BillingEmail = createDto.BillingEmail,
+                PreferredPaymentMethod = createDto.PreferredPaymentMethod,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -111,6 +127,21 @@ public class CustomerService : ICustomerService
             customer.Email = updateDto.Email;
             customer.Phone = updateDto.Phone;
             customer.Address = updateDto.Address;
+            customer.City = updateDto.City;
+            customer.State = updateDto.State;
+            customer.PostalCode = updateDto.PostalCode;
+            customer.CountryCode = updateDto.CountryCode;
+            customer.CompanyName = updateDto.CompanyName;
+            customer.TaxId = updateDto.TaxId;
+            customer.VatNumber = updateDto.VatNumber;
+            customer.ContactPerson = updateDto.ContactPerson;
+            customer.IsCompany = updateDto.IsCompany;
+            customer.IsActive = updateDto.IsActive;
+            customer.Status = updateDto.Status;
+            customer.CreditLimit = updateDto.CreditLimit;
+            customer.Notes = updateDto.Notes;
+            customer.BillingEmail = updateDto.BillingEmail;
+            customer.PreferredPaymentMethod = updateDto.PreferredPaymentMethod;
             customer.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
@@ -161,6 +192,22 @@ public class CustomerService : ICustomerService
             Email = customer.Email,
             Phone = customer.Phone,
             Address = customer.Address,
+            City = customer.City,
+            State = customer.State,
+            PostalCode = customer.PostalCode,
+            CountryCode = customer.CountryCode,
+            CompanyName = customer.CompanyName,
+            TaxId = customer.TaxId,
+            VatNumber = customer.VatNumber,
+            ContactPerson = customer.ContactPerson,
+            IsCompany = customer.IsCompany,
+            IsActive = customer.IsActive,
+            Status = customer.Status,
+            Balance = customer.Balance,
+            CreditLimit = customer.CreditLimit,
+            Notes = customer.Notes,
+            BillingEmail = customer.BillingEmail,
+            PreferredPaymentMethod = customer.PreferredPaymentMethod,
             CreatedAt = customer.CreatedAt,
             UpdatedAt = customer.UpdatedAt
         };
