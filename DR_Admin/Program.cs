@@ -78,6 +78,8 @@ builder.Services.AddTransient<IServiceTypeService, ServiceTypeService>();
 builder.Services.AddTransient<IBillingCycleService, BillingCycleService>();
 builder.Services.AddTransient<IOrderService, OrderService>();
 builder.Services.AddTransient<IInvoiceService, InvoiceService>();
+builder.Services.AddTransient<IInvoiceLineService, InvoiceLineService>();
+builder.Services.AddTransient<IUnitService, UnitService>();
 builder.Services.AddTransient<ICountryService, CountryService>();
 builder.Services.AddTransient<IPostalCodeService, PostalCodeService>();
 builder.Services.AddTransient<ITldService, TldService>();

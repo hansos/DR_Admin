@@ -205,6 +205,13 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Description).IsRequired().HasMaxLength(500);
             entity.Property(e => e.UnitPrice).HasPrecision(18, 2);
             entity.Property(e => e.TotalPrice).HasPrecision(18, 2);
+            entity.Property(e => e.Discount).HasPrecision(18, 2);
+            entity.Property(e => e.TaxRate).HasPrecision(18, 2);
+            entity.Property(e => e.TaxAmount).HasPrecision(18, 2);
+            entity.Property(e => e.TotalWithTax).HasPrecision(18, 2);
+            entity.Property(e => e.ServiceNameSnapshot).HasMaxLength(200);
+            entity.Property(e => e.AccountingCode).HasMaxLength(100);
+            entity.Property(e => e.Notes).HasMaxLength(1000);
             
             entity.HasOne(e => e.Invoice)
                 .WithMany(i => i.InvoiceLines)
@@ -215,6 +222,11 @@ public class ApplicationDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(e => e.ServiceId)
                 .OnDelete(DeleteBehavior.SetNull);
+            
+            entity.HasOne(e => e.Unit)
+                .WithMany(u => u.InvoiceLines)
+                .HasForeignKey(e => e.UnitId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         // PaymentTransaction configuration
@@ -428,6 +440,18 @@ public class ApplicationDbContext : DbContext
                 .HasForeignKey(e => e.CountryCode)
                 .HasPrincipalKey(c => c.Code)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Unit configuration
+        modelBuilder.Entity<Unit>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Code).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Description).HasMaxLength(500);
+            
+            entity.HasIndex(e => e.Code).IsUnique();
+            entity.HasIndex(e => e.IsActive);
         });
     }
 }
