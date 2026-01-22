@@ -6,7 +6,7 @@ The `IHostingPanel` interface provides a standardized way to manage web hosting 
 
 ## Table of Contents
 
-1. [Supported hosting panels](#Supported_ hosting_panels)
+1. [Supported hosting panels](#Supported-hosting-panels)
 2. [Web Hosting Accounts](#web-hosting-accounts)
     - Create
     - Update

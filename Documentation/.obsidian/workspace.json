@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Features/Mailing.md",
+                "file": "Features/Hosting.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Mailing"
+              "title": "Hosting"
             }
           },
           {
@@ -108,7 +108,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Features/Mailing.md",
+                "file": "Features/Hosting.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -118,7 +118,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for Mailing"
+              "title": "Backlinks for Hosting"
             }
           },
           {
@@ -127,12 +127,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Features/Mailing.md",
+                "file": "Features/Hosting.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from Mailing"
+              "title": "Outgoing links from Hosting"
             }
           },
           {
@@ -170,13 +170,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Features/Mailing.md",
+                "file": "Features/Hosting.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of Mailing"
+              "title": "Outline of Hosting"
             }
           }
         ]
@@ -197,11 +197,11 @@
       "bases:Create new base": false
     }
   },
-  "active": "c5473fcba7c183fe",
+  "active": "ee0bfb72c0f77574",
   "lastOpenFiles": [
+    "Features/Mailing.md",
     "Features/Domain registration.md",
     "Features/Hosting.md",
-    "Features/Mailing.md",
     "Index.md",
     "Untitled",
     "Features"
