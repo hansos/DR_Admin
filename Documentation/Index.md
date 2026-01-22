@@ -1,6 +1,9 @@
 # DR_Admin Features Overview
 
-**DR_Admin** is a comprehensive management system designed to simplify and automate essential web services for resellers, developers, and IT administrators. Its core capabilities span three main areas: domain registration, hosting management, and email delivery. Each component is built with flexibility, reliability, and integration in mind, supporting multiple providers and advanced features.
+
+**DR_Admin** is a comprehensive REST API backend designed to simplify and automate essential web services for resellers, developers, and IT administrators. Its core capabilities span three main areas: domain registration, hosting management, and email delivery.  
+
+Being a REST API, **DR_Admin can be accessed programmatically by any client written in any language**, making it highly flexible for integration into web applications, desktop tools, or automation scripts. Each component is built with flexibility, reliability, and integration in mind, supporting multiple providers and advanced features.
 
 ---
 
@@ -58,6 +61,39 @@ See [Mailing](Features/Mailing.md) for more information.
 
 ---
 
+## 4. Full Database Backend
+
+DR_Admin includes a **complete database server backend** to manage customers, services, orders, and invoicing. This allows the system to maintain all necessary business data in a structured, reliable manner.  
+
+**Key Features:**
+
+- **Customer Management:** Store and manage customer information, including contact details and account status.  
+- **Service Management:** Track hosting, domain, and email services assigned to customers.  
+- **Order Management:** Handle service orders, activations, and status updates.  
+- **Invoicing & Billing:** Generate invoices, track payments, and manage financial records.  
+- **Database Flexibility:** The backend can be powered by multiple database engines, including:
+  - Microsoft SQL Server (MS SQL)  
+  - SQLite  
+  - MySQL  
+  - MariaDB  
+  - PostgreSQL  
+
+This flexibility allows DR_Admin to be deployed in small environments with lightweight databases (like SQLite) or in large-scale production systems using robust servers like MS SQL or PostgreSQL.
+
+---
+
+## 5. Cross-Platform Compatibility
+
+DR_Admin runs on **all operating systems that support .NET**, giving you the flexibility to deploy in diverse environments. Supported operating systems include:
+
+- **Windows** (Windows 10, 11, Server 2016/2019/2022)  
+- **Linux** (Ubuntu, Debian, CentOS, Red Hat Enterprise Linux, Fedora, openSUSE, and others)  
+- **macOS** (Big Sur, Monterey, Ventura, and later versions)  
+
+This ensures that DR_Admin can be hosted in any environment, whether on-premises servers, cloud infrastructure, or development machines.
+
+
+---
 ## Summary
 
 DR_Admin is a unified platform designed to manage the critical aspects of online services: domain registration, hosting management, and email delivery. Its modular approach, support for multiple providers, and asynchronous operations make it an ideal solution for resellers, developers, and IT administrators who require automation, flexibility, and reliability in managing web services.
