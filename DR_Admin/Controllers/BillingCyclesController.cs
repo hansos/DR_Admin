@@ -12,12 +12,11 @@ namespace ISPAdmin.Controllers;
 public class BillingCyclesController : ControllerBase
 {
     private readonly IBillingCycleService _billingCycleService;
-    private readonly Serilog.ILogger _logger;
+    private static readonly Serilog.ILogger _log = Log.ForContext<BillingCyclesController>();
 
-    public BillingCyclesController(IBillingCycleService billingCycleService, Serilog.ILogger logger)
+    public BillingCyclesController(IBillingCycleService billingCycleService)
     {
         _billingCycleService = billingCycleService;
-        _logger = logger;
     }
 
     [HttpGet]
@@ -26,13 +25,13 @@ public class BillingCyclesController : ControllerBase
     {
         try
         {
-            _logger.Information("API: GetAllBillingCycles called by user {User}", User.Identity?.Name);
+            _log.Information("API: GetAllBillingCycles called by user {User}", User.Identity?.Name);
             var billingCycles = await _billingCycleService.GetAllBillingCyclesAsync();
             return Ok(billingCycles);
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "API: Error in GetAllBillingCycles");
+            _log.Error(ex, "API: Error in GetAllBillingCycles");
             return StatusCode(500, "An error occurred while retrieving billing cycles");
         }
     }
@@ -43,12 +42,12 @@ public class BillingCyclesController : ControllerBase
     {
         try
         {
-            _logger.Information("API: GetBillingCycleById called for ID {BillingCycleId} by user {User}", id, User.Identity?.Name);
+            _log.Information("API: GetBillingCycleById called for ID {BillingCycleId} by user {User}", id, User.Identity?.Name);
             var billingCycle = await _billingCycleService.GetBillingCycleByIdAsync(id);
 
             if (billingCycle == null)
             {
-                _logger.Information("API: Billing cycle with ID {BillingCycleId} not found", id);
+                _log.Information("API: Billing cycle with ID {BillingCycleId} not found", id);
                 return NotFound($"Billing cycle with ID {id} not found");
             }
 
@@ -56,7 +55,7 @@ public class BillingCyclesController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "API: Error in GetBillingCycleById for ID {BillingCycleId}", id);
+            _log.Error(ex, "API: Error in GetBillingCycleById for ID {BillingCycleId}", id);
             return StatusCode(500, "An error occurred while retrieving the billing cycle");
         }
     }
@@ -67,11 +66,11 @@ public class BillingCyclesController : ControllerBase
     {
         try
         {
-            _logger.Information("API: CreateBillingCycle called by user {User}", User.Identity?.Name);
+            _log.Information("API: CreateBillingCycle called by user {User}", User.Identity?.Name);
 
             if (!ModelState.IsValid)
             {
-                _logger.Warning("API: Invalid model state for CreateBillingCycle");
+                _log.Warning("API: Invalid model state for CreateBillingCycle");
                 return BadRequest(ModelState);
             }
 
@@ -80,7 +79,7 @@ public class BillingCyclesController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "API: Error in CreateBillingCycle");
+            _log.Error(ex, "API: Error in CreateBillingCycle");
             return StatusCode(500, "An error occurred while creating the billing cycle");
         }
     }
@@ -91,11 +90,11 @@ public class BillingCyclesController : ControllerBase
     {
         try
         {
-            _logger.Information("API: UpdateBillingCycle called for ID {BillingCycleId} by user {User}", id, User.Identity?.Name);
+            _log.Information("API: UpdateBillingCycle called for ID {BillingCycleId} by user {User}", id, User.Identity?.Name);
 
             if (!ModelState.IsValid)
             {
-                _logger.Warning("API: Invalid model state for UpdateBillingCycle");
+                _log.Warning("API: Invalid model state for UpdateBillingCycle");
                 return BadRequest(ModelState);
             }
 
@@ -103,7 +102,7 @@ public class BillingCyclesController : ControllerBase
 
             if (billingCycle == null)
             {
-                _logger.Information("API: Billing cycle with ID {BillingCycleId} not found for update", id);
+                _log.Information("API: Billing cycle with ID {BillingCycleId} not found for update", id);
                 return NotFound($"Billing cycle with ID {id} not found");
             }
 
@@ -111,7 +110,7 @@ public class BillingCyclesController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "API: Error in UpdateBillingCycle for ID {BillingCycleId}", id);
+            _log.Error(ex, "API: Error in UpdateBillingCycle for ID {BillingCycleId}", id);
             return StatusCode(500, "An error occurred while updating the billing cycle");
         }
     }
@@ -122,12 +121,12 @@ public class BillingCyclesController : ControllerBase
     {
         try
         {
-            _logger.Information("API: DeleteBillingCycle called for ID {BillingCycleId} by user {User}", id, User.Identity?.Name);
+            _log.Information("API: DeleteBillingCycle called for ID {BillingCycleId} by user {User}", id, User.Identity?.Name);
             var result = await _billingCycleService.DeleteBillingCycleAsync(id);
 
             if (!result)
             {
-                _logger.Information("API: Billing cycle with ID {BillingCycleId} not found for deletion", id);
+                _log.Information("API: Billing cycle with ID {BillingCycleId} not found for deletion", id);
                 return NotFound($"Billing cycle with ID {id} not found");
             }
 
@@ -135,7 +134,7 @@ public class BillingCyclesController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "API: Error in DeleteBillingCycle for ID {BillingCycleId}", id);
+            _log.Error(ex, "API: Error in DeleteBillingCycle for ID {BillingCycleId}", id);
             return StatusCode(500, "An error occurred while deleting the billing cycle");
         }
     }

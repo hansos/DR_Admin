@@ -9,19 +9,18 @@ namespace ISPAdmin.Services;
 public class BillingCycleService : IBillingCycleService
 {
     private readonly ApplicationDbContext _context;
-    private readonly Serilog.ILogger _logger;
+    private static readonly Serilog.ILogger _log = Log.ForContext<BillingCycleService>();
 
-    public BillingCycleService(ApplicationDbContext context, Serilog.ILogger logger)
+    public BillingCycleService(ApplicationDbContext context)
     {
         _context = context;
-        _logger = logger;
     }
 
     public async Task<IEnumerable<BillingCycleDto>> GetAllBillingCyclesAsync()
     {
         try
         {
-            _logger.Information("Fetching all billing cycles");
+            _log.Information("Fetching all billing cycles");
             
             var billingCycles = await _context.BillingCycles
                 .AsNoTracking()
@@ -29,12 +28,12 @@ public class BillingCycleService : IBillingCycleService
 
             var billingCycleDtos = billingCycles.Select(MapToDto);
             
-            _logger.Information("Successfully fetched {Count} billing cycles", billingCycles.Count);
+            _log.Information("Successfully fetched {Count} billing cycles", billingCycles.Count);
             return billingCycleDtos;
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error occurred while fetching all billing cycles");
+            _log.Error(ex, "Error occurred while fetching all billing cycles");
             throw;
         }
     }
@@ -43,7 +42,7 @@ public class BillingCycleService : IBillingCycleService
     {
         try
         {
-            _logger.Information("Fetching billing cycle with ID: {BillingCycleId}", id);
+            _log.Information("Fetching billing cycle with ID: {BillingCycleId}", id);
             
             var billingCycle = await _context.BillingCycles
                 .AsNoTracking()
@@ -51,16 +50,16 @@ public class BillingCycleService : IBillingCycleService
 
             if (billingCycle == null)
             {
-                _logger.Warning("Billing cycle with ID {BillingCycleId} not found", id);
+                _log.Warning("Billing cycle with ID {BillingCycleId} not found", id);
                 return null;
             }
 
-            _logger.Information("Successfully fetched billing cycle with ID: {BillingCycleId}", id);
+            _log.Information("Successfully fetched billing cycle with ID: {BillingCycleId}", id);
             return MapToDto(billingCycle);
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error occurred while fetching billing cycle with ID: {BillingCycleId}", id);
+            _log.Error(ex, "Error occurred while fetching billing cycle with ID: {BillingCycleId}", id);
             throw;
         }
     }
@@ -69,7 +68,7 @@ public class BillingCycleService : IBillingCycleService
     {
         try
         {
-            _logger.Information("Creating new billing cycle with name: {BillingCycleName}", createDto.Name);
+            _log.Information("Creating new billing cycle with name: {BillingCycleName}", createDto.Name);
 
             var billingCycle = new BillingCycle
             {
@@ -81,12 +80,12 @@ public class BillingCycleService : IBillingCycleService
             _context.BillingCycles.Add(billingCycle);
             await _context.SaveChangesAsync();
 
-            _logger.Information("Successfully created billing cycle with ID: {BillingCycleId}", billingCycle.Id);
+            _log.Information("Successfully created billing cycle with ID: {BillingCycleId}", billingCycle.Id);
             return MapToDto(billingCycle);
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error occurred while creating billing cycle with name: {BillingCycleName}", createDto.Name);
+            _log.Error(ex, "Error occurred while creating billing cycle with name: {BillingCycleName}", createDto.Name);
             throw;
         }
     }
@@ -95,13 +94,13 @@ public class BillingCycleService : IBillingCycleService
     {
         try
         {
-            _logger.Information("Updating billing cycle with ID: {BillingCycleId}", id);
+            _log.Information("Updating billing cycle with ID: {BillingCycleId}", id);
 
             var billingCycle = await _context.BillingCycles.FindAsync(id);
 
             if (billingCycle == null)
             {
-                _logger.Warning("Billing cycle with ID {BillingCycleId} not found for update", id);
+                _log.Warning("Billing cycle with ID {BillingCycleId} not found for update", id);
                 return null;
             }
 
@@ -111,12 +110,12 @@ public class BillingCycleService : IBillingCycleService
 
             await _context.SaveChangesAsync();
 
-            _logger.Information("Successfully updated billing cycle with ID: {BillingCycleId}", id);
+            _log.Information("Successfully updated billing cycle with ID: {BillingCycleId}", id);
             return MapToDto(billingCycle);
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error occurred while updating billing cycle with ID: {BillingCycleId}", id);
+            _log.Error(ex, "Error occurred while updating billing cycle with ID: {BillingCycleId}", id);
             throw;
         }
     }
@@ -125,25 +124,25 @@ public class BillingCycleService : IBillingCycleService
     {
         try
         {
-            _logger.Information("Deleting billing cycle with ID: {BillingCycleId}", id);
+            _log.Information("Deleting billing cycle with ID: {BillingCycleId}", id);
 
             var billingCycle = await _context.BillingCycles.FindAsync(id);
 
             if (billingCycle == null)
             {
-                _logger.Warning("Billing cycle with ID {BillingCycleId} not found for deletion", id);
+                _log.Warning("Billing cycle with ID {BillingCycleId} not found for deletion", id);
                 return false;
             }
 
             _context.BillingCycles.Remove(billingCycle);
             await _context.SaveChangesAsync();
 
-            _logger.Information("Successfully deleted billing cycle with ID: {BillingCycleId}", id);
+            _log.Information("Successfully deleted billing cycle with ID: {BillingCycleId}", id);
             return true;
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error occurred while deleting billing cycle with ID: {BillingCycleId}", id);
+            _log.Error(ex, "Error occurred while deleting billing cycle with ID: {BillingCycleId}", id);
             throw;
         }
     }

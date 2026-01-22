@@ -15,13 +15,12 @@ public class MyAccountService : IMyAccountService
 {
     private readonly ApplicationDbContext _context;
     private readonly IConfiguration _configuration;
-    private readonly Serilog.ILogger _logger;
+    private static readonly Serilog.ILogger _log = Log.ForContext<MyAccountService>();
 
-    public MyAccountService(ApplicationDbContext context, IConfiguration configuration, Serilog.ILogger logger)
+    public MyAccountService(ApplicationDbContext context, IConfiguration configuration)
     {
         _context = context;
         _configuration = configuration;
-        _logger = logger;
     }
 
     public async Task<MyAccountLoginResponseDto?> LoginAsync(string email, string password)
@@ -36,20 +35,20 @@ public class MyAccountService : IMyAccountService
 
             if (user == null)
             {
-                _logger.Warning("Login attempt failed: User not found - {Email}", email);
+                _log.Warning("Login attempt failed: User not found - {Email}", email);
                 return null;
             }
 
             // TODO: In production, use proper password hashing (BCrypt, PBKDF2)
             if (user.PasswordHash != password)
             {
-                _logger.Warning("Login attempt failed: Invalid password - {Email}", email);
+                _log.Warning("Login attempt failed: Invalid password - {Email}", email);
                 return null;
             }
 
             if (!user.IsActive)
             {
-                _logger.Warning("Login attempt failed: User is inactive - {Email}", email);
+                _log.Warning("Login attempt failed: User is inactive - {Email}", email);
                 return null;
             }
 
@@ -59,7 +58,7 @@ public class MyAccountService : IMyAccountService
 
             var expirationMinutes = _configuration.GetValue<int>("JwtSettings:ExpirationInMinutes");
 
-            _logger.Information("User logged in successfully: {Email}", email);
+            _log.Information("User logged in successfully: {Email}", email);
 
             return new MyAccountLoginResponseDto
             {
@@ -86,7 +85,7 @@ public class MyAccountService : IMyAccountService
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error during login for email: {Email}", email);
+            _log.Error(ex, "Error during login for email: {Email}", email);
             return null;
         }
     }
@@ -149,7 +148,7 @@ public class MyAccountService : IMyAccountService
             // Generate email confirmation token
             var confirmationToken = await GenerateEmailConfirmationTokenAsync(user.Id);
 
-            _logger.Information("User registered successfully: {Email}", request.Email);
+            _log.Information("User registered successfully: {Email}", request.Email);
 
             return new RegisterAccountResponseDto
             {
@@ -161,7 +160,7 @@ public class MyAccountService : IMyAccountService
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error during registration for email: {Email}", request.Email);
+            _log.Error(ex, "Error during registration for email: {Email}", request.Email);
             throw;
         }
     }
@@ -176,7 +175,7 @@ public class MyAccountService : IMyAccountService
 
             if (user == null)
             {
-                _logger.Warning("Email confirmation failed: User not found - {Email}", email);
+                _log.Warning("Email confirmation failed: User not found - {Email}", email);
                 return false;
             }
 
@@ -188,7 +187,7 @@ public class MyAccountService : IMyAccountService
 
             if (token == null)
             {
-                _logger.Warning("Email confirmation failed: Invalid or expired token - {Email}", email);
+                _log.Warning("Email confirmation failed: Invalid or expired token - {Email}", email);
                 return false;
             }
 
@@ -198,12 +197,12 @@ public class MyAccountService : IMyAccountService
 
             await _context.SaveChangesAsync();
 
-            _logger.Information("Email confirmed successfully: {Email}", email);
+            _log.Information("Email confirmed successfully: {Email}", email);
             return true;
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error during email confirmation for: {Email}", email);
+            _log.Error(ex, "Error during email confirmation for: {Email}", email);
             return false;
         }
     }
@@ -218,7 +217,7 @@ public class MyAccountService : IMyAccountService
 
             if (user == null)
             {
-                _logger.Warning("Set password failed: User not found - {Email}", email);
+                _log.Warning("Set password failed: User not found - {Email}", email);
                 return false;
             }
 
@@ -230,7 +229,7 @@ public class MyAccountService : IMyAccountService
 
             if (passwordResetToken == null)
             {
-                _logger.Warning("Set password failed: Invalid or expired token - {Email}", email);
+                _log.Warning("Set password failed: Invalid or expired token - {Email}", email);
                 return false;
             }
 
@@ -241,12 +240,12 @@ public class MyAccountService : IMyAccountService
 
             await _context.SaveChangesAsync();
 
-            _logger.Information("Password set successfully: {Email}", email);
+            _log.Information("Password set successfully: {Email}", email);
             return true;
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error during set password for: {Email}", email);
+            _log.Error(ex, "Error during set password for: {Email}", email);
             return false;
         }
     }
@@ -259,14 +258,14 @@ public class MyAccountService : IMyAccountService
 
             if (user == null)
             {
-                _logger.Warning("Change password failed: User not found - {UserId}", userId);
+                _log.Warning("Change password failed: User not found - {UserId}", userId);
                 return false;
             }
 
             // TODO: In production, use proper password hashing (BCrypt, PBKDF2)
             if (user.PasswordHash != currentPassword)
             {
-                _logger.Warning("Change password failed: Invalid current password - {UserId}", userId);
+                _log.Warning("Change password failed: Invalid current password - {UserId}", userId);
                 return false;
             }
 
@@ -275,12 +274,12 @@ public class MyAccountService : IMyAccountService
 
             await _context.SaveChangesAsync();
 
-            _logger.Information("Password changed successfully for user: {UserId}", userId);
+            _log.Information("Password changed successfully for user: {UserId}", userId);
             return true;
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error during password change for user: {UserId}", userId);
+            _log.Error(ex, "Error during password change for user: {UserId}", userId);
             return false;
         }
     }
@@ -293,7 +292,7 @@ public class MyAccountService : IMyAccountService
 
             if (user == null)
             {
-                _logger.Warning("Patch email failed: User not found - {UserId}", userId);
+                _log.Warning("Patch email failed: User not found - {UserId}", userId);
                 return false;
             }
 
@@ -301,7 +300,7 @@ public class MyAccountService : IMyAccountService
             // TODO: In production, use proper password hashing (BCrypt, PBKDF2)
             if (user.PasswordHash != password)
             {
-                _logger.Warning("Patch email failed: Invalid password - {UserId}", userId);
+                _log.Warning("Patch email failed: Invalid password - {UserId}", userId);
                 return false;
             }
 
@@ -311,7 +310,7 @@ public class MyAccountService : IMyAccountService
 
             if (existingUser != null)
             {
-                _logger.Warning("Patch email failed: Email already in use - {Email}", newEmail);
+                _log.Warning("Patch email failed: Email already in use - {Email}", newEmail);
                 return false;
             }
 
@@ -321,12 +320,12 @@ public class MyAccountService : IMyAccountService
 
             await _context.SaveChangesAsync();
 
-            _logger.Information("Email updated successfully for user: {UserId}", userId);
+            _log.Information("Email updated successfully for user: {UserId}", userId);
             return true;
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error during email update for user: {UserId}", userId);
+            _log.Error(ex, "Error during email update for user: {UserId}", userId);
             return false;
         }
     }
@@ -341,7 +340,7 @@ public class MyAccountService : IMyAccountService
 
             if (user == null || user.Customer == null)
             {
-                _logger.Warning("Patch customer info failed: User or customer not found - {UserId}", userId);
+                _log.Warning("Patch customer info failed: User or customer not found - {UserId}", userId);
                 return null;
             }
 
@@ -376,7 +375,7 @@ public class MyAccountService : IMyAccountService
             {
                 customer.UpdatedAt = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
-                _logger.Information("Customer info updated successfully for user: {UserId}", userId);
+                _log.Information("Customer info updated successfully for user: {UserId}", userId);
             }
 
             return new CustomerAccountDto
@@ -390,7 +389,7 @@ public class MyAccountService : IMyAccountService
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error during customer info update for user: {UserId}", userId);
+            _log.Error(ex, "Error during customer info update for user: {UserId}", userId);
             return null;
         }
     }
@@ -410,7 +409,7 @@ public class MyAccountService : IMyAccountService
 
             if (token == null)
             {
-                _logger.Warning("Refresh token failed: Invalid or expired token");
+                _log.Warning("Refresh token failed: Invalid or expired token");
                 return null;
             }
 
@@ -427,7 +426,7 @@ public class MyAccountService : IMyAccountService
 
             var expirationMinutes = _configuration.GetValue<int>("JwtSettings:ExpirationInMinutes");
 
-            _logger.Information("Token refreshed successfully for user: {UserId}", user.Id);
+            _log.Information("Token refreshed successfully for user: {UserId}", user.Id);
 
             return new RefreshTokenResponseDto
             {
@@ -439,7 +438,7 @@ public class MyAccountService : IMyAccountService
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error during token refresh");
+            _log.Error(ex, "Error during token refresh");
             return null;
         }
     }
@@ -454,7 +453,7 @@ public class MyAccountService : IMyAccountService
 
             if (user == null)
             {
-                _logger.Warning("Get account failed: User not found - {UserId}", userId);
+                _log.Warning("Get account failed: User not found - {UserId}", userId);
                 return null;
             }
 
@@ -476,7 +475,7 @@ public class MyAccountService : IMyAccountService
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error getting account for user: {UserId}", userId);
+            _log.Error(ex, "Error getting account for user: {UserId}", userId);
             return null;
         }
     }
@@ -492,19 +491,19 @@ public class MyAccountService : IMyAccountService
 
             if (token == null)
             {
-                _logger.Warning("Revoke token failed: Token not found");
+                _log.Warning("Revoke token failed: Token not found");
                 return false;
             }
 
             token.RevokedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
-            _logger.Information("Refresh token revoked successfully");
+            _log.Information("Refresh token revoked successfully");
             return true;
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error during token revocation");
+            _log.Error(ex, "Error during token revocation");
             return false;
         }
     }

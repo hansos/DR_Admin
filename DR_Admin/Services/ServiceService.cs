@@ -9,19 +9,18 @@ namespace ISPAdmin.Services;
 public class ServiceService : IServiceService
 {
     private readonly ApplicationDbContext _context;
-    private readonly Serilog.ILogger _logger;
+    private static readonly Serilog.ILogger _log = Log.ForContext<ServiceService>();
 
-    public ServiceService(ApplicationDbContext context, Serilog.ILogger logger)
+    public ServiceService(ApplicationDbContext context)
     {
         _context = context;
-        _logger = logger;
     }
 
     public async Task<IEnumerable<ServiceDto>> GetAllServicesAsync()
     {
         try
         {
-            _logger.Information("Fetching all services");
+            _log.Information("Fetching all services");
             
             var services = await _context.Services
                 .AsNoTracking()
@@ -29,12 +28,12 @@ public class ServiceService : IServiceService
 
             var serviceDtos = services.Select(MapToDto);
             
-            _logger.Information("Successfully fetched {Count} services", services.Count);
+            _log.Information("Successfully fetched {Count} services", services.Count);
             return serviceDtos;
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error occurred while fetching all services");
+            _log.Error(ex, "Error occurred while fetching all services");
             throw;
         }
     }
@@ -43,7 +42,7 @@ public class ServiceService : IServiceService
     {
         try
         {
-            _logger.Information("Fetching service with ID: {ServiceId}", id);
+            _log.Information("Fetching service with ID: {ServiceId}", id);
             
             var service = await _context.Services
                 .AsNoTracking()
@@ -51,16 +50,16 @@ public class ServiceService : IServiceService
 
             if (service == null)
             {
-                _logger.Warning("Service with ID {ServiceId} not found", id);
+                _log.Warning("Service with ID {ServiceId} not found", id);
                 return null;
             }
 
-            _logger.Information("Successfully fetched service with ID: {ServiceId}", id);
+            _log.Information("Successfully fetched service with ID: {ServiceId}", id);
             return MapToDto(service);
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error occurred while fetching service with ID: {ServiceId}", id);
+            _log.Error(ex, "Error occurred while fetching service with ID: {ServiceId}", id);
             throw;
         }
     }
@@ -69,7 +68,7 @@ public class ServiceService : IServiceService
     {
         try
         {
-            _logger.Information("Creating new service with name: {ServiceName}", createDto.Name);
+            _log.Information("Creating new service with name: {ServiceName}", createDto.Name);
 
             var service = new ServiceEntity
             {
@@ -85,12 +84,12 @@ public class ServiceService : IServiceService
             _context.Services.Add(service);
             await _context.SaveChangesAsync();
 
-            _logger.Information("Successfully created service with ID: {ServiceId}", service.Id);
+            _log.Information("Successfully created service with ID: {ServiceId}", service.Id);
             return MapToDto(service);
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error occurred while creating service with name: {ServiceName}", createDto.Name);
+            _log.Error(ex, "Error occurred while creating service with name: {ServiceName}", createDto.Name);
             throw;
         }
     }
@@ -99,13 +98,13 @@ public class ServiceService : IServiceService
     {
         try
         {
-            _logger.Information("Updating service with ID: {ServiceId}", id);
+            _log.Information("Updating service with ID: {ServiceId}", id);
 
             var service = await _context.Services.FindAsync(id);
 
             if (service == null)
             {
-                _logger.Warning("Service with ID {ServiceId} not found for update", id);
+                _log.Warning("Service with ID {ServiceId} not found for update", id);
                 return null;
             }
 
@@ -118,12 +117,12 @@ public class ServiceService : IServiceService
 
             await _context.SaveChangesAsync();
 
-            _logger.Information("Successfully updated service with ID: {ServiceId}", id);
+            _log.Information("Successfully updated service with ID: {ServiceId}", id);
             return MapToDto(service);
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error occurred while updating service with ID: {ServiceId}", id);
+            _log.Error(ex, "Error occurred while updating service with ID: {ServiceId}", id);
             throw;
         }
     }
@@ -132,25 +131,25 @@ public class ServiceService : IServiceService
     {
         try
         {
-            _logger.Information("Deleting service with ID: {ServiceId}", id);
+            _log.Information("Deleting service with ID: {ServiceId}", id);
 
             var service = await _context.Services.FindAsync(id);
 
             if (service == null)
             {
-                _logger.Warning("Service with ID {ServiceId} not found for deletion", id);
+                _log.Warning("Service with ID {ServiceId} not found for deletion", id);
                 return false;
             }
 
             _context.Services.Remove(service);
             await _context.SaveChangesAsync();
 
-            _logger.Information("Successfully deleted service with ID: {ServiceId}", id);
+            _log.Information("Successfully deleted service with ID: {ServiceId}", id);
             return true;
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error occurred while deleting service with ID: {ServiceId}", id);
+            _log.Error(ex, "Error occurred while deleting service with ID: {ServiceId}", id);
             throw;
         }
     }

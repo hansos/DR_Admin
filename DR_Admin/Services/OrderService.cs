@@ -9,19 +9,18 @@ namespace ISPAdmin.Services;
 public class OrderService : IOrderService
 {
     private readonly ApplicationDbContext _context;
-    private readonly Serilog.ILogger _logger;
+    private static readonly Serilog.ILogger _log = Log.ForContext<OrderService>();
 
-    public OrderService(ApplicationDbContext context, Serilog.ILogger logger)
+    public OrderService(ApplicationDbContext context)
     {
         _context = context;
-        _logger = logger;
     }
 
     public async Task<IEnumerable<OrderDto>> GetAllOrdersAsync()
     {
         try
         {
-            _logger.Information("Fetching all orders");
+            _log.Information("Fetching all orders");
             
             var orders = await _context.Orders
                 .AsNoTracking()
@@ -29,12 +28,12 @@ public class OrderService : IOrderService
 
             var orderDtos = orders.Select(MapToDto);
             
-            _logger.Information("Successfully fetched {Count} orders", orders.Count);
+            _log.Information("Successfully fetched {Count} orders", orders.Count);
             return orderDtos;
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error occurred while fetching all orders");
+            _log.Error(ex, "Error occurred while fetching all orders");
             throw;
         }
     }
@@ -43,7 +42,7 @@ public class OrderService : IOrderService
     {
         try
         {
-            _logger.Information("Fetching order with ID: {OrderId}", id);
+            _log.Information("Fetching order with ID: {OrderId}", id);
             
             var order = await _context.Orders
                 .AsNoTracking()
@@ -51,16 +50,16 @@ public class OrderService : IOrderService
 
             if (order == null)
             {
-                _logger.Warning("Order with ID {OrderId} not found", id);
+                _log.Warning("Order with ID {OrderId} not found", id);
                 return null;
             }
 
-            _logger.Information("Successfully fetched order with ID: {OrderId}", id);
+            _log.Information("Successfully fetched order with ID: {OrderId}", id);
             return MapToDto(order);
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error occurred while fetching order with ID: {OrderId}", id);
+            _log.Error(ex, "Error occurred while fetching order with ID: {OrderId}", id);
             throw;
         }
     }
@@ -69,7 +68,7 @@ public class OrderService : IOrderService
     {
         try
         {
-            _logger.Information("Creating new order for customer: {CustomerId}", createDto.CustomerId);
+            _log.Information("Creating new order for customer: {CustomerId}", createDto.CustomerId);
 
             var order = new Order
             {
@@ -84,12 +83,12 @@ public class OrderService : IOrderService
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();
 
-            _logger.Information("Successfully created order with ID: {OrderId}", order.Id);
+            _log.Information("Successfully created order with ID: {OrderId}", order.Id);
             return MapToDto(order);
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error occurred while creating order for customer: {CustomerId}", createDto.CustomerId);
+            _log.Error(ex, "Error occurred while creating order for customer: {CustomerId}", createDto.CustomerId);
             throw;
         }
     }
@@ -98,13 +97,13 @@ public class OrderService : IOrderService
     {
         try
         {
-            _logger.Information("Updating order with ID: {OrderId}", id);
+            _log.Information("Updating order with ID: {OrderId}", id);
 
             var order = await _context.Orders.FindAsync(id);
 
             if (order == null)
             {
-                _logger.Warning("Order with ID {OrderId} not found for update", id);
+                _log.Warning("Order with ID {OrderId} not found for update", id);
                 return null;
             }
 
@@ -117,12 +116,12 @@ public class OrderService : IOrderService
 
             await _context.SaveChangesAsync();
 
-            _logger.Information("Successfully updated order with ID: {OrderId}", id);
+            _log.Information("Successfully updated order with ID: {OrderId}", id);
             return MapToDto(order);
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error occurred while updating order with ID: {OrderId}", id);
+            _log.Error(ex, "Error occurred while updating order with ID: {OrderId}", id);
             throw;
         }
     }
@@ -131,25 +130,25 @@ public class OrderService : IOrderService
     {
         try
         {
-            _logger.Information("Deleting order with ID: {OrderId}", id);
+            _log.Information("Deleting order with ID: {OrderId}", id);
 
             var order = await _context.Orders.FindAsync(id);
 
             if (order == null)
             {
-                _logger.Warning("Order with ID {OrderId} not found for deletion", id);
+                _log.Warning("Order with ID {OrderId} not found for deletion", id);
                 return false;
             }
 
             _context.Orders.Remove(order);
             await _context.SaveChangesAsync();
 
-            _logger.Information("Successfully deleted order with ID: {OrderId}", id);
+            _log.Information("Successfully deleted order with ID: {OrderId}", id);
             return true;
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error occurred while deleting order with ID: {OrderId}", id);
+            _log.Error(ex, "Error occurred while deleting order with ID: {OrderId}", id);
             throw;
         }
     }

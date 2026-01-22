@@ -12,12 +12,11 @@ namespace ISPAdmin.Controllers;
 public class OrdersController : ControllerBase
 {
     private readonly IOrderService _orderService;
-    private readonly Serilog.ILogger _logger;
+    private static readonly Serilog.ILogger _log = Log.ForContext<OrdersController>();
 
-    public OrdersController(IOrderService orderService, Serilog.ILogger logger)
+    public OrdersController(IOrderService orderService)
     {
         _orderService = orderService;
-        _logger = logger;
     }
 
     [HttpGet]
@@ -26,13 +25,13 @@ public class OrdersController : ControllerBase
     {
         try
         {
-            _logger.Information("API: GetAllOrders called by user {User}", User.Identity?.Name);
+            _log.Information("API: GetAllOrders called by user {User}", User.Identity?.Name);
             var orders = await _orderService.GetAllOrdersAsync();
             return Ok(orders);
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "API: Error in GetAllOrders");
+            _log.Error(ex, "API: Error in GetAllOrders");
             return StatusCode(500, "An error occurred while retrieving orders");
         }
     }
@@ -43,12 +42,12 @@ public class OrdersController : ControllerBase
     {
         try
         {
-            _logger.Information("API: GetOrderById called for ID {OrderId} by user {User}", id, User.Identity?.Name);
+            _log.Information("API: GetOrderById called for ID {OrderId} by user {User}", id, User.Identity?.Name);
             var order = await _orderService.GetOrderByIdAsync(id);
 
             if (order == null)
             {
-                _logger.Information("API: Order with ID {OrderId} not found", id);
+                _log.Information("API: Order with ID {OrderId} not found", id);
                 return NotFound($"Order with ID {id} not found");
             }
 
@@ -56,7 +55,7 @@ public class OrdersController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "API: Error in GetOrderById for ID {OrderId}", id);
+            _log.Error(ex, "API: Error in GetOrderById for ID {OrderId}", id);
             return StatusCode(500, "An error occurred while retrieving the order");
         }
     }
@@ -67,11 +66,11 @@ public class OrdersController : ControllerBase
     {
         try
         {
-            _logger.Information("API: CreateOrder called by user {User}", User.Identity?.Name);
+            _log.Information("API: CreateOrder called by user {User}", User.Identity?.Name);
 
             if (!ModelState.IsValid)
             {
-                _logger.Warning("API: Invalid model state for CreateOrder");
+                _log.Warning("API: Invalid model state for CreateOrder");
                 return BadRequest(ModelState);
             }
 
@@ -80,7 +79,7 @@ public class OrdersController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "API: Error in CreateOrder");
+            _log.Error(ex, "API: Error in CreateOrder");
             return StatusCode(500, "An error occurred while creating the order");
         }
     }
@@ -91,11 +90,11 @@ public class OrdersController : ControllerBase
     {
         try
         {
-            _logger.Information("API: UpdateOrder called for ID {OrderId} by user {User}", id, User.Identity?.Name);
+            _log.Information("API: UpdateOrder called for ID {OrderId} by user {User}", id, User.Identity?.Name);
 
             if (!ModelState.IsValid)
             {
-                _logger.Warning("API: Invalid model state for UpdateOrder");
+                _log.Warning("API: Invalid model state for UpdateOrder");
                 return BadRequest(ModelState);
             }
 
@@ -103,7 +102,7 @@ public class OrdersController : ControllerBase
 
             if (order == null)
             {
-                _logger.Information("API: Order with ID {OrderId} not found for update", id);
+                _log.Information("API: Order with ID {OrderId} not found for update", id);
                 return NotFound($"Order with ID {id} not found");
             }
 
@@ -111,7 +110,7 @@ public class OrdersController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "API: Error in UpdateOrder for ID {OrderId}", id);
+            _log.Error(ex, "API: Error in UpdateOrder for ID {OrderId}", id);
             return StatusCode(500, "An error occurred while updating the order");
         }
     }
@@ -122,12 +121,12 @@ public class OrdersController : ControllerBase
     {
         try
         {
-            _logger.Information("API: DeleteOrder called for ID {OrderId} by user {User}", id, User.Identity?.Name);
+            _log.Information("API: DeleteOrder called for ID {OrderId} by user {User}", id, User.Identity?.Name);
             var result = await _orderService.DeleteOrderAsync(id);
 
             if (!result)
             {
-                _logger.Information("API: Order with ID {OrderId} not found for deletion", id);
+                _log.Information("API: Order with ID {OrderId} not found for deletion", id);
                 return NotFound($"Order with ID {id} not found");
             }
 
@@ -135,7 +134,7 @@ public class OrdersController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "API: Error in DeleteOrder for ID {OrderId}", id);
+            _log.Error(ex, "API: Error in DeleteOrder for ID {OrderId}", id);
             return StatusCode(500, "An error occurred while deleting the order");
         }
     }

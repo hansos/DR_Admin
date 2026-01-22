@@ -12,12 +12,11 @@ namespace ISPAdmin.Controllers;
 public class MyAccountController : ControllerBase
 {
     private readonly IMyAccountService _myAccountService;
-    private readonly Serilog.ILogger _logger;
+    private static readonly Serilog.ILogger _log = Log.ForContext<MyAccountController>();
 
-    public MyAccountController(IMyAccountService myAccountService, Serilog.ILogger logger)
+    public MyAccountController(IMyAccountService myAccountService)
     {
         _myAccountService = myAccountService;
-        _logger = logger;
     }
 
     /// <summary>
@@ -33,7 +32,7 @@ public class MyAccountController : ControllerBase
         {
             if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Password))
             {
-                _logger.Warning("Login attempt with empty email or password");
+                _log.Warning("Login attempt with empty email or password");
                 return BadRequest(new { message = "Email and password are required" });
             }
 
@@ -41,16 +40,16 @@ public class MyAccountController : ControllerBase
 
             if (result == null)
             {
-                _logger.Warning("Failed login attempt for email: {Email}", request.Email);
+                _log.Warning("Failed login attempt for email: {Email}", request.Email);
                 return Unauthorized(new { message = "Invalid email or password" });
             }
 
-            _logger.Information("Successful login for email: {Email}", request.Email);
+            _log.Information("Successful login for email: {Email}", request.Email);
             return Ok(result);
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error during login for email: {Email}", request.Email);
+            _log.Error(ex, "Error during login for email: {Email}", request.Email);
             return StatusCode(500, new { message = "An error occurred during login" });
         }
     }
@@ -68,23 +67,23 @@ public class MyAccountController : ControllerBase
         {
             if (!ModelState.IsValid)
             {
-                _logger.Warning("Invalid model state for registration");
+                _log.Warning("Invalid model state for registration");
                 return BadRequest(ModelState);
             }
 
             var result = await _myAccountService.RegisterAsync(request);
 
-            _logger.Information("Account registered successfully: {Email}", request.Email);
+            _log.Information("Account registered successfully: {Email}", request.Email);
             return CreatedAtAction(nameof(GetMyAccount), new { }, result);
         }
         catch (InvalidOperationException ex)
         {
-            _logger.Warning(ex, "Registration failed: {Message}", ex.Message);
+            _log.Warning(ex, "Registration failed: {Message}", ex.Message);
             return BadRequest(new { message = ex.Message });
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error during registration for email: {Email}", request.Email);
+            _log.Error(ex, "Error during registration for email: {Email}", request.Email);
             return StatusCode(500, new { message = "An error occurred during registration" });
         }
     }
@@ -102,7 +101,7 @@ public class MyAccountController : ControllerBase
         {
             if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.ConfirmationToken))
             {
-                _logger.Warning("Email confirmation attempt with empty email or token");
+                _log.Warning("Email confirmation attempt with empty email or token");
                 return BadRequest(new { message = "Email and confirmation token are required" });
             }
 
@@ -110,16 +109,16 @@ public class MyAccountController : ControllerBase
 
             if (!result)
             {
-                _logger.Warning("Email confirmation failed for: {Email}", request.Email);
+                _log.Warning("Email confirmation failed for: {Email}", request.Email);
                 return BadRequest(new { message = "Invalid or expired confirmation token" });
             }
 
-            _logger.Information("Email confirmed successfully: {Email}", request.Email);
+            _log.Information("Email confirmed successfully: {Email}", request.Email);
             return Ok(new { message = "Email confirmed successfully" });
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error during email confirmation for: {Email}", request.Email);
+            _log.Error(ex, "Error during email confirmation for: {Email}", request.Email);
             return StatusCode(500, new { message = "An error occurred during email confirmation" });
         }
     }
@@ -138,13 +137,13 @@ public class MyAccountController : ControllerBase
             if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Token) || 
                 string.IsNullOrEmpty(request.NewPassword))
             {
-                _logger.Warning("Set password attempt with missing required fields");
+                _log.Warning("Set password attempt with missing required fields");
                 return BadRequest(new { message = "Email, token, and new password are required" });
             }
 
             if (request.NewPassword != request.ConfirmPassword)
             {
-                _logger.Warning("Set password attempt with mismatched passwords");
+                _log.Warning("Set password attempt with mismatched passwords");
                 return BadRequest(new { message = "Passwords do not match" });
             }
 
@@ -152,16 +151,16 @@ public class MyAccountController : ControllerBase
 
             if (!result)
             {
-                _logger.Warning("Set password failed for: {Email}", request.Email);
+                _log.Warning("Set password failed for: {Email}", request.Email);
                 return BadRequest(new { message = "Invalid or expired token" });
             }
 
-            _logger.Information("Password set successfully for: {Email}", request.Email);
+            _log.Information("Password set successfully for: {Email}", request.Email);
             return Ok(new { message = "Password set successfully" });
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error during set password for: {Email}", request.Email);
+            _log.Error(ex, "Error during set password for: {Email}", request.Email);
             return StatusCode(500, new { message = "An error occurred while setting password" });
         }
     }
@@ -181,13 +180,13 @@ public class MyAccountController : ControllerBase
 
             if (string.IsNullOrEmpty(request.CurrentPassword) || string.IsNullOrEmpty(request.NewPassword))
             {
-                _logger.Warning("Change password attempt with missing required fields");
+                _log.Warning("Change password attempt with missing required fields");
                 return BadRequest(new { message = "Current password and new password are required" });
             }
 
             if (request.NewPassword != request.ConfirmPassword)
             {
-                _logger.Warning("Change password attempt with mismatched passwords");
+                _log.Warning("Change password attempt with mismatched passwords");
                 return BadRequest(new { message = "Passwords do not match" });
             }
 
@@ -195,16 +194,16 @@ public class MyAccountController : ControllerBase
 
             if (!result)
             {
-                _logger.Warning("Change password failed for user: {UserId}", userId);
+                _log.Warning("Change password failed for user: {UserId}", userId);
                 return BadRequest(new { message = "Current password is incorrect" });
             }
 
-            _logger.Information("Password changed successfully for user: {UserId}", userId);
+            _log.Information("Password changed successfully for user: {UserId}", userId);
             return Ok(new { message = "Password changed successfully" });
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error during password change");
+            _log.Error(ex, "Error during password change");
             return StatusCode(500, new { message = "An error occurred while changing password" });
         }
     }
@@ -224,7 +223,7 @@ public class MyAccountController : ControllerBase
 
             if (string.IsNullOrEmpty(request.NewEmail) || string.IsNullOrEmpty(request.Password))
             {
-                _logger.Warning("Patch email attempt with missing required fields");
+                _log.Warning("Patch email attempt with missing required fields");
                 return BadRequest(new { message = "New email and password are required" });
             }
 
@@ -232,16 +231,16 @@ public class MyAccountController : ControllerBase
 
             if (!result)
             {
-                _logger.Warning("Patch email failed for user: {UserId}", userId);
+                _log.Warning("Patch email failed for user: {UserId}", userId);
                 return BadRequest(new { message = "Invalid password or email already in use" });
             }
 
-            _logger.Information("Email updated successfully for user: {UserId}", userId);
+            _log.Information("Email updated successfully for user: {UserId}", userId);
             return Ok(new { message = "Email updated successfully. Please confirm your new email address." });
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error during email update");
+            _log.Error(ex, "Error during email update");
             return StatusCode(500, new { message = "An error occurred while updating email" });
         }
     }
@@ -261,7 +260,7 @@ public class MyAccountController : ControllerBase
 
             if (!ModelState.IsValid)
             {
-                _logger.Warning("Invalid model state for customer info update");
+                _log.Warning("Invalid model state for customer info update");
                 return BadRequest(ModelState);
             }
 
@@ -269,16 +268,16 @@ public class MyAccountController : ControllerBase
 
             if (result == null)
             {
-                _logger.Warning("Patch customer info failed for user: {UserId}", userId);
+                _log.Warning("Patch customer info failed for user: {UserId}", userId);
                 return BadRequest(new { message = "Unable to update customer information" });
             }
 
-            _logger.Information("Customer info updated successfully for user: {UserId}", userId);
+            _log.Information("Customer info updated successfully for user: {UserId}", userId);
             return Ok(result);
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error during customer info update");
+            _log.Error(ex, "Error during customer info update");
             return StatusCode(500, new { message = "An error occurred while updating customer information" });
         }
     }
@@ -299,16 +298,16 @@ public class MyAccountController : ControllerBase
 
             if (result == null)
             {
-                _logger.Warning("Get account failed for user: {UserId}", userId);
+                _log.Warning("Get account failed for user: {UserId}", userId);
                 return NotFound(new { message = "Account not found" });
             }
 
-            _logger.Information("Account information retrieved for user: {UserId}", userId);
+            _log.Information("Account information retrieved for user: {UserId}", userId);
             return Ok(result);
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error retrieving account information");
+            _log.Error(ex, "Error retrieving account information");
             return StatusCode(500, new { message = "An error occurred while retrieving account information" });
         }
     }
@@ -326,7 +325,7 @@ public class MyAccountController : ControllerBase
         {
             if (string.IsNullOrEmpty(request.RefreshToken))
             {
-                _logger.Warning("Refresh token attempt with empty token");
+                _log.Warning("Refresh token attempt with empty token");
                 return BadRequest(new { message = "Refresh token is required" });
             }
 
@@ -334,16 +333,16 @@ public class MyAccountController : ControllerBase
 
             if (result == null)
             {
-                _logger.Warning("Refresh token failed: Invalid or expired token");
+                _log.Warning("Refresh token failed: Invalid or expired token");
                 return Unauthorized(new { message = "Invalid or expired refresh token" });
             }
 
-            _logger.Information("Token refreshed successfully");
+            _log.Information("Token refreshed successfully");
             return Ok(result);
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error during token refresh");
+            _log.Error(ex, "Error during token refresh");
             return StatusCode(500, new { message = "An error occurred during token refresh" });
         }
     }
@@ -361,7 +360,7 @@ public class MyAccountController : ControllerBase
         {
             if (string.IsNullOrEmpty(request.RefreshToken))
             {
-                _logger.Warning("Logout attempt with empty token");
+                _log.Warning("Logout attempt with empty token");
                 return BadRequest(new { message = "Refresh token is required" });
             }
 
@@ -369,16 +368,16 @@ public class MyAccountController : ControllerBase
 
             if (!result)
             {
-                _logger.Warning("Logout failed: Token not found");
+                _log.Warning("Logout failed: Token not found");
                 return BadRequest(new { message = "Token not found or already revoked" });
             }
 
-            _logger.Information("User logged out successfully");
+            _log.Information("User logged out successfully");
             return Ok(new { message = "Logged out successfully" });
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error during logout");
+            _log.Error(ex, "Error during logout");
             return StatusCode(500, new { message = "An error occurred during logout" });
         }
     }

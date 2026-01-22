@@ -9,19 +9,18 @@ namespace ISPAdmin.Services;
 public class TokenService : ITokenService
 {
     private readonly ApplicationDbContext _context;
-    private readonly Serilog.ILogger _logger;
+    private static readonly Serilog.ILogger _log = Log.ForContext<TokenService>();
 
-    public TokenService(ApplicationDbContext context, Serilog.ILogger logger)
+    public TokenService(ApplicationDbContext context)
     {
         _context = context;
-        _logger = logger;
     }
 
     public async Task<IEnumerable<TokenDto>> GetAllTokensAsync()
     {
         try
         {
-            _logger.Information("Fetching all tokens");
+            _log.Information("Fetching all tokens");
             
             var tokens = await _context.Tokens
                 .AsNoTracking()
@@ -29,12 +28,12 @@ public class TokenService : ITokenService
 
             var tokenDtos = tokens.Select(MapToDto);
             
-            _logger.Information("Successfully fetched {Count} tokens", tokens.Count);
+            _log.Information("Successfully fetched {Count} tokens", tokens.Count);
             return tokenDtos;
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error occurred while fetching all tokens");
+            _log.Error(ex, "Error occurred while fetching all tokens");
             throw;
         }
     }
@@ -43,7 +42,7 @@ public class TokenService : ITokenService
     {
         try
         {
-            _logger.Information("Fetching token with ID: {TokenId}", id);
+            _log.Information("Fetching token with ID: {TokenId}", id);
             
             var token = await _context.Tokens
                 .AsNoTracking()
@@ -51,16 +50,16 @@ public class TokenService : ITokenService
 
             if (token == null)
             {
-                _logger.Warning("Token with ID {TokenId} not found", id);
+                _log.Warning("Token with ID {TokenId} not found", id);
                 return null;
             }
 
-            _logger.Information("Successfully fetched token with ID: {TokenId}", id);
+            _log.Information("Successfully fetched token with ID: {TokenId}", id);
             return MapToDto(token);
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error occurred while fetching token with ID: {TokenId}", id);
+            _log.Error(ex, "Error occurred while fetching token with ID: {TokenId}", id);
             throw;
         }
     }
@@ -69,7 +68,7 @@ public class TokenService : ITokenService
     {
         try
         {
-            _logger.Information("Creating new token for user: {UserId}", createDto.UserId);
+            _log.Information("Creating new token for user: {UserId}", createDto.UserId);
 
             var token = new Token
             {
@@ -83,12 +82,12 @@ public class TokenService : ITokenService
             _context.Tokens.Add(token);
             await _context.SaveChangesAsync();
 
-            _logger.Information("Successfully created token with ID: {TokenId}", token.Id);
+            _log.Information("Successfully created token with ID: {TokenId}", token.Id);
             return MapToDto(token);
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error occurred while creating token for user: {UserId}", createDto.UserId);
+            _log.Error(ex, "Error occurred while creating token for user: {UserId}", createDto.UserId);
             throw;
         }
     }
@@ -97,13 +96,13 @@ public class TokenService : ITokenService
     {
         try
         {
-            _logger.Information("Updating token with ID: {TokenId}", id);
+            _log.Information("Updating token with ID: {TokenId}", id);
 
             var token = await _context.Tokens.FindAsync(id);
 
             if (token == null)
             {
-                _logger.Warning("Token with ID {TokenId} not found for update", id);
+                _log.Warning("Token with ID {TokenId} not found for update", id);
                 return null;
             }
 
@@ -111,12 +110,12 @@ public class TokenService : ITokenService
 
             await _context.SaveChangesAsync();
 
-            _logger.Information("Successfully updated token with ID: {TokenId}", id);
+            _log.Information("Successfully updated token with ID: {TokenId}", id);
             return MapToDto(token);
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error occurred while updating token with ID: {TokenId}", id);
+            _log.Error(ex, "Error occurred while updating token with ID: {TokenId}", id);
             throw;
         }
     }
@@ -125,25 +124,25 @@ public class TokenService : ITokenService
     {
         try
         {
-            _logger.Information("Deleting token with ID: {TokenId}", id);
+            _log.Information("Deleting token with ID: {TokenId}", id);
 
             var token = await _context.Tokens.FindAsync(id);
 
             if (token == null)
             {
-                _logger.Warning("Token with ID {TokenId} not found for deletion", id);
+                _log.Warning("Token with ID {TokenId} not found for deletion", id);
                 return false;
             }
 
             _context.Tokens.Remove(token);
             await _context.SaveChangesAsync();
 
-            _logger.Information("Successfully deleted token with ID: {TokenId}", id);
+            _log.Information("Successfully deleted token with ID: {TokenId}", id);
             return true;
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error occurred while deleting token with ID: {TokenId}", id);
+            _log.Error(ex, "Error occurred while deleting token with ID: {TokenId}", id);
             throw;
         }
     }

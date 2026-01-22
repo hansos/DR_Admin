@@ -9,19 +9,18 @@ namespace ISPAdmin.Services;
 public class RoleService : IRoleService
 {
     private readonly ApplicationDbContext _context;
-    private readonly Serilog.ILogger _logger;
+    private static readonly Serilog.ILogger _log = Log.ForContext<RoleService>();
 
-    public RoleService(ApplicationDbContext context, Serilog.ILogger logger)
+    public RoleService(ApplicationDbContext context)
     {
         _context = context;
-        _logger = logger;
     }
 
     public async Task<IEnumerable<RoleDto>> GetAllRolesAsync()
     {
         try
         {
-            _logger.Information("Fetching all roles");
+            _log.Information("Fetching all roles");
             
             var roles = await _context.Roles
                 .AsNoTracking()
@@ -29,12 +28,12 @@ public class RoleService : IRoleService
 
             var roleDtos = roles.Select(MapToDto);
             
-            _logger.Information("Successfully fetched {Count} roles", roles.Count);
+            _log.Information("Successfully fetched {Count} roles", roles.Count);
             return roleDtos;
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error occurred while fetching all roles");
+            _log.Error(ex, "Error occurred while fetching all roles");
             throw;
         }
     }
@@ -43,7 +42,7 @@ public class RoleService : IRoleService
     {
         try
         {
-            _logger.Information("Fetching role with ID: {RoleId}", id);
+            _log.Information("Fetching role with ID: {RoleId}", id);
             
             var role = await _context.Roles
                 .AsNoTracking()
@@ -51,16 +50,16 @@ public class RoleService : IRoleService
 
             if (role == null)
             {
-                _logger.Warning("Role with ID {RoleId} not found", id);
+                _log.Warning("Role with ID {RoleId} not found", id);
                 return null;
             }
 
-            _logger.Information("Successfully fetched role with ID: {RoleId}", id);
+            _log.Information("Successfully fetched role with ID: {RoleId}", id);
             return MapToDto(role);
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error occurred while fetching role with ID: {RoleId}", id);
+            _log.Error(ex, "Error occurred while fetching role with ID: {RoleId}", id);
             throw;
         }
     }
@@ -69,7 +68,7 @@ public class RoleService : IRoleService
     {
         try
         {
-            _logger.Information("Creating new role with name: {RoleName}", createDto.Name);
+            _log.Information("Creating new role with name: {RoleName}", createDto.Name);
 
             var role = new Role
             {
@@ -80,12 +79,12 @@ public class RoleService : IRoleService
             _context.Roles.Add(role);
             await _context.SaveChangesAsync();
 
-            _logger.Information("Successfully created role with ID: {RoleId}", role.Id);
+            _log.Information("Successfully created role with ID: {RoleId}", role.Id);
             return MapToDto(role);
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error occurred while creating role with name: {RoleName}", createDto.Name);
+            _log.Error(ex, "Error occurred while creating role with name: {RoleName}", createDto.Name);
             throw;
         }
     }
@@ -94,13 +93,13 @@ public class RoleService : IRoleService
     {
         try
         {
-            _logger.Information("Updating role with ID: {RoleId}", id);
+            _log.Information("Updating role with ID: {RoleId}", id);
 
             var role = await _context.Roles.FindAsync(id);
 
             if (role == null)
             {
-                _logger.Warning("Role with ID {RoleId} not found for update", id);
+                _log.Warning("Role with ID {RoleId} not found for update", id);
                 return null;
             }
 
@@ -109,12 +108,12 @@ public class RoleService : IRoleService
 
             await _context.SaveChangesAsync();
 
-            _logger.Information("Successfully updated role with ID: {RoleId}", id);
+            _log.Information("Successfully updated role with ID: {RoleId}", id);
             return MapToDto(role);
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error occurred while updating role with ID: {RoleId}", id);
+            _log.Error(ex, "Error occurred while updating role with ID: {RoleId}", id);
             throw;
         }
     }
@@ -123,25 +122,25 @@ public class RoleService : IRoleService
     {
         try
         {
-            _logger.Information("Deleting role with ID: {RoleId}", id);
+            _log.Information("Deleting role with ID: {RoleId}", id);
 
             var role = await _context.Roles.FindAsync(id);
 
             if (role == null)
             {
-                _logger.Warning("Role with ID {RoleId} not found for deletion", id);
+                _log.Warning("Role with ID {RoleId} not found for deletion", id);
                 return false;
             }
 
             _context.Roles.Remove(role);
             await _context.SaveChangesAsync();
 
-            _logger.Information("Successfully deleted role with ID: {RoleId}", id);
+            _log.Information("Successfully deleted role with ID: {RoleId}", id);
             return true;
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error occurred while deleting role with ID: {RoleId}", id);
+            _log.Error(ex, "Error occurred while deleting role with ID: {RoleId}", id);
             throw;
         }
     }
@@ -155,7 +154,7 @@ public class RoleService : IRoleService
 
             if (existingRole == null)
             {
-                _logger.Information("Creating role: {RoleName}", roleName);
+                _log.Information("Creating role: {RoleName}", roleName);
                 
                 var role = new Role
                 {
@@ -168,16 +167,16 @@ public class RoleService : IRoleService
                 _context.Roles.Add(role);
                 await _context.SaveChangesAsync();
                 
-                _logger.Information("Successfully created role: {RoleName} with ID: {RoleId}", roleName, role.Id);
+                _log.Information("Successfully created role: {RoleName} with ID: {RoleId}", roleName, role.Id);
             }
             else
             {
-                _logger.Debug("Role {RoleName} already exists with ID: {RoleId}", roleName, existingRole.Id);
+                _log.Debug("Role {RoleName} already exists with ID: {RoleId}", roleName, existingRole.Id);
             }
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error occurred while ensuring role exists: {RoleName}", roleName);
+            _log.Error(ex, "Error occurred while ensuring role exists: {RoleName}", roleName);
             throw;
         }
     }

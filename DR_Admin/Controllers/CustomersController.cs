@@ -12,12 +12,11 @@ namespace ISPAdmin.Controllers;
 public class CustomersController : ControllerBase
 {
     private readonly ICustomerService _customerService;
-    private readonly Serilog.ILogger _logger;
+    private static readonly Serilog.ILogger _log = Log.ForContext<CustomersController>();
 
-    public CustomersController(ICustomerService customerService, Serilog.ILogger logger)
+    public CustomersController(ICustomerService customerService)
     {
         _customerService = customerService;
-        _logger = logger;
     }
 
     /// <summary>
@@ -29,14 +28,14 @@ public class CustomersController : ControllerBase
     {
         try
         {
-            _logger.Information("API: GetAllCustomers called by user {User}", User.Identity?.Name);
+            _log.Information("API: GetAllCustomers called by user {User}", User.Identity?.Name);
             
             var customers = await _customerService.GetAllCustomersAsync();
             return Ok(customers);
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "API: Error in GetAllCustomers");
+            _log.Error(ex, "API: Error in GetAllCustomers");
             return StatusCode(500, "An error occurred while retrieving customers");
         }
     }
@@ -50,13 +49,13 @@ public class CustomersController : ControllerBase
     {
         try
         {
-            _logger.Information("API: GetCustomerById called for ID {CustomerId} by user {User}", id, User.Identity?.Name);
+            _log.Information("API: GetCustomerById called for ID {CustomerId} by user {User}", id, User.Identity?.Name);
             
             var customer = await _customerService.GetCustomerByIdAsync(id);
 
             if (customer == null)
             {
-                _logger.Information("API: Customer with ID {CustomerId} not found", id);
+                _log.Information("API: Customer with ID {CustomerId} not found", id);
                 return NotFound($"Customer with ID {id} not found");
             }
 
@@ -64,7 +63,7 @@ public class CustomersController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "API: Error in GetCustomerById for ID {CustomerId}", id);
+            _log.Error(ex, "API: Error in GetCustomerById for ID {CustomerId}", id);
             return StatusCode(500, "An error occurred while retrieving the customer");
         }
     }
@@ -78,11 +77,11 @@ public class CustomersController : ControllerBase
     {
         try
         {
-            _logger.Information("API: CreateCustomer called by user {User}", User.Identity?.Name);
+            _log.Information("API: CreateCustomer called by user {User}", User.Identity?.Name);
 
             if (!ModelState.IsValid)
             {
-                _logger.Warning("API: Invalid model state for CreateCustomer");
+                _log.Warning("API: Invalid model state for CreateCustomer");
                 return BadRequest(ModelState);
             }
 
@@ -95,7 +94,7 @@ public class CustomersController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "API: Error in CreateCustomer");
+            _log.Error(ex, "API: Error in CreateCustomer");
             return StatusCode(500, "An error occurred while creating the customer");
         }
     }
@@ -109,11 +108,11 @@ public class CustomersController : ControllerBase
     {
         try
         {
-            _logger.Information("API: UpdateCustomer called for ID {CustomerId} by user {User}", id, User.Identity?.Name);
+            _log.Information("API: UpdateCustomer called for ID {CustomerId} by user {User}", id, User.Identity?.Name);
 
             if (!ModelState.IsValid)
             {
-                _logger.Warning("API: Invalid model state for UpdateCustomer");
+                _log.Warning("API: Invalid model state for UpdateCustomer");
                 return BadRequest(ModelState);
             }
 
@@ -121,7 +120,7 @@ public class CustomersController : ControllerBase
 
             if (customer == null)
             {
-                _logger.Information("API: Customer with ID {CustomerId} not found for update", id);
+                _log.Information("API: Customer with ID {CustomerId} not found for update", id);
                 return NotFound($"Customer with ID {id} not found");
             }
 
@@ -129,7 +128,7 @@ public class CustomersController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "API: Error in UpdateCustomer for ID {CustomerId}", id);
+            _log.Error(ex, "API: Error in UpdateCustomer for ID {CustomerId}", id);
             return StatusCode(500, "An error occurred while updating the customer");
         }
     }
@@ -143,13 +142,13 @@ public class CustomersController : ControllerBase
     {
         try
         {
-            _logger.Information("API: DeleteCustomer called for ID {CustomerId} by user {User}", id, User.Identity?.Name);
+            _log.Information("API: DeleteCustomer called for ID {CustomerId} by user {User}", id, User.Identity?.Name);
 
             var result = await _customerService.DeleteCustomerAsync(id);
 
             if (!result)
             {
-                _logger.Information("API: Customer with ID {CustomerId} not found for deletion", id);
+                _log.Information("API: Customer with ID {CustomerId} not found for deletion", id);
                 return NotFound($"Customer with ID {id} not found");
             }
 
@@ -157,7 +156,7 @@ public class CustomersController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "API: Error in DeleteCustomer for ID {CustomerId}", id);
+            _log.Error(ex, "API: Error in DeleteCustomer for ID {CustomerId}", id);
             return StatusCode(500, "An error occurred while deleting the customer");
         }
     }

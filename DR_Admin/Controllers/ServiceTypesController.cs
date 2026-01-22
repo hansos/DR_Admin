@@ -12,12 +12,11 @@ namespace ISPAdmin.Controllers;
 public class ServiceTypesController : ControllerBase
 {
     private readonly IServiceTypeService _serviceTypeService;
-    private readonly Serilog.ILogger _logger;
+    private static readonly Serilog.ILogger _log = Log.ForContext<ServiceTypesController>();
 
-    public ServiceTypesController(IServiceTypeService serviceTypeService, Serilog.ILogger logger)
+    public ServiceTypesController(IServiceTypeService serviceTypeService)
     {
         _serviceTypeService = serviceTypeService;
-        _logger = logger;
     }
 
     /// <summary>
@@ -29,14 +28,14 @@ public class ServiceTypesController : ControllerBase
     {
         try
         {
-            _logger.Information("API: GetAllServiceTypes called by user {User}", User.Identity?.Name);
+            _log.Information("API: GetAllServiceTypes called by user {User}", User.Identity?.Name);
             
             var serviceTypes = await _serviceTypeService.GetAllServiceTypesAsync();
             return Ok(serviceTypes);
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "API: Error in GetAllServiceTypes");
+            _log.Error(ex, "API: Error in GetAllServiceTypes");
             return StatusCode(500, "An error occurred while retrieving service types");
         }
     }
@@ -50,13 +49,13 @@ public class ServiceTypesController : ControllerBase
     {
         try
         {
-            _logger.Information("API: GetServiceTypeById called for ID {ServiceTypeId} by user {User}", id, User.Identity?.Name);
+            _log.Information("API: GetServiceTypeById called for ID {ServiceTypeId} by user {User}", id, User.Identity?.Name);
             
             var serviceType = await _serviceTypeService.GetServiceTypeByIdAsync(id);
 
             if (serviceType == null)
             {
-                _logger.Information("API: Service type with ID {ServiceTypeId} not found", id);
+                _log.Information("API: Service type with ID {ServiceTypeId} not found", id);
                 return NotFound($"Service type with ID {id} not found");
             }
 
@@ -64,7 +63,7 @@ public class ServiceTypesController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "API: Error in GetServiceTypeById for ID {ServiceTypeId}", id);
+            _log.Error(ex, "API: Error in GetServiceTypeById for ID {ServiceTypeId}", id);
             return StatusCode(500, "An error occurred while retrieving the service type");
         }
     }
@@ -78,11 +77,11 @@ public class ServiceTypesController : ControllerBase
     {
         try
         {
-            _logger.Information("API: CreateServiceType called by user {User}", User.Identity?.Name);
+            _log.Information("API: CreateServiceType called by user {User}", User.Identity?.Name);
 
             if (!ModelState.IsValid)
             {
-                _logger.Warning("API: Invalid model state for CreateServiceType");
+                _log.Warning("API: Invalid model state for CreateServiceType");
                 return BadRequest(ModelState);
             }
 
@@ -95,7 +94,7 @@ public class ServiceTypesController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "API: Error in CreateServiceType");
+            _log.Error(ex, "API: Error in CreateServiceType");
             return StatusCode(500, "An error occurred while creating the service type");
         }
     }
@@ -109,11 +108,11 @@ public class ServiceTypesController : ControllerBase
     {
         try
         {
-            _logger.Information("API: UpdateServiceType called for ID {ServiceTypeId} by user {User}", id, User.Identity?.Name);
+            _log.Information("API: UpdateServiceType called for ID {ServiceTypeId} by user {User}", id, User.Identity?.Name);
 
             if (!ModelState.IsValid)
             {
-                _logger.Warning("API: Invalid model state for UpdateServiceType");
+                _log.Warning("API: Invalid model state for UpdateServiceType");
                 return BadRequest(ModelState);
             }
 
@@ -121,7 +120,7 @@ public class ServiceTypesController : ControllerBase
 
             if (serviceType == null)
             {
-                _logger.Information("API: Service type with ID {ServiceTypeId} not found for update", id);
+                _log.Information("API: Service type with ID {ServiceTypeId} not found for update", id);
                 return NotFound($"Service type with ID {id} not found");
             }
 
@@ -129,7 +128,7 @@ public class ServiceTypesController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "API: Error in UpdateServiceType for ID {ServiceTypeId}", id);
+            _log.Error(ex, "API: Error in UpdateServiceType for ID {ServiceTypeId}", id);
             return StatusCode(500, "An error occurred while updating the service type");
         }
     }
@@ -143,13 +142,13 @@ public class ServiceTypesController : ControllerBase
     {
         try
         {
-            _logger.Information("API: DeleteServiceType called for ID {ServiceTypeId} by user {User}", id, User.Identity?.Name);
+            _log.Information("API: DeleteServiceType called for ID {ServiceTypeId} by user {User}", id, User.Identity?.Name);
 
             var result = await _serviceTypeService.DeleteServiceTypeAsync(id);
 
             if (!result)
             {
-                _logger.Information("API: Service type with ID {ServiceTypeId} not found for deletion", id);
+                _log.Information("API: Service type with ID {ServiceTypeId} not found for deletion", id);
                 return NotFound($"Service type with ID {id} not found");
             }
 
@@ -157,7 +156,7 @@ public class ServiceTypesController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "API: Error in DeleteServiceType for ID {ServiceTypeId}", id);
+            _log.Error(ex, "API: Error in DeleteServiceType for ID {ServiceTypeId}", id);
             return StatusCode(500, "An error occurred while deleting the service type");
         }
     }

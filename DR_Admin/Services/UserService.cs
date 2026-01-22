@@ -9,19 +9,18 @@ namespace ISPAdmin.Services;
 public class UserService : IUserService
 {
     private readonly ApplicationDbContext _context;
-    private readonly Serilog.ILogger _logger;
+    private static readonly Serilog.ILogger _log = Log.ForContext<UserService>();
 
-    public UserService(ApplicationDbContext context, Serilog.ILogger logger)
+    public UserService(ApplicationDbContext context)
     {
         _context = context;
-        _logger = logger;
     }
 
     public async Task<IEnumerable<UserDto>> GetAllUsersAsync()
     {
         try
         {
-            _logger.Information("Fetching all users");
+            _log.Information("Fetching all users");
             
             var users = await _context.Users
                 .AsNoTracking()
@@ -29,12 +28,12 @@ public class UserService : IUserService
 
             var userDtos = users.Select(MapToDto);
             
-            _logger.Information("Successfully fetched {Count} users", users.Count);
+            _log.Information("Successfully fetched {Count} users", users.Count);
             return userDtos;
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error occurred while fetching all users");
+            _log.Error(ex, "Error occurred while fetching all users");
             throw;
         }
     }
@@ -43,7 +42,7 @@ public class UserService : IUserService
     {
         try
         {
-            _logger.Information("Fetching user with ID: {UserId}", id);
+            _log.Information("Fetching user with ID: {UserId}", id);
             
             var user = await _context.Users
                 .AsNoTracking()
@@ -51,16 +50,16 @@ public class UserService : IUserService
 
             if (user == null)
             {
-                _logger.Warning("User with ID {UserId} not found", id);
+                _log.Warning("User with ID {UserId} not found", id);
                 return null;
             }
 
-            _logger.Information("Successfully fetched user with ID: {UserId}", id);
+            _log.Information("Successfully fetched user with ID: {UserId}", id);
             return MapToDto(user);
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error occurred while fetching user with ID: {UserId}", id);
+            _log.Error(ex, "Error occurred while fetching user with ID: {UserId}", id);
             throw;
         }
     }
@@ -69,7 +68,8 @@ public class UserService : IUserService
     {
         try
         {
-            _logger.Information("Creating new user with username: {Username}", createDto.Username);
+            _log.Information("Creating new user with username: {Username}", createDto.Username);
+
 
             var user = new User
             {
@@ -85,12 +85,12 @@ public class UserService : IUserService
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            _logger.Information("Successfully created user with ID: {UserId}", user.Id);
+            _log.Information("Successfully created user with ID: {UserId}", user.Id);
             return MapToDto(user);
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error occurred while creating user with username: {Username}", createDto.Username);
+            _log.Error(ex, "Error occurred while creating user with username: {Username}", createDto.Username);
             throw;
         }
     }
@@ -99,13 +99,13 @@ public class UserService : IUserService
     {
         try
         {
-            _logger.Information("Updating user with ID: {UserId}", id);
+            _log.Information("Updating user with ID: {UserId}", id);
 
             var user = await _context.Users.FindAsync(id);
 
             if (user == null)
             {
-                _logger.Warning("User with ID {UserId} not found for update", id);
+                _log.Warning("User with ID {UserId} not found for update", id);
                 return null;
             }
 
@@ -117,12 +117,12 @@ public class UserService : IUserService
 
             await _context.SaveChangesAsync();
 
-            _logger.Information("Successfully updated user with ID: {UserId}", id);
+            _log.Information("Successfully updated user with ID: {UserId}", id);
             return MapToDto(user);
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error occurred while updating user with ID: {UserId}", id);
+            _log.Error(ex, "Error occurred while updating user with ID: {UserId}", id);
             throw;
         }
     }
@@ -131,25 +131,25 @@ public class UserService : IUserService
     {
         try
         {
-            _logger.Information("Deleting user with ID: {UserId}", id);
+            _log.Information("Deleting user with ID: {UserId}", id);
 
             var user = await _context.Users.FindAsync(id);
 
             if (user == null)
             {
-                _logger.Warning("User with ID {UserId} not found for deletion", id);
+                _log.Warning("User with ID {UserId} not found for deletion", id);
                 return false;
             }
 
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
 
-            _logger.Information("Successfully deleted user with ID: {UserId}", id);
+            _log.Information("Successfully deleted user with ID: {UserId}", id);
             return true;
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error occurred while deleting user with ID: {UserId}", id);
+            _log.Error(ex, "Error occurred while deleting user with ID: {UserId}", id);
             throw;
         }
     }

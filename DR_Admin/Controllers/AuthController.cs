@@ -11,26 +11,23 @@ namespace ISPAdmin.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
-    private readonly Serilog.ILogger _logger;
+    private static readonly Serilog.ILogger _log = Log.ForContext<AuthController>();
 
-    public AuthController(IAuthService authService, Serilog.ILogger logger)
+    public AuthController(IAuthService authService)
     {
         _authService = authService;
-        _logger = logger;
     }
 
     /// <summary>
     /// Login endpoint to get JWT token
     /// </summary>
-    /// <param name="loginRequest">Username and password</param>
-    /// <returns>JWT token and user information</returns>
     [HttpPost("login")]
     [AllowAnonymous]
     public async Task<ActionResult<LoginResponseDto>> Login([FromBody] LoginRequestDto loginRequest)
     {
         if (string.IsNullOrEmpty(loginRequest.Username) || string.IsNullOrEmpty(loginRequest.Password))
         {
-            _logger.Warning("Login attempt with empty username or password");
+            _log.Warning("Login attempt with empty username or password");
             return BadRequest(new { message = "Username and password are required" });
         }
 
@@ -38,12 +35,62 @@ public class AuthController : ControllerBase
 
         if (result == null)
         {
-            _logger.Warning("Failed login attempt for username: {Username}", loginRequest.Username);
+            _log.Warning("Failed login attempt for username: {Username}", loginRequest.Username);
             return Unauthorized(new { message = "Invalid username or password" });
         }
 
-        _logger.Information("Successful login for username: {Username}", loginRequest.Username);
+        _log.Information("Successful login for username: {Username}", loginRequest.Username);
         return Ok(result);
+    }
+
+    /// <summary>
+    /// Refresh access token using refresh token
+    /// </summary>
+    [HttpPost("refresh")]
+    [AllowAnonymous]
+    public async Task<ActionResult<LoginResponseDto>> RefreshToken([FromBody] RefreshTokenRequestDto request)
+    {
+        if (string.IsNullOrEmpty(request.RefreshToken))
+        {
+            _log.Warning("Refresh token attempt with empty token");
+            return BadRequest(new { message = "Refresh token is required" });
+        }
+
+        var result = await _authService.RefreshTokenAsync(request.RefreshToken);
+
+        if (result == null)
+        {
+            _log.Warning("Failed refresh token attempt");
+            return Unauthorized(new { message = "Invalid or expired refresh token" });
+        }
+
+        _log.Information("Successfully refreshed token for user: {Username}", result.Username);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Logout endpoint to revoke refresh token
+    /// </summary>
+    [HttpPost("logout")]
+    [Authorize]
+    public async Task<ActionResult> Logout([FromBody] RefreshTokenRequestDto request)
+    {
+        if (string.IsNullOrEmpty(request.RefreshToken))
+        {
+            _log.Warning("Logout attempt with empty refresh token");
+            return BadRequest(new { message = "Refresh token is required" });
+        }
+
+        var success = await _authService.RevokeRefreshTokenAsync(request.RefreshToken);
+
+        if (!success)
+        {
+            _log.Warning("Failed to revoke refresh token");
+            return BadRequest(new { message = "Failed to revoke token" });
+        }
+
+        _log.Information("User logged out successfully: {Username}", User.Identity?.Name);
+        return Ok(new { message = "Logged out successfully" });
     }
 
     /// <summary>
@@ -59,7 +106,7 @@ public class AuthController : ControllerBase
             .Select(c => c.Value)
             .ToList();
 
-        _logger.Information("Token verified for user: {Username}", username);
+        _log.Information("Token verified for user: {Username}", username);
 
         return Ok(new
         {

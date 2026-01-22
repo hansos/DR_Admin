@@ -9,26 +9,25 @@ namespace ISPAdmin.Services;
 public class InvoiceService : IInvoiceService
 {
     private readonly ApplicationDbContext _context;
-    private readonly Serilog.ILogger _logger;
+    private static readonly Serilog.ILogger _log = Log.ForContext<InvoiceService>();
 
-    public InvoiceService(ApplicationDbContext context, Serilog.ILogger logger)
+    public InvoiceService(ApplicationDbContext context)
     {
         _context = context;
-        _logger = logger;
     }
 
     public async Task<IEnumerable<InvoiceDto>> GetAllInvoicesAsync()
     {
         try
         {
-            _logger.Information("Fetching all invoices");
+            _log.Information("Fetching all invoices");
             var invoices = await _context.Invoices.AsNoTracking().ToListAsync();
-            _logger.Information("Successfully fetched {Count} invoices", invoices.Count);
+            _log.Information("Successfully fetched {Count} invoices", invoices.Count);
             return invoices.Select(MapToDto);
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error occurred while fetching all invoices");
+            _log.Error(ex, "Error occurred while fetching all invoices");
             throw;
         }
     }
@@ -37,21 +36,21 @@ public class InvoiceService : IInvoiceService
     {
         try
         {
-            _logger.Information("Fetching invoice with ID: {InvoiceId}", id);
+            _log.Information("Fetching invoice with ID: {InvoiceId}", id);
             var invoice = await _context.Invoices.AsNoTracking().FirstOrDefaultAsync(i => i.Id == id);
 
             if (invoice == null)
             {
-                _logger.Warning("Invoice with ID {InvoiceId} not found", id);
+                _log.Warning("Invoice with ID {InvoiceId} not found", id);
                 return null;
             }
 
-            _logger.Information("Successfully fetched invoice with ID: {InvoiceId}", id);
+            _log.Information("Successfully fetched invoice with ID: {InvoiceId}", id);
             return MapToDto(invoice);
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error occurred while fetching invoice with ID: {InvoiceId}", id);
+            _log.Error(ex, "Error occurred while fetching invoice with ID: {InvoiceId}", id);
             throw;
         }
     }
@@ -60,7 +59,7 @@ public class InvoiceService : IInvoiceService
     {
         try
         {
-            _logger.Information("Creating new invoice for order: {OrderId}", createDto.OrderId);
+            _log.Information("Creating new invoice for order: {OrderId}", createDto.OrderId);
 
             var invoice = new Invoice
             {
@@ -75,12 +74,12 @@ public class InvoiceService : IInvoiceService
             _context.Invoices.Add(invoice);
             await _context.SaveChangesAsync();
 
-            _logger.Information("Successfully created invoice with ID: {InvoiceId}", invoice.Id);
+            _log.Information("Successfully created invoice with ID: {InvoiceId}", invoice.Id);
             return MapToDto(invoice);
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error occurred while creating invoice");
+            _log.Error(ex, "Error occurred while creating invoice");
             throw;
         }
     }
@@ -89,12 +88,12 @@ public class InvoiceService : IInvoiceService
     {
         try
         {
-            _logger.Information("Updating invoice with ID: {InvoiceId}", id);
+            _log.Information("Updating invoice with ID: {InvoiceId}", id);
             var invoice = await _context.Invoices.FindAsync(id);
 
             if (invoice == null)
             {
-                _logger.Warning("Invoice with ID {InvoiceId} not found for update", id);
+                _log.Warning("Invoice with ID {InvoiceId} not found for update", id);
                 return null;
             }
 
@@ -107,12 +106,12 @@ public class InvoiceService : IInvoiceService
 
             await _context.SaveChangesAsync();
 
-            _logger.Information("Successfully updated invoice with ID: {InvoiceId}", id);
+            _log.Information("Successfully updated invoice with ID: {InvoiceId}", id);
             return MapToDto(invoice);
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error occurred while updating invoice with ID: {InvoiceId}", id);
+            _log.Error(ex, "Error occurred while updating invoice with ID: {InvoiceId}", id);
             throw;
         }
     }
@@ -121,24 +120,24 @@ public class InvoiceService : IInvoiceService
     {
         try
         {
-            _logger.Information("Deleting invoice with ID: {InvoiceId}", id);
+            _log.Information("Deleting invoice with ID: {InvoiceId}", id);
             var invoice = await _context.Invoices.FindAsync(id);
 
             if (invoice == null)
             {
-                _logger.Warning("Invoice with ID {InvoiceId} not found for deletion", id);
+                _log.Warning("Invoice with ID {InvoiceId} not found for deletion", id);
                 return false;
             }
 
             _context.Invoices.Remove(invoice);
             await _context.SaveChangesAsync();
 
-            _logger.Information("Successfully deleted invoice with ID: {InvoiceId}", id);
+            _log.Information("Successfully deleted invoice with ID: {InvoiceId}", id);
             return true;
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error occurred while deleting invoice with ID: {InvoiceId}", id);
+            _log.Error(ex, "Error occurred while deleting invoice with ID: {InvoiceId}", id);
             throw;
         }
     }

@@ -9,19 +9,18 @@ namespace ISPAdmin.Services;
 public class ServiceTypeService : IServiceTypeService
 {
     private readonly ApplicationDbContext _context;
-    private readonly Serilog.ILogger _logger;
+    private static readonly Serilog.ILogger _log = Log.ForContext<ServiceTypeService>();
 
-    public ServiceTypeService(ApplicationDbContext context, Serilog.ILogger logger)
+    public ServiceTypeService(ApplicationDbContext context)
     {
         _context = context;
-        _logger = logger;
     }
 
     public async Task<IEnumerable<ServiceTypeDto>> GetAllServiceTypesAsync()
     {
         try
         {
-            _logger.Information("Fetching all service types");
+            _log.Information("Fetching all service types");
             
             var serviceTypes = await _context.ServiceTypes
                 .AsNoTracking()
@@ -29,12 +28,12 @@ public class ServiceTypeService : IServiceTypeService
 
             var serviceTypeDtos = serviceTypes.Select(MapToDto);
             
-            _logger.Information("Successfully fetched {Count} service types", serviceTypes.Count);
+            _log.Information("Successfully fetched {Count} service types", serviceTypes.Count);
             return serviceTypeDtos;
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error occurred while fetching all service types");
+            _log.Error(ex, "Error occurred while fetching all service types");
             throw;
         }
     }
@@ -43,7 +42,7 @@ public class ServiceTypeService : IServiceTypeService
     {
         try
         {
-            _logger.Information("Fetching service type with ID: {ServiceTypeId}", id);
+            _log.Information("Fetching service type with ID: {ServiceTypeId}", id);
             
             var serviceType = await _context.ServiceTypes
                 .AsNoTracking()
@@ -51,16 +50,16 @@ public class ServiceTypeService : IServiceTypeService
 
             if (serviceType == null)
             {
-                _logger.Warning("Service type with ID {ServiceTypeId} not found", id);
+                _log.Warning("Service type with ID {ServiceTypeId} not found", id);
                 return null;
             }
 
-            _logger.Information("Successfully fetched service type with ID: {ServiceTypeId}", id);
+            _log.Information("Successfully fetched service type with ID: {ServiceTypeId}", id);
             return MapToDto(serviceType);
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error occurred while fetching service type with ID: {ServiceTypeId}", id);
+            _log.Error(ex, "Error occurred while fetching service type with ID: {ServiceTypeId}", id);
             throw;
         }
     }
@@ -69,7 +68,7 @@ public class ServiceTypeService : IServiceTypeService
     {
         try
         {
-            _logger.Information("Creating new service type with name: {ServiceTypeName}", createDto.Name);
+            _log.Information("Creating new service type with name: {ServiceTypeName}", createDto.Name);
 
             var serviceType = new ServiceType
             {
@@ -80,12 +79,12 @@ public class ServiceTypeService : IServiceTypeService
             _context.ServiceTypes.Add(serviceType);
             await _context.SaveChangesAsync();
 
-            _logger.Information("Successfully created service type with ID: {ServiceTypeId}", serviceType.Id);
+            _log.Information("Successfully created service type with ID: {ServiceTypeId}", serviceType.Id);
             return MapToDto(serviceType);
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error occurred while creating service type with name: {ServiceTypeName}", createDto.Name);
+            _log.Error(ex, "Error occurred while creating service type with name: {ServiceTypeName}", createDto.Name);
             throw;
         }
     }
@@ -94,13 +93,13 @@ public class ServiceTypeService : IServiceTypeService
     {
         try
         {
-            _logger.Information("Updating service type with ID: {ServiceTypeId}", id);
+            _log.Information("Updating service type with ID: {ServiceTypeId}", id);
 
             var serviceType = await _context.ServiceTypes.FindAsync(id);
 
             if (serviceType == null)
             {
-                _logger.Warning("Service type with ID {ServiceTypeId} not found for update", id);
+                _log.Warning("Service type with ID {ServiceTypeId} not found for update", id);
                 return null;
             }
 
@@ -109,12 +108,12 @@ public class ServiceTypeService : IServiceTypeService
 
             await _context.SaveChangesAsync();
 
-            _logger.Information("Successfully updated service type with ID: {ServiceTypeId}", id);
+            _log.Information("Successfully updated service type with ID: {ServiceTypeId}", id);
             return MapToDto(serviceType);
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error occurred while updating service type with ID: {ServiceTypeId}", id);
+            _log.Error(ex, "Error occurred while updating service type with ID: {ServiceTypeId}", id);
             throw;
         }
     }
@@ -123,25 +122,25 @@ public class ServiceTypeService : IServiceTypeService
     {
         try
         {
-            _logger.Information("Deleting service type with ID: {ServiceTypeId}", id);
+            _log.Information("Deleting service type with ID: {ServiceTypeId}", id);
 
             var serviceType = await _context.ServiceTypes.FindAsync(id);
 
             if (serviceType == null)
             {
-                _logger.Warning("Service type with ID {ServiceTypeId} not found for deletion", id);
+                _log.Warning("Service type with ID {ServiceTypeId} not found for deletion", id);
                 return false;
             }
 
             _context.ServiceTypes.Remove(serviceType);
             await _context.SaveChangesAsync();
 
-            _logger.Information("Successfully deleted service type with ID: {ServiceTypeId}", id);
+            _log.Information("Successfully deleted service type with ID: {ServiceTypeId}", id);
             return true;
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error occurred while deleting service type with ID: {ServiceTypeId}", id);
+            _log.Error(ex, "Error occurred while deleting service type with ID: {ServiceTypeId}", id);
             throw;
         }
     }

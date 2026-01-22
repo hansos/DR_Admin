@@ -12,12 +12,11 @@ namespace ISPAdmin.Controllers;
 public class RolesController : ControllerBase
 {
     private readonly IRoleService _roleService;
-    private readonly Serilog.ILogger _logger;
+    private static readonly Serilog.ILogger _log = Log.ForContext<RolesController>();
 
-    public RolesController(IRoleService roleService, Serilog.ILogger logger)
+    public RolesController(IRoleService roleService)
     {
         _roleService = roleService;
-        _logger = logger;
     }
 
     /// <summary>
@@ -29,14 +28,14 @@ public class RolesController : ControllerBase
     {
         try
         {
-            _logger.Information("API: GetAllRoles called by user {User}", User.Identity?.Name);
+            _log.Information("API: GetAllRoles called by user {User}", User.Identity?.Name);
             
             var roles = await _roleService.GetAllRolesAsync();
             return Ok(roles);
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "API: Error in GetAllRoles");
+            _log.Error(ex, "API: Error in GetAllRoles");
             return StatusCode(500, "An error occurred while retrieving roles");
         }
     }
@@ -50,13 +49,13 @@ public class RolesController : ControllerBase
     {
         try
         {
-            _logger.Information("API: GetRoleById called for ID {RoleId} by user {User}", id, User.Identity?.Name);
+            _log.Information("API: GetRoleById called for ID {RoleId} by user {User}", id, User.Identity?.Name);
             
             var role = await _roleService.GetRoleByIdAsync(id);
 
             if (role == null)
             {
-                _logger.Information("API: Role with ID {RoleId} not found", id);
+                _log.Information("API: Role with ID {RoleId} not found", id);
                 return NotFound($"Role with ID {id} not found");
             }
 
@@ -64,7 +63,7 @@ public class RolesController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "API: Error in GetRoleById for ID {RoleId}", id);
+            _log.Error(ex, "API: Error in GetRoleById for ID {RoleId}", id);
             return StatusCode(500, "An error occurred while retrieving the role");
         }
     }
@@ -78,11 +77,11 @@ public class RolesController : ControllerBase
     {
         try
         {
-            _logger.Information("API: CreateRole called by user {User}", User.Identity?.Name);
+            _log.Information("API: CreateRole called by user {User}", User.Identity?.Name);
 
             if (!ModelState.IsValid)
             {
-                _logger.Warning("API: Invalid model state for CreateRole");
+                _log.Warning("API: Invalid model state for CreateRole");
                 return BadRequest(ModelState);
             }
 
@@ -95,7 +94,7 @@ public class RolesController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "API: Error in CreateRole");
+            _log.Error(ex, "API: Error in CreateRole");
             return StatusCode(500, "An error occurred while creating the role");
         }
     }
@@ -109,11 +108,11 @@ public class RolesController : ControllerBase
     {
         try
         {
-            _logger.Information("API: UpdateRole called for ID {RoleId} by user {User}", id, User.Identity?.Name);
+            _log.Information("API: UpdateRole called for ID {RoleId} by user {User}", id, User.Identity?.Name);
 
             if (!ModelState.IsValid)
             {
-                _logger.Warning("API: Invalid model state for UpdateRole");
+                _log.Warning("API: Invalid model state for UpdateRole");
                 return BadRequest(ModelState);
             }
 
@@ -121,7 +120,7 @@ public class RolesController : ControllerBase
 
             if (role == null)
             {
-                _logger.Information("API: Role with ID {RoleId} not found for update", id);
+                _log.Information("API: Role with ID {RoleId} not found for update", id);
                 return NotFound($"Role with ID {id} not found");
             }
 
@@ -129,7 +128,7 @@ public class RolesController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "API: Error in UpdateRole for ID {RoleId}", id);
+            _log.Error(ex, "API: Error in UpdateRole for ID {RoleId}", id);
             return StatusCode(500, "An error occurred while updating the role");
         }
     }
@@ -143,13 +142,13 @@ public class RolesController : ControllerBase
     {
         try
         {
-            _logger.Information("API: DeleteRole called for ID {RoleId} by user {User}", id, User.Identity?.Name);
+            _log.Information("API: DeleteRole called for ID {RoleId} by user {User}", id, User.Identity?.Name);
 
             var result = await _roleService.DeleteRoleAsync(id);
 
             if (!result)
             {
-                _logger.Information("API: Role with ID {RoleId} not found for deletion", id);
+                _log.Information("API: Role with ID {RoleId} not found for deletion", id);
                 return NotFound($"Role with ID {id} not found");
             }
 
@@ -157,7 +156,7 @@ public class RolesController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "API: Error in DeleteRole for ID {RoleId}", id);
+            _log.Error(ex, "API: Error in DeleteRole for ID {RoleId}", id);
             return StatusCode(500, "An error occurred while deleting the role");
         }
     }

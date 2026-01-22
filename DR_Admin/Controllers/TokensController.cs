@@ -12,12 +12,11 @@ namespace ISPAdmin.Controllers;
 public class TokensController : ControllerBase
 {
     private readonly ITokenService _tokenService;
-    private readonly Serilog.ILogger _logger;
+    private static readonly Serilog.ILogger _log = Log.ForContext<TokensController>();
 
-    public TokensController(ITokenService tokenService, Serilog.ILogger logger)
+    public TokensController(ITokenService tokenService)
     {
         _tokenService = tokenService;
-        _logger = logger;
     }
 
     /// <summary>
@@ -29,14 +28,14 @@ public class TokensController : ControllerBase
     {
         try
         {
-            _logger.Information("API: GetAllTokens called by user {User}", User.Identity?.Name);
+            _log.Information("API: GetAllTokens called by user {User}", User.Identity?.Name);
             
             var tokens = await _tokenService.GetAllTokensAsync();
             return Ok(tokens);
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "API: Error in GetAllTokens");
+            _log.Error(ex, "API: Error in GetAllTokens");
             return StatusCode(500, "An error occurred while retrieving tokens");
         }
     }
@@ -50,13 +49,13 @@ public class TokensController : ControllerBase
     {
         try
         {
-            _logger.Information("API: GetTokenById called for ID {TokenId} by user {User}", id, User.Identity?.Name);
+            _log.Information("API: GetTokenById called for ID {TokenId} by user {User}", id, User.Identity?.Name);
             
             var token = await _tokenService.GetTokenByIdAsync(id);
 
             if (token == null)
             {
-                _logger.Information("API: Token with ID {TokenId} not found", id);
+                _log.Information("API: Token with ID {TokenId} not found", id);
                 return NotFound($"Token with ID {id} not found");
             }
 
@@ -64,7 +63,7 @@ public class TokensController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "API: Error in GetTokenById for ID {TokenId}", id);
+            _log.Error(ex, "API: Error in GetTokenById for ID {TokenId}", id);
             return StatusCode(500, "An error occurred while retrieving the token");
         }
     }
@@ -78,11 +77,11 @@ public class TokensController : ControllerBase
     {
         try
         {
-            _logger.Information("API: CreateToken called by user {User}", User.Identity?.Name);
+            _log.Information("API: CreateToken called by user {User}", User.Identity?.Name);
 
             if (!ModelState.IsValid)
             {
-                _logger.Warning("API: Invalid model state for CreateToken");
+                _log.Warning("API: Invalid model state for CreateToken");
                 return BadRequest(ModelState);
             }
 
@@ -95,7 +94,7 @@ public class TokensController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "API: Error in CreateToken");
+            _log.Error(ex, "API: Error in CreateToken");
             return StatusCode(500, "An error occurred while creating the token");
         }
     }
@@ -109,11 +108,11 @@ public class TokensController : ControllerBase
     {
         try
         {
-            _logger.Information("API: UpdateToken called for ID {TokenId} by user {User}", id, User.Identity?.Name);
+            _log.Information("API: UpdateToken called for ID {TokenId} by user {User}", id, User.Identity?.Name);
 
             if (!ModelState.IsValid)
             {
-                _logger.Warning("API: Invalid model state for UpdateToken");
+                _log.Warning("API: Invalid model state for UpdateToken");
                 return BadRequest(ModelState);
             }
 
@@ -121,7 +120,7 @@ public class TokensController : ControllerBase
 
             if (token == null)
             {
-                _logger.Information("API: Token with ID {TokenId} not found for update", id);
+                _log.Information("API: Token with ID {TokenId} not found for update", id);
                 return NotFound($"Token with ID {id} not found");
             }
 
@@ -129,7 +128,7 @@ public class TokensController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "API: Error in UpdateToken for ID {TokenId}", id);
+            _log.Error(ex, "API: Error in UpdateToken for ID {TokenId}", id);
             return StatusCode(500, "An error occurred while updating the token");
         }
     }
@@ -143,13 +142,13 @@ public class TokensController : ControllerBase
     {
         try
         {
-            _logger.Information("API: DeleteToken called for ID {TokenId} by user {User}", id, User.Identity?.Name);
+            _log.Information("API: DeleteToken called for ID {TokenId} by user {User}", id, User.Identity?.Name);
 
             var result = await _tokenService.DeleteTokenAsync(id);
 
             if (!result)
             {
-                _logger.Information("API: Token with ID {TokenId} not found for deletion", id);
+                _log.Information("API: Token with ID {TokenId} not found for deletion", id);
                 return NotFound($"Token with ID {id} not found");
             }
 
@@ -157,7 +156,7 @@ public class TokensController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "API: Error in DeleteToken for ID {TokenId}", id);
+            _log.Error(ex, "API: Error in DeleteToken for ID {TokenId}", id);
             return StatusCode(500, "An error occurred while deleting the token");
         }
     }

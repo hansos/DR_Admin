@@ -12,12 +12,11 @@ namespace ISPAdmin.Controllers;
 public class ServicesController : ControllerBase
 {
     private readonly IServiceService _serviceService;
-    private readonly Serilog.ILogger _logger;
+    private static readonly Serilog.ILogger _log = Log.ForContext<ServicesController>();
 
-    public ServicesController(IServiceService serviceService, Serilog.ILogger logger)
+    public ServicesController(IServiceService serviceService)
     {
         _serviceService = serviceService;
-        _logger = logger;
     }
 
     /// <summary>
@@ -29,14 +28,14 @@ public class ServicesController : ControllerBase
     {
         try
         {
-            _logger.Information("API: GetAllServices called by user {User}", User.Identity?.Name);
+            _log.Information("API: GetAllServices called by user {User}", User.Identity?.Name);
             
             var services = await _serviceService.GetAllServicesAsync();
             return Ok(services);
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "API: Error in GetAllServices");
+            _log.Error(ex, "API: Error in GetAllServices");
             return StatusCode(500, "An error occurred while retrieving services");
         }
     }
@@ -50,13 +49,13 @@ public class ServicesController : ControllerBase
     {
         try
         {
-            _logger.Information("API: GetServiceById called for ID {ServiceId} by user {User}", id, User.Identity?.Name);
+            _log.Information("API: GetServiceById called for ID {ServiceId} by user {User}", id, User.Identity?.Name);
             
             var service = await _serviceService.GetServiceByIdAsync(id);
 
             if (service == null)
             {
-                _logger.Information("API: Service with ID {ServiceId} not found", id);
+                _log.Information("API: Service with ID {ServiceId} not found", id);
                 return NotFound($"Service with ID {id} not found");
             }
 
@@ -64,7 +63,7 @@ public class ServicesController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "API: Error in GetServiceById for ID {ServiceId}", id);
+            _log.Error(ex, "API: Error in GetServiceById for ID {ServiceId}", id);
             return StatusCode(500, "An error occurred while retrieving the service");
         }
     }
@@ -78,11 +77,11 @@ public class ServicesController : ControllerBase
     {
         try
         {
-            _logger.Information("API: CreateService called by user {User}", User.Identity?.Name);
+            _log.Information("API: CreateService called by user {User}", User.Identity?.Name);
 
             if (!ModelState.IsValid)
             {
-                _logger.Warning("API: Invalid model state for CreateService");
+                _log.Warning("API: Invalid model state for CreateService");
                 return BadRequest(ModelState);
             }
 
@@ -95,7 +94,7 @@ public class ServicesController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "API: Error in CreateService");
+            _log.Error(ex, "API: Error in CreateService");
             return StatusCode(500, "An error occurred while creating the service");
         }
     }
@@ -109,11 +108,11 @@ public class ServicesController : ControllerBase
     {
         try
         {
-            _logger.Information("API: UpdateService called for ID {ServiceId} by user {User}", id, User.Identity?.Name);
+            _log.Information("API: UpdateService called for ID {ServiceId} by user {User}", id, User.Identity?.Name);
 
             if (!ModelState.IsValid)
             {
-                _logger.Warning("API: Invalid model state for UpdateService");
+                _log.Warning("API: Invalid model state for UpdateService");
                 return BadRequest(ModelState);
             }
 
@@ -121,7 +120,7 @@ public class ServicesController : ControllerBase
 
             if (service == null)
             {
-                _logger.Information("API: Service with ID {ServiceId} not found for update", id);
+                _log.Information("API: Service with ID {ServiceId} not found for update", id);
                 return NotFound($"Service with ID {id} not found");
             }
 
@@ -129,7 +128,7 @@ public class ServicesController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "API: Error in UpdateService for ID {ServiceId}", id);
+            _log.Error(ex, "API: Error in UpdateService for ID {ServiceId}", id);
             return StatusCode(500, "An error occurred while updating the service");
         }
     }
@@ -143,13 +142,13 @@ public class ServicesController : ControllerBase
     {
         try
         {
-            _logger.Information("API: DeleteService called for ID {ServiceId} by user {User}", id, User.Identity?.Name);
+            _log.Information("API: DeleteService called for ID {ServiceId} by user {User}", id, User.Identity?.Name);
 
             var result = await _serviceService.DeleteServiceAsync(id);
 
             if (!result)
             {
-                _logger.Information("API: Service with ID {ServiceId} not found for deletion", id);
+                _log.Information("API: Service with ID {ServiceId} not found for deletion", id);
                 return NotFound($"Service with ID {id} not found");
             }
 
@@ -157,7 +156,7 @@ public class ServicesController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "API: Error in DeleteService for ID {ServiceId}", id);
+            _log.Error(ex, "API: Error in DeleteService for ID {ServiceId}", id);
             return StatusCode(500, "An error occurred while deleting the service");
         }
     }

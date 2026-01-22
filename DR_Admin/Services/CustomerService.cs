@@ -9,19 +9,18 @@ namespace ISPAdmin.Services;
 public class CustomerService : ICustomerService
 {
     private readonly ApplicationDbContext _context;
-    private readonly Serilog.ILogger _logger;
+    private static readonly Serilog.ILogger _log = Log.ForContext<CustomerService>();
 
-    public CustomerService(ApplicationDbContext context, Serilog.ILogger logger)
+    public CustomerService(ApplicationDbContext context)
     {
         _context = context;
-        _logger = logger;
     }
 
     public async Task<IEnumerable<CustomerDto>> GetAllCustomersAsync()
     {
         try
         {
-            _logger.Information("Fetching all customers");
+            _log.Information("Fetching all customers");
             
             var customers = await _context.Customers
                 .AsNoTracking()
@@ -29,12 +28,12 @@ public class CustomerService : ICustomerService
 
             var customerDtos = customers.Select(MapToDto);
             
-            _logger.Information("Successfully fetched {Count} customers", customers.Count);
+            _log.Information("Successfully fetched {Count} customers", customers.Count);
             return customerDtos;
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error occurred while fetching all customers");
+            _log.Error(ex, "Error occurred while fetching all customers");
             throw;
         }
     }
@@ -43,7 +42,7 @@ public class CustomerService : ICustomerService
     {
         try
         {
-            _logger.Information("Fetching customer with ID: {CustomerId}", id);
+            _log.Information("Fetching customer with ID: {CustomerId}", id);
             
             var customer = await _context.Customers
                 .AsNoTracking()
@@ -51,16 +50,16 @@ public class CustomerService : ICustomerService
 
             if (customer == null)
             {
-                _logger.Warning("Customer with ID {CustomerId} not found", id);
+                _log.Warning("Customer with ID {CustomerId} not found", id);
                 return null;
             }
 
-            _logger.Information("Successfully fetched customer with ID: {CustomerId}", id);
+            _log.Information("Successfully fetched customer with ID: {CustomerId}", id);
             return MapToDto(customer);
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error occurred while fetching customer with ID: {CustomerId}", id);
+            _log.Error(ex, "Error occurred while fetching customer with ID: {CustomerId}", id);
             throw;
         }
     }
@@ -69,7 +68,7 @@ public class CustomerService : ICustomerService
     {
         try
         {
-            _logger.Information("Creating new customer with email: {Email}", createDto.Email);
+            _log.Information("Creating new customer with email: {Email}", createDto.Email);
 
             var customer = new Customer
             {
@@ -84,12 +83,12 @@ public class CustomerService : ICustomerService
             _context.Customers.Add(customer);
             await _context.SaveChangesAsync();
 
-            _logger.Information("Successfully created customer with ID: {CustomerId}", customer.Id);
+            _log.Information("Successfully created customer with ID: {CustomerId}", customer.Id);
             return MapToDto(customer);
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error occurred while creating customer with email: {Email}", createDto.Email);
+            _log.Error(ex, "Error occurred while creating customer with email: {Email}", createDto.Email);
             throw;
         }
     }
@@ -98,13 +97,13 @@ public class CustomerService : ICustomerService
     {
         try
         {
-            _logger.Information("Updating customer with ID: {CustomerId}", id);
+            _log.Information("Updating customer with ID: {CustomerId}", id);
 
             var customer = await _context.Customers.FindAsync(id);
 
             if (customer == null)
             {
-                _logger.Warning("Customer with ID {CustomerId} not found for update", id);
+                _log.Warning("Customer with ID {CustomerId} not found for update", id);
                 return null;
             }
 
@@ -116,12 +115,12 @@ public class CustomerService : ICustomerService
 
             await _context.SaveChangesAsync();
 
-            _logger.Information("Successfully updated customer with ID: {CustomerId}", id);
+            _log.Information("Successfully updated customer with ID: {CustomerId}", id);
             return MapToDto(customer);
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error occurred while updating customer with ID: {CustomerId}", id);
+            _log.Error(ex, "Error occurred while updating customer with ID: {CustomerId}", id);
             throw;
         }
     }
@@ -130,25 +129,25 @@ public class CustomerService : ICustomerService
     {
         try
         {
-            _logger.Information("Deleting customer with ID: {CustomerId}", id);
+            _log.Information("Deleting customer with ID: {CustomerId}", id);
 
             var customer = await _context.Customers.FindAsync(id);
 
             if (customer == null)
             {
-                _logger.Warning("Customer with ID {CustomerId} not found for deletion", id);
+                _log.Warning("Customer with ID {CustomerId} not found for deletion", id);
                 return false;
             }
 
             _context.Customers.Remove(customer);
             await _context.SaveChangesAsync();
 
-            _logger.Information("Successfully deleted customer with ID: {CustomerId}", id);
+            _log.Information("Successfully deleted customer with ID: {CustomerId}", id);
             return true;
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Error occurred while deleting customer with ID: {CustomerId}", id);
+            _log.Error(ex, "Error occurred while deleting customer with ID: {CustomerId}", id);
             throw;
         }
     }
