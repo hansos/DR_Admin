@@ -1,4 +1,6 @@
 using HostingPanelLib.Models;
+using System.Net.Http.Json;
+using System.Text.Json;
 
 namespace HostingPanelLib.Implementations
 {
@@ -18,14 +20,84 @@ namespace HostingPanelLib.Implementations
             _password = password ?? throw new ArgumentNullException(nameof(password));
             _port = port;
             _useHttps = useHttps;
-            _remoteApiUrl = remoteApiUrl;
+            _remoteApiUrl = remoteApiUrl ?? apiUrl;
         }
 
         private async Task<bool> LoginAsync()
         {
-            // TODO: Implement ISPConfig remote API login
-            await Task.CompletedTask;
-            return false;
+            try
+            {
+                if (!string.IsNullOrEmpty(_sessionId))
+                {
+                    return true; // Already logged in
+                }
+
+                var endpoint = $"{_remoteApiUrl}/remote/json.php?login";
+                
+                var loginData = new
+                {
+                    username = _username,
+                    password = _password
+                };
+
+                var response = await _httpClient.PostAsJsonAsync(endpoint, loginData);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return false;
+                }
+
+                using var jsonDoc = JsonDocument.Parse(responseContent);
+                var root = jsonDoc.RootElement;
+
+                if (root.TryGetProperty("code\", out var codeElement) && codeElement.GetString() == \"ok\" &&
+                    root.TryGetProperty("response", out var sessionElement))
+                {
+                    _sessionId = sessionElement.GetString();
+                    return !string.IsNullOrEmpty(_sessionId);
+                }
+
+                return false;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private async Task<T?> CallRemoteApiAsync<T>(string method, object? parameters = null)
+        {
+            if (!await LoginAsync())
+            {
+                return default;
+            }
+
+            var endpoint = $"{_remoteApiUrl}/remote/json.php?{method}";
+            
+            var requestData = new
+            {
+                session_id = _sessionId,
+                param = parameters ?? new { }
+            };
+
+            var response = await _httpClient.PostAsJsonAsync(endpoint, requestData);
+            var responseContent = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return default;
+            }
+
+            using var jsonDoc = JsonDocument.Parse(responseContent);
+            var root = jsonDoc.RootElement;
+
+            if (root.TryGetProperty("response", out var responseElement))
+            {
+                return JsonSerializer.Deserialize<T>(responseElement.GetRawText());
+            }
+
+            return default;
         }
 
         public override async Task<HostingAccountResult> CreateWebHostingAccountAsync(HostingAccountRequest request)
