@@ -1,8 +1,8 @@
 # Test Summary
 
 ## Overall Results
-- **Total Tests:** 23 (reduced from 33 - removed duplicate auth tests)
-- **Passed:** 23 ?
+- **Total Tests:** 43 (Auth: 17, MyAccount: 9, BillingCycles: 17)
+- **Passed:** 43 ?
 - **Failed:** 0
 - **Success Rate:** 100%
 
@@ -41,11 +41,11 @@
 - ? FullAuthFlow_RegisterLoginRefreshVerifyLogout_Success
 
 ### MyAccountController Tests ?
-**Status:** All 6 tests passing (100%)
+**Status:** All 9 tests passing (100%)
 
 **Note:** Login, logout, and refresh token tests have been removed from MyAccountController as these endpoints are now exclusively handled by AuthController.
 
-#### Passing Tests (6)
+#### Passing Tests (9)
 - ? Registration tests (3)
   - Register_ValidRequest_ReturnsCreatedWithRegistrationDetails
   - Register_DuplicateEmail_ReturnsBadRequest
@@ -60,6 +60,43 @@
   - ChangePassword_ValidRequest_ReturnsOk
   - ChangePassword_MismatchedPasswords_ReturnsBadRequest
   - ChangePassword_WrongCurrentPassword_ReturnsBadRequest
+
+### BillingCyclesController Tests ?
+**Status:** All 17 tests passing (100%)
+
+**Note:** Demonstrates role-based authorization with Admin, Support, Sales, and Customer roles.
+
+#### Get All Billing Cycles Tests (5 tests)
+- ? GetAllBillingCycles_WithAdminRole_ReturnsOk
+- ? GetAllBillingCycles_WithSupportRole_ReturnsOk
+- ? GetAllBillingCycles_WithSalesRole_ReturnsOk
+- ? GetAllBillingCycles_WithoutAuthentication_ReturnsUnauthorized
+- ? GetAllBillingCycles_WithCustomerRole_ReturnsForbidden
+
+#### Get Billing Cycle By Id Tests (3 tests)
+- ? GetBillingCycleById_ValidId_ReturnsOk
+- ? GetBillingCycleById_InvalidId_ReturnsNotFound
+- ? GetBillingCycleById_WithoutAuthentication_ReturnsUnauthorized
+
+#### Create Billing Cycle Tests (3 tests)
+- ? CreateBillingCycle_ValidData_ReturnsCreated
+- ? CreateBillingCycle_WithSupportRole_ReturnsForbidden
+- ? CreateBillingCycle_WithoutAuthentication_ReturnsUnauthorized
+
+#### Update Billing Cycle Tests (4 tests)
+- ? UpdateBillingCycle_ValidData_ReturnsOk
+- ? UpdateBillingCycle_InvalidId_ReturnsNotFound
+- ? UpdateBillingCycle_WithSupportRole_ReturnsForbidden
+- ? UpdateBillingCycle_WithoutAuthentication_ReturnsUnauthorized
+
+#### Delete Billing Cycle Tests (4 tests)
+- ? DeleteBillingCycle_ValidId_ReturnsNoContent
+- ? DeleteBillingCycle_InvalidId_ReturnsNotFound
+- ? DeleteBillingCycle_WithSupportRole_ReturnsForbidden
+- ? DeleteBillingCycle_WithoutAuthentication_ReturnsUnauthorized
+
+#### Integration Tests (1 test)
+- ? FullCRUDFlow_CreateReadUpdateDelete_Success
 
 ## How to Run Tests
 
@@ -76,6 +113,11 @@ dotnet test --filter "Category=Auth"
 ### Run only MyAccount tests
 ```bash
 dotnet test --filter "Category=MyAccount"
+```
+
+### Run only BillingCycles tests
+```bash
+dotnet test --filter "Category=BillingCycles"
 ```
 
 ### Run high priority tests
@@ -107,6 +149,13 @@ dotnet test --logger "console;verbosity=detailed"
 - ? POST /refresh-token (removed - use /api/v1/Auth/refresh instead)
 - ? POST /logout (removed - use /api/v1/Auth/logout instead)
 
+#### /api/v1/BillingCycles
+- ? GET / (Get all billing cycles)
+- ? GET /{id} (Get billing cycle by ID)
+- ? POST / (Create billing cycle)
+- ? PUT /{id} (Update billing cycle)
+- ? DELETE /{id} (Delete billing cycle)
+
 ### Test Scenarios Covered
 
 #### Authentication & Authorization
@@ -116,6 +165,8 @@ dotnet test --logger "console;verbosity=detailed"
 - ? JWT token generation
 - ? JWT token verification
 - ? Authorization header validation
+- ? Role-based access control (Admin, Support, Sales, Customer)
+- ? Forbidden access for insufficient permissions
 
 #### Token Management
 - ? Access token generation
@@ -137,6 +188,16 @@ dotnet test --logger "console;verbosity=detailed"
 - ? Password complexity validation
 - ? Secure token storage
 - ? Token-based authentication
+- ? Role-based authorization
+
+#### CRUD Operations (BillingCycles)
+- ? Create new resources with validation
+- ? Read all resources
+- ? Read single resource by ID
+- ? Update existing resources
+- ? Delete resources
+- ? NotFound handling for missing resources
+- ? Full CRUD integration flow
 
 ## Notes
 
@@ -145,13 +206,16 @@ dotnet test --logger "console;verbosity=detailed"
 - Tests are designed to run sequentially to avoid conflicts
 - TestTokenStorage is used to share authentication state across tests
 - **Refactored:** Removed duplicate authentication endpoints from MyAccountController. All login, logout, and refresh token functionality is now exclusively in AuthController.
+- **New:** BillingCyclesController tests demonstrate comprehensive CRUD testing with role-based authorization
+- Helper methods dynamically create users with specific roles (Admin, Support, Sales, Customer) for testing authorization
 
 ## Next Steps
 
 To further improve the test suite:
 
 1. ~~Fix token persistence issues in MyAccountController tests~~ ? **RESOLVED** - Removed duplicate endpoints
-2. Add tests for other controllers (if any)
-3. Add integration tests for complex workflows
-4. Consider adding performance tests for authentication flows
-4. Add performance tests for high-load scenarios
+2. ~~Add tests for CRUD controllers~~ ? **DONE** - Added BillingCycles tests
+3. Add tests for other controllers (Customers, Domains, Services, etc.)
+4. Add integration tests for complex workflows
+5. Consider adding performance tests for authentication flows
+6. Add tests for edge cases and validation scenarios

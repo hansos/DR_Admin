@@ -91,6 +91,45 @@ The `AuthControllerTests` class contains comprehensive tests for all authenticat
 ### Integration Tests
 - ? Full authentication flow: Register ? Login ? Verify ? Refresh ? Logout
 
+## BillingCyclesController Tests
+
+The `BillingCyclesControllerTests` class contains comprehensive tests for all BillingCycles endpoints with role-based access control:
+
+### Get All Billing Cycles Tests
+- ? Admin role can retrieve all billing cycles
+- ? Support role can retrieve all billing cycles
+- ? Sales role can retrieve all billing cycles
+- ? Customer role receives Forbidden
+- ? Unauthenticated access returns Unauthorized
+
+### Get Billing Cycle By Id Tests
+- ? Get by valid ID returns OK
+- ? Get by invalid ID returns NotFound
+- ? Unauthenticated access returns Unauthorized
+
+### Create Billing Cycle Tests
+- ? Admin role can create billing cycles
+- ? Support role receives Forbidden
+- ? Unauthenticated access returns Unauthorized
+
+### Update Billing Cycle Tests
+- ? Admin role can update billing cycles
+- ? Update with invalid ID returns NotFound
+- ? Support role receives Forbidden
+- ? Unauthenticated access returns Unauthorized
+
+### Delete Billing Cycle Tests
+- ? Admin role can delete billing cycles
+- ? Delete with invalid ID returns NotFound
+- ? Support role receives Forbidden
+- ? Unauthenticated access returns Unauthorized
+- ? Deletion is verified
+
+### Integration Tests
+- ? Full CRUD flow: Create ? Read ? Update ? Delete
+
+**Note:** These tests demonstrate role-based authorization, dynamically creating users with Admin, Support, Sales, and Customer roles.
+
 ## Running the Tests
 
 ### Run all tests
@@ -107,6 +146,7 @@ dotnet test --logger "console;verbosity=detailed"
 ```bash
 dotnet test --filter "Category=MyAccount"
 dotnet test --filter "Category=Auth"
+dotnet test --filter "Category=BillingCycles"
 ```
 
 ### Run tests by priority
