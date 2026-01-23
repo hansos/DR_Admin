@@ -5,7 +5,6 @@ public class RegistrarDto
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Code { get; set; } = string.Empty;
-    public string ApiUrl { get; set; } = string.Empty;
     public bool IsActive { get; set; }
     public string? ContactEmail { get; set; }
     public string? ContactPhone { get; set; }
@@ -19,11 +18,6 @@ public class CreateRegistrarDto
 {
     public string Name { get; set; } = string.Empty;
     public string Code { get; set; } = string.Empty;
-    public string ApiUrl { get; set; } = string.Empty;
-    public string? ApiKey { get; set; }
-    public string? ApiSecret { get; set; }
-    public string? ApiUsername { get; set; }
-    public string? ApiPassword { get; set; }
     public bool IsActive { get; set; } = true;
     public string? ContactEmail { get; set; }
     public string? ContactPhone { get; set; }
@@ -35,11 +29,6 @@ public class UpdateRegistrarDto
 {
     public string Name { get; set; } = string.Empty;
     public string Code { get; set; } = string.Empty;
-    public string ApiUrl { get; set; } = string.Empty;
-    public string? ApiKey { get; set; }
-    public string? ApiSecret { get; set; }
-    public string? ApiUsername { get; set; }
-    public string? ApiPassword { get; set; }
     public bool IsActive { get; set; }
     public string? ContactEmail { get; set; }
     public string? ContactPhone { get; set; }

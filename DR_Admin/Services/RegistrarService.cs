@@ -416,11 +416,6 @@ public class RegistrarService : IRegistrarService
             {
                 Name = createDto.Name,
                 Code = createDto.Code.ToUpper(),
-                ApiUrl = createDto.ApiUrl,
-                ApiKey = createDto.ApiKey,
-                ApiSecret = createDto.ApiSecret,
-                ApiUsername = createDto.ApiUsername,
-                ApiPassword = createDto.ApiPassword,
                 IsActive = createDto.IsActive,
                 ContactEmail = createDto.ContactEmail,
                 ContactPhone = createDto.ContactPhone,
@@ -470,11 +465,6 @@ public class RegistrarService : IRegistrarService
 
             registrar.Name = updateDto.Name;
             registrar.Code = updateDto.Code.ToUpper();
-            registrar.ApiUrl = updateDto.ApiUrl;
-            registrar.ApiKey = updateDto.ApiKey;
-            registrar.ApiSecret = updateDto.ApiSecret;
-            registrar.ApiUsername = updateDto.ApiUsername;
-            registrar.ApiPassword = updateDto.ApiPassword;
             registrar.IsActive = updateDto.IsActive;
             registrar.ContactEmail = updateDto.ContactEmail;
             registrar.ContactPhone = updateDto.ContactPhone;
@@ -542,7 +532,6 @@ public class RegistrarService : IRegistrarService
             Id = registrar.Id,
             Name = registrar.Name,
             Code = registrar.Code,
-            ApiUrl = registrar.ApiUrl,
             IsActive = registrar.IsActive,
             ContactEmail = registrar.ContactEmail,
             ContactPhone = registrar.ContactPhone,
