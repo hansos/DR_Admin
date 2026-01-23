@@ -1,10 +1,7 @@
 namespace ISPAdmin.Data.Entities;
 
-public class InvoiceLine
+public class InvoiceLine : EntityBase
 {
-    // Primary Key
-    public int Id { get; set; }
-
     // Relationships
     public int InvoiceId { get; set; }
     public int? ServiceId { get; set; }
@@ -25,9 +22,7 @@ public class InvoiceLine
     public string ServiceNameSnapshot { get; set; } = string.Empty; 
     public string AccountingCode { get; set; } = string.Empty; // GL / SKU / product code
 
-    // Audit & lifecycle
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
+    // Lifecycle
     public DateTime? DeletedAt { get; set; }            // Soft delete support
 
     // Optional metadata

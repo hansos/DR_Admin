@@ -1,8 +1,7 @@
 namespace ISPAdmin.Data.Entities;
 
-public class Domain
+public class Domain : EntityBase
 {
-    public int Id { get; set; }
     public int CustomerId { get; set; }
     public string Name { get; set; } = string.Empty;
     public int RegistrarId { get; set; }
@@ -15,8 +14,6 @@ public class Domain
     public decimal? RegistrationPrice { get; set; }
     public decimal? RenewalPrice { get; set; }
     public string? Notes { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
 
     public Customer Customer { get; set; } = null!;
     public Registrar Registrar { get; set; } = null!;

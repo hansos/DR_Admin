@@ -1,8 +1,7 @@
 namespace ISPAdmin.Data.Entities;
 
-public class Customer
+public class Customer : EntityBase
 {
-    public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string Phone { get; set; } = string.Empty;
@@ -23,8 +22,6 @@ public class Customer
     public string? Notes { get; set; }
     public string? BillingEmail { get; set; }
     public string? PreferredPaymentMethod { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
 
     public Country? Country { get; set; }
     public ICollection<User> Users { get; set; } = new List<User>();

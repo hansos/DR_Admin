@@ -1,8 +1,7 @@
 namespace ISPAdmin.Data.Entities;
 
-public class RegistrarTld
+public class RegistrarTld : EntityBase
 {
-    public int Id { get; set; }
     public int RegistrarId { get; set; }
     public int TldId { get; set; }
     public decimal RegistrationCost { get; set; }
@@ -19,8 +18,6 @@ public class RegistrarTld
     public int? MinRegistrationYears { get; set; }
     public int? MaxRegistrationYears { get; set; }
     public string? Notes { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
 
     public Registrar Registrar { get; set; } = null!;
     public Tld Tld { get; set; } = null!;

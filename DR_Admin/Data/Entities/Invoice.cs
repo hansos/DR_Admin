@@ -2,11 +2,8 @@ using ISPAdmin.Data.Enums;
 
 namespace ISPAdmin.Data.Entities;
 
-public class Invoice
+public class Invoice : EntityBase
 {
-    // Primary Key
-    public int Id { get; set; }
-
     // Human-readable invoice number (legal identifier)
     public string InvoiceNumber { get; set; } = string.Empty;
 
@@ -44,10 +41,6 @@ public class Invoice
     // Notes & Metadata
     public string Notes { get; set; } = string.Empty;
     public string InternalComment { get; set; } = string.Empty;
-
-    // Audit
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
 
     // Soft delete (rare but useful for drafts)
     public DateTime? DeletedAt { get; set; }
