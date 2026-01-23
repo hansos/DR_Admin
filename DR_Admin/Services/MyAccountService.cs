@@ -23,73 +23,6 @@ public class MyAccountService : IMyAccountService
         _configuration = configuration;
     }
 
-    public async Task<MyAccountLoginResponseDto?> LoginAsync(string email, string password)
-    {
-        try
-        {
-            var user = await _context.Users
-                .Include(u => u.Customer)
-                .Include(u => u.UserRoles)
-                    .ThenInclude(ur => ur.Role)
-                .FirstOrDefaultAsync(u => u.Email == email);
-
-            if (user == null)
-            {
-                _log.Warning("Login attempt failed: User not found - {Email}", email);
-                return null;
-            }
-
-            // TODO: In production, use proper password hashing (BCrypt, PBKDF2)
-            if (user.PasswordHash != password)
-            {
-                _log.Warning("Login attempt failed: Invalid password - {Email}", email);
-                return null;
-            }
-
-            if (!user.IsActive)
-            {
-                _log.Warning("Login attempt failed: User is inactive - {Email}", email);
-                return null;
-            }
-
-            var roles = user.UserRoles.Select(ur => ur.Role.Name).ToList();
-            var accessToken = GenerateAccessToken(user.Email, user.Id, roles);
-            var refreshToken = await GenerateAndSaveRefreshTokenAsync(user.Id);
-
-            var expirationMinutes = _configuration.GetValue<int>("JwtSettings:ExpirationInMinutes");
-
-            _log.Information("User logged in successfully: {Email}", email);
-
-            return new MyAccountLoginResponseDto
-            {
-                AccessToken = accessToken,
-                RefreshToken = refreshToken.TokenValue,
-                AccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(expirationMinutes),
-                RefreshTokenExpiresAt = refreshToken.Expiry,
-                User = new UserAccountDto
-                {
-                    Id = user.Id,
-                    Username = user.Username,
-                    Email = user.Email,
-                    EmailConfirmed = user.EmailConfirmed,
-                    Customer = user.Customer != null ? new CustomerAccountDto
-                    {
-                        Id = user.Customer.Id,
-                        Name = user.Customer.Name,
-                        Email = user.Customer.Email,
-                        Phone = user.Customer.Phone,
-                        Address = user.Customer.Address
-                    } : null
-                }
-            };
-        }
-        catch (Exception ex)
-        {
-            _log.Error(ex, "Error during login for email: {Email}", email);
-            return null;
-        }
-    }
-
     public async Task<RegisterAccountResponseDto> RegisterAsync(RegisterAccountRequestDto request)
     {
         try
@@ -394,55 +327,6 @@ public class MyAccountService : IMyAccountService
         }
     }
 
-    public async Task<RefreshTokenResponseDto?> RefreshTokenAsync(string refreshToken)
-    {
-        try
-        {
-            var token = await _context.Tokens
-                .Include(t => t.User)
-                    .ThenInclude(u => u.UserRoles)
-                        .ThenInclude(ur => ur.Role)
-                .FirstOrDefaultAsync(t => t.TokenValue == refreshToken 
-                    && t.TokenType == "RefreshToken" 
-                    && t.RevokedAt == null 
-                    && t.Expiry > DateTime.UtcNow);
-
-            if (token == null)
-            {
-                _log.Warning("Refresh token failed: Invalid or expired token");
-                return null;
-            }
-
-            var user = token.User;
-            var roles = user.UserRoles.Select(ur => ur.Role.Name).ToList();
-
-            // Generate new tokens
-            var newAccessToken = GenerateAccessToken(user.Email, user.Id, roles);
-            var newRefreshToken = await GenerateAndSaveRefreshTokenAsync(user.Id);
-
-            // Revoke old refresh token
-            token.RevokedAt = DateTime.UtcNow;
-            await _context.SaveChangesAsync();
-
-            var expirationMinutes = _configuration.GetValue<int>("JwtSettings:ExpirationInMinutes");
-
-            _log.Information("Token refreshed successfully for user: {UserId}", user.Id);
-
-            return new RefreshTokenResponseDto
-            {
-                AccessToken = newAccessToken,
-                RefreshToken = newRefreshToken.TokenValue,
-                AccessTokenExpiresAt = DateTime.UtcNow.AddMinutes(expirationMinutes),
-                RefreshTokenExpiresAt = newRefreshToken.Expiry
-            };
-        }
-        catch (Exception ex)
-        {
-            _log.Error(ex, "Error during token refresh");
-            return null;
-        }
-    }
-
     public async Task<UserAccountDto?> GetMyAccountAsync(int userId)
     {
         try
@@ -480,83 +364,7 @@ public class MyAccountService : IMyAccountService
         }
     }
 
-    public async Task<bool> RevokeRefreshTokenAsync(string refreshToken)
-    {
-        try
-        {
-            var token = await _context.Tokens
-                .FirstOrDefaultAsync(t => t.TokenValue == refreshToken 
-                    && t.TokenType == "RefreshToken" 
-                    && t.RevokedAt == null);
-
-            if (token == null)
-            {
-                _log.Warning("Revoke token failed: Token not found");
-                return false;
-            }
-
-            token.RevokedAt = DateTime.UtcNow;
-            await _context.SaveChangesAsync();
-
-            _log.Information("Refresh token revoked successfully");
-            return true;
-        }
-        catch (Exception ex)
-        {
-            _log.Error(ex, "Error during token revocation");
-            return false;
-        }
-    }
-
     #region Private Helper Methods
-
-    private string GenerateAccessToken(string email, int userId, List<string> roles)
-    {
-        var jwtSettings = _configuration.GetSection("JwtSettings");
-        var secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey is not configured");
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
-        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-        var claims = new List<Claim>
-        {
-            new Claim(ClaimTypes.Email, email),
-            new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
-            new Claim(JwtRegisteredClaimNames.Sub, email),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-        };
-
-        foreach (var role in roles)
-        {
-            claims.Add(new Claim(ClaimTypes.Role, role));
-        }
-
-        var token = new JwtSecurityToken(
-            issuer: jwtSettings["Issuer"],
-            audience: jwtSettings["Audience"],
-            claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(Convert.ToDouble(jwtSettings["ExpirationInMinutes"])),
-            signingCredentials: credentials
-        );
-
-        return new JwtSecurityTokenHandler().WriteToken(token);
-    }
-
-    private async Task<Token> GenerateAndSaveRefreshTokenAsync(int userId)
-    {
-        var refreshToken = new Token
-        {
-            UserId = userId,
-            TokenType = "RefreshToken",
-            TokenValue = GenerateSecureToken(),
-            Expiry = DateTime.UtcNow.AddDays(7), // Refresh token valid for 7 days
-            CreatedAt = DateTime.UtcNow
-        };
-
-        _context.Tokens.Add(refreshToken);
-        await _context.SaveChangesAsync();
-
-        return refreshToken;
-    }
 
     private async Task<string> GenerateEmailConfirmationTokenAsync(int userId)
     {

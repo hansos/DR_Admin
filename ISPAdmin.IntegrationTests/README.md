@@ -48,12 +48,6 @@ The `MyAccountControllerTests` class contains comprehensive tests for all MyAcco
 - ? Confirm email with valid token
 - ? Invalid token handling
 
-### Login Tests
-- ? Login with valid credentials
-- ? Invalid credentials handling
-- ? Empty email validation
-- **? Stores tokens in TestTokenStorage for other test classes**
-
 ### Get My Account Tests
 - ? Get authenticated user information
 - ? Unauthorized access handling
@@ -63,12 +57,7 @@ The `MyAccountControllerTests` class contains comprehensive tests for all MyAcco
 - ? Mismatched passwords validation
 - ? Wrong current password handling
 
-### Refresh Token Tests
-- ? Refresh token with valid token
-- ? Invalid token handling
-
-### Logout Tests
-- ? Logout and revoke refresh token
+**Note:** Login, logout, and refresh token endpoints have been moved to `AuthController` to avoid duplication. See `AuthControllerTests` for these tests.
 
 ## AuthController Tests
 
@@ -127,7 +116,7 @@ dotnet test --filter "Priority=1"
 
 ## Using TestTokenStorage in Other Test Classes
 
-Both `MyAccountControllerTests` and `AuthControllerTests` classes automatically store authentication tokens after successful login. Other test classes can use these tokens:
+The `AuthControllerTests` class automatically stores authentication tokens after successful login. Other test classes can use these tokens:
 
 ```csharp
 public class OtherControllerTests : IClassFixture<TestWebApplicationFactory>
@@ -152,7 +141,7 @@ public class OtherControllerTests : IClassFixture<TestWebApplicationFactory>
         else
         {
             // No valid token available, need to login first
-            // Run MyAccountControllerTests.Login_ValidCredentials_ReturnsTokens first
+            // Run AuthControllerTests.Login_ValidCredentials_ReturnsTokens first
             throw new InvalidOperationException("No valid access token. Run login tests first.");
         }
 

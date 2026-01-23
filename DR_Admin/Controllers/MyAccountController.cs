@@ -20,41 +20,6 @@ public class MyAccountController : ControllerBase
     }
 
     /// <summary>
-    /// Login with email and password, returns access and refresh tokens
-    /// </summary>
-    /// <param name="request">Email and password</param>
-    /// <returns>Access token, refresh token, and user information</returns>
-    [HttpPost("login")]
-    [AllowAnonymous]
-    public async Task<ActionResult<MyAccountLoginResponseDto>> Login([FromBody] MyAccountLoginRequestDto request)
-    {
-        try
-        {
-            if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Password))
-            {
-                _log.Warning("Login attempt with empty email or password");
-                return BadRequest(new { message = "Email and password are required" });
-            }
-
-            var result = await _myAccountService.LoginAsync(request.Email, request.Password);
-
-            if (result == null)
-            {
-                _log.Warning("Failed login attempt for email: {Email}", request.Email);
-                return Unauthorized(new { message = "Invalid email or password" });
-            }
-
-            _log.Information("Successful login for email: {Email}", request.Email);
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            _log.Error(ex, "Error during login for email: {Email}", request.Email);
-            return StatusCode(500, new { message = "An error occurred during login" });
-        }
-    }
-
-    /// <summary>
     /// Register a new account with user and customer information
     /// </summary>
     /// <param name="request">Registration details</param>
@@ -309,76 +274,6 @@ public class MyAccountController : ControllerBase
         {
             _log.Error(ex, "Error retrieving account information");
             return StatusCode(500, new { message = "An error occurred while retrieving account information" });
-        }
-    }
-
-    /// <summary>
-    /// Refresh access token using refresh token
-    /// </summary>
-    /// <param name="request">Refresh token</param>
-    /// <returns>New access and refresh tokens</returns>
-    [HttpPost("refresh-token")]
-    [AllowAnonymous]
-    public async Task<ActionResult<RefreshTokenResponseDto>> RefreshToken([FromBody] RefreshTokenRequestDto request)
-    {
-        try
-        {
-            if (string.IsNullOrEmpty(request.RefreshToken))
-            {
-                _log.Warning("Refresh token attempt with empty token");
-                return BadRequest(new { message = "Refresh token is required" });
-            }
-
-            var result = await _myAccountService.RefreshTokenAsync(request.RefreshToken);
-
-            if (result == null)
-            {
-                _log.Warning("Refresh token failed: Invalid or expired token");
-                return Unauthorized(new { message = "Invalid or expired refresh token" });
-            }
-
-            _log.Information("Token refreshed successfully");
-            return Ok(result);
-        }
-        catch (Exception ex)
-        {
-            _log.Error(ex, "Error during token refresh");
-            return StatusCode(500, new { message = "An error occurred during token refresh" });
-        }
-    }
-
-    /// <summary>
-    /// Logout by revoking refresh token
-    /// </summary>
-    /// <param name="request">Refresh token to revoke</param>
-    /// <returns>Success status</returns>
-    [HttpPost("logout")]
-    [AllowAnonymous]
-    public async Task<ActionResult> Logout([FromBody] RefreshTokenRequestDto request)
-    {
-        try
-        {
-            if (string.IsNullOrEmpty(request.RefreshToken))
-            {
-                _log.Warning("Logout attempt with empty token");
-                return BadRequest(new { message = "Refresh token is required" });
-            }
-
-            var result = await _myAccountService.RevokeRefreshTokenAsync(request.RefreshToken);
-
-            if (!result)
-            {
-                _log.Warning("Logout failed: Token not found");
-                return BadRequest(new { message = "Token not found or already revoked" });
-            }
-
-            _log.Information("User logged out successfully");
-            return Ok(new { message = "Logged out successfully" });
-        }
-        catch (Exception ex)
-        {
-            _log.Error(ex, "Error during logout");
-            return StatusCode(500, new { message = "An error occurred during logout" });
         }
     }
 

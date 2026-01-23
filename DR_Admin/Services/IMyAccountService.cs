@@ -5,11 +5,6 @@ namespace ISPAdmin.Services;
 public interface IMyAccountService
 {
     /// <summary>
-    /// Authenticate user with email and password, returning access and refresh tokens
-    /// </summary>
-    Task<MyAccountLoginResponseDto?> LoginAsync(string email, string password);
-
-    /// <summary>
     /// Register a new account with user and customer information
     /// </summary>
     Task<RegisterAccountResponseDto> RegisterAsync(RegisterAccountRequestDto request);
@@ -40,17 +35,7 @@ public interface IMyAccountService
     Task<CustomerAccountDto?> PatchCustomerInfoAsync(int userId, PatchCustomerInfoRequestDto request);
 
     /// <summary>
-    /// Refresh access token using refresh token
-    /// </summary>
-    Task<RefreshTokenResponseDto?> RefreshTokenAsync(string refreshToken);
-
-    /// <summary>
     /// Get current user account information
     /// </summary>
     Task<UserAccountDto?> GetMyAccountAsync(int userId);
-
-    /// <summary>
-    /// Revoke refresh token (logout)
-    /// </summary>
-    Task<bool> RevokeRefreshTokenAsync(string refreshToken);
 }

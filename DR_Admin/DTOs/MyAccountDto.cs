@@ -1,27 +1,6 @@
 namespace ISPAdmin.DTOs;
 
 /// <summary>
-/// Request DTO for user login
-/// </summary>
-public class MyAccountLoginRequestDto
-{
-    public string Email { get; set; } = string.Empty;
-    public string Password { get; set; } = string.Empty;
-}
-
-/// <summary>
-/// Response DTO for successful login with access and refresh tokens
-/// </summary>
-public class MyAccountLoginResponseDto
-{
-    public string AccessToken { get; set; } = string.Empty;
-    public string RefreshToken { get; set; } = string.Empty;
-    public DateTime AccessTokenExpiresAt { get; set; }
-    public DateTime RefreshTokenExpiresAt { get; set; }
-    public UserAccountDto User { get; set; } = null!;
-}
-
-/// <summary>
 /// DTO for user account information
 /// </summary>
 public class UserAccountDto
