@@ -1,0 +1,415 @@
+using System.Net;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using ISPAdmin.Data;
+using ISPAdmin.Data.Entities;
+using ISPAdmin.DTOs;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Xunit;
+using Xunit.Abstractions;
+
+namespace DR_Admin.IntegrationTests.Controllers;
+
+[Collection("Sequential")]
+public class ServersControllerTests : IClassFixture<TestWebApplicationFactory>
+{
+    private readonly HttpClient _client;
+    private readonly ITestOutputHelper _output;
+    private readonly TestWebApplicationFactory _factory;
+
+    public ServersControllerTests(TestWebApplicationFactory factory, ITestOutputHelper output)
+    {
+        _factory = factory;
+        _client = factory.CreateClient();
+        _output = output;
+    }
+
+    #region Get All Servers Tests
+
+    [Fact]
+    [Trait("Category", "Servers")]
+    [Trait("Priority", "1")]
+    public async Task GetAllServers_WithAdminRole_ReturnsOk()
+    {
+        // Arrange
+        await SeedServers();
+        var token = await GetAdminTokenAsync();
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        // Act
+        var response = await _client.GetAsync("/api/v1/Servers");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var result = await response.Content.ReadFromJsonAsync<IEnumerable<ServerDto>>();
+        Assert.NotNull(result);
+        Assert.NotEmpty(result);
+
+        _output.WriteLine($"Retrieved {result.Count()} servers");
+        foreach (var server in result)
+        {
+            _output.WriteLine($"  - {server.Name} ({server.ServerType}): {server.Status}");
+        }
+    }
+
+    [Fact]
+    [Trait("Category", "Servers")]
+    public async Task GetAllServers_WithSupportRole_ReturnsOk()
+    {
+        // Arrange
+        await SeedServers();
+        var token = await GetSupportTokenAsync();
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        // Act
+        var response = await _client.GetAsync("/api/v1/Servers");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    [Trait("Category", "Servers")]
+    public async Task GetAllServers_WithSalesRole_ReturnsForbidden()
+    {
+        // Arrange
+        var token = await GetSalesTokenAsync();
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        // Act
+        var response = await _client.GetAsync("/api/v1/Servers");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    [Trait("Category", "Servers")]
+    public async Task GetAllServers_WithoutAuthentication_ReturnsUnauthorized()
+    {
+        // Act
+        var response = await _client.GetAsync("/api/v1/Servers");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    #endregion
+
+    #region Get Server By Id Tests
+
+    [Fact]
+    [Trait("Category", "Servers")]
+    [Trait("Priority", "2")]
+    public async Task GetServerById_ValidId_ReturnsOk()
+    {
+        // Arrange
+        var serverId = await SeedServers();
+        var token = await GetAdminTokenAsync();
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        // Act
+        var response = await _client.GetAsync($"/api/v1/Servers/{serverId}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var result = await response.Content.ReadFromJsonAsync<ServerDto>();
+        Assert.NotNull(result);
+        Assert.Equal(serverId, result.Id);
+        Assert.NotEmpty(result.Name);
+
+        _output.WriteLine($"Retrieved server: {result.Name}");
+        _output.WriteLine($"  Type: {result.ServerType}");
+        _output.WriteLine($"  OS: {result.OperatingSystem}");
+        _output.WriteLine($"  Status: {result.Status}");
+    }
+
+    [Fact]
+    [Trait("Category", "Servers")]
+    public async Task GetServerById_InvalidId_ReturnsNotFound()
+    {
+        // Arrange
+        var token = await GetAdminTokenAsync();
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        // Act
+        var response = await _client.GetAsync("/api/v1/Servers/99999");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    #endregion
+
+    #region Create Server Tests
+
+    [Fact]
+    [Trait("Category", "Servers")]
+    [Trait("Priority", "3")]
+    public async Task CreateServer_ValidData_ReturnsCreated()
+    {
+        // Arrange
+        var token = await GetAdminTokenAsync();
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var createDto = new CreateServerDto
+        {
+            Name = "Test Server 1",
+            ServerType = "Cloud",
+            HostProvider = "AWS",
+            Location = "US-East",
+            OperatingSystem = "Ubuntu 22.04 LTS",
+            Status = "Active",
+            CpuCores = 8,
+            RamMB = 16384,
+            DiskSpaceGB = 500,
+            Notes = "Test server for integration tests"
+        };
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/api/v1/Servers", createDto);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+
+        var result = await response.Content.ReadFromJsonAsync<ServerDto>();
+        Assert.NotNull(result);
+        Assert.True(result.Id > 0);
+        Assert.Equal(createDto.Name, result.Name);
+        Assert.Equal(createDto.ServerType, result.ServerType);
+        Assert.Equal(createDto.HostProvider, result.HostProvider);
+        Assert.Equal(createDto.Location, result.Location);
+        Assert.Equal(createDto.OperatingSystem, result.OperatingSystem);
+        Assert.Equal(createDto.Status, result.Status);
+        Assert.Equal(createDto.CpuCores, result.CpuCores);
+        Assert.Equal(createDto.RamMB, result.RamMB);
+        Assert.Equal(createDto.DiskSpaceGB, result.DiskSpaceGB);
+
+        _output.WriteLine($"Created server with ID: {result.Id}");
+        _output.WriteLine($"  Name: {result.Name}");
+        _output.WriteLine($"  Type: {result.ServerType}");
+        _output.WriteLine($"  Specs: {result.CpuCores} cores, {result.RamMB}MB RAM, {result.DiskSpaceGB}GB disk");
+    }
+
+    [Fact]
+    [Trait("Category", "Servers")]
+    public async Task CreateServer_WithSupportRole_ReturnsForbidden()
+    {
+        // Arrange
+        var token = await GetSupportTokenAsync();
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var createDto = new CreateServerDto
+        {
+            Name = "Test Server",
+            ServerType = "Physical",
+            OperatingSystem = "Windows Server 2022",
+            Status = "Active"
+        };
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/api/v1/Servers", createDto);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    #endregion
+
+    #region Update Server Tests
+
+    [Fact]
+    [Trait("Category", "Servers")]
+    [Trait("Priority", "4")]
+    public async Task UpdateServer_ValidData_ReturnsOk()
+    {
+        // Arrange
+        var serverId = await SeedServers();
+        var token = await GetAdminTokenAsync();
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var updateDto = new UpdateServerDto
+        {
+            Name = "Updated Server Name",
+            ServerType = "Virtual",
+            HostProvider = "DigitalOcean",
+            Location = "EU-West",
+            OperatingSystem = "CentOS 8",
+            Status = "Maintenance",
+            CpuCores = 16,
+            RamMB = 32768,
+            DiskSpaceGB = 1000,
+            Notes = "Updated notes"
+        };
+
+        // Act
+        var response = await _client.PutAsJsonAsync($"/api/v1/Servers/{serverId}", updateDto);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var result = await response.Content.ReadFromJsonAsync<ServerDto>();
+        Assert.NotNull(result);
+        Assert.Equal(serverId, result.Id);
+        Assert.Equal(updateDto.Name, result.Name);
+        Assert.Equal(updateDto.Status, result.Status);
+        Assert.Equal(updateDto.CpuCores, result.CpuCores);
+
+        _output.WriteLine($"Updated server ID: {result.Id}");
+        _output.WriteLine($"  New name: {result.Name}");
+        _output.WriteLine($"  New status: {result.Status}");
+    }
+
+    [Fact]
+    [Trait("Category", "Servers")]
+    public async Task UpdateServer_InvalidId_ReturnsNotFound()
+    {
+        // Arrange
+        var token = await GetAdminTokenAsync();
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var updateDto = new UpdateServerDto
+        {
+            Name = "Test",
+            ServerType = "Cloud",
+            OperatingSystem = "Linux",
+            Status = "Active"
+        };
+
+        // Act
+        var response = await _client.PutAsJsonAsync("/api/v1/Servers/99999", updateDto);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    #endregion
+
+    #region Delete Server Tests
+
+    [Fact]
+    [Trait("Category", "Servers")]
+    [Trait("Priority", "5")]
+    public async Task DeleteServer_ValidId_ReturnsNoContent()
+    {
+        // Arrange
+        var serverId = await SeedServers();
+        var token = await GetAdminTokenAsync();
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        // Act
+        var response = await _client.DeleteAsync($"/api/v1/Servers/{serverId}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+
+        _output.WriteLine($"Deleted server ID: {serverId}");
+    }
+
+    [Fact]
+    [Trait("Category", "Servers")]
+    public async Task DeleteServer_InvalidId_ReturnsNotFound()
+    {
+        // Arrange
+        var token = await GetAdminTokenAsync();
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        // Act
+        var response = await _client.DeleteAsync("/api/v1/Servers/99999");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    [Trait("Category", "Servers")]
+    public async Task DeleteServer_WithSupportRole_ReturnsForbidden()
+    {
+        // Arrange
+        var serverId = await SeedServers();
+        var token = await GetSupportTokenAsync();
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        // Act
+        var response = await _client.DeleteAsync($"/api/v1/Servers/{serverId}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    #endregion
+
+    #region Helper Methods
+
+    private async Task<int> SeedServers()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        // Clean up existing test data
+        var existingServers = await context.Servers.ToListAsync();
+        context.Servers.RemoveRange(existingServers);
+        await context.SaveChangesAsync();
+
+        var server = new Server
+        {
+            Name = "Primary Web Server",
+            ServerType = "Physical",
+            HostProvider = "On-Premise",
+            Location = "DataCenter-1",
+            OperatingSystem = "Ubuntu 22.04 LTS",
+            Status = "Active",
+            CpuCores = 32,
+            RamMB = 65536,
+            DiskSpaceGB = 2000,
+            Notes = "Main production server",
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        context.Servers.Add(server);
+        await context.SaveChangesAsync();
+
+        return server.Id;
+    }
+
+    private async Task<string> GetAdminTokenAsync()
+    {
+        return await GetTokenForUserAsync("admin");
+    }
+
+    private async Task<string> GetSupportTokenAsync()
+    {
+        return await GetTokenForUserAsync("support");
+    }
+
+    private async Task<string> GetSalesTokenAsync()
+    {
+        return await GetTokenForUserAsync("sales");
+    }
+
+    private async Task<string> GetCustomerTokenAsync()
+    {
+        return await GetTokenForUserAsync("customer");
+    }
+
+    private async Task<string> GetTokenForUserAsync(string username)
+    {
+        var loginRequest = new { Username = username, Password = "Admin123!" };
+        var response = await _client.PostAsJsonAsync("/api/v1/Auth/login", loginRequest);
+        
+        if (!response.IsSuccessStatusCode)
+        {
+            var error = await response.Content.ReadAsStringAsync();
+            throw new Exception($"Failed to get token for user '{username}': {error}");
+        }
+        
+        var result = await response.Content.ReadFromJsonAsync<Dictionary<string, object>>();
+        return result?["token"]?.ToString() ?? throw new Exception("Token not found in response");
+    }
+
+    #endregion
+}

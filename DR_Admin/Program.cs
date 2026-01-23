@@ -87,6 +87,11 @@ builder.Services.AddTransient<IRegistrarService, RegistrarService>();
 builder.Services.AddTransient<IRegistrarTldService, RegistrarTldService>();
 builder.Services.AddTransient<IDnsRecordTypeService, DnsRecordTypeService>();
 builder.Services.AddTransient<IDnsRecordService, DnsRecordService>();
+builder.Services.AddTransient<IServerService, ServerService>();
+builder.Services.AddTransient<IServerIpAddressService, ServerIpAddressService>();
+builder.Services.AddTransient<IControlPanelTypeService, ControlPanelTypeService>();
+builder.Services.AddTransient<IServerControlPanelService, ServerControlPanelService>();
+builder.Services.AddTransient<IHostingPackageService, HostingPackageService>();
 
 // Configure CORS from appsettings
 var corsSettings = builder.Configuration.GetSection("CorsSettings");
