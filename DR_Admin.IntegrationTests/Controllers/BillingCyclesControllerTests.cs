@@ -522,6 +522,14 @@ public class BillingCyclesControllerTests : IClassFixture<TestWebApplicationFact
         using var scope = _factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
+        // Clear existing billing cycles to avoid potential conflicts
+        var existingBillingCycles = await context.BillingCycles.ToListAsync();
+        if (existingBillingCycles.Any())
+        {
+            context.BillingCycles.RemoveRange(existingBillingCycles);
+            await context.SaveChangesAsync();
+        }
+
         var now = DateTime.UtcNow;
         var billingCycles = new[]
         {

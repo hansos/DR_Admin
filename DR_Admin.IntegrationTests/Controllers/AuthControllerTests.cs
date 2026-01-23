@@ -94,7 +94,7 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
 
         var content = await response.Content.ReadAsStringAsync();
-        Assert.Contains("Invalid username or password", content);
+        Assert.Contains("Invalid username/email or password", content);
 
         _output.WriteLine($"Response: {content}");
     }
@@ -131,7 +131,7 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
 
         var content = await response.Content.ReadAsStringAsync();
-        Assert.Contains("Invalid username or password", content);
+        Assert.Contains("Invalid username/email or password", content);
 
         _output.WriteLine($"Response: {content}");
     }
@@ -154,7 +154,7 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
 
         var content = await response.Content.ReadAsStringAsync();
-        Assert.Contains("Username and password are required", content);
+        Assert.Contains("Username/email and password are required", content);
 
         _output.WriteLine($"Response: {content}");
     }
@@ -177,7 +177,7 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
 
         var content = await response.Content.ReadAsStringAsync();
-        Assert.Contains("Username and password are required", content);
+        Assert.Contains("Username/email and password are required", content);
 
         _output.WriteLine($"Response: {content}");
     }

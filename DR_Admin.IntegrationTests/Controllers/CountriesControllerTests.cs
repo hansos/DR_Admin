@@ -744,6 +744,14 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
         using var scope = _factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
+        // Clear existing countries to avoid UNIQUE constraint violations
+        var existingCountries = await context.Countries.ToListAsync();
+        if (existingCountries.Any())
+        {
+            context.Countries.RemoveRange(existingCountries);
+            await context.SaveChangesAsync();
+        }
+
         var now = DateTime.UtcNow;
         var countries = new[]
         {

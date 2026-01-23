@@ -686,6 +686,14 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
         using var scope = _factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
+        // Clear existing control panel types to avoid UNIQUE constraint violations
+        var existingControlPanelTypes = await context.ControlPanelTypes.ToListAsync();
+        if (existingControlPanelTypes.Any())
+        {
+            context.ControlPanelTypes.RemoveRange(existingControlPanelTypes);
+            await context.SaveChangesAsync();
+        }
+
         var now = DateTime.UtcNow;
         var controlPanelTypes = new[]
         {
