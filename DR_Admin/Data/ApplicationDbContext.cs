@@ -74,6 +74,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<PostalCode> PostalCodes { get; set; }
     public DbSet<ResellerCompany> ResellerCompanies { get; set; }
     public DbSet<SalesAgent> SalesAgents { get; set; }
+    public DbSet<SentEmail> SentEmails { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -244,7 +245,7 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.PaymentMethod).HasMaxLength(100);
             
             entity.HasOne(e => e.Customer)
-                .WithMany()
+                .WithMany(c => c.Invoices)
                 .HasForeignKey(e => e.CustomerId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
@@ -712,6 +713,41 @@ public class ApplicationDbContext : DbContext
             entity.HasOne(e => e.ResellerCompany)
                 .WithMany(r => r.SalesAgents)
                 .HasForeignKey(e => e.ResellerCompanyId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // SentEmail configuration
+        modelBuilder.Entity<SentEmail>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.From).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.To).IsRequired().HasMaxLength(1000);
+            entity.Property(e => e.Cc).HasMaxLength(1000);
+            entity.Property(e => e.Bcc).HasMaxLength(1000);
+            entity.Property(e => e.Subject).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.Body).HasMaxLength(int.MaxValue);
+            entity.Property(e => e.MessageId).IsRequired().HasMaxLength(255);
+            entity.Property(e => e.Status).HasMaxLength(50);
+            entity.Property(e => e.ErrorMessage).HasMaxLength(2000);
+            entity.Property(e => e.RelatedEntityType).HasMaxLength(100);
+            entity.Property(e => e.Attachments).HasMaxLength(4000);
+            
+            entity.HasIndex(e => e.SentDate);
+            entity.HasIndex(e => e.MessageId);
+            entity.HasIndex(e => e.From);
+            entity.HasIndex(e => e.CustomerId);
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => new { e.RelatedEntityType, e.RelatedEntityId });
+            
+            entity.HasOne(e => e.Customer)
+                .WithMany()
+                .HasForeignKey(e => e.CustomerId)
+                .OnDelete(DeleteBehavior.SetNull);
+            
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
                 .OnDelete(DeleteBehavior.SetNull);
         });
     }
