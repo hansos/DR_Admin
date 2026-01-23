@@ -6,6 +6,9 @@ using Serilog;
 
 namespace ISPAdmin.Controllers;
 
+/// <summary>
+/// Manages countries and their information
+/// </summary>
 [ApiController]
 [Route("api/v1/[controller]")]
 [Authorize]
@@ -20,9 +23,16 @@ public class CountriesController : ControllerBase
     }
 
     /// <summary>
-    /// Get all countries
+    /// Retrieves all countries in the system
     /// </summary>
+    /// <returns>List of all countries</returns>
+    /// <response code="200">Returns the list of countries</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpGet]
+    [ProducesResponseType(typeof(IEnumerable<CountryDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<IEnumerable<CountryDto>>> GetAllCountries()
     {
         try
@@ -40,9 +50,16 @@ public class CountriesController : ControllerBase
     }
 
     /// <summary>
-    /// Get active countries only
+    /// Retrieves only active countries
     /// </summary>
+    /// <returns>List of active countries</returns>
+    /// <response code="200">Returns the list of active countries</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpGet("active")]
+    [ProducesResponseType(typeof(IEnumerable<CountryDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<IEnumerable<CountryDto>>> GetActiveCountries()
     {
         try
@@ -60,9 +77,19 @@ public class CountriesController : ControllerBase
     }
 
     /// <summary>
-    /// Get country by ID
+    /// Retrieves a specific country by its unique identifier
     /// </summary>
+    /// <param name="id">The unique identifier of the country</param>
+    /// <returns>The country information</returns>
+    /// <response code="200">Returns the country data</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="404">If country is not found</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpGet("{id}")]
+    [ProducesResponseType(typeof(CountryDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<CountryDto>> GetCountryById(int id)
     {
         try
@@ -87,9 +114,19 @@ public class CountriesController : ControllerBase
     }
 
     /// <summary>
-    /// Get country by code
+    /// Retrieves a specific country by its country code
     /// </summary>
+    /// <param name="code">The country code (e.g., "US", "GB")</param>
+    /// <returns>The country information</returns>
+    /// <response code="200">Returns the country data</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="404">If country is not found</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpGet("code/{code}")]
+    [ProducesResponseType(typeof(CountryDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<CountryDto>> GetCountryByCode(string code)
     {
         try
@@ -114,10 +151,22 @@ public class CountriesController : ControllerBase
     }
 
     /// <summary>
-    /// Create a new country
+    /// Creates a new country in the system
     /// </summary>
+    /// <param name="createDto">Country information for creation</param>
+    /// <returns>The newly created country</returns>
+    /// <response code="201">Returns the newly created country</response>
+    /// <response code="400">If the country data is invalid</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have Admin role</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpPost]
     [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(CountryDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<CountryDto>> CreateCountry([FromBody] CreateCountryDto createDto)
     {
         try

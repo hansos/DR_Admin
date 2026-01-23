@@ -1,5 +1,8 @@
 namespace ISPAdmin.DTOs;
 
+/// <summary>
+/// Data transfer object representing a country
+/// </summary>
 public class CountryDto
 {
     public int Id { get; set; }
@@ -12,6 +15,10 @@ public class CountryDto
     public DateTime UpdatedAt { get; set; }
 }
 
+
+/// <summary>
+/// Data transfer object for creating a new country
+/// </summary>
 public class CreateCountryDto
 {
     public string Code { get; set; } = string.Empty;
@@ -21,6 +28,10 @@ public class CreateCountryDto
     public bool IsActive { get; set; } = true;
 }
 
+
+/// <summary>
+/// Data transfer object for updating an existing country
+/// </summary>
 public class UpdateCountryDto
 {
     public string Code { get; set; } = string.Empty;

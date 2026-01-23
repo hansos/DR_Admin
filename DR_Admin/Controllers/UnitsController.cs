@@ -6,6 +6,9 @@ using Serilog;
 
 namespace ISPAdmin.Controllers;
 
+/// <summary>
+/// Manages units of measurement for services and products
+/// </summary>
 [ApiController]
 [Route("api/v1/[controller]")]
 [Authorize]
@@ -20,10 +23,19 @@ public class UnitsController : ControllerBase
     }
 
     /// <summary>
-    /// Get all units
+    /// Retrieves all units of measurement in the system
     /// </summary>
+    /// <returns>List of all units</returns>
+    /// <response code="200">Returns the list of units</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have required role</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpGet]
     [Authorize(Roles = "Admin,Support,Sales")]
+    [ProducesResponseType(typeof(IEnumerable<UnitDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<IEnumerable<UnitDto>>> GetAllUnits()
     {
         try
@@ -41,10 +53,22 @@ public class UnitsController : ControllerBase
     }
 
     /// <summary>
-    /// Get unit by ID
+    /// Retrieves a specific unit by its unique identifier
     /// </summary>
+    /// <param name="id">The unique identifier of the unit</param>
+    /// <returns>The unit information</returns>
+    /// <response code="200">Returns the unit data</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have required role</response>
+    /// <response code="404">If unit is not found</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpGet("{id}")]
     [Authorize(Roles = "Admin,Support,Sales")]
+    [ProducesResponseType(typeof(UnitDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<UnitDto>> GetUnitById(int id)
     {
         try
@@ -69,10 +93,22 @@ public class UnitsController : ControllerBase
     }
 
     /// <summary>
-    /// Get unit by code
+    /// Retrieves a specific unit by its code
     /// </summary>
+    /// <param name="code">The unit code</param>
+    /// <returns>The unit information</returns>
+    /// <response code="200">Returns the unit data</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have required role</response>
+    /// <response code="404">If unit is not found</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpGet("code/{code}")]
     [Authorize(Roles = "Admin,Support,Sales")]
+    [ProducesResponseType(typeof(UnitDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<UnitDto>> GetUnitByCode(string code)
     {
         try
@@ -97,10 +133,22 @@ public class UnitsController : ControllerBase
     }
 
     /// <summary>
-    /// Create a new unit
+    /// Creates a new unit of measurement in the system
     /// </summary>
+    /// <param name="createDto">Unit information for creation</param>
+    /// <returns>The newly created unit</returns>
+    /// <response code="201">Returns the newly created unit</response>
+    /// <response code="400">If the unit data is invalid</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have Admin role</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpPost]
     [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(UnitDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<UnitDto>> CreateUnit([FromBody] CreateUnitDto createDto)
     {
         try

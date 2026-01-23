@@ -1,5 +1,8 @@
 namespace ISPAdmin.DTOs;
 
+/// <summary>
+/// Data transfer object representing a customer order for a service
+/// </summary>
 public class OrderDto
 {
     public int Id { get; set; }
@@ -13,6 +16,10 @@ public class OrderDto
     public DateTime UpdatedAt { get; set; }
 }
 
+
+/// <summary>
+/// Data transfer object for creating a new order
+/// </summary>
 public class CreateOrderDto
 {
     public int CustomerId { get; set; }
@@ -23,6 +30,10 @@ public class CreateOrderDto
     public DateTime NextBillingDate { get; set; }
 }
 
+
+/// <summary>
+/// Data transfer object for updating an existing order
+/// </summary>
 public class UpdateOrderDto
 {
     public int CustomerId { get; set; }

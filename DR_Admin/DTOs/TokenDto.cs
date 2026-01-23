@@ -1,5 +1,8 @@
 namespace ISPAdmin.DTOs;
 
+/// <summary>
+/// Data transfer object representing an authentication or refresh token
+/// </summary>
 public class TokenDto
 {
     public int Id { get; set; }
@@ -11,6 +14,10 @@ public class TokenDto
     public DateTime? RevokedAt { get; set; }
 }
 
+
+/// <summary>
+/// Data transfer object for creating a new token
+/// </summary>
 public class CreateTokenDto
 {
     public int UserId { get; set; }
@@ -19,6 +26,10 @@ public class CreateTokenDto
     public DateTime Expiry { get; set; }
 }
 
+
+/// <summary>
+/// Data transfer object for updating an existing token (primarily for revocation)
+/// </summary>
 public class UpdateTokenDto
 {
     public DateTime? RevokedAt { get; set; }

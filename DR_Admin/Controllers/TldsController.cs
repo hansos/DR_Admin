@@ -6,6 +6,9 @@ using Serilog;
 
 namespace ISPAdmin.Controllers;
 
+/// <summary>
+/// Manages Top-Level Domains (TLDs) and their registrars
+/// </summary>
 [ApiController]
 [Route("api/v1/[controller]")]
 [Authorize]
@@ -20,9 +23,17 @@ public class TldsController : ControllerBase
     }
 
     /// <summary>
-    /// Get all registrars for a TLD
+    /// Retrieves all registrars supporting a specific TLD
     /// </summary>
+    /// <param name="tldId">The unique identifier of the TLD</param>
+    /// <returns>List of registrars supporting the TLD</returns>
+    /// <response code="200">Returns the list of registrars</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpGet("{tldId}/registrars")]
+    [ProducesResponseType(typeof(IEnumerable<RegistrarDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<IEnumerable<RegistrarDto>>> GetRegistrarsByTld(int tldId)
     {
         try
@@ -40,9 +51,16 @@ public class TldsController : ControllerBase
     }
 
     /// <summary>
-    /// Get all TLDs
+    /// Retrieves all Top-Level Domains in the system
     /// </summary>
+    /// <returns>List of all TLDs</returns>
+    /// <response code="200">Returns the list of TLDs</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpGet]
+    [ProducesResponseType(typeof(IEnumerable<TldDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<IEnumerable<TldDto>>> GetAllTlds()
     {
         try
@@ -60,9 +78,16 @@ public class TldsController : ControllerBase
     }
 
     /// <summary>
-    /// Get active TLDs only
+    /// Retrieves only active Top-Level Domains
     /// </summary>
+    /// <returns>List of active TLDs</returns>
+    /// <response code="200">Returns the list of active TLDs</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpGet("active")]
+    [ProducesResponseType(typeof(IEnumerable<TldDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<IEnumerable<TldDto>>> GetActiveTlds()
     {
         try
@@ -80,9 +105,19 @@ public class TldsController : ControllerBase
     }
 
     /// <summary>
-    /// Get TLD by ID
+    /// Retrieves a specific TLD by its unique identifier
     /// </summary>
+    /// <param name="id">The unique identifier of the TLD</param>
+    /// <returns>The TLD information</returns>
+    /// <response code="200">Returns the TLD data</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="404">If TLD is not found</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpGet("{id}")]
+    [ProducesResponseType(typeof(TldDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<TldDto>> GetTldById(int id)
     {
         try
@@ -107,9 +142,19 @@ public class TldsController : ControllerBase
     }
 
     /// <summary>
-    /// Get TLD by extension
+    /// Retrieves a specific TLD by its extension
     /// </summary>
+    /// <param name="extension">The TLD extension (e.g., "com", "net", "org")</param>
+    /// <returns>The TLD information</returns>
+    /// <response code="200">Returns the TLD data</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="404">If TLD is not found</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpGet("extension/{extension}")]
+    [ProducesResponseType(typeof(TldDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<TldDto>> GetTldByExtension(string extension)
     {
         try

@@ -6,6 +6,9 @@ using Serilog;
 
 namespace ISPAdmin.Controllers;
 
+/// <summary>
+/// Manages authentication and refresh tokens
+/// </summary>
 [ApiController]
 [Route("api/v1/[controller]")]
 [Authorize]
@@ -20,10 +23,19 @@ public class TokensController : ControllerBase
     }
 
     /// <summary>
-    /// Get all tokens
+    /// Retrieves all tokens in the system (Admin only)
     /// </summary>
+    /// <returns>List of all tokens</returns>
+    /// <response code="200">Returns the list of tokens</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have Admin role</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpGet]
     [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(IEnumerable<TokenDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<IEnumerable<TokenDto>>> GetAllTokens()
     {
         try
@@ -41,10 +53,22 @@ public class TokensController : ControllerBase
     }
 
     /// <summary>
-    /// Get token by ID
+    /// Retrieves a specific token by its unique identifier
     /// </summary>
+    /// <param name="id">The unique identifier of the token</param>
+    /// <returns>The token information</returns>
+    /// <response code="200">Returns the token data</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have Admin role</response>
+    /// <response code="404">If token is not found</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpGet("{id}")]
     [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(TokenDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<TokenDto>> GetTokenById(int id)
     {
         try
@@ -69,10 +93,22 @@ public class TokensController : ControllerBase
     }
 
     /// <summary>
-    /// Create a new token
+    /// Creates a new token (Admin only)
     /// </summary>
+    /// <param name="createDto">Token information for creation</param>
+    /// <returns>The newly created token</returns>
+    /// <response code="201">Returns the newly created token</response>
+    /// <response code="400">If the token data is invalid</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have Admin role</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpPost]
     [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(TokenDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<TokenDto>> CreateToken([FromBody] CreateTokenDto createDto)
     {
         try
@@ -100,10 +136,25 @@ public class TokensController : ControllerBase
     }
 
     /// <summary>
-    /// Update an existing token
+    /// Updates an existing token's information
     /// </summary>
+    /// <param name="id">The unique identifier of the token to update</param>
+    /// <param name="updateDto">Updated token information</param>
+    /// <returns>The updated token</returns>
+    /// <response code="200">Returns the updated token</response>
+    /// <response code="400">If the token data is invalid</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have Admin role</response>
+    /// <response code="404">If token is not found</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpPut("{id}")]
     [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(TokenDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<TokenDto>> UpdateToken(int id, [FromBody] UpdateTokenDto updateDto)
     {
         try

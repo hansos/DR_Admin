@@ -69,10 +69,18 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
-    /// Logout endpoint to revoke refresh token
+    /// Logs out the current user by revoking their refresh token
     /// </summary>
+    /// <param name="request">Request containing the refresh token to revoke</param>
+    /// <returns>Success message if logout is successful</returns>
+    /// <response code="200">If logout is successful</response>
+    /// <response code="400">If refresh token is empty or revocation fails</response>
+    /// <response code="401">If user is not authenticated</response>
     [HttpPost("logout")]
     [Authorize]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult> Logout([FromBody] RefreshTokenRequestDto request)
     {
         if (string.IsNullOrEmpty(request.RefreshToken))

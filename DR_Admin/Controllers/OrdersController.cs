@@ -6,6 +6,9 @@ using Serilog;
 
 namespace ISPAdmin.Controllers;
 
+/// <summary>
+/// Manages customer orders including creation, retrieval, updates, and deletion
+/// </summary>
 [ApiController]
 [Route("api/v1/[controller]")]
 [Authorize]
@@ -19,8 +22,20 @@ public class OrdersController : ControllerBase
         _orderService = orderService;
     }
 
+    /// <summary>
+    /// Retrieves all orders in the system
+    /// </summary>
+    /// <returns>List of all orders</returns>
+    /// <response code="200">Returns the list of orders</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have required role</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpGet]
     [Authorize(Roles = "Admin,Support,Sales")]
+    [ProducesResponseType(typeof(IEnumerable<OrderDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<IEnumerable<OrderDto>>> GetAllOrders()
     {
         try
@@ -36,8 +51,23 @@ public class OrdersController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Retrieves a specific order by its unique identifier
+    /// </summary>
+    /// <param name="id">The unique identifier of the order</param>
+    /// <returns>The order information</returns>
+    /// <response code="200">Returns the order data</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have required role</response>
+    /// <response code="404">If order is not found</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpGet("{id}")]
     [Authorize(Roles = "Admin,Support,Sales")]
+    [ProducesResponseType(typeof(OrderDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<OrderDto>> GetOrderById(int id)
     {
         try
@@ -60,8 +90,23 @@ public class OrdersController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Creates a new order in the system
+    /// </summary>
+    /// <param name="createDto">Order information for creation</param>
+    /// <returns>The newly created order</returns>
+    /// <response code="201">Returns the newly created order</response>
+    /// <response code="400">If the order data is invalid</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have required role</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpPost]
     [Authorize(Roles = "Admin,Sales")]
+    [ProducesResponseType(typeof(OrderDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<OrderDto>> CreateOrder([FromBody] CreateOrderDto createDto)
     {
         try
@@ -84,8 +129,26 @@ public class OrdersController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Updates an existing order's information
+    /// </summary>
+    /// <param name="id">The unique identifier of the order to update</param>
+    /// <param name="updateDto">Updated order information</param>
+    /// <returns>The updated order</returns>
+    /// <response code="200">Returns the updated order</response>
+    /// <response code="400">If the order data is invalid</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have required role</response>
+    /// <response code="404">If order is not found</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpPut("{id}")]
     [Authorize(Roles = "Admin,Sales")]
+    [ProducesResponseType(typeof(OrderDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<OrderDto>> UpdateOrder(int id, [FromBody] UpdateOrderDto updateDto)
     {
         try
@@ -115,8 +178,23 @@ public class OrdersController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Deletes an order from the system
+    /// </summary>
+    /// <param name="id">The unique identifier of the order to delete</param>
+    /// <returns>No content on success</returns>
+    /// <response code="204">If order was successfully deleted</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have Admin role</response>
+    /// <response code="404">If order is not found</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpDelete("{id}")]
     [Authorize(Roles = "Admin")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult> DeleteOrder(int id)
     {
         try

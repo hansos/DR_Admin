@@ -1,5 +1,8 @@
 namespace ISPAdmin.DTOs;
 
+/// <summary>
+/// Data transfer object representing a domain registrar
+/// </summary>
 public class RegistrarDto
 {
     public int Id { get; set; }
@@ -14,6 +17,10 @@ public class RegistrarDto
     public DateTime UpdatedAt { get; set; }
 }
 
+
+/// <summary>
+/// Data transfer object for creating a new registrar
+/// </summary>
 public class CreateRegistrarDto
 {
     public string Name { get; set; } = string.Empty;
@@ -25,6 +32,10 @@ public class CreateRegistrarDto
     public string? Notes { get; set; }
 }
 
+
+/// <summary>
+/// Data transfer object for updating an existing registrar
+/// </summary>
 public class UpdateRegistrarDto
 {
     public string Name { get; set; } = string.Empty;

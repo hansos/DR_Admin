@@ -6,6 +6,9 @@ using Serilog;
 
 namespace ISPAdmin.Controllers;
 
+/// <summary>
+/// Manages DNS record types (A, AAAA, CNAME, MX, TXT, NS, SRV, etc.)
+/// </summary>
 [ApiController]
 [Route("api/v1/[controller]")]
 [Authorize]
@@ -20,10 +23,19 @@ public class DnsRecordTypesController : ControllerBase
     }
 
     /// <summary>
-    /// Get all DNS record types
+    /// Retrieves all DNS record types in the system
     /// </summary>
+    /// <returns>List of all DNS record types</returns>
+    /// <response code="200">Returns the list of DNS record types</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have required role</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpGet]
     [Authorize(Roles = "Admin,Support,Customer")]
+    [ProducesResponseType(typeof(IEnumerable<DnsRecordTypeDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<IEnumerable<DnsRecordTypeDto>>> GetAllDnsRecordTypes()
     {
         try
@@ -41,10 +53,19 @@ public class DnsRecordTypesController : ControllerBase
     }
 
     /// <summary>
-    /// Get active DNS record types (for client use)
+    /// Retrieves only active DNS record types available for customer use
     /// </summary>
+    /// <returns>List of active DNS record types</returns>
+    /// <response code="200">Returns the list of active DNS record types</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have required role</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpGet("active")]
     [Authorize(Roles = "Admin,Support,Customer")]
+    [ProducesResponseType(typeof(IEnumerable<DnsRecordTypeDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<IEnumerable<DnsRecordTypeDto>>> GetActiveDnsRecordTypes()
     {
         try
@@ -62,10 +83,22 @@ public class DnsRecordTypesController : ControllerBase
     }
 
     /// <summary>
-    /// Get DNS record type by ID
+    /// Retrieves a specific DNS record type by its unique identifier
     /// </summary>
+    /// <param name="id">The unique identifier of the DNS record type</param>
+    /// <returns>The DNS record type information</returns>
+    /// <response code="200">Returns the DNS record type data</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have required role</response>
+    /// <response code="404">If DNS record type is not found</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpGet("{id}")]
     [Authorize(Roles = "Admin,Support")]
+    [ProducesResponseType(typeof(DnsRecordTypeDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<DnsRecordTypeDto>> GetDnsRecordTypeById(int id)
     {
         try
@@ -90,10 +123,22 @@ public class DnsRecordTypesController : ControllerBase
     }
 
     /// <summary>
-    /// Get DNS record type by type name (e.g., A, AAAA, CNAME)
+    /// Retrieves a specific DNS record type by its type name (e.g., A, AAAA, CNAME, MX, TXT)
     /// </summary>
+    /// <param name="type">The DNS record type name (e.g., "A", "CNAME", "MX")</param>
+    /// <returns>The DNS record type information</returns>
+    /// <response code="200">Returns the DNS record type data</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have required role</response>
+    /// <response code="404">If DNS record type is not found</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpGet("type/{type}")]
     [Authorize(Roles = "Admin,Support,Customer")]
+    [ProducesResponseType(typeof(DnsRecordTypeDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<DnsRecordTypeDto>> GetDnsRecordTypeByType(string type)
     {
         try

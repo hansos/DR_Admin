@@ -7,6 +7,9 @@ using Serilog;
 
 namespace ISPAdmin.Controllers;
 
+/// <summary>
+/// Manages customer invoices including creation, retrieval, updates, and deletion
+/// </summary>
 [ApiController]
 [Route("api/v1/[controller]")]
 [Authorize]
@@ -21,10 +24,19 @@ public class InvoicesController : ControllerBase
     }
 
     /// <summary>
-    /// Get all invoices
+    /// Retrieves all invoices in the system
     /// </summary>
+    /// <returns>List of all invoices</returns>
+    /// <response code="200">Returns the list of invoices</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have required role</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpGet]
     [Authorize(Roles = "Admin,Support,Sales")]
+    [ProducesResponseType(typeof(IEnumerable<InvoiceDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<IEnumerable<InvoiceDto>>> GetAllInvoices()
     {
         try
@@ -41,10 +53,20 @@ public class InvoicesController : ControllerBase
     }
 
     /// <summary>
-    /// Get invoices by customer ID
+    /// Retrieves all invoices for a specific customer
     /// </summary>
+    /// <param name="customerId">The unique identifier of the customer</param>
+    /// <returns>List of invoices for the specified customer</returns>
+    /// <response code="200">Returns the list of customer invoices</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have required role</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpGet("customer/{customerId}")]
     [Authorize(Roles = "Admin,Support,Sales")]
+    [ProducesResponseType(typeof(IEnumerable<InvoiceDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<IEnumerable<InvoiceDto>>> GetInvoicesByCustomerId(int customerId)
     {
         try
@@ -61,10 +83,20 @@ public class InvoicesController : ControllerBase
     }
 
     /// <summary>
-    /// Get invoices by status
+    /// Retrieves all invoices with a specific status
     /// </summary>
+    /// <param name="status">The invoice status to filter by</param>
+    /// <returns>List of invoices with the specified status</returns>
+    /// <response code="200">Returns the list of invoices matching the status</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have required role</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpGet("status/{status}")]
     [Authorize(Roles = "Admin,Support,Sales")]
+    [ProducesResponseType(typeof(IEnumerable<InvoiceDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<IEnumerable<InvoiceDto>>> GetInvoicesByStatus(InvoiceStatus status)
     {
         try
@@ -81,10 +113,22 @@ public class InvoicesController : ControllerBase
     }
 
     /// <summary>
-    /// Get invoice by ID
+    /// Retrieves a specific invoice by its unique identifier
     /// </summary>
+    /// <param name="id">The unique identifier of the invoice</param>
+    /// <returns>The invoice information</returns>
+    /// <response code="200">Returns the invoice data</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have required role</response>
+    /// <response code="404">If invoice is not found</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpGet("{id}")]
     [Authorize(Roles = "Admin,Support,Sales")]
+    [ProducesResponseType(typeof(InvoiceDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<InvoiceDto>> GetInvoiceById(int id)
     {
         try
@@ -108,10 +152,22 @@ public class InvoicesController : ControllerBase
     }
 
     /// <summary>
-    /// Get invoice by invoice number
+    /// Retrieves a specific invoice by its invoice number
     /// </summary>
+    /// <param name="invoiceNumber">The invoice number</param>
+    /// <returns>The invoice information</returns>
+    /// <response code="200">Returns the invoice data</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have required role</response>
+    /// <response code="404">If invoice is not found</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpGet("number/{invoiceNumber}")]
     [Authorize(Roles = "Admin,Support,Sales")]
+    [ProducesResponseType(typeof(InvoiceDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<InvoiceDto>> GetInvoiceByNumber(string invoiceNumber)
     {
         try
@@ -135,10 +191,22 @@ public class InvoicesController : ControllerBase
     }
 
     /// <summary>
-    /// Create a new invoice
+    /// Creates a new invoice in the system
     /// </summary>
+    /// <param name="createDto">Invoice information for creation</param>
+    /// <returns>The newly created invoice</returns>
+    /// <response code="201">Returns the newly created invoice</response>
+    /// <response code="400">If the invoice data is invalid</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have required role</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpPost]
     [Authorize(Roles = "Admin,Sales")]
+    [ProducesResponseType(typeof(InvoiceDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<InvoiceDto>> CreateInvoice([FromBody] CreateInvoiceDto createDto)
     {
         try
@@ -171,10 +239,25 @@ public class InvoicesController : ControllerBase
     }
 
     /// <summary>
-    /// Update an existing invoice
+    /// Updates an existing invoice's information
     /// </summary>
+    /// <param name="id">The unique identifier of the invoice to update</param>
+    /// <param name="updateDto">Updated invoice information</param>
+    /// <returns>The updated invoice</returns>
+    /// <response code="200">Returns the updated invoice</response>
+    /// <response code="400">If the invoice data is invalid</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have required role</response>
+    /// <response code="404">If invoice is not found</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpPut("{id}")]
     [Authorize(Roles = "Admin,Sales")]
+    [ProducesResponseType(typeof(InvoiceDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<InvoiceDto>> UpdateInvoice(int id, [FromBody] UpdateInvoiceDto updateDto)
     {
         try

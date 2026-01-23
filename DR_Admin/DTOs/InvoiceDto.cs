@@ -2,6 +2,9 @@ using ISPAdmin.Data.Enums;
 
 namespace ISPAdmin.DTOs;
 
+/// <summary>
+/// Data transfer object representing an invoice
+/// </summary>
 public class InvoiceDto
 {
     public int Id { get; set; }
@@ -31,6 +34,10 @@ public class InvoiceDto
     public DateTime? DeletedAt { get; set; }
 }
 
+
+/// <summary>
+/// Data transfer object for creating a new invoice
+/// </summary>
 public class CreateInvoiceDto
 {
     public string InvoiceNumber { get; set; } = string.Empty;
@@ -53,6 +60,10 @@ public class CreateInvoiceDto
     public string InternalComment { get; set; } = string.Empty;
 }
 
+
+/// <summary>
+/// Data transfer object for updating an existing invoice
+/// </summary>
 public class UpdateInvoiceDto
 {
     public string InvoiceNumber { get; set; } = string.Empty;

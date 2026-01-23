@@ -6,6 +6,9 @@ using Serilog;
 
 namespace ISPAdmin.Controllers;
 
+/// <summary>
+/// Manages service types including creation, retrieval, updates, and deletion
+/// </summary>
 [ApiController]
 [Route("api/v1/[controller]")]
 [Authorize]
@@ -20,10 +23,19 @@ public class ServiceTypesController : ControllerBase
     }
 
     /// <summary>
-    /// Get all service types
+    /// Retrieves all service types in the system
     /// </summary>
+    /// <returns>List of all service types</returns>
+    /// <response code="200">Returns the list of service types</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have required role</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpGet]
     [Authorize(Roles = "Admin,Support,Sales")]
+    [ProducesResponseType(typeof(IEnumerable<ServiceTypeDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<IEnumerable<ServiceTypeDto>>> GetAllServiceTypes()
     {
         try
@@ -41,10 +53,22 @@ public class ServiceTypesController : ControllerBase
     }
 
     /// <summary>
-    /// Get service type by ID
+    /// Retrieves a specific service type by its unique identifier
     /// </summary>
+    /// <param name="id">The unique identifier of the service type</param>
+    /// <returns>The service type information</returns>
+    /// <response code="200">Returns the service type data</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have required role</response>
+    /// <response code="404">If service type is not found</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpGet("{id}")]
     [Authorize(Roles = "Admin,Support,Sales")]
+    [ProducesResponseType(typeof(ServiceTypeDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<ServiceTypeDto>> GetServiceTypeById(int id)
     {
         try
@@ -69,10 +93,22 @@ public class ServiceTypesController : ControllerBase
     }
 
     /// <summary>
-    /// Create a new service type
+    /// Creates a new service type in the system
     /// </summary>
+    /// <param name="createDto">Service type information for creation</param>
+    /// <returns>The newly created service type</returns>
+    /// <response code="201">Returns the newly created service type</response>
+    /// <response code="400">If the service type data is invalid</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have Admin role</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpPost]
     [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ServiceTypeDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<ServiceTypeDto>> CreateServiceType([FromBody] CreateServiceTypeDto createDto)
     {
         try
@@ -100,10 +136,25 @@ public class ServiceTypesController : ControllerBase
     }
 
     /// <summary>
-    /// Update an existing service type
+    /// Updates an existing service type's information
     /// </summary>
+    /// <param name="id">The unique identifier of the service type to update</param>
+    /// <param name="updateDto">Updated service type information</param>
+    /// <returns>The updated service type</returns>
+    /// <response code="200">Returns the updated service type</response>
+    /// <response code="400">If the service type data is invalid</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have Admin role</response>
+    /// <response code="404">If service type is not found</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpPut("{id}")]
     [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ServiceTypeDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<ServiceTypeDto>> UpdateServiceType(int id, [FromBody] UpdateServiceTypeDto updateDto)
     {
         try
@@ -134,10 +185,22 @@ public class ServiceTypesController : ControllerBase
     }
 
     /// <summary>
-    /// Delete a service type
+    /// Deletes a service type from the system
     /// </summary>
+    /// <param name="id">The unique identifier of the service type to delete</param>
+    /// <returns>No content on success</returns>
+    /// <response code="204">If service type was successfully deleted</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have Admin role</response>
+    /// <response code="404">If service type is not found</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpDelete("{id}")]
     [Authorize(Roles = "Admin")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult> DeleteServiceType(int id)
     {
         try

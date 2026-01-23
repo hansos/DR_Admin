@@ -1,5 +1,8 @@
 namespace ISPAdmin.DTOs;
 
+/// <summary>
+/// Data transfer object representing a postal code with geographic information
+/// </summary>
 public class PostalCodeDto
 {
     public int Id { get; set; }
@@ -16,6 +19,10 @@ public class PostalCodeDto
     public DateTime UpdatedAt { get; set; }
 }
 
+
+/// <summary>
+/// Data transfer object for creating a new postal code
+/// </summary>
 public class CreatePostalCodeDto
 {
     public string Code { get; set; } = string.Empty;
@@ -29,6 +36,10 @@ public class CreatePostalCodeDto
     public bool IsActive { get; set; } = true;
 }
 
+
+/// <summary>
+/// Data transfer object for updating an existing postal code
+/// </summary>
 public class UpdatePostalCodeDto
 {
     public string Code { get; set; } = string.Empty;

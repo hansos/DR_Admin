@@ -1,5 +1,8 @@
 namespace ISPAdmin.DTOs;
 
+/// <summary>
+/// Data transfer object representing a line item on an invoice
+/// </summary>
 public class InvoiceLineDto
 {
     public int Id { get; set; }
@@ -27,6 +30,10 @@ public class InvoiceLineDto
     public string Notes { get; set; } = string.Empty;
 }
 
+
+/// <summary>
+/// Data transfer object for creating a new invoice line item
+/// </summary>
 public class CreateInvoiceLineDto
 {
     public int InvoiceId { get; set; }

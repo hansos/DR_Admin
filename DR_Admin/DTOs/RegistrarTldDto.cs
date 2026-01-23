@@ -1,5 +1,8 @@
 namespace ISPAdmin.DTOs;
 
+/// <summary>
+/// Data transfer object representing a registrar's TLD offering with pricing information
+/// </summary>
 public class RegistrarTldDto
 {
     public int Id { get; set; }
@@ -25,6 +28,10 @@ public class RegistrarTldDto
     public DateTime UpdatedAt { get; set; }
 }
 
+
+/// <summary>
+/// Data transfer object for creating a new registrar-TLD offering
+/// </summary>
 public class CreateRegistrarTldDto
 {
     public int RegistrarId { get; set; }
@@ -45,6 +52,10 @@ public class CreateRegistrarTldDto
     public string? Notes { get; set; }
 }
 
+
+/// <summary>
+/// Data transfer object for updating an existing registrar-TLD offering
+/// </summary>
 public class UpdateRegistrarTldDto
 {
     public int RegistrarId { get; set; }

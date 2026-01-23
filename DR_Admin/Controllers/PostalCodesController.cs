@@ -6,6 +6,9 @@ using Serilog;
 
 namespace ISPAdmin.Controllers;
 
+/// <summary>
+/// Manages postal codes and their geographic information
+/// </summary>
 [ApiController]
 [Route("api/v1/[controller]")]
 [Authorize]
@@ -20,10 +23,19 @@ public class PostalCodesController : ControllerBase
     }
 
     /// <summary>
-    /// Get all postal codes
+    /// Retrieves all postal codes in the system
     /// </summary>
+    /// <returns>List of all postal codes</returns>
+    /// <response code="200">Returns the list of postal codes</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have required role</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpGet]
     [Authorize(Roles = "Admin,Support")]
+    [ProducesResponseType(typeof(IEnumerable<PostalCodeDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<IEnumerable<PostalCodeDto>>> GetAllPostalCodes()
     {
         try
@@ -41,9 +53,17 @@ public class PostalCodesController : ControllerBase
     }
 
     /// <summary>
-    /// Get postal codes by country
+    /// Retrieves all postal codes for a specific country
     /// </summary>
+    /// <param name="countryCode">The country code (e.g., "US", "GB")</param>
+    /// <returns>List of postal codes for the country</returns>
+    /// <response code="200">Returns the list of postal codes</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpGet("country/{countryCode}")]
+    [ProducesResponseType(typeof(IEnumerable<PostalCodeDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<IEnumerable<PostalCodeDto>>> GetPostalCodesByCountry(string countryCode)
     {
         try
@@ -62,9 +82,17 @@ public class PostalCodesController : ControllerBase
     }
 
     /// <summary>
-    /// Get postal codes by city
+    /// Retrieves all postal codes for a specific city
     /// </summary>
+    /// <param name="city">The city name</param>
+    /// <returns>List of postal codes for the city</returns>
+    /// <response code="200">Returns the list of postal codes</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpGet("city/{city}")]
+    [ProducesResponseType(typeof(IEnumerable<PostalCodeDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<IEnumerable<PostalCodeDto>>> GetPostalCodesByCity(string city)
     {
         try
@@ -83,9 +111,19 @@ public class PostalCodesController : ControllerBase
     }
 
     /// <summary>
-    /// Get postal code by ID
+    /// Retrieves a specific postal code by its unique identifier
     /// </summary>
+    /// <param name="id">The unique identifier of the postal code</param>
+    /// <returns>The postal code information</returns>
+    /// <response code="200">Returns the postal code data</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="404">If postal code is not found</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpGet("{id}")]
+    [ProducesResponseType(typeof(PostalCodeDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<PostalCodeDto>> GetPostalCodeById(int id)
     {
         try
@@ -111,9 +149,20 @@ public class PostalCodesController : ControllerBase
     }
 
     /// <summary>
-    /// Get postal code by code and country
+    /// Retrieves a specific postal code by code and country
     /// </summary>
+    /// <param name="code">The postal code</param>
+    /// <param name="countryCode">The country code (e.g., "US", "GB")</param>
+    /// <returns>The postal code information</returns>
+    /// <response code="200">Returns the postal code data</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="404">If postal code is not found</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpGet("{code}/country/{countryCode}")]
+    [ProducesResponseType(typeof(PostalCodeDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<PostalCodeDto>> GetPostalCodeByCodeAndCountry(string code, string countryCode)
     {
         try

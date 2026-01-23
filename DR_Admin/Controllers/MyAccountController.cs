@@ -7,6 +7,9 @@ using Serilog;
 
 namespace ISPAdmin.Controllers;
 
+/// <summary>
+/// Manages user account operations including registration, email confirmation, and password management
+/// </summary>
 [ApiController]
 [Route("api/v1/[controller]")]
 public class MyAccountController : ControllerBase
@@ -20,12 +23,21 @@ public class MyAccountController : ControllerBase
     }
 
     /// <summary>
-    /// Register a new account with user and customer information
+    /// Registers a new account with user and customer information
     /// </summary>
-    /// <param name="request">Registration details</param>
-    /// <returns>User ID, email, and confirmation token</returns>
+    /// <param name="request">Registration details including username, email, password, and customer information</param>
+    /// <returns>User ID, email, and email confirmation token</returns>
+    /// <response code="201">Returns the registration result with confirmation token</response>
+    /// <response code="400">If the registration data is invalid or user already exists</response>
+    /// <response code="500">If an internal server error occurs</response>
+    /// <remarks>
+    /// Creates both a user account and associated customer record. Email confirmation is required before the account is fully activated.
+    /// </remarks>
     [HttpPost("register")]
     [AllowAnonymous]
+    [ProducesResponseType(typeof(RegisterAccountResponseDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<RegisterAccountResponseDto>> Register([FromBody] RegisterAccountRequestDto request)
     {
         try
@@ -54,12 +66,18 @@ public class MyAccountController : ControllerBase
     }
 
     /// <summary>
-    /// Confirm email address using confirmation token
+    /// Confirms user email address using the confirmation token sent during registration
     /// </summary>
-    /// <param name="request">Email and confirmation token</param>
-    /// <returns>Success status</returns>
+    /// <param name="request">Email address and confirmation token</param>
+    /// <returns>Success status message</returns>
+    /// <response code="200">If email was confirmed successfully</response>
+    /// <response code="400">If email or token is missing, invalid, or expired</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpPost("confirm-email")]
     [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult> ConfirmEmail([FromBody] ConfirmEmailRequestDto request)
     {
         try
@@ -89,12 +107,18 @@ public class MyAccountController : ControllerBase
     }
 
     /// <summary>
-    /// Set password for new account using token (e.g., after password reset)
+    /// Sets password for a new account or after password reset using a token
     /// </summary>
-    /// <param name="request">Email, token, and new password</param>
-    /// <returns>Success status</returns>
+    /// <param name="request">Email, token, new password, and password confirmation</param>
+    /// <returns>Success status message</returns>
+    /// <response code="200">If password was set successfully</response>
+    /// <response code="400">If required fields are missing, passwords don't match, or token is invalid/expired</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpPost("set-password")]
     [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult> SetPassword([FromBody] SetPasswordRequestDto request)
     {
         try
@@ -131,12 +155,20 @@ public class MyAccountController : ControllerBase
     }
 
     /// <summary>
-    /// Change password for authenticated user
+    /// Changes password for the currently authenticated user
     /// </summary>
-    /// <param name="request">Current password, new password, and confirmation</param>
-    /// <returns>Success status</returns>
+    /// <param name="request">Current password, new password, and password confirmation</param>
+    /// <returns>Success status message</returns>
+    /// <response code="200">If password was changed successfully</response>
+    /// <response code="400">If required fields are missing, passwords don't match, or current password is incorrect</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpPost("change-password")]
     [Authorize]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult> ChangePassword([FromBody] ChangePasswordRequestDto request)
     {
         try
@@ -174,12 +206,20 @@ public class MyAccountController : ControllerBase
     }
 
     /// <summary>
-    /// Update email address for authenticated user
+    /// Updates the email address for the currently authenticated user
     /// </summary>
-    /// <param name="request">New email and password for verification</param>
-    /// <returns>Success status</returns>
+    /// <param name="request">New email address and current password for verification</param>
+    /// <returns>Success status message</returns>
+    /// <response code="200">If email was updated successfully</response>
+    /// <response code="400">If required fields are missing, password is incorrect, or email is already in use</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpPatch("email")]
     [Authorize]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult> PatchEmail([FromBody] PatchEmailRequestDto request)
     {
         try

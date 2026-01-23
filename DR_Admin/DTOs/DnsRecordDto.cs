@@ -1,5 +1,8 @@
 namespace ISPAdmin.DTOs;
 
+/// <summary>
+/// Data transfer object representing a DNS record for a domain
+/// </summary>
 public class DnsRecordDto
 {
     public int Id { get; set; }
@@ -20,6 +23,10 @@ public class DnsRecordDto
     public DateTime UpdatedAt { get; set; }
 }
 
+
+/// <summary>
+/// Data transfer object for creating a new DNS record
+/// </summary>
 public class CreateDnsRecordDto
 {
     public int DomainId { get; set; }
@@ -32,6 +39,10 @@ public class CreateDnsRecordDto
     public int? Port { get; set; }
 }
 
+
+/// <summary>
+/// Data transfer object for updating an existing DNS record
+/// </summary>
 public class UpdateDnsRecordDto
 {
     public int DomainId { get; set; }

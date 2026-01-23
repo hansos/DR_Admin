@@ -6,6 +6,9 @@ using Serilog;
 
 namespace ISPAdmin.Controllers;
 
+/// <summary>
+/// Manages user accounts including creation, retrieval, updates, and deletion
+/// </summary>
 [ApiController]
 [Route("api/v1/[controller]")]
 [Authorize]
@@ -20,10 +23,19 @@ public class UsersController : ControllerBase
     }
 
     /// <summary>
-    /// Get all users
+    /// Retrieves all users in the system
     /// </summary>
+    /// <returns>List of all users</returns>
+    /// <response code="200">Returns the list of users</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have required role (Admin or Support)</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpGet]
     [Authorize(Roles = "Admin,Support")]
+    [ProducesResponseType(typeof(IEnumerable<UserDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<IEnumerable<UserDto>>> GetAllUsers()
     {
         try
@@ -41,10 +53,22 @@ public class UsersController : ControllerBase
     }
 
     /// <summary>
-    /// Get user by ID
+    /// Retrieves a specific user by their unique identifier
     /// </summary>
+    /// <param name="id">The unique identifier of the user</param>
+    /// <returns>The user information</returns>
+    /// <response code="200">Returns the user data</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have required role (Admin or Support)</response>
+    /// <response code="404">If user is not found</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpGet("{id}")]
     [Authorize(Roles = "Admin,Support")]
+    [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<UserDto>> GetUserById(int id)
     {
         try
@@ -69,10 +93,22 @@ public class UsersController : ControllerBase
     }
 
     /// <summary>
-    /// Create a new user
+    /// Creates a new user in the system
     /// </summary>
+    /// <param name="createDto">User information for creation</param>
+    /// <returns>The newly created user</returns>
+    /// <response code="201">Returns the newly created user</response>
+    /// <response code="400">If the user data is invalid</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have Admin role</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpPost]
     [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(UserDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<UserDto>> CreateUser([FromBody] CreateUserDto createDto)
     {
         try
@@ -100,10 +136,25 @@ public class UsersController : ControllerBase
     }
 
     /// <summary>
-    /// Update an existing user
+    /// Updates an existing user's information
     /// </summary>
+    /// <param name="id">The unique identifier of the user to update</param>
+    /// <param name="updateDto">Updated user information</param>
+    /// <returns>The updated user</returns>
+    /// <response code="200">Returns the updated user</response>
+    /// <response code="400">If the user data is invalid</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have Admin role</response>
+    /// <response code="404">If user is not found</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpPut("{id}")]
     [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<UserDto>> UpdateUser(int id, [FromBody] UpdateUserDto updateDto)
     {
         try
@@ -134,10 +185,22 @@ public class UsersController : ControllerBase
     }
 
     /// <summary>
-    /// Delete a user
+    /// Deletes a user from the system
     /// </summary>
+    /// <param name="id">The unique identifier of the user to delete</param>
+    /// <returns>No content on success</returns>
+    /// <response code="204">If user was successfully deleted</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have Admin role</response>
+    /// <response code="404">If user is not found</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpDelete("{id}")]
     [Authorize(Roles = "Admin")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult> DeleteUser(int id)
     {
         try

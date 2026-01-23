@@ -7,6 +7,9 @@ using Serilog;
 
 namespace ISPAdmin.Controllers;
 
+/// <summary>
+/// Manages domain registrars and their TLD offerings
+/// </summary>
 [ApiController]
 [Route("api/v1/[controller]")]
 [Authorize]
@@ -21,9 +24,17 @@ public class RegistrarsController : ControllerBase
     }
 
     /// <summary>
-    /// Get all TLDs for a registrar
+    /// Retrieves all TLDs supported by a specific registrar
     /// </summary>
+    /// <param name="registrarId">The unique identifier of the registrar</param>
+    /// <returns>List of TLDs supported by the registrar</returns>
+    /// <response code="200">Returns the list of TLDs</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpGet("{registrarId}/tlds")]
+    [ProducesResponseType(typeof(IEnumerable<TldDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<IEnumerable<TldDto>>> GetTldsByRegistrar(int registrarId)
     {
         try
@@ -41,10 +52,23 @@ public class RegistrarsController : ControllerBase
     }
 
     /// <summary>
-    /// Assign a TLD to a registrar by IDs
+    /// Assigns a TLD to a registrar using their unique identifiers
     /// </summary>
+    /// <param name="registrarId">The unique identifier of the registrar</param>
+    /// <param name="tldId">The unique identifier of the TLD</param>
+    /// <returns>The created registrar-TLD relationship</returns>
+    /// <response code="201">Returns the created registrar-TLD relationship</response>
+    /// <response code="400">If the assignment is invalid or already exists</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have Admin role</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpPost("{registrarId}/tld/{tldId}")]
     [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(RegistrarTldDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<RegistrarTldDto>> AssignTldToRegistrarByIds(int registrarId, int tldId)
     {
         try
@@ -68,10 +92,23 @@ public class RegistrarsController : ControllerBase
     }
 
     /// <summary>
-    /// Assign a TLD to a registrar by DTO
+    /// Assigns a TLD to a registrar using TLD details
     /// </summary>
+    /// <param name="registrarId">The unique identifier of the registrar</param>
+    /// <param name="tldDto">The TLD information</param>
+    /// <returns>The created registrar-TLD relationship</returns>
+    /// <response code="201">Returns the created registrar-TLD relationship</response>
+    /// <response code="400">If the TLD data is invalid or assignment already exists</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have Admin role</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpPost("{registrarId}/tld")]
     [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(RegistrarTldDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<RegistrarTldDto>> AssignTldToRegistrarByDto(int registrarId, [FromBody] TldDto tldDto)
     {
         try
@@ -101,10 +138,19 @@ public class RegistrarsController : ControllerBase
     }
 
     /// <summary>
-    /// Get all registrars
+    /// Retrieves all domain registrars in the system
     /// </summary>
+    /// <returns>List of all registrars</returns>
+    /// <response code="200">Returns the list of registrars</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have required role</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpGet]
     [Authorize(Roles = "Admin,Support")]
+    [ProducesResponseType(typeof(IEnumerable<RegistrarDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<IEnumerable<RegistrarDto>>> GetAllRegistrars()
     {
         try

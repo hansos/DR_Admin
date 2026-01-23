@@ -1,5 +1,8 @@
 namespace ISPAdmin.DTOs;
 
+/// <summary>
+/// Data transfer object representing a Top-Level Domain (TLD)
+/// </summary>
 public class TldDto
 {
     public int Id { get; set; }
@@ -14,6 +17,10 @@ public class TldDto
     public DateTime UpdatedAt { get; set; }
 }
 
+
+/// <summary>
+/// Data transfer object for creating a new TLD
+/// </summary>
 public class CreateTldDto
 {
     public string Extension { get; set; } = string.Empty;
@@ -25,6 +32,10 @@ public class CreateTldDto
     public string? Notes { get; set; }
 }
 
+
+/// <summary>
+/// Data transfer object for updating an existing TLD
+/// </summary>
 public class UpdateTldDto
 {
     public string Extension { get; set; } = string.Empty;

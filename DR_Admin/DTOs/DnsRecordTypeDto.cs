@@ -1,5 +1,8 @@
 namespace ISPAdmin.DTOs;
 
+/// <summary>
+/// Data transfer object representing a DNS record type (e.g., A, AAAA, CNAME, MX, TXT)
+/// </summary>
 public class DnsRecordTypeDto
 {
     public int Id { get; set; }
@@ -15,6 +18,10 @@ public class DnsRecordTypeDto
     public DateTime UpdatedAt { get; set; }
 }
 
+
+/// <summary>
+/// Data transfer object for creating a new DNS record type
+/// </summary>
 public class CreateDnsRecordTypeDto
 {
     public string Type { get; set; } = string.Empty;
@@ -27,6 +34,10 @@ public class CreateDnsRecordTypeDto
     public int DefaultTTL { get; set; } = 3600;
 }
 
+
+/// <summary>
+/// Data transfer object for updating an existing DNS record type
+/// </summary>
 public class UpdateDnsRecordTypeDto
 {
     public string Type { get; set; } = string.Empty;

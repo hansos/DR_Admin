@@ -6,6 +6,9 @@ using Serilog;
 
 namespace ISPAdmin.Controllers;
 
+/// <summary>
+/// Manages registrar-TLD relationships and pricing
+/// </summary>
 [ApiController]
 [Route("api/v1/[controller]")]
 [Authorize]
@@ -20,10 +23,19 @@ public class RegistrarTldsController : ControllerBase
     }
 
     /// <summary>
-    /// Get all registrar TLD offerings
+    /// Retrieves all registrar-TLD offerings in the system
     /// </summary>
+    /// <returns>List of all registrar-TLD relationships</returns>
+    /// <response code="200">Returns the list of registrar-TLD offerings</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have required role</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpGet]
     [Authorize(Roles = "Admin,Support,Sales")]
+    [ProducesResponseType(typeof(IEnumerable<RegistrarTldDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<IEnumerable<RegistrarTldDto>>> GetAllRegistrarTlds()
     {
         try
@@ -41,9 +53,16 @@ public class RegistrarTldsController : ControllerBase
     }
 
     /// <summary>
-    /// Get available registrar TLD offerings
+    /// Retrieves only available registrar-TLD offerings for purchase
     /// </summary>
+    /// <returns>List of available registrar-TLD relationships</returns>
+    /// <response code="200">Returns the list of available offerings</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpGet("available")]
+    [ProducesResponseType(typeof(IEnumerable<RegistrarTldDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<IEnumerable<RegistrarTldDto>>> GetAvailableRegistrarTlds()
     {
         try
@@ -61,9 +80,17 @@ public class RegistrarTldsController : ControllerBase
     }
 
     /// <summary>
-    /// Get registrar TLD offerings by registrar
+    /// Retrieves all TLD offerings for a specific registrar
     /// </summary>
+    /// <param name="registrarId">The unique identifier of the registrar</param>
+    /// <returns>List of TLD offerings for the registrar</returns>
+    /// <response code="200">Returns the list of TLD offerings</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpGet("registrar/{registrarId}")]
+    [ProducesResponseType(typeof(IEnumerable<RegistrarTldDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<IEnumerable<RegistrarTldDto>>> GetRegistrarTldsByRegistrar(int registrarId)
     {
         try
@@ -82,9 +109,17 @@ public class RegistrarTldsController : ControllerBase
     }
 
     /// <summary>
-    /// Get registrar TLD offerings by TLD
+    /// Retrieves all registrars offering a specific TLD
     /// </summary>
+    /// <param name="tldId">The unique identifier of the TLD</param>
+    /// <returns>List of registrars offering the TLD</returns>
+    /// <response code="200">Returns the list of registrar offerings</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpGet("tld/{tldId}")]
+    [ProducesResponseType(typeof(IEnumerable<RegistrarTldDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<IEnumerable<RegistrarTldDto>>> GetRegistrarTldsByTld(int tldId)
     {
         try
@@ -103,9 +138,19 @@ public class RegistrarTldsController : ControllerBase
     }
 
     /// <summary>
-    /// Get registrar TLD offering by ID
+    /// Retrieves a specific registrar-TLD offering by its unique identifier
     /// </summary>
+    /// <param name="id">The unique identifier of the registrar-TLD relationship</param>
+    /// <returns>The registrar-TLD offering information</returns>
+    /// <response code="200">Returns the registrar-TLD offering data</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="404">If registrar-TLD offering is not found</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpGet("{id}")]
+    [ProducesResponseType(typeof(RegistrarTldDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<RegistrarTldDto>> GetRegistrarTldById(int id)
     {
         try
