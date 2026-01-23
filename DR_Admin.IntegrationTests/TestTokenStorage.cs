@@ -1,4 +1,4 @@
-namespace ISPAdmin.IntegrationTests;
+namespace DR_Admin.IntegrationTests;
 
 /// <summary>
 /// Static storage for sharing authentication tokens across test classes

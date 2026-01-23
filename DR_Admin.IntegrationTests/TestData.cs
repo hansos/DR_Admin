@@ -1,4 +1,4 @@
-namespace ISPAdmin.IntegrationTests;
+namespace DR_Admin.IntegrationTests;
 
 /// <summary>
 /// Constants for test data used across integration tests

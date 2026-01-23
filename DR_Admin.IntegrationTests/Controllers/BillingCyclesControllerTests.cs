@@ -9,7 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace ISPAdmin.IntegrationTests.Controllers;
+namespace DR_Admin.IntegrationTests.Controllers;
 
 [Collection("Sequential")]
 public class BillingCyclesControllerTests : IClassFixture<TestWebApplicationFactory>

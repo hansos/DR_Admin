@@ -6,7 +6,7 @@ using ISPAdmin.DTOs;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace ISPAdmin.IntegrationTests.Controllers;
+namespace DR_Admin.IntegrationTests.Controllers;
 
 [Collection("Sequential")]
 public class MyAccountControllerTests : IClassFixture<TestWebApplicationFactory>

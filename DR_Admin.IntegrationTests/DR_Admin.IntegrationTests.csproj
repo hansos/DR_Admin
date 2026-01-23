@@ -5,6 +5,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
+    <AssemblyName>DR_Admin.IntegrationTests</AssemblyName>
+    <RootNamespace>DR_Admin.IntegrationTests</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DR_Admin\ISPAdmin.csproj" />
+    <ProjectReference Include="..\DR_Admin\DR_Admin.csproj" />
   </ItemGroup>
 
 </Project>

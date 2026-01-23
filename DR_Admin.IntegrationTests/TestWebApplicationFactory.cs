@@ -7,7 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-namespace ISPAdmin.IntegrationTests;
+namespace DR_Admin.IntegrationTests;
 
 public class TestWebApplicationFactory : WebApplicationFactory<Program>
 {
