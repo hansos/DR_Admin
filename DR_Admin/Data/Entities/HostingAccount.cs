@@ -4,6 +4,8 @@ public class HostingAccount : EntityBase
 {
     public int CustomerId { get; set; }
     public int ServiceId { get; set; }
+    public int? ServerId { get; set; }
+    public int? ServerControlPanelId { get; set; }
     public string Provider { get; set; } = string.Empty;
     public string Username { get; set; } = string.Empty;
     public string PasswordHash { get; set; } = string.Empty;
@@ -12,4 +14,6 @@ public class HostingAccount : EntityBase
 
     public Customer Customer { get; set; } = null!;
     public Service Service { get; set; } = null!;
+    public Server? Server { get; set; }
+    public ServerControlPanel? ServerControlPanel { get; set; }
 }

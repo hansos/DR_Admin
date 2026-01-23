@@ -60,6 +60,11 @@ public class ApplicationDbContext : DbContext
     public DbSet<DnsRecordType> DnsRecordTypes { get; set; }
     public DbSet<DnsRecord> DnsRecords { get; set; }
     public DbSet<HostingAccount> HostingAccounts { get; set; }
+    public DbSet<Server> Servers { get; set; }
+    public DbSet<ServerIpAddress> ServerIpAddresses { get; set; }
+    public DbSet<ControlPanelType> ControlPanelTypes { get; set; }
+    public DbSet<ServerControlPanel> ServerControlPanels { get; set; }
+    public DbSet<HostingPackage> HostingPackages { get; set; }
     public DbSet<AuditLog> AuditLogs { get; set; }
     public DbSet<SystemSetting> SystemSettings { get; set; }
     public DbSet<BackupSchedule> BackupSchedules { get; set; }
@@ -360,6 +365,109 @@ public class ApplicationDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(e => e.ServiceId)
                 .OnDelete(DeleteBehavior.Restrict);
+            
+            entity.HasOne(e => e.Server)
+                .WithMany(s => s.HostingAccounts)
+                .HasForeignKey(e => e.ServerId)
+                .OnDelete(DeleteBehavior.Restrict);
+            
+            entity.HasOne(e => e.ServerControlPanel)
+                .WithMany()
+                .HasForeignKey(e => e.ServerControlPanelId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Server configuration
+        modelBuilder.Entity<Server>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.ServerType).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.HostProvider).HasMaxLength(100);
+            entity.Property(e => e.Location).HasMaxLength(200);
+            entity.Property(e => e.OperatingSystem).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Status).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Notes).HasMaxLength(2000);
+            
+            entity.HasIndex(e => e.Name);
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.ServerType);
+        });
+
+        // ServerIpAddress configuration
+        modelBuilder.Entity<ServerIpAddress>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.IpAddress).IsRequired().HasMaxLength(45); // IPv6 max length
+            entity.Property(e => e.IpVersion).IsRequired().HasMaxLength(10);
+            entity.Property(e => e.Status).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.AssignedTo).HasMaxLength(200);
+            entity.Property(e => e.Notes).HasMaxLength(1000);
+            
+            entity.HasIndex(e => e.IpAddress);
+            entity.HasIndex(e => e.ServerId);
+            entity.HasIndex(e => e.Status);
+            
+            entity.HasOne(e => e.Server)
+                .WithMany(s => s.IpAddresses)
+                .HasForeignKey(e => e.ServerId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ControlPanelType configuration
+        modelBuilder.Entity<ControlPanelType>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.DisplayName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.Version).HasMaxLength(50);
+            entity.Property(e => e.WebsiteUrl).HasMaxLength(500);
+            
+            entity.HasIndex(e => e.Name).IsUnique();
+            entity.HasIndex(e => e.IsActive);
+        });
+
+        // ServerControlPanel configuration
+        modelBuilder.Entity<ServerControlPanel>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.ApiUrl).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.ApiToken).HasMaxLength(500);
+            entity.Property(e => e.ApiKey).HasMaxLength(500);
+            entity.Property(e => e.Username).HasMaxLength(100);
+            entity.Property(e => e.PasswordHash).HasMaxLength(500);
+            entity.Property(e => e.AdditionalSettings).HasMaxLength(4000);
+            entity.Property(e => e.Status).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.LastError).HasMaxLength(2000);
+            entity.Property(e => e.Notes).HasMaxLength(2000);
+            
+            entity.HasIndex(e => e.ServerId);
+            entity.HasIndex(e => e.ControlPanelTypeId);
+            entity.HasIndex(e => e.Status);
+            
+            entity.HasOne(e => e.Server)
+                .WithMany(s => s.ControlPanels)
+                .HasForeignKey(e => e.ServerId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasOne(e => e.ControlPanelType)
+                .WithMany(c => c.ServerControlPanels)
+                .HasForeignKey(e => e.ControlPanelTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // HostingPackage configuration
+        modelBuilder.Entity<HostingPackage>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Description).HasMaxLength(1000);
+            entity.Property(e => e.MonthlyPrice).HasPrecision(18, 2);
+            entity.Property(e => e.YearlyPrice).HasPrecision(18, 2);
+            
+            entity.HasIndex(e => e.Name);
+            entity.HasIndex(e => e.IsActive);
         });
 
         // AuditLog configuration
