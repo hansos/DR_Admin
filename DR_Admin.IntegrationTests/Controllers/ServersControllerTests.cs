@@ -376,39 +376,135 @@ public class ServersControllerTests : IClassFixture<TestWebApplicationFactory>
         return server.Id;
     }
 
+    /// <summary>
+    /// Creates a user with Admin role and returns their access token
+    /// </summary>
     private async Task<string> GetAdminTokenAsync()
     {
-        return await GetTokenForUserAsync("admin");
+        var (username, email) = await CreateUserWithRole("Admin");
+        return await LoginAndGetTokenAsync(username);
     }
 
+    /// <summary>
+    /// Creates a user with Support role and returns their access token
+    /// </summary>
     private async Task<string> GetSupportTokenAsync()
     {
-        return await GetTokenForUserAsync("support");
+        var (username, email) = await CreateUserWithRole("Support");
+        return await LoginAndGetTokenAsync(username);
     }
 
+    /// <summary>
+    /// Creates a user with Sales role and returns their access token
+    /// </summary>
     private async Task<string> GetSalesTokenAsync()
     {
-        return await GetTokenForUserAsync("sales");
+        var (username, email) = await CreateUserWithRole("Sales");
+        return await LoginAndGetTokenAsync(username);
     }
 
+    /// <summary>
+    /// Creates a user with Customer role and returns their access token
+    /// </summary>
     private async Task<string> GetCustomerTokenAsync()
     {
-        return await GetTokenForUserAsync("customer");
+        var (username, email) = await CreateUserWithRole("Customer");
+        return await LoginAndGetTokenAsync(username);
     }
 
-    private async Task<string> GetTokenForUserAsync(string username)
+    /// <summary>
+    /// Creates a user with the specified role and returns (username, email)
+    /// </summary>
+    private async Task<(string username, string email)> CreateUserWithRole(string roleName)
     {
-        var loginRequest = new { Username = username, Password = "Admin123!" };
+        using var scope = _factory.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        // Ensure role exists
+        var role = await context.Roles.FirstOrDefaultAsync(r => r.Name == roleName);
+        if (role == null)
+        {
+            role = new Role
+            {
+                Name = roleName,
+                Description = $"{roleName} role"
+            };
+            await context.Roles.AddAsync(role);
+            await context.SaveChangesAsync();
+        }
+
+        // Create customer
+        var timestamp = DateTime.UtcNow.Ticks;
+        var customer = new Customer
+        {
+            Name = $"{roleName} Test Customer {timestamp}",
+            Email = $"{roleName.ToLower()}{timestamp}@example.com",
+            Phone = "555-0100",
+            Address = "123 Test St",
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+        await context.Customers.AddAsync(customer);
+        await context.SaveChangesAsync();
+
+        // Create user
+        var username = $"{roleName.ToLower()}user{timestamp}";
+        var email = $"{roleName.ToLower()}{timestamp}@example.com";
+
+        var user = new User
+        {
+            CustomerId = customer.Id,
+            Username = username,
+            Email = email,
+            PasswordHash = "Test@1234", // TODO: In production, use proper password hashing
+            EmailConfirmed = DateTime.UtcNow,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+        await context.Users.AddAsync(user);
+        await context.SaveChangesAsync();
+
+        // Assign role to user
+        var userRole = new UserRole
+        {
+            UserId = user.Id,
+            RoleId = role.Id
+        };
+        await context.UserRoles.AddAsync(userRole);
+        await context.SaveChangesAsync();
+
+        _output.WriteLine($"Created {roleName} user: {username}");
+
+        return (username, email);
+    }
+
+    /// <summary>
+    /// Logs in with the specified username and returns the access token
+    /// </summary>
+    private async Task<string> LoginAndGetTokenAsync(string username)
+    {
+        var loginRequest = new LoginRequestDto
+        {
+            Username = username,
+            Password = "Test@1234"
+        };
+
         var response = await _client.PostAsJsonAsync("/api/v1/Auth/login", loginRequest);
         
         if (!response.IsSuccessStatusCode)
         {
             var error = await response.Content.ReadAsStringAsync();
-            throw new Exception($"Failed to get token for user '{username}': {error}");
+            throw new Exception($"Login failed for {username}: {response.StatusCode} - {error}");
         }
-        
-        var result = await response.Content.ReadFromJsonAsync<Dictionary<string, object>>();
-        return result?["token"]?.ToString() ?? throw new Exception("Token not found in response");
+
+        var result = await response.Content.ReadFromJsonAsync<LoginResponseDto>();
+        if (result == null || string.IsNullOrEmpty(result.AccessToken))
+        {
+            throw new Exception($"Failed to get access token for {username}");
+        }
+
+        return result.AccessToken;
     }
 
     #endregion
