@@ -11,4 +11,5 @@ public interface ITldService
     Task<TldDto> CreateTldAsync(CreateTldDto createDto);
     Task<TldDto?> UpdateTldAsync(int id, UpdateTldDto updateDto);
     Task<bool> DeleteTldAsync(int id);
+    Task<IEnumerable<RegistrarDto>> GetRegistrarsByTldAsync(int tldId);
 }

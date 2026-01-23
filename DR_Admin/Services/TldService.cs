@@ -264,4 +264,43 @@ public class TldService : ITldService
             UpdatedAt = tld.UpdatedAt
         };
     }
+
+    public async Task<IEnumerable<RegistrarDto>> GetRegistrarsByTldAsync(int tldId)
+    {
+        try
+        {
+            _log.Information("Fetching registrars for TLD {TldId}", tldId);
+
+            var registrars = await _context.RegistrarTlds
+                .AsNoTracking()
+                .Where(rt => rt.TldId == tldId)
+                .Include(rt => rt.Registrar)
+                .Select(rt => rt.Registrar)
+                .OrderBy(r => r.Name)
+                .ToListAsync();
+
+            var registrarDtos = registrars.Select(r => new RegistrarDto
+            {
+                Id = r.Id,
+                Name = r.Name,
+                Code = r.Code,
+                ApiUrl = r.ApiUrl,
+                IsActive = r.IsActive,
+                ContactEmail = r.ContactEmail,
+                ContactPhone = r.ContactPhone,
+                Website = r.Website,
+                Notes = r.Notes,
+                CreatedAt = r.CreatedAt,
+                UpdatedAt = r.UpdatedAt
+            });
+
+            _log.Information("Successfully fetched {Count} registrars for TLD {TldId}", registrars.Count, tldId);
+            return registrarDtos;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while fetching registrars for TLD {TldId}", tldId);
+            throw;
+        }
+    }
 }

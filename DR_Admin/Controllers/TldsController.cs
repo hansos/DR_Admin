@@ -20,6 +20,26 @@ public class TldsController : ControllerBase
     }
 
     /// <summary>
+    /// Get all registrars for a TLD
+    /// </summary>
+    [HttpGet("{tldId}/registrars")]
+    public async Task<ActionResult<IEnumerable<RegistrarDto>>> GetRegistrarsByTld(int tldId)
+    {
+        try
+        {
+            _log.Information("API: GetRegistrarsByTld called for TLD {TldId} by user {User}", tldId, User.Identity?.Name);
+
+            var registrars = await _tldService.GetRegistrarsByTldAsync(tldId);
+            return Ok(registrars);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in GetRegistrarsByTld for TLD {TldId}", tldId);
+            return StatusCode(500, "An error occurred while retrieving registrars for the TLD");
+        }
+    }
+
+    /// <summary>
     /// Get all TLDs
     /// </summary>
     [HttpGet]

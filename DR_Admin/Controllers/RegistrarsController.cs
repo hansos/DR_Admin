@@ -21,6 +21,26 @@ public class RegistrarsController : ControllerBase
     }
 
     /// <summary>
+    /// Get all TLDs for a registrar
+    /// </summary>
+    [HttpGet("{registrarId}/tlds")]
+    public async Task<ActionResult<IEnumerable<TldDto>>> GetTldsByRegistrar(int registrarId)
+    {
+        try
+        {
+            _log.Information("API: GetTldsByRegistrar called for registrar {RegistrarId} by user {User}", registrarId, User.Identity?.Name);
+
+            var tlds = await _registrarService.GetTldsByRegistrarAsync(registrarId);
+            return Ok(tlds);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in GetTldsByRegistrar for registrar {RegistrarId}", registrarId);
+            return StatusCode(500, "An error occurred while retrieving TLDs for the registrar");
+        }
+    }
+
+    /// <summary>
     /// Assign a TLD to a registrar by IDs
     /// </summary>
     [HttpPost("{registrarId}/tld/{tldId}")]
