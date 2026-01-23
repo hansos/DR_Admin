@@ -27,15 +27,15 @@ public class AuthService : IAuthService
     {
         try
         {
-            // Find user by username
+            // Find user by username or email
             var user = await _context.Users
                 .Include(u => u.UserRoles)
                     .ThenInclude(ur => ur.Role)
-                .FirstOrDefaultAsync(u => u.Username == username);
+                .FirstOrDefaultAsync(u => u.Username == username || u.Email == username);
 
             if (user == null)
             {
-                _log.Warning("Login attempt failed: User not found - {Username}", username);
+                _log.Warning("Login attempt failed: User not found - {UsernameOrEmail}", username);
                 return null;
             }
 

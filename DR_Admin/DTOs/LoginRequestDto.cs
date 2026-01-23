@@ -6,7 +6,7 @@ namespace ISPAdmin.DTOs;
 public class LoginRequestDto
 {
     /// <summary>
-    /// Gets or sets the username for authentication
+    /// Gets or sets the username or email address for authentication
     /// </summary>
     public string Username { get; set; } = string.Empty;
     

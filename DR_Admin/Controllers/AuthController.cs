@@ -19,7 +19,7 @@ public class AuthController : ControllerBase
     }
 
     /// <summary>
-    /// Login endpoint to get JWT token
+    /// Login endpoint to get JWT token. Accepts both username and email address as identification.
     /// </summary>
     [HttpPost("login")]
     [AllowAnonymous]
@@ -28,15 +28,15 @@ public class AuthController : ControllerBase
         if (string.IsNullOrEmpty(loginRequest.Username) || string.IsNullOrEmpty(loginRequest.Password))
         {
             _log.Warning("Login attempt with empty username or password");
-            return BadRequest(new { message = "Username and password are required" });
+            return BadRequest(new { message = "Username/email and password are required" });
         }
 
         var result = await _authService.AuthenticateAsync(loginRequest.Username, loginRequest.Password);
 
         if (result == null)
         {
-            _log.Warning("Failed login attempt for username: {Username}", loginRequest.Username);
-            return Unauthorized(new { message = "Invalid username or password" });
+            _log.Warning("Failed login attempt for username/email: {UsernameOrEmail}", loginRequest.Username);
+            return Unauthorized(new { message = "Invalid username/email or password" });
         }
 
         _log.Information("Successful login for username: {Username}", loginRequest.Username);
