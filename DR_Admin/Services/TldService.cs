@@ -93,11 +93,13 @@ public class TldService : ITldService
     {
         try
         {
-            _log.Information("Fetching TLD with extension: {Extension}", extension);
-            
+            // Normalize extension: remove leading dot and surrounding whitespace
+            var ext = extension?.Trim().TrimStart('.') ?? string.Empty;
+            _log.Information("Fetching TLD with extension: {Extension}", ext);
+
             var tld = await _context.Tlds
                 .AsNoTracking()
-                .FirstOrDefaultAsync(t => t.Extension == extension);
+                .FirstOrDefaultAsync(t => t.Extension == ext);
 
             if (tld == null)
             {
@@ -105,7 +107,7 @@ public class TldService : ITldService
                 return null;
             }
 
-            _log.Information("Successfully fetched TLD with extension: {Extension}", extension);
+            _log.Information("Successfully fetched TLD with extension: {Extension}", ext);
             return MapToDto(tld);
         }
         catch (Exception ex)
@@ -119,20 +121,29 @@ public class TldService : ITldService
     {
         try
         {
-            _log.Information("Creating new TLD with extension: {Extension}", createDto.Extension);
+            // Normalize extension: remove leading dot and surrounding whitespace
+            var extension = createDto.Extension?.Trim().TrimStart('.') ?? string.Empty;
+
+            _log.Information("Creating new TLD with extension: {Extension}", extension);
+
+            if (string.IsNullOrEmpty(extension))
+            {
+                _log.Warning("TLD extension is empty or invalid");
+                throw new InvalidOperationException("TLD extension cannot be empty");
+            }
 
             var existingTld = await _context.Tlds
-                .FirstOrDefaultAsync(t => t.Extension == createDto.Extension);
+                .FirstOrDefaultAsync(t => t.Extension == extension);
 
             if (existingTld != null)
             {
-                _log.Warning("TLD with extension {Extension} already exists", createDto.Extension);
-                throw new InvalidOperationException($"TLD with extension {createDto.Extension} already exists");
+                _log.Warning("TLD with extension {Extension} already exists", extension);
+                throw new InvalidOperationException($"TLD with extension {extension} already exists");
             }
 
             var tld = new Tld
             {
-                Extension = createDto.Extension,
+                Extension = extension,
                 Description = createDto.Description,
                 IsActive = createDto.IsActive,
                 DefaultRegistrationYears = createDto.DefaultRegistrationYears,
@@ -170,16 +181,19 @@ public class TldService : ITldService
                 return null;
             }
 
+            // Normalize extension: remove leading dot and surrounding whitespace
+            var extension = updateDto.Extension?.Trim().TrimStart('.') ?? string.Empty;
+
             var duplicateExtension = await _context.Tlds
-                .AnyAsync(t => t.Extension == updateDto.Extension && t.Id != id);
+                .AnyAsync(t => t.Extension == extension && t.Id != id);
 
             if (duplicateExtension)
             {
-                _log.Warning("Cannot update TLD {TldId}: extension {Extension} already exists", id, updateDto.Extension);
-                throw new InvalidOperationException($"TLD with extension {updateDto.Extension} already exists");
+                _log.Warning("Cannot update TLD {TldId}: extension {Extension} already exists", id, extension);
+                throw new InvalidOperationException($"TLD with extension {extension} already exists");
             }
 
-            tld.Extension = updateDto.Extension;
+            tld.Extension = extension;
             tld.Description = updateDto.Description;
             tld.IsActive = updateDto.IsActive;
             tld.DefaultRegistrationYears = updateDto.DefaultRegistrationYears;

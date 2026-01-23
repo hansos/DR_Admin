@@ -3,6 +3,8 @@ using ISPAdmin.Data.Entities;
 using ISPAdmin.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using ISPAdmin.DTOs;
+using Microsoft.EntityFrameworkCore;
 
 namespace ISPAdmin.Services;
 
@@ -14,6 +16,286 @@ public class RegistrarService : IRegistrarService
     public RegistrarService(ApplicationDbContext context)
     {
         _context = context;
+    }
+
+    public async Task<RegistrarTldDto> AssignTldToRegistrarAsync(int registrarId, TldDto tldDto)
+    {
+        try
+        {
+            // Normalize extension
+            var extension = tldDto.Extension?.Trim().TrimStart('.') ?? string.Empty;
+            _log.Information("Assigning or creating TLD {Extension} and linking to registrar {RegistrarId}", extension, registrarId);
+
+            var registrarExists = await _context.Registrars.AnyAsync(r => r.Id == registrarId);
+            if (!registrarExists)
+            {
+                _log.Warning("Registrar with ID {RegistrarId} does not exist", registrarId);
+                throw new InvalidOperationException($"Registrar with ID {registrarId} does not exist");
+            }
+
+            if (string.IsNullOrEmpty(extension))
+            {
+                _log.Warning("TLD extension is empty or invalid");
+                throw new InvalidOperationException("TLD extension cannot be empty");
+            }
+
+            // Check if TLD exists; if not create it
+            var tld = await _context.Tlds.FirstOrDefaultAsync(t => t.Extension == extension);
+            if (tld == null)
+            {
+                _log.Information("TLD {Extension} does not exist, creating new TLD", extension);
+                var newTld = new Data.Entities.Tld
+                {
+                    Extension = extension,
+                    Description = tldDto.Description,
+                    IsActive = tldDto.IsActive,
+                    DefaultRegistrationYears = tldDto.DefaultRegistrationYears,
+                    MaxRegistrationYears = tldDto.MaxRegistrationYears,
+                    RequiresPrivacy = tldDto.RequiresPrivacy,
+                    Notes = tldDto.Notes,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+
+                _context.Tlds.Add(newTld);
+                await _context.SaveChangesAsync();
+
+                tld = newTld;
+            }
+
+            // Now create RegistrarTld linking registrarId and tld.Id
+            var existing = await _context.RegistrarTlds.FirstOrDefaultAsync(rt => rt.RegistrarId == registrarId && rt.TldId == tld.Id);
+            if (existing != null)
+            {
+                _log.Warning("Registrar TLD for registrar {RegistrarId} and TLD {TldId} already exists", registrarId, tld.Id);
+                throw new InvalidOperationException("This registrar-TLD combination already exists");
+            }
+
+            var registrarTld = new Data.Entities.RegistrarTld
+            {
+                RegistrarId = registrarId,
+                TldId = tld.Id,
+                RegistrationCost = 0,
+                RegistrationPrice = 0,
+                RenewalCost = 0,
+                RenewalPrice = 0,
+                TransferCost = 0,
+                TransferPrice = 0,
+                Currency = "USD",
+                IsAvailable = true,
+                AutoRenew = false,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            _context.RegistrarTlds.Add(registrarTld);
+            await _context.SaveChangesAsync();
+
+            await _context.Entry(registrarTld).Reference(rt => rt.Registrar).LoadAsync();
+            await _context.Entry(registrarTld).Reference(rt => rt.Tld).LoadAsync();
+
+            _log.Information("Successfully created registrar TLD with ID: {RegistrarTldId}", registrarTld.Id);
+            return new RegistrarTldDto
+            {
+                Id = registrarTld.Id,
+                RegistrarId = registrarTld.RegistrarId,
+                RegistrarName = registrarTld.Registrar?.Name,
+                TldId = registrarTld.TldId,
+                TldExtension = registrarTld.Tld?.Extension,
+                RegistrationCost = registrarTld.RegistrationCost,
+                RegistrationPrice = registrarTld.RegistrationPrice,
+                RenewalCost = registrarTld.RenewalCost,
+                RenewalPrice = registrarTld.RenewalPrice,
+                TransferCost = registrarTld.TransferCost,
+                TransferPrice = registrarTld.TransferPrice,
+                PrivacyCost = registrarTld.PrivacyCost,
+                PrivacyPrice = registrarTld.PrivacyPrice,
+                Currency = registrarTld.Currency,
+                IsAvailable = registrarTld.IsAvailable,
+                AutoRenew = registrarTld.AutoRenew,
+                MinRegistrationYears = registrarTld.MinRegistrationYears,
+                MaxRegistrationYears = registrarTld.MaxRegistrationYears,
+                Notes = registrarTld.Notes,
+                CreatedAt = registrarTld.CreatedAt,
+                UpdatedAt = registrarTld.UpdatedAt
+            };
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while assigning/creating TLD {Extension} for registrar {RegistrarId}", tldDto.Extension, registrarId);
+            throw;
+        }
+    }
+
+    public async Task<RegistrarTldDto> AssignTldToRegistrarAsync(int registrarId, int tldId)
+    {
+        try
+        {
+            _log.Information("Assigning TLD {TldId} to registrar {RegistrarId}", tldId, registrarId);
+
+            var registrarExists = await _context.Registrars.AnyAsync(r => r.Id == registrarId);
+            if (!registrarExists)
+            {
+                _log.Warning("Registrar with ID {RegistrarId} does not exist", registrarId);
+                throw new InvalidOperationException($"Registrar with ID {registrarId} does not exist");
+            }
+
+            var tldExists = await _context.Tlds.AnyAsync(t => t.Id == tldId);
+            if (!tldExists)
+            {
+                _log.Warning("TLD with ID {TldId} does not exist", tldId);
+                throw new InvalidOperationException($"TLD with ID {tldId} does not exist");
+            }
+
+            var existing = await _context.RegistrarTlds.FirstOrDefaultAsync(rt => rt.RegistrarId == registrarId && rt.TldId == tldId);
+            if (existing != null)
+            {
+                _log.Warning("Registrar TLD for registrar {RegistrarId} and TLD {TldId} already exists", registrarId, tldId);
+                throw new InvalidOperationException("This registrar-TLD combination already exists");
+            }
+
+            var registrarTld = new Data.Entities.RegistrarTld
+            {
+                RegistrarId = registrarId,
+                TldId = tldId,
+                RegistrationCost = 0,
+                RegistrationPrice = 0,
+                RenewalCost = 0,
+                RenewalPrice = 0,
+                TransferCost = 0,
+                TransferPrice = 0,
+                Currency = "USD",
+                IsAvailable = true,
+                AutoRenew = false,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            _context.RegistrarTlds.Add(registrarTld);
+            await _context.SaveChangesAsync();
+
+            await _context.Entry(registrarTld).Reference(rt => rt.Registrar).LoadAsync();
+            await _context.Entry(registrarTld).Reference(rt => rt.Tld).LoadAsync();
+
+            _log.Information("Successfully assigned TLD {TldId} to registrar {RegistrarId}", tldId, registrarId);
+            return new RegistrarTldDto
+            {
+                Id = registrarTld.Id,
+                RegistrarId = registrarTld.RegistrarId,
+                RegistrarName = registrarTld.Registrar?.Name,
+                TldId = registrarTld.TldId,
+                TldExtension = registrarTld.Tld?.Extension,
+                RegistrationCost = registrarTld.RegistrationCost,
+                RegistrationPrice = registrarTld.RegistrationPrice,
+                RenewalCost = registrarTld.RenewalCost,
+                RenewalPrice = registrarTld.RenewalPrice,
+                TransferCost = registrarTld.TransferCost,
+                TransferPrice = registrarTld.TransferPrice,
+                PrivacyCost = registrarTld.PrivacyCost,
+                PrivacyPrice = registrarTld.PrivacyPrice,
+                Currency = registrarTld.Currency,
+                IsAvailable = registrarTld.IsAvailable,
+                AutoRenew = registrarTld.AutoRenew,
+                MinRegistrationYears = registrarTld.MinRegistrationYears,
+                MaxRegistrationYears = registrarTld.MaxRegistrationYears,
+                Notes = registrarTld.Notes,
+                CreatedAt = registrarTld.CreatedAt,
+                UpdatedAt = registrarTld.UpdatedAt
+            };
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while assigning TLD {TldId} to registrar {RegistrarId}", tldId, registrarId);
+            throw;
+        }
+    }
+
+    public async Task<RegistrarTldDto> AssignTldToRegistrarAsync(CreateRegistrarTldDto createDto)
+    {
+        try
+        {
+            _log.Information("Assigning TLD {TldId} to registrar {RegistrarId} via DTO", createDto.TldId, createDto.RegistrarId);
+
+            var registrarExists = await _context.Registrars.AnyAsync(r => r.Id == createDto.RegistrarId);
+            if (!registrarExists)
+            {
+                _log.Warning("Registrar with ID {RegistrarId} does not exist", createDto.RegistrarId);
+                throw new InvalidOperationException($"Registrar with ID {createDto.RegistrarId} does not exist");
+            }
+
+            var tldExists = await _context.Tlds.AnyAsync(t => t.Id == createDto.TldId);
+            if (!tldExists)
+            {
+                _log.Warning("TLD with ID {TldId} does not exist", createDto.TldId);
+                throw new InvalidOperationException($"TLD with ID {createDto.TldId} does not exist");
+            }
+
+            var existing = await _context.RegistrarTlds.FirstOrDefaultAsync(rt => rt.RegistrarId == createDto.RegistrarId && rt.TldId == createDto.TldId);
+            if (existing != null)
+            {
+                _log.Warning("Registrar TLD for registrar {RegistrarId} and TLD {TldId} already exists", createDto.RegistrarId, createDto.TldId);
+                throw new InvalidOperationException("This registrar-TLD combination already exists");
+            }
+
+            var registrarTld = new Data.Entities.RegistrarTld
+            {
+                RegistrarId = createDto.RegistrarId,
+                TldId = createDto.TldId,
+                RegistrationCost = createDto.RegistrationCost,
+                RegistrationPrice = createDto.RegistrationPrice,
+                RenewalCost = createDto.RenewalCost,
+                RenewalPrice = createDto.RenewalPrice,
+                TransferCost = createDto.TransferCost,
+                TransferPrice = createDto.TransferPrice,
+                PrivacyCost = createDto.PrivacyCost,
+                PrivacyPrice = createDto.PrivacyPrice,
+                Currency = createDto.Currency,
+                IsAvailable = createDto.IsAvailable,
+                AutoRenew = createDto.AutoRenew,
+                MinRegistrationYears = createDto.MinRegistrationYears,
+                MaxRegistrationYears = createDto.MaxRegistrationYears,
+                Notes = createDto.Notes,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            _context.RegistrarTlds.Add(registrarTld);
+            await _context.SaveChangesAsync();
+
+            await _context.Entry(registrarTld).Reference(rt => rt.Registrar).LoadAsync();
+            await _context.Entry(registrarTld).Reference(rt => rt.Tld).LoadAsync();
+
+            _log.Information("Successfully created registrar TLD with ID: {RegistrarTldId}", registrarTld.Id);
+            return new RegistrarTldDto
+            {
+                Id = registrarTld.Id,
+                RegistrarId = registrarTld.RegistrarId,
+                RegistrarName = registrarTld.Registrar?.Name,
+                TldId = registrarTld.TldId,
+                TldExtension = registrarTld.Tld?.Extension,
+                RegistrationCost = registrarTld.RegistrationCost,
+                RegistrationPrice = registrarTld.RegistrationPrice,
+                RenewalCost = registrarTld.RenewalCost,
+                RenewalPrice = registrarTld.RenewalPrice,
+                TransferCost = registrarTld.TransferCost,
+                TransferPrice = registrarTld.TransferPrice,
+                PrivacyCost = registrarTld.PrivacyCost,
+                PrivacyPrice = registrarTld.PrivacyPrice,
+                Currency = registrarTld.Currency,
+                IsAvailable = registrarTld.IsAvailable,
+                AutoRenew = registrarTld.AutoRenew,
+                MinRegistrationYears = registrarTld.MinRegistrationYears,
+                MaxRegistrationYears = registrarTld.MaxRegistrationYears,
+                Notes = registrarTld.Notes,
+                CreatedAt = registrarTld.CreatedAt,
+                UpdatedAt = registrarTld.UpdatedAt
+            };
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while assigning TLD {TldId} to registrar {RegistrarId}", createDto.TldId, createDto.RegistrarId);
+            throw;
+        }
     }
 
     public async Task<IEnumerable<RegistrarDto>> GetAllRegistrarsAsync()

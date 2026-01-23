@@ -1,5 +1,6 @@
 using ISPAdmin.DTOs;
 using ISPAdmin.Services;
+using ISPAdmin.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
@@ -17,6 +18,66 @@ public class RegistrarsController : ControllerBase
     public RegistrarsController(IRegistrarService registrarService)
     {
         _registrarService = registrarService;
+    }
+
+    /// <summary>
+    /// Assign a TLD to a registrar by IDs
+    /// </summary>
+    [HttpPost("{registrarId}/tld/{tldId}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<RegistrarTldDto>> AssignTldToRegistrarByIds(int registrarId, int tldId)
+    {
+        try
+        {
+            _log.Information("API: AssignTldToRegistrarByIds called for registrar {RegistrarId} and TLD {TldId} by user {User}", registrarId, tldId, User.Identity?.Name);
+
+            var result = await _registrarService.AssignTldToRegistrarAsync(registrarId, tldId);
+
+            return CreatedAtAction(null, result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _log.Warning(ex, "API: Invalid operation in AssignTldToRegistrarByIds");
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in AssignTldToRegistrarByIds for registrar {RegistrarId} and TLD {TldId}", registrarId, tldId);
+            return StatusCode(500, "An error occurred while assigning the TLD to the registrar");
+        }
+    }
+
+    /// <summary>
+    /// Assign a TLD to a registrar by DTO
+    /// </summary>
+    [HttpPost("{registrarId}/tld")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<RegistrarTldDto>> AssignTldToRegistrarByDto(int registrarId, [FromBody] TldDto tldDto)
+    {
+        try
+        {
+            _log.Information("API: AssignTldToRegistrarByDto called for registrar {RegistrarId} by user {User}", registrarId, User.Identity?.Name);
+
+            if (!ModelState.IsValid)
+            {
+                _log.Warning("API: Invalid model state for AssignTldToRegistrarByDto");
+                return BadRequest(ModelState);
+            }
+
+            var result = await _registrarService.AssignTldToRegistrarAsync(registrarId, tldDto);
+
+            return CreatedAtAction(null, result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _log.Warning(ex, "API: Invalid operation in AssignTldToRegistrarByDto");
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in AssignTldToRegistrarByDto");
+            return StatusCode(500, "An error occurred while assigning the TLD to the registrar");
+        }
     }
 
     /// <summary>

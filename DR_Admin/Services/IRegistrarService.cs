@@ -11,4 +11,7 @@ public interface IRegistrarService
     Task<RegistrarDto> CreateRegistrarAsync(CreateRegistrarDto createDto);
     Task<RegistrarDto?> UpdateRegistrarAsync(int id, UpdateRegistrarDto updateDto);
     Task<bool> DeleteRegistrarAsync(int id);
+    Task<RegistrarTldDto> AssignTldToRegistrarAsync(int registrarId, int tldId);
+    Task<RegistrarTldDto> AssignTldToRegistrarAsync(CreateRegistrarTldDto createDto);
+    Task<RegistrarTldDto> AssignTldToRegistrarAsync(int registrarId, TldDto tldDto);
 }
