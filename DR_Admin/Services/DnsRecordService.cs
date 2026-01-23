@@ -25,6 +25,7 @@ public class DnsRecordService : IDnsRecordService
             var dnsRecords = await _context.DnsRecords
                 .AsNoTracking()
                 .Include(d => d.Domain)
+                .Include(d => d.DnsRecordType)
                 .ToListAsync();
 
             var dnsRecordDtos = dnsRecords.Select(MapToDto);
@@ -48,6 +49,7 @@ public class DnsRecordService : IDnsRecordService
             var dnsRecord = await _context.DnsRecords
                 .AsNoTracking()
                 .Include(d => d.Domain)
+                .Include(d => d.DnsRecordType)
                 .FirstOrDefaultAsync(d => d.Id == id);
 
             if (dnsRecord == null)
@@ -75,6 +77,7 @@ public class DnsRecordService : IDnsRecordService
             var dnsRecords = await _context.DnsRecords
                 .AsNoTracking()
                 .Include(d => d.Domain)
+                .Include(d => d.DnsRecordType)
                 .Where(d => d.DomainId == domainId)
                 .ToListAsync();
 
@@ -99,7 +102,8 @@ public class DnsRecordService : IDnsRecordService
             var dnsRecords = await _context.DnsRecords
                 .AsNoTracking()
                 .Include(d => d.Domain)
-                .Where(d => d.Type.ToUpper() == type.ToUpper())
+                .Include(d => d.DnsRecordType)
+                .Where(d => d.DnsRecordType.Type.ToUpper() == type.ToUpper())
                 .ToListAsync();
 
             var dnsRecordDtos = dnsRecords.Select(MapToDto);
@@ -118,7 +122,7 @@ public class DnsRecordService : IDnsRecordService
     {
         try
         {
-            _log.Information("Creating new DNS record of type {Type} for domain ID: {DomainId}", createDto.Type, createDto.DomainId);
+            _log.Information("Creating new DNS record of type ID {DnsRecordTypeId} for domain ID: {DomainId}", createDto.DnsRecordTypeId, createDto.DomainId);
 
             // Validate that the domain exists
             var domainExists = await _context.Domains.AnyAsync(d => d.Id == createDto.DomainId);
@@ -127,13 +131,41 @@ public class DnsRecordService : IDnsRecordService
                 throw new InvalidOperationException($"Domain with ID {createDto.DomainId} not found");
             }
 
+            // Validate that the DNS record type exists and is active
+            var dnsRecordType = await _context.DnsRecordTypes.FindAsync(createDto.DnsRecordTypeId);
+            if (dnsRecordType == null)
+            {
+                throw new InvalidOperationException($"DNS record type with ID {createDto.DnsRecordTypeId} not found");
+            }
+
+            if (!dnsRecordType.IsActive)
+            {
+                throw new InvalidOperationException($"DNS record type '{dnsRecordType.Type}' is not active");
+            }
+
+            // Validate Priority, Weight, Port based on record type
+            if (dnsRecordType.HasPriority && !createDto.Priority.HasValue)
+            {
+                throw new InvalidOperationException($"Priority is required for DNS record type '{dnsRecordType.Type}'");
+            }
+
+            if (dnsRecordType.HasWeight && !createDto.Weight.HasValue)
+            {
+                throw new InvalidOperationException($"Weight is required for DNS record type '{dnsRecordType.Type}'");
+            }
+
+            if (dnsRecordType.HasPort && !createDto.Port.HasValue)
+            {
+                throw new InvalidOperationException($"Port is required for DNS record type '{dnsRecordType.Type}'");
+            }
+
             var dnsRecord = new DnsRecord
             {
                 DomainId = createDto.DomainId,
-                Type = createDto.Type.ToUpper(),
+                DnsRecordTypeId = createDto.DnsRecordTypeId,
                 Name = createDto.Name,
                 Value = createDto.Value,
-                TTL = createDto.TTL,
+                TTL = createDto.TTL > 0 ? createDto.TTL : dnsRecordType.DefaultTTL,
                 Priority = createDto.Priority,
                 Weight = createDto.Weight,
                 Port = createDto.Port,
@@ -146,10 +178,11 @@ public class DnsRecordService : IDnsRecordService
 
             _log.Information("Successfully created DNS record with ID: {DnsRecordId}", dnsRecord.Id);
 
-            // Fetch the created record with domain navigation property
+            // Fetch the created record with navigation properties
             var createdRecord = await _context.DnsRecords
                 .AsNoTracking()
                 .Include(d => d.Domain)
+                .Include(d => d.DnsRecordType)
                 .FirstOrDefaultAsync(d => d.Id == dnsRecord.Id);
 
             return MapToDto(createdRecord!);
@@ -169,6 +202,7 @@ public class DnsRecordService : IDnsRecordService
 
             var dnsRecord = await _context.DnsRecords
                 .Include(d => d.Domain)
+                .Include(d => d.DnsRecordType)
                 .FirstOrDefaultAsync(d => d.Id == id);
 
             if (dnsRecord == null)
@@ -187,15 +221,47 @@ public class DnsRecordService : IDnsRecordService
                 }
             }
 
+            // Validate that the DNS record type exists and is active if type is being changed
+            if (dnsRecord.DnsRecordTypeId != updateDto.DnsRecordTypeId)
+            {
+                var dnsRecordType = await _context.DnsRecordTypes.FindAsync(updateDto.DnsRecordTypeId);
+                if (dnsRecordType == null)
+                {
+                    throw new InvalidOperationException($"DNS record type with ID {updateDto.DnsRecordTypeId} not found");
+                }
+
+                if (!dnsRecordType.IsActive)
+                {
+                    throw new InvalidOperationException($"DNS record type '{dnsRecordType.Type}' is not active");
+                }
+
+                // Validate Priority, Weight, Port based on new record type
+                if (dnsRecordType.HasPriority && !updateDto.Priority.HasValue)
+                {
+                    throw new InvalidOperationException($"Priority is required for DNS record type '{dnsRecordType.Type}'");
+                }
+
+                if (dnsRecordType.HasWeight && !updateDto.Weight.HasValue)
+                {
+                    throw new InvalidOperationException($"Weight is required for DNS record type '{dnsRecordType.Type}'");
+                }
+
+                if (dnsRecordType.HasPort && !updateDto.Port.HasValue)
+                {
+                    throw new InvalidOperationException($"Port is required for DNS record type '{dnsRecordType.Type}'");
+                }
+
+                dnsRecord.DnsRecordType = dnsRecordType;
+            }
+
             dnsRecord.DomainId = updateDto.DomainId;
-            dnsRecord.Type = updateDto.Type.ToUpper();
+            dnsRecord.DnsRecordTypeId = updateDto.DnsRecordTypeId;
             dnsRecord.Name = updateDto.Name;
             dnsRecord.Value = updateDto.Value;
             dnsRecord.TTL = updateDto.TTL;
             dnsRecord.Priority = updateDto.Priority;
             dnsRecord.Weight = updateDto.Weight;
             dnsRecord.Port = updateDto.Port;
-            dnsRecord.IsEditableByUser = updateDto.IsEditableByUser;
             dnsRecord.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
@@ -243,13 +309,18 @@ public class DnsRecordService : IDnsRecordService
         {
             Id = dnsRecord.Id,
             DomainId = dnsRecord.DomainId,
-            Type = dnsRecord.Type,
+            DnsRecordTypeId = dnsRecord.DnsRecordTypeId,
+            Type = dnsRecord.DnsRecordType.Type,
             Name = dnsRecord.Name,
             Value = dnsRecord.Value,
             TTL = dnsRecord.TTL,
             Priority = dnsRecord.Priority,
             Weight = dnsRecord.Weight,
             Port = dnsRecord.Port,
+            IsEditableByUser = dnsRecord.DnsRecordType.IsEditableByUser,
+            HasPriority = dnsRecord.DnsRecordType.HasPriority,
+            HasWeight = dnsRecord.DnsRecordType.HasWeight,
+            HasPort = dnsRecord.DnsRecordType.HasPort,
             CreatedAt = dnsRecord.CreatedAt,
             UpdatedAt = dnsRecord.UpdatedAt
         };

@@ -26,6 +26,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Tld> Tlds { get; set; }
     public DbSet<Registrar> Registrars { get; set; }
     public DbSet<RegistrarTld> RegistrarTlds { get; set; }
+    public DbSet<DnsRecordType> DnsRecordTypes { get; set; }
     public DbSet<DnsRecord> DnsRecords { get; set; }
     public DbSet<HostingAccount> HostingAccounts { get; set; }
     public DbSet<AuditLog> AuditLogs { get; set; }
@@ -274,24 +275,40 @@ public class ApplicationDbContext : DbContext
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
+        // DnsRecordType configuration
+        modelBuilder.Entity<DnsRecordType>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Type).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.IsEditableByUser).HasDefaultValue(true);
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.DefaultTTL).HasDefaultValue(3600);
+            
+            entity.HasIndex(e => e.Type).IsUnique();
+            entity.HasIndex(e => e.IsActive);
+        });
+
         // DnsRecord configuration
         modelBuilder.Entity<DnsRecord>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.Type).IsRequired().HasMaxLength(20);
             entity.Property(e => e.Name).IsRequired().HasMaxLength(255);
             entity.Property(e => e.Value).IsRequired().HasMaxLength(1000);
-            entity.Property(e => e.IsEditableByUser).HasDefaultValue(true);
             
-            entity.HasIndex(e => e.Type);
             entity.HasIndex(e => e.DomainId);
-            entity.HasIndex(e => new { e.DomainId, e.Type });
-            entity.HasIndex(e => e.IsEditableByUser);
+            entity.HasIndex(e => e.DnsRecordTypeId);
+            entity.HasIndex(e => new { e.DomainId, e.DnsRecordTypeId });
             
             entity.HasOne(e => e.Domain)
                 .WithMany(d => d.DnsRecords)
                 .HasForeignKey(e => e.DomainId)
                 .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasOne(e => e.DnsRecordType)
+                .WithMany(t => t.DnsRecords)
+                .HasForeignKey(e => e.DnsRecordTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         // HostingAccount configuration

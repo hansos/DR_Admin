@@ -182,14 +182,7 @@ public class DnsRecordsController : ControllerBase
             if (!existingRecord.IsEditableByUser && !isAdminOrSupport)
             {
                 _log.Warning("API: User {User} attempted to edit system-managed DNS record {DnsRecordId}", User.Identity?.Name, id);
-                return Forbid("This DNS record is system-managed and cannot be edited by regular users");
-            }
-
-            // Regular users cannot change the IsEditableByUser flag
-            if (!isAdminOrSupport && updateDto.IsEditableByUser != existingRecord.IsEditableByUser)
-            {
-                _log.Warning("API: User {User} attempted to change IsEditableByUser flag for DNS record {DnsRecordId}", User.Identity?.Name, id);
-                updateDto.IsEditableByUser = existingRecord.IsEditableByUser; // Restore original value
+                return Forbid("This DNS record type is system-managed and cannot be edited by regular users");
             }
 
             var dnsRecord = await _dnsRecordService.UpdateDnsRecordAsync(id, updateDto);
