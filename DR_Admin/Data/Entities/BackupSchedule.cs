@@ -8,4 +8,6 @@ public class BackupSchedule
     public DateTime LastBackupDate { get; set; }
     public DateTime NextBackupDate { get; set; }
     public string Status { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
 }

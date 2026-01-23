@@ -10,6 +10,7 @@ public class HostingAccount
     public string PasswordHash { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
     public DateTime ExpirationDate { get; set; }
 
     public Customer Customer { get; set; } = null!;

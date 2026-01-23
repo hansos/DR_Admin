@@ -9,6 +9,7 @@ public class PaymentTransactionDto
     public string TransactionId { get; set; } = string.Empty;
     public decimal Amount { get; set; }
     public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
 }
 
 public class CreatePaymentTransactionDto

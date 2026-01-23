@@ -9,6 +9,8 @@ public class Order
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
     public DateTime NextBillingDate { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
 
     public Customer Customer { get; set; } = null!;
     public Service Service { get; set; } = null!;

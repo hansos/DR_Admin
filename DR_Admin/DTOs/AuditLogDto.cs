@@ -8,6 +8,8 @@ public class AuditLogDto
     public string EntityType { get; set; } = string.Empty;
     public int EntityId { get; set; }
     public DateTime Timestamp { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
     public string Details { get; set; } = string.Empty;
     public string IPAddress { get; set; } = string.Empty;
 }

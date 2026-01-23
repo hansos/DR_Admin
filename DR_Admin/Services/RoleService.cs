@@ -73,7 +73,9 @@ public class RoleService : IRoleService
             var role = new Role
             {
                 Name = createDto.Name,
-                Description = createDto.Description
+                Description = createDto.Description,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
             };
 
             _context.Roles.Add(role);
@@ -105,6 +107,7 @@ public class RoleService : IRoleService
 
             role.Name = updateDto.Name;
             role.Description = updateDto.Description;
+            role.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
 
@@ -161,7 +164,9 @@ public class RoleService : IRoleService
                     Name = roleName,
                     Description = string.IsNullOrWhiteSpace(description) 
                         ? $"{roleName} role" 
-                        : description
+                        : description,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
                 };
 
                 _context.Roles.Add(role);
@@ -187,7 +192,9 @@ public class RoleService : IRoleService
         {
             Id = role.Id,
             Name = role.Name,
-            Description = role.Description
+            Description = role.Description,
+            CreatedAt = role.CreatedAt,
+            UpdatedAt = role.UpdatedAt
         };
     }
 }

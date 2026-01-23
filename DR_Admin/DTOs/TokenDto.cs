@@ -7,6 +7,7 @@ public class TokenDto
     public string TokenType { get; set; } = string.Empty;
     public DateTime Expiry { get; set; }
     public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
     public DateTime? RevokedAt { get; set; }
 }
 

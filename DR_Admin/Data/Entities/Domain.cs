@@ -15,6 +15,8 @@ public class Domain
     public decimal? RegistrationPrice { get; set; }
     public decimal? RenewalPrice { get; set; }
     public string? Notes { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
 
     public Customer Customer { get; set; } = null!;
     public Registrar Registrar { get; set; } = null!;

@@ -198,10 +198,15 @@ public class BillingCyclesControllerTests : IClassFixture<TestWebApplicationFact
         Assert.Equal(createDto.Name, result.Name);
         Assert.Equal(createDto.DurationInDays, result.DurationInDays);
         Assert.Equal(createDto.Description, result.Description);
+        Assert.True(result.CreatedAt > DateTime.MinValue);
+        Assert.True(result.UpdatedAt > DateTime.MinValue);
+        Assert.Equal(result.CreatedAt, result.UpdatedAt, TimeSpan.FromSeconds(1)); // Should be equal when first created
 
         _output.WriteLine($"Created billing cycle with ID: {result.Id}");
         _output.WriteLine($"  Name: {result.Name}");
         _output.WriteLine($"  Duration: {result.DurationInDays} days");
+        _output.WriteLine($"  CreatedAt: {result.CreatedAt}");
+        _output.WriteLine($"  UpdatedAt: {result.UpdatedAt}");
     }
 
     [Fact]
@@ -259,6 +264,14 @@ public class BillingCyclesControllerTests : IClassFixture<TestWebApplicationFact
         var token = await GetAdminTokenAsync();
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
+        // Get the original billing cycle to compare timestamps
+        var getResponse = await _client.GetAsync($"/api/v1/BillingCycles/{billingCycleId}");
+        var originalBillingCycle = await getResponse.Content.ReadFromJsonAsync<BillingCycleDto>();
+        Assert.NotNull(originalBillingCycle);
+
+        // Wait a bit to ensure UpdatedAt will be different
+        await Task.Delay(100);
+
         var updateDto = new UpdateBillingCycleDto
         {
             Name = "Updated Monthly",
@@ -278,10 +291,14 @@ public class BillingCyclesControllerTests : IClassFixture<TestWebApplicationFact
         Assert.Equal(updateDto.Name, result.Name);
         Assert.Equal(updateDto.DurationInDays, result.DurationInDays);
         Assert.Equal(updateDto.Description, result.Description);
+        Assert.Equal(originalBillingCycle.CreatedAt, result.CreatedAt); // CreatedAt should not change
+        Assert.True(result.UpdatedAt > originalBillingCycle.UpdatedAt); // UpdatedAt should be newer
 
         _output.WriteLine($"Updated billing cycle ID {result.Id}:");
         _output.WriteLine($"  New Name: {result.Name}");
         _output.WriteLine($"  New Duration: {result.DurationInDays} days");
+        _output.WriteLine($"  CreatedAt: {result.CreatedAt} (unchanged)");
+        _output.WriteLine($"  UpdatedAt: {result.UpdatedAt} (was: {originalBillingCycle.UpdatedAt})");
     }
 
     [Fact]
@@ -505,19 +522,24 @@ public class BillingCyclesControllerTests : IClassFixture<TestWebApplicationFact
         using var scope = _factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
+        var now = DateTime.UtcNow;
         var billingCycles = new[]
         {
             new BillingCycle
             {
                 Name = "Monthly",
                 DurationInDays = 30,
-                Description = "Billed monthly"
+                Description = "Billed monthly",
+                CreatedAt = now,
+                UpdatedAt = now
             },
             new BillingCycle
             {
                 Name = "Yearly",
                 DurationInDays = 365,
-                Description = "Billed annually"
+                Description = "Billed annually",
+                CreatedAt = now,
+                UpdatedAt = now
             }
         };
 

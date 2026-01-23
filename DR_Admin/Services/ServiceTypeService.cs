@@ -73,7 +73,9 @@ public class ServiceTypeService : IServiceTypeService
             var serviceType = new ServiceType
             {
                 Name = createDto.Name,
-                Description = createDto.Description
+                Description = createDto.Description,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
             };
 
             _context.ServiceTypes.Add(serviceType);
@@ -105,6 +107,7 @@ public class ServiceTypeService : IServiceTypeService
 
             serviceType.Name = updateDto.Name;
             serviceType.Description = updateDto.Description;
+            serviceType.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
 
@@ -151,7 +154,9 @@ public class ServiceTypeService : IServiceTypeService
         {
             Id = serviceType.Id,
             Name = serviceType.Name,
-            Description = serviceType.Description
+            Description = serviceType.Description,
+            CreatedAt = serviceType.CreatedAt,
+            UpdatedAt = serviceType.UpdatedAt
         };
     }
 }

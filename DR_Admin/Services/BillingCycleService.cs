@@ -74,7 +74,9 @@ public class BillingCycleService : IBillingCycleService
             {
                 Name = createDto.Name,
                 DurationInDays = createDto.DurationInDays,
-                Description = createDto.Description
+                Description = createDto.Description,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
             };
 
             _context.BillingCycles.Add(billingCycle);
@@ -107,6 +109,7 @@ public class BillingCycleService : IBillingCycleService
             billingCycle.Name = updateDto.Name;
             billingCycle.DurationInDays = updateDto.DurationInDays;
             billingCycle.Description = updateDto.Description;
+            billingCycle.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
 
@@ -154,7 +157,9 @@ public class BillingCycleService : IBillingCycleService
             Id = billingCycle.Id,
             Name = billingCycle.Name,
             DurationInDays = billingCycle.DurationInDays,
-            Description = billingCycle.Description
+            Description = billingCycle.Description,
+            CreatedAt = billingCycle.CreatedAt,
+            UpdatedAt = billingCycle.UpdatedAt
         };
     }
 }

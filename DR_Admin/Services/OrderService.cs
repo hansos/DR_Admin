@@ -77,7 +77,9 @@ public class OrderService : IOrderService
                 Status = createDto.Status,
                 StartDate = createDto.StartDate,
                 EndDate = createDto.EndDate,
-                NextBillingDate = createDto.NextBillingDate
+                NextBillingDate = createDto.NextBillingDate,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
             };
 
             _context.Orders.Add(order);
@@ -113,6 +115,7 @@ public class OrderService : IOrderService
             order.StartDate = updateDto.StartDate;
             order.EndDate = updateDto.EndDate;
             order.NextBillingDate = updateDto.NextBillingDate;
+            order.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
 
@@ -163,7 +166,9 @@ public class OrderService : IOrderService
             Status = order.Status,
             StartDate = order.StartDate,
             EndDate = order.EndDate,
-            NextBillingDate = order.NextBillingDate
+            NextBillingDate = order.NextBillingDate,
+            CreatedAt = order.CreatedAt,
+            UpdatedAt = order.UpdatedAt
         };
     }
 }
