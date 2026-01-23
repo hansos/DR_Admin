@@ -181,49 +181,52 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
-// Apply database migrations on startup
-using (var scope = app.Services.CreateScope())
+// Apply database migrations on startup (skip in testing environment)
+if (app.Environment.EnvironmentName != "Testing")
 {
-    var services = scope.ServiceProvider;
-    try
+    using (var scope = app.Services.CreateScope())
     {
-        var context = services.GetRequiredService<ApplicationDbContext>();
-        
-        // Check for pending migrations
-        var pendingMigrations = await context.Database.GetPendingMigrationsAsync();
-        var pendingCount = pendingMigrations.Count();
-        
-        if (pendingCount > 0)
+        var services = scope.ServiceProvider;
+        try
         {
-            log.Information("Applying {Count} pending database migration(s)...", pendingCount);
-            await context.Database.MigrateAsync();
-            log.Information("Database migrations applied successfully");
+            var context = services.GetRequiredService<ApplicationDbContext>();
+            
+            // Check for pending migrations
+            var pendingMigrations = await context.Database.GetPendingMigrationsAsync();
+            var pendingCount = pendingMigrations.Count();
+            
+            if (pendingCount > 0)
+            {
+                log.Information("Applying {Count} pending database migration(s)...", pendingCount);
+                await context.Database.MigrateAsync();
+                log.Information("Database migrations applied successfully");
+            }
+            else
+            {
+                log.Information("Database is up to date. No pending migrations");
+            }
+
+            // Synchronize roles from controller attributes
+            log.Information("Synchronizing roles from controller attributes...");
+            var roleService = services.GetRequiredService<IRoleService>();
+            var controllerRoles = RoleInitializationService.GetAllRolesFromControllers();
+            
+            log.Information("Found {Count} unique roles in controllers: {Roles}", 
+                controllerRoles.Count, 
+                string.Join(", ", controllerRoles));
+
+            foreach (var roleName in controllerRoles)
+            {
+                await roleService.EnsureRoleExistsAsync(roleName);
+            }
+
+            log.Information("Role synchronization completed successfully");
         }
-        else
+        catch (Exception ex)
         {
-            log.Information("Database is up to date. No pending migrations");
+            log.Error(ex, "An error occurred while migrating the database");
+            throw;
         }
-
-        // Synchronize roles from controller attributes
-        log.Information("Synchronizing roles from controller attributes...");
-        var roleService = services.GetRequiredService<IRoleService>();
-        var controllerRoles = RoleInitializationService.GetAllRolesFromControllers();
-        
-        log.Information("Found {Count} unique roles in controllers: {Roles}", 
-            controllerRoles.Count, 
-            string.Join(", ", controllerRoles));
-
-        foreach (var roleName in controllerRoles)
-        {
-            await roleService.EnsureRoleExistsAsync(roleName);
-        }
-
-        log.Information("Role synchronization completed successfully");
-    }
-    catch (Exception ex)
-    {
-        log.Error(ex, "An error occurred while migrating the database");
-        throw;
     }
 }
 
