@@ -72,6 +72,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<BackupSchedule> BackupSchedules { get; set; }
     public DbSet<Country> Countries { get; set; }
     public DbSet<PostalCode> PostalCodes { get; set; }
+    public DbSet<ResellerCompany> ResellerCompanies { get; set; }
+    public DbSet<SalesAgent> SalesAgents { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -184,6 +186,16 @@ public class ApplicationDbContext : DbContext
                 .WithMany(bc => bc.Services)
                 .HasForeignKey(e => e.BillingCycleId)
                 .OnDelete(DeleteBehavior.Restrict);
+            
+            entity.HasOne(e => e.ResellerCompany)
+                .WithMany(r => r.Services)
+                .HasForeignKey(e => e.ResellerCompanyId)
+                .OnDelete(DeleteBehavior.SetNull);
+            
+            entity.HasOne(e => e.SalesAgent)
+                .WithMany(s => s.Services)
+                .HasForeignKey(e => e.SalesAgentId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         // ServiceType configuration
@@ -360,6 +372,16 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => e.IsActive);
             entity.HasIndex(e => e.IsDefault);
             entity.HasIndex(e => e.SortOrder);
+            
+            entity.HasOne(e => e.ResellerCompany)
+                .WithMany(r => r.DnsZonePackages)
+                .HasForeignKey(e => e.ResellerCompanyId)
+                .OnDelete(DeleteBehavior.SetNull);
+            
+            entity.HasOne(e => e.SalesAgent)
+                .WithMany(s => s.DnsZonePackages)
+                .HasForeignKey(e => e.SalesAgentId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         // DnsZonePackageRecord configuration
@@ -647,6 +669,50 @@ public class ApplicationDbContext : DbContext
             
             entity.HasIndex(e => e.Code).IsUnique();
             entity.HasIndex(e => e.IsActive);
+        });
+
+        // ResellerCompany configuration
+        modelBuilder.Entity<ResellerCompany>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.ContactPerson).HasMaxLength(200);
+            entity.Property(e => e.Email).HasMaxLength(200);
+            entity.Property(e => e.Phone).HasMaxLength(50);
+            entity.Property(e => e.Address).HasMaxLength(500);
+            entity.Property(e => e.City).HasMaxLength(100);
+            entity.Property(e => e.State).HasMaxLength(100);
+            entity.Property(e => e.PostalCode).HasMaxLength(20);
+            entity.Property(e => e.CountryCode).HasMaxLength(2);
+            entity.Property(e => e.CompanyRegistrationNumber).HasMaxLength(100);
+            entity.Property(e => e.TaxId).HasMaxLength(50);
+            entity.Property(e => e.VatNumber).HasMaxLength(50);
+            entity.Property(e => e.Notes).HasMaxLength(2000);
+            
+            entity.HasIndex(e => e.Name);
+            entity.HasIndex(e => e.IsActive);
+            entity.HasIndex(e => e.Email);
+        });
+
+        // SalesAgent configuration
+        modelBuilder.Entity<SalesAgent>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.FirstName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.LastName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Email).HasMaxLength(200);
+            entity.Property(e => e.Phone).HasMaxLength(50);
+            entity.Property(e => e.MobilePhone).HasMaxLength(50);
+            entity.Property(e => e.Notes).HasMaxLength(2000);
+            
+            entity.HasIndex(e => e.ResellerCompanyId);
+            entity.HasIndex(e => e.IsActive);
+            entity.HasIndex(e => e.Email);
+            
+            entity.HasOne(e => e.ResellerCompany)
+                .WithMany(r => r.SalesAgents)
+                .HasForeignKey(e => e.ResellerCompanyId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
     }
 }

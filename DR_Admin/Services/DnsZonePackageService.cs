@@ -223,7 +223,9 @@ public class DnsZonePackageService : IDnsZonePackageService
                 Description = createDto.Description,
                 IsActive = createDto.IsActive,
                 IsDefault = createDto.IsDefault,
-                SortOrder = createDto.SortOrder
+                SortOrder = createDto.SortOrder,
+                ResellerCompanyId = createDto.ResellerCompanyId,
+                SalesAgentId = createDto.SalesAgentId
             };
 
             _context.DnsZonePackages.Add(package);
@@ -270,6 +272,8 @@ public class DnsZonePackageService : IDnsZonePackageService
             package.IsActive = updateDto.IsActive;
             package.IsDefault = updateDto.IsDefault;
             package.SortOrder = updateDto.SortOrder;
+            package.ResellerCompanyId = updateDto.ResellerCompanyId;
+            package.SalesAgentId = updateDto.SalesAgentId;
 
             await _context.SaveChangesAsync();
 
@@ -397,6 +401,8 @@ public class DnsZonePackageService : IDnsZonePackageService
             IsActive = package.IsActive,
             IsDefault = package.IsDefault,
             SortOrder = package.SortOrder,
+            ResellerCompanyId = package.ResellerCompanyId,
+            SalesAgentId = package.SalesAgentId,
             CreatedAt = package.CreatedAt,
             UpdatedAt = package.UpdatedAt,
             Records = new List<DnsZonePackageRecordDto>()
@@ -413,6 +419,8 @@ public class DnsZonePackageService : IDnsZonePackageService
             IsActive = package.IsActive,
             IsDefault = package.IsDefault,
             SortOrder = package.SortOrder,
+            ResellerCompanyId = package.ResellerCompanyId,
+            SalesAgentId = package.SalesAgentId,
             CreatedAt = package.CreatedAt,
             UpdatedAt = package.UpdatedAt,
             Records = package.Records.Select(r => new DnsZonePackageRecordDto

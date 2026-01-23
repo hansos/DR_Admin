@@ -36,6 +36,16 @@ public class DnsZonePackageDto
     public int SortOrder { get; set; } = 0;
     
     /// <summary>
+    /// Gets or sets the reseller company ID (null if sold directly)
+    /// </summary>
+    public int? ResellerCompanyId { get; set; }
+    
+    /// <summary>
+    /// Gets or sets the sales agent ID (null if self-service)
+    /// </summary>
+    public int? SalesAgentId { get; set; }
+    
+    /// <summary>
     /// Gets or sets the date and time when the package was created
     /// </summary>
     public DateTime CreatedAt { get; set; }
@@ -80,6 +90,16 @@ public class CreateDnsZonePackageDto
     /// Gets or sets the sort order for display purposes
     /// </summary>
     public int SortOrder { get; set; } = 0;
+    
+    /// <summary>
+    /// Gets or sets the reseller company ID (null if sold directly)
+    /// </summary>
+    public int? ResellerCompanyId { get; set; }
+    
+    /// <summary>
+    /// Gets or sets the sales agent ID (null if self-service)
+    /// </summary>
+    public int? SalesAgentId { get; set; }
 }
 
 /// <summary>
@@ -111,4 +131,14 @@ public class UpdateDnsZonePackageDto
     /// Gets or sets the sort order for display purposes
     /// </summary>
     public int SortOrder { get; set; } = 0;
+    
+    /// <summary>
+    /// Gets or sets the reseller company ID (null if sold directly)
+    /// </summary>
+    public int? ResellerCompanyId { get; set; }
+    
+    /// <summary>
+    /// Gets or sets the sales agent ID (null if self-service)
+    /// </summary>
+    public int? SalesAgentId { get; set; }
 }

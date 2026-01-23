@@ -7,8 +7,13 @@ public class Service : EntityBase
     public int ServiceTypeId { get; set; }
     public int BillingCycleId { get; set; }
     public decimal Price { get; set; }
+    public int? ResellerCompanyId { get; set; }
+    public int? SalesAgentId { get; set; }
 
     public ServiceType ServiceType { get; set; } = null!;
     public BillingCycle BillingCycle { get; set; } = null!;
+    public ResellerCompany? ResellerCompany { get; set; }
+    public SalesAgent? SalesAgent { get; set; }
     public ICollection<Order> Orders { get; set; } = new List<Order>();
 }
+

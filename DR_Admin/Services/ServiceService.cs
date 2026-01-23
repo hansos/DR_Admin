@@ -77,6 +77,8 @@ public class ServiceService : IServiceService
                 ServiceTypeId = createDto.ServiceTypeId,
                 BillingCycleId = createDto.BillingCycleId,
                 Price = createDto.Price,
+                ResellerCompanyId = createDto.ResellerCompanyId,
+                SalesAgentId = createDto.SalesAgentId,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -113,6 +115,8 @@ public class ServiceService : IServiceService
             service.ServiceTypeId = updateDto.ServiceTypeId;
             service.BillingCycleId = updateDto.BillingCycleId;
             service.Price = updateDto.Price;
+            service.ResellerCompanyId = updateDto.ResellerCompanyId;
+            service.SalesAgentId = updateDto.SalesAgentId;
             service.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
@@ -164,6 +168,8 @@ public class ServiceService : IServiceService
             ServiceTypeId = service.ServiceTypeId,
             BillingCycleId = service.BillingCycleId,
             Price = service.Price,
+            ResellerCompanyId = service.ResellerCompanyId,
+            SalesAgentId = service.SalesAgentId,
             CreatedAt = service.CreatedAt,
             UpdatedAt = service.UpdatedAt
         };
