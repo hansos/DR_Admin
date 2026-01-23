@@ -284,7 +284,6 @@ public class TldService : ITldService
                 Id = r.Id,
                 Name = r.Name,
                 Code = r.Code,
-                ApiUrl = r.ApiUrl,
                 IsActive = r.IsActive,
                 ContactEmail = r.ContactEmail,
                 ContactPhone = r.ContactPhone,

@@ -8,6 +8,12 @@ public class DnsRecordDto
     public string Name { get; set; } = string.Empty;
     public string Value { get; set; } = string.Empty;
     public int TTL { get; set; }
+    public int? Priority { get; set; }
+    public int? Weight { get; set; }
+    public int? Port { get; set; }
+    public bool IsEditableByUser { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
 }
 
 public class CreateDnsRecordDto
@@ -16,7 +22,11 @@ public class CreateDnsRecordDto
     public string Type { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public string Value { get; set; } = string.Empty;
-    public int TTL { get; set; }
+    public int TTL { get; set; } = 3600;
+    public int? Priority { get; set; }
+    public int? Weight { get; set; }
+    public int? Port { get; set; }
+    public bool IsEditableByUser { get; set; } = true;
 }
 
 public class UpdateDnsRecordDto
@@ -26,4 +36,8 @@ public class UpdateDnsRecordDto
     public string Name { get; set; } = string.Empty;
     public string Value { get; set; } = string.Empty;
     public int TTL { get; set; }
+    public int? Priority { get; set; }
+    public int? Weight { get; set; }
+    public int? Port { get; set; }
+    public bool IsEditableByUser { get; set; }
 }

@@ -281,6 +281,12 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Type).IsRequired().HasMaxLength(20);
             entity.Property(e => e.Name).IsRequired().HasMaxLength(255);
             entity.Property(e => e.Value).IsRequired().HasMaxLength(1000);
+            entity.Property(e => e.IsEditableByUser).HasDefaultValue(true);
+            
+            entity.HasIndex(e => e.Type);
+            entity.HasIndex(e => e.DomainId);
+            entity.HasIndex(e => new { e.DomainId, e.Type });
+            entity.HasIndex(e => e.IsEditableByUser);
             
             entity.HasOne(e => e.Domain)
                 .WithMany(d => d.DnsRecords)
@@ -375,11 +381,6 @@ public class ApplicationDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
             entity.Property(e => e.Code).IsRequired().HasMaxLength(50);
-            entity.Property(e => e.ApiUrl).HasMaxLength(500);
-            entity.Property(e => e.ApiKey).HasMaxLength(500);
-            entity.Property(e => e.ApiSecret).HasMaxLength(500);
-            entity.Property(e => e.ApiUsername).HasMaxLength(200);
-            entity.Property(e => e.ApiPassword).HasMaxLength(500);
             entity.Property(e => e.ContactEmail).HasMaxLength(200);
             entity.Property(e => e.ContactPhone).HasMaxLength(50);
             entity.Property(e => e.Website).HasMaxLength(500);
