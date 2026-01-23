@@ -87,6 +87,8 @@ builder.Services.AddTransient<IRegistrarService, RegistrarService>();
 builder.Services.AddTransient<IRegistrarTldService, RegistrarTldService>();
 builder.Services.AddTransient<IDnsRecordTypeService, DnsRecordTypeService>();
 builder.Services.AddTransient<IDnsRecordService, DnsRecordService>();
+builder.Services.AddTransient<IDnsZonePackageService, DnsZonePackageService>();
+builder.Services.AddTransient<IDnsZonePackageRecordService, DnsZonePackageRecordService>();
 builder.Services.AddTransient<IServerService, ServerService>();
 builder.Services.AddTransient<IServerIpAddressService, ServerIpAddressService>();
 builder.Services.AddTransient<IControlPanelTypeService, ControlPanelTypeService>();
