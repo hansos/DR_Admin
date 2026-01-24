@@ -238,7 +238,7 @@ public class DnsRecordsController : ControllerBase
             if (!existingRecord.IsEditableByUser && !isAdminOrSupport)
             {
                 _log.Warning("API: User {User} attempted to edit system-managed DNS record {DnsRecordId}", User.Identity?.Name, id);
-                return Forbid("This DNS record type is system-managed and cannot be edited by regular users");
+                return StatusCode(403, "This DNS record type is system-managed and cannot be edited by regular users");
             }
 
             var dnsRecord = await _dnsRecordService.UpdateDnsRecordAsync(id, updateDto);
