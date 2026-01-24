@@ -53,6 +53,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Invoice> Invoices { get; set; }
     public DbSet<InvoiceLine> InvoiceLines { get; set; }
     public DbSet<PaymentTransaction> PaymentTransactions { get; set; }
+    public DbSet<PaymentGateway> PaymentGateways { get; set; }
     public DbSet<Domain> Domains { get; set; }
     public DbSet<Tld> Tlds { get; set; }
     public DbSet<Registrar> Registrars { get; set; }

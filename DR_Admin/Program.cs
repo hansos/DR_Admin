@@ -97,6 +97,7 @@ builder.Services.AddTransient<IHostingPackageService, HostingPackageService>();
 builder.Services.AddTransient<IResellerCompanyService, ResellerCompanyService>();
 builder.Services.AddTransient<ISalesAgentService, SalesAgentService>();
 builder.Services.AddTransient<ISentEmailService, SentEmailService>();
+builder.Services.AddTransient<IPaymentGatewayService, PaymentGatewayService>();
 
 // Configure CORS from appsettings
 var corsSettings = builder.Configuration.GetSection("CorsSettings");
