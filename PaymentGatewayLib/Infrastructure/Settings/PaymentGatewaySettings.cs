@@ -104,5 +104,55 @@ namespace PaymentGatewayLib.Infrastructure.Settings
         /// OpenNode payment gateway settings (cryptocurrency - Bitcoin Lightning)
         /// </summary>
         public OpenNodeSettings? OpenNode { get; set; }
+
+        /// <summary>
+        /// M-Pesa Daraja API payment gateway settings (African mobile money)
+        /// </summary>
+        public MpesaSettings? Mpesa { get; set; }
+
+        /// <summary>
+        /// Flutterwave payment gateway settings (African payments)
+        /// </summary>
+        public FlutterwaveSettings? Flutterwave { get; set; }
+
+        /// <summary>
+        /// Pesapal payment gateway settings (African payments)
+        /// </summary>
+        public PesapalSettings? Pesapal { get; set; }
+
+        /// <summary>
+        /// Paystack payment gateway settings (African payments)
+        /// </summary>
+        public PaystackSettings? Paystack { get; set; }
+
+        /// <summary>
+        /// iPay Africa payment gateway settings
+        /// </summary>
+        public IPayAfricaSettings? IPayAfrica { get; set; }
+
+        /// <summary>
+        /// DPO Group (DPO Pay) payment gateway settings (African payments)
+        /// </summary>
+        public DpoGroupSettings? DpoGroup { get; set; }
+
+        /// <summary>
+        /// IntaSend payment gateway settings (African payments)
+        /// </summary>
+        public IntaSendSettings? IntaSend { get; set; }
+
+        /// <summary>
+        /// JamboPay payment gateway settings (African payments)
+        /// </summary>
+        public JamboPaySettings? JamboPay { get; set; }
+
+        /// <summary>
+        /// KopoKopo payment gateway settings (African payments)
+        /// </summary>
+        public KopoKopoSettings? KopoKopo { get; set; }
+
+        /// <summary>
+        /// Africa's Talking payment gateway settings (African mobile money & payments)
+        /// </summary>
+        public AfricasTalkingSettings? AfricasTalking { get; set; }
     }
 }

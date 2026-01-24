@@ -107,6 +107,46 @@ namespace PaymentGatewayLib.Factories
                     ? new OpenNodePaymentGateway(_settings.OpenNode.ApiKey, _settings.OpenNode.UseTestMode)
                     : throw new InvalidOperationException("OpenNode settings are not configured"),
 
+                "mpesa" => _settings.Mpesa is not null
+                    ? new MpesaPaymentGateway(_settings.Mpesa.ConsumerKey, _settings.Mpesa.ConsumerSecret, _settings.Mpesa.Shortcode, _settings.Mpesa.Passkey, _settings.Mpesa.UseSandbox)
+                    : throw new InvalidOperationException("M-Pesa settings are not configured"),
+
+                "flutterwave" => _settings.Flutterwave is not null
+                    ? new FlutterwavePaymentGateway(_settings.Flutterwave.PublicKey, _settings.Flutterwave.SecretKey, _settings.Flutterwave.EncryptionKey, _settings.Flutterwave.UseTestMode)
+                    : throw new InvalidOperationException("Flutterwave settings are not configured"),
+
+                "pesapal" => _settings.Pesapal is not null
+                    ? new PesapalPaymentGateway(_settings.Pesapal.ConsumerKey, _settings.Pesapal.ConsumerSecret, _settings.Pesapal.UseSandbox)
+                    : throw new InvalidOperationException("Pesapal settings are not configured"),
+
+                "paystack" => _settings.Paystack is not null
+                    ? new PaystackPaymentGateway(_settings.Paystack.PublicKey, _settings.Paystack.SecretKey, _settings.Paystack.UseTestMode)
+                    : throw new InvalidOperationException("Paystack settings are not configured"),
+
+                "ipayafrica" => _settings.IPayAfrica is not null
+                    ? new IPayAfricaPaymentGateway(_settings.IPayAfrica.VendorId, _settings.IPayAfrica.HashKey, _settings.IPayAfrica.UseTestMode)
+                    : throw new InvalidOperationException("iPay Africa settings are not configured"),
+
+                "dpogroup" => _settings.DpoGroup is not null
+                    ? new DpoGroupPaymentGateway(_settings.DpoGroup.CompanyToken, _settings.DpoGroup.ServiceType, _settings.DpoGroup.UseTestMode)
+                    : throw new InvalidOperationException("DPO Group settings are not configured"),
+
+                "intasend" => _settings.IntaSend is not null
+                    ? new IntaSendPaymentGateway(_settings.IntaSend.PublishableKey, _settings.IntaSend.SecretKey, _settings.IntaSend.UseTestMode)
+                    : throw new InvalidOperationException("IntaSend settings are not configured"),
+
+                "jambopay" => _settings.JamboPay is not null
+                    ? new JamboPayPaymentGateway(_settings.JamboPay.MerchantId, _settings.JamboPay.ApiKey, _settings.JamboPay.UseTestMode)
+                    : throw new InvalidOperationException("JamboPay settings are not configured"),
+
+                "kopokopo" => _settings.KopoKopo is not null
+                    ? new KopoKopoPaymentGateway(_settings.KopoKopo.ClientId, _settings.KopoKopo.ClientSecret, _settings.KopoKopo.ApiKey, _settings.KopoKopo.UseSandbox)
+                    : throw new InvalidOperationException("KopoKopo settings are not configured"),
+
+                "africastalking" => _settings.AfricasTalking is not null
+                    ? new AfricasTalkingPaymentGateway(_settings.AfricasTalking.Username, _settings.AfricasTalking.ApiKey, _settings.AfricasTalking.ProductName, _settings.AfricasTalking.UseSandbox)
+                    : throw new InvalidOperationException("Africa's Talking settings are not configured"),
+
                 _ => throw new NotSupportedException($"Payment gateway provider '{_settings.Provider}' is not supported")
             };
         }
