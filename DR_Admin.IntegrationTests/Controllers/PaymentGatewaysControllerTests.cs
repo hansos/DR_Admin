@@ -655,4 +655,81 @@ public class PaymentGatewaysControllerTests : IClassFixture<TestWebApplicationFa
     }
 
     #endregion
+
+    private async Task EnsureTestUserExists(string username, string password, string roleName)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        // Ensure role exists
+        var role = await context.Roles.FirstOrDefaultAsync(r => r.Name == roleName);
+        if (role == null)
+        {
+            role = new ISPAdmin.Data.Entities.Role
+            {
+                Name = roleName,
+                Description = roleName
+            };
+            context.Roles.Add(role);
+            await context.SaveChangesAsync();
+        }
+
+        // Ensure user exists
+        var user = await context.Users.Include(u => u.UserRoles).FirstOrDefaultAsync(u => u.Username == username);
+        if (user == null)
+        {
+            var customer = new ISPAdmin.Data.Entities.Customer
+            {
+                Name = $"{username}Customer",
+                Email = $"{username}@example.com",
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+            context.Customers.Add(customer);
+            await context.SaveChangesAsync();
+
+            user = new ISPAdmin.Data.Entities.User
+            {
+                CustomerId = customer.Id,
+                Username = username,
+                Email = $"{username}@example.com",
+                PasswordHash = password, // tests use plain comparison
+                EmailConfirmed = DateTime.UtcNow,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+            context.Users.Add(user);
+            await context.SaveChangesAsync();
+
+            // Assign role
+            var userRole = new ISPAdmin.Data.Entities.UserRole
+            {
+                UserId = user.Id,
+                RoleId = role.Id
+            };
+            context.UserRoles.Add(userRole);
+            await context.SaveChangesAsync();
+        }
+        else
+        {
+            // Ensure the user has the role
+            var hasRole = await context.UserRoles.AnyAsync(ur => ur.UserId == user.Id && ur.RoleId == role.Id);
+            if (!hasRole)
+            {
+                context.UserRoles.Add(new ISPAdmin.Data.Entities.UserRole { UserId = user.Id, RoleId = role.Id });
+                await context.SaveChangesAsync();
+            }
+
+            // Ensure password and active
+            if (user.PasswordHash != password || !user.IsActive)
+            {
+                user.PasswordHash = password;
+                user.IsActive = true;
+                user.UpdatedAt = DateTime.UtcNow;
+                context.Users.Update(user);
+                await context.SaveChangesAsync();
+            }
+        }
+    }
 }
