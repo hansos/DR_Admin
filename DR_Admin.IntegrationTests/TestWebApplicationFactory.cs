@@ -51,6 +51,21 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>
             using var scope = serviceProvider.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             db.Database.EnsureCreated();
+            // Seed minimal lookup data required by integration tests
+            if (!db.Countries.Any())
+            {
+                db.Countries.Add(new ISPAdmin.Data.Entities.Country
+                {
+                    Code = "US",
+                    Tld = "us",
+                    EnglishName = "United States",
+                    LocalName = "United States",
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                });
+                db.SaveChanges();
+            }
         });
 
         builder.UseEnvironment("Testing");

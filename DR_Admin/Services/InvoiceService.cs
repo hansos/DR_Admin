@@ -209,20 +209,32 @@ public class InvoiceService : IInvoiceService
                 return null;
             }
 
-            var duplicateNumber = await _context.Invoices
-                .AnyAsync(i => i.InvoiceNumber == updateDto.InvoiceNumber && i.Id != id && i.DeletedAt == null);
-
-            if (duplicateNumber)
+            // Only validate and update the invoice number when a new number is provided
+            if (!string.IsNullOrWhiteSpace(updateDto.InvoiceNumber))
             {
-                _log.Warning("Cannot update invoice {InvoiceId}: number {InvoiceNumber} already exists", id, updateDto.InvoiceNumber);
-                throw new InvalidOperationException($"Invoice with number {updateDto.InvoiceNumber} already exists");
+                var duplicateNumber = await _context.Invoices
+                    .AnyAsync(i => i.InvoiceNumber == updateDto.InvoiceNumber && i.Id != id && i.DeletedAt == null);
+
+                if (duplicateNumber)
+                {
+                    _log.Warning("Cannot update invoice {InvoiceId}: number {InvoiceNumber} already exists", id, updateDto.InvoiceNumber);
+                    throw new InvalidOperationException($"Invoice with number {updateDto.InvoiceNumber} already exists");
+                }
+
+                invoice.InvoiceNumber = updateDto.InvoiceNumber;
             }
 
-            invoice.InvoiceNumber = updateDto.InvoiceNumber;
             invoice.Status = updateDto.Status;
-            invoice.IssueDate = updateDto.IssueDate;
-            invoice.DueDate = updateDto.DueDate;
-            invoice.PaidAt = updateDto.PaidAt;
+
+            // Only update date/time fields when a non-default value is provided by the client
+            if (updateDto.IssueDate != default(DateTime))
+                invoice.IssueDate = updateDto.IssueDate;
+
+            if (updateDto.DueDate != default(DateTime))
+                invoice.DueDate = updateDto.DueDate;
+
+            if (updateDto.PaidAt.HasValue)
+                invoice.PaidAt = updateDto.PaidAt;
             invoice.SubTotal = updateDto.SubTotal;
             invoice.TaxAmount = updateDto.TaxAmount;
             invoice.TotalAmount = updateDto.TotalAmount;

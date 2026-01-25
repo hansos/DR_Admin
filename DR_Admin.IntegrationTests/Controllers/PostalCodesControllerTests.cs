@@ -116,24 +116,29 @@ public class PostalCodesControllerTests : IClassFixture<TestWebApplicationFactor
         using var scope = _factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-        var country = new Country
+        var countryCode = "US";
+        var country = await context.Countries.FirstOrDefaultAsync(c => c.Code == countryCode);
+        if (country == null)
         {
-            Code = "US",
-            Tld = ".us",
-            EnglishName = "United States",
-            LocalName = "United States",
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
-        await context.Countries.AddAsync(country);
-        await context.SaveChangesAsync();
+            country = new Country
+            {
+                Code = countryCode,
+                Tld = ".us",
+                EnglishName = "United States",
+                LocalName = "United States",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+            await context.Countries.AddAsync(country);
+            await context.SaveChangesAsync();
+        }
 
         var postalCode = new PostalCode
         {
             Code = "10001",
             City = "New York",
-            CountryCode = "US",
+            CountryCode = countryCode,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };

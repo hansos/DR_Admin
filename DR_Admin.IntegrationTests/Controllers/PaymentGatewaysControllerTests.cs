@@ -611,6 +611,9 @@ public class PaymentGatewaysControllerTests : IClassFixture<TestWebApplicationFa
 
     private async Task<string> GetAdminTokenAsync()
     {
+        // Ensure the admin user and role exist in the test database
+        await EnsureTestUserExists("admin", "Admin@123", "Admin");
+
         var loginDto = new LoginRequestDto
         {
             Username = "admin",
@@ -626,6 +629,9 @@ public class PaymentGatewaysControllerTests : IClassFixture<TestWebApplicationFa
 
     private async Task<string> GetSupportTokenAsync()
     {
+        // Ensure the support user and role exist in the test database
+        await EnsureTestUserExists("support", "Support@123", "Support");
+
         var loginDto = new LoginRequestDto
         {
             Username = "support",
@@ -641,6 +647,9 @@ public class PaymentGatewaysControllerTests : IClassFixture<TestWebApplicationFa
 
     private async Task<string> GetSalesTokenAsync()
     {
+        // Ensure the sales user and role exist in the test database
+        await EnsureTestUserExists("sales", "Sales@123", "Sales");
+
         var loginDto = new LoginRequestDto
         {
             Username = "sales",
