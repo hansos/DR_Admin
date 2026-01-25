@@ -11,9 +11,9 @@ public class SentEmailDto
     public int Id { get; set; }
     
     /// <summary>
-    /// Gets or sets the date and time when the email was sent
+    /// Gets or sets the date and time when the email was sent (null if not yet sent)
     /// </summary>
-    public DateTime SentDate { get; set; }
+    public DateTime? SentDate { get; set; }
     
     /// <summary>
     /// Gets or sets the sender email address
@@ -137,9 +137,14 @@ public class CreateSentEmailDto
     public string Subject { get; set; } = string.Empty;
     
     /// <summary>
-    /// Gets or sets the email body content
+    /// Gets or sets the email body content (plain text)
     /// </summary>
-    public string? Body { get; set; }
+    public string? BodyText { get; set; }
+    
+    /// <summary>
+    /// Gets or sets the email body content (HTML)
+    /// </summary>
+    public string? BodyHtml { get; set; }
     
     /// <summary>
     /// Gets or sets the unique message ID assigned by the mail server
@@ -159,7 +164,7 @@ public class CreateSentEmailDto
     /// <summary>
     /// Gets or sets the number of retry attempts
     /// </summary>
-    public int? RetryCount { get; set; }
+    public int RetryCount { get; set; }
     
     /// <summary>
     /// Gets or sets the customer ID this email relates to
@@ -205,5 +210,5 @@ public class UpdateSentEmailDto
     /// <summary>
     /// Gets or sets the number of retry attempts
     /// </summary>
-    public int? RetryCount { get; set; }
+    public int RetryCount { get; set; }
 }

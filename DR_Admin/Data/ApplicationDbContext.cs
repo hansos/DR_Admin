@@ -726,10 +726,14 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Cc).HasMaxLength(1000);
             entity.Property(e => e.Bcc).HasMaxLength(1000);
             entity.Property(e => e.Subject).IsRequired().HasMaxLength(500);
-            entity.Property(e => e.Body).HasMaxLength(int.MaxValue);
+            entity.Property(e => e.BodyText).HasMaxLength(int.MaxValue);
+            entity.Property(e => e.BodyHtml).HasMaxLength(int.MaxValue);
             entity.Property(e => e.MessageId).IsRequired().HasMaxLength(255);
-            entity.Property(e => e.Status).HasMaxLength(50);
+            entity.Property(e => e.Status).IsRequired().HasMaxLength(50).HasDefaultValue(EmailStatus.Pending);
             entity.Property(e => e.ErrorMessage).HasMaxLength(2000);
+            entity.Property(e => e.RetryCount).IsRequired().HasDefaultValue(0);
+            entity.Property(e => e.MaxRetries).IsRequired().HasDefaultValue(3);
+            entity.Property(e => e.Provider).HasMaxLength(100);
             entity.Property(e => e.RelatedEntityType).HasMaxLength(100);
             entity.Property(e => e.Attachments).HasMaxLength(4000);
             
@@ -739,6 +743,8 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => e.CustomerId);
             entity.HasIndex(e => e.UserId);
             entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.NextAttemptAt);
+            entity.HasIndex(e => new { e.Status, e.NextAttemptAt });
             entity.HasIndex(e => new { e.RelatedEntityType, e.RelatedEntityId });
             
             entity.HasOne(e => e.Customer)

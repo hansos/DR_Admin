@@ -2,6 +2,7 @@ using ISPAdmin.Data;
 using ISPAdmin.Infrastructure;
 using ISPAdmin.Infrastructure.Settings;
 using ISPAdmin.Services;
+using ISPAdmin.BackgroundServices;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -9,6 +10,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Security.Claims;
 using System.Text;
+using System.Threading.Channels;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,6 +41,13 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         appSettings.DefaultConnection,
         appSettings.DbSettings.DatabaseType);
 });
+
+// Register Email Queue Channel as singleton
+builder.Services.AddSingleton(Channel.CreateUnbounded<int>(new UnboundedChannelOptions
+{
+    SingleReader = false, // Allow multiple background service instances if scaled
+    SingleWriter = false
+}));
 
 // Configure Authentication with JWT Bearer
 builder.Services.AddAuthentication(options =>
@@ -98,6 +107,10 @@ builder.Services.AddTransient<IResellerCompanyService, ResellerCompanyService>()
 builder.Services.AddTransient<ISalesAgentService, SalesAgentService>();
 builder.Services.AddTransient<ISentEmailService, SentEmailService>();
 builder.Services.AddTransient<IPaymentGatewayService, PaymentGatewayService>();
+builder.Services.AddTransient<IEmailQueueService, EmailQueueService>();
+
+// Register Background Services
+builder.Services.AddHostedService<EmailQueueBackgroundService>();
 
 // Configure CORS from appsettings
 var corsSettings = builder.Configuration.GetSection("CorsSettings");
