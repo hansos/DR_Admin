@@ -29,5 +29,29 @@ namespace PaymentGatewayLib.Infrastructure.Settings
         /// Callback URL for payment notifications
         /// </summary>
         public string CallbackUrl { get; set; } = string.Empty;
+
+        /// <summary>
+        /// iPay Africa API base URL for transaction status and other API calls
+        /// Default: https://apis.ipayafrica.com
+        /// </summary>
+        public string ApiBaseUrl { get; set; } = "https://apis.ipayafrica.com";
+
+        /// <summary>
+        /// Transaction status endpoint path
+        /// Default: /payments/v2/transact/mobilemoney/status
+        /// </summary>
+        public string StatusEndpoint { get; set; } = "/payments/v2/transact/mobilemoney/status";
+
+        /// <summary>
+        /// API authentication token (if required)
+        /// </summary>
+        public string ApiToken { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Request timeout in seconds
+        /// Default: 30 seconds
+        /// </summary>
+        public int TimeoutSeconds { get; set; } = 30;
     }
 }
+
