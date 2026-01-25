@@ -130,6 +130,211 @@ The `BillingCyclesControllerTests` class contains comprehensive tests for all Bi
 
 **Note:** These tests demonstrate role-based authorization, dynamically creating users with Admin, Support, Sales, and Customer roles.
 
+## CustomersController Tests
+
+The `CustomersControllerTests` class contains comprehensive tests for customer management endpoints:
+
+### Features Tested
+- ? Get all customers (Admin, Support, Sales roles)
+- ? Get customer by ID with validation
+- ? Create customer (Admin, Sales roles)
+- ? Update customer information
+- ? Delete customer (Admin only)
+- ? Full CRUD integration flow
+- ? Role-based access control validation
+
+## OrdersController Tests
+
+The `OrdersControllerTests` class tests order management functionality:
+
+### Features Tested
+- ? Get all orders with proper authorization
+- ? Get order by ID
+- ? Create order with customer and service dependencies
+- ? Update order status and details
+- ? Delete order
+- ? Proper seeding of customer and service entities
+
+## PostalCodesController Tests
+
+The `PostalCodesControllerTests` class tests postal code management:
+
+### Features Tested
+- ? Get all postal codes (Admin, Support roles)
+- ? Get postal code by ID
+- ? Create postal code with country association
+- ? Authorization validation
+
+## RegistrarsController Tests
+
+The `RegistrarsControllerTests` class tests domain registrar endpoints:
+
+### Features Tested
+- ? Get TLDs by registrar
+- ? Authorization requirements
+- ? Proper registrar seeding
+
+## RegistrarTldsController Tests
+
+The `RegistrarTldsControllerTests` class tests registrar-TLD associations:
+
+### Features Tested
+- ? Get all registrar TLDs
+- ? Authorization validation
+- ? Seeding with registrar and TLD dependencies
+
+## ResellerCompaniesController Tests
+
+The `ResellerCompaniesControllerTests` class tests reseller company management:
+
+### Features Tested
+- ? Get all reseller companies
+- ? Authorization requirements
+- ? Proper data seeding
+
+## RolesController Tests
+
+The `RolesControllerTests` class tests role management (Admin-only access):
+
+### Features Tested
+- ? Get all roles (Admin only)
+- ? Forbidden access for non-admin roles
+- ? Authorization validation
+
+## SalesAgentsController Tests
+
+The `SalesAgentsControllerTests` class tests sales agent management:
+
+### Features Tested
+- ? Get all sales agents
+- ? Authorization validation
+- ? Seeding with reseller company dependency
+
+## SentEmailsController Tests
+
+The `SentEmailsControllerTests` class tests email tracking:
+
+### Features Tested
+- ? Get all sent emails
+- ? Authorization requirements
+- ? Email entity seeding
+
+## ServerControlPanelsController Tests
+
+The `ServerControlPanelsControllerTests` class tests server control panel management:
+
+### Features Tested
+- ? Get all server control panels
+- ? Authorization validation
+- ? Seeding with server and control panel type dependencies
+
+## ServerIpAddressesController Tests
+
+The `ServerIpAddressesControllerTests` class tests IP address management:
+
+### Features Tested
+- ? Get all server IP addresses
+- ? Authorization validation
+- ? Seeding with server dependency
+
+## ServicesController Tests
+
+The `ServicesControllerTests` class tests service catalog management:
+
+### Features Tested
+- ? Get all services
+- ? Authorization validation
+- ? Seeding with service type and billing cycle dependencies
+
+## ServiceTypesController Tests
+
+The `ServiceTypesControllerTests` class tests service type management:
+
+### Features Tested
+- ? Get all service types
+- ? Authorization requirements
+- ? Proper data seeding
+
+## TldsController Tests
+
+The `TldsControllerTests` class tests top-level domain management:
+
+### Features Tested
+- ? Get all TLDs
+- ? Authorization validation
+- ? TLD entity seeding
+
+## TokensController Tests
+
+The `TokensControllerTests` class tests token management endpoints:
+
+### Features Tested
+- ? Get all tokens with admin access
+- ? Authorization validation
+- ? Flexible response handling
+
+## UnitsController Tests
+
+The `UnitsControllerTests` class tests measurement unit management:
+
+### Features Tested
+- ? Get all units
+- ? Authorization requirements
+- ? Unit entity seeding
+
+## UsersController Tests
+
+The `UsersControllerTests` class tests user management endpoints:
+
+### Features Tested
+- ? Get all users (Admin, Support roles)
+- ? Get user by ID
+- ? Forbidden access for customer role
+- ? Authorization validation
+- ? User entity seeding with customer dependency
+
+## Test Coverage Summary
+
+The integration test suite now covers the following controllers:
+
+**Authentication & Account:**
+- AuthController ?
+- MyAccountController ?
+
+**Resource Management:**
+- BillingCyclesController ?
+- ControlPanelTypesController ?
+- CountriesController ?
+- CustomersController ?
+- DnsRecordsController ?
+- DnsRecordTypesController ?
+- DnsZonePackagesController ?
+- DnsZonePackageRecordsController ?
+- HostingPackagesController ?
+- InitializationController ?
+- InvoiceLinesController ?
+- InvoicesController ?
+- OrdersController ?
+- PaymentGatewaysController ?
+- PostalCodesController ?
+- RegistrarsController ?
+- RegistrarTldsController ?
+- ResellerCompaniesController ?
+- RolesController ?
+- SalesAgentsController ?
+- SentEmailsController ?
+- ServerControlPanelsController ?
+- ServerIpAddressesController ?
+- ServersController ?
+- ServicesController ?
+- ServiceTypesController ?
+- TldsController ?
+- TokensController ?
+- UnitsController ?
+- UsersController ?
+
+**Total: 33 Controllers with Integration Tests**
+
 ## Running the Tests
 
 ### Run all tests
