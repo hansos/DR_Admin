@@ -3,6 +3,7 @@ namespace ISPAdmin.Data.Entities;
 public class Domain : EntityBase
 {
     public int CustomerId { get; set; }
+    public int ServiceId { get; set; }
     public string Name { get; set; } = string.Empty;
     public int RegistrarId { get; set; }
     public int? RegistrarTldId { get; set; }
@@ -16,6 +17,7 @@ public class Domain : EntityBase
     public string? Notes { get; set; }
 
     public Customer Customer { get; set; } = null!;
+    public Service Service { get; set; } = null!;
     public Registrar Registrar { get; set; } = null!;
     public RegistrarTld? RegistrarTld { get; set; }
     public ICollection<DnsRecord> DnsRecords { get; set; } = new List<DnsRecord>();

@@ -4,6 +4,7 @@ public class DomainDto
 {
     public int Id { get; set; }
     public int CustomerId { get; set; }
+    public int ServiceId { get; set; }
     public string Name { get; set; } = string.Empty;
     public int ProviderId { get; set; }
     public string Status { get; set; } = string.Empty;
@@ -16,6 +17,7 @@ public class DomainDto
 public class CreateDomainDto
 {
     public int CustomerId { get; set; }
+    public int ServiceId { get; set; }
     public string Name { get; set; } = string.Empty;
     public int ProviderId { get; set; }
     public string Status { get; set; } = string.Empty;
@@ -26,6 +28,7 @@ public class CreateDomainDto
 public class UpdateDomainDto
 {
     public int CustomerId { get; set; }
+    public int ServiceId { get; set; }
     public string Name { get; set; } = string.Empty;
     public int ProviderId { get; set; }
     public string Status { get; set; } = string.Empty;

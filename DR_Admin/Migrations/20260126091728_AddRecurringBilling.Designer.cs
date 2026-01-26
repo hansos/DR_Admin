@@ -3,6 +3,7 @@ using System;
 using ISPAdmin.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ISPAdmin.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260126091728_AddRecurringBilling")]
+    partial class AddRecurringBilling
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.2");
@@ -929,9 +932,6 @@ namespace ISPAdmin.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("ServiceId")
-                        .HasColumnType("INTEGER");
-
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -951,8 +951,6 @@ namespace ISPAdmin.Migrations
                     b.HasIndex("RegistrarId");
 
                     b.HasIndex("RegistrarTldId");
-
-                    b.HasIndex("ServiceId");
 
                     b.HasIndex("Status");
 
@@ -3344,19 +3342,11 @@ namespace ISPAdmin.Migrations
                         .HasForeignKey("RegistrarTldId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("ISPAdmin.Data.Entities.Service", "Service")
-                        .WithMany()
-                        .HasForeignKey("ServiceId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.Navigation("Customer");
 
                     b.Navigation("Registrar");
 
                     b.Navigation("RegistrarTld");
-
-                    b.Navigation("Service");
                 });
 
             modelBuilder.Entity("ISPAdmin.Data.Entities.HostingAccount", b =>

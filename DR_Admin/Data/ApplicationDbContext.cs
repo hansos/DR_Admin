@@ -89,6 +89,10 @@ public class ApplicationDbContext : DbContext
     public DbSet<TaxRule> TaxRules { get; set; }
     public DbSet<CustomerCredit> CustomerCredits { get; set; }
     public DbSet<CreditTransaction> CreditTransactions { get; set; }
+    
+    // Recurring Billing entities
+    public DbSet<Subscription> Subscriptions { get; set; }
+    public DbSet<SubscriptionBillingHistory> SubscriptionBillingHistories { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -327,6 +331,11 @@ public class ApplicationDbContext : DbContext
             entity.HasOne(e => e.Customer)
                 .WithMany(c => c.Domains)
                 .HasForeignKey(e => e.CustomerId)
+                .OnDelete(DeleteBehavior.Restrict);
+            
+            entity.HasOne(e => e.Service)
+                .WithMany()
+                .HasForeignKey(e => e.ServiceId)
                 .OnDelete(DeleteBehavior.Restrict);
             
             entity.HasOne(e => e.Registrar)
