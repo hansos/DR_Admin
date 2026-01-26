@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "API/HostingServices/index.md",
+                "file": "Index.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "index"
+              "title": "Index"
             }
           }
         ]
@@ -94,7 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "API/HostingServices/index.md",
+                "file": "Index.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +104,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for index"
+              "title": "Backlinks for Index"
             }
           },
           {
@@ -113,12 +113,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "API/HostingServices/index.md",
+                "file": "Index.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from index"
+              "title": "Outgoing links from Index"
             }
           },
           {
@@ -156,13 +156,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "API/HostingServices/index.md",
+                "file": "Index.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of index"
+              "title": "Outline of Index"
             }
           }
         ]
@@ -185,6 +185,9 @@
   },
   "active": "afcce07dfc48f666",
   "lastOpenFiles": [
+    "API/index.md",
+    "Index.md",
+    "API/HostingServices/index.md",
     "API/System/PostalCodesController.md",
     "API/System/CountriesController.md",
     "API/System/InitializationController.md",
@@ -192,7 +195,6 @@
     "API/UserManagement/MyAccountController.md",
     "API/Resellers/ResellerCompaniesController.md",
     "API/UserManagement/index.md",
-    "API/HostingServices/index.md",
     "API/HostingServices/ControlPanelTypesController.md",
     "API/HostingServices/ServerIpAddressesController.md",
     "API/HostingServices/ServerControlPanelsController.md",
@@ -210,8 +212,6 @@
     "00d2xix1.msb~",
     "API/DNSManagement/DnsRecordTypesController.md",
     "API/DNSManagement/DnsRecordsController.md",
-    "API/DNSManagement/DnsZonePackageRecordsController.md",
-    "API/DNSManagement/DnsZonePackagesController.md",
     "API/UserManagement",
     "API/System",
     "API/Resellers",

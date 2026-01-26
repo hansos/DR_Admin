@@ -13,7 +13,9 @@ For detailed API reference documentation, see the [API Documentation](API/index.
 
 ---
 
-## 1. Domain Registration
+## Feature Documentation
+
+### 1. Domain Registration
 
 The **Domain Registration module** enables programmatic management of domain names across a wide range of registrars. Through the `IDomainRegistrar` interface, applications can check domain availability, register, renew, and transfer domains, as well as manage DNS and domain settings.  
 
@@ -32,7 +34,7 @@ See [Domain registration](Features/Domain-registration.md) for more information.
 
 ---
 
-## 2. Hosting Management
+### 2. Hosting Management
 
 The **Hosting module** (detailed in DR_Admin documentation) provides tools for managing web hosting accounts, services, and server resources. It is designed to allow administrators to provision, update, and monitor hosting services efficiently.  
 
@@ -49,7 +51,7 @@ See [Hosting](Features/Hosting.md) for more information.
 
 ---
 
-## 3. Email Delivery
+### 3. Email Delivery
 
 The **Mailing module** allows applications to send emails asynchronously with support for plain text, HTML, and attachments, through the `IEmailSender` interface. DR_Admin supports multiple providers to give maximum flexibility for different email environments.
 
@@ -67,7 +69,7 @@ See [Mailing](Features/Mailing.md) for more information.
 
 ---
 
-## 4. Full Database Backend
+### 4. Full Database Backend
 
 DR_Admin includes a **complete database server backend** to manage customers, services, orders, and invoicing. This allows the system to maintain all necessary business data in a structured, reliable manner.  
 
@@ -88,7 +90,7 @@ This flexibility allows DR_Admin to be deployed in small environments with light
 
 ---
 
-## 5. Cross-Platform Compatibility
+### 5. Cross-Platform Compatibility
 
 DR_Admin runs on **all operating systems that support .NET**, giving you the flexibility to deploy in diverse environments. Supported operating systems include:
 
@@ -100,7 +102,7 @@ This ensures that DR_Admin can be hosted in any environment, whether on-premises
 
 
 ---
-## Summary
+### Summary
 
 DR_Admin is a unified platform designed to manage the critical aspects of online services: domain registration, hosting management, and email delivery. Its modular approach, support for multiple providers, and asynchronous operations make it an ideal solution for resellers, developers, and IT administrators who require automation, flexibility, and reliability in managing web services.
 
