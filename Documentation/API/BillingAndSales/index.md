@@ -16,5 +16,7 @@
 - [CouponsController](CouponsController.md)
 - [CurrenciesController](CurrenciesController.md)
 - [TaxRulesController](TaxRulesController.md)
+- [SubscriptionBillingHistoriesController](SubscriptionBillingHistoriesController.md)
+- [SubscriptionsController](SubscriptionsController.md)
 
 [Back to Controllers Index](index.md)
