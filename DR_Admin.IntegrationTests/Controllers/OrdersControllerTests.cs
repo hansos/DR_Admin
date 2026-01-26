@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using ISPAdmin.Data;
 using ISPAdmin.Data.Entities;
+using ISPAdmin.Data.Enums;
 using ISPAdmin.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -134,7 +135,7 @@ public class OrdersControllerTests : IClassFixture<TestWebApplicationFactory>
         {
             CustomerId = customerId,
             ServiceId = serviceId,
-            Status = "Active",
+            OrderType = OrderType.New,
             StartDate = DateTime.UtcNow,
             EndDate = DateTime.UtcNow.AddYears(1),
             NextBillingDate = DateTime.UtcNow.AddMonths(1)
@@ -168,7 +169,7 @@ public class OrdersControllerTests : IClassFixture<TestWebApplicationFactory>
         {
             CustomerId = customerId,
             ServiceId = serviceId,
-            Status = "Active",
+            OrderType = OrderType.New,
             StartDate = DateTime.UtcNow,
             EndDate = DateTime.UtcNow.AddYears(1),
             NextBillingDate = DateTime.UtcNow.AddMonths(1)
@@ -201,12 +202,13 @@ public class OrdersControllerTests : IClassFixture<TestWebApplicationFactory>
 
         var updateDto = new UpdateOrderDto
         {
-            CustomerId = order!.CustomerId,
-            ServiceId = order.ServiceId,
-            Status = "Suspended",
+            ServiceId = order!.ServiceId,
+            Status = OrderStatus.Suspended,
             StartDate = order.StartDate,
             EndDate = order.EndDate,
-            NextBillingDate = order.NextBillingDate
+            NextBillingDate = order.NextBillingDate,
+            AutoRenew = order.AutoRenew,
+            Notes = order.Notes
         };
 
         // Act
@@ -217,7 +219,7 @@ public class OrdersControllerTests : IClassFixture<TestWebApplicationFactory>
 
         var result = await response.Content.ReadFromJsonAsync<OrderDto>();
         Assert.NotNull(result);
-        Assert.Equal("Suspended", result.Status);
+        Assert.Equal(OrderStatus.Suspended, result.Status);
     }
 
     [Fact]
@@ -231,12 +233,13 @@ public class OrdersControllerTests : IClassFixture<TestWebApplicationFactory>
 
         var updateDto = new UpdateOrderDto
         {
-            CustomerId = customerId,
             ServiceId = serviceId,
-            Status = "Active",
+            Status = OrderStatus.Active,
             StartDate = DateTime.UtcNow,
             EndDate = DateTime.UtcNow.AddYears(1),
-            NextBillingDate = DateTime.UtcNow.AddMonths(1)
+            NextBillingDate = DateTime.UtcNow.AddMonths(1),
+            AutoRenew = true,
+            Notes = string.Empty
         };
 
         // Act
@@ -300,12 +303,17 @@ public class OrdersControllerTests : IClassFixture<TestWebApplicationFactory>
         {
             new Order
             {
+                OrderNumber = "ORD-TEST-00001",
                 CustomerId = customerId,
                 ServiceId = serviceId,
-                Status = "Active",
+                OrderType = OrderType.New,
+                Status = OrderStatus.Active,
                 StartDate = now,
                 EndDate = now.AddYears(1),
                 NextBillingDate = now.AddMonths(1),
+                SetupFee = 0,
+                RecurringAmount = 100,
+                AutoRenew = true,
                 CreatedAt = now,
                 UpdatedAt = now
             }
@@ -327,12 +335,17 @@ public class OrdersControllerTests : IClassFixture<TestWebApplicationFactory>
         var now = DateTime.UtcNow;
         var order = new Order
         {
+            OrderNumber = "ORD-TEST-00002",
             CustomerId = customerId,
             ServiceId = serviceId,
-            Status = "Active",
+            OrderType = OrderType.New,
+            Status = OrderStatus.Active,
             StartDate = now,
             EndDate = now.AddYears(1),
             NextBillingDate = now.AddMonths(1),
+            SetupFee = 0,
+            RecurringAmount = 100,
+            AutoRenew = true,
             CreatedAt = now,
             UpdatedAt = now
         };

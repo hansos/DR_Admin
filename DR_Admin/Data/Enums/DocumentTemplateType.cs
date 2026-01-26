@@ -41,6 +41,31 @@ public enum DocumentTemplateType
     DeliveryNote = 6,
     
     /// <summary>
+    /// Template for credit notes
+    /// </summary>
+    CreditNote = 7,
+    
+    /// <summary>
+    /// Template for subscription confirmations
+    /// </summary>
+    SubscriptionConfirmation = 8,
+    
+    /// <summary>
+    /// Template for service suspension notices
+    /// </summary>
+    SuspensionNotice = 9,
+    
+    /// <summary>
+    /// Template for cancellation confirmations
+    /// </summary>
+    CancellationConfirmation = 10,
+    
+    /// <summary>
+    /// Template for service agreements
+    /// </summary>
+    ServiceAgreement = 11,
+    
+    /// <summary>
     /// Other template types
     /// </summary>
     Other = 99

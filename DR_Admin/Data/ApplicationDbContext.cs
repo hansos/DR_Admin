@@ -77,6 +77,18 @@ public class ApplicationDbContext : DbContext
     public DbSet<SalesAgent> SalesAgents { get; set; }
     public DbSet<SentEmail> SentEmails { get; set; }
     public DbSet<DocumentTemplate> DocumentTemplates { get; set; }
+    
+    // Sales and Payment Flow entities
+    public DbSet<Quote> Quotes { get; set; }
+    public DbSet<QuoteLine> QuoteLines { get; set; }
+    public DbSet<PaymentIntent> PaymentIntents { get; set; }
+    public DbSet<CustomerPaymentMethod> CustomerPaymentMethods { get; set; }
+    public DbSet<Refund> Refunds { get; set; }
+    public DbSet<Coupon> Coupons { get; set; }
+    public DbSet<CouponUsage> CouponUsages { get; set; }
+    public DbSet<TaxRule> TaxRules { get; set; }
+    public DbSet<CustomerCredit> CustomerCredits { get; set; }
+    public DbSet<CreditTransaction> CreditTransactions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

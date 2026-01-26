@@ -64,20 +64,34 @@ public class OrderService : IOrderService
         }
     }
 
+
     public async Task<OrderDto> CreateOrderAsync(CreateOrderDto createDto)
     {
         try
         {
             _log.Information("Creating new order for customer: {CustomerId}", createDto.CustomerId);
 
+            // Fetch service to get default prices if not provided
+            var service = await _context.Services.FindAsync(createDto.ServiceId);
+            if (service == null)
+            {
+                throw new InvalidOperationException($"Service with ID {createDto.ServiceId} not found");
+            }
+
             var order = new Order
             {
+                OrderNumber = await GenerateOrderNumberAsync(),
                 CustomerId = createDto.CustomerId,
                 ServiceId = createDto.ServiceId,
-                Status = createDto.Status,
+                QuoteId = createDto.QuoteId,
+                OrderType = createDto.OrderType,
+                Status = Data.Enums.OrderStatus.Pending,
                 StartDate = createDto.StartDate,
                 EndDate = createDto.EndDate,
                 NextBillingDate = createDto.NextBillingDate,
+                SetupFee = createDto.SetupFee ?? service.SetupFee,
+                RecurringAmount = createDto.RecurringAmount ?? service.Price,
+                AutoRenew = createDto.AutoRenew,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -95,6 +109,16 @@ public class OrderService : IOrderService
         }
     }
 
+    private async Task<string> GenerateOrderNumberAsync()
+    {
+        var lastOrder = await _context.Orders
+            .OrderByDescending(o => o.Id)
+            .FirstOrDefaultAsync();
+
+        var nextNumber = (lastOrder?.Id ?? 0) + 1;
+        return $"ORD-{DateTime.UtcNow.Year}-{nextNumber:D5}";
+    }
+
     public async Task<OrderDto?> UpdateOrderAsync(int id, UpdateOrderDto updateDto)
     {
         try
@@ -109,12 +133,13 @@ public class OrderService : IOrderService
                 return null;
             }
 
-            order.CustomerId = updateDto.CustomerId;
             order.ServiceId = updateDto.ServiceId;
             order.Status = updateDto.Status;
             order.StartDate = updateDto.StartDate;
             order.EndDate = updateDto.EndDate;
             order.NextBillingDate = updateDto.NextBillingDate;
+            order.AutoRenew = updateDto.AutoRenew;
+            order.Notes = updateDto.Notes;
             order.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
@@ -161,12 +186,20 @@ public class OrderService : IOrderService
         return new OrderDto
         {
             Id = order.Id,
+            OrderNumber = order.OrderNumber,
             CustomerId = order.CustomerId,
             ServiceId = order.ServiceId,
+            QuoteId = order.QuoteId,
+            OrderType = order.OrderType,
             Status = order.Status,
             StartDate = order.StartDate,
             EndDate = order.EndDate,
             NextBillingDate = order.NextBillingDate,
+            SetupFee = order.SetupFee,
+            RecurringAmount = order.RecurringAmount,
+            DiscountAmount = order.DiscountAmount,
+            TrialEndsAt = order.TrialEndsAt,
+            AutoRenew = order.AutoRenew,
             CreatedAt = order.CreatedAt,
             UpdatedAt = order.UpdatedAt
         };
