@@ -4,21 +4,21 @@
     "type": "split",
     "children": [
       {
-        "id": "5d38ae438d16131a",
+        "id": "3d2e8c1cad5ebfa8",
         "type": "tabs",
         "children": [
           {
-            "id": "afcce07dfc48f666",
+            "id": "a1e9204f0da1f4d9",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Index.md",
+                "file": "API/CustomerManagement/CustomersController.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Index"
+              "title": "CustomersController"
             }
           }
         ]
@@ -94,7 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Index.md",
+                "file": "API/CustomerManagement/CustomersController.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +104,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for Index"
+              "title": "Backlinks for CustomersController"
             }
           },
           {
@@ -113,12 +113,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Index.md",
+                "file": "API/CustomerManagement/CustomersController.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from Index"
+              "title": "Outgoing links from CustomersController"
             }
           },
           {
@@ -156,13 +156,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Index.md",
+                "file": "API/CustomerManagement/CustomersController.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of Index"
+              "title": "Outline of CustomersController"
             }
           }
         ]
@@ -183,8 +183,22 @@
       "bases:Create new base": false
     }
   },
-  "active": "afcce07dfc48f666",
+  "active": "a1e9204f0da1f4d9",
   "lastOpenFiles": [
+    "API/CustomerManagement/CustomersController.md",
+    "API/Authentication/AuthController.md",
+    "Features/CustomerManagement/Customers.md",
+    "Features/Authentication/InitializeDatabaseWithFirstUser.md",
+    "Features/CustomerManagement",
+    "Features/Authentication/Customers.md",
+    "Features/BillngAndSales/OrderToInvoiceFlow.md",
+    "Features/Authentication",
+    "Features/BillngAndSales/Untitled.md",
+    "API/BillingAndSales/OrderToInvoiceFlow.md",
+    "Index.md",
+    "Features/BillngAndSales",
+    "Features/BillngAndSale/Untitled.md",
+    "Features/BillngAndSale",
     "API/BillingAndSales/TaxRulesController.md",
     "API/BillingAndSales/SubscriptionsController.md",
     "API/BillingAndSales/SubscriptionBillingHistoriesController.md",
@@ -195,31 +209,17 @@
     "API/System/PostalCodesController.md",
     "API/System/index.md",
     "API/System/CountriesController.md",
-    "Index.md",
     "API/index.md",
     "API/HostingServices/index.md",
     "API/System/InitializationController.md",
     "API/Resellers/SalesAgentsController.md",
     "API/UserManagement/MyAccountController.md",
     "API/Resellers/ResellerCompaniesController.md",
-    "API/UserManagement/index.md",
-    "API/HostingServices/ControlPanelTypesController.md",
-    "API/HostingServices/ServerIpAddressesController.md",
-    "API/HostingServices/ServerControlPanelsController.md",
-    "API/HostingServices/ServersController.md",
-    "API/HostingServices/HostingPackagesController.md",
-    "API/HostingServices/ServiceTypesController.md",
-    "API/HostingServices/ServicesController.md",
-    "API/DomainRegistration/index.md",
     "00d2xix1.msb~",
     "API/UserManagement",
     "API/System",
     "API/Resellers",
     "API/HostingServices",
-    "API/DomainRegistration",
-    "API/Documents",
-    "API/DNSManagement",
-    "API/CustomerManagement",
-    "API/Communication"
+    "API/DomainRegistration"
   ]
 }
