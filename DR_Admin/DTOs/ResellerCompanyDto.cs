@@ -81,6 +81,26 @@ public class ResellerCompanyDto
     public string? Notes { get; set; }
     
     /// <summary>
+    /// Gets or sets the default currency for this reseller (ISO 4217 code)
+    /// </summary>
+    public string DefaultCurrency { get; set; } = "EUR";
+    
+    /// <summary>
+    /// Gets or sets the comma-separated list of supported currencies
+    /// </summary>
+    public string? SupportedCurrencies { get; set; }
+    
+    /// <summary>
+    /// Gets or sets whether to automatically apply currency markup
+    /// </summary>
+    public bool ApplyCurrencyMarkup { get; set; } = false;
+    
+    /// <summary>
+    /// Gets or sets the default currency markup percentage
+    /// </summary>
+    public decimal DefaultCurrencyMarkup { get; set; } = 0m;
+    
+    /// <summary>
     /// Gets or sets the date and time when the reseller company was created
     /// </summary>
     public DateTime CreatedAt { get; set; }
@@ -165,6 +185,26 @@ public class CreateResellerCompanyDto
     /// Gets or sets additional notes about the reseller company
     /// </summary>
     public string? Notes { get; set; }
+    
+    /// <summary>
+    /// Gets or sets the default currency for this reseller (ISO 4217 code)
+    /// </summary>
+    public string DefaultCurrency { get; set; } = "EUR";
+    
+    /// <summary>
+    /// Gets or sets the comma-separated list of supported currencies
+    /// </summary>
+    public string? SupportedCurrencies { get; set; }
+    
+    /// <summary>
+    /// Gets or sets whether to automatically apply currency markup
+    /// </summary>
+    public bool ApplyCurrencyMarkup { get; set; } = false;
+    
+    /// <summary>
+    /// Gets or sets the default currency markup percentage
+    /// </summary>
+    public decimal DefaultCurrencyMarkup { get; set; } = 0m;
 }
 
 /// <summary>
@@ -235,10 +275,31 @@ public class UpdateResellerCompanyDto
     /// <summary>
     /// Gets or sets whether the reseller company is active
     /// </summary>
-    public bool IsActive { get; set; } = true;
+    public bool IsActive { get; set; }
     
     /// <summary>
     /// Gets or sets additional notes about the reseller company
     /// </summary>
     public string? Notes { get; set; }
+    
+    /// <summary>
+    /// Gets or sets the default currency for this reseller (ISO 4217 code)
+    /// </summary>
+    public string DefaultCurrency { get; set; } = "EUR";
+    
+    /// <summary>
+    /// Gets or sets the comma-separated list of supported currencies
+    /// </summary>
+    public string? SupportedCurrencies { get; set; }
+    
+    /// <summary>
+    /// Gets or sets whether to automatically apply currency markup
+    /// </summary>
+    public bool ApplyCurrencyMarkup { get; set; }
+    
+    /// <summary>
+    /// Gets or sets the default currency markup percentage
+    /// </summary>
+    public decimal DefaultCurrencyMarkup { get; set; }
 }
+

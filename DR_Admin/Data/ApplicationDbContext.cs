@@ -93,6 +93,9 @@ public class ApplicationDbContext : DbContext
     // Recurring Billing entities
     public DbSet<Subscription> Subscriptions { get; set; }
     public DbSet<SubscriptionBillingHistory> SubscriptionBillingHistories { get; set; }
+    
+    // Currency entities
+    public DbSet<CurrencyExchangeRate> CurrencyExchangeRates { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -778,6 +781,23 @@ public class ApplicationDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(e => e.UserId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // CurrencyExchangeRate configuration
+        modelBuilder.Entity<CurrencyExchangeRate>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.BaseCurrency).IsRequired().HasMaxLength(3);
+            entity.Property(e => e.TargetCurrency).IsRequired().HasMaxLength(3);
+            entity.Property(e => e.Rate).IsRequired().HasPrecision(18, 6);
+            entity.Property(e => e.EffectiveRate).IsRequired().HasPrecision(18, 6);
+            entity.Property(e => e.Markup).HasPrecision(5, 2);
+            entity.Property(e => e.Notes).HasMaxLength(500);
+            
+            // Indexes for performance
+            entity.HasIndex(e => new { e.BaseCurrency, e.TargetCurrency, e.EffectiveDate })
+                .HasDatabaseName("IX_CurrencyExchangeRates_BaseCurrency_TargetCurrency_EffectiveDate");
+            entity.HasIndex(e => e.IsActive);
         });
     }
 }

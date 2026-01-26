@@ -92,6 +92,8 @@ public class CustomerService : ICustomerService
                 Notes = createDto.Notes,
                 BillingEmail = createDto.BillingEmail,
                 PreferredPaymentMethod = createDto.PreferredPaymentMethod,
+                PreferredCurrency = createDto.PreferredCurrency,
+                AllowCurrencyOverride = createDto.AllowCurrencyOverride,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -142,6 +144,8 @@ public class CustomerService : ICustomerService
             customer.Notes = updateDto.Notes;
             customer.BillingEmail = updateDto.BillingEmail;
             customer.PreferredPaymentMethod = updateDto.PreferredPaymentMethod;
+            customer.PreferredCurrency = updateDto.PreferredCurrency;
+            customer.AllowCurrencyOverride = updateDto.AllowCurrencyOverride;
             customer.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
@@ -208,6 +212,8 @@ public class CustomerService : ICustomerService
             Notes = customer.Notes,
             BillingEmail = customer.BillingEmail,
             PreferredPaymentMethod = customer.PreferredPaymentMethod,
+            PreferredCurrency = customer.PreferredCurrency,
+            AllowCurrencyOverride = customer.AllowCurrencyOverride,
             CreatedAt = customer.CreatedAt,
             UpdatedAt = customer.UpdatedAt
         };

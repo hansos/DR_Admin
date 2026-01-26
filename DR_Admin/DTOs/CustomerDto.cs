@@ -111,6 +111,16 @@ public class CustomerDto
     public string? PreferredPaymentMethod { get; set; }
     
     /// <summary>
+    /// Gets or sets the customer's preferred currency (ISO 4217 code, e.g., "EUR", "USD")
+    /// </summary>
+    public string PreferredCurrency { get; set; } = "EUR";
+    
+    /// <summary>
+    /// Gets or sets whether to allow currency override at transaction level
+    /// </summary>
+    public bool AllowCurrencyOverride { get; set; } = true;
+    
+    /// <summary>
     /// Gets or sets the date and time when the customer was created
     /// </summary>
     public DateTime CreatedAt { get; set; }
@@ -127,25 +137,110 @@ public class CustomerDto
 /// </summary>
 public class CreateCustomerDto
 {
+    /// <summary>
+    /// Customer's name
+    /// </summary>
     public string Name { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Customer's email address
+    /// </summary>
     public string Email { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Customer's phone number
+    /// </summary>
     public string Phone { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Customer's street address
+    /// </summary>
     public string Address { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Customer's city
+    /// </summary>
     public string City { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Customer's state/province
+    /// </summary>
     public string State { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Customer's postal code
+    /// </summary>
     public string PostalCode { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Customer's country code
+    /// </summary>
     public string? CountryCode { get; set; }
+    
+    /// <summary>
+    /// Company name (if customer is a company)
+    /// </summary>
     public string? CompanyName { get; set; }
+    
+    /// <summary>
+    /// Tax identification number
+    /// </summary>
     public string? TaxId { get; set; }
+    
+    /// <summary>
+    /// VAT (Value Added Tax) number
+    /// </summary>
     public string? VatNumber { get; set; }
+    
+    /// <summary>
+    /// Primary contact person's name
+    /// </summary>
     public string? ContactPerson { get; set; }
+    
+    /// <summary>
+    /// Whether the customer is a company
+    /// </summary>
     public bool IsCompany { get; set; }
+    
+    /// <summary>
+    /// Whether the customer account is active
+    /// </summary>
     public bool IsActive { get; set; } = true;
+    
+    /// <summary>
+    /// Customer's account status
+    /// </summary>
     public string Status { get; set; } = "Active";
+    
+    /// <summary>
+    /// Customer's credit limit
+    /// </summary>
     public decimal CreditLimit { get; set; }
+    
+    /// <summary>
+    /// Additional notes about the customer
+    /// </summary>
     public string? Notes { get; set; }
+    
+    /// <summary>
+    /// Billing email address (if different from main email)
+    /// </summary>
     public string? BillingEmail { get; set; }
+    
+    /// <summary>
+    /// Customer's preferred payment method
+    /// </summary>
     public string? PreferredPaymentMethod { get; set; }
+    
+    /// <summary>
+    /// Customer's preferred currency (ISO 4217 code, e.g., "EUR", "USD")
+    /// </summary>
+    public string PreferredCurrency { get; set; } = "EUR";
+    
+    /// <summary>
+    /// Whether to allow currency override at transaction level
+    /// </summary>
+    public bool AllowCurrencyOverride { get; set; } = true;
 }
 
 
@@ -154,23 +249,108 @@ public class CreateCustomerDto
 /// </summary>
 public class UpdateCustomerDto
 {
+    /// <summary>
+    /// Customer's name
+    /// </summary>
     public string Name { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Customer's email address
+    /// </summary>
     public string Email { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Customer's phone number
+    /// </summary>
     public string Phone { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Customer's street address
+    /// </summary>
     public string Address { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Customer's city
+    /// </summary>
     public string City { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Customer's state/province
+    /// </summary>
     public string State { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Customer's postal code
+    /// </summary>
     public string PostalCode { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Customer's country code
+    /// </summary>
     public string? CountryCode { get; set; }
+    
+    /// <summary>
+    /// Company name (if customer is a company)
+    /// </summary>
     public string? CompanyName { get; set; }
+    
+    /// <summary>
+    /// Tax identification number
+    /// </summary>
     public string? TaxId { get; set; }
+    
+    /// <summary>
+    /// VAT (Value Added Tax) number
+    /// </summary>
     public string? VatNumber { get; set; }
+    
+    /// <summary>
+    /// Primary contact person's name
+    /// </summary>
     public string? ContactPerson { get; set; }
+    
+    /// <summary>
+    /// Whether the customer is a company
+    /// </summary>
     public bool IsCompany { get; set; }
+    
+    /// <summary>
+    /// Whether the customer account is active
+    /// </summary>
     public bool IsActive { get; set; }
+    
+    /// <summary>
+    /// Customer's account status
+    /// </summary>
     public string Status { get; set; } = "Active";
+    
+    /// <summary>
+    /// Customer's credit limit
+    /// </summary>
     public decimal CreditLimit { get; set; }
+    
+    /// <summary>
+    /// Additional notes about the customer
+    /// </summary>
     public string? Notes { get; set; }
+    
+    /// <summary>
+    /// Billing email address (if different from main email)
+    /// </summary>
     public string? BillingEmail { get; set; }
+    
+    /// <summary>
+    /// Customer's preferred payment method
+    /// </summary>
     public string? PreferredPaymentMethod { get; set; }
+    
+    /// <summary>
+    /// Customer's preferred currency (ISO 4217 code, e.g., "EUR", "USD")
+    /// </summary>
+    public string PreferredCurrency { get; set; } = "EUR";
+    
+    /// <summary>
+    /// Whether to allow currency override at transaction level
+    /// </summary>
+    public bool AllowCurrencyOverride { get; set; } = true;
 }

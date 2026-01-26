@@ -2,7 +2,7 @@
 
 ## Overview
 
-The BillingCycles API provides endpoints for managing billing cycles in the system. It allows administrators, support staff, and sales personnel to create, retrieve, update, and delete billing cycle records.
+Manages billing cycles including creation, retrieval, updates, and deletion
 
 ## Base URL
 
@@ -34,10 +34,10 @@ Retrieves all billing cycles in the system.
   {
     "id": 1,
     "name": "Monthly",
+    "durationInDays": 30,
     "description": "Monthly billing cycle",
-    "days": 30,
-    "createdAt": "2023-01-15T10:30:00Z",
-    "updatedAt": "2023-01-15T10:30:00Z"
+    "createdAt": "2023-01-01T00:00:00Z",
+    "updatedAt": "2023-01-01T00:00:00Z"
   }
 ]
 ```
@@ -58,6 +58,18 @@ Retrieves a specific billing cycle by its unique identifier.
 - 404: If billing cycle is not found
 - 500: If an internal server error occurs
 
+**Response Body:**
+```json
+{
+  "id": 1,
+  "name": "Monthly",
+  "durationInDays": 30,
+  "description": "Monthly billing cycle",
+  "createdAt": "2023-01-01T00:00:00Z",
+  "updatedAt": "2023-01-01T00:00:00Z"
+}
+```
+
 ### POST /api/v1/BillingCycles
 
 Creates a new billing cycle in the system.
@@ -67,9 +79,9 @@ Creates a new billing cycle in the system.
 **Request Body:**
 ```json
 {
-  "name": "Quarterly",
-  "description": "Quarterly billing cycle",
-  "days": 90
+  "name": "Monthly",
+  "durationInDays": 30,
+  "description": "Monthly billing cycle"
 }
 ```
 
@@ -79,6 +91,18 @@ Creates a new billing cycle in the system.
 - 401: If user is not authenticated
 - 403: If user doesn't have Admin role
 - 500: If an internal server error occurs
+
+**Response Body:**
+```json
+{
+  "id": 1,
+  "name": "Monthly",
+  "durationInDays": 30,
+  "description": "Monthly billing cycle",
+  "createdAt": "2023-01-01T00:00:00Z",
+  "updatedAt": "2023-01-01T00:00:00Z"
+}
+```
 
 ### PUT /api/v1/BillingCycles/{id}
 
@@ -92,9 +116,9 @@ Updates an existing billing cycle's information.
 **Request Body:**
 ```json
 {
-  "name": "Updated Name",
-  "description": "Updated description",
-  "days": 120
+  "name": "Monthly",
+  "durationInDays": 30,
+  "description": "Monthly billing cycle"
 }
 ```
 
@@ -105,6 +129,18 @@ Updates an existing billing cycle's information.
 - 403: If user doesn't have Admin role
 - 404: If billing cycle is not found
 - 500: If an internal server error occurs
+
+**Response Body:**
+```json
+{
+  "id": 1,
+  "name": "Monthly",
+  "durationInDays": 30,
+  "description": "Monthly billing cycle",
+  "createdAt": "2023-01-01T00:00:00Z",
+  "updatedAt": "2023-01-01T00:00:00Z"
+}
+```
 
 ### DELETE /api/v1/BillingCycles/{id}
 
@@ -122,55 +158,4 @@ Deletes a billing cycle from the system.
 - 404: If billing cycle is not found
 - 500: If an internal server error occurs
 
-## Data Models
-
-### BillingCycleDto
-
-```json
-{
-  "id": 0,
-  "name": "string",
-  "description": "string",
-  "days": 0,
-  "createdAt": "2023-01-15T10:30:00Z",
-  "updatedAt": "2023-01-15T10:30:00Z"
-}
-```
-
-### CreateBillingCycleDto
-
-```json
-{
-  "name": "string",
-  "description": "string",
-  "days": 0
-}
-```
-
-### UpdateBillingCycleDto
-
-```json
-{
-  "name": "string",
-  "description": "string",
-  "days": 0
-}
-```
-
-## Error Handling
-
-All endpoints return appropriate HTTP status codes and error messages in case of failures. Common error responses include:
-
-- **400 Bad Request:** Invalid request data or parameters
-- **401 Unauthorized:** Missing or invalid authentication
-- **403 Forbidden:** Insufficient permissions
-- **404 Not Found:** Resource not found
-- **500 Internal Server Error:** Server-side error
-
-## Rate Limiting
-
-API calls are subject to rate limiting. Please refer to the general API documentation for rate limit details.
-
-## Changelog
-
-- **v1.0:** Initial release of BillingCycles API
+[Back to Controllers Index](index.md)

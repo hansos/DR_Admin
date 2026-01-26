@@ -109,6 +109,7 @@ builder.Services.AddTransient<ISentEmailService, SentEmailService>();
 builder.Services.AddTransient<IPaymentGatewayService, PaymentGatewayService>();
 builder.Services.AddTransient<IEmailQueueService, EmailQueueService>();
 builder.Services.AddTransient<IDocumentTemplateService, DocumentTemplateService>();
+builder.Services.AddTransient<ICurrencyService, CurrencyService>();
 
 // Register Background Services
 builder.Services.AddHostedService<EmailQueueBackgroundService>();

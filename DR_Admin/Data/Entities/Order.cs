@@ -71,6 +71,27 @@ public class Order : EntityBase
     /// Discount amount applied to this order
     /// </summary>
     public decimal DiscountAmount { get; set; }
+    
+    /// <summary>
+    /// Currency code for this order (ISO 4217, e.g., "EUR", "USD")
+    /// </summary>
+    public string CurrencyCode { get; set; } = "EUR";
+    
+    /// <summary>
+    /// Base currency for accounting purposes (e.g., "EUR")
+    /// </summary>
+    public string BaseCurrencyCode { get; set; } = "EUR";
+    
+    /// <summary>
+    /// Exchange rate applied at order creation (from base to order currency)
+    /// Null if base and order currencies are the same
+    /// </summary>
+    public decimal? ExchangeRate { get; set; }
+    
+    /// <summary>
+    /// Date of the exchange rate used
+    /// </summary>
+    public DateTime? ExchangeRateDate { get; set; }
 
     /// <summary>
     /// Trial period end date (if applicable)

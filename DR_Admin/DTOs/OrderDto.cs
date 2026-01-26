@@ -71,6 +71,26 @@ public class OrderDto
     /// Discount amount
     /// </summary>
     public decimal DiscountAmount { get; set; }
+    
+    /// <summary>
+    /// Currency code for this order (ISO 4217)
+    /// </summary>
+    public string CurrencyCode { get; set; } = "EUR";
+    
+    /// <summary>
+    /// Base currency for accounting purposes
+    /// </summary>
+    public string BaseCurrencyCode { get; set; } = "EUR";
+    
+    /// <summary>
+    /// Exchange rate applied at order creation
+    /// </summary>
+    public decimal? ExchangeRate { get; set; }
+    
+    /// <summary>
+    /// Date of the exchange rate used
+    /// </summary>
+    public DateTime? ExchangeRateDate { get; set; }
 
     /// <summary>
     /// Trial end date

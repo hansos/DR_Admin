@@ -14,6 +14,7 @@
 - [CustomerPaymentMethodsController](CustomerPaymentMethodsController.md)
 - [CustomerCreditsController](CustomerCreditsController.md)
 - [CouponsController](CouponsController.md)
+- [CurrenciesController](CurrenciesController.md)
 - [TaxRulesController](TaxRulesController.md)
 
 [Back to Controllers Index](index.md)

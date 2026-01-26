@@ -22,6 +22,16 @@ public class Customer : EntityBase
     public string? Notes { get; set; }
     public string? BillingEmail { get; set; }
     public string? PreferredPaymentMethod { get; set; }
+    
+    /// <summary>
+    /// Customer's preferred currency for invoices and transactions (ISO 4217 code, e.g., "EUR", "USD")
+    /// </summary>
+    public string PreferredCurrency { get; set; } = "EUR";
+    
+    /// <summary>
+    /// Whether to allow currency override at transaction level
+    /// </summary>
+    public bool AllowCurrencyOverride { get; set; } = true;
 
     public Country? Country { get; set; }
     public ICollection<User> Users { get; set; } = new List<User>();

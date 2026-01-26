@@ -28,6 +28,32 @@ public class Invoice : EntityBase
     public string CurrencyCode { get; set; } = "EUR";
     public decimal TaxRate { get; set; }
     public string TaxName { get; set; } = "VAT";
+    
+    /// <summary>
+    /// Base currency for accounting purposes (e.g., "EUR")
+    /// </summary>
+    public string BaseCurrencyCode { get; set; } = "EUR";
+    
+    /// <summary>
+    /// Display currency for customer (may differ from base currency)
+    /// </summary>
+    public string DisplayCurrencyCode { get; set; } = "EUR";
+    
+    /// <summary>
+    /// Exchange rate applied at invoice creation (from base to display currency)
+    /// Null if base and display currencies are the same
+    /// </summary>
+    public decimal? ExchangeRate { get; set; }
+    
+    /// <summary>
+    /// Total amount in base currency for accounting
+    /// </summary>
+    public decimal? BaseTotalAmount { get; set; }
+    
+    /// <summary>
+    /// Date of the exchange rate used
+    /// </summary>
+    public DateTime? ExchangeRateDate { get; set; }
 
     // Billing Snapshot (important!)
     public string CustomerName { get; set; } = string.Empty;

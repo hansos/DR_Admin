@@ -131,7 +131,11 @@ public class ResellerCompanyService : IResellerCompanyService
                 TaxId = dto.TaxId,
                 VatNumber = dto.VatNumber,
                 IsActive = dto.IsActive,
-                Notes = dto.Notes
+                Notes = dto.Notes,
+                DefaultCurrency = dto.DefaultCurrency,
+                SupportedCurrencies = dto.SupportedCurrencies,
+                ApplyCurrencyMarkup = dto.ApplyCurrencyMarkup,
+                DefaultCurrencyMarkup = dto.DefaultCurrencyMarkup
             };
 
             _context.ResellerCompanies.Add(company);
@@ -181,6 +185,10 @@ public class ResellerCompanyService : IResellerCompanyService
             company.VatNumber = dto.VatNumber;
             company.IsActive = dto.IsActive;
             company.Notes = dto.Notes;
+            company.DefaultCurrency = dto.DefaultCurrency;
+            company.SupportedCurrencies = dto.SupportedCurrencies;
+            company.ApplyCurrencyMarkup = dto.ApplyCurrencyMarkup;
+            company.DefaultCurrencyMarkup = dto.DefaultCurrencyMarkup;
 
             await _context.SaveChangesAsync();
 
@@ -245,6 +253,10 @@ public class ResellerCompanyService : IResellerCompanyService
             VatNumber = company.VatNumber,
             IsActive = company.IsActive,
             Notes = company.Notes,
+            DefaultCurrency = company.DefaultCurrency,
+            SupportedCurrencies = company.SupportedCurrencies,
+            ApplyCurrencyMarkup = company.ApplyCurrencyMarkup,
+            DefaultCurrencyMarkup = company.DefaultCurrencyMarkup,
             CreatedAt = company.CreatedAt,
             UpdatedAt = company.UpdatedAt
         };

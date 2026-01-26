@@ -41,6 +41,23 @@ public class PaymentTransaction : EntityBase
     /// Currency code
     /// </summary>
     public string CurrencyCode { get; set; } = "EUR";
+    
+    /// <summary>
+    /// Base currency for accounting (if different from CurrencyCode)
+    /// </summary>
+    public string? BaseCurrencyCode { get; set; }
+    
+    /// <summary>
+    /// Exchange rate at time of payment (from base to payment currency)
+    /// Null if base and payment currencies are the same
+    /// </summary>
+    public decimal? ExchangeRate { get; set; }
+    
+    /// <summary>
+    /// Amount in base currency for accounting
+    /// Null if base and payment currencies are the same
+    /// </summary>
+    public decimal? BaseAmount { get; set; }
 
     /// <summary>
     /// Foreign key to the payment gateway
