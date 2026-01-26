@@ -7,6 +7,12 @@ Being a REST API, **DR_Admin can be accessed programmatically by any client writ
 
 ---
 
+## API Documentation
+
+For detailed API reference documentation, see the [API Documentation](API/index.md).
+
+---
+
 ## 1. Domain Registration
 
 The **Domain Registration module** enables programmatic management of domain names across a wide range of registrars. Through the `IDomainRegistrar` interface, applications can check domain availability, register, renew, and transfer domains, as well as manage DNS and domain settings.  

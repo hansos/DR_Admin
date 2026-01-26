@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Features/Payment/Untitled.md",
+                "file": "API/HostingServices/index.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Untitled"
+              "title": "index"
             }
           }
         ]
@@ -94,7 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Features/Payment/Untitled.md",
+                "file": "API/HostingServices/index.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +104,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for Untitled"
+              "title": "Backlinks for index"
             }
           },
           {
@@ -113,12 +113,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Features/Payment/Untitled.md",
+                "file": "API/HostingServices/index.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from Untitled"
+              "title": "Outgoing links from index"
             }
           },
           {
@@ -156,13 +156,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Features/Payment/Untitled.md",
+                "file": "API/HostingServices/index.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of Untitled"
+              "title": "Outline of index"
             }
           }
         ]
@@ -185,41 +185,41 @@
   },
   "active": "afcce07dfc48f666",
   "lastOpenFiles": [
-    "API/BillingAndSales/BillingCyclesController.md",
-    "API/BillingAndSales/RefundsController.md",
-    "API/BillingAndSales/QuotesController.md",
-    "API/BillingAndSales/InvoicesController.md",
-    "API/BillingAndSales/InvoiceLinesController.md",
-    "API/DNSManagement/DNS-records.md",
-    "API/index.md",
-    "API/UserManagement/UsersController.md",
-    "API/UserManagement/RolesController.md",
+    "API/Resellers/SalesAgentsController.md",
     "API/UserManagement/MyAccountController.md",
+    "API/Resellers/ResellerCompaniesController.md",
     "API/UserManagement/index.md",
-    "API/UserManagement",
-    "API/System/index.md",
-    "API/System",
-    "API/Resellers/index.md",
-    "API/Resellers",
     "API/HostingServices/index.md",
-    "API/HostingServices",
+    "API/HostingServices/ControlPanelTypesController.md",
+    "API/HostingServices/ServerIpAddressesController.md",
+    "API/HostingServices/ServerControlPanelsController.md",
+    "API/HostingServices/ServersController.md",
+    "API/HostingServices/HostingPackagesController.md",
+    "API/HostingServices/ServiceTypesController.md",
+    "API/HostingServices/ServicesController.md",
     "API/DomainRegistration/index.md",
-    "API/DomainRegistration",
+    "API/DomainRegistration/RegistrarsController.md",
+    "API/DomainRegistration/RegistrarTldsController.md",
+    "API/System/index.md",
+    "API/DomainRegistration/TldsController.md",
     "API/Documents/index.md",
+    "API/Documents/DocumentTemplatesController.md",
+    "00d2xix1.msb~",
+    "API/DNSManagement/DnsRecordTypesController.md",
+    "API/DNSManagement/DnsRecordsController.md",
+    "API/DNSManagement/DnsZonePackageRecordsController.md",
+    "API/DNSManagement/DnsZonePackagesController.md",
+    "Features/Payment/Untitled.md",
+    "API/Communication/SentEmailsController.md",
+    "API/Communication/EmailQueueController.md",
+    "API/UserManagement",
+    "API/System",
+    "API/Resellers",
+    "API/HostingServices",
+    "API/DomainRegistration",
     "API/Documents",
-    "API/DNSManagement/index.md",
     "API/DNSManagement",
-    "API/CustomerManagement/index.md",
-    "API/CustomerManagement/CustomersController.md",
     "API/CustomerManagement",
-    "API/Communication/index.md",
-    "API/Communication",
-    "API/BillingAndSales/OrdersController.md",
-    "API/BillingAndSales/index.md",
-    "API/BillingAndSales",
-    "API/Authentication/index.md",
-    "API/Authentication/AuthController.md",
-    "API/Controllers/System/index.md",
-    "API/Controllers/Documents/index.md"
+    "API/Communication"
   ]
 }
