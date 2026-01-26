@@ -76,6 +76,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<ResellerCompany> ResellerCompanies { get; set; }
     public DbSet<SalesAgent> SalesAgents { get; set; }
     public DbSet<SentEmail> SentEmails { get; set; }
+    public DbSet<DocumentTemplate> DocumentTemplates { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
