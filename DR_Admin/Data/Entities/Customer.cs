@@ -17,6 +17,21 @@ public class Customer : EntityBase
     public bool IsCompany { get; set; }
     public bool IsActive { get; set; }
     public string Status { get; set; } = "Active";
+
+    /// <summary>
+    /// Normalized version of Name for case-insensitive searches
+    /// </summary>
+    public string NormalizedName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Normalized version of CompanyName for case-insensitive searches
+    /// </summary>
+    public string? NormalizedCompanyName { get; set; }
+
+    /// <summary>
+    /// Normalized version of ContactPerson for case-insensitive searches
+    /// </summary>
+    public string? NormalizedContactPerson { get; set; }
     public decimal Balance { get; set; }
     public decimal CreditLimit { get; set; }
     public string? Notes { get; set; }

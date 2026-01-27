@@ -16,6 +16,11 @@ public class Domain : EntityBase
     public decimal? RenewalPrice { get; set; }
     public string? Notes { get; set; }
 
+    /// <summary>
+    /// Normalized version of Name for case-insensitive searches
+    /// </summary>
+    public string NormalizedName { get; set; } = string.Empty;
+
     public Customer Customer { get; set; } = null!;
     public Service Service { get; set; } = null!;
     public Registrar Registrar { get; set; } = null!;

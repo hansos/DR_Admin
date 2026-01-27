@@ -10,6 +10,11 @@ public class Registrar : EntityBase
     public string? Website { get; set; }
     public string? Notes { get; set; }
 
+    /// <summary>
+    /// Normalized version of Name for case-insensitive searches
+    /// </summary>
+    public string NormalizedName { get; set; } = string.Empty;
+
     public ICollection<RegistrarTld> RegistrarTlds { get; set; } = new List<RegistrarTld>();
     public ICollection<Domain> Domains { get; set; } = new List<Domain>();
 }

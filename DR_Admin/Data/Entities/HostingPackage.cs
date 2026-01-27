@@ -4,6 +4,11 @@ public class HostingPackage : EntityBase
 {
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
+
+    /// <summary>
+    /// Normalized version of Name for case-insensitive searches
+    /// </summary>
+    public string NormalizedName { get; set; } = string.Empty;
     
     // Resource Limits
     public int DiskSpaceMB { get; set; }

@@ -9,6 +9,11 @@ public class User : EntityBase
     public DateTime? EmailConfirmed { get; set; }
     public bool IsActive { get; set; }
 
+    /// <summary>
+    /// Normalized version of Username for case-insensitive searches
+    /// </summary>
+    public string NormalizedUsername { get; set; } = string.Empty;
+
     public Customer? Customer { get; set; }
     public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
     public ICollection<Token> Tokens { get; set; } = new List<Token>();

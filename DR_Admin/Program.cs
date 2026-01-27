@@ -110,6 +110,7 @@ builder.Services.AddTransient<IPaymentGatewayService, PaymentGatewayService>();
 builder.Services.AddTransient<IEmailQueueService, EmailQueueService>();
 builder.Services.AddTransient<IDocumentTemplateService, DocumentTemplateService>();
 builder.Services.AddTransient<ICurrencyService, CurrencyService>();
+builder.Services.AddTransient<ISystemService, SystemService>();
 
 // Sales and Payment Flow services
 builder.Services.AddTransient<ICouponService, CouponService>();

@@ -18,6 +18,11 @@ public class Coupon : EntityBase
     public string Name { get; set; } = string.Empty;
 
     /// <summary>
+    /// Normalized version of Name for case-insensitive searches
+    /// </summary>
+    public string NormalizedName { get; set; } = string.Empty;
+
+    /// <summary>
     /// Description of the coupon
     /// </summary>
     public string Description { get; set; } = string.Empty;

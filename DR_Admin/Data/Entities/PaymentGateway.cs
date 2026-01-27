@@ -11,6 +11,11 @@ public class PaymentGateway : EntityBase
     public string Name { get; set; } = string.Empty;
 
     /// <summary>
+    /// Normalized version of Name for case-insensitive searches
+    /// </summary>
+    public string NormalizedName { get; set; } = string.Empty;
+
+    /// <summary>
     /// Payment gateway provider code (stripe, paypal, square)
     /// </summary>
     public string ProviderCode { get; set; } = string.Empty;

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using ISPAdmin.Data.Entities;
+using ISPAdmin.Utilities;
 
 namespace ISPAdmin.Data;
 
@@ -32,11 +33,68 @@ public class ApplicationDbContext : DbContext
             {
                 entry.Entity.CreatedAt = now;
                 entry.Entity.UpdatedAt = now;
+                NormalizeEntity(entry.Entity);
             }
             else if (entry.State == EntityState.Modified)
             {
                 entry.Entity.UpdatedAt = now;
+                NormalizeEntity(entry.Entity);
             }
+        }
+    }
+
+    private void NormalizeEntity(object entity)
+    {
+        switch (entity)
+        {
+            case Country country:
+                country.NormalizedEnglishName = NormalizationHelper.Normalize(country.EnglishName) ?? string.Empty;
+                country.NormalizedLocalName = NormalizationHelper.Normalize(country.LocalName) ?? string.Empty;
+                break;
+
+            case Coupon coupon:
+                coupon.NormalizedName = NormalizationHelper.Normalize(coupon.Name) ?? string.Empty;
+                break;
+
+            case Customer customer:
+                customer.NormalizedName = NormalizationHelper.Normalize(customer.Name) ?? string.Empty;
+                customer.NormalizedCompanyName = NormalizationHelper.Normalize(customer.CompanyName);
+                customer.NormalizedContactPerson = NormalizationHelper.Normalize(customer.ContactPerson);
+                break;
+
+            case Entities.Domain domain:
+                domain.NormalizedName = NormalizationHelper.Normalize(domain.Name) ?? string.Empty;
+                break;
+
+            case HostingPackage hostingPackage:
+                hostingPackage.NormalizedName = NormalizationHelper.Normalize(hostingPackage.Name) ?? string.Empty;
+                break;
+
+            case PaymentGateway paymentGateway:
+                paymentGateway.NormalizedName = NormalizationHelper.Normalize(paymentGateway.Name) ?? string.Empty;
+                break;
+
+            case PostalCode postalCode:
+                postalCode.NormalizedCode = NormalizationHelper.Normalize(postalCode.Code) ?? string.Empty;
+                postalCode.NormalizedCountryCode = NormalizationHelper.Normalize(postalCode.CountryCode) ?? string.Empty;
+                postalCode.NormalizedCity = NormalizationHelper.Normalize(postalCode.City) ?? string.Empty;
+                postalCode.NormalizedState = NormalizationHelper.Normalize(postalCode.State);
+                postalCode.NormalizedRegion = NormalizationHelper.Normalize(postalCode.Region);
+                postalCode.NormalizedDistrict = NormalizationHelper.Normalize(postalCode.District);
+                break;
+
+            case Registrar registrar:
+                registrar.NormalizedName = NormalizationHelper.Normalize(registrar.Name) ?? string.Empty;
+                break;
+
+            case SalesAgent salesAgent:
+                salesAgent.NormalizedFirstName = NormalizationHelper.Normalize(salesAgent.FirstName) ?? string.Empty;
+                salesAgent.NormalizedLastName = NormalizationHelper.Normalize(salesAgent.LastName) ?? string.Empty;
+                break;
+
+            case User user:
+                user.NormalizedUsername = NormalizationHelper.Normalize(user.Username) ?? string.Empty;
+                break;
         }
     }
 
@@ -126,12 +184,17 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Notes).HasMaxLength(2000);
             entity.Property(e => e.BillingEmail).HasMaxLength(200);
             entity.Property(e => e.PreferredPaymentMethod).HasMaxLength(50);
+            entity.Property(e => e.NormalizedName).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.NormalizedCompanyName).HasMaxLength(200);
+            entity.Property(e => e.NormalizedContactPerson).HasMaxLength(200);
             
             entity.HasIndex(e => e.Email);
             entity.HasIndex(e => e.Status);
             entity.HasIndex(e => e.TaxId);
             entity.HasIndex(e => e.VatNumber);
             entity.HasIndex(e => e.IsActive);
+            entity.HasIndex(e => e.NormalizedName);
+            entity.HasIndex(e => e.NormalizedCompanyName);
             
             entity.HasOne(e => e.Country)
                 .WithMany(c => c.Customers)
@@ -147,9 +210,11 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Username).IsRequired().HasMaxLength(100);
             entity.Property(e => e.PasswordHash).IsRequired();
             entity.Property(e => e.Email).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.NormalizedUsername).IsRequired().HasMaxLength(100);
             
             entity.HasIndex(e => e.Username).IsUnique();
             entity.HasIndex(e => e.Email).IsUnique();
+            entity.HasIndex(e => e.NormalizedUsername).IsUnique();
             
             entity.HasOne(e => e.Customer)
                 .WithMany(c => c.Users)
@@ -329,10 +394,12 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.RegistrationPrice).HasPrecision(18, 2);
             entity.Property(e => e.RenewalPrice).HasPrecision(18, 2);
             entity.Property(e => e.Notes).HasMaxLength(1000);
+            entity.Property(e => e.NormalizedName).IsRequired().HasMaxLength(255);
             
             entity.HasIndex(e => e.Name);
             entity.HasIndex(e => e.Status);
             entity.HasIndex(e => e.ExpirationDate);
+            entity.HasIndex(e => e.NormalizedName);
             
             entity.HasOne(e => e.Customer)
                 .WithMany(c => c.Domains)
@@ -555,9 +622,11 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Description).HasMaxLength(1000);
             entity.Property(e => e.MonthlyPrice).HasPrecision(18, 2);
             entity.Property(e => e.YearlyPrice).HasPrecision(18, 2);
+            entity.Property(e => e.NormalizedName).IsRequired().HasMaxLength(200);
             
             entity.HasIndex(e => e.Name);
             entity.HasIndex(e => e.IsActive);
+            entity.HasIndex(e => e.NormalizedName);
         });
 
         // AuditLog configuration
@@ -603,10 +672,13 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Tld).IsRequired().HasMaxLength(10);
             entity.Property(e => e.EnglishName).IsRequired().HasMaxLength(100);
             entity.Property(e => e.LocalName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.NormalizedEnglishName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.NormalizedLocalName).IsRequired().HasMaxLength(100);
             
             entity.HasIndex(e => e.Code).IsUnique();
             entity.HasIndex(e => e.Tld);
             entity.HasIndex(e => e.EnglishName);
+            entity.HasIndex(e => e.NormalizedEnglishName);
         });
 
         // Tld configuration
@@ -631,10 +703,12 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.ContactPhone).HasMaxLength(50);
             entity.Property(e => e.Website).HasMaxLength(500);
             entity.Property(e => e.Notes).HasMaxLength(1000);
+            entity.Property(e => e.NormalizedName).IsRequired().HasMaxLength(100);
             
             entity.HasIndex(e => e.Code).IsUnique();
             entity.HasIndex(e => e.Name);
             entity.HasIndex(e => e.IsActive);
+            entity.HasIndex(e => e.NormalizedName);
         });
 
         // RegistrarTld configuration
@@ -678,9 +752,17 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.District).HasMaxLength(100);
             entity.Property(e => e.Latitude).HasPrecision(10, 7);
             entity.Property(e => e.Longitude).HasPrecision(10, 7);
+            entity.Property(e => e.NormalizedCode).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.NormalizedCountryCode).IsRequired().HasMaxLength(2);
+            entity.Property(e => e.NormalizedCity).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.NormalizedState).HasMaxLength(100);
+            entity.Property(e => e.NormalizedRegion).HasMaxLength(100);
+            entity.Property(e => e.NormalizedDistrict).HasMaxLength(100);
             
             entity.HasIndex(e => new { e.Code, e.CountryCode });
             entity.HasIndex(e => e.City);
+            entity.HasIndex(e => new { e.NormalizedCode, e.NormalizedCountryCode });
+            entity.HasIndex(e => e.NormalizedCity);
             
             entity.HasOne(e => e.Country)
                 .WithMany(c => c.PostalCodes)
@@ -734,10 +816,13 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Phone).HasMaxLength(50);
             entity.Property(e => e.MobilePhone).HasMaxLength(50);
             entity.Property(e => e.Notes).HasMaxLength(2000);
+            entity.Property(e => e.NormalizedFirstName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.NormalizedLastName).IsRequired().HasMaxLength(100);
             
             entity.HasIndex(e => e.ResellerCompanyId);
             entity.HasIndex(e => e.IsActive);
             entity.HasIndex(e => e.Email);
+            entity.HasIndex(e => new { e.NormalizedFirstName, e.NormalizedLastName });
             
             entity.HasOne(e => e.ResellerCompany)
                 .WithMany(r => r.SalesAgents)
@@ -801,6 +886,46 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => new { e.BaseCurrency, e.TargetCurrency, e.EffectiveDate })
                 .HasDatabaseName("IX_CurrencyExchangeRates_BaseCurrency_TargetCurrency_EffectiveDate");
             entity.HasIndex(e => e.IsActive);
+        });
+
+        // PaymentGateway configuration
+        modelBuilder.Entity<PaymentGateway>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.ProviderCode).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.ApiKey).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.ApiSecret).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.ConfigurationJson).HasMaxLength(4000);
+            entity.Property(e => e.WebhookUrl).HasMaxLength(500);
+            entity.Property(e => e.Notes).HasMaxLength(2000);
+            entity.Property(e => e.NormalizedName).IsRequired().HasMaxLength(200);
+            
+            entity.HasIndex(e => e.ProviderCode);
+            entity.HasIndex(e => e.IsActive);
+            entity.HasIndex(e => e.IsDefault);
+            entity.HasIndex(e => e.NormalizedName);
+        });
+
+        // Coupon configuration
+        modelBuilder.Entity<Coupon>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Code).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Description).HasMaxLength(1000);
+            entity.Property(e => e.Value).IsRequired().HasPrecision(18, 2);
+            entity.Property(e => e.MinimumAmount).HasPrecision(18, 2);
+            entity.Property(e => e.MaximumDiscount).HasPrecision(18, 2);
+            entity.Property(e => e.AllowedServiceTypeIdsJson).HasMaxLength(1000);
+            entity.Property(e => e.InternalNotes).HasMaxLength(2000);
+            entity.Property(e => e.NormalizedName).IsRequired().HasMaxLength(200);
+            
+            entity.HasIndex(e => e.Code).IsUnique();
+            entity.HasIndex(e => e.IsActive);
+            entity.HasIndex(e => e.ValidFrom);
+            entity.HasIndex(e => e.ValidUntil);
+            entity.HasIndex(e => e.NormalizedName);
         });
     }
 }
