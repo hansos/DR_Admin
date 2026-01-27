@@ -7,30 +7,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Models\" />
-    <Folder Include="Extensions\" />
+    <Compile Remove="Extensions\**" />
+    <Compile Remove="Models\**" />
+    <EmbeddedResource Remove="Extensions\**" />
+    <EmbeddedResource Remove="Models\**" />
+    <None Remove="Extensions\**" />
+    <None Remove="Models\**" />
   </ItemGroup>
 
-  <!--
-  Optional NuGet packages for provider implementations:
-  Uncomment the packages you need based on your chosen SMS provider(s)
-  
   <ItemGroup>
-    <!-- Global Providers -->
-    <!-- <PackageReference Include="Twilio" Version="7.5.0" /> -->
-    <!-- <PackageReference Include="Vonage" Version="7.0.0" /> -->
-    <!-- <PackageReference Include="MessageBird" Version="2.0.0" /> -->
-    <!-- Note: Sinch, Gatewayapi, IntaSend, and Safaricom use HTTP clients - no official SDKs -->
-    
-    <!-- Africa/Kenya Providers -->
-    <!-- <PackageReference Include="AfricasTalkingCS" Version="1.0.0" /> -->
-    
-    <!-- For HTTP-based providers (Sinch, Gatewayapi, IntaSend, Safaricom) -->
-    <!-- <PackageReference Include="System.Net.Http.Json" Version="10.0.0" /> -->
-    
-    <!-- For Local Modem (already included in .NET) -->
-    <!-- System.IO.Ports is built-in -->
+    <!-- Required for LocalModemSmsSender to access SerialPort, Parity, and StopBits -->
+    <PackageReference Include="System.IO.Ports" Version="9.0.0" />
   </ItemGroup>
-  -->
 
 </Project>

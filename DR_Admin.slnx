@@ -6,5 +6,5 @@
   <Project Path="EmailSenderLib/EmailSenderLib.csproj" Id="70cada2c-63e7-4433-b4d9-3003b17354f3" />
   <Project Path="HostingPanelLib/HostingPanelLib.csproj" Id="5062074a-d52e-48c5-9b37-ae0509b39aad" />
   <Project Path="PaymentGatewayLib/PaymentGatewayLib.csproj" Id="643cbbc6-669f-43e2-8679-1fa9bd020d40" />
-  <Project Path="SMSSenderLib/SMSSenderLib.csproj" Id="ec687d2f-53b8-4e07-98a5-5ab64bfbae30" />
+  <Project Path="SMSSenderLib/SMSSenderLib.csproj" />
 </Solution>
