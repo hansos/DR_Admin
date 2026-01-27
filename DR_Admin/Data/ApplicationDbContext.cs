@@ -54,7 +54,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<InvoiceLine> InvoiceLines { get; set; }
     public DbSet<PaymentTransaction> PaymentTransactions { get; set; }
     public DbSet<PaymentGateway> PaymentGateways { get; set; }
-    public DbSet<Domain> Domains { get; set; }
+    public DbSet<Entities.Domain> Domains { get; set; }
     public DbSet<Tld> Tlds { get; set; }
     public DbSet<Registrar> Registrars { get; set; }
     public DbSet<RegistrarTld> RegistrarTlds { get; set; }
@@ -96,6 +96,9 @@ public class ApplicationDbContext : DbContext
     
     // Currency entities
     public DbSet<CurrencyExchangeRate> CurrencyExchangeRates { get; set; }
+    
+    // Domain Lifecycle Workflow entities
+    public DbSet<OutboxEvent> OutboxEvents { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -318,7 +321,7 @@ public class ApplicationDbContext : DbContext
         });
 
         // Domain configuration
-        modelBuilder.Entity<Domain>(entity =>
+        modelBuilder.Entity<Entities.Domain>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Name).IsRequired().HasMaxLength(255);

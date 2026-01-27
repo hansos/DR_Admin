@@ -38,6 +38,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\EmailSenderLib\EmailSenderLib.csproj" />
+    <ProjectReference Include="..\DomainRegistrationLib\DomainRegistrationLib.csproj" />
   </ItemGroup>
 
 </Project>

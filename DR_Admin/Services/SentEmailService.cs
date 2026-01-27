@@ -299,7 +299,7 @@ public class SentEmailService : ISentEmailService
             }
 
             email.Status = dto.Status;
-            email.ErrorMessage = dto.ErrorMessage;
+            email.ErrorMessage = dto.ErrorMessage ?? email.ErrorMessage;
             email.RetryCount = dto.RetryCount;
 
             await _context.SaveChangesAsync();

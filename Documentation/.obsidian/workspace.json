@@ -183,8 +183,9 @@
       "bases:Create new base": false
     }
   },
-  "active": "a1e9204f0da1f4d9",
+  "active": "c5473fcba7c183fe",
   "lastOpenFiles": [
+    "Features/Workflows",
     "API/CustomerManagement/CustomersController.md",
     "API/Authentication/AuthController.md",
     "Features/CustomerManagement/Customers.md",
@@ -214,7 +215,6 @@
     "API/System/InitializationController.md",
     "API/Resellers/SalesAgentsController.md",
     "API/UserManagement/MyAccountController.md",
-    "API/Resellers/ResellerCompaniesController.md",
     "00d2xix1.msb~",
     "API/UserManagement",
     "API/System",

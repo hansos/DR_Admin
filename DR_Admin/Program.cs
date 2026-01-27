@@ -111,8 +111,44 @@ builder.Services.AddTransient<IEmailQueueService, EmailQueueService>();
 builder.Services.AddTransient<IDocumentTemplateService, DocumentTemplateService>();
 builder.Services.AddTransient<ICurrencyService, CurrencyService>();
 
+// Sales and Payment Flow services
+builder.Services.AddTransient<ICouponService, CouponService>();
+builder.Services.AddTransient<ITaxService, TaxService>();
+builder.Services.AddTransient<IQuoteService, QuoteService>();
+builder.Services.AddTransient<ICreditService, CreditService>();
+builder.Services.AddTransient<IPaymentIntentService, PaymentIntentService>();
+builder.Services.AddTransient<IRefundService, RefundService>();
+builder.Services.AddTransient<ICustomerPaymentMethodService, CustomerPaymentMethodService>();
+builder.Services.AddTransient<ISubscriptionService, SubscriptionService>();
+builder.Services.AddTransient<ISubscriptionBillingHistoryService, SubscriptionBillingHistoryService>();
+
+// Domain Registration Library - Registrar Settings
+var registrarSettings = builder.Configuration.GetSection("RegistrarSettings").Get<DomainRegistrationLib.Infrastructure.Settings.RegistrarSettings>()
+    ?? new DomainRegistrationLib.Infrastructure.Settings.RegistrarSettings();
+builder.Services.AddSingleton(registrarSettings);
+
+// Domain Registration Library - Registrar Factory
+builder.Services.AddSingleton<DomainRegistrationLib.Factories.DomainRegistrarFactory>();
+
+// Domain Lifecycle Workflows - Domain Services
+builder.Services.AddTransient<ISPAdmin.Domain.Services.IDomainEventPublisher, ISPAdmin.Domain.Services.DomainEventPublisher>();
+
+// Domain Lifecycle Workflows - Event Handlers
+builder.Services.AddTransient<ISPAdmin.Domain.Services.IDomainEventHandler<ISPAdmin.Domain.Events.DomainEvents.DomainRegisteredEvent>, ISPAdmin.Domain.EventHandlers.DomainRegisteredEventHandler>();
+builder.Services.AddTransient<ISPAdmin.Domain.Services.IDomainEventHandler<ISPAdmin.Domain.Events.DomainEvents.DomainExpiredEvent>, ISPAdmin.Domain.EventHandlers.DomainExpiredEventHandler>();
+builder.Services.AddTransient<ISPAdmin.Domain.Services.IDomainEventHandler<ISPAdmin.Domain.Events.OrderEvents.OrderActivatedEvent>, ISPAdmin.Domain.EventHandlers.OrderActivatedEventHandler>();
+builder.Services.AddTransient<ISPAdmin.Domain.Services.IDomainEventHandler<ISPAdmin.Domain.Events.InvoiceEvents.InvoicePaidEvent>, ISPAdmin.Domain.EventHandlers.InvoicePaidEventHandler>();
+
+
+// Domain Lifecycle Workflows - Workflow Orchestrators
+builder.Services.AddTransient<ISPAdmin.Domain.Workflows.IDomainRegistrationWorkflow, ISPAdmin.Domain.Workflows.DomainRegistrationWorkflow>();
+builder.Services.AddTransient<ISPAdmin.Domain.Workflows.IDomainRenewalWorkflow, ISPAdmin.Domain.Workflows.DomainRenewalWorkflow>();
+builder.Services.AddTransient<ISPAdmin.Domain.Workflows.IOrderProvisioningWorkflow, ISPAdmin.Domain.Workflows.OrderProvisioningWorkflow>();
+
 // Register Background Services
 builder.Services.AddHostedService<EmailQueueBackgroundService>();
+builder.Services.AddHostedService<ISPAdmin.BackgroundServices.DomainExpirationMonitorService>();
+builder.Services.AddHostedService<ISPAdmin.BackgroundServices.OutboxProcessorService>();
 
 // Configure CORS from appsettings
 var corsSettings = builder.Configuration.GetSection("CorsSettings");
