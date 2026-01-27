@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quotes API Test - DR Admin</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Test Page Styles -->
+    <link href="/assets/css/test-page.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/choose-test.html">DR Admin - Quotes API</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <span class="user-info" id="userInfo"></span>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/choose-test.html" class="btn btn-back">&#8592; Back to Tests</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-main">
+        <div class="header-card">
+            <h1>&#128221; Quotes API Test</h1>
+            <p>Test CRUD operations for Quotes API endpoint</p>
+        </div>
+
+        <!-- Alert Messages -->
+        <div id="alertContainer"></div>
+
+        <!-- Create Quote Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#10133; Create Quote</h2>
+            <form id="createForm">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="createCustomerId" class="form-label">Customer ID *</label>
+                        <input type="number" class="form-control" id="createCustomerId" placeholder="e.g., 1" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="createQuoteNumber" class="form-label">Quote Number</label>
+                        <input type="text" class="form-control" id="createQuoteNumber" placeholder="Auto-generated if empty">
+                        <small class="text-muted">Leave empty for auto-generation</small>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="createTotalAmount" class="form-label">Total Amount *</label>
+                        <input type="number" class="form-control" id="createTotalAmount" placeholder="e.g., 150.00" step="0.01" min="0" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="createCurrencyId" class="form-label">Currency ID</label>
+                        <input type="number" class="form-control" id="createCurrencyId" placeholder="e.g., 1">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="createStatus" class="form-label">Status</label>
+                        <select class="form-control" id="createStatus">
+                            <option value="Draft">Draft</option>
+                            <option value="Sent">Sent</option>
+                            <option value="Accepted">Accepted</option>
+                            <option value="Rejected">Rejected</option>
+                            <option value="Converted">Converted</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="createValidUntil" class="form-label">Valid Until</label>
+                    <input type="date" class="form-control" id="createValidUntil">
+                </div>
+                <div class="mb-3">
+                    <label for="createNotes" class="form-label">Notes</label>
+                    <textarea class="form-control" id="createNotes" rows="3" placeholder="Enter quote notes..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Create Quote</button>
+            </form>
+        </div>
+
+        <!-- Get All Quotes Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128203; Get All Quotes</h2>
+            <button class="btn btn-primary mb-3" onclick="getAllQuotes()">Load All Quotes</button>
+            <div class="loading" id="loadingAll">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="quotesTableContainer"></div>
+        </div>
+
+        <!-- Get Quote by ID Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128269; Get Quote by ID</h2>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="getQuoteId" class="form-label">Quote ID</label>
+                    <input type="number" class="form-control" id="getQuoteId" placeholder="Enter ID">
+                </div>
+                <div class="col-md-8 mb-3 d-flex align-items-end">
+                    <button class="btn btn-primary" onclick="getQuoteById()">Get Quote</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingById">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="quoteByIdResult"></div>
+        </div>
+
+        <!-- Get Quotes by Customer Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128100; Get Quotes by Customer</h2>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="getQuoteCustomerId" class="form-label">Customer ID</label>
+                    <input type="number" class="form-control" id="getQuoteCustomerId" placeholder="Enter Customer ID">
+                </div>
+                <div class="col-md-8 mb-3 d-flex align-items-end">
+                    <button class="btn btn-primary" onclick="getQuotesByCustomer()">Get Customer Quotes</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingByCustomer">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="customerQuotesContainer"></div>
+        </div>
+
+        <!-- Get Quotes by Status Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128198; Get Quotes by Status</h2>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="getQuoteStatus" class="form-label">Status</label>
+                    <select class="form-control" id="getQuoteStatus">
+                        <option value="Draft">Draft</option>
+                        <option value="Sent">Sent</option>
+                        <option value="Accepted">Accepted</option>
+                        <option value="Rejected">Rejected</option>
+                        <option value="Converted">Converted</option>
+                    </select>
+                </div>
+                <div class="col-md-8 mb-3 d-flex align-items-end">
+                    <button class="btn btn-primary" onclick="getQuotesByStatus()">Get Quotes</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingByStatus">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="quotesByStatusContainer"></div>
+        </div>
+
+        <!-- Send / Accept / Reject / Convert / PDF Sections -->
+        <div class="test-section">
+            <h2 class="section-title">&#128233; Send Quote</h2>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="sendQuoteId" class="form-label">Quote ID</label>
+                    <input type="number" class="form-control" id="sendQuoteId" placeholder="Enter ID">
+                </div>
+                <div class="col-md-8 mb-3 d-flex align-items-end">
+                    <button class="btn btn-primary" onclick="sendQuote()">Send Quote</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingSend">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="sendResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h2 class="section-title">&#9989; Accept Quote (by token)</h2>
+            <form id="acceptForm">
+                <div class="row">
+                    <div class="col-md-8 mb-3">
+                        <label for="acceptToken" class="form-label">Acceptance Token</label>
+                        <input type="text" class="form-control" id="acceptToken" placeholder="Enter acceptance token" required>
+                    </div>
+                    <div class="col-md-4 mb-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-success">Accept Quote</button>
+                    </div>
+                </div>
+            </form>
+            <div id="acceptResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h2 class="section-title">&#10060; Reject Quote</h2>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="rejectQuoteId" class="form-label">Quote ID</label>
+                    <input type="number" class="form-control" id="rejectQuoteId" placeholder="Enter ID">
+                </div>
+                <div class="col-md-8 mb-3 d-flex align-items-end">
+                    <button class="btn btn-danger" onclick="rejectQuote()">Reject Quote</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingReject">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="rejectResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h2 class="section-title">&#128160; Convert Quote</h2>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="convertQuoteId" class="form-label">Quote ID</label>
+                    <input type="number" class="form-control" id="convertQuoteId" placeholder="Enter ID">
+                </div>
+                <div class="col-md-8 mb-3 d-flex align-items-end">
+                    <button class="btn btn-warning" onclick="convertQuote()">Convert to Order/Invoice</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingConvert">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="convertResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h2 class="section-title">&#128196; Get Quote PDF</h2>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="pdfQuoteId" class="form-label">Quote ID</label>
+                    <input type="number" class="form-control" id="pdfQuoteId" placeholder="Enter ID">
+                </div>
+                <div class="col-md-8 mb-3 d-flex align-items-end">
+                    <button class="btn btn-info" onclick="getQuotePdf()">Get PDF</button>
+                </div>
+            </div>
+            <div id="pdfResult"></div>
+        </div>
+
+        <!-- API Response Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128225; Last API Response</h2>
+            <div class="response-box" id="responseBox">No API calls made yet...</div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">&#9998; Edit Quote</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editForm">
+                        <input type="hidden" id="editId">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editCustomerId" class="form-label">Customer ID *</label>
+                                <input type="number" class="form-control" id="editCustomerId" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editQuoteNumber" class="form-label">Quote Number</label>
+                                <input type="text" class="form-control" id="editQuoteNumber" readonly>
+                                <small class="text-muted">Quote number cannot be changed</small>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="editTotalAmount" class="form-label">Total Amount *</label>
+                                <input type="number" class="form-control" id="editTotalAmount" step="0.01" min="0" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="editCurrencyId" class="form-label">Currency ID</label>
+                                <input type="number" class="form-control" id="editCurrencyId">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="editStatus" class="form-label">Status</label>
+                                <select class="form-control" id="editStatus">
+                                    <option value="Draft">Draft</option>
+                                    <option value="Sent">Sent</option>
+                                    <option value="Accepted">Accepted</option>
+                                    <option value="Rejected">Rejected</option>
+                                    <option value="Converted">Converted</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editValidUntil" class="form-label">Valid Until</label>
+                            <input type="date" class="form-control" id="editValidUntil">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editNotes" class="form-label">Notes</label>
+                            <textarea class="form-control" id="editNotes" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="updateQuote()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Auth Client -->
+    <script src="/assets/js/authClient.js"></script>
+    
+    <script>
+        let currentQuotes = [];
+        let editModal;
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            const token = authClient.getToken();
+            if (!token) { window.location.href = '/login.html'; return; }
+
+            const result = await authClient.verifyToken();
+            if (result.authenticated && result.data?.username) {
+                document.getElementById('userInfo').textContent = `Hello, ${result.data.username}!`;
+            } else {
+                document.getElementById('userInfo').textContent = 'Hello, User!';
+            }
+
+            editModal = new bootstrap.Modal(document.getElementById('editModal'));
+            document.getElementById('createForm').addEventListener('submit', handleCreate);
+            document.getElementById('acceptForm').addEventListener('submit', handleAcceptToken);
+
+            getAllQuotes();
+        });
+
+        function showAlert(message, type = 'info') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertHtml = `\n                <div class="alert alert-${type} alert-dismissible fade show" role="alert">\n                    ${message}\n                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>\n                </div>\n            `;
+            alertContainer.innerHTML = alertHtml;
+            setTimeout(() => { const alert = alertContainer.querySelector('.alert'); if (alert) bootstrap.Alert.getOrCreateInstance(alert).close(); }, 5000);
+        }
+
+        function updateResponseBox(data) { document.getElementById('responseBox').textContent = JSON.stringify(data, null, 2); }
+        function getAuthHeaders() { const token = authClient.getToken(); return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }; }
+
+        async function handleCreate(e) {
+            e.preventDefault();
+            const data = {
+                customerId: parseInt(document.getElementById('createCustomerId').value),
+                quoteNumber: document.getElementById('createQuoteNumber').value.trim() || null,
+                totalAmount: parseFloat(document.getElementById('createTotalAmount').value),
+                currencyId: parseInt(document.getElementById('createCurrencyId').value) || null,
+                status: document.getElementById('createStatus').value,
+                validUntil: document.getElementById('createValidUntil').value || null,
+                notes: document.getElementById('createNotes').value.trim() || null
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Quotes`, { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify(data) });
+                let result;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) result = await response.json(); else { const text = await response.text(); result = { error: text, statusCode: response.status }; }
+                updateResponseBox(result);
+                if (response.ok) { showAlert('Quote created successfully!', 'success'); document.getElementById('createForm').reset(); getAllQuotes(); } else showAlert(`Error: ${result.message || result.error || 'Failed to create quote'}`, 'danger');
+            } catch (error) { showAlert(`Error: ${error.message}`, 'danger'); updateResponseBox({ error: error.message }); }
+        }
+
+        async function getAllQuotes() {
+            const loading = document.getElementById('loadingAll'); const container = document.getElementById('quotesTableContainer'); loading.style.display='block'; container.innerHTML='';
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Quotes`, { method: 'GET', headers: getAuthHeaders() });
+                let data; const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) data = await response.json(); else { const text = await response.text(); data = { error: text, statusCode: response.status }; }
+                updateResponseBox(data);
+                if (response.ok) { currentQuotes = data; renderQuotesTable(data); } else showAlert(`Error: ${data.message || data.error || 'Failed to fetch quotes'}`, 'danger');
+            } catch (error) { showAlert(`Error: ${error.message}`, 'danger'); updateResponseBox({ error: error.message }); } finally { loading.style.display='none'; }
+        }
+
+        function renderQuotesTable(quotes) {
+            const container = document.getElementById('quotesTableContainer'); if (!quotes || quotes.length===0) { container.innerHTML = '<div class="empty-state">No quotes found</div>'; return; }
+            const tableHtml = `
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Quote Number</th>
+                                <th>Customer ID</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                                <th>Valid Until</th>
+                                <th>Created At</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${quotes.map(q => `
+                                <tr>
+                                    <td>${q.id}</td>
+                                    <td><code>${q.quoteNumber || '-'}</code></td>
+                                    <td>${q.customerId || '-'}</td>
+                                    <td>${q.totalAmount !== undefined ? q.totalAmount.toFixed(2) : '-'}</td>
+                                    <td><span class="badge ${q.status==='Accepted'?'badge-success': q.status==='Rejected'?'badge-danger': q.status==='Sent'?'badge-info':'badge-secondary'}">${q.status || 'Unknown'}</span></td>
+                                    <td>${q.validUntil ? new Date(q.validUntil).toLocaleDateString() : '-'}</td>
+                                    <td>${q.createdAt ? new Date(q.createdAt).toLocaleString() : '-'}</td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="btn btn-sm btn-primary" onclick="sendQuoteQuick(${q.id})">Send</button>
+                                            <button class="btn btn-sm btn-warning" onclick="convertQuoteQuick(${q.id})">Convert</button>
+                                            <button class="btn btn-sm btn-info" onclick="getQuotePdf(${q.id})">PDF</button>
+                                            <button class="btn btn-sm btn-warning" onclick="openEditModal(${q.id})">Edit</button>
+                                            <button class="btn btn-sm btn-danger" onclick="deleteQuote(${q.id}, '${(q.quoteNumber||('Quote#'+q.id)).replace(/'/g, "\\'" )}')">Delete</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            container.innerHTML = tableHtml;
+        }
+
+        async function getQuoteById() {
+            const id = document.getElementById('getQuoteId').value; if (!id) { showAlert('Please enter a quote ID','warning'); return; }
+            const loading = document.getElementById('loadingById'); const result = document.getElementById('quoteByIdResult'); loading.style.display='block'; result.innerHTML='';
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Quotes/${id}`, { method:'GET', headers: getAuthHeaders() });
+                let data; const contentType = response.headers.get('content-type'); if (contentType && contentType.includes('application/json')) data = await response.json(); else { const text = await response.text(); data = { error: text, statusCode: response.status }; }
+                updateResponseBox(data);
+                if (response.ok) {
+                    result.innerHTML = `\n                        <div class="alert alert-success">\n                            <h5>Quote Found:</h5>\n                            <p><strong>ID:</strong> ${data.id}</p>\n                            <p><strong>Quote Number:</strong> ${data.quoteNumber || 'N/A'}</p>\n                            <p><strong>Customer ID:</strong> ${data.customerId || 'N/A'}</p>\n                            <p><strong>Total Amount:</strong> ${data.totalAmount !== undefined ? data.totalAmount.toFixed(2) : 'N/A'}</p>\n                            <p><strong>Status:</strong> ${data.status || 'N/A'}</p>\n                            <p><strong>Valid Until:</strong> ${data.validUntil ? new Date(data.validUntil).toLocaleDateString() : 'N/A'}</p>\n                            <p><strong>Notes:</strong> ${data.notes || 'N/A'}</p>\n                            <p><strong>Created:</strong> ${data.createdAt ? new Date(data.createdAt).toLocaleString() : 'N/A'}</p>\n                            <p><strong>Updated:</strong> ${data.updatedAt ? new Date(data.updatedAt).toLocaleString() : 'N/A'}</p>\n                        </div>\n                    `;
+                } else showAlert(`Error: ${data.message || data.error || 'Quote not found'}`,'danger');
+            } catch (error) { showAlert(`Error: ${error.message}`,'danger'); updateResponseBox({ error: error.message }); } finally { loading.style.display='none'; }
+        }
+
+        async function getQuotesByCustomer() {
+            const customerId = document.getElementById('getQuoteCustomerId').value; if (!customerId) { showAlert('Please enter a customer ID','warning'); return; }
+            const loading = document.getElementById('loadingByCustomer'); const container = document.getElementById('customerQuotesContainer'); loading.style.display='block'; container.innerHTML='';
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Quotes/customer/${customerId}`, { method:'GET', headers: getAuthHeaders() });
+                let data; const contentType = response.headers.get('content-type'); if (contentType && contentType.includes('application/json')) data = await response.json(); else { const text = await response.text(); data = { error: text, statusCode: response.status }; }
+                updateResponseBox(data);
+                if (response.ok) {
+                    if (!data || data.length===0) container.innerHTML = '<div class="empty-state">No quotes found for this customer</div>';
+                    else {
+                        const listHtml = `\n                            <div class="alert alert-success">\n                                <h5>Customer Quotes (${data.length}):</h5>\n                                <ul>\n                                    ${data.map(q=> `<li><strong>${q.quoteNumber||q.id}</strong> - ${q.totalAmount? q.totalAmount.toFixed(2): '0.00'} - Status: ${q.status} - ${q.createdAt? new Date(q.createdAt).toLocaleString():''}</li>`).join('')}\n                                </ul>\n                            </div>\n                        `;
+                        container.innerHTML = listHtml;
+                    }
+                } else showAlert(`Error: ${data.message || data.error || 'Failed to fetch customer quotes'}`,'danger');
+            } catch (error) { showAlert(`Error: ${error.message}`,'danger'); updateResponseBox({ error: error.message }); } finally { loading.style.display='none'; }
+        }
+
+        async function getQuotesByStatus() {
+            const status = document.getElementById('getQuoteStatus').value; const loading = document.getElementById('loadingByStatus'); const container = document.getElementById('quotesByStatusContainer'); loading.style.display='block'; container.innerHTML='';
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Quotes/status/${encodeURIComponent(status)}`, { method:'GET', headers: getAuthHeaders() });
+                let data; const contentType = response.headers.get('content-type'); if (contentType && contentType.includes('application/json')) data = await response.json(); else { const text = await response.text(); data = { error: text, statusCode: response.status }; }
+                updateResponseBox(data);
+                if (response.ok) {
+                    if (!data || data.length===0) container.innerHTML = '<div class="empty-state">No quotes found for this status</div>';
+                    else {
+                        const tableHtml = `\n                            <div class="table-responsive">\n                                <table class="table table-sm">\n                                    <thead><tr><th>ID</th><th>Quote</th><th>Customer</th><th>Total</th><th>Status</th></tr></thead>\n                                    <tbody>${data.map(q=> `<tr><td>${q.id}</td><td><code>${q.quoteNumber||'-'}</code></td><td>${q.customerId||'-'}</td><td>${q.totalAmount? q.totalAmount.toFixed(2): '-'}</td><td>${q.status||'-'}</td></tr>`).join('')}</tbody>\n                                </table>\n                            </div>\n                        `;
+                        container.innerHTML = tableHtml;
+                    }
+                } else showAlert(`Error: ${data.message || data.error || 'Failed to fetch quotes'}`,'danger');
+            } catch (error) { showAlert(`Error: ${error.message}`,'danger'); updateResponseBox({ error: error.message }); } finally { loading.style.display='none'; }
+        }
+
+        async function sendQuote() {
+            const id = document.getElementById('sendQuoteId').value; if (!id) { showAlert('Please enter a quote ID','warning'); return; }
+            const loading = document.getElementById('loadingSend'); const result = document.getElementById('sendResult'); loading.style.display='block'; result.innerHTML='';
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Quotes/${id}/send`, { method:'POST', headers: getAuthHeaders() });
+                let data; const contentType = response.headers.get('content-type'); if (contentType && contentType.includes('application/json')) data = await response.json(); else if (response.ok) data = { message: 'Quote sent' }; else { const text = await response.text(); data = { error: text, statusCode: response.status }; }
+                updateResponseBox(data);
+                if (response.ok) { result.innerHTML = '<div class="alert alert-success">Quote sent successfully!</div>'; showAlert('Quote sent successfully!','success'); getAllQuotes(); } else showAlert(`Error: ${data.message || data.error || 'Failed to send quote'}`,'danger');
+            } catch (error) { showAlert(`Error: ${error.message}`,'danger'); updateResponseBox({ error: error.message }); } finally { loading.style.display='none'; }
+        }
+
+        async function sendQuoteQuick(id) { if (!confirm('Send this quote?')) return; try { const response = await fetch(`${API_BASE_URL}/api/v1/Quotes/${id}/send`, { method:'POST', headers: getAuthHeaders() }); let data; const contentType = response.headers.get('content-type'); if (contentType && contentType.includes('application/json')) data = await response.json(); else if (response.ok) data = { message: 'Quote sent' }; else { const text = await response.text(); data = { error: text, statusCode: response.status }; } updateResponseBox(data); if (response.ok) { showAlert('Quote sent successfully!','success'); getAllQuotes(); } else showAlert(`Error: ${data.message || data.error || 'Failed to send quote'}`,'danger'); } catch (error) { showAlert(`Error: ${error.message}`,'danger'); updateResponseBox({ error: error.message }); } }
+
+        async function handleAcceptToken(e) { e.preventDefault(); const token = document.getElementById('acceptToken').value.trim(); if (!token) { showAlert('Please provide a token','warning'); return; } try { const response = await fetch(`${API_BASE_URL}/api/v1/Quotes/accept/${encodeURIComponent(token)}`, { method:'POST', headers: getAuthHeaders() }); let data; const contentType = response.headers.get('content-type'); if (contentType && contentType.includes('application/json')) data = await response.json(); else if (response.ok) data = { message: 'Quote accepted' }; else { const text = await response.text(); data = { error: text, statusCode: response.status }; } updateResponseBox(data); if (response.ok) { document.getElementById('acceptForm').reset(); document.getElementById('acceptResult').innerHTML = '<div class="alert alert-success">Quote accepted successfully</div>'; showAlert('Quote accepted successfully!','success'); getAllQuotes(); } else showAlert(`Error: ${data.message || data.error || 'Failed to accept quote'}`,'danger'); } catch (error) { showAlert(`Error: ${error.message}`,'danger'); updateResponseBox({ error: error.message }); } }
+
+        async function rejectQuote() { const id = document.getElementById('rejectQuoteId').value; if (!id) { showAlert('Please enter a quote ID','warning'); return; } if (!confirm('Reject this quote?')) return; const loading = document.getElementById('loadingReject'); loading.style.display='block'; try { const response = await fetch(`${API_BASE_URL}/api/v1/Quotes/${id}/reject`, { method:'POST', headers: getAuthHeaders() }); let data; const contentType = response.headers.get('content-type'); if (contentType && contentType.includes('application/json')) data = await response.json(); else if (response.ok) data = { message: 'Quote rejected' }; else { const text = await response.text(); data = { error: text, statusCode: response.status }; } updateResponseBox(data); if (response.ok) { document.getElementById('rejectResult').innerHTML = '<div class="alert alert-success">Quote rejected successfully</div>'; showAlert('Quote rejected successfully!','success'); getAllQuotes(); } else showAlert(`Error: ${data.message || data.error || 'Failed to reject quote'}`,'danger'); } catch (error) { showAlert(`Error: ${error.message}`,'danger'); updateResponseBox({ error: error.message }); } finally { loading.style.display='none'; } }
+
+        async function convertQuote() { const id = document.getElementById('convertQuoteId').value; if (!id) { showAlert('Please enter a quote ID','warning'); return; } if (!confirm('Convert this quote to an order/invoice?')) return; const loading = document.getElementById('loadingConvert'); loading.style.display='block'; try { const response = await fetch(`${API_BASE_URL}/api/v1/Quotes/${id}/convert`, { method:'POST', headers: getAuthHeaders() }); let data; const contentType = response.headers.get('content-type'); if (contentType && contentType.includes('application/json')) data = await response.json(); else if (response.ok) data = { message: 'Quote converted' }; else { const text = await response.text(); data = { error: text, statusCode: response.status }; } updateResponseBox(data); if (response.ok) { document.getElementById('convertResult').innerHTML = '<div class="alert alert-success">Quote converted successfully</div>'; showAlert('Quote converted successfully!','success'); getAllQuotes(); } else showAlert(`Error: ${data.message || data.error || 'Failed to convert quote'}`,'danger'); } catch (error) { showAlert(`Error: ${error.message}`,'danger'); updateResponseBox({ error: error.message }); } finally { loading.style.display='none'; } }
+
+        async function convertQuoteQuick(id) { if (!confirm('Convert this quote?')) return; try { const response = await fetch(`${API_BASE_URL}/api/v1/Quotes/${id}/convert`, { method:'POST', headers: getAuthHeaders() }); let data; const contentType = response.headers.get('content-type'); if (contentType && contentType.includes('application/json')) data = await response.json(); else if (response.ok) data = { message: 'Quote converted' }; else { const text = await response.text(); data = { error: text, statusCode: response.status }; } updateResponseBox(data); if (response.ok) { showAlert('Quote converted successfully!','success'); getAllQuotes(); } else showAlert(`Error: ${data.message || data.error || 'Failed to convert quote'}`,'danger'); } catch (error) { showAlert(`Error: ${error.message}`,'danger'); updateResponseBox({ error: error.message }); } }
+
+        async function getQuotePdf(idOverride) { const id = idOverride || document.getElementById('pdfQuoteId').value; if (!id) { showAlert('Please enter a quote ID','warning'); return; } try { const response = await fetch(`${API_BASE_URL}/api/v1/Quotes/${id}/pdf`, { method:'GET', headers: getAuthHeaders() }); if (!response.ok) { const text = await response.text(); updateResponseBox({ error: text, statusCode: response.status }); showAlert('Failed to get PDF','danger'); return; } const blob = await response.blob(); const url = URL.createObjectURL(blob); window.open(url, '_blank'); updateResponseBox({ message: 'PDF downloaded' }); } catch (error) { showAlert(`Error: ${error.message}`,'danger'); updateResponseBox({ error: error.message }); } }
+
+        function openEditModal(id) { const q = currentQuotes.find(x=>x.id===id); if (!q) { showAlert('Quote not found','danger'); return; } document.getElementById('editId').value=q.id; document.getElementById('editCustomerId').value=q.customerId||''; document.getElementById('editQuoteNumber').value=q.quoteNumber||''; document.getElementById('editTotalAmount').value=q.totalAmount||''; document.getElementById('editCurrencyId').value=q.currencyId||''; document.getElementById('editStatus').value=q.status||'Draft'; document.getElementById('editValidUntil').value=q.validUntil? new Date(q.validUntil).toISOString().slice(0,10):''; document.getElementById('editNotes').value=q.notes||''; editModal.show(); }
+
+        async function updateQuote() { const id = document.getElementById('editId').value; const data = { customerId: parseInt(document.getElementById('editCustomerId').value), totalAmount: parseFloat(document.getElementById('editTotalAmount').value), currencyId: parseInt(document.getElementById('editCurrencyId').value) || null, status: document.getElementById('editStatus').value, validUntil: document.getElementById('editValidUntil').value || null, notes: document.getElementById('editNotes').value.trim() || null }; try { const response = await fetch(`${API_BASE_URL}/api/v1/Quotes/${id}`, { method:'PUT', headers: getAuthHeaders(), body: JSON.stringify(data) }); let result; const contentType = response.headers.get('content-type'); if (contentType && contentType.includes('application/json')) result = await response.json(); else { const text = await response.text(); result = { error: text, statusCode: response.status }; } updateResponseBox(result); if (response.ok) { showAlert('Quote updated successfully!','success'); editModal.hide(); getAllQuotes(); } else showAlert(`Error: ${result.message || result.error || 'Failed to update quote'}`,'danger'); } catch (error) { showAlert(`Error: ${error.message}`,'danger'); updateResponseBox({ error: error.message }); } }
+
+        async function deleteQuote(id, name) { if (!confirm(`Are you sure you want to delete "${name}"?`)) return; try { const response = await fetch(`${API_BASE_URL}/api/v1/Quotes/${id}`, { method:'DELETE', headers: getAuthHeaders() }); if (response.ok) { if (response.status===204) updateResponseBox({ message: 'Quote deleted successfully' }); else { const contentType = response.headers.get('content-type'); if (contentType && contentType.includes('application/json')) { const result = await response.json(); updateResponseBox(result); } else updateResponseBox({ message: 'Quote deleted successfully' }); } showAlert('Quote deleted successfully!','success'); getAllQuotes(); } else { let result; const contentType = response.headers.get('content-type'); if (contentType && contentType.includes('application/json')) result = await response.json(); else { const text = await response.text(); result = { error: text, statusCode: response.status }; } updateResponseBox(result); showAlert(`Error: ${result.message || result.error || 'Failed to delete quote'}`,'danger'); } } catch (error) { showAlert(`Error: ${error.message}`,'danger'); updateResponseBox({ error: error.message }); } }
+    </script>
+</body>
+</html>

@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Billing Cycles API Test - DR Admin</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Test Page Styles -->
+    <link href="/assets/css/test-page.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/choose-test.html">DR Admin - Billing Cycles API</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <span class="user-info" id="userInfo"></span>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/choose-test.html" class="btn btn-back">&#8592; Back to Tests</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-main">
+        <div class="header-card">
+            <h1>&#128176; Billing Cycles API Test</h1>
+            <p>Test CRUD operations for Billing Cycles API endpoint</p>
+        </div>
+
+        <!-- Alert Messages -->
+        <div id="alertContainer"></div>
+
+        <!-- Create Billing Cycle Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#10133; Create Billing Cycle</h2>
+            <form id="createForm">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="createName" class="form-label">Name *</label>
+                        <input type="text" class="form-control" id="createName" placeholder="e.g., Monthly" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="createCode" class="form-label">Code</label>
+                        <input type="text" class="form-control" id="createCode" placeholder="e.g., MONTHLY">
+                        <small class="text-muted">Unique identifier code</small>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label for="createDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="createDescription" rows="3" placeholder="Enter description..."></textarea>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="createDurationDays" class="form-label">Duration (Days)</label>
+                        <input type="number" class="form-control" id="createDurationDays" placeholder="e.g., 30" min="1">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="createDurationMonths" class="form-label">Duration (Months)</label>
+                        <input type="number" class="form-control" id="createDurationMonths" placeholder="e.g., 1" min="0">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="createSortOrder" class="form-label">Sort Order</label>
+                        <input type="number" class="form-control" id="createSortOrder" placeholder="e.g., 1" value="0">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="createIsActive" checked>
+                        <label class="form-check-label" for="createIsActive">
+                            Is Active
+                        </label>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Create Billing Cycle</button>
+            </form>
+        </div>
+
+        <!-- Get All Billing Cycles Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128203; Get All Billing Cycles</h2>
+            <button class="btn btn-primary mb-3" onclick="getAllBillingCycles()">Load All Billing Cycles</button>
+            <div class="loading" id="loadingAll">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="billingCyclesTableContainer"></div>
+        </div>
+
+        <!-- Get Billing Cycle by ID Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128269; Get Billing Cycle by ID</h2>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="getBillingCycleId" class="form-label">Billing Cycle ID</label>
+                    <input type="number" class="form-control" id="getBillingCycleId" placeholder="Enter ID">
+                </div>
+                <div class="col-md-8 mb-3 d-flex align-items-end">
+                    <button class="btn btn-primary" onclick="getBillingCycleById()">Get Billing Cycle</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingById">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="billingCycleByIdResult"></div>
+        </div>
+
+        <!-- API Response Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128225; Last API Response</h2>
+            <div class="response-box" id="responseBox">No API calls made yet...</div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">&#9998; Edit Billing Cycle</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editForm">
+                        <input type="hidden" id="editId">
+                        <div class="mb-3">
+                            <label for="editName" class="form-label">Name *</label>
+                            <input type="text" class="form-control" id="editName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editCode" class="form-label">Code</label>
+                            <input type="text" class="form-control" id="editCode">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="editDescription" rows="3"></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editDurationDays" class="form-label">Duration (Days)</label>
+                                <input type="number" class="form-control" id="editDurationDays" min="1">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editDurationMonths" class="form-label">Duration (Months)</label>
+                                <input type="number" class="form-control" id="editDurationMonths" min="0">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editSortOrder" class="form-label">Sort Order</label>
+                            <input type="number" class="form-control" id="editSortOrder">
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="editIsActive">
+                                <label class="form-check-label" for="editIsActive">
+                                    Is Active
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="updateBillingCycle()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Auth Client -->
+    <script src="/assets/js/authClient.js"></script>
+    
+    <script>
+        // API_BASE_URL is already defined in authClient.js
+        let currentBillingCycles = [];
+        let editModal;
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            // Check authentication
+            const token = authClient.getToken();
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            // Verify token
+            const result = await authClient.verifyToken();
+            if (result.authenticated && result.data?.username) {
+                document.getElementById('userInfo').textContent = `Hello, ${result.data.username}!`;
+            } else {
+                document.getElementById('userInfo').textContent = 'Hello, User!';
+            }
+
+            // Initialize edit modal
+            editModal = new bootstrap.Modal(document.getElementById('editModal'));
+
+            // Setup create form
+            document.getElementById('createForm').addEventListener('submit', handleCreate);
+
+            // Load all billing cycles on init
+            getAllBillingCycles();
+        });
+
+        // Show alert message
+        function showAlert(message, type = 'info') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertHtml = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            alertContainer.innerHTML = alertHtml;
+            
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                const alert = alertContainer.querySelector('.alert');
+                if (alert) {
+                    bootstrap.Alert.getOrCreateInstance(alert).close();
+                }
+            }, 5000);
+        }
+
+        // Update response box
+        function updateResponseBox(data) {
+            const responseBox = document.getElementById('responseBox');
+            responseBox.textContent = JSON.stringify(data, null, 2);
+        }
+
+        // Get authorization headers
+        function getAuthHeaders() {
+            const token = authClient.getToken();
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            };
+        }
+
+        // Handle Create Billing Cycle
+        async function handleCreate(e) {
+            e.preventDefault();
+            
+            const data = {
+                name: document.getElementById('createName').value.trim(),
+                code: document.getElementById('createCode').value.trim() || null,
+                description: document.getElementById('createDescription').value.trim() || null,
+                durationDays: parseInt(document.getElementById('createDurationDays').value) || null,
+                durationMonths: parseInt(document.getElementById('createDurationMonths').value) || null,
+                sortOrder: parseInt(document.getElementById('createSortOrder').value) || 0,
+                isActive: document.getElementById('createIsActive').checked
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/BillingCycles`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(data)
+                });
+
+                let result;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    result = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(result);
+
+                if (response.ok) {
+                    showAlert('Billing Cycle created successfully!', 'success');
+                    document.getElementById('createForm').reset();
+                    document.getElementById('createIsActive').checked = true;
+                    document.getElementById('createSortOrder').value = 0;
+                    getAllBillingCycles(); // Refresh list
+                } else {
+                    showAlert(`Error: ${result.message || result.error || 'Failed to create billing cycle'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+
+        // Get All Billing Cycles
+        async function getAllBillingCycles() {
+            const loading = document.getElementById('loadingAll');
+            const container = document.getElementById('billingCyclesTableContainer');
+            
+            loading.style.display = 'block';
+            container.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/BillingCycles`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    currentBillingCycles = data;
+                    renderBillingCyclesTable(data);
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Failed to fetch billing cycles'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Render Billing Cycles Table
+        function renderBillingCyclesTable(billingCycles) {
+            const container = document.getElementById('billingCyclesTableContainer');
+            
+            if (!billingCycles || billingCycles.length === 0) {
+                container.innerHTML = '<div class="empty-state">No billing cycles found</div>';
+                return;
+            }
+
+            const tableHtml = `
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Code</th>
+                                <th>Description</th>
+                                <th>Duration</th>
+                                <th>Sort Order</th>
+                                <th>Status</th>
+                                <th>Created At</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${billingCycles.map(cycle => {
+                                let duration = '';
+                                if (cycle.durationMonths) {
+                                    duration = `${cycle.durationMonths} month${cycle.durationMonths > 1 ? 's' : ''}`;
+                                } else if (cycle.durationDays) {
+                                    duration = `${cycle.durationDays} day${cycle.durationDays > 1 ? 's' : ''}`;
+                                } else {
+                                    duration = '-';
+                                }
+                                
+                                return `
+                                    <tr>
+                                        <td>${cycle.id}</td>
+                                        <td><strong>${cycle.name}</strong></td>
+                                        <td>${cycle.code || '-'}</td>
+                                        <td>${cycle.description || '-'}</td>
+                                        <td>${duration}</td>
+                                        <td>${cycle.sortOrder !== undefined ? cycle.sortOrder : '-'}</td>
+                                        <td>
+                                            <span class="badge ${cycle.isActive ? 'badge-success' : 'badge-secondary'}">
+                                                ${cycle.isActive ? 'Active' : 'Inactive'}
+                                            </span>
+                                        </td>
+                                        <td>${cycle.createdAt ? new Date(cycle.createdAt).toLocaleString() : '-'}</td>
+                                        <td>
+                                            <div class="action-buttons">
+                                                <button class="btn btn-sm btn-warning" onclick="openEditModal(${cycle.id})">
+                                                    Edit
+                                                </button>
+                                                <button class="btn btn-sm btn-danger" onclick="deleteBillingCycle(${cycle.id}, '${cycle.name.replace(/'/g, "\\'")}')">
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            container.innerHTML = tableHtml;
+        }
+
+        // Get Billing Cycle by ID
+        async function getBillingCycleById() {
+            const id = document.getElementById('getBillingCycleId').value;
+            
+            if (!id) {
+                showAlert('Please enter a billing cycle ID', 'warning');
+                return;
+            }
+
+            const loading = document.getElementById('loadingById');
+            const result = document.getElementById('billingCycleByIdResult');
+            
+            loading.style.display = 'block';
+            result.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/BillingCycles/${id}`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    let duration = '';
+                    if (data.durationMonths) {
+                        duration = `${data.durationMonths} month${data.durationMonths > 1 ? 's' : ''}`;
+                    } else if (data.durationDays) {
+                        duration = `${data.durationDays} day${data.durationDays > 1 ? 's' : ''}`;
+                    } else {
+                        duration = 'N/A';
+                    }
+                    
+                    result.innerHTML = `
+                        <div class="alert alert-success">
+                            <h5>Billing Cycle Found:</h5>
+                            <p><strong>ID:</strong> ${data.id}</p>
+                            <p><strong>Name:</strong> ${data.name}</p>
+                            <p><strong>Code:</strong> ${data.code || 'N/A'}</p>
+                            <p><strong>Description:</strong> ${data.description || 'N/A'}</p>
+                            <p><strong>Duration:</strong> ${duration}</p>
+                            <p><strong>Sort Order:</strong> ${data.sortOrder !== undefined ? data.sortOrder : 'N/A'}</p>
+                            <p><strong>Status:</strong> ${data.isActive ? 'Active' : 'Inactive'}</p>
+                            <p><strong>Created:</strong> ${data.createdAt ? new Date(data.createdAt).toLocaleString() : 'N/A'}</p>
+                            <p><strong>Updated:</strong> ${data.updatedAt ? new Date(data.updatedAt).toLocaleString() : 'N/A'}</p>
+                        </div>
+                    `;
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Billing cycle not found'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Open Edit Modal
+        function openEditModal(id) {
+            const cycle = currentBillingCycles.find(c => c.id === id);
+            
+            if (!cycle) {
+                showAlert('Billing cycle not found', 'danger');
+                return;
+            }
+
+            document.getElementById('editId').value = cycle.id;
+            document.getElementById('editName').value = cycle.name;
+            document.getElementById('editCode').value = cycle.code || '';
+            document.getElementById('editDescription').value = cycle.description || '';
+            document.getElementById('editDurationDays').value = cycle.durationDays || '';
+            document.getElementById('editDurationMonths').value = cycle.durationMonths || '';
+            document.getElementById('editSortOrder').value = cycle.sortOrder !== undefined ? cycle.sortOrder : 0;
+            document.getElementById('editIsActive').checked = cycle.isActive;
+
+            editModal.show();
+        }
+
+        // Update Billing Cycle
+        async function updateBillingCycle() {
+            const id = document.getElementById('editId').value;
+            const data = {
+                name: document.getElementById('editName').value.trim(),
+                code: document.getElementById('editCode').value.trim() || null,
+                description: document.getElementById('editDescription').value.trim() || null,
+                durationDays: parseInt(document.getElementById('editDurationDays').value) || null,
+                durationMonths: parseInt(document.getElementById('editDurationMonths').value) || null,
+                sortOrder: parseInt(document.getElementById('editSortOrder').value) || 0,
+                isActive: document.getElementById('editIsActive').checked
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/BillingCycles/${id}`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(data)
+                });
+
+                let result;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    result = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(result);
+
+                if (response.ok) {
+                    showAlert('Billing Cycle updated successfully!', 'success');
+                    editModal.hide();
+                    getAllBillingCycles(); // Refresh list
+                } else {
+                    showAlert(`Error: ${result.message || result.error || 'Failed to update billing cycle'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+
+        // Delete Billing Cycle
+        async function deleteBillingCycle(id, name) {
+            if (!confirm(`Are you sure you want to delete "${name}"?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/BillingCycles/${id}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+
+                if (response.ok) {
+                    // Some APIs return 204 No Content on successful delete
+                    if (response.status === 204) {
+                        updateResponseBox({ message: 'Billing Cycle deleted successfully' });
+                    } else {
+                        const contentType = response.headers.get('content-type');
+                        if (contentType && contentType.includes('application/json')) {
+                            const result = await response.json();
+                            updateResponseBox(result);
+                        } else {
+                            updateResponseBox({ message: 'Billing Cycle deleted successfully' });
+                        }
+                    }
+                    showAlert('Billing Cycle deleted successfully!', 'success');
+                    getAllBillingCycles(); // Refresh list
+                } else {
+                    let result;
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        result = await response.json();
+                    } else {
+                        const text = await response.text();
+                        result = { error: text, statusCode: response.status };
+                    }
+                    updateResponseBox(result);
+                    showAlert(`Error: ${result.message || result.error || 'Failed to delete billing cycle'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+    </script>
+</body>
+</html>

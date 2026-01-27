@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Credits API Test - DR Admin</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Test Page Styles -->
+    <link href="/assets/css/test-page.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/choose-test.html">DR Admin - Customer Credits API</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <span class="user-info" id="userInfo"></span>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/choose-test.html" class="btn btn-back">&#8592; Back to Tests</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-main">
+        <div class="header-card">
+            <h1>&#128179; Customer Credits API Test</h1>
+            <p>Test credit management operations and transaction viewing</p>
+        </div>
+
+        <!-- Alert Messages -->
+        <div id="alertContainer"></div>
+
+        <!-- Add Credits Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#10133; Add Credits to Customer</h2>
+            <form id="addCreditsForm">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="addCustomerId" class="form-label">Customer ID *</label>
+                        <input type="number" class="form-control" id="addCustomerId" placeholder="e.g., 1" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="addAmount" class="form-label">Amount *</label>
+                        <input type="number" step="0.01" class="form-control" id="addAmount" placeholder="e.g., 100.00" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="addReason" class="form-label">Reason</label>
+                        <input type="text" class="form-control" id="addReason" placeholder="e.g., Refund">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-success">Add Credits</button>
+            </form>
+        </div>
+
+        <!-- Deduct Credits Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#10134; Deduct Credits from Customer</h2>
+            <form id="deductCreditsForm">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="deductCustomerId" class="form-label">Customer ID *</label>
+                        <input type="number" class="form-control" id="deductCustomerId" placeholder="e.g., 1" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="deductAmount" class="form-label">Amount *</label>
+                        <input type="number" step="0.01" class="form-control" id="deductAmount" placeholder="e.g., 50.00" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="deductReason" class="form-label">Reason</label>
+                        <input type="text" class="form-control" id="deductReason" placeholder="e.g., Purchase">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-warning">Deduct Credits</button>
+            </form>
+        </div>
+
+        <!-- Check Customer Credit Balance Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128269; Check Customer Credit Balance</h2>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="checkCustomerId" class="form-label">Customer ID</label>
+                    <input type="number" class="form-control" id="checkCustomerId" placeholder="Enter Customer ID">
+                </div>
+                <div class="col-md-8 mb-3 d-flex align-items-end">
+                    <button class="btn btn-primary me-2" onclick="checkCustomerBalance()">Check Balance</button>
+                    <button class="btn btn-info" onclick="getCustomerInfo()">Get Customer Info</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingCheck">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="customerBalanceResult"></div>
+        </div>
+
+        <!-- Get All Transactions Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128203; Get All Transactions</h2>
+            <button class="btn btn-primary mb-3" onclick="getAllTransactions()">Load All Transactions</button>
+            <div class="loading" id="loadingAllTransactions">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="allTransactionsTableContainer"></div>
+        </div>
+
+        <!-- Get Customer Transactions Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128202; Get Customer Transactions</h2>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="transactionsCustomerId" class="form-label">Customer ID</label>
+                    <input type="number" class="form-control" id="transactionsCustomerId" placeholder="Enter Customer ID">
+                </div>
+                <div class="col-md-8 mb-3 d-flex align-items-end">
+                    <button class="btn btn-primary" onclick="getCustomerTransactions()">Load Customer Transactions</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingCustomerTransactions">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="customerTransactionsTableContainer"></div>
+        </div>
+
+        <!-- API Response Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128225; Last API Response</h2>
+            <div class="response-box" id="responseBox">No API calls made yet...</div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Auth Client -->
+    <script src="/assets/js/authClient.js"></script>
+    
+    <script>
+        // API_BASE_URL is already defined in authClient.js
+        let currentTransactions = [];
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            // Check authentication
+            const token = authClient.getToken();
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            // Verify token
+            const result = await authClient.verifyToken();
+            if (result.authenticated && result.data?.username) {
+                document.getElementById('userInfo').textContent = `Hello, ${result.data.username}!`;
+            } else {
+                document.getElementById('userInfo').textContent = 'Hello, User!';
+            }
+
+            // Setup forms
+            document.getElementById('addCreditsForm').addEventListener('submit', handleAddCredits);
+            document.getElementById('deductCreditsForm').addEventListener('submit', handleDeductCredits);
+
+            // Load all transactions on init
+            getAllTransactions();
+        });
+
+        // Show alert message
+        function showAlert(message, type = 'info') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertHtml = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            alertContainer.innerHTML = alertHtml;
+            
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                const alert = alertContainer.querySelector('.alert');
+                if (alert) {
+                    bootstrap.Alert.getOrCreateInstance(alert).close();
+                }
+            }, 5000);
+        }
+
+        // Update response box
+        function updateResponseBox(data) {
+            const responseBox = document.getElementById('responseBox');
+            responseBox.textContent = JSON.stringify(data, null, 2);
+        }
+
+        // Get authorization headers
+        function getAuthHeaders() {
+            const token = authClient.getToken();
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            };
+        }
+
+        // Handle Add Credits
+        async function handleAddCredits(e) {
+            e.preventDefault();
+            
+            const customerId = document.getElementById('addCustomerId').value;
+            const data = {
+                amount: parseFloat(document.getElementById('addAmount').value),
+                reason: document.getElementById('addReason').value.trim() || null
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/CustomerCredits/customer/${customerId}/add`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(data)
+                });
+
+                let result;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    result = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(result);
+
+                if (response.ok) {
+                    showAlert(`Successfully added ${data.amount} credits to Customer #${customerId}!`, 'success');
+                    document.getElementById('addCreditsForm').reset();
+                    getAllTransactions(); // Refresh transactions
+                } else {
+                    showAlert(`Error: ${result.message || result.error || 'Failed to add credits'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+
+        // Handle Deduct Credits
+        async function handleDeductCredits(e) {
+            e.preventDefault();
+            
+            const customerId = document.getElementById('deductCustomerId').value;
+            const data = {
+                amount: parseFloat(document.getElementById('deductAmount').value),
+                reason: document.getElementById('deductReason').value.trim() || null
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/CustomerCredits/customer/${customerId}/deduct`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(data)
+                });
+
+                let result;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    result = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(result);
+
+                if (response.ok) {
+                    showAlert(`Successfully deducted ${data.amount} credits from Customer #${customerId}!`, 'success');
+                    document.getElementById('deductCreditsForm').reset();
+                    getAllTransactions(); // Refresh transactions
+                } else {
+                    showAlert(`Error: ${result.message || result.error || 'Failed to deduct credits'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+
+        // Check Customer Balance
+        async function checkCustomerBalance() {
+            const customerId = document.getElementById('checkCustomerId').value;
+            
+            if (!customerId) {
+                showAlert('Please enter a customer ID', 'warning');
+                return;
+            }
+
+            const loading = document.getElementById('loadingCheck');
+            const result = document.getElementById('customerBalanceResult');
+            
+            loading.style.display = 'block';
+            result.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/CustomerCredits/customer/${customerId}/check`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    result.innerHTML = `
+                        <div class="alert alert-success">
+                            <h5>Customer Credit Balance:</h5>
+                            <p><strong>Customer ID:</strong> ${customerId}</p>
+                            <p><strong>Balance:</strong> $${typeof data === 'number' ? data.toFixed(2) : (data.balance || data.amount || 0).toFixed(2)}</p>
+                            ${data.lastUpdated ? `<p><strong>Last Updated:</strong> ${new Date(data.lastUpdated).toLocaleString()}</p>` : ''}
+                        </div>
+                    `;
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Failed to check balance'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Get Customer Info
+        async function getCustomerInfo() {
+            const customerId = document.getElementById('checkCustomerId').value;
+            
+            if (!customerId) {
+                showAlert('Please enter a customer ID', 'warning');
+                return;
+            }
+
+            const loading = document.getElementById('loadingCheck');
+            const result = document.getElementById('customerBalanceResult');
+            
+            loading.style.display = 'block';
+            result.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/CustomerCredits/customer/${customerId}`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    result.innerHTML = `
+                        <div class="alert alert-info">
+                            <h5>Customer Credit Information:</h5>
+                            <p><strong>Customer ID:</strong> ${data.customerId || customerId}</p>
+                            <p><strong>Balance:</strong> $${(data.balance || data.amount || 0).toFixed(2)}</p>
+                            ${data.totalAdded ? `<p><strong>Total Added:</strong> $${data.totalAdded.toFixed(2)}</p>` : ''}
+                            ${data.totalDeducted ? `<p><strong>Total Deducted:</strong> $${data.totalDeducted.toFixed(2)}</p>` : ''}
+                            ${data.transactionCount ? `<p><strong>Transaction Count:</strong> ${data.transactionCount}</p>` : ''}
+                            ${data.createdAt ? `<p><strong>Created:</strong> ${new Date(data.createdAt).toLocaleString()}</p>` : ''}
+                            ${data.updatedAt ? `<p><strong>Updated:</strong> ${new Date(data.updatedAt).toLocaleString()}</p>` : ''}
+                        </div>
+                    `;
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Customer not found'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Get All Transactions
+        async function getAllTransactions() {
+            const loading = document.getElementById('loadingAllTransactions');
+            const container = document.getElementById('allTransactionsTableContainer');
+            
+            loading.style.display = 'block';
+            container.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/CustomerCredits/transactions`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    currentTransactions = data;
+                    renderTransactionsTable(data, container, 'all');
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Failed to fetch transactions'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Get Customer Transactions
+        async function getCustomerTransactions() {
+            const customerId = document.getElementById('transactionsCustomerId').value;
+            
+            if (!customerId) {
+                showAlert('Please enter a customer ID', 'warning');
+                return;
+            }
+
+            const loading = document.getElementById('loadingCustomerTransactions');
+            const container = document.getElementById('customerTransactionsTableContainer');
+            
+            loading.style.display = 'block';
+            container.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/CustomerCredits/customer/${customerId}/transactions`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    renderTransactionsTable(data, container, 'customer');
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Failed to fetch customer transactions'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Render Transactions Table
+        function renderTransactionsTable(transactions, container, type) {
+            if (!transactions || transactions.length === 0) {
+                container.innerHTML = '<div class="empty-state">No transactions found</div>';
+                return;
+            }
+
+            const tableHtml = `
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                ${type === 'all' ? '<th>Customer ID</th>' : ''}
+                                <th>Type</th>
+                                <th>Amount</th>
+                                <th>Balance After</th>
+                                <th>Reason</th>
+                                <th>Reference</th>
+                                <th>Created At</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${transactions.map(txn => {
+                                const isCredit = txn.type === 'Credit' || txn.type === 'Add' || txn.amount > 0;
+                                const amountClass = isCredit ? 'text-success' : 'text-danger';
+                                const amountPrefix = isCredit ? '+' : '-';
+                                
+                                return `
+                                    <tr>
+                                        <td>${txn.id}</td>
+                                        ${type === 'all' ? `<td><strong>${txn.customerId}</strong></td>` : ''}
+                                        <td>
+                                            <span class="badge ${isCredit ? 'badge-success' : 'badge-warning'}">
+                                                ${txn.type || (isCredit ? 'Credit' : 'Debit')}
+                                            </span>
+                                        </td>
+                                        <td class="${amountClass}"><strong>${amountPrefix}$${Math.abs(txn.amount || 0).toFixed(2)}</strong></td>
+                                        <td>$${(txn.balanceAfter || txn.balance || 0).toFixed(2)}</td>
+                                        <td>${txn.reason || txn.description || '-'}</td>
+                                        <td>${txn.referenceNumber || txn.reference || '-'}</td>
+                                        <td>${txn.createdAt ? new Date(txn.createdAt).toLocaleString() : '-'}</td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            container.innerHTML = tableHtml;
+        }
+    </script>
+</body>
+</html>

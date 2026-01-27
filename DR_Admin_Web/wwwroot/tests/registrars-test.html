@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrars API Test - DR Admin</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Test Page Styles -->
+    <link href="/assets/css/test-page.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/choose-test.html">DR Admin - Registrars API</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <span class="user-info" id="userInfo"></span>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/choose-test.html" class="btn btn-back">&#8592; Back to Tests</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-main">
+        <div class="header-card">
+            <h1>&#127760; Registrars API Test</h1>
+            <p>Test CRUD operations and extra endpoints for Registrars</p>
+        </div>
+
+        <!-- Alert Messages -->
+        <div id="alertContainer"></div>
+
+        <!-- Create Registrar Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#10133; Create Registrar</h2>
+            <form id="createForm">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="createName" class="form-label">Name *</label>
+                        <input type="text" class="form-control" id="createName" placeholder="e.g., Example Registrar" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="createCode" class="form-label">Code *</label>
+                        <input type="text" class="form-control" id="createCode" placeholder="e.g., EXREG" required>
+                        <small class="text-muted">Unique code identifier</small>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="createApiUrl" class="form-label">API URL</label>
+                    <input type="url" class="form-control" id="createApiUrl" placeholder="https://api.example.com">
+                </div>
+                <div class="mb-3">
+                    <label for="createDescription" class="form-label">Description</label>
+                    <textarea class="form-control" id="createDescription" rows="3"></textarea>
+                </div>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="createIsActive" checked>
+                        <label class="form-check-label" for="createIsActive">Is Active</label>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Create Registrar</button>
+            </form>
+        </div>
+
+        <!-- Get All Registrars Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128203; Get All Registrars</h2>
+            <button class="btn btn-primary mb-3" onclick="getAllRegistrars()">Load All Registrars</button>
+            <div class="loading" id="loadingAll">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="registrarsTableContainer"></div>
+        </div>
+
+        <!-- Get Registrar by ID Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128269; Get Registrar by ID</h2>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="getRegistrarId" class="form-label">Registrar ID</label>
+                    <input type="number" class="form-control" id="getRegistrarId" placeholder="Enter ID">
+                </div>
+                <div class="col-md-8 mb-3 d-flex align-items-end">
+                    <button class="btn btn-primary" onclick="getRegistrarById()">Get Registrar</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingById">
+                <div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div>
+            </div>
+            <div id="registrarByIdResult"></div>
+        </div>
+
+        <!-- Get Active Registrars Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#9989; Get Active Registrars</h2>
+            <button class="btn btn-success mb-3" onclick="getActiveRegistrars()">Load Active Registrars</button>
+            <div class="loading" id="loadingActive">
+                <div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div>
+            </div>
+            <div id="activeRegistrarsContainer"></div>
+        </div>
+
+        <!-- Get Registrar by Code Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128270; Get Registrar by Code</h2>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="getByCode" class="form-label">Code</label>
+                    <input type="text" class="form-control" id="getByCode" placeholder="e.g., EXREG">
+                </div>
+                <div class="col-md-8 mb-3 d-flex align-items-end">
+                    <button class="btn btn-primary" onclick="getRegistrarByCode()">Get Registrar</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingByCode"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>
+            <div id="registrarByCodeResult"></div>
+        </div>
+
+        <!-- Registrar TLDs Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#127760; Registrar TLDs</h2>
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label for="tldRegistrarId" class="form-label">Registrar ID</label>
+                    <input type="number" class="form-control" id="tldRegistrarId" placeholder="Registrar ID">
+                </div>
+                <div class="col-md-8 d-flex align-items-end">
+                    <button class="btn btn-primary me-2" onclick="getRegistrarTlds()">Load TLDs</button>
+                    <button class="btn btn-success" onclick="addTldToRegistrar()">Add TLD</button>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="newTld" class="form-label">New TLD (when adding)</label>
+                <input type="text" class="form-control" id="newTld" placeholder="e.g., .example">
+            </div>
+            <div id="registrarTldsContainer"></div>
+        </div>
+
+        <!-- API Response Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128225; Last API Response</h2>
+            <div class="response-box" id="responseBox">No API calls made yet...</div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">&#9998; Edit Registrar</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editForm">
+                        <input type="hidden" id="editId">
+                        <div class="mb-3">
+                            <label for="editName" class="form-label">Name *</label>
+                            <input type="text" class="form-control" id="editName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editCode" class="form-label">Code *</label>
+                            <input type="text" class="form-control" id="editCode" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editApiUrl" class="form-label">API URL</label>
+                            <input type="url" class="form-control" id="editApiUrl">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="editDescription" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="editIsActive">
+                                <label class="form-check-label" for="editIsActive">Is Active</label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="updateRegistrar()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/assets/js/authClient.js"></script>
+    <script>
+        let currentRegistrars = [];
+        let editModal;
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            const token = authClient.getToken();
+            if (!token) { window.location.href = '/login.html'; return; }
+
+            const result = await authClient.verifyToken();
+            if (result.authenticated && result.data?.username) document.getElementById('userInfo').textContent = `Hello, ${result.data.username}!`;
+            else document.getElementById('userInfo').textContent = 'Hello, User!';
+
+            editModal = new bootstrap.Modal(document.getElementById('editModal'));
+            document.getElementById('createForm').addEventListener('submit', handleCreate);
+
+            getAllRegistrars();
+        });
+
+        function showAlert(message, type='info') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertHtml = `\n                <div class="alert alert-${type} alert-dismissible fade show" role="alert">\n                    ${message}\n                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>\n                </div>\n            `;
+            alertContainer.innerHTML = alertHtml;
+            setTimeout(()=>{ const alert = alertContainer.querySelector('.alert'); if (alert) bootstrap.Alert.getOrCreateInstance(alert).close(); },5000);
+        }
+
+        function updateResponseBox(data) { document.getElementById('responseBox').textContent = JSON.stringify(data, null, 2); }
+        function getAuthHeaders() { const token = authClient.getToken(); return { 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` }; }
+
+        async function handleCreate(e) {
+            e.preventDefault();
+            const data = {
+                name: document.getElementById('createName').value.trim(),
+                code: document.getElementById('createCode').value.trim().toUpperCase(),
+                apiUrl: document.getElementById('createApiUrl').value.trim() || null,
+                description: document.getElementById('createDescription').value.trim() || null,
+                isActive: document.getElementById('createIsActive').checked
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Registrars`, { method:'POST', headers: getAuthHeaders(), body: JSON.stringify(data) });
+                let result; const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) result = await response.json(); else { const text = await response.text(); result = { error: text, statusCode: response.status }; }
+                updateResponseBox(result);
+                if (response.ok) { showAlert('Registrar created successfully!', 'success'); document.getElementById('createForm').reset(); getAllRegistrars(); } else showAlert(`Error: ${result.message || result.error || 'Failed to create registrar'}`,'danger');
+            } catch (error) { showAlert(`Error: ${error.message}`,'danger'); updateResponseBox({ error: error.message }); }
+        }
+
+        async function getAllRegistrars() {
+            const loading = document.getElementById('loadingAll'); const container = document.getElementById('registrarsTableContainer'); loading.style.display='block'; container.innerHTML='';
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Registrars`, { method:'GET', headers: getAuthHeaders() });
+                let data; const contentType = response.headers.get('content-type'); if (contentType && contentType.includes('application/json')) data = await response.json(); else { const text = await response.text(); data = { error: text, statusCode: response.status }; }
+                updateResponseBox(data);
+                if (response.ok) { currentRegistrars = data; renderRegistrarsTable(data); } else showAlert(`Error: ${data.message || data.error || 'Failed to fetch registrars'}`,'danger');
+            } catch (error) { showAlert(`Error: ${error.message}`,'danger'); updateResponseBox({ error: error.message }); } finally { loading.style.display='none'; }
+        }
+
+        function renderRegistrarsTable(registrars) {
+            const container = document.getElementById('registrarsTableContainer'); if (!registrars || registrars.length===0) { container.innerHTML = '<div class="empty-state">No registrars found</div>'; return; }
+            const tableHtml = `
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Code</th>
+                                <th>API URL</th>
+                                <th>Status</th>
+                                <th>Created At</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${registrars.map(r => `
+                                <tr>
+                                    <td>${r.id}</td>
+                                    <td><strong>${r.name}</strong></td>
+                                    <td><code>${r.code || '-'}</code></td>
+                                    <td>${r.apiUrl || '-'}</td>
+                                    <td><span class="badge ${r.isActive ? 'badge-success' : 'badge-secondary'}">${r.isActive ? 'Active' : 'Inactive'}</span></td>
+                                    <td>${r.createdAt ? new Date(r.createdAt).toLocaleString() : '-'}</td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="btn btn-sm btn-warning" onclick="openEditModal(${r.id})">Edit</button>
+                                            <button class="btn btn-sm btn-danger" onclick="deleteRegistrar(${r.id}, '${(r.name||r.code).replace(/'/g, "\\'" )}')">Delete</button>
+                                            <button class="btn btn-sm btn-info" onclick="openTldsFor(${r.id})">TLDs</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            container.innerHTML = tableHtml;
+        }
+
+        async function getRegistrarById() {
+            const id = document.getElementById('getRegistrarId').value; if (!id) { showAlert('Please enter a registrar ID','warning'); return; }
+            const loading = document.getElementById('loadingById'); const result = document.getElementById('registrarByIdResult'); loading.style.display='block'; result.innerHTML='';
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Registrars/${id}`, { method:'GET', headers: getAuthHeaders() });
+                let data; const contentType = response.headers.get('content-type'); if (contentType && contentType.includes('application/json')) data = await response.json(); else { const text = await response.text(); data = { error: text, statusCode: response.status }; }
+                updateResponseBox(data);
+                if (response.ok) { result.innerHTML = `<div class="alert alert-success"><h5>Registrar Found:</h5><p><strong>ID:</strong> ${data.id}</p><p><strong>Name:</strong> ${data.name}</p><p><strong>Code:</strong> ${data.code}</p><p><strong>API URL:</strong> ${data.apiUrl || 'N/A'}</p><p><strong>Status:</strong> ${data.isActive ? 'Active' : 'Inactive'}</p></div>`; } else showAlert(`Error: ${data.message || data.error || 'Registrar not found'}`,'danger');
+            } catch (error) { showAlert(`Error: ${error.message}`,'danger'); updateResponseBox({ error: error.message }); } finally { loading.style.display='none'; }
+        }
+
+        async function getActiveRegistrars() {
+            const loading = document.getElementById('loadingActive'); const container = document.getElementById('activeRegistrarsContainer'); loading.style.display='block'; container.innerHTML='';
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Registrars/active`, { method:'GET', headers: getAuthHeaders() });
+                let data; const contentType = response.headers.get('content-type'); if (contentType && contentType.includes('application/json')) data = await response.json(); else { const text = await response.text(); data = { error: text, statusCode: response.status }; }
+                updateResponseBox(data);
+                if (response.ok) {
+                    if (!data || data.length===0) container.innerHTML = '<div class="empty-state">No active registrars found</div>';
+                    else container.innerHTML = `<div class="alert alert-success"><h5>Active Registrars (${data.length}):</h5><ul>${data.map(r=>`<li>${r.name} (${r.code}) - ID: ${r.id}</li>`).join('')}</ul></div>`;
+                } else showAlert(`Error: ${data.message || data.error || 'Failed to fetch active registrars'}`,'danger');
+            } catch (error) { showAlert(`Error: ${error.message}`,'danger'); updateResponseBox({ error: error.message }); } finally { loading.style.display='none'; }
+        }
+
+        async function getRegistrarByCode() {
+            const code = document.getElementById('getByCode').value.trim(); if (!code) { showAlert('Please enter a code','warning'); return; }
+            const loading = document.getElementById('loadingByCode'); const result = document.getElementById('registrarByCodeResult'); loading.style.display='block'; result.innerHTML='';
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Registrars/code/${encodeURIComponent(code)}`, { method:'GET', headers: getAuthHeaders() });
+                let data; const contentType = response.headers.get('content-type'); if (contentType && contentType.includes('application/json')) data = await response.json(); else { const text = await response.text(); data = { error: text, statusCode: response.status }; }
+                updateResponseBox(data);
+                if (response.ok) { result.innerHTML = `<div class="alert alert-success"><h5>Registrar Found:</h5><p><strong>ID:</strong> ${data.id}</p><p><strong>Name:</strong> ${data.name}</p><p><strong>Code:</strong> ${data.code}</p><p><strong>API URL:</strong> ${data.apiUrl || 'N/A'}</p></div>`; } else showAlert(`Error: ${data.message || data.error || 'Registrar not found'}`,'danger');
+            } catch (error) { showAlert(`Error: ${error.message}`,'danger'); updateResponseBox({ error: error.message }); } finally { loading.style.display='none'; }
+        }
+
+        // Registrar TLDs
+        async function getRegistrarTlds() {
+            const registrarId = document.getElementById('tldRegistrarId').value; if (!registrarId) { showAlert('Please enter a registrar ID','warning'); return; }
+            const container = document.getElementById('registrarTldsContainer'); const loading = document.getElementById('loadingAll'); container.innerHTML = '';
+            loading.style.display = 'block';
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Registrars/${registrarId}/tlds`, { method:'GET', headers: getAuthHeaders() });
+                let data; const contentType = response.headers.get('content-type'); if (contentType && contentType.includes('application/json')) data = await response.json(); else { const text = await response.text(); data = { error: text, statusCode: response.status }; }
+                updateResponseBox(data);
+                if (response.ok) {
+                    if (!data || data.length===0) container.innerHTML = '<div class="empty-state">No TLDs found for this registrar</div>';
+                    else {
+                        const html = `\n                            <div class="table-responsive">\n                                <table class="table table-sm">\n                                    <thead><tr><th>ID</th><th>TLD</th><th>Actions</th></tr></thead>\n                                    <tbody>${data.map(t=>`<tr><td>${t.id}</td><td><code>${t.tld}</code></td><td><button class="btn btn-sm btn-danger" onclick="removeTldFromRegistrar(${registrarId}, ${t.id})">Remove</button></td></tr>`).join('')}</tbody>\n                                </table>\n                            </div>\n                        `;
+                        container.innerHTML = html;
+                    }
+                } else showAlert(`Error: ${data.message || data.error || 'Failed to fetch TLDs'}`,'danger');
+            } catch (error) { showAlert(`Error: ${error.message}`,'danger'); updateResponseBox({ error: error.message }); } finally { loading.style.display='none'; }
+        }
+
+        async function addTldToRegistrar() {
+            const registrarId = document.getElementById('tldRegistrarId').value; const newTld = document.getElementById('newTld').value.trim();
+            if (!registrarId || !newTld) { showAlert('Please enter registrar ID and TLD','warning'); return; }
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Registrars/${registrarId}/tld`, { method:'POST', headers: getAuthHeaders(), body: JSON.stringify({ tld: newTld }) });
+                let data; const contentType = response.headers.get('content-type'); if (contentType && contentType.includes('application/json')) data = await response.json(); else { const text = await response.text(); data = { error: text, statusCode: response.status }; }
+                updateResponseBox(data);
+                if (response.ok) { showAlert('TLD added to registrar!', 'success'); document.getElementById('newTld').value=''; getRegistrarTlds(); } else showAlert(`Error: ${data.message || data.error || 'Failed to add TLD'}`,'danger');
+            } catch (error) { showAlert(`Error: ${error.message}`,'danger'); updateResponseBox({ error: error.message }); }
+        }
+
+        async function removeTldFromRegistrar(registrarId, tldId) {
+            if (!confirm('Remove this TLD from registrar?')) return;
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Registrars/${registrarId}/tld/${tldId}`, { method:'POST', headers: getAuthHeaders() });
+                let data; const contentType = response.headers.get('content-type'); if (contentType && contentType.includes('application/json')) data = await response.json(); else if (response.ok) data = { message: 'TLD removed' }; else { const text = await response.text(); data = { error: text, statusCode: response.status }; }
+                updateResponseBox(data);
+                if (response.ok) { showAlert('TLD removed successfully!', 'success'); getRegistrarTlds(); } else showAlert(`Error: ${data.message || data.error || 'Failed to remove TLD'}`,'danger');
+            } catch (error) { showAlert(`Error: ${error.message}`,'danger'); updateResponseBox({ error: error.message }); }
+        }
+
+        function openTldsFor(id) { document.getElementById('tldRegistrarId').value = id; getRegistrarTlds(); }
+
+        // Update Registrar
+        function openEditModal(id) { const r = currentRegistrars.find(x=>x.id===id); if (!r) { showAlert('Registrar not found','danger'); return; } document.getElementById('editId').value=r.id; document.getElementById('editName').value=r.name||''; document.getElementById('editCode').value=r.code||''; document.getElementById('editApiUrl').value=r.apiUrl||''; document.getElementById('editDescription').value=r.description||''; document.getElementById('editIsActive').checked = !!r.isActive; editModal.show(); }
+
+        async function updateRegistrar() {
+            const id = document.getElementById('editId').value; const data = { name: document.getElementById('editName').value.trim(), code: document.getElementById('editCode').value.trim().toUpperCase(), apiUrl: document.getElementById('editApiUrl').value.trim() || null, description: document.getElementById('editDescription').value.trim() || null, isActive: document.getElementById('editIsActive').checked };
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Registrars/${id}`, { method:'PUT', headers: getAuthHeaders(), body: JSON.stringify(data) });
+                let result; const contentType = response.headers.get('content-type'); if (contentType && contentType.includes('application/json')) result = await response.json(); else { const text = await response.text(); result = { error: text, statusCode: response.status }; }
+                updateResponseBox(result);
+                if (response.ok) { showAlert('Registrar updated successfully!','success'); editModal.hide(); getAllRegistrars(); } else showAlert(`Error: ${result.message || result.error || 'Failed to update registrar'}`,'danger');
+            } catch (error) { showAlert(`Error: ${error.message}`,'danger'); updateResponseBox({ error: error.message }); }
+        }
+
+        // Delete Registrar
+        async function deleteRegistrar(id, name) { if (!confirm(`Are you sure you want to delete "${name}"?`)) return; try { const response = await fetch(`${API_BASE_URL}/api/v1/Registrars/${id}`, { method:'DELETE', headers: getAuthHeaders() }); if (response.ok) { if (response.status===204) updateResponseBox({ message: 'Registrar deleted successfully' }); else { const contentType = response.headers.get('content-type'); if (contentType && contentType.includes('application/json')) { const result = await response.json(); updateResponseBox(result); } else updateResponseBox({ message: 'Registrar deleted successfully' }); } showAlert('Registrar deleted successfully!','success'); getAllRegistrars(); } else { let result; const contentType = response.headers.get('content-type'); if (contentType && contentType.includes('application/json')) result = await response.json(); else { const text = await response.text(); result = { error: text, statusCode: response.status }; } updateResponseBox(result); showAlert(`Error: ${result.message || result.error || 'Failed to delete registrar'}`,'danger'); } } catch (error) { showAlert(`Error: ${error.message}`,'danger'); updateResponseBox({ error: error.message }); } }
+    </script>
+</body>
+</html>

@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - DR Admin</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .login-container {
+            max-width: 450px;
+            width: 100%;
+            padding: 20px;
+        }
+
+        .login-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .login-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .login-header h2 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 28px;
+        }
+
+        .login-header p {
+            margin: 10px 0 0;
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .login-body {
+            padding: 40px;
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .form-control {
+            border-radius: 8px;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            transition: all 0.3s;
+        }
+
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 10px;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        .btn-login:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .alert {
+            border-radius: 8px;
+            border: none;
+        }
+
+        .form-check-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .forgot-password {
+            text-align: right;
+        }
+
+        .forgot-password a {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .forgot-password a:hover {
+            text-decoration: underline;
+        }
+
+        .spinner-border-sm {
+            width: 1rem;
+            height: 1rem;
+            border-width: 0.15em;
+        }
+
+        .input-group-text {
+            background-color: #f8f9fa;
+            border-radius: 8px 0 0 8px;
+        }
+
+        .password-toggle {
+            cursor: pointer;
+            background-color: #f8f9fa;
+            border-radius: 0 8px 8px 0;
+            border-left: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <h2>Welcome Back</h2>
+                <p>Sign in to your account</p>
+            </div>
+            
+            <div class="login-body">
+                <div id="alertContainer"></div>
+                
+                <form id="loginForm">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input 
+                            type="text" 
+                            class="form-control" 
+                            id="username" 
+                            name="username"
+                            placeholder="Enter your username"
+                            required
+                            autocomplete="username">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <div class="input-group">
+                            <input 
+                                type="password" 
+                                class="form-control" 
+                                id="password" 
+                                name="password"
+                                placeholder="Enter your password"
+                                required
+                                autocomplete="current-password">
+                            <span class="input-group-text password-toggle" onclick="togglePassword()">
+                                <i id="toggleIcon">???</i>
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3 d-flex justify-content-between align-items-center">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="rememberMe">
+                            <label class="form-check-label" for="rememberMe">
+                                Remember me
+                            </label>
+                        </div>
+                        <div class="forgot-password">
+                            <a href="#" onclick="alert('Contact administrator'); return false;">Forgot password?</a>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-login" id="loginBtn">
+                        <span id="btnText">Sign In</span>
+                        <span id="btnSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="text-center mt-3">
+            <small class="text-white">© 2024 DR Admin. All rights reserved.</small>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Auth Client -->
+    <script src="/assets/js/authClient.js"></script>
+    
+    <script>
+        // Toggle password visibility
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const toggleIcon = document.getElementById('toggleIcon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.textContent = '??';
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.textContent = '???';
+            }
+        }
+
+        // Show alert message
+        function showAlert(message, type = 'danger') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type} alert-dismissible fade show`;
+            alert.setAttribute('role', 'alert');
+            alert.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            alertContainer.innerHTML = '';
+            alertContainer.appendChild(alert);
+            
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                alert.classList.remove('show');
+                setTimeout(() => alert.remove(), 150);
+            }, 5000);
+        }
+
+        // Set loading state
+        function setLoading(isLoading) {
+            const loginBtn = document.getElementById('loginBtn');
+            const btnText = document.getElementById('btnText');
+            const btnSpinner = document.getElementById('btnSpinner');
+            const form = document.getElementById('loginForm');
+            
+            if (isLoading) {
+                loginBtn.disabled = true;
+                btnText.classList.add('d-none');
+                btnSpinner.classList.remove('d-none');
+                form.classList.add('was-validated');
+            } else {
+                loginBtn.disabled = false;
+                btnText.classList.remove('d-none');
+                btnSpinner.classList.add('d-none');
+            }
+        }
+
+        // Handle form submission
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const rememberMe = document.getElementById('rememberMe').checked;
+            
+            if (!username || !password) {
+                showAlert('Please enter both username and password.', 'warning');
+                return;
+            }
+            
+            setLoading(true);
+            
+            try {
+                const result = await authClient.login(username, password);
+                
+                if (result.success) {
+                    showAlert('Login successful! Redirecting...', 'success');
+                    
+                    // Store remember me preference
+                    if (rememberMe) {
+                        localStorage.setItem('rememberMe', 'true');
+                        localStorage.setItem('lastUsername', username);
+                    } else {
+                        localStorage.removeItem('rememberMe');
+                        localStorage.removeItem('lastUsername');
+                    }
+                    
+                    // Log token info (for debugging)
+                    console.log('Login successful:', result.data);
+                    
+                    // Redirect to choose test page after 1 second
+                    setTimeout(() => {
+                        window.location.href = '/choose-test.html';
+                    }, 1000);
+                } else {
+                    showAlert(result.error || 'Login failed. Please check your credentials.', 'danger');
+                    setLoading(false);
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showAlert('An unexpected error occurred. Please try again.', 'danger');
+                setLoading(false);
+            }
+        });
+
+        // Load saved username if "remember me" was checked
+        window.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('rememberMe') === 'true') {
+                const savedUsername = localStorage.getItem('lastUsername');
+                if (savedUsername) {
+                    document.getElementById('username').value = savedUsername;
+                    document.getElementById('rememberMe').checked = true;
+                }
+            }
+            
+            // Check if already logged in
+            const token = authClient.getToken();
+            if (token) {
+                console.log('User already has a token');
+                // Optionally redirect to home page
+                // window.location.href = '/';
+            }
+        });
+
+        // Handle Enter key on password field
+        document.getElementById('password').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+            }
+        });
+    </script>
+</body>
+</html>

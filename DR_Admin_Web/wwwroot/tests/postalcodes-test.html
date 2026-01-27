@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Postal Codes API Test - DR Admin</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Test Page Styles -->
+    <link href="/assets/css/test-page.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/choose-test.html">DR Admin - Postal Codes API</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <span class="user-info" id="userInfo"></span>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/choose-test.html" class="btn btn-back">&#8592; Back to Tests</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-main">
+        <div class="header-card">
+            <h1>&#128234; Postal Codes API Test</h1>
+            <p>Test CRUD operations for Postal Codes API endpoint</p>
+        </div>
+
+        <!-- Alert Messages -->
+        <div id="alertContainer"></div>
+
+        <!-- Create Postal Code Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#10133; Create Postal Code</h2>
+            <form id="createForm">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="createCode" class="form-label">Postal Code *</label>
+                        <input type="text" class="form-control" id="createCode" placeholder="e.g., 12345" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="createCountryCode" class="form-label">Country Code *</label>
+                        <input type="text" class="form-control" id="createCountryCode" placeholder="e.g., US" maxlength="2" required>
+                        <small class="text-muted">2-character ISO code</small>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="createCity" class="form-label">City *</label>
+                        <input type="text" class="form-control" id="createCity" placeholder="e.g., New York" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="createState" class="form-label">State/Province</label>
+                        <input type="text" class="form-control" id="createState" placeholder="e.g., NY">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="createDistrict" class="form-label">District</label>
+                        <input type="text" class="form-control" id="createDistrict" placeholder="Enter district">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="createRegion" class="form-label">Region</label>
+                        <input type="text" class="form-control" id="createRegion" placeholder="Enter region">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="createLatitude" class="form-label">Latitude</label>
+                        <input type="number" class="form-control" id="createLatitude" placeholder="e.g., 40.7128" step="0.000001">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="createLongitude" class="form-label">Longitude</label>
+                        <input type="number" class="form-control" id="createLongitude" placeholder="e.g., -74.0060" step="0.000001">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="createIsActive" checked>
+                        <label class="form-check-label" for="createIsActive">
+                            Is Active
+                        </label>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Create Postal Code</button>
+            </form>
+        </div>
+
+        <!-- Get All Postal Codes Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128203; Get All Postal Codes</h2>
+            <button class="btn btn-primary mb-3" onclick="getAllPostalCodes()">Load All Postal Codes</button>
+            <div class="loading" id="loadingAll">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="postalCodesTableContainer"></div>
+        </div>
+
+        <!-- Get Postal Code by ID Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128269; Get Postal Code by ID</h2>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="getPostalCodeId" class="form-label">Postal Code ID</label>
+                    <input type="number" class="form-control" id="getPostalCodeId" placeholder="Enter ID">
+                </div>
+                <div class="col-md-8 mb-3 d-flex align-items-end">
+                    <button class="btn btn-primary" onclick="getPostalCodeById()">Get Postal Code</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingById">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="postalCodeByIdResult"></div>
+        </div>
+
+        <!-- Get Postal Codes by Country Code Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#127757; Get Postal Codes by Country Code</h2>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="getByCountryCode" class="form-label">Country Code</label>
+                    <input type="text" class="form-control" id="getByCountryCode" placeholder="e.g., US" maxlength="2">
+                </div>
+                <div class="col-md-8 mb-3 d-flex align-items-end">
+                    <button class="btn btn-primary" onclick="getPostalCodesByCountry()">Get Postal Codes</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingByCountry">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="postalCodesByCountryContainer"></div>
+        </div>
+
+        <!-- Get Postal Codes by City Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#127961; Get Postal Codes by City</h2>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="getByCity" class="form-label">City Name</label>
+                    <input type="text" class="form-control" id="getByCity" placeholder="e.g., New York">
+                </div>
+                <div class="col-md-8 mb-3 d-flex align-items-end">
+                    <button class="btn btn-primary" onclick="getPostalCodesByCity()">Get Postal Codes</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingByCity">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="postalCodesByCityContainer"></div>
+        </div>
+
+        <!-- Get Postal Code by Code and Country Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128270; Get Postal Code by Code and Country</h2>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="getByCodeValue" class="form-label">Postal Code</label>
+                    <input type="text" class="form-control" id="getByCodeValue" placeholder="e.g., 12345">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="getByCodeCountry" class="form-label">Country Code</label>
+                    <input type="text" class="form-control" id="getByCodeCountry" placeholder="e.g., US" maxlength="2">
+                </div>
+                <div class="col-md-4 mb-3 d-flex align-items-end">
+                    <button class="btn btn-primary" onclick="getPostalCodeByCodeAndCountry()">Get Postal Code</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingByCodeCountry">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="postalCodeByCodeCountryResult"></div>
+        </div>
+
+        <!-- API Response Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128225; Last API Response</h2>
+            <div class="response-box" id="responseBox">No API calls made yet...</div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">&#9998; Edit Postal Code</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editForm">
+                        <input type="hidden" id="editId">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editCode" class="form-label">Postal Code *</label>
+                                <input type="text" class="form-control" id="editCode" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editCountryCode" class="form-label">Country Code *</label>
+                                <input type="text" class="form-control" id="editCountryCode" maxlength="2" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editCity" class="form-label">City *</label>
+                                <input type="text" class="form-control" id="editCity" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editState" class="form-label">State/Province</label>
+                                <input type="text" class="form-control" id="editState">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editDistrict" class="form-label">District</label>
+                                <input type="text" class="form-control" id="editDistrict">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editRegion" class="form-label">Region</label>
+                                <input type="text" class="form-control" id="editRegion">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editLatitude" class="form-label">Latitude</label>
+                                <input type="number" class="form-control" id="editLatitude" step="0.000001">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editLongitude" class="form-label">Longitude</label>
+                                <input type="number" class="form-control" id="editLongitude" step="0.000001">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="editIsActive">
+                                <label class="form-check-label" for="editIsActive">
+                                    Is Active
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="updatePostalCode()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Auth Client -->
+    <script src="/assets/js/authClient.js"></script>
+    
+    <script>
+        // API_BASE_URL is already defined in authClient.js
+        let currentPostalCodes = [];
+        let editModal;
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            // Check authentication
+            const token = authClient.getToken();
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            // Verify token
+            const result = await authClient.verifyToken();
+            if (result.authenticated && result.data?.username) {
+                document.getElementById('userInfo').textContent = `Hello, ${result.data.username}!`;
+            } else {
+                document.getElementById('userInfo').textContent = 'Hello, User!';
+            }
+
+            // Initialize edit modal
+            editModal = new bootstrap.Modal(document.getElementById('editModal'));
+
+            // Setup create form
+            document.getElementById('createForm').addEventListener('submit', handleCreate);
+
+            // Load all postal codes on init
+            getAllPostalCodes();
+        });
+
+        // Show alert message
+        function showAlert(message, type = 'info') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertHtml = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            alertContainer.innerHTML = alertHtml;
+            
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                const alert = alertContainer.querySelector('.alert');
+                if (alert) {
+                    bootstrap.Alert.getOrCreateInstance(alert).close();
+                }
+            }, 5000);
+        }
+
+        // Update response box
+        function updateResponseBox(data) {
+            const responseBox = document.getElementById('responseBox');
+            responseBox.textContent = JSON.stringify(data, null, 2);
+        }
+
+        // Get authorization headers
+        function getAuthHeaders() {
+            const token = authClient.getToken();
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            };
+        }
+
+        // Handle Create Postal Code
+        async function handleCreate(e) {
+            e.preventDefault();
+            
+            const data = {
+                code: document.getElementById('createCode').value.trim(),
+                countryCode: document.getElementById('createCountryCode').value.trim().toUpperCase(),
+                city: document.getElementById('createCity').value.trim(),
+                state: document.getElementById('createState').value.trim() || null,
+                district: document.getElementById('createDistrict').value.trim() || null,
+                region: document.getElementById('createRegion').value.trim() || null,
+                latitude: parseFloat(document.getElementById('createLatitude').value) || null,
+                longitude: parseFloat(document.getElementById('createLongitude').value) || null,
+                isActive: document.getElementById('createIsActive').checked
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/PostalCodes`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(data)
+                });
+
+                let result;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    result = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(result);
+
+                if (response.ok) {
+                    showAlert('Postal Code created successfully!', 'success');
+                    document.getElementById('createForm').reset();
+                    document.getElementById('createIsActive').checked = true;
+                    getAllPostalCodes(); // Refresh list
+                } else {
+                    showAlert(`Error: ${result.message || result.error || 'Failed to create postal code'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+
+        // Get All Postal Codes
+        async function getAllPostalCodes() {
+            const loading = document.getElementById('loadingAll');
+            const container = document.getElementById('postalCodesTableContainer');
+            
+            loading.style.display = 'block';
+            container.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/PostalCodes`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    currentPostalCodes = data;
+                    renderPostalCodesTable(data);
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Failed to fetch postal codes'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Render Postal Codes Table
+        function renderPostalCodesTable(postalCodes) {
+            const container = document.getElementById('postalCodesTableContainer');
+            
+            if (!postalCodes || postalCodes.length === 0) {
+                container.innerHTML = '<div class="empty-state">No postal codes found</div>';
+                return;
+            }
+
+            const tableHtml = `
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Code</th>
+                                <th>Country</th>
+                                <th>City</th>
+                                <th>State</th>
+                                <th>District</th>
+                                <th>Region</th>
+                                <th>Coordinates</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${postalCodes.map(pc => {
+                                const coords = pc.latitude && pc.longitude 
+                                    ? `${pc.latitude.toFixed(4)}, ${pc.longitude.toFixed(4)}` 
+                                    : '-';
+                                
+                                return `
+                                    <tr>
+                                        <td>${pc.id}</td>
+                                        <td><strong>${pc.code}</strong></td>
+                                        <td><code>${pc.countryCode || '-'}</code></td>
+                                        <td>${pc.city || '-'}</td>
+                                        <td>${pc.state || '-'}</td>
+                                        <td>${pc.district || '-'}</td>
+                                        <td>${pc.region || '-'}</td>
+                                        <td><small>${coords}</small></td>
+                                        <td>
+                                            <span class="badge ${pc.isActive ? 'badge-success' : 'badge-secondary'}">
+                                                ${pc.isActive ? 'Active' : 'Inactive'}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="action-buttons">
+                                                <button class="btn btn-sm btn-warning" onclick="openEditModal(${pc.id})">
+                                                    Edit
+                                                </button>
+                                                <button class="btn btn-sm btn-danger" onclick="deletePostalCode(${pc.id}, '${pc.code.replace(/'/g, "\\'")}')">
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            container.innerHTML = tableHtml;
+        }
+
+        // Get Postal Code by ID
+        async function getPostalCodeById() {
+            const id = document.getElementById('getPostalCodeId').value;
+            
+            if (!id) {
+                showAlert('Please enter a postal code ID', 'warning');
+                return;
+            }
+
+            const loading = document.getElementById('loadingById');
+            const result = document.getElementById('postalCodeByIdResult');
+            
+            loading.style.display = 'block';
+            result.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/PostalCodes/${id}`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    result.innerHTML = `
+                        <div class="alert alert-success">
+                            <h5>Postal Code Found:</h5>
+                            <p><strong>ID:</strong> ${data.id}</p>
+                            <p><strong>Code:</strong> ${data.code}</p>
+                            <p><strong>Country Code:</strong> ${data.countryCode || 'N/A'}</p>
+                            <p><strong>City:</strong> ${data.city || 'N/A'}</p>
+                            <p><strong>State:</strong> ${data.state || 'N/A'}</p>
+                            <p><strong>District:</strong> ${data.district || 'N/A'}</p>
+                            <p><strong>Region:</strong> ${data.region || 'N/A'}</p>
+                            <p><strong>Latitude:</strong> ${data.latitude || 'N/A'}</p>
+                            <p><strong>Longitude:</strong> ${data.longitude || 'N/A'}</p>
+                            <p><strong>Status:</strong> ${data.isActive ? 'Active' : 'Inactive'}</p>
+                            <p><strong>Created:</strong> ${data.createdAt ? new Date(data.createdAt).toLocaleString() : 'N/A'}</p>
+                            <p><strong>Updated:</strong> ${data.updatedAt ? new Date(data.updatedAt).toLocaleString() : 'N/A'}</p>
+                        </div>
+                    `;
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Postal code not found'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Get Postal Codes by Country
+        async function getPostalCodesByCountry() {
+            const countryCode = document.getElementById('getByCountryCode').value.trim().toUpperCase();
+            
+            if (!countryCode) {
+                showAlert('Please enter a country code', 'warning');
+                return;
+            }
+
+            const loading = document.getElementById('loadingByCountry');
+            const container = document.getElementById('postalCodesByCountryContainer');
+            
+            loading.style.display = 'block';
+            container.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/PostalCodes/country/${encodeURIComponent(countryCode)}`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    if (!data || data.length === 0) {
+                        container.innerHTML = '<div class="empty-state">No postal codes found for this country</div>';
+                    } else {
+                        const listHtml = `
+                            <div class="alert alert-success">
+                                <h5>Postal Codes in ${countryCode} (${data.length}):</h5>
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Code</th>
+                                                <th>City</th>
+                                                <th>State</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${data.map(pc => `
+                                                <tr>
+                                                    <td>${pc.id}</td>
+                                                    <td><strong>${pc.code}</strong></td>
+                                                    <td>${pc.city || '-'}</td>
+                                                    <td>${pc.state || '-'}</td>
+                                                    <td>
+                                                        <span class="badge ${pc.isActive ? 'badge-success' : 'badge-secondary'}">
+                                                            ${pc.isActive ? 'Active' : 'Inactive'}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        `;
+                        container.innerHTML = listHtml;
+                    }
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Failed to fetch postal codes'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Get Postal Codes by City
+        async function getPostalCodesByCity() {
+            const city = document.getElementById('getByCity').value.trim();
+            
+            if (!city) {
+                showAlert('Please enter a city name', 'warning');
+                return;
+            }
+
+            const loading = document.getElementById('loadingByCity');
+            const container = document.getElementById('postalCodesByCityContainer');
+            
+            loading.style.display = 'block';
+            container.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/PostalCodes/city/${encodeURIComponent(city)}`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    if (!data || data.length === 0) {
+                        container.innerHTML = '<div class="empty-state">No postal codes found for this city</div>';
+                    } else {
+                        const listHtml = `
+                            <div class="alert alert-success">
+                                <h5>Postal Codes in ${city} (${data.length}):</h5>
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th>Code</th>
+                                                <th>Country</th>
+                                                <th>State</th>
+                                                <th>District</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${data.map(pc => `
+                                                <tr>
+                                                    <td>${pc.id}</td>
+                                                    <td><strong>${pc.code}</strong></td>
+                                                    <td><code>${pc.countryCode || '-'}</code></td>
+                                                    <td>${pc.state || '-'}</td>
+                                                    <td>${pc.district || '-'}</td>
+                                                    <td>
+                                                        <span class="badge ${pc.isActive ? 'badge-success' : 'badge-secondary'}">
+                                                            ${pc.isActive ? 'Active' : 'Inactive'}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        `;
+                        container.innerHTML = listHtml;
+                    }
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Failed to fetch postal codes'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Get Postal Code by Code and Country
+        async function getPostalCodeByCodeAndCountry() {
+            const code = document.getElementById('getByCodeValue').value.trim();
+            const countryCode = document.getElementById('getByCodeCountry').value.trim().toUpperCase();
+            
+            if (!code || !countryCode) {
+                showAlert('Please enter both postal code and country code', 'warning');
+                return;
+            }
+
+            const loading = document.getElementById('loadingByCodeCountry');
+            const result = document.getElementById('postalCodeByCodeCountryResult');
+            
+            loading.style.display = 'block';
+            result.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/PostalCodes/${encodeURIComponent(code)}/country/${encodeURIComponent(countryCode)}`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    result.innerHTML = `
+                        <div class="alert alert-success">
+                            <h5>Postal Code Found:</h5>
+                            <p><strong>ID:</strong> ${data.id}</p>
+                            <p><strong>Code:</strong> ${data.code}</p>
+                            <p><strong>Country Code:</strong> ${data.countryCode || 'N/A'}</p>
+                            <p><strong>City:</strong> ${data.city || 'N/A'}</p>
+                            <p><strong>State:</strong> ${data.state || 'N/A'}</p>
+                            <p><strong>District:</strong> ${data.district || 'N/A'}</p>
+                            <p><strong>Region:</strong> ${data.region || 'N/A'}</p>
+                            <p><strong>Coordinates:</strong> ${data.latitude && data.longitude ? `${data.latitude}, ${data.longitude}` : 'N/A'}</p>
+                            <p><strong>Status:</strong> ${data.isActive ? 'Active' : 'Inactive'}</p>
+                        </div>
+                    `;
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Postal code not found'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Open Edit Modal
+        function openEditModal(id) {
+            const postalCode = currentPostalCodes.find(pc => pc.id === id);
+            
+            if (!postalCode) {
+                showAlert('Postal code not found', 'danger');
+                return;
+            }
+
+            document.getElementById('editId').value = postalCode.id;
+            document.getElementById('editCode').value = postalCode.code;
+            document.getElementById('editCountryCode').value = postalCode.countryCode || '';
+            document.getElementById('editCity').value = postalCode.city || '';
+            document.getElementById('editState').value = postalCode.state || '';
+            document.getElementById('editDistrict').value = postalCode.district || '';
+            document.getElementById('editRegion').value = postalCode.region || '';
+            document.getElementById('editLatitude').value = postalCode.latitude || '';
+            document.getElementById('editLongitude').value = postalCode.longitude || '';
+            document.getElementById('editIsActive').checked = postalCode.isActive;
+
+            editModal.show();
+        }
+
+        // Update Postal Code
+        async function updatePostalCode() {
+            const id = document.getElementById('editId').value;
+            const data = {
+                code: document.getElementById('editCode').value.trim(),
+                countryCode: document.getElementById('editCountryCode').value.trim().toUpperCase(),
+                city: document.getElementById('editCity').value.trim(),
+                state: document.getElementById('editState').value.trim() || null,
+                district: document.getElementById('editDistrict').value.trim() || null,
+                region: document.getElementById('editRegion').value.trim() || null,
+                latitude: parseFloat(document.getElementById('editLatitude').value) || null,
+                longitude: parseFloat(document.getElementById('editLongitude').value) || null,
+                isActive: document.getElementById('editIsActive').checked
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/PostalCodes/${id}`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(data)
+                });
+
+                let result;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    result = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(result);
+
+                if (response.ok) {
+                    showAlert('Postal Code updated successfully!', 'success');
+                    editModal.hide();
+                    getAllPostalCodes(); // Refresh list
+                } else {
+                    showAlert(`Error: ${result.message || result.error || 'Failed to update postal code'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+
+        // Delete Postal Code
+        async function deletePostalCode(id, code) {
+            if (!confirm(`Are you sure you want to delete postal code "${code}"?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/PostalCodes/${id}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+
+                if (response.ok) {
+                    // Some APIs return 204 No Content on successful delete
+                    if (response.status === 204) {
+                        updateResponseBox({ message: 'Postal Code deleted successfully' });
+                    } else {
+                        const contentType = response.headers.get('content-type');
+                        if (contentType && contentType.includes('application/json')) {
+                            const result = await response.json();
+                            updateResponseBox(result);
+                        } else {
+                            updateResponseBox({ message: 'Postal Code deleted successfully' });
+                        }
+                    }
+                    showAlert('Postal Code deleted successfully!', 'success');
+                    getAllPostalCodes(); // Refresh list
+                } else {
+                    let result;
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        result = await response.json();
+                    } else {
+                        const text = await response.text();
+                        result = { error: text, statusCode: response.status };
+                    }
+                    updateResponseBox(result);
+                    showAlert(`Error: ${result.message || result.error || 'Failed to delete postal code'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+    </script>
+</body>
+</html>

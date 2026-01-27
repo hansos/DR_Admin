@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Units API Test - DR Admin</title>
+  <link href="/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/assets/css/test-page.css" rel="stylesheet">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-light">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="/choose-test.html">DR Admin - Units API</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><span id="userInfo" class="user-info"></span></li>
+          <li class="nav-item"><a href="/choose-test.html" class="btn btn-back">&#8592; Back to Tests</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container-main">
+    <div class="header-card">
+      <h1>&#128202; Units API Test</h1>
+      <p>Units management and listing</p>
+    </div>
+
+    <div id="alertContainer"></div>
+
+    <div class="test-section">
+      <h2 class="section-title">&#128203; List Units</h2>
+      <button class="btn btn-primary" onclick="getAll()">Load Units</button>
+      <div id="unitsContainer"></div>
+    </div>
+
+    <div class="test-section">
+      <h2 class="section-title">&#128225; Last API Response</h2>
+      <div class="response-box" id="responseBox">No API calls made yet...</div>
+    </div>
+  </div>
+
+  <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/assets/js/authClient.js"></script>
+  <script>
+    function showAlert(message,type='info'){ const c=document.getElementById('alertContainer'); c.innerHTML=`<div class="alert alert-${type} alert-dismissible fade show" role="alert">${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`; setTimeout(()=>{ const a=c.querySelector('.alert'); if(a) bootstrap.Alert.getOrCreateInstance(a).close(); },5000); }
+    function updateResponseBox(d){ document.getElementById('responseBox').textContent = JSON.stringify(d,null,2); }
+    function getAuthHeaders(){ const token=authClient.getToken(); return {'Content-Type':'application/json','Authorization': `Bearer ${token}`}; }
+
+    async function getAll(){ try{ const res=await fetch(`${API_BASE_URL}/api/v1/Units`,{ method:'GET', headers:getAuthHeaders() }); let data; const ct=res.headers.get('content-type'); if(ct && ct.includes('application/json')) data=await res.json(); else { const t=await res.text(); data={ error: t, statusCode: res.status }; } updateResponseBox(data); if(res.ok) document.getElementById('unitsContainer').innerHTML = JSON.stringify(data,null,2); else showAlert('Failed','danger'); }catch(err){ showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } }
+  </script>
+</body>
+</html>

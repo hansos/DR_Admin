@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoices API Test - DR Admin</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Test Page Styles -->
+    <link href="/assets/css/test-page.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/choose-test.html">DR Admin - Invoices API</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <span class="user-info" id="userInfo"></span>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/choose-test.html" class="btn btn-back">&#8592; Back to Tests</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-main">
+        <div class="header-card">
+            <h1>&#128196; Invoices API Test</h1>
+            <p>Test CRUD operations for Invoices API endpoint</p>
+        </div>
+
+        <!-- Alert Messages -->
+        <div id="alertContainer"></div>
+
+        <!-- Create Invoice Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#10133; Create Invoice</h2>
+            <form id="createForm">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="createCustomerId" class="form-label">Customer ID *</label>
+                        <input type="number" class="form-control" id="createCustomerId" placeholder="e.g., 1" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="createInvoiceNumber" class="form-label">Invoice Number</label>
+                        <input type="text" class="form-control" id="createInvoiceNumber" placeholder="e.g., INV-2024-001">
+                        <small class="text-muted">Auto-generated if not provided</small>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="createInvoiceDate" class="form-label">Invoice Date</label>
+                        <input type="date" class="form-control" id="createInvoiceDate">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="createDueDate" class="form-label">Due Date</label>
+                        <input type="date" class="form-control" id="createDueDate">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="createStatus" class="form-label">Status</label>
+                        <select class="form-select" id="createStatus">
+                            <option value="Draft">Draft</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Paid">Paid</option>
+                            <option value="Overdue">Overdue</option>
+                            <option value="Cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="createSubtotal" class="form-label">Subtotal</label>
+                        <input type="number" step="0.01" class="form-control" id="createSubtotal" placeholder="0.00">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="createTaxAmount" class="form-label">Tax Amount</label>
+                        <input type="number" step="0.01" class="form-control" id="createTaxAmount" placeholder="0.00">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="createTotal" class="form-label">Total</label>
+                        <input type="number" step="0.01" class="form-control" id="createTotal" placeholder="0.00">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="createCurrencyCode" class="form-label">Currency Code</label>
+                        <input type="text" class="form-control" id="createCurrencyCode" placeholder="e.g., USD" maxlength="3">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="createPaymentTerms" class="form-label">Payment Terms</label>
+                        <input type="text" class="form-control" id="createPaymentTerms" placeholder="e.g., Net 30">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="createNotes" class="form-label">Notes</label>
+                    <textarea class="form-control" id="createNotes" rows="3" placeholder="Enter notes..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Create Invoice</button>
+            </form>
+        </div>
+
+        <!-- Get All Invoices Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128203; Get All Invoices</h2>
+            <button class="btn btn-primary mb-3" onclick="getAllInvoices()">Load All Invoices</button>
+            <div class="loading" id="loadingAll">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="invoicesTableContainer"></div>
+        </div>
+
+        <!-- Get Invoice by ID Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128269; Get Invoice by ID</h2>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="getInvoiceId" class="form-label">Invoice ID</label>
+                    <input type="number" class="form-control" id="getInvoiceId" placeholder="Enter ID">
+                </div>
+                <div class="col-md-8 mb-3 d-flex align-items-end">
+                    <button class="btn btn-primary" onclick="getInvoiceById()">Get Invoice</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingById">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="invoiceByIdResult"></div>
+        </div>
+
+        <!-- Get Invoices by Customer ID Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128100; Get Invoices by Customer ID</h2>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="getCustomerId" class="form-label">Customer ID</label>
+                    <input type="number" class="form-control" id="getCustomerId" placeholder="Enter Customer ID">
+                </div>
+                <div class="col-md-8 mb-3 d-flex align-items-end">
+                    <button class="btn btn-primary" onclick="getInvoicesByCustomerId()">Get Customer Invoices</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingByCustomer">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="invoicesByCustomerContainer"></div>
+        </div>
+
+        <!-- Get Invoices by Status Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128204; Get Invoices by Status</h2>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="getStatus" class="form-label">Status</label>
+                    <select class="form-select" id="getStatus">
+                        <option value="">Select status...</option>
+                        <option value="Draft">Draft</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Paid">Paid</option>
+                        <option value="Overdue">Overdue</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div class="col-md-8 mb-3 d-flex align-items-end">
+                    <button class="btn btn-primary" onclick="getInvoicesByStatus()">Get Invoices by Status</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingByStatus">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="invoicesByStatusContainer"></div>
+        </div>
+
+        <!-- Get Invoice by Number Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128290; Get Invoice by Number</h2>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="getInvoiceNumber" class="form-label">Invoice Number</label>
+                    <input type="text" class="form-control" id="getInvoiceNumber" placeholder="e.g., INV-2024-001">
+                </div>
+                <div class="col-md-8 mb-3 d-flex align-items-end">
+                    <button class="btn btn-primary" onclick="getInvoiceByNumber()">Get Invoice by Number</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingByNumber">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="invoiceByNumberResult"></div>
+        </div>
+
+        <!-- API Response Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128225; Last API Response</h2>
+            <div class="response-box" id="responseBox">No API calls made yet...</div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">&#9998; Edit Invoice</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editForm">
+                        <input type="hidden" id="editId">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editCustomerId" class="form-label">Customer ID *</label>
+                                <input type="number" class="form-control" id="editCustomerId" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editInvoiceNumber" class="form-label">Invoice Number</label>
+                                <input type="text" class="form-control" id="editInvoiceNumber">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="editInvoiceDate" class="form-label">Invoice Date</label>
+                                <input type="date" class="form-control" id="editInvoiceDate">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="editDueDate" class="form-label">Due Date</label>
+                                <input type="date" class="form-control" id="editDueDate">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="editStatus" class="form-label">Status</label>
+                                <select class="form-select" id="editStatus">
+                                    <option value="Draft">Draft</option>
+                                    <option value="Pending">Pending</option>
+                                    <option value="Paid">Paid</option>
+                                    <option value="Overdue">Overdue</option>
+                                    <option value="Cancelled">Cancelled</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="editSubtotal" class="form-label">Subtotal</label>
+                                <input type="number" step="0.01" class="form-control" id="editSubtotal">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="editTaxAmount" class="form-label">Tax Amount</label>
+                                <input type="number" step="0.01" class="form-control" id="editTaxAmount">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="editTotal" class="form-label">Total</label>
+                                <input type="number" step="0.01" class="form-control" id="editTotal">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editCurrencyCode" class="form-label">Currency Code</label>
+                                <input type="text" class="form-control" id="editCurrencyCode" maxlength="3">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editPaymentTerms" class="form-label">Payment Terms</label>
+                                <input type="text" class="form-control" id="editPaymentTerms">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editNotes" class="form-label">Notes</label>
+                            <textarea class="form-control" id="editNotes" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="updateInvoice()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Auth Client -->
+    <script src="/assets/js/authClient.js"></script>
+    
+    <script>
+        // API_BASE_URL is already defined in authClient.js
+        let currentInvoices = [];
+        let editModal;
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            // Check authentication
+            const token = authClient.getToken();
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            // Verify token
+            const result = await authClient.verifyToken();
+            if (result.authenticated && result.data?.username) {
+                document.getElementById('userInfo').textContent = `Hello, ${result.data.username}!`;
+            } else {
+                document.getElementById('userInfo').textContent = 'Hello, User!';
+            }
+
+            // Initialize edit modal
+            editModal = new bootstrap.Modal(document.getElementById('editModal'));
+
+            // Setup create form
+            document.getElementById('createForm').addEventListener('submit', handleCreate);
+
+            // Set default dates
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('createInvoiceDate').value = today;
+            
+            const dueDate = new Date();
+            dueDate.setDate(dueDate.getDate() + 30);
+            document.getElementById('createDueDate').value = dueDate.toISOString().split('T')[0];
+
+            // Load all invoices on init
+            getAllInvoices();
+        });
+
+        // Show alert message
+        function showAlert(message, type = 'info') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertHtml = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            alertContainer.innerHTML = alertHtml;
+            
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                const alert = alertContainer.querySelector('.alert');
+                if (alert) {
+                    bootstrap.Alert.getOrCreateInstance(alert).close();
+                }
+            }, 5000);
+        }
+
+        // Update response box
+        function updateResponseBox(data) {
+            const responseBox = document.getElementById('responseBox');
+            responseBox.textContent = JSON.stringify(data, null, 2);
+        }
+
+        // Get authorization headers
+        function getAuthHeaders() {
+            const token = authClient.getToken();
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            };
+        }
+
+        // Format date for display
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            return new Date(dateString).toLocaleDateString();
+        }
+
+        // Format currency
+        function formatCurrency(amount, currencyCode = 'USD') {
+            if (amount === null || amount === undefined) return 'N/A';
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: currencyCode || 'USD'
+            }).format(amount);
+        }
+
+        // Handle Create Invoice
+        async function handleCreate(e) {
+            e.preventDefault();
+            
+            const data = {
+                customerId: parseInt(document.getElementById('createCustomerId').value),
+                invoiceNumber: document.getElementById('createInvoiceNumber').value.trim() || null,
+                invoiceDate: document.getElementById('createInvoiceDate').value || null,
+                dueDate: document.getElementById('createDueDate').value || null,
+                status: document.getElementById('createStatus').value,
+                subtotal: parseFloat(document.getElementById('createSubtotal').value) || 0,
+                taxAmount: parseFloat(document.getElementById('createTaxAmount').value) || 0,
+                total: parseFloat(document.getElementById('createTotal').value) || 0,
+                currencyCode: document.getElementById('createCurrencyCode').value.trim() || null,
+                paymentTerms: document.getElementById('createPaymentTerms').value.trim() || null,
+                notes: document.getElementById('createNotes').value.trim() || null
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Invoices`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(data)
+                });
+
+                let result;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    result = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(result);
+
+                if (response.ok) {
+                    showAlert('Invoice created successfully!', 'success');
+                    document.getElementById('createForm').reset();
+                    
+                    // Reset default dates
+                    const today = new Date().toISOString().split('T')[0];
+                    document.getElementById('createInvoiceDate').value = today;
+                    const dueDate = new Date();
+                    dueDate.setDate(dueDate.getDate() + 30);
+                    document.getElementById('createDueDate').value = dueDate.toISOString().split('T')[0];
+                    document.getElementById('createStatus').value = 'Draft';
+                    
+                    getAllInvoices(); // Refresh list
+                } else {
+                    showAlert(`Error: ${result.message || result.error || 'Failed to create invoice'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+
+        // Get All Invoices
+        async function getAllInvoices() {
+            const loading = document.getElementById('loadingAll');
+            const container = document.getElementById('invoicesTableContainer');
+            
+            loading.style.display = 'block';
+            container.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Invoices`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    currentInvoices = data;
+                    renderInvoicesTable(data, container);
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Failed to fetch invoices'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Render Invoices Table
+        function renderInvoicesTable(invoices, container) {
+            if (!invoices || invoices.length === 0) {
+                container.innerHTML = '<div class="empty-state">No invoices found</div>';
+                return;
+            }
+
+            const tableHtml = `
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Invoice #</th>
+                                <th>Customer ID</th>
+                                <th>Invoice Date</th>
+                                <th>Due Date</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${invoices.map(invoice => {
+                                const statusColor = {
+                                    'Draft': 'badge-secondary',
+                                    'Pending': 'badge-warning',
+                                    'Paid': 'badge-success',
+                                    'Overdue': 'badge-danger',
+                                    'Cancelled': 'badge-dark'
+                                }[invoice.status] || 'badge-secondary';
+                                
+                                return `
+                                    <tr>
+                                        <td>${invoice.id}</td>
+                                        <td><strong>${invoice.invoiceNumber || 'N/A'}</strong></td>
+                                        <td>${invoice.customerId}</td>
+                                        <td>${formatDate(invoice.invoiceDate)}</td>
+                                        <td>${formatDate(invoice.dueDate)}</td>
+                                        <td>${formatCurrency(invoice.total, invoice.currencyCode)}</td>
+                                        <td>
+                                            <span class="badge ${statusColor}">
+                                                ${invoice.status}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="action-buttons">
+                                                <button class="btn btn-sm btn-warning" onclick="openEditModal(${invoice.id})">
+                                                    Edit
+                                                </button>
+                                                <button class="btn btn-sm btn-danger" onclick="deleteInvoice(${invoice.id}, '${(invoice.invoiceNumber || invoice.id).toString().replace(/'/g, "\\'")}')">
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            container.innerHTML = tableHtml;
+        }
+
+        // Get Invoice by ID
+        async function getInvoiceById() {
+            const id = document.getElementById('getInvoiceId').value;
+            
+            if (!id) {
+                showAlert('Please enter an invoice ID', 'warning');
+                return;
+            }
+
+            const loading = document.getElementById('loadingById');
+            const result = document.getElementById('invoiceByIdResult');
+            
+            loading.style.display = 'block';
+            result.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Invoices/${id}`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    result.innerHTML = `
+                        <div class="alert alert-success">
+                            <h5>Invoice Found:</h5>
+                            <p><strong>ID:</strong> ${data.id}</p>
+                            <p><strong>Invoice Number:</strong> ${data.invoiceNumber || 'N/A'}</p>
+                            <p><strong>Customer ID:</strong> ${data.customerId}</p>
+                            <p><strong>Invoice Date:</strong> ${formatDate(data.invoiceDate)}</p>
+                            <p><strong>Due Date:</strong> ${formatDate(data.dueDate)}</p>
+                            <p><strong>Status:</strong> ${data.status}</p>
+                            <p><strong>Subtotal:</strong> ${formatCurrency(data.subtotal, data.currencyCode)}</p>
+                            <p><strong>Tax Amount:</strong> ${formatCurrency(data.taxAmount, data.currencyCode)}</p>
+                            <p><strong>Total:</strong> ${formatCurrency(data.total, data.currencyCode)}</p>
+                            <p><strong>Currency:</strong> ${data.currencyCode || 'N/A'}</p>
+                            <p><strong>Payment Terms:</strong> ${data.paymentTerms || 'N/A'}</p>
+                            <p><strong>Notes:</strong> ${data.notes || 'N/A'}</p>
+                            <p><strong>Created:</strong> ${data.createdAt ? new Date(data.createdAt).toLocaleString() : 'N/A'}</p>
+                            <p><strong>Updated:</strong> ${data.updatedAt ? new Date(data.updatedAt).toLocaleString() : 'N/A'}</p>
+                        </div>
+                    `;
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Invoice not found'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Get Invoices by Customer ID
+        async function getInvoicesByCustomerId() {
+            const customerId = document.getElementById('getCustomerId').value;
+            
+            if (!customerId) {
+                showAlert('Please enter a customer ID', 'warning');
+                return;
+            }
+
+            const loading = document.getElementById('loadingByCustomer');
+            const container = document.getElementById('invoicesByCustomerContainer');
+            
+            loading.style.display = 'block';
+            container.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Invoices/customer/${customerId}`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    renderInvoicesTable(data, container);
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Failed to fetch customer invoices'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Get Invoices by Status
+        async function getInvoicesByStatus() {
+            const status = document.getElementById('getStatus').value;
+            
+            if (!status) {
+                showAlert('Please select a status', 'warning');
+                return;
+            }
+
+            const loading = document.getElementById('loadingByStatus');
+            const container = document.getElementById('invoicesByStatusContainer');
+            
+            loading.style.display = 'block';
+            container.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Invoices/status/${status}`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    renderInvoicesTable(data, container);
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Failed to fetch invoices by status'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Get Invoice by Number
+        async function getInvoiceByNumber() {
+            const invoiceNumber = document.getElementById('getInvoiceNumber').value.trim();
+            
+            if (!invoiceNumber) {
+                showAlert('Please enter an invoice number', 'warning');
+                return;
+            }
+
+            const loading = document.getElementById('loadingByNumber');
+            const result = document.getElementById('invoiceByNumberResult');
+            
+            loading.style.display = 'block';
+            result.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Invoices/number/${encodeURIComponent(invoiceNumber)}`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    result.innerHTML = `
+                        <div class="alert alert-success">
+                            <h5>Invoice Found:</h5>
+                            <p><strong>ID:</strong> ${data.id}</p>
+                            <p><strong>Invoice Number:</strong> ${data.invoiceNumber || 'N/A'}</p>
+                            <p><strong>Customer ID:</strong> ${data.customerId}</p>
+                            <p><strong>Invoice Date:</strong> ${formatDate(data.invoiceDate)}</p>
+                            <p><strong>Due Date:</strong> ${formatDate(data.dueDate)}</p>
+                            <p><strong>Status:</strong> ${data.status}</p>
+                            <p><strong>Subtotal:</strong> ${formatCurrency(data.subtotal, data.currencyCode)}</p>
+                            <p><strong>Tax Amount:</strong> ${formatCurrency(data.taxAmount, data.currencyCode)}</p>
+                            <p><strong>Total:</strong> ${formatCurrency(data.total, data.currencyCode)}</p>
+                            <p><strong>Currency:</strong> ${data.currencyCode || 'N/A'}</p>
+                            <p><strong>Payment Terms:</strong> ${data.paymentTerms || 'N/A'}</p>
+                            <p><strong>Notes:</strong> ${data.notes || 'N/A'}</p>
+                        </div>
+                    `;
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Invoice not found'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Open Edit Modal
+        function openEditModal(id) {
+            const invoice = currentInvoices.find(i => i.id === id);
+            
+            if (!invoice) {
+                showAlert('Invoice not found', 'danger');
+                return;
+            }
+
+            document.getElementById('editId').value = invoice.id;
+            document.getElementById('editCustomerId').value = invoice.customerId;
+            document.getElementById('editInvoiceNumber').value = invoice.invoiceNumber || '';
+            document.getElementById('editInvoiceDate').value = invoice.invoiceDate ? invoice.invoiceDate.split('T')[0] : '';
+            document.getElementById('editDueDate').value = invoice.dueDate ? invoice.dueDate.split('T')[0] : '';
+            document.getElementById('editStatus').value = invoice.status;
+            document.getElementById('editSubtotal').value = invoice.subtotal || 0;
+            document.getElementById('editTaxAmount').value = invoice.taxAmount || 0;
+            document.getElementById('editTotal').value = invoice.total || 0;
+            document.getElementById('editCurrencyCode').value = invoice.currencyCode || '';
+            document.getElementById('editPaymentTerms').value = invoice.paymentTerms || '';
+            document.getElementById('editNotes').value = invoice.notes || '';
+
+            editModal.show();
+        }
+
+        // Update Invoice
+        async function updateInvoice() {
+            const id = document.getElementById('editId').value;
+            const data = {
+                customerId: parseInt(document.getElementById('editCustomerId').value),
+                invoiceNumber: document.getElementById('editInvoiceNumber').value.trim() || null,
+                invoiceDate: document.getElementById('editInvoiceDate').value || null,
+                dueDate: document.getElementById('editDueDate').value || null,
+                status: document.getElementById('editStatus').value,
+                subtotal: parseFloat(document.getElementById('editSubtotal').value) || 0,
+                taxAmount: parseFloat(document.getElementById('editTaxAmount').value) || 0,
+                total: parseFloat(document.getElementById('editTotal').value) || 0,
+                currencyCode: document.getElementById('editCurrencyCode').value.trim() || null,
+                paymentTerms: document.getElementById('editPaymentTerms').value.trim() || null,
+                notes: document.getElementById('editNotes').value.trim() || null
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Invoices/${id}`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(data)
+                });
+
+                let result;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    result = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(result);
+
+                if (response.ok) {
+                    showAlert('Invoice updated successfully!', 'success');
+                    editModal.hide();
+                    getAllInvoices(); // Refresh list
+                } else {
+                    showAlert(`Error: ${result.message || result.error || 'Failed to update invoice'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+
+        // Delete Invoice
+        async function deleteInvoice(id, name) {
+            if (!confirm(`Are you sure you want to delete invoice "${name}"?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Invoices/${id}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+
+                if (response.ok) {
+                    // Some APIs return 204 No Content on successful delete
+                    if (response.status === 204) {
+                        updateResponseBox({ message: 'Invoice deleted successfully' });
+                    } else {
+                        const contentType = response.headers.get('content-type');
+                        if (contentType && contentType.includes('application/json')) {
+                            const result = await response.json();
+                            updateResponseBox(result);
+                        } else {
+                            updateResponseBox({ message: 'Invoice deleted successfully' });
+                        }
+                    }
+                    showAlert('Invoice deleted successfully!', 'success');
+                    getAllInvoices(); // Refresh list
+                } else {
+                    let result;
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        result = await response.json();
+                    } else {
+                        const text = await response.text();
+                        result = { error: text, statusCode: response.status };
+                    }
+                    updateResponseBox(result);
+                    showAlert(`Error: ${result.message || result.error || 'Failed to delete invoice'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+    </script>
+</body>
+</html>

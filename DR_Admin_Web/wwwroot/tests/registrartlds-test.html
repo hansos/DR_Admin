@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrar TLDs API Test - DR Admin</title>
+    <link href="/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/assets/css/test-page.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/choose-test.html">DR Admin - Registrar TLDs API</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><span class="user-info" id="userInfo"></span></li>
+                    <li class="nav-item"><a href="/choose-test.html" class="btn btn-back">&#8592; Back to Tests</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-main">
+        <div class="header-card">
+            <h1>&#127760; Registrar TLDs API Test</h1>
+            <p>Test CRUD operations for RegistrarTlds and lookup endpoints</p>
+        </div>
+
+        <div id="alertContainer"></div>
+
+        <!-- Create RegistrarTld Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#10133; Create Registrar TLD</h2>
+            <form id="createForm">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="createRegistrarId" class="form-label">Registrar ID *</label>
+                        <input type="number" class="form-control" id="createRegistrarId" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="createTld" class="form-label">TLD *</label>
+                        <input type="text" class="form-control" id="createTld" placeholder="e.g., .com" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="createIsActive" class="form-label">Status</label>
+                        <select class="form-control" id="createIsActive">
+                            <option value="true">Active</option>
+                            <option value="false">Inactive</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="createNotes" class="form-label">Notes</label>
+                    <textarea class="form-control" id="createNotes" rows="2"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Create Registrar TLD</button>
+            </form>
+        </div>
+
+        <!-- Get All RegistrarTlds Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128203; Get All Registrar TLDs</h2>
+            <button class="btn btn-primary mb-3" onclick="getAllRegistrarTlds()">Load All Registrar TLDs</button>
+            <div class="loading" id="loadingAll"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>
+            <div id="registrarTldsTableContainer"></div>
+        </div>
+
+        <!-- Get RegistrarTld by ID Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128269; Get Registrar TLD by ID</h2>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="getRegistrarTldId" class="form-label">ID</label>
+                    <input type="number" class="form-control" id="getRegistrarTldId">
+                </div>
+                <div class="col-md-8 mb-3 d-flex align-items-end">
+                    <button class="btn btn-primary" onclick="getRegistrarTldById()">Get Registrar TLD</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingById"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>
+            <div id="registrarTldByIdResult"></div>
+        </div>
+
+        <!-- Available TLDs -->
+        <div class="test-section">
+            <h2 class="section-title">&#127760; Get Available TLDs</h2>
+            <button class="btn btn-primary mb-3" onclick="getAvailableTlds()">Load Available TLDs</button>
+            <div class="loading" id="loadingAvailable"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>
+            <div id="availableTldsContainer"></div>
+        </div>
+
+        <!-- Get TLDs for Registrar -->
+        <div class="test-section">
+            <h2 class="section-title">&#128101; Get TLDs for Registrar</h2>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="getForRegistrarId" class="form-label">Registrar ID</label>
+                    <input type="number" class="form-control" id="getForRegistrarId">
+                </div>
+                <div class="col-md-8 mb-3 d-flex align-items-end">
+                    <button class="btn btn-primary" onclick="getTldsForRegistrar()">Get TLDs</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingForRegistrar"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>
+            <div id="tldsForRegistrarContainer"></div>
+        </div>
+
+        <!-- Check specific Registrar TLD -->
+        <div class="test-section">
+            <h2 class="section-title">&#128270; Check Registrar TLD</h2>
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label for="checkRegistrarId" class="form-label">Registrar ID</label>
+                    <input type="number" class="form-control" id="checkRegistrarId">
+                </div>
+                <div class="col-md-5 mb-3">
+                    <label for="checkTldId" class="form-label">TLD ID</label>
+                    <input type="number" class="form-control" id="checkTldId">
+                </div>
+                <div class="col-md-4 mb-3 d-flex align-items-end">
+                    <button class="btn btn-primary" onclick="checkRegistrarTld()">Check</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingCheck"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>
+            <div id="checkResult"></div>
+        </div>
+
+        <!-- API Response -->
+        <div class="test-section">
+            <h2 class="section-title">&#128225; Last API Response</h2>
+            <div class="response-box" id="responseBox">No API calls made yet...</div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">&#9998; Edit Registrar TLD</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editForm">
+                        <input type="hidden" id="editId">
+                        <div class="mb-3">
+                            <label for="editRegistrarId" class="form-label">Registrar ID *</label>
+                            <input type="number" class="form-control" id="editRegistrarId" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editTld" class="form-label">TLD *</label>
+                            <input type="text" class="form-control" id="editTld" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editIsActive" class="form-label">Status</label>
+                            <select class="form-control" id="editIsActive">
+                                <option value="true">Active</option>
+                                <option value="false">Inactive</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editNotes" class="form-label">Notes</label>
+                            <textarea class="form-control" id="editNotes" rows="2"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="updateRegistrarTld()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/assets/js/authClient.js"></script>
+    <script>
+        let currentRegistrarTlds = [];
+        let editModal;
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            const token = authClient.getToken(); if (!token) { window.location.href = '/login.html'; return; }
+            const result = await authClient.verifyToken(); if (result.authenticated && result.data?.username) document.getElementById('userInfo').textContent = `Hello, ${result.data.username}!`; else document.getElementById('userInfo').textContent = 'Hello, User!';
+
+            editModal = new bootstrap.Modal(document.getElementById('editModal'));
+            document.getElementById('createForm').addEventListener('submit', handleCreate);
+            getAllRegistrarTlds();
+        });
+
+        function showAlert(message, type='info') { const alertContainer = document.getElementById('alertContainer'); const alertHtml = `\n                <div class="alert alert-${type} alert-dismissible fade show" role="alert">${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`; alertContainer.innerHTML = alertHtml; setTimeout(()=>{ const a = alertContainer.querySelector('.alert'); if (a) bootstrap.Alert.getOrCreateInstance(a).close(); },5000); }
+        function updateResponseBox(data) { document.getElementById('responseBox').textContent = JSON.stringify(data, null, 2); }
+        function getAuthHeaders() { const token = authClient.getToken(); return { 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` }; }
+
+        async function handleCreate(e) {
+            e.preventDefault();
+            const data = {
+                registrarId: parseInt(document.getElementById('createRegistrarId').value),
+                tld: document.getElementById('createTld').value.trim(),
+                isActive: document.getElementById('createIsActive').value === 'true',
+                notes: document.getElementById('createNotes').value.trim() || null
+            };
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/v1/RegistrarTlds`, { method:'POST', headers: getAuthHeaders(), body: JSON.stringify(data) });
+                let result; const ct = res.headers.get('content-type'); if (ct && ct.includes('application/json')) result = await res.json(); else { const text = await res.text(); result = { error: text, statusCode: res.status }; }
+                updateResponseBox(result);
+                if (res.ok) { showAlert('Registrar TLD created','success'); document.getElementById('createForm').reset(); getAllRegistrarTlds(); } else showAlert(`Error: ${result.message||result.error||'Failed to create'}`,'danger');
+            } catch (err) { showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); }
+        }
+
+        async function getAllRegistrarTlds() {
+            const loading = document.getElementById('loadingAll'); const container = document.getElementById('registrarTldsTableContainer'); loading.style.display='block'; container.innerHTML='';
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/v1/RegistrarTlds`, { method:'GET', headers: getAuthHeaders() });
+                let data; const ct = res.headers.get('content-type'); if (ct && ct.includes('application/json')) data = await res.json(); else { const text = await res.text(); data = { error: text, statusCode: res.status }; }
+                updateResponseBox(data);
+                if (res.ok) { currentRegistrarTlds = data; renderRegistrarTldsTable(data); } else showAlert(`Error: ${data.message||data.error||'Failed to fetch'}`,'danger');
+            } catch (err) { showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } finally { loading.style.display='none'; }
+        }
+
+        function renderRegistrarTldsTable(items) {
+            const container = document.getElementById('registrarTldsTableContainer'); if (!items || items.length===0) { container.innerHTML = '<div class="empty-state">No registrar TLDs found</div>'; return; }
+            const tableHtml = `
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead><tr><th>ID</th><th>Registrar ID</th><th>TLD</th><th>Status</th><th>Notes</th><th>Actions</th></tr></thead>
+                        <tbody>${items.map(i=>`<tr><td>${i.id}</td><td>${i.registrarId}</td><td><code>${i.tld}</code></td><td><span class="badge ${i.isActive?'badge-success':'badge-secondary'}">${i.isActive?'Active':'Inactive'}</span></td><td>${i.notes||'-'}</td><td><div class="action-buttons"><button class="btn btn-sm btn-warning" onclick="openEditModal(${i.id})">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteRegistrarTld(${i.id}, '${(i.tld||'').replace(/'/g, "\\'" )}')">Delete</button></div></td></tr>`).join('')}</tbody>
+                    </table>
+                </div>`;
+            container.innerHTML = tableHtml;
+        }
+
+        async function getRegistrarTldById() {
+            const id = document.getElementById('getRegistrarTldId').value; if (!id) { showAlert('Please enter an ID','warning'); return; }
+            const loading = document.getElementById('loadingById'); const result = document.getElementById('registrarTldByIdResult'); loading.style.display='block'; result.innerHTML='';
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/v1/RegistrarTlds/${id}`, { method:'GET', headers: getAuthHeaders() });
+                let data; const ct = res.headers.get('content-type'); if (ct && ct.includes('application/json')) data = await res.json(); else { const text = await res.text(); data = { error: text, statusCode: res.status }; }
+                updateResponseBox(data);
+                if (res.ok) { result.innerHTML = `<div class="alert alert-success"><h5>Registrar TLD Found:</h5><p><strong>ID:</strong> ${data.id}</p><p><strong>Registrar ID:</strong> ${data.registrarId}</p><p><strong>TLD:</strong> <code>${data.tld}</code></p><p><strong>Status:</strong> ${data.isActive? 'Active':'Inactive'}</p><p><strong>Notes:</strong> ${data.notes||'N/A'}</p></div>`; } else showAlert(`Error: ${data.message||data.error||'Not found'}`,'danger');
+            } catch (err) { showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } finally { loading.style.display='none'; }
+        }
+
+        async function getAvailableTlds() {
+            const loading = document.getElementById('loadingAvailable'); const container = document.getElementById('availableTldsContainer'); loading.style.display='block'; container.innerHTML='';
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/v1/RegistrarTlds/available`, { method:'GET', headers: getAuthHeaders() });
+                let data; const ct = res.headers.get('content-type'); if (ct && ct.includes('application/json')) data = await res.json(); else { const text = await res.text(); data = { error: text, statusCode: res.status }; }
+                updateResponseBox(data);
+                if (res.ok) { if (!data || data.length===0) container.innerHTML = '<div class="empty-state">No available TLDs</div>'; else container.innerHTML = `<div class="alert alert-success"><h5>Available TLDs (${data.length}):</h5><ul>${data.map(t=>`<li><code>${t.tld}</code> - ID: ${t.id}</li>`).join('')}</ul></div>`; } else showAlert(`Error: ${data.message||data.error||'Failed to fetch'}`,'danger');
+            } catch (err) { showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } finally { loading.style.display='none'; }
+        }
+
+        async function getTldsForRegistrar() {
+            const registrarId = document.getElementById('getForRegistrarId').value; if (!registrarId) { showAlert('Please enter registrar ID','warning'); return; }
+            const loading = document.getElementById('loadingForRegistrar'); const container = document.getElementById('tldsForRegistrarContainer'); loading.style.display='block'; container.innerHTML='';
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/v1/RegistrarTlds/registrar/${registrarId}`, { method:'GET', headers: getAuthHeaders() });
+                let data; const ct = res.headers.get('content-type'); if (ct && ct.includes('application/json')) data = await res.json(); else { const text = await res.text(); data = { error: text, statusCode: res.status }; }
+                updateResponseBox(data);
+                if (res.ok) { if (!data || data.length===0) container.innerHTML = '<div class="empty-state">No TLDs for this registrar</div>'; else container.innerHTML = `<div class="alert alert-success"><h5>TLDs for Registrar ${registrarId} (${data.length}):</h5><ul>${data.map(t=>`<li><code>${t.tld}</code> - ID: ${t.id} - ${t.isActive? 'Active':'Inactive'}</li>`).join('')}</ul></div>`; } else showAlert(`Error: ${data.message||data.error||'Failed to fetch'}`,'danger');
+            } catch (err) { showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } finally { loading.style.display='none'; }
+        }
+
+        async function checkRegistrarTld() {
+            const registrarId = document.getElementById('checkRegistrarId').value; const tldId = document.getElementById('checkTldId').value; if (!registrarId || !tldId) { showAlert('Provide registrar ID and TLD ID','warning'); return; }
+            const loading = document.getElementById('loadingCheck'); const result = document.getElementById('checkResult'); loading.style.display='block'; result.innerHTML='';
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/v1/RegistrarTlds/registrar/${registrarId}/tld/${tldId}`, { method:'GET', headers: getAuthHeaders() });
+                let data; const ct = res.headers.get('content-type'); if (ct && ct.includes('application/json')) data = await res.json(); else { const text = await res.text(); data = { error: text, statusCode: res.status }; }
+                updateResponseBox(data);
+                if (res.ok) { result.innerHTML = `<div class="alert alert-success"><p><strong>Registrar TLD:</strong> ID ${data.id} - <code>${data.tld}</code> - ${data.isActive? 'Active':'Inactive'}</p></div>`; } else showAlert(`Error: ${data.message||data.error||'Not found'}`,'danger');
+            } catch (err) { showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } finally { loading.style.display='none'; }
+        }
+
+        function openEditModal(id) { const item = currentRegistrarTlds.find(x=>x.id===id); if (!item) { showAlert('Item not found','danger'); return; } document.getElementById('editId').value=item.id; document.getElementById('editRegistrarId').value=item.registrarId||''; document.getElementById('editTld').value=item.tld||''; document.getElementById('editIsActive').value = item.isActive? 'true':'false'; document.getElementById('editNotes').value = item.notes||''; editModal.show(); }
+
+        async function updateRegistrarTld() {
+            const id = document.getElementById('editId').value; const data = { registrarId: parseInt(document.getElementById('editRegistrarId').value), tld: document.getElementById('editTld').value.trim(), isActive: document.getElementById('editIsActive').value === 'true', notes: document.getElementById('editNotes').value.trim() || null };
+            try { const res = await fetch(`${API_BASE_URL}/api/v1/RegistrarTlds/${id}`, { method:'PUT', headers: getAuthHeaders(), body: JSON.stringify(data) }); let result; const ct = res.headers.get('content-type'); if (ct && ct.includes('application/json')) result = await res.json(); else { const text = await res.text(); result = { error: text, statusCode: res.status }; } updateResponseBox(result); if (res.ok) { showAlert('Registrar TLD updated','success'); editModal.hide(); getAllRegistrarTlds(); } else showAlert(`Error: ${result.message||result.error||'Failed to update'}`,'danger'); } catch (err) { showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); }
+        }
+
+        async function deleteRegistrarTld(id, name) { if (!confirm(`Delete TLD "${name}"?`)) return; try { const res = await fetch(`${API_BASE_URL}/api/v1/RegistrarTlds/${id}`, { method:'DELETE', headers: getAuthHeaders() }); if (res.ok) { showAlert('Registrar TLD deleted','success'); getAllRegistrarTlds(); const ct = res.headers.get('content-type'); if (ct && ct.includes('application/json')) updateResponseBox(await res.json()); else updateResponseBox({ message: 'Deleted' }); } else { let result; const ct = res.headers.get('content-type'); if (ct && ct.includes('application/json')) result = await res.json(); else { const text = await res.text(); result = { error: text, statusCode: res.status }; } updateResponseBox(result); showAlert(`Error: ${result.message||result.error||'Failed to delete'}`,'danger'); } } catch (err) { showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } }
+    </script>
+</body>
+</html>

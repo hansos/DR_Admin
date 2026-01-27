@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sent Emails API Test - DR Admin</title>
+  <link href="/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/assets/css/test-page.css" rel="stylesheet">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-light">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="/choose-test.html">DR Admin - Sent Emails API</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><span id="userInfo" class="user-info"></span></li>
+          <li class="nav-item"><a href="/choose-test.html" class="btn btn-back">&#8592; Back to Tests</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container-main">
+    <div class="header-card">
+      <h1>&#128233; Sent Emails API Test</h1>
+      <p>CRUD and advanced lookups for sent emails</p>
+    </div>
+
+    <div id="alertContainer"></div>
+
+    <div class="test-section">
+      <h2 class="section-title">&#128203; Get Sent Emails</h2>
+      <button class="btn btn-primary mb-3" onclick="getAllSentEmails()">Load All</button>
+      <div class="loading" id="loadingAll"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>
+      <div id="sentEmailsTable"></div>
+    </div>
+
+    <div class="test-section">
+      <h2 class="section-title">&#128065; Lookups</h2>
+      <div class="row">
+        <div class="col-md-4 mb-3">
+          <label class="form-label">By Customer ID</label>
+          <input id="byCustomerId" class="form-control" />
+        </div>
+        <div class="col-md-4 mb-3">
+          <label class="form-label">By User ID</label>
+          <input id="byUserId" class="form-control" />
+        </div>
+        <div class="col-md-4 mb-3">
+          <label class="form-label">By Message ID</label>
+          <input id="byMessageId" class="form-control" />
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="form-label">By Entity (type)</label>
+          <input id="byEntityType" class="form-control" placeholder="e.g., Invoice" />
+        </div>
+        <div class="col-md-6 mb-3">
+          <label class="form-label">By Entity ID</label>
+          <input id="byEntityId" class="form-control" />
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="form-label">Date From</label>
+          <input id="dateFrom" type="date" class="form-control" />
+        </div>
+        <div class="col-md-6 mb-3">
+          <label class="form-label">Date To</label>
+          <input id="dateTo" type="date" class="form-control" />
+        </div>
+      </div>
+      <div class="d-flex gap-2">
+        <button class="btn btn-primary" onclick="lookupByCustomer()">Lookup by Customer</button>
+        <button class="btn btn-primary" onclick="lookupByUser()">Lookup by User</button>
+        <button class="btn btn-primary" onclick="lookupByEntity()">Lookup by Entity</button>
+        <button class="btn btn-primary" onclick="lookupByDateRange()">Lookup by Date Range</button>
+        <button class="btn btn-primary" onclick="lookupByMessageId()">Lookup by Message ID</button>
+      </div>
+    </div>
+
+    <div class="test-section">
+      <h2 class="section-title">&#128225; Last API Response</h2>
+      <div class="response-box" id="responseBox">No API calls made yet...</div>
+    </div>
+  </div>
+
+  <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/assets/js/authClient.js"></script>
+  <script>
+    function showAlert(message,type='info'){ const c=document.getElementById('alertContainer'); c.innerHTML=`<div class="alert alert-${type} alert-dismissible fade show" role="alert">${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`; setTimeout(()=>{ const a=c.querySelector('.alert'); if(a) bootstrap.Alert.getOrCreateInstance(a).close(); },5000); }
+    function updateResponseBox(d){ document.getElementById('responseBox').textContent = JSON.stringify(d,null,2); }
+    function getAuthHeaders(){ const token=authClient.getToken(); return {'Content-Type':'application/json','Authorization': `Bearer ${token}`}; }
+
+    async function getAllSentEmails(){ const loading=document.getElementById('loadingAll'); const container=document.getElementById('sentEmailsTable'); loading.style.display='block'; container.innerHTML=''; try{ const res = await fetch(`${API_BASE_URL}/api/v1/SentEmails`,{ method:'GET', headers:getAuthHeaders() }); let data; const ct=res.headers.get('content-type'); if(ct && ct.includes('application/json')) data=await res.json(); else { const t=await res.text(); data={ error: t, statusCode: res.status }; } updateResponseBox(data); if(res.ok){ renderSentEmailsTable(data);} else showAlert('Failed to fetch sent emails','danger'); }catch(err){ showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } finally{ loading.style.display='none'; } }
+
+    function renderSentEmailsTable(items){ const container=document.getElementById('sentEmailsTable'); if(!items||items.length===0){ container.innerHTML='<div class="empty-state">No sent emails found</div>'; return; } const html=`<div class="table-responsive"><table class="table table-sm"><thead><tr><th>ID</th><th>To</th><th>Subject</th><th>Message ID</th><th>Date Sent</th></tr></thead><tbody>${items.map(i=>`<tr><td>${i.id}</td><td>${i.toAddress||'-'}</td><td>${i.subject||'-'}</td><td><code>${i.messageId||'-'}</code></td><td>${i.sentAt? new Date(i.sentAt).toLocaleString() : '-'}</td></tr>`).join('')}</tbody></table></div>`; container.innerHTML=html; }
+
+    async function lookupByCustomer(){ const id=document.getElementById('byCustomerId').value; if(!id){ showAlert('Please enter customer ID','warning'); return; } try{ const res=await fetch(`${API_BASE_URL}/api/v1/SentEmails/by-customer/${id}`,{ method:'GET', headers:getAuthHeaders() }); let data; const ct=res.headers.get('content-type'); if(ct && ct.includes('application/json')) data=await res.json(); else { const t=await res.text(); data={ error: t, statusCode: res.status }; } updateResponseBox(data); if(res.ok) renderSentEmailsTable(data); else showAlert('Lookup failed','danger'); }catch(err){ showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } }
+
+    async function lookupByUser(){ const id=document.getElementById('byUserId').value; if(!id){ showAlert('Please enter user ID','warning'); return; } try{ const res=await fetch(`${API_BASE_URL}/api/v1/SentEmails/by-user/${id}`,{ method:'GET', headers:getAuthHeaders() }); let data; const ct=res.headers.get('content-type'); if(ct && ct.includes('application/json')) data=await res.json(); else { const t=await res.text(); data={ error: t, statusCode: res.status }; } updateResponseBox(data); if(res.ok) renderSentEmailsTable(data); else showAlert('Lookup failed','danger'); }catch(err){ showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } }
+
+    async function lookupByEntity(){ const type=document.getElementById('byEntityType').value.trim(); const id=document.getElementById('byEntityId').value; if(!type || !id){ showAlert('Provide entity type and id','warning'); return; } try{ const res=await fetch(`${API_BASE_URL}/api/v1/SentEmails/by-entity/${encodeURIComponent(type)}/${id}`,{ method:'GET', headers:getAuthHeaders() }); let data; const ct=res.headers.get('content-type'); if(ct && ct.includes('application/json')) data=await res.json(); else { const t=await res.text(); data={ error: t, statusCode: res.status }; } updateResponseBox(data); if(res.ok) renderSentEmailsTable(data); else showAlert('Lookup failed','danger'); }catch(err){ showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } }
+
+    async function lookupByDateRange(){ const from=document.getElementById('dateFrom').value; const to=document.getElementById('dateTo').value; if(!from || !to){ showAlert('Provide both dates','warning'); return; } try{ const res=await fetch(`${API_BASE_URL}/api/v1/SentEmails/by-date-range?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`,{ method:'GET', headers:getAuthHeaders() }); let data; const ct=res.headers.get('content-type'); if(ct && ct.includes('application/json')) data=await res.json(); else { const t=await res.text(); data={ error: t, statusCode: res.status }; } updateResponseBox(data); if(res.ok) renderSentEmailsTable(data); else showAlert('Lookup failed','danger'); }catch(err){ showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } }
+
+    async function lookupByMessageId(){ const msg=document.getElementById('byMessageId').value.trim(); if(!msg){ showAlert('Provide message id','warning'); return; } try{ const res=await fetch(`${API_BASE_URL}/api/v1/SentEmails/by-message-id/${encodeURIComponent(msg)}`,{ method:'GET', headers:getAuthHeaders() }); let data; const ct=res.headers.get('content-type'); if(ct && ct.includes('application/json')) data=await res.json(); else { const t=await res.text(); data={ error: t, statusCode: res.status }; } updateResponseBox(data); if(res.ok) renderSentEmailsTable(data); else showAlert('Lookup failed','danger'); }catch(err){ showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } }
+  </script>
+</body>
+</html>

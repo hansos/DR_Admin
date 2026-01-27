@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control Panel Types API Test - DR Admin</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Test Page Styles -->
+    <link href="/assets/css/test-page.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/choose-test.html">DR Admin - Control Panel Types API</a>
+            <div class="ms-auto">
+                <a href="/choose-test.html" class="btn-back">&#8592; Back to Tests</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-main">
+        <div class="header-card">
+            <h1>&#128421; Control Panel Types API Test</h1>
+            <p>Test CRUD operations for /api/v1/ControlPanelTypes</p>
+        </div>
+
+        <!-- POST Create Control Panel Type -->
+        <div class="test-section">
+            <h2 class="section-title">&#10133; POST Create Control Panel Type</h2>
+            <div class="mb-3">
+                <label for="createName" class="form-label">Name:</label>
+                <input type="text" class="form-control" id="createName" placeholder="Enter control panel type name">
+            </div>
+            <div class="mb-3">
+                <label for="createDescription" class="form-label">Description:</label>
+                <input type="text" class="form-control" id="createDescription" placeholder="Enter description (optional)">
+            </div>
+            <div class="mb-3 form-check">
+                <input type="checkbox" class="form-check-input" id="createIsActive" checked>
+                <label class="form-check-label" for="createIsActive">Is Active</label>
+            </div>
+            <button class="btn btn-success" onclick="createControlPanelType()">
+                <span id="createSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                Create Control Panel Type
+            </button>
+            <div id="createResult" class="mt-3"></div>
+        </div>
+
+        <!-- GET All Control Panel Types -->
+        <div class="test-section">
+            <h2 class="section-title">&#128203; GET All Control Panel Types</h2>
+            <button class="btn btn-primary" onclick="getAllControlPanelTypes()">
+                <span id="getAllSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                Get All Control Panel Types
+            </button>
+            <div id="getAllResult" class="mt-3"></div>
+        </div>
+
+        <!-- GET Control Panel Type by ID -->
+        <div class="test-section">
+            <h2 class="section-title">&#128269; GET Control Panel Type by ID</h2>
+            <div class="mb-3">
+                <label for="getById" class="form-label">Control Panel Type ID:</label>
+                <input type="number" class="form-control" id="getById" placeholder="Enter ID">
+            </div>
+            <button class="btn btn-primary" onclick="getControlPanelTypeById()">
+                <span id="getByIdSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                Get Control Panel Type
+            </button>
+            <div id="getByIdResult" class="mt-3"></div>
+        </div>
+
+        <!-- DELETE Control Panel Type -->
+        <div class="test-section">
+            <h2 class="section-title">&#128465; DELETE Control Panel Type</h2>
+            <div class="mb-3">
+                <label for="deleteId" class="form-label">Control Panel Type ID:</label>
+                <input type="number" class="form-control" id="deleteId" placeholder="Enter ID to delete">
+            </div>
+            <button class="btn btn-danger" onclick="deleteControlPanelType()">
+                <span id="deleteSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                Delete Control Panel Type
+            </button>
+            <div id="deleteResult" class="mt-3"></div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">&#9998; Edit Control Panel Type</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editForm">
+                        <input type="hidden" id="editId">
+                        <div class="mb-3">
+                            <label for="editName" class="form-label">Name *</label>
+                            <input type="text" class="form-control" id="editName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editDescription" class="form-label">Description</label>
+                            <input type="text" class="form-control" id="editDescription">
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="editIsActive">
+                                <label class="form-check-label" for="editIsActive">
+                                    Is Active
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="updateControlPanelType()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Auth Client -->
+    <script src="/assets/js/authClient.js"></script>
+
+    <script>
+        const CONTROL_PANEL_TYPES_API_URL = '/api/v1/ControlPanelTypes';
+        let editModal;
+
+        // Utility functions
+        function showSpinner(spinnerId) {
+            document.getElementById(spinnerId).classList.remove('d-none');
+        }
+
+        function hideSpinner(spinnerId) {
+            document.getElementById(spinnerId).classList.add('d-none');
+        }
+
+        function showResult(resultId, type, message, data = null) {
+            const resultDiv = document.getElementById(resultId);
+            let alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+            
+            let html = `<div class="alert ${alertClass}">${message}</div>`;
+            
+            if (data) {
+                html += `<div class="code-block"><pre>${JSON.stringify(data, null, 2)}</pre></div>`;
+            }
+            
+            resultDiv.innerHTML = html;
+        }
+
+        function renderTable(data) {
+            if (!data || data.length === 0) {
+                return '<div class="alert alert-info">No control panel types found</div>';
+            }
+
+            let html = `
+                <div class="table-responsive mt-3">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Description</th>
+                                <th>Is Active</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            data.forEach(item => {
+                const statusBadge = item.isActive 
+                    ? '<span class="badge badge-success">Active</span>' 
+                    : '<span class="badge badge-danger">Inactive</span>';
+                
+                html += `
+                    <tr>
+                        <td>${item.id}</td>
+                        <td>${item.name || 'N/A'}</td>
+                        <td>${item.description || 'N/A'}</td>
+                        <td>${statusBadge}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn btn-sm btn-primary" onclick="loadForEdit(${item.id}, '${item.name}', '${item.description || ''}', ${item.isActive})">Edit</button>
+                                <button class="btn btn-sm btn-danger" onclick="confirmDelete(${item.id})">Delete</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            return html;
+        }
+
+        // API Functions
+        async function getAllControlPanelTypes() {
+            const resultId = 'getAllResult';
+            const spinnerId = 'getAllSpinner';
+            
+            showSpinner(spinnerId);
+            
+            try {
+                const response = await authClient.authenticatedFetch(CONTROL_PANEL_TYPES_API_URL);
+                
+                hideSpinner(spinnerId);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const table = renderTable(data);
+                    document.getElementById(resultId).innerHTML = `
+                        <div class="alert alert-success">Successfully retrieved ${data.length} control panel type(s)</div>
+                        ${table}
+                    `;
+                } else {
+                    let errorText;
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        const errorData = await response.json();
+                        errorText = errorData.message || errorData.error || JSON.stringify(errorData);
+                    } else {
+                        errorText = await response.text();
+                    }
+                    showResult(resultId, 'error', `Error: ${response.status} - ${errorText}`);
+                }
+            } catch (error) {
+                hideSpinner(spinnerId);
+                showResult(resultId, 'error', `Error: ${error.message}`);
+            }
+        }
+
+        async function getControlPanelTypeById() {
+            const id = document.getElementById('getById').value;
+            const resultId = 'getByIdResult';
+            const spinnerId = 'getByIdSpinner';
+            
+            if (!id) {
+                showResult(resultId, 'error', 'Please enter a Control Panel Type ID');
+                return;
+            }
+            
+            showSpinner(spinnerId);
+            
+            try {
+                const response = await authClient.authenticatedFetch(`${CONTROL_PANEL_TYPES_API_URL}/${id}`);
+                
+                hideSpinner(spinnerId);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    showResult(resultId, 'success', 'Control Panel Type retrieved successfully', data);
+                } else {
+                    let errorText;
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        const errorData = await response.json();
+                        errorText = errorData.message || errorData.error || JSON.stringify(errorData);
+                    } else {
+                        errorText = await response.text();
+                    }
+                    showResult(resultId, 'error', `Error: ${response.status} - ${errorText}`);
+                }
+            } catch (error) {
+                hideSpinner(spinnerId);
+                showResult(resultId, 'error', `Error: ${error.message}`);
+            }
+        }
+
+        async function createControlPanelType() {
+            const name = document.getElementById('createName').value;
+            const description = document.getElementById('createDescription').value;
+            const isActive = document.getElementById('createIsActive').checked;
+            const resultId = 'createResult';
+            const spinnerId = 'createSpinner';
+            
+            if (!name) {
+                showResult(resultId, 'error', 'Please enter a name');
+                return;
+            }
+            
+            const payload = {
+                name: name,
+                description: description || null,
+                isActive: isActive
+            };
+            
+            showSpinner(spinnerId);
+            
+            try {
+                const response = await authClient.authenticatedFetch(CONTROL_PANEL_TYPES_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                hideSpinner(spinnerId);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    showResult(resultId, 'success', 'Control Panel Type created successfully', data);
+                    
+                    document.getElementById('createName').value = '';
+                    document.getElementById('createDescription').value = '';
+                    document.getElementById('createIsActive').checked = true;
+                    
+                    getAllControlPanelTypes();
+                } else {
+                    let errorText;
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        const errorData = await response.json();
+                        errorText = errorData.message || errorData.error || JSON.stringify(errorData);
+                    } else {
+                        errorText = await response.text();
+                    }
+                    showResult(resultId, 'error', `Error: ${response.status} - ${errorText}`);
+                }
+            } catch (error) {
+                hideSpinner(spinnerId);
+                showResult(resultId, 'error', `Error: ${error.message}`);
+            }
+        }
+
+        async function updateControlPanelType() {
+            const id = document.getElementById('editId').value;
+            const name = document.getElementById('editName').value;
+            const description = document.getElementById('editDescription').value;
+            const isActive = document.getElementById('editIsActive').checked;
+            
+            if (!id || !name) {
+                alert('Please enter both ID and name');
+                return;
+            }
+            
+            const payload = {
+                id: parseInt(id),
+                name: name,
+                description: description || null,
+                isActive: isActive
+            };
+            
+            try {
+                const response = await authClient.authenticatedFetch(`${CONTROL_PANEL_TYPES_API_URL}/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    editModal.hide();
+                    getAllControlPanelTypes();
+                    // Show success message in a temporary alert
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'alert alert-success alert-dismissible fade show';
+                    alertDiv.innerHTML = `
+                        Control Panel Type updated successfully
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    `;
+                    document.querySelector('.container-main').insertBefore(alertDiv, document.querySelector('.header-card').nextSibling);
+                    setTimeout(() => alertDiv.remove(), 5000);
+                } else {
+                    let errorText;
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        const errorData = await response.json();
+                        errorText = errorData.message || errorData.error || JSON.stringify(errorData);
+                    } else {
+                        errorText = await response.text();
+                    }
+                    alert(`Error: ${response.status} - ${errorText}`);
+                }
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        }
+
+        async function deleteControlPanelType() {
+            const id = document.getElementById('deleteId').value;
+            const resultId = 'deleteResult';
+            const spinnerId = 'deleteSpinner';
+            
+            if (!id) {
+                showResult(resultId, 'error', 'Please enter a Control Panel Type ID');
+                return;
+            }
+            
+            if (!confirm(`Are you sure you want to delete Control Panel Type with ID ${id}?`)) {
+                return;
+            }
+            
+            showSpinner(spinnerId);
+            
+            try {
+                const response = await authClient.authenticatedFetch(`${CONTROL_PANEL_TYPES_API_URL}/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                hideSpinner(spinnerId);
+                
+                if (response.ok) {
+                    showResult(resultId, 'success', 'Control Panel Type deleted successfully');
+                    document.getElementById('deleteId').value = '';
+                    getAllControlPanelTypes();
+                } else {
+                    let errorText;
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        const errorData = await response.json();
+                        errorText = errorData.message || errorData.error || JSON.stringify(errorData);
+                    } else {
+                        errorText = await response.text();
+                    }
+                    showResult(resultId, 'error', `Error: ${response.status} - ${errorText}`);
+                }
+            } catch (error) {
+                hideSpinner(spinnerId);
+                showResult(resultId, 'error', `Error: ${error.message}`);
+            }
+        }
+
+        // Helper functions for table actions
+        function loadForEdit(id, name, description, isActive) {
+            document.getElementById('editId').value = id;
+            document.getElementById('editName').value = name;
+            document.getElementById('editDescription').value = description;
+            document.getElementById('editIsActive').checked = isActive;
+            
+            editModal.show();
+        }
+
+        function confirmDelete(id) {
+            document.getElementById('deleteId').value = id;
+            deleteControlPanelType();
+        }
+
+        // Check authentication on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            const token = authClient.getToken();
+            
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            const result = await authClient.verifyToken();
+            
+            if (!result.authenticated) {
+                console.warn('Token verification failed');
+            }
+
+            // Initialize edit modal
+            editModal = new bootstrap.Modal(document.getElementById('editModal'));
+        });
+    </script>
+</body>
+</html>

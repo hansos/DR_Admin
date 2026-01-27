@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Account API Test - DR Admin</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Test Page Styles -->
+    <link href="/assets/css/test-page.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/choose-test.html">DR Admin - My Account API</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <span class="user-info" id="userInfo"></span>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/choose-test.html" class="btn btn-back">&#8592; Back to Tests</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-main">
+        <div class="header-card">
+            <h1>&#128100; My Account API Test</h1>
+            <p>Test account management operations</p>
+        </div>
+
+        <!-- Alert Messages -->
+        <div id="alertContainer"></div>
+
+        <!-- Register Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128221; Register New Account</h2>
+            <form id="registerForm">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="registerEmail" class="form-label">Email *</label>
+                        <input type="email" class="form-control" id="registerEmail" placeholder="user@example.com" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="registerUsername" class="form-label">Username *</label>
+                        <input type="text" class="form-control" id="registerUsername" placeholder="username" required>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="registerPassword" class="form-label">Password *</label>
+                        <input type="password" class="form-control" id="registerPassword" placeholder="Enter password" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="registerConfirmPassword" class="form-label">Confirm Password *</label>
+                        <input type="password" class="form-control" id="registerConfirmPassword" placeholder="Confirm password" required>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="registerFirstName" class="form-label">First Name</label>
+                        <input type="text" class="form-control" id="registerFirstName" placeholder="John">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="registerLastName" class="form-label">Last Name</label>
+                        <input type="text" class="form-control" id="registerLastName" placeholder="Doe">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Register Account</button>
+            </form>
+        </div>
+
+        <!-- Confirm Email Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#9989; Confirm Email</h2>
+            <form id="confirmEmailForm">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="confirmUserId" class="form-label">User ID *</label>
+                        <input type="text" class="form-control" id="confirmUserId" placeholder="Enter user ID" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="confirmToken" class="form-label">Confirmation Token *</label>
+                        <input type="text" class="form-control" id="confirmToken" placeholder="Enter token" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Confirm Email</button>
+            </form>
+        </div>
+
+        <!-- Set Password Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128274; Set Password</h2>
+            <form id="setPasswordForm">
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label for="setPasswordUserId" class="form-label">User ID *</label>
+                        <input type="text" class="form-control" id="setPasswordUserId" placeholder="Enter user ID" required>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="setPasswordNew" class="form-label">New Password *</label>
+                        <input type="password" class="form-control" id="setPasswordNew" placeholder="Enter new password" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="setPasswordConfirm" class="form-label">Confirm Password *</label>
+                        <input type="password" class="form-control" id="setPasswordConfirm" placeholder="Confirm password" required>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label for="setPasswordToken" class="form-label">Reset Token</label>
+                        <input type="text" class="form-control" id="setPasswordToken" placeholder="Enter reset token (if required)">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Set Password</button>
+            </form>
+        </div>
+
+        <!-- Change Password Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128273; Change Password</h2>
+            <form id="changePasswordForm">
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label for="changePasswordOld" class="form-label">Current Password *</label>
+                        <input type="password" class="form-control" id="changePasswordOld" placeholder="Enter current password" required>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="changePasswordNew" class="form-label">New Password *</label>
+                        <input type="password" class="form-control" id="changePasswordNew" placeholder="Enter new password" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="changePasswordConfirm" class="form-label">Confirm New Password *</label>
+                        <input type="password" class="form-control" id="changePasswordConfirm" placeholder="Confirm new password" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Change Password</button>
+            </form>
+        </div>
+
+        <!-- Update Email Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#9993; Update Email</h2>
+            <form id="updateEmailForm">
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label for="updateNewEmail" class="form-label">New Email *</label>
+                        <input type="email" class="form-control" id="updateNewEmail" placeholder="newemail@example.com" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Update Email</button>
+            </form>
+        </div>
+
+        <!-- Update Customer Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128101; Update Customer Information</h2>
+            <form id="updateCustomerForm">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="updateFirstName" class="form-label">First Name</label>
+                        <input type="text" class="form-control" id="updateFirstName" placeholder="John">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="updateLastName" class="form-label">Last Name</label>
+                        <input type="text" class="form-control" id="updateLastName" placeholder="Doe">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="updateCompanyName" class="form-label">Company Name</label>
+                        <input type="text" class="form-control" id="updateCompanyName" placeholder="Company Inc.">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="updatePhoneNumber" class="form-label">Phone Number</label>
+                        <input type="tel" class="form-control" id="updatePhoneNumber" placeholder="+1234567890">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label for="updateAddress" class="form-label">Address</label>
+                        <textarea class="form-control" id="updateAddress" rows="2" placeholder="Enter address"></textarea>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="updateCity" class="form-label">City</label>
+                        <input type="text" class="form-control" id="updateCity" placeholder="City">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="updateState" class="form-label">State/Province</label>
+                        <input type="text" class="form-control" id="updateState" placeholder="State">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="updateZipCode" class="form-label">Zip/Postal Code</label>
+                        <input type="text" class="form-control" id="updateZipCode" placeholder="12345">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="updateCountry" class="form-label">Country</label>
+                        <input type="text" class="form-control" id="updateCountry" placeholder="Country">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Update Customer Info</button>
+            </form>
+        </div>
+
+        <!-- Get My Account Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128269; Get My Account Information</h2>
+            <button class="btn btn-primary mb-3" onclick="getMyAccount()">Load My Account</button>
+            <div class="loading" id="loadingMyAccount">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="myAccountResult"></div>
+        </div>
+
+        <!-- API Response Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128225; Last API Response</h2>
+            <div class="response-box" id="responseBox">No API calls made yet...</div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Auth Client -->
+    <script src="/assets/js/authClient.js"></script>
+    
+    <script>
+        // API_BASE_URL is already defined in authClient.js
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            // Check authentication
+            const token = authClient.getToken();
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            // Verify token
+            const result = await authClient.verifyToken();
+            if (result.authenticated && result.data?.username) {
+                document.getElementById('userInfo').textContent = `Hello, ${result.data.username}!`;
+            } else {
+                document.getElementById('userInfo').textContent = 'Hello, User!';
+            }
+
+            // Setup forms
+            document.getElementById('registerForm').addEventListener('submit', handleRegister);
+            document.getElementById('confirmEmailForm').addEventListener('submit', handleConfirmEmail);
+            document.getElementById('setPasswordForm').addEventListener('submit', handleSetPassword);
+            document.getElementById('changePasswordForm').addEventListener('submit', handleChangePassword);
+            document.getElementById('updateEmailForm').addEventListener('submit', handleUpdateEmail);
+            document.getElementById('updateCustomerForm').addEventListener('submit', handleUpdateCustomer);
+
+            // Load account info on init
+            getMyAccount();
+        });
+
+        // Show alert message
+        function showAlert(message, type = 'info') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertHtml = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            alertContainer.innerHTML = alertHtml;
+            
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                const alert = alertContainer.querySelector('.alert');
+                if (alert) {
+                    bootstrap.Alert.getOrCreateInstance(alert).close();
+                }
+            }, 5000);
+        }
+
+        // Update response box
+        function updateResponseBox(data) {
+            const responseBox = document.getElementById('responseBox');
+            responseBox.textContent = JSON.stringify(data, null, 2);
+        }
+
+        // Get authorization headers
+        function getAuthHeaders() {
+            const token = authClient.getToken();
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            };
+        }
+
+        // Handle Register
+        async function handleRegister(e) {
+            e.preventDefault();
+            
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('registerConfirmPassword').value;
+
+            if (password !== confirmPassword) {
+                showAlert('Passwords do not match!', 'warning');
+                return;
+            }
+
+            const data = {
+                email: document.getElementById('registerEmail').value.trim(),
+                username: document.getElementById('registerUsername').value.trim(),
+                password: password,
+                firstName: document.getElementById('registerFirstName').value.trim() || null,
+                lastName: document.getElementById('registerLastName').value.trim() || null
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/MyAccount/register`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(data)
+                });
+
+                let result;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    result = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(result);
+
+                if (response.ok) {
+                    showAlert('Account registered successfully! Please check your email to confirm.', 'success');
+                    document.getElementById('registerForm').reset();
+                } else {
+                    showAlert(`Error: ${result.message || result.error || 'Failed to register account'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+
+        // Handle Confirm Email
+        async function handleConfirmEmail(e) {
+            e.preventDefault();
+            
+            const data = {
+                userId: document.getElementById('confirmUserId').value.trim(),
+                token: document.getElementById('confirmToken').value.trim()
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/MyAccount/confirm-email`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(data)
+                });
+
+                let result;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    result = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(result);
+
+                if (response.ok) {
+                    showAlert('Email confirmed successfully!', 'success');
+                    document.getElementById('confirmEmailForm').reset();
+                } else {
+                    showAlert(`Error: ${result.message || result.error || 'Failed to confirm email'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+
+        // Handle Set Password
+        async function handleSetPassword(e) {
+            e.preventDefault();
+            
+            const password = document.getElementById('setPasswordNew').value;
+            const confirmPassword = document.getElementById('setPasswordConfirm').value;
+
+            if (password !== confirmPassword) {
+                showAlert('Passwords do not match!', 'warning');
+                return;
+            }
+
+            const data = {
+                userId: document.getElementById('setPasswordUserId').value.trim(),
+                newPassword: password,
+                token: document.getElementById('setPasswordToken').value.trim() || null
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/MyAccount/set-password`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(data)
+                });
+
+                let result;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    result = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(result);
+
+                if (response.ok) {
+                    showAlert('Password set successfully!', 'success');
+                    document.getElementById('setPasswordForm').reset();
+                } else {
+                    showAlert(`Error: ${result.message || result.error || 'Failed to set password'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+
+        // Handle Change Password
+        async function handleChangePassword(e) {
+            e.preventDefault();
+            
+            const newPassword = document.getElementById('changePasswordNew').value;
+            const confirmPassword = document.getElementById('changePasswordConfirm').value;
+
+            if (newPassword !== confirmPassword) {
+                showAlert('New passwords do not match!', 'warning');
+                return;
+            }
+
+            const data = {
+                currentPassword: document.getElementById('changePasswordOld').value,
+                newPassword: newPassword
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/MyAccount/change-password`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(data)
+                });
+
+                let result;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    result = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(result);
+
+                if (response.ok) {
+                    showAlert('Password changed successfully!', 'success');
+                    document.getElementById('changePasswordForm').reset();
+                } else {
+                    showAlert(`Error: ${result.message || result.error || 'Failed to change password'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+
+        // Handle Update Email
+        async function handleUpdateEmail(e) {
+            e.preventDefault();
+            
+            const data = {
+                newEmail: document.getElementById('updateNewEmail').value.trim()
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/MyAccount/email`, {
+                    method: 'PATCH',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(data)
+                });
+
+                let result;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    result = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(result);
+
+                if (response.ok) {
+                    showAlert('Email update requested successfully! Please check your new email to confirm.', 'success');
+                    document.getElementById('updateEmailForm').reset();
+                } else {
+                    showAlert(`Error: ${result.message || result.error || 'Failed to update email'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+
+        // Handle Update Customer
+        async function handleUpdateCustomer(e) {
+            e.preventDefault();
+            
+            const data = {
+                firstName: document.getElementById('updateFirstName').value.trim() || null,
+                lastName: document.getElementById('updateLastName').value.trim() || null,
+                companyName: document.getElementById('updateCompanyName').value.trim() || null,
+                phoneNumber: document.getElementById('updatePhoneNumber').value.trim() || null,
+                address: document.getElementById('updateAddress').value.trim() || null,
+                city: document.getElementById('updateCity').value.trim() || null,
+                state: document.getElementById('updateState').value.trim() || null,
+                zipCode: document.getElementById('updateZipCode').value.trim() || null,
+                country: document.getElementById('updateCountry').value.trim() || null
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/MyAccount/customer`, {
+                    method: 'PATCH',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(data)
+                });
+
+                let result;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    result = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(result);
+
+                if (response.ok) {
+                    showAlert('Customer information updated successfully!', 'success');
+                    getMyAccount(); // Refresh account info
+                } else {
+                    showAlert(`Error: ${result.message || result.error || 'Failed to update customer information'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+
+        // Get My Account
+        async function getMyAccount() {
+            const loading = document.getElementById('loadingMyAccount');
+            const result = document.getElementById('myAccountResult');
+            
+            loading.style.display = 'block';
+            result.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/MyAccount/me`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    result.innerHTML = `
+                        <div class="alert alert-success">
+                            <h5>Account Information:</h5>
+                            <p><strong>User ID:</strong> ${data.userId || data.id || 'N/A'}</p>
+                            <p><strong>Username:</strong> ${data.username || 'N/A'}</p>
+                            <p><strong>Email:</strong> ${data.email || 'N/A'}</p>
+                            <p><strong>Email Confirmed:</strong> ${data.emailConfirmed ? '? Yes' : '? No'}</p>
+                            <p><strong>First Name:</strong> ${data.firstName || 'N/A'}</p>
+                            <p><strong>Last Name:</strong> ${data.lastName || 'N/A'}</p>
+                            <p><strong>Company:</strong> ${data.companyName || 'N/A'}</p>
+                            <p><strong>Phone:</strong> ${data.phoneNumber || 'N/A'}</p>
+                            <p><strong>Address:</strong> ${data.address || 'N/A'}</p>
+                            <p><strong>City:</strong> ${data.city || 'N/A'}</p>
+                            <p><strong>State:</strong> ${data.state || 'N/A'}</p>
+                            <p><strong>Zip Code:</strong> ${data.zipCode || 'N/A'}</p>
+                            <p><strong>Country:</strong> ${data.country || 'N/A'}</p>
+                            <p><strong>Customer ID:</strong> ${data.customerId || 'N/A'}</p>
+                            <p><strong>Created:</strong> ${data.createdAt ? new Date(data.createdAt).toLocaleString() : 'N/A'}</p>
+                            <p><strong>Updated:</strong> ${data.updatedAt ? new Date(data.updatedAt).toLocaleString() : 'N/A'}</p>
+                        </div>
+                    `;
+
+                    // Pre-fill update customer form with current data
+                    if (data.firstName) document.getElementById('updateFirstName').value = data.firstName;
+                    if (data.lastName) document.getElementById('updateLastName').value = data.lastName;
+                    if (data.companyName) document.getElementById('updateCompanyName').value = data.companyName;
+                    if (data.phoneNumber) document.getElementById('updatePhoneNumber').value = data.phoneNumber;
+                    if (data.address) document.getElementById('updateAddress').value = data.address;
+                    if (data.city) document.getElementById('updateCity').value = data.city;
+                    if (data.state) document.getElementById('updateState').value = data.state;
+                    if (data.zipCode) document.getElementById('updateZipCode').value = data.zipCode;
+                    if (data.country) document.getElementById('updateCountry').value = data.country;
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Failed to fetch account information'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

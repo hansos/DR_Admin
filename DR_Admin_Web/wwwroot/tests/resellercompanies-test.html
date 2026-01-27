@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Reseller Companies API Test - DR Admin</title>
+    <link href="/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/assets/css/test-page.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/choose-test.html">DR Admin - Reseller Companies API</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><span id="userInfo" class="user-info"></span></li>
+                    <li class="nav-item"><a href="/choose-test.html" class="btn btn-back">&#8592; Back to Tests</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-main">
+        <div class="header-card">
+            <h1>&#127979; Reseller Companies API Test</h1>
+            <p>Test CRUD operations for Reseller Companies and active lookup</p>
+        </div>
+
+        <div id="alertContainer"></div>
+
+        <!-- Create Reseller Company -->
+        <div class="test-section">
+            <h2 class="section-title">&#10133; Create Reseller Company</h2>
+            <form id="createForm">
+                <div class="mb-3">
+                    <label for="createName" class="form-label">Name *</label>
+                    <input type="text" id="createName" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label for="createCode" class="form-label">Code *</label>
+                    <input type="text" id="createCode" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label for="createIsActive" class="form-label">Is Active</label>
+                    <select id="createIsActive" class="form-control">
+                        <option value="true">Active</option>
+                        <option value="false">Inactive</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" type="submit">Create Reseller Company</button>
+            </form>
+        </div>
+
+        <!-- List -->
+        <div class="test-section">
+            <h2 class="section-title">&#128203; Get All Reseller Companies</h2>
+            <button class="btn btn-primary mb-3" onclick="getAllResellerCompanies()">Load All</button>
+            <div class="loading" id="loadingAll"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>
+            <div id="resellerCompaniesTable"></div>
+        </div>
+
+        <!-- Get by ID -->
+        <div class="test-section">
+            <h2 class="section-title">&#128269; Get Reseller Company by ID</h2>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <input type="number" id="getResellerId" class="form-control" placeholder="Enter ID">
+                </div>
+                <div class="col-md-8 d-flex align-items-end">
+                    <button class="btn btn-primary" onclick="getResellerById()">Get</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingById"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>
+            <div id="resellerByIdResult"></div>
+        </div>
+
+        <!-- Active -->
+        <div class="test-section">
+            <h2 class="section-title">&#9989; Get Active Reseller Companies</h2>
+            <button class="btn btn-success mb-3" onclick="getActiveResellerCompanies()">Load Active</button>
+            <div class="loading" id="loadingActive"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>
+            <div id="activeResellersContainer"></div>
+        </div>
+
+        <!-- Response -->
+        <div class="test-section">
+            <h2 class="section-title">&#128225; Last API Response</h2>
+            <div class="response-box" id="responseBox">No API calls made yet...</div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">&#9998; Edit Reseller Company</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editForm">
+                        <input type="hidden" id="editId">
+                        <div class="mb-3">
+                            <label for="editName" class="form-label">Name *</label>
+                            <input type="text" id="editName" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editCode" class="form-label">Code *</label>
+                            <input type="text" id="editCode" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editIsActive" class="form-label">Is Active</label>
+                            <select id="editIsActive" class="form-control"><option value="true">Active</option><option value="false">Inactive</option></select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="updateReseller()">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/assets/js/authClient.js"></script>
+    <script>
+        let currentResellers = [];
+        let editModal;
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            const token = authClient.getToken(); if (!token) { window.location.href = '/login.html'; return; }
+            const result = await authClient.verifyToken(); if (result.authenticated && result.data?.username) document.getElementById('userInfo').textContent = `Hello, ${result.data.username}!`;
+            editModal = new bootstrap.Modal(document.getElementById('editModal'));
+            document.getElementById('createForm').addEventListener('submit', handleCreate);
+            document.getElementById('editForm').addEventListener('submit', (e)=>e.preventDefault());
+            getAllResellerCompanies();
+        });
+
+        function showAlert(message, type='info') { const container = document.getElementById('alertContainer'); container.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`; setTimeout(()=>{ const a = container.querySelector('.alert'); if (a) bootstrap.Alert.getOrCreateInstance(a).close(); },5000); }
+        function updateResponseBox(data) { document.getElementById('responseBox').textContent = JSON.stringify(data, null, 2); }
+        function getAuthHeaders() { const token = authClient.getToken(); return { 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` }; }
+
+        async function handleCreate(e) {
+            e.preventDefault();
+            const data = { name: document.getElementById('createName').value.trim(), code: document.getElementById('createCode').value.trim(), isActive: document.getElementById('createIsActive').value === 'true' };
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/v1/ResellerCompanies`, { method:'POST', headers: getAuthHeaders(), body: JSON.stringify(data) });
+                let result; const ct = res.headers.get('content-type'); if (ct && ct.includes('application/json')) result = await res.json(); else { const text = await res.text(); result = { error: text, statusCode: res.status }; }
+                updateResponseBox(result);
+                if (res.ok) { showAlert('Reseller company created','success'); document.getElementById('createForm').reset(); getAllResellerCompanies(); } else showAlert(`Error: ${result.message||result.error||'Failed to create'}`,'danger');
+            } catch (err) { showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); }
+        }
+
+        async function getAllResellerCompanies() {
+            const loading = document.getElementById('loadingAll'); const container = document.getElementById('resellerCompaniesTable'); loading.style.display='block'; container.innerHTML='';
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/v1/ResellerCompanies`, { method:'GET', headers: getAuthHeaders() });
+                let data; const ct = res.headers.get('content-type'); if (ct && ct.includes('application/json')) data = await res.json(); else { const text = await res.text(); data = { error: text, statusCode: res.status }; }
+                updateResponseBox(data);
+                if (res.ok) { currentResellers = data; renderResellersTable(data); } else showAlert(`Error: ${data.message||data.error||'Failed to fetch'}`,'danger');
+            } catch (err) { showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } finally { loading.style.display='none'; }
+        }
+
+        function renderResellersTable(items) {
+            const container = document.getElementById('resellerCompaniesTable'); if (!items || items.length===0) { container.innerHTML = '<div class="empty-state">No reseller companies found</div>'; return; }
+            const html = `
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead><tr><th>ID</th><th>Name</th><th>Code</th><th>Status</th><th>Actions</th></tr></thead>
+                        <tbody>
+                            ${items.map(i=>`<tr><td>${i.id}</td><td><strong>${i.name}</strong></td><td><code>${i.code}</code></td><td><span class="badge ${i.isActive?'badge-success':'badge-secondary'}">${i.isActive?'Active':'Inactive'}</span></td><td><div class="action-buttons"><button class="btn btn-sm btn-warning" onclick="openEditModal(${i.id})">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteReseller(${i.id}, '${(i.name||'').replace(/'/g, "\\'" )}')">Delete</button></div></td></tr>`).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            container.innerHTML = html;
+        }
+
+        async function getResellerById() {
+            const id = document.getElementById('getResellerId').value; if (!id) { showAlert('Please enter an ID','warning'); return; }
+            const loading = document.getElementById('loadingById'); const result = document.getElementById('resellerByIdResult'); loading.style.display='block'; result.innerHTML='';
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/v1/ResellerCompanies/${id}`, { method:'GET', headers: getAuthHeaders() });
+                let data; const ct = res.headers.get('content-type'); if (ct && ct.includes('application/json')) data = await res.json(); else { const text = await res.text(); data = { error: text, statusCode: res.status }; }
+                updateResponseBox(data);
+                if (res.ok) { result.innerHTML = `<div class="alert alert-success"><h5>Reseller Company:</h5><p><strong>ID:</strong> ${data.id}</p><p><strong>Name:</strong> ${data.name}</p><p><strong>Code:</strong> ${data.code}</p><p><strong>Status:</strong> ${data.isActive? 'Active':'Inactive'}</p></div>`; } else showAlert(`Error: ${data.message||data.error||'Not found'}`,'danger');
+            } catch (err) { showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } finally { loading.style.display='none'; }
+        }
+
+        async function getActiveResellerCompanies() {
+            const loading = document.getElementById('loadingActive'); const container = document.getElementById('activeResellersContainer'); loading.style.display='block'; container.innerHTML='';
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/v1/ResellerCompanies/active`, { method:'GET', headers: getAuthHeaders() });
+                let data; const ct = res.headers.get('content-type'); if (ct && ct.includes('application/json')) data = await res.json(); else { const text = await res.text(); data = { error: text, statusCode: res.status }; }
+                updateResponseBox(data);
+                if (res.ok) { if (!data || data.length===0) container.innerHTML = '<div class="empty-state">No active resellers found</div>'; else container.innerHTML = `<div class="alert alert-success"><h5>Active Reseller Companies (${data.length}):</h5><ul>${data.map(r=>`<li>${r.name} (ID ${r.id})</li>`).join('')}</ul></div>`; } else showAlert(`Error: ${data.message||data.error||'Failed to fetch'}`,'danger');
+            } catch (err) { showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } finally { loading.style.display='none'; }
+        }
+
+        function openEditModal(id) { const item = currentResellers.find(x=>x.id===id); if (!item) { showAlert('Reseller not found','danger'); return; } document.getElementById('editId').value = item.id; document.getElementById('editName').value = item.name || ''; document.getElementById('editCode').value = item.code || ''; document.getElementById('editIsActive').value = item.isActive ? 'true' : 'false'; editModal.show(); }
+
+        async function updateReseller() {
+            const id = document.getElementById('editId').value; const data = { name: document.getElementById('editName').value.trim(), code: document.getElementById('editCode').value.trim(), isActive: document.getElementById('editIsActive').value === 'true' };
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/v1/ResellerCompanies/${id}`, { method:'PUT', headers: getAuthHeaders(), body: JSON.stringify(data) });
+                let result; const ct = res.headers.get('content-type'); if (ct && ct.includes('application/json')) result = await res.json(); else { const text = await res.text(); result = { error: text, statusCode: res.status }; }
+                updateResponseBox(result);
+                if (res.ok) { showAlert('Reseller updated','success'); editModal.hide(); getAllResellerCompanies(); } else showAlert(`Error: ${result.message||result.error||'Failed to update'}`,'danger');
+            } catch (err) { showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); }
+        }
+
+        async function deleteReseller(id, name) { if (!confirm(`Delete "${name}"?`)) return; try { const res = await fetch(`${API_BASE_URL}/api/v1/ResellerCompanies/${id}`, { method:'DELETE', headers: getAuthHeaders() }); if (res.ok) { showAlert('Reseller deleted','success'); getAllResellerCompanies(); const ct = res.headers.get('content-type'); if (ct && ct.includes('application/json')) updateResponseBox(await res.json()); else updateResponseBox({ message: 'Deleted' }); } else { let result; const ct = res.headers.get('content-type'); if (ct && ct.includes('application/json')) result = await res.json(); else { const text = await res.text(); result = { error: text, statusCode: res.status }; } updateResponseBox(result); showAlert(`Error: ${result.message||result.error||'Failed to delete'}`,'danger'); } } catch (err) { showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); }
+    </script>
+</body>
+</html>

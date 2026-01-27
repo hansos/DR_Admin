@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNS Zone Packages API Test - DR Admin</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Test Page Styles -->
+    <link href="/assets/css/test-page.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/choose-test.html">DR Admin - DNS Zone Packages API</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <span class="user-info" id="userInfo"></span>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/choose-test.html" class="btn btn-back">&#8592; Back to Tests</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-main">
+        <div class="header-card">
+            <h1>&#128230; DNS Zone Packages API Test</h1>
+            <p>Test CRUD operations for DNS Zone Packages API endpoint</p>
+        </div>
+
+        <!-- Alert Messages -->
+        <div id="alertContainer"></div>
+
+        <!-- Create DNS Zone Package Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#10133; Create DNS Zone Package</h2>
+            <form id="createForm">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="createName" class="form-label">Name *</label>
+                        <input type="text" class="form-control" id="createName" placeholder="e.g., Basic DNS Package" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="createCode" class="form-label">Code</label>
+                        <input type="text" class="form-control" id="createCode" placeholder="e.g., BASIC_DNS">
+                        <small class="text-muted">Unique identifier code</small>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label for="createDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="createDescription" rows="3" placeholder="Enter description..."></textarea>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="createSortOrder" class="form-label">Sort Order</label>
+                        <input type="number" class="form-control" id="createSortOrder" placeholder="e.g., 1" value="0">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="createMaxRecords" class="form-label">Max Records</label>
+                        <input type="number" class="form-control" id="createMaxRecords" placeholder="e.g., 50">
+                        <small class="text-muted">Maximum DNS records allowed</small>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="createIsDefault">
+                            <label class="form-check-label" for="createIsDefault">
+                                Is Default Package
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="createIsActive" checked>
+                            <label class="form-check-label" for="createIsActive">
+                                Is Active
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Create DNS Zone Package</button>
+            </form>
+        </div>
+
+        <!-- Get All DNS Zone Packages Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128203; Get All DNS Zone Packages</h2>
+            <div class="mb-3">
+                <button class="btn btn-primary me-2" onclick="getAllDnsZonePackages()">Load All Packages</button>
+                <button class="btn btn-info me-2" onclick="getPackagesWithRecords()">Load Packages with Records</button>
+                <button class="btn btn-success" onclick="getActivePackages()">Load Active Packages</button>
+            </div>
+            <div class="loading" id="loadingAll">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="dnsZonePackagesTableContainer"></div>
+        </div>
+
+        <!-- Get DNS Zone Package by ID Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128269; Get DNS Zone Package by ID</h2>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="getPackageId" class="form-label">DNS Zone Package ID</label>
+                    <input type="number" class="form-control" id="getPackageId" placeholder="Enter ID">
+                </div>
+                <div class="col-md-8 mb-3 d-flex align-items-end">
+                    <button class="btn btn-primary" onclick="getDnsZonePackageById()">Get DNS Zone Package</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingById">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="packageByIdResult"></div>
+        </div>
+
+        <!-- Get Default DNS Zone Package Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#11088; Get Default DNS Zone Package</h2>
+            <button class="btn btn-primary mb-3" onclick="getDefaultPackage()">Load Default Package</button>
+            <div class="loading" id="loadingDefault">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="defaultPackageResult"></div>
+        </div>
+
+        <!-- Apply Package to Domain Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128204; Apply Package to Domain</h2>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="applyPackageId" class="form-label">Package ID</label>
+                    <input type="number" class="form-control" id="applyPackageId" placeholder="Enter Package ID">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="applyDomainId" class="form-label">Domain ID</label>
+                    <input type="number" class="form-control" id="applyDomainId" placeholder="Enter Domain ID">
+                </div>
+                <div class="col-md-4 mb-3 d-flex align-items-end">
+                    <button class="btn btn-success" onclick="applyPackageToDomain()">Apply to Domain</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingApply">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="applyPackageResult"></div>
+        </div>
+
+        <!-- API Response Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128225; Last API Response</h2>
+            <div class="response-box" id="responseBox">No API calls made yet...</div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">&#9998; Edit DNS Zone Package</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editForm">
+                        <input type="hidden" id="editId">
+                        <div class="mb-3">
+                            <label for="editName" class="form-label">Name *</label>
+                            <input type="text" class="form-control" id="editName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editCode" class="form-label">Code</label>
+                            <input type="text" class="form-control" id="editCode">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="editDescription" rows="3"></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editSortOrder" class="form-label">Sort Order</label>
+                                <input type="number" class="form-control" id="editSortOrder">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editMaxRecords" class="form-label">Max Records</label>
+                                <input type="number" class="form-control" id="editMaxRecords">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="editIsDefault">
+                                <label class="form-check-label" for="editIsDefault">
+                                    Is Default Package
+                                </label>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="editIsActive">
+                                <label class="form-check-label" for="editIsActive">
+                                    Is Active
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="updateDnsZonePackage()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Auth Client -->
+    <script src="/assets/js/authClient.js"></script>
+    
+    <script>
+        // API_BASE_URL is already defined in authClient.js
+        let currentPackages = [];
+        let editModal;
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            // Check authentication
+            const token = authClient.getToken();
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            // Verify token
+            const result = await authClient.verifyToken();
+            if (result.authenticated && result.data?.username) {
+                document.getElementById('userInfo').textContent = `Hello, ${result.data.username}!`;
+            } else {
+                document.getElementById('userInfo').textContent = 'Hello, User!';
+            }
+
+            // Initialize edit modal
+            editModal = new bootstrap.Modal(document.getElementById('editModal'));
+
+            // Setup create form
+            document.getElementById('createForm').addEventListener('submit', handleCreate);
+
+            // Load all DNS zone packages on init
+            getAllDnsZonePackages();
+        });
+
+        // Show alert message
+        function showAlert(message, type = 'info') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertHtml = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            alertContainer.innerHTML = alertHtml;
+            
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                const alert = alertContainer.querySelector('.alert');
+                if (alert) {
+                    bootstrap.Alert.getOrCreateInstance(alert).close();
+                }
+            }, 5000);
+        }
+
+        // Update response box
+        function updateResponseBox(data) {
+            const responseBox = document.getElementById('responseBox');
+            responseBox.textContent = JSON.stringify(data, null, 2);
+        }
+
+        // Get authorization headers
+        function getAuthHeaders() {
+            const token = authClient.getToken();
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            };
+        }
+
+        // Handle Create DNS Zone Package
+        async function handleCreate(e) {
+            e.preventDefault();
+            
+            const data = {
+                name: document.getElementById('createName').value.trim(),
+                code: document.getElementById('createCode').value.trim() || null,
+                description: document.getElementById('createDescription').value.trim() || null,
+                sortOrder: parseInt(document.getElementById('createSortOrder').value) || 0,
+                maxRecords: parseInt(document.getElementById('createMaxRecords').value) || null,
+                isDefault: document.getElementById('createIsDefault').checked,
+                isActive: document.getElementById('createIsActive').checked
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/DnsZonePackages`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(data)
+                });
+
+                let result;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    result = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(result);
+
+                if (response.ok) {
+                    showAlert('DNS Zone Package created successfully!', 'success');
+                    document.getElementById('createForm').reset();
+                    document.getElementById('createIsActive').checked = true;
+                    document.getElementById('createSortOrder').value = 0;
+                    getAllDnsZonePackages(); // Refresh list
+                } else {
+                    showAlert(`Error: ${result.message || result.error || 'Failed to create DNS zone package'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+
+        // Get All DNS Zone Packages
+        async function getAllDnsZonePackages() {
+            const loading = document.getElementById('loadingAll');
+            const container = document.getElementById('dnsZonePackagesTableContainer');
+            
+            loading.style.display = 'block';
+            container.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/DnsZonePackages`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    currentPackages = data;
+                    renderPackagesTable(data);
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Failed to fetch DNS zone packages'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Get Packages with Records
+        async function getPackagesWithRecords() {
+            const loading = document.getElementById('loadingAll');
+            const container = document.getElementById('dnsZonePackagesTableContainer');
+            
+            loading.style.display = 'block';
+            container.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/DnsZonePackages/with-records`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    currentPackages = data;
+                    renderPackagesTable(data, true);
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Failed to fetch packages with records'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Get Active Packages
+        async function getActivePackages() {
+            const loading = document.getElementById('loadingAll');
+            const container = document.getElementById('dnsZonePackagesTableContainer');
+            
+            loading.style.display = 'block';
+            container.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/DnsZonePackages/active`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    currentPackages = data;
+                    renderPackagesTable(data);
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Failed to fetch active packages'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Render Packages Table
+        function renderPackagesTable(packages, showRecords = false) {
+            const container = document.getElementById('dnsZonePackagesTableContainer');
+            
+            if (!packages || packages.length === 0) {
+                container.innerHTML = '<div class="empty-state">No DNS zone packages found</div>';
+                return;
+            }
+
+            const recordsColumn = showRecords ? '<th>Records Count</th>' : '';
+            
+            const tableHtml = `
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Code</th>
+                                <th>Description</th>
+                                <th>Max Records</th>
+                                ${recordsColumn}
+                                <th>Sort Order</th>
+                                <th>Default</th>
+                                <th>Status</th>
+                                <th>Created At</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${packages.map(pkg => {
+                                const recordsCell = showRecords 
+                                    ? `<td><span class="badge badge-info">${pkg.records?.length || pkg.recordsCount || 0}</span></td>` 
+                                    : '';
+                                
+                                return `
+                                    <tr ${pkg.isDefault ? 'class="table-warning"' : ''}>
+                                        <td>${pkg.id}</td>
+                                        <td><strong>${pkg.name}</strong></td>
+                                        <td>${pkg.code || '-'}</td>
+                                        <td>${pkg.description || '-'}</td>
+                                        <td>${pkg.maxRecords !== null && pkg.maxRecords !== undefined ? pkg.maxRecords : 'Unlimited'}</td>
+                                        ${recordsCell}
+                                        <td>${pkg.sortOrder !== undefined ? pkg.sortOrder : '-'}</td>
+                                        <td>
+                                            ${pkg.isDefault 
+                                                ? '<span class="badge badge-warning">Default</span>' 
+                                                : '-'}
+                                        </td>
+                                        <td>
+                                            <span class="badge ${pkg.isActive ? 'badge-success' : 'badge-secondary'}">
+                                                ${pkg.isActive ? 'Active' : 'Inactive'}
+                                            </span>
+                                        </td>
+                                        <td>${pkg.createdAt ? new Date(pkg.createdAt).toLocaleString() : '-'}</td>
+                                        <td>
+                                            <div class="action-buttons">
+                                                <button class="btn btn-sm btn-warning" onclick="openEditModal(${pkg.id})">
+                                                    Edit
+                                                </button>
+                                                <button class="btn btn-sm btn-danger" onclick="deleteDnsZonePackage(${pkg.id}, '${pkg.name.replace(/'/g, "\\'")}')">
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            container.innerHTML = tableHtml;
+        }
+
+        // Get DNS Zone Package by ID
+        async function getDnsZonePackageById() {
+            const id = document.getElementById('getPackageId').value;
+            
+            if (!id) {
+                showAlert('Please enter a DNS zone package ID', 'warning');
+                return;
+            }
+
+            const loading = document.getElementById('loadingById');
+            const result = document.getElementById('packageByIdResult');
+            
+            loading.style.display = 'block';
+            result.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/DnsZonePackages/${id}`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    result.innerHTML = `
+                        <div class="alert alert-success">
+                            <h5>DNS Zone Package Found:</h5>
+                            <p><strong>ID:</strong> ${data.id}</p>
+                            <p><strong>Name:</strong> ${data.name}</p>
+                            <p><strong>Code:</strong> ${data.code || 'N/A'}</p>
+                            <p><strong>Description:</strong> ${data.description || 'N/A'}</p>
+                            <p><strong>Max Records:</strong> ${data.maxRecords !== null && data.maxRecords !== undefined ? data.maxRecords : 'Unlimited'}</p>
+                            <p><strong>Sort Order:</strong> ${data.sortOrder !== undefined ? data.sortOrder : 'N/A'}</p>
+                            <p><strong>Is Default:</strong> ${data.isDefault ? 'Yes' : 'No'}</p>
+                            <p><strong>Status:</strong> ${data.isActive ? 'Active' : 'Inactive'}</p>
+                            <p><strong>Created:</strong> ${data.createdAt ? new Date(data.createdAt).toLocaleString() : 'N/A'}</p>
+                            <p><strong>Updated:</strong> ${data.updatedAt ? new Date(data.updatedAt).toLocaleString() : 'N/A'}</p>
+                        </div>
+                    `;
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'DNS zone package not found'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Get Default Package
+        async function getDefaultPackage() {
+            const loading = document.getElementById('loadingDefault');
+            const result = document.getElementById('defaultPackageResult');
+            
+            loading.style.display = 'block';
+            result.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/DnsZonePackages/default`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    result.innerHTML = `
+                        <div class="alert alert-success">
+                            <h5>Default DNS Zone Package:</h5>
+                            <p><strong>ID:</strong> ${data.id}</p>
+                            <p><strong>Name:</strong> ${data.name}</p>
+                            <p><strong>Code:</strong> ${data.code || 'N/A'}</p>
+                            <p><strong>Description:</strong> ${data.description || 'N/A'}</p>
+                            <p><strong>Max Records:</strong> ${data.maxRecords !== null && data.maxRecords !== undefined ? data.maxRecords : 'Unlimited'}</p>
+                            <p><strong>Created:</strong> ${data.createdAt ? new Date(data.createdAt).toLocaleString() : 'N/A'}</p>
+                        </div>
+                    `;
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'No default package found'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Apply Package to Domain
+        async function applyPackageToDomain() {
+            const packageId = document.getElementById('applyPackageId').value;
+            const domainId = document.getElementById('applyDomainId').value;
+            
+            if (!packageId || !domainId) {
+                showAlert('Please enter both Package ID and Domain ID', 'warning');
+                return;
+            }
+
+            const loading = document.getElementById('loadingApply');
+            const result = document.getElementById('applyPackageResult');
+            
+            loading.style.display = 'block';
+            result.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/DnsZonePackages/${packageId}/apply-to-domain/${domainId}`, {
+                    method: 'POST',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else if (response.status === 204) {
+                    data = { message: 'Package applied to domain successfully' };
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    result.innerHTML = `
+                        <div class="alert alert-success">
+                            <h5>Package Applied Successfully!</h5>
+                            <p>DNS Zone Package #${packageId} has been applied to Domain #${domainId}</p>
+                            ${data.recordsCreated ? `<p><strong>Records Created:</strong> ${data.recordsCreated}</p>` : ''}
+                        </div>
+                    `;
+                    showAlert('DNS Zone Package applied to domain successfully!', 'success');
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Failed to apply package to domain'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Open Edit Modal
+        function openEditModal(id) {
+            const pkg = currentPackages.find(p => p.id === id);
+            
+            if (!pkg) {
+                showAlert('DNS zone package not found', 'danger');
+                return;
+            }
+
+            document.getElementById('editId').value = pkg.id;
+            document.getElementById('editName').value = pkg.name;
+            document.getElementById('editCode').value = pkg.code || '';
+            document.getElementById('editDescription').value = pkg.description || '';
+            document.getElementById('editSortOrder').value = pkg.sortOrder !== undefined ? pkg.sortOrder : 0;
+            document.getElementById('editMaxRecords').value = pkg.maxRecords !== null && pkg.maxRecords !== undefined ? pkg.maxRecords : '';
+            document.getElementById('editIsDefault').checked = pkg.isDefault;
+            document.getElementById('editIsActive').checked = pkg.isActive;
+
+            editModal.show();
+        }
+
+        // Update DNS Zone Package
+        async function updateDnsZonePackage() {
+            const id = document.getElementById('editId').value;
+            const data = {
+                name: document.getElementById('editName').value.trim(),
+                code: document.getElementById('editCode').value.trim() || null,
+                description: document.getElementById('editDescription').value.trim() || null,
+                sortOrder: parseInt(document.getElementById('editSortOrder').value) || 0,
+                maxRecords: parseInt(document.getElementById('editMaxRecords').value) || null,
+                isDefault: document.getElementById('editIsDefault').checked,
+                isActive: document.getElementById('editIsActive').checked
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/DnsZonePackages/${id}`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(data)
+                });
+
+                let result;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    result = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(result);
+
+                if (response.ok) {
+                    showAlert('DNS Zone Package updated successfully!', 'success');
+                    editModal.hide();
+                    getAllDnsZonePackages(); // Refresh list
+                } else {
+                    showAlert(`Error: ${result.message || result.error || 'Failed to update DNS zone package'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+
+        // Delete DNS Zone Package
+        async function deleteDnsZonePackage(id, name) {
+            if (!confirm(`Are you sure you want to delete "${name}"?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/DnsZonePackages/${id}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+
+                if (response.ok) {
+                    // Some APIs return 204 No Content on successful delete
+                    if (response.status === 204) {
+                        updateResponseBox({ message: 'DNS Zone Package deleted successfully' });
+                    } else {
+                        const contentType = response.headers.get('content-type');
+                        if (contentType && contentType.includes('application/json')) {
+                            const result = await response.json();
+                            updateResponseBox(result);
+                        } else {
+                            updateResponseBox({ message: 'DNS Zone Package deleted successfully' });
+                        }
+                    }
+                    showAlert('DNS Zone Package deleted successfully!', 'success');
+                    getAllDnsZonePackages(); // Refresh list
+                } else {
+                    let result;
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        result = await response.json();
+                    } else {
+                        const text = await response.text();
+                        result = { error: text, statusCode: response.status };
+                    }
+                    updateResponseBox(result);
+                    showAlert(`Error: ${result.message || result.error || 'Failed to delete DNS zone package'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+    </script>
+</body>
+</html>

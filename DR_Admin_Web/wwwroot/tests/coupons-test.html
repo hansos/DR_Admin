@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coupons API Test - DR Admin</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Test Page Styles -->
+    <link href="/assets/css/test-page.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/choose-test.html">DR Admin - Coupons API</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <span class="user-info" id="userInfo"></span>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/choose-test.html" class="btn btn-back">&#8592; Back to Tests</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-main">
+        <div class="header-card">
+            <h1>&#127991; Coupons API Test</h1>
+            <p>Test CRUD operations for Coupons API endpoint</p>
+        </div>
+
+        <!-- Alert Messages -->
+        <div id="alertContainer"></div>
+
+        <!-- Create Coupon Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#10133; Create Coupon</h2>
+            <form id="createForm">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="createCode" class="form-label">Coupon Code *</label>
+                        <input type="text" class="form-control" id="createCode" placeholder="e.g., SAVE20" required>
+                        <small class="text-muted">Unique coupon code</small>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="createDiscountPercentage" class="form-label">Discount Percentage</label>
+                        <input type="number" class="form-control" id="createDiscountPercentage" placeholder="e.g., 20" min="0" max="100" step="0.01">
+                        <small class="text-muted">Percentage discount (0-100)</small>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="createDiscountAmount" class="form-label">Discount Amount</label>
+                        <input type="number" class="form-control" id="createDiscountAmount" placeholder="e.g., 10.00" min="0" step="0.01">
+                        <small class="text-muted">Fixed discount amount</small>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="createMaxUses" class="form-label">Max Uses</label>
+                        <input type="number" class="form-control" id="createMaxUses" placeholder="e.g., 100" min="0">
+                        <small class="text-muted">Maximum number of uses (0 = unlimited)</small>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="createValidFrom" class="form-label">Valid From</label>
+                        <input type="datetime-local" class="form-control" id="createValidFrom">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="createValidUntil" class="form-label">Valid Until</label>
+                        <input type="datetime-local" class="form-control" id="createValidUntil">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="createDescription" class="form-label">Description</label>
+                    <textarea class="form-control" id="createDescription" rows="2" placeholder="Enter coupon description..."></textarea>
+                </div>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="createIsActive" checked>
+                        <label class="form-check-label" for="createIsActive">
+                            Is Active
+                        </label>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Create Coupon</button>
+            </form>
+        </div>
+
+        <!-- Get All Coupons Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128203; Get All Coupons</h2>
+            <button class="btn btn-primary mb-3" onclick="getAllCoupons()">Load All Coupons</button>
+            <div class="loading" id="loadingAll">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="couponsTableContainer"></div>
+        </div>
+
+        <!-- Get Coupon by ID Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128269; Get Coupon by ID</h2>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="getCouponId" class="form-label">Coupon ID</label>
+                    <input type="number" class="form-control" id="getCouponId" placeholder="Enter ID">
+                </div>
+                <div class="col-md-8 mb-3 d-flex align-items-end">
+                    <button class="btn btn-primary" onclick="getCouponById()">Get Coupon</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingById">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="couponByIdResult"></div>
+        </div>
+
+        <!-- API Response Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128225; Last API Response</h2>
+            <div class="response-box" id="responseBox">No API calls made yet...</div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">&#9998; Edit Coupon</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editForm">
+                        <input type="hidden" id="editId">
+                        <div class="mb-3">
+                            <label for="editCode" class="form-label">Coupon Code *</label>
+                            <input type="text" class="form-control" id="editCode" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editDiscountPercentage" class="form-label">Discount Percentage</label>
+                            <input type="number" class="form-control" id="editDiscountPercentage" min="0" max="100" step="0.01">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editDiscountAmount" class="form-label">Discount Amount</label>
+                            <input type="number" class="form-control" id="editDiscountAmount" min="0" step="0.01">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editMaxUses" class="form-label">Max Uses</label>
+                            <input type="number" class="form-control" id="editMaxUses" min="0">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editValidFrom" class="form-label">Valid From</label>
+                            <input type="datetime-local" class="form-control" id="editValidFrom">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editValidUntil" class="form-label">Valid Until</label>
+                            <input type="datetime-local" class="form-control" id="editValidUntil">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="editDescription" rows="2"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="editIsActive">
+                                <label class="form-check-label" for="editIsActive">
+                                    Is Active
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="updateCoupon()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Auth Client -->
+    <script src="/assets/js/authClient.js"></script>
+    
+    <script>
+        // API_BASE_URL is already defined in authClient.js
+        let currentCoupons = [];
+        let editModal;
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            // Check authentication
+            const token = authClient.getToken();
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            // Verify token
+            const result = await authClient.verifyToken();
+            if (result.authenticated && result.data?.username) {
+                document.getElementById('userInfo').textContent = `Hello, ${result.data.username}!`;
+            } else {
+                document.getElementById('userInfo').textContent = 'Hello, User!';
+            }
+
+            // Initialize edit modal
+            editModal = new bootstrap.Modal(document.getElementById('editModal'));
+
+            // Setup create form
+            document.getElementById('createForm').addEventListener('submit', handleCreate);
+
+            // Load all coupons on init
+            getAllCoupons();
+        });
+
+        // Show alert message
+        function showAlert(message, type = 'info') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertHtml = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            alertContainer.innerHTML = alertHtml;
+            
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                const alert = alertContainer.querySelector('.alert');
+                if (alert) {
+                    bootstrap.Alert.getOrCreateInstance(alert).close();
+                }
+            }, 5000);
+        }
+
+        // Update response box
+        function updateResponseBox(data) {
+            const responseBox = document.getElementById('responseBox');
+            responseBox.textContent = JSON.stringify(data, null, 2);
+        }
+
+        // Get authorization headers
+        function getAuthHeaders() {
+            const token = authClient.getToken();
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            };
+        }
+
+        // Format datetime for input
+        function formatDateTimeForInput(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
+
+        // Handle Create Coupon
+        async function handleCreate(e) {
+            e.preventDefault();
+            
+            const data = {
+                code: document.getElementById('createCode').value.trim().toUpperCase(),
+                discountPercentage: parseFloat(document.getElementById('createDiscountPercentage').value) || null,
+                discountAmount: parseFloat(document.getElementById('createDiscountAmount').value) || null,
+                maxUses: parseInt(document.getElementById('createMaxUses').value) || null,
+                validFrom: document.getElementById('createValidFrom').value || null,
+                validUntil: document.getElementById('createValidUntil').value || null,
+                description: document.getElementById('createDescription').value.trim() || null,
+                isActive: document.getElementById('createIsActive').checked
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Coupons`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                updateResponseBox(result);
+
+                if (response.ok) {
+                    showAlert('Coupon created successfully!', 'success');
+                    document.getElementById('createForm').reset();
+                    document.getElementById('createIsActive').checked = true;
+                    getAllCoupons(); // Refresh list
+                } else {
+                    showAlert(`Error: ${result.message || 'Failed to create coupon'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+
+        // Get All Coupons
+        async function getAllCoupons() {
+            const loading = document.getElementById('loadingAll');
+            const container = document.getElementById('couponsTableContainer');
+            
+            loading.style.display = 'block';
+            container.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Coupons`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                const data = await response.json();
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    currentCoupons = data;
+                    renderCouponsTable(data);
+                } else {
+                    showAlert(`Error: ${data.message || 'Failed to fetch coupons'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Render Coupons Table
+        function renderCouponsTable(coupons) {
+            const container = document.getElementById('couponsTableContainer');
+            
+            if (!coupons || coupons.length === 0) {
+                container.innerHTML = '<div class="empty-state">No coupons found</div>';
+                return;
+            }
+
+            const tableHtml = `
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Code</th>
+                                <th>Discount %</th>
+                                <th>Discount Amount</th>
+                                <th>Max Uses</th>
+                                <th>Current Uses</th>
+                                <th>Valid From</th>
+                                <th>Valid Until</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${coupons.map(coupon => `
+                                <tr>
+                                    <td>${coupon.id}</td>
+                                    <td><strong>${coupon.code}</strong></td>
+                                    <td>${coupon.discountPercentage ? coupon.discountPercentage + '%' : '-'}</td>
+                                    <td>${coupon.discountAmount ? '$' + coupon.discountAmount.toFixed(2) : '-'}</td>
+                                    <td>${coupon.maxUses || 'Unlimited'}</td>
+                                    <td>${coupon.currentUses || 0}</td>
+                                    <td>${coupon.validFrom ? new Date(coupon.validFrom).toLocaleDateString() : '-'}</td>
+                                    <td>${coupon.validUntil ? new Date(coupon.validUntil).toLocaleDateString() : '-'}</td>
+                                    <td>
+                                        <span class="badge ${coupon.isActive ? 'badge-success' : 'badge-secondary'}">
+                                            ${coupon.isActive ? 'Active' : 'Inactive'}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="btn btn-sm btn-warning" onclick="openEditModal(${coupon.id})">
+                                                Edit
+                                            </button>
+                                            <button class="btn btn-sm btn-danger" onclick="deleteCoupon(${coupon.id}, '${coupon.code}')">
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            container.innerHTML = tableHtml;
+        }
+
+        // Get Coupon by ID
+        async function getCouponById() {
+            const id = document.getElementById('getCouponId').value;
+            
+            if (!id) {
+                showAlert('Please enter a coupon ID', 'warning');
+                return;
+            }
+
+            const loading = document.getElementById('loadingById');
+            const result = document.getElementById('couponByIdResult');
+            
+            loading.style.display = 'block';
+            result.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Coupons/${id}`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                const data = await response.json();
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    result.innerHTML = `
+                        <div class="alert alert-success">
+                            <h5>Coupon Found:</h5>
+                            <p><strong>ID:</strong> ${data.id}</p>
+                            <p><strong>Code:</strong> ${data.code}</p>
+                            <p><strong>Discount Percentage:</strong> ${data.discountPercentage ? data.discountPercentage + '%' : 'N/A'}</p>
+                            <p><strong>Discount Amount:</strong> ${data.discountAmount ? '$' + data.discountAmount.toFixed(2) : 'N/A'}</p>
+                            <p><strong>Max Uses:</strong> ${data.maxUses || 'Unlimited'}</p>
+                            <p><strong>Current Uses:</strong> ${data.currentUses || 0}</p>
+                            <p><strong>Valid From:</strong> ${data.validFrom ? new Date(data.validFrom).toLocaleString() : 'N/A'}</p>
+                            <p><strong>Valid Until:</strong> ${data.validUntil ? new Date(data.validUntil).toLocaleString() : 'N/A'}</p>
+                            <p><strong>Description:</strong> ${data.description || 'N/A'}</p>
+                            <p><strong>Status:</strong> ${data.isActive ? 'Active' : 'Inactive'}</p>
+                            <p><strong>Created:</strong> ${new Date(data.createdAt).toLocaleString()}</p>
+                            <p><strong>Updated:</strong> ${new Date(data.updatedAt).toLocaleString()}</p>
+                        </div>
+                    `;
+                } else {
+                    showAlert(`Error: ${data.message || 'Coupon not found'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Open Edit Modal
+        function openEditModal(id) {
+            const coupon = currentCoupons.find(c => c.id === id);
+            
+            if (!coupon) {
+                showAlert('Coupon not found', 'danger');
+                return;
+            }
+
+            document.getElementById('editId').value = coupon.id;
+            document.getElementById('editCode').value = coupon.code;
+            document.getElementById('editDiscountPercentage').value = coupon.discountPercentage || '';
+            document.getElementById('editDiscountAmount').value = coupon.discountAmount || '';
+            document.getElementById('editMaxUses').value = coupon.maxUses || '';
+            document.getElementById('editValidFrom').value = formatDateTimeForInput(coupon.validFrom);
+            document.getElementById('editValidUntil').value = formatDateTimeForInput(coupon.validUntil);
+            document.getElementById('editDescription').value = coupon.description || '';
+            document.getElementById('editIsActive').checked = coupon.isActive;
+
+            editModal.show();
+        }
+
+        // Update Coupon
+        async function updateCoupon() {
+            const id = document.getElementById('editId').value;
+            const data = {
+                code: document.getElementById('editCode').value.trim().toUpperCase(),
+                discountPercentage: parseFloat(document.getElementById('editDiscountPercentage').value) || null,
+                discountAmount: parseFloat(document.getElementById('editDiscountAmount').value) || null,
+                maxUses: parseInt(document.getElementById('editMaxUses').value) || null,
+                validFrom: document.getElementById('editValidFrom').value || null,
+                validUntil: document.getElementById('editValidUntil').value || null,
+                description: document.getElementById('editDescription').value.trim() || null,
+                isActive: document.getElementById('editIsActive').checked
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Coupons/${id}`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(data)
+                });
+
+                let result;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    result = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(result);
+
+                if (response.ok) {
+                    showAlert('Coupon updated successfully!', 'success');
+                    editModal.hide();
+                    getAllCoupons(); // Refresh list
+                } else {
+                    showAlert(`Error: ${result.message || result.error || 'Failed to update coupon'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+
+        // Delete Coupon
+        async function deleteCoupon(id, code) {
+            if (!confirm(`Are you sure you want to delete coupon "${code}"?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Coupons/${id}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+
+                if (response.ok) {
+                    // Some APIs return 204 No Content on successful delete
+                    if (response.status === 204) {
+                        updateResponseBox({ message: 'Coupon deleted successfully' });
+                    } else {
+                        const result = await response.json();
+                        updateResponseBox(result);
+                    }
+                    showAlert('Coupon deleted successfully!', 'success');
+                    getAllCoupons(); // Refresh list
+                } else {
+                    const result = await response.json();
+                    updateResponseBox(result);
+                    showAlert(`Error: ${result.message || 'Failed to delete coupon'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+    </script>
+</body>
+</html>

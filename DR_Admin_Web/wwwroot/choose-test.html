@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Choose Test - DR Admin</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.95) !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            color: #667eea !important;
+            font-size: 24px;
+        }
+
+        .container-main {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        .header-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header-card h1 {
+            color: #667eea;
+            font-weight: 700;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+
+        .header-card p {
+            color: #666;
+            font-size: 16px;
+            margin: 0;
+        }
+
+        .test-links-container {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .test-links-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .test-links-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .test-link {
+            display: block;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 10px;
+            text-decoration: none;
+            color: #333;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .test-link:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .test-link::before {
+            content: '\2192';
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 24px;
+            opacity: 0;
+            transition: all 0.3s;
+        }
+
+        .test-link:hover::before {
+            opacity: 1;
+            right: 15px;
+        }
+
+        .test-link-title {
+            font-weight: 600;
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        .test-link-description {
+            font-size: 14px;
+            color: #666;
+            margin: 0;
+        }
+
+        .section-title {
+            color: #667eea;
+            font-weight: 600;
+            font-size: 20px;
+            margin-bottom: 25px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .btn-logout {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+
+        .btn-logout:hover {
+            transform: translateY(-2px);
+            color: white;
+        }
+
+        .user-info {
+            color: #667eea;
+            font-weight: 600;
+            margin-right: 20px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/choose-test.html">DR Admin - API Testing</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <span class="user-info" id="userInfo"></span>
+                    </li>
+                    <li class="nav-item">
+                        <button class="btn btn-logout" onclick="handleLogout()">Logout</button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-main">
+        <div class="header-card">
+            <h1>&#128218; Choose API Test</h1>
+            <p>Select an API controller to test</p>
+        </div>
+
+        <div class="test-links-container">
+            <h2 class="section-title">&#128295; Available API Tests</h2>
+            
+            <div class="test-links-grid" id="testLinksGrid">
+                <!-- Test links will be added here -->
+                <!-- Example structure:
+                <a href="/tests/auth-test.html" class="test-link">
+                    <div class="test-link-title">Authentication API</div>
+                    <p class="test-link-description">Test login, logout, and token validation</p>
+                </a>
+                -->
+            </div>
+
+            <!-- Empty state when no tests are available -->
+            <div class="empty-state" id="emptyState">
+                <div class="empty-state-icon">&#129514;</div>
+                <h3>No Tests Available Yet</h3>
+                <p>API test pages will be added here</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Auth Client -->
+    <script src="/assets/js/authClient.js"></script>
+    
+    <script>
+        // Test links configuration
+        // Add new test pages here as they are created
+        // Group test links by category
+        const testLinksConfig = {
+            'System': [
+                { title: 'Document Templates API', description: 'Test document template CRUD operations and management', url: '/tests/documenttemplates-test.html' },
+                { title: 'Tax Rules API', description: 'Test tax rules and lookup endpoints', url: '/tests/taxrules-test.html' },
+                { title: 'Units API', description: 'Test units CRUD and listing', url: '/tests/units-test.html' },
+            ],
+            'Authentication and Authrization': [
+                { title: 'Initialization API', description: 'Test system initialization operations', url: '/tests/initialization-test.html' },
+                { title: 'Roles API', description: 'Test role CRUD operations and management', url: '/tests/roles-test.html' },
+                { title: 'My Account API', description: 'Test account registration, email confirmation, password management, and profile updates', url: '/tests/myaccount-test.html' },
+            ],
+            'Geographical': [
+                { title: 'Countries API', description: 'Test country CRUD operations and management', url: '/tests/countries-test.html' },
+                { title: 'Postal Codes API', description: 'Test postal code CRUD operations, country/city lookups, and location data', url: '/tests/postalcodes-test.html' },
+            ],
+            'Mail and SMS': [
+                { title: 'Email Queue API', description: 'Test email queue operations and status tracking', url: '/tests/emailqueue-test.html' },
+                { title: 'Sent Emails API', description: 'Test sent email logs and lookup endpoints', url: '/tests/sentemails-test.html' },
+            ],
+            'Users and Customer': [
+                { title: 'Users API', description: 'Test user CRUD operations', url: '/tests/users-test.html' },
+                { title: 'Customers API', description: 'Test customer CRUD operations and management', url: '/tests/customers-test.html' },
+                { title: 'Sales Agents API', description: 'Test sales agent CRUD operations and management', url: '/tests/salesagents-test.html' }
+            ],
+            'Company': [
+                { title: 'Reseller Companies API', description: 'Test reseller company CRUD operations and active lookup', url: '/tests/resellercompanies-test.html' }
+            ],
+            'Services': [
+                { title: 'Service Types API', description: 'Test service type CRUD operations', url: '/tests/servicetypes-test.html' },
+                { title: 'Server IP Addresses API (Services)', description: 'Service-scoped server IP address tests', url: '/tests/serveripaddresses-test.html' }
+            ],
+            'Invoicing and Billing': [
+                { title: 'Billing Cycles API', description: 'Test billing cycle CRUD operations and management', url: '/tests/billingcycles-test.html' },
+                { title: 'Coupons API', description: 'Test coupon CRUD operations and management', url: '/tests/coupons-test.html' },
+                { title: 'Currencies API', description: 'Test currency CRUD operations and management', url: '/tests/currencies-test.html' },
+                { title: 'Customer Credits API', description: 'Test customer credit CRUD operations and management', url: '/tests/customercredits-test.html' },
+                { title: 'Payment Gateways API', description: 'Test payment gateway management and operations', url: '/tests/paymentgateways-test.html' },
+                { title: 'Payment Intents API', description: 'Test payment intent CRUD operations, customer payments, and webhook handling', url: '/tests/paymentintents-test.html' },
+                { title: 'Quotes API', description: 'Test quote CRUD operations, sending, accepting and converting', url: '/tests/quotes-test.html' },
+                { title: 'Refunds API', description: 'Test refund creation, listing and processing', url: '/tests/refunds-test.html' },
+                { title: 'Invoice Lines API', description: 'Test invoice line CRUD operations and management', url: '/tests/invoicelines-test.html' },
+                { title: 'Invoices API', description: 'Test invoice CRUD operations, customer invoices, and status tracking', url: '/tests/invoices-test.html' },
+                { title: 'Orders API', description: 'Test order CRUD operations and management', url: '/tests/orders-test.html' }
+            ],
+            'Hosting': [
+                { title: 'Control Panel Types API', description: 'Test control panel type CRUD operations and management', url: '/tests/controlpaneltypes-test.html' },
+                { title: 'Hosting Packages API', description: 'Test hosting package CRUD operations and management', url: '/tests/hostingpackages-test.html' },
+                { title: 'Server Control Panels API', description: 'Test server control panel CRUD operations and server endpoints', url: '/tests/servercontrolpanels-test.html' },
+                { title: 'Server IP Addresses API', description: 'Test server IP address CRUD and server lookups', url: '/tests/serveripaddresses-test.html' },
+                { title: 'Servers API', description: 'Test server CRUD operations', url: '/tests/servers-test.html' }
+            ],
+            'Domain management': [
+                { title: 'DNS Records API', description: 'Test DNS record CRUD operations and management', url: '/tests/dnsrecords-test.html' },
+                { title: 'DNS Record Types API', description: 'Test DNS record type CRUD operations and management', url: '/tests/dnsrecordtypes-test.html' },
+                { title: 'DNS Zone Package Records API', description: 'Test DNS zone package record CRUD operations and management', url: '/tests/dnszonepackagerecords-test.html' },
+                { title: 'DNS Zone Packages API', description: 'Test DNS zone package CRUD operations and management', url: '/tests/dnszonepackages-test.html' },
+                { title: 'Registrar TLDs API', description: 'Test registrar TLD CRUD operations and lookups', url: '/tests/registrartlds-test.html' },
+                { title: 'Reseller Companies API', description: 'Test reseller company CRUD operations and active lookup', url: '/tests/resellercompanies-test.html' },
+                { title: 'Registrars API', description: 'Test registrar CRUD operations, TLD management and lookups', url: '/tests/registrars-test.html' },
+                { title: 'TLDs API', description: 'Test TLD CRUD operations and lookups', url: '/tests/tlds-test.html' }
+            ],
+            'Subscriptions': [
+                { title: 'Subscriptions API', description: 'Test subscription CRUD and lifecycle operations', url: '/tests/subscriptions-test.html' },
+                { title: 'Subscription Billing Histories API', description: 'Test subscription billing history CRUD', url: '/tests/subscriptionbillinghistories-test.html' }
+            ]
+        };
+
+        // Flatten for backward compatibility
+        const testLinks = Object.values(testLinksConfig).flat();
+
+        // Render test links
+        function renderTestLinks() {
+            const grid = document.getElementById('testLinksGrid');
+            const emptyState = document.getElementById('emptyState');
+            
+            if (testLinks.length === 0) {
+                grid.style.display = 'none';
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            grid.style.display = 'grid';
+            emptyState.style.display = 'none';
+            
+            // Render grouped test links
+            let html = '';
+            for (const [groupName, links] of Object.entries(testLinksConfig)) {
+                if (links.length > 0) {
+                    html += `
+                        <div style="grid-column: 1 / -1;">
+                            <h3 style="color: #667eea; font-size: 18px; font-weight: 600; margin: 20px 0 10px 0; padding-bottom: 8px; border-bottom: 2px solid #e0e0e0;">
+                                ${groupName}
+                            </h3>
+                        </div>
+                    `;
+                    html += links.map(link => `
+                        <a href="${link.url}" class="test-link">
+                            <div class="test-link-title">${link.title}</div>
+                            <p class="test-link-description">${link.description}</p>
+                        </a>
+                    `).join('');
+                }
+            }
+            grid.innerHTML = html;
+        }
+
+        // Check authentication on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            const token = authClient.getToken();
+            
+            if (!token) {
+                // No token found, redirect to login
+                window.location.href = '/login.html';
+                return;
+            }
+
+            // Try to verify token with API (optional - if endpoint doesn't exist, just use local token)
+            const result = await authClient.verifyToken();
+            
+            if (result.authenticated) {
+                // Show user info if available from API
+                if (result.data && result.data.username) {
+                    document.getElementById('userInfo').textContent = `Hello, ${result.data.username}!`;
+                } else {
+                    document.getElementById('userInfo').textContent = 'Hello, User!';
+                }
+            } else {
+                // If verification fails but we have a token, still show the page
+                // This allows the app to work even if verify endpoint doesn't exist
+                console.warn('Token verification failed, but token exists locally');
+                document.getElementById('userInfo').textContent = 'Hello, User!';
+            }
+            
+            // Render test links
+            renderTestLinks();
+        });
+
+        // Handle logout
+        async function handleLogout() {
+            const confirmed = confirm('Are you sure you want to logout?');
+            if (!confirmed) return;
+
+            await authClient.logout();
+            window.location.href = '/login.html';
+        }
+    </script>
+</body>
+</html>
+

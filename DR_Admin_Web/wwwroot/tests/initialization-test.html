@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Initialization API Test - DR Admin</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Test Page Styles -->
+    <link href="/assets/css/test-page.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/choose-test.html">DR Admin - Initialization API</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <span class="user-info" id="userInfo"></span>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/choose-test.html" class="btn btn-back">&#8592; Back to Tests</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-main">
+        <div class="header-card">
+            <h1>&#9881; Initialization API Test</h1>
+            <p>Test system initialization operations</p>
+        </div>
+
+        <!-- Alert Messages -->
+        <div id="alertContainer"></div>
+
+        <!-- Initialize System Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128640; Initialize System</h2>
+            <div class="alert alert-warning" role="alert">
+                <strong>&#9888; Warning:</strong> This operation will initialize the system. This may reset or configure system settings, seed data, or perform other initialization tasks. Use with caution!
+            </div>
+            <form id="initializeForm">
+                <div class="mb-3">
+                    <label for="initOptions" class="form-label">Initialization Options (Optional)</label>
+                    <textarea class="form-control" id="initOptions" rows="4" placeholder='Enter JSON options (optional)&#10;Example: { "seedData": true, "resetDatabase": false }'></textarea>
+                    <small class="text-muted">Enter any initialization parameters as JSON, or leave empty for default initialization</small>
+                </div>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="confirmInitialize" required>
+                        <label class="form-check-label" for="confirmInitialize">
+                            I understand this will initialize the system *
+                        </label>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-lg">
+                    &#128640; Initialize System
+                </button>
+            </form>
+        </div>
+
+        <!-- Initialization Status Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128200; Initialization Status</h2>
+            <div class="loading" id="loadingStatus">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="initializationStatusResult"></div>
+        </div>
+
+        <!-- Initialization History Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128202; Initialization History</h2>
+            <div id="initializationHistoryContainer">
+                <div class="empty-state">No initializations performed in this session yet</div>
+            </div>
+        </div>
+
+        <!-- API Response Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128225; Last API Response</h2>
+            <div class="response-box" id="responseBox">No API calls made yet...</div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Auth Client -->
+    <script src="/assets/js/authClient.js"></script>
+    
+    <script>
+        // API_BASE_URL is already defined in authClient.js
+        let initializationHistory = [];
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            // Check authentication
+            const token = authClient.getToken();
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            // Verify token
+            const result = await authClient.verifyToken();
+            if (result.authenticated && result.data?.username) {
+                document.getElementById('userInfo').textContent = `Hello, ${result.data.username}!`;
+            } else {
+                document.getElementById('userInfo').textContent = 'Hello, User!';
+            }
+
+            // Setup initialize form
+            document.getElementById('initializeForm').addEventListener('submit', handleInitialize);
+        });
+
+        // Show alert message
+        function showAlert(message, type = 'info') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertHtml = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            alertContainer.innerHTML = alertHtml;
+            
+            // Auto-dismiss after 8 seconds (longer for important messages)
+            setTimeout(() => {
+                const alert = alertContainer.querySelector('.alert');
+                if (alert) {
+                    bootstrap.Alert.getOrCreateInstance(alert).close();
+                }
+            }, 8000);
+        }
+
+        // Update response box
+        function updateResponseBox(data) {
+            const responseBox = document.getElementById('responseBox');
+            responseBox.textContent = JSON.stringify(data, null, 2);
+        }
+
+        // Get authorization headers
+        function getAuthHeaders() {
+            const token = authClient.getToken();
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            };
+        }
+
+        // Handle Initialize
+        async function handleInitialize(e) {
+            e.preventDefault();
+            
+            if (!document.getElementById('confirmInitialize').checked) {
+                showAlert('Please confirm that you want to initialize the system', 'warning');
+                return;
+            }
+
+            const optionsText = document.getElementById('initOptions').value.trim();
+            let data = null;
+
+            // Parse JSON options if provided
+            if (optionsText) {
+                try {
+                    data = JSON.parse(optionsText);
+                } catch (error) {
+                    showAlert(`Invalid JSON in options: ${error.message}`, 'danger');
+                    return;
+                }
+            }
+
+            const loading = document.getElementById('loadingStatus');
+            const statusResult = document.getElementById('initializationStatusResult');
+            
+            loading.style.display = 'block';
+            statusResult.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Initialization/initialize`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: data ? JSON.stringify(data) : null
+                });
+
+                let result;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else if (response.status === 204) {
+                    result = { message: 'System initialized successfully', status: 'Success' };
+                } else {
+                    const text = await response.text();
+                    result = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(result);
+
+                if (response.ok) {
+                    showAlert('System initialized successfully!', 'success');
+                    
+                    // Display status
+                    statusResult.innerHTML = `
+                        <div class="alert alert-success">
+                            <h5>&#9989; Initialization Completed Successfully</h5>
+                            <p><strong>Status:</strong> ${result.status || result.message || 'Success'}</p>
+                            ${result.tasksCompleted ? `<p><strong>Tasks Completed:</strong> ${result.tasksCompleted}</p>` : ''}
+                            ${result.itemsCreated ? `<p><strong>Items Created:</strong> ${result.itemsCreated}</p>` : ''}
+                            ${result.itemsUpdated ? `<p><strong>Items Updated:</strong> ${result.itemsUpdated}</p>` : ''}
+                            ${result.duration ? `<p><strong>Duration:</strong> ${result.duration}</p>` : ''}
+                            ${result.message ? `<p><strong>Message:</strong> ${result.message}</p>` : ''}
+                            ${result.details ? `<p><strong>Details:</strong> ${result.details}</p>` : ''}
+                            <p><strong>Timestamp:</strong> ${new Date().toLocaleString()}</p>
+                        </div>
+                    `;
+
+                    // Add to history
+                    const historyItem = {
+                        timestamp: new Date().toISOString(),
+                        status: 'Success',
+                        options: data,
+                        result: result
+                    };
+                    initializationHistory.unshift(historyItem);
+                    renderInitializationHistory();
+
+                    // Reset form
+                    document.getElementById('initializeForm').reset();
+                } else {
+                    showAlert(`Error: ${result.message || result.error || 'Failed to initialize system'}`, 'danger');
+                    
+                    // Display error status
+                    statusResult.innerHTML = `
+                        <div class="alert alert-danger">
+                            <h5>&#10060; Initialization Failed</h5>
+                            <p><strong>Error:</strong> ${result.message || result.error || 'Unknown error'}</p>
+                            ${result.details ? `<p><strong>Details:</strong> ${result.details}</p>` : ''}
+                            <p><strong>Timestamp:</strong> ${new Date().toLocaleString()}</p>
+                        </div>
+                    `;
+
+                    // Add to history
+                    const historyItem = {
+                        timestamp: new Date().toISOString(),
+                        status: 'Failed',
+                        options: data,
+                        error: result.message || result.error
+                    };
+                    initializationHistory.unshift(historyItem);
+                    renderInitializationHistory();
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+                
+                // Display error status
+                statusResult.innerHTML = `
+                    <div class="alert alert-danger">
+                        <h5>&#10060; Initialization Error</h5>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                        <p><strong>Timestamp:</strong> ${new Date().toLocaleString()}</p>
+                    </div>
+                `;
+
+                // Add to history
+                const historyItem = {
+                    timestamp: new Date().toISOString(),
+                    status: 'Error',
+                    options: data,
+                    error: error.message
+                };
+                initializationHistory.unshift(historyItem);
+                renderInitializationHistory();
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Render Initialization History
+        function renderInitializationHistory() {
+            const container = document.getElementById('initializationHistoryContainer');
+            
+            if (!initializationHistory || initializationHistory.length === 0) {
+                container.innerHTML = '<div class="empty-state">No initializations performed in this session yet</div>';
+                return;
+            }
+
+            const tableHtml = `
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Status</th>
+                                <th>Options</th>
+                                <th>Result/Error</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${initializationHistory.map(item => {
+                                const statusBadgeClass = item.status === 'Success' 
+                                    ? 'badge-success' 
+                                    : item.status === 'Failed' 
+                                    ? 'badge-danger' 
+                                    : 'badge-warning';
+                                
+                                const optionsDisplay = item.options 
+                                    ? `<code>${JSON.stringify(item.options, null, 2)}</code>` 
+                                    : '<em>Default</em>';
+                                
+                                const resultDisplay = item.status === 'Success'
+                                    ? (item.result?.message || item.result?.status || 'Completed')
+                                    : (item.error || 'Unknown error');
+                                
+                                return `
+                                    <tr>
+                                        <td>${new Date(item.timestamp).toLocaleString()}</td>
+                                        <td>
+                                            <span class="badge ${statusBadgeClass}">
+                                                ${item.status}
+                                            </span>
+                                        </td>
+                                        <td>${optionsDisplay}</td>
+                                        <td>${resultDisplay}</td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            container.innerHTML = tableHtml;
+        }
+    </script>
+</body>
+</html>

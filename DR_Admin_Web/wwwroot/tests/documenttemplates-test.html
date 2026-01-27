@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Templates API Test - DR Admin</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Test Page Styles -->
+    <link href="/assets/css/test-page.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/choose-test.html">DR Admin - Document Templates API</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <span class="user-info" id="userInfo"></span>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/choose-test.html" class="btn btn-back">&#8592; Back to Tests</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-main">
+        <div class="header-card">
+            <h1>&#128196; Document Templates API Test</h1>
+            <p>Test CRUD operations for Document Templates API endpoint</p>
+        </div>
+
+        <!-- Alert Messages -->
+        <div id="alertContainer"></div>
+
+        <!-- Create/Upload Document Template Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#10133; Create/Upload Document Template</h2>
+            <form id="createForm">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="createName" class="form-label">Name *</label>
+                        <input type="text" class="form-control" id="createName" placeholder="e.g., Invoice Template" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="createType" class="form-label">Type *</label>
+                        <select class="form-control" id="createType" required>
+                            <option value="">Select Type...</option>
+                            <option value="Invoice">Invoice</option>
+                            <option value="Contract">Contract</option>
+                            <option value="Agreement">Agreement</option>
+                            <option value="Report">Report</option>
+                            <option value="Letter">Letter</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label for="createDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="createDescription" rows="3" placeholder="Enter description..."></textarea>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="createFile" class="form-label">Template File</label>
+                        <input type="file" class="form-control" id="createFile" accept=".docx,.pdf,.html,.txt">
+                        <small class="text-muted">Upload template file (optional)</small>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="createVersion" class="form-label">Version</label>
+                        <input type="text" class="form-control" id="createVersion" placeholder="e.g., 1.0">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="createIsDefault">
+                            <label class="form-check-label" for="createIsDefault">
+                                Set as Default for Type
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="createIsActive" checked>
+                            <label class="form-check-label" for="createIsActive">
+                                Is Active
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Create Document Template</button>
+                <button type="button" class="btn btn-success ms-2" onclick="uploadTemplate()">Upload Template with File</button>
+            </form>
+        </div>
+
+        <!-- Get All Document Templates Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128203; Get All Document Templates</h2>
+            <div class="mb-3">
+                <button class="btn btn-primary me-2" onclick="getAllDocumentTemplates()">Load All Templates</button>
+                <button class="btn btn-success" onclick="getActiveTemplates()">Load Active Templates</button>
+            </div>
+            <div class="loading" id="loadingAll">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="documentTemplatesTableContainer"></div>
+        </div>
+
+        <!-- Get Document Template by ID Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128269; Get Document Template by ID</h2>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="getTemplateId" class="form-label">Document Template ID</label>
+                    <input type="number" class="form-control" id="getTemplateId" placeholder="Enter ID">
+                </div>
+                <div class="col-md-8 mb-3 d-flex align-items-end">
+                    <button class="btn btn-primary" onclick="getDocumentTemplateById()">Get Document Template</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingById">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="templateByIdResult"></div>
+        </div>
+
+        <!-- Get Templates by Type Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128194; Get Templates by Type</h2>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="getTypeFilter" class="form-label">Template Type</label>
+                    <select class="form-control" id="getTypeFilter">
+                        <option value="">Select Type...</option>
+                        <option value="Invoice">Invoice</option>
+                        <option value="Contract">Contract</option>
+                        <option value="Agreement">Agreement</option>
+                        <option value="Report">Report</option>
+                        <option value="Letter">Letter</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="col-md-8 mb-3 d-flex align-items-end">
+                    <button class="btn btn-primary" onclick="getTemplatesByType()">Get Templates by Type</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingByType">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="templatesByTypeContainer"></div>
+        </div>
+
+        <!-- Get Default Template by Type Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#11088; Get Default Template by Type</h2>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="getDefaultType" class="form-label">Template Type</label>
+                    <select class="form-control" id="getDefaultType">
+                        <option value="">Select Type...</option>
+                        <option value="Invoice">Invoice</option>
+                        <option value="Contract">Contract</option>
+                        <option value="Agreement">Agreement</option>
+                        <option value="Report">Report</option>
+                        <option value="Letter">Letter</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="col-md-8 mb-3 d-flex align-items-end">
+                    <button class="btn btn-primary" onclick="getDefaultTemplateByType()">Get Default Template</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingDefault">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="defaultTemplateResult"></div>
+        </div>
+
+        <!-- API Response Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128225; Last API Response</h2>
+            <div class="response-box" id="responseBox">No API calls made yet...</div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">&#9998; Edit Document Template</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editForm">
+                        <input type="hidden" id="editId">
+                        <div class="mb-3">
+                            <label for="editName" class="form-label">Name *</label>
+                            <input type="text" class="form-control" id="editName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editType" class="form-label">Type *</label>
+                            <select class="form-control" id="editType" required>
+                                <option value="Invoice">Invoice</option>
+                                <option value="Contract">Contract</option>
+                                <option value="Agreement">Agreement</option>
+                                <option value="Report">Report</option>
+                                <option value="Letter">Letter</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="editDescription" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editVersion" class="form-label">Version</label>
+                            <input type="text" class="form-control" id="editVersion">
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="editIsDefault">
+                                <label class="form-check-label" for="editIsDefault">
+                                    Set as Default for Type
+                                </label>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="editIsActive">
+                                <label class="form-check-label" for="editIsActive">
+                                    Is Active
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="updateDocumentTemplate()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Auth Client -->
+    <script src="/assets/js/authClient.js"></script>
+    
+    <script>
+        // API_BASE_URL is already defined in authClient.js
+        let currentTemplates = [];
+        let editModal;
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            // Check authentication
+            const token = authClient.getToken();
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            // Verify token
+            const result = await authClient.verifyToken();
+            if (result.authenticated && result.data?.username) {
+                document.getElementById('userInfo').textContent = `Hello, ${result.data.username}!`;
+            } else {
+                document.getElementById('userInfo').textContent = 'Hello, User!';
+            }
+
+            // Initialize edit modal
+            editModal = new bootstrap.Modal(document.getElementById('editModal'));
+
+            // Setup create form
+            document.getElementById('createForm').addEventListener('submit', handleCreate);
+
+            // Load all document templates on init
+            getAllDocumentTemplates();
+        });
+
+        // Show alert message
+        function showAlert(message, type = 'info') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertHtml = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            alertContainer.innerHTML = alertHtml;
+            
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                const alert = alertContainer.querySelector('.alert');
+                if (alert) {
+                    bootstrap.Alert.getOrCreateInstance(alert).close();
+                }
+            }, 5000);
+        }
+
+        // Update response box
+        function updateResponseBox(data) {
+            const responseBox = document.getElementById('responseBox');
+            responseBox.textContent = JSON.stringify(data, null, 2);
+        }
+
+        // Get authorization headers
+        function getAuthHeaders() {
+            const token = authClient.getToken();
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            };
+        }
+
+        // Handle Create Document Template
+        async function handleCreate(e) {
+            e.preventDefault();
+            
+            const data = {
+                name: document.getElementById('createName').value.trim(),
+                type: document.getElementById('createType').value,
+                description: document.getElementById('createDescription').value.trim() || null,
+                version: document.getElementById('createVersion').value.trim() || null,
+                isDefault: document.getElementById('createIsDefault').checked,
+                isActive: document.getElementById('createIsActive').checked
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/DocumentTemplates`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(data)
+                });
+
+                let result;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    result = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(result);
+
+                if (response.ok) {
+                    showAlert('Document Template created successfully!', 'success');
+                    document.getElementById('createForm').reset();
+                    document.getElementById('createIsActive').checked = true;
+                    getAllDocumentTemplates(); // Refresh list
+                } else {
+                    showAlert(`Error: ${result.message || result.error || 'Failed to create document template'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+
+        // Upload Template
+        async function uploadTemplate() {
+            const fileInput = document.getElementById('createFile');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                showAlert('Please select a file to upload', 'warning');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('name', document.getElementById('createName').value.trim());
+            formData.append('type', document.getElementById('createType').value);
+            formData.append('description', document.getElementById('createDescription').value.trim() || '');
+            formData.append('version', document.getElementById('createVersion').value.trim() || '');
+            formData.append('isDefault', document.getElementById('createIsDefault').checked);
+            formData.append('isActive', document.getElementById('createIsActive').checked);
+
+            try {
+                const token = authClient.getToken();
+                const response = await fetch(`${API_BASE_URL}/api/v1/DocumentTemplates/upload`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+
+                let result;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    result = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(result);
+
+                if (response.ok) {
+                    showAlert('Document Template uploaded successfully!', 'success');
+                    document.getElementById('createForm').reset();
+                    document.getElementById('createIsActive').checked = true;
+                    getAllDocumentTemplates(); // Refresh list
+                } else {
+                    showAlert(`Error: ${result.message || result.error || 'Failed to upload document template'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+
+        // Get All Document Templates
+        async function getAllDocumentTemplates() {
+            const loading = document.getElementById('loadingAll');
+            const container = document.getElementById('documentTemplatesTableContainer');
+            
+            loading.style.display = 'block';
+            container.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/DocumentTemplates`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    currentTemplates = data;
+                    renderTemplatesTable(data);
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Failed to fetch document templates'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Get Active Templates
+        async function getActiveTemplates() {
+            const loading = document.getElementById('loadingAll');
+            const container = document.getElementById('documentTemplatesTableContainer');
+            
+            loading.style.display = 'block';
+            container.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/DocumentTemplates/active`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    currentTemplates = data;
+                    renderTemplatesTable(data);
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Failed to fetch active templates'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Render Templates Table
+        function renderTemplatesTable(templates) {
+            const container = document.getElementById('documentTemplatesTableContainer');
+            
+            if (!templates || templates.length === 0) {
+                container.innerHTML = '<div class="empty-state">No document templates found</div>';
+                return;
+            }
+
+            const tableHtml = `
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Version</th>
+                                <th>File</th>
+                                <th>Default</th>
+                                <th>Status</th>
+                                <th>Created At</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${templates.map(template => {
+                                return `
+                                    <tr ${template.isDefault ? 'class="table-warning"' : ''}>
+                                        <td>${template.id}</td>
+                                        <td><strong>${template.name}</strong></td>
+                                        <td>
+                                            <span class="badge badge-info">
+                                                ${template.type}
+                                            </span>
+                                        </td>
+                                        <td>${template.description || '-'}</td>
+                                        <td>${template.version || '-'}</td>
+                                        <td>
+                                            ${template.fileName || template.filePath 
+                                                ? `<button class="btn btn-sm btn-outline-primary" onclick="downloadTemplate(${template.id})">
+                                                    &#128190; Download
+                                                   </button>` 
+                                                : '-'}
+                                        </td>
+                                        <td>
+                                            ${template.isDefault 
+                                                ? '<span class="badge badge-warning">Default</span>' 
+                                                : `<button class="btn btn-sm btn-outline-warning" onclick="setAsDefault(${template.id})">Set Default</button>`}
+                                        </td>
+                                        <td>
+                                            <span class="badge ${template.isActive ? 'badge-success' : 'badge-secondary'}">
+                                                ${template.isActive ? 'Active' : 'Inactive'}
+                                            </span>
+                                        </td>
+                                        <td>${template.createdAt ? new Date(template.createdAt).toLocaleString() : '-'}</td>
+                                        <td>
+                                            <div class="action-buttons">
+                                                <button class="btn btn-sm btn-warning" onclick="openEditModal(${template.id})">
+                                                    Edit
+                                                </button>
+                                                <button class="btn btn-sm btn-danger" onclick="deleteDocumentTemplate(${template.id}, '${template.name.replace(/'/g, "\\'")}')">
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            container.innerHTML = tableHtml;
+        }
+
+        // Get Document Template by ID
+        async function getDocumentTemplateById() {
+            const id = document.getElementById('getTemplateId').value;
+            
+            if (!id) {
+                showAlert('Please enter a document template ID', 'warning');
+                return;
+            }
+
+            const loading = document.getElementById('loadingById');
+            const result = document.getElementById('templateByIdResult');
+            
+            loading.style.display = 'block';
+            result.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/DocumentTemplates/${id}`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    result.innerHTML = `
+                        <div class="alert alert-success">
+                            <h5>Document Template Found:</h5>
+                            <p><strong>ID:</strong> ${data.id}</p>
+                            <p><strong>Name:</strong> ${data.name}</p>
+                            <p><strong>Type:</strong> ${data.type}</p>
+                            <p><strong>Description:</strong> ${data.description || 'N/A'}</p>
+                            <p><strong>Version:</strong> ${data.version || 'N/A'}</p>
+                            <p><strong>File Name:</strong> ${data.fileName || data.filePath || 'N/A'}</p>
+                            <p><strong>Is Default:</strong> ${data.isDefault ? 'Yes' : 'No'}</p>
+                            <p><strong>Status:</strong> ${data.isActive ? 'Active' : 'Inactive'}</p>
+                            <p><strong>Created:</strong> ${data.createdAt ? new Date(data.createdAt).toLocaleString() : 'N/A'}</p>
+                            <p><strong>Updated:</strong> ${data.updatedAt ? new Date(data.updatedAt).toLocaleString() : 'N/A'}</p>
+                        </div>
+                    `;
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Document template not found'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Get Templates by Type
+        async function getTemplatesByType() {
+            const type = document.getElementById('getTypeFilter').value;
+            
+            if (!type) {
+                showAlert('Please select a template type', 'warning');
+                return;
+            }
+
+            const loading = document.getElementById('loadingByType');
+            const container = document.getElementById('templatesByTypeContainer');
+            
+            loading.style.display = 'block';
+            container.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/DocumentTemplates/type/${encodeURIComponent(type)}`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    renderTemplatesTableInContainer(data, container);
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Failed to fetch templates by type'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Get Default Template by Type
+        async function getDefaultTemplateByType() {
+            const type = document.getElementById('getDefaultType').value;
+            
+            if (!type) {
+                showAlert('Please select a template type', 'warning');
+                return;
+            }
+
+            const loading = document.getElementById('loadingDefault');
+            const result = document.getElementById('defaultTemplateResult');
+            
+            loading.style.display = 'block';
+            result.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/DocumentTemplates/default/${encodeURIComponent(type)}`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    result.innerHTML = `
+                        <div class="alert alert-success">
+                            <h5>Default Template for ${type}:</h5>
+                            <p><strong>ID:</strong> ${data.id}</p>
+                            <p><strong>Name:</strong> ${data.name}</p>
+                            <p><strong>Type:</strong> ${data.type}</p>
+                            <p><strong>Description:</strong> ${data.description || 'N/A'}</p>
+                            <p><strong>Version:</strong> ${data.version || 'N/A'}</p>
+                            <p><strong>File Name:</strong> ${data.fileName || data.filePath || 'N/A'}</p>
+                            <p><strong>Created:</strong> ${data.createdAt ? new Date(data.createdAt).toLocaleString() : 'N/A'}</p>
+                        </div>
+                    `;
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'No default template found for this type'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Render Templates Table in Specific Container
+        function renderTemplatesTableInContainer(templates, container) {
+            if (!templates || templates.length === 0) {
+                container.innerHTML = '<div class="empty-state">No templates found for this type</div>';
+                return;
+            }
+
+            // Reuse the main render function logic
+            const tableHtml = `
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Description</th>
+                                <th>Version</th>
+                                <th>Default</th>
+                                <th>Status</th>
+                                <th>Created At</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${templates.map(template => {
+                                return `
+                                    <tr ${template.isDefault ? 'class="table-warning"' : ''}>
+                                        <td>${template.id}</td>
+                                        <td><strong>${template.name}</strong></td>
+                                        <td>${template.description || '-'}</td>
+                                        <td>${template.version || '-'}</td>
+                                        <td>
+                                            ${template.isDefault 
+                                                ? '<span class="badge badge-warning">Default</span>' 
+                                                : '-'}
+                                        </td>
+                                        <td>
+                                            <span class="badge ${template.isActive ? 'badge-success' : 'badge-secondary'}">
+                                                ${template.isActive ? 'Active' : 'Inactive'}
+                                            </span>
+                                        </td>
+                                        <td>${template.createdAt ? new Date(template.createdAt).toLocaleString() : '-'}</td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            container.innerHTML = tableHtml;
+        }
+
+        // Download Template
+        async function downloadTemplate(id) {
+            try {
+                const token = authClient.getToken();
+                const response = await fetch(`${API_BASE_URL}/api/v1/DocumentTemplates/${id}/download`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const contentDisposition = response.headers.get('Content-Disposition');
+                    let filename = `template_${id}`;
+                    
+                    if (contentDisposition) {
+                        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+                        if (filenameMatch && filenameMatch[1]) {
+                            filename = filenameMatch[1].replace(/['"]/g, '');
+                        }
+                    }
+
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                    
+                    showAlert('Template downloaded successfully!', 'success');
+                } else {
+                    showAlert('Failed to download template', 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+            }
+        }
+
+        // Set as Default
+        async function setAsDefault(id) {
+            if (!confirm('Set this template as default for its type?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/DocumentTemplates/${id}/set-default`, {
+                    method: 'POST',
+                    headers: getAuthHeaders()
+                });
+
+                let result;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else if (response.status === 204) {
+                    result = { message: 'Template set as default successfully' };
+                } else {
+                    const text = await response.text();
+                    result = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(result);
+
+                if (response.ok) {
+                    showAlert('Template set as default successfully!', 'success');
+                    getAllDocumentTemplates(); // Refresh list
+                } else {
+                    showAlert(`Error: ${result.message || result.error || 'Failed to set as default'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+
+        // Open Edit Modal
+        function openEditModal(id) {
+            const template = currentTemplates.find(t => t.id === id);
+            
+            if (!template) {
+                showAlert('Document template not found', 'danger');
+                return;
+            }
+
+            document.getElementById('editId').value = template.id;
+            document.getElementById('editName').value = template.name;
+            document.getElementById('editType').value = template.type;
+            document.getElementById('editDescription').value = template.description || '';
+            document.getElementById('editVersion').value = template.version || '';
+            document.getElementById('editIsDefault').checked = template.isDefault;
+            document.getElementById('editIsActive').checked = template.isActive;
+
+            editModal.show();
+        }
+
+        // Update Document Template
+        async function updateDocumentTemplate() {
+            const id = document.getElementById('editId').value;
+            const data = {
+                name: document.getElementById('editName').value.trim(),
+                type: document.getElementById('editType').value,
+                description: document.getElementById('editDescription').value.trim() || null,
+                version: document.getElementById('editVersion').value.trim() || null,
+                isDefault: document.getElementById('editIsDefault').checked,
+                isActive: document.getElementById('editIsActive').checked
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/DocumentTemplates/${id}`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(data)
+                });
+
+                let result;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    result = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(result);
+
+                if (response.ok) {
+                    showAlert('Document Template updated successfully!', 'success');
+                    editModal.hide();
+                    getAllDocumentTemplates(); // Refresh list
+                } else {
+                    showAlert(`Error: ${result.message || result.error || 'Failed to update document template'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+
+        // Delete Document Template
+        async function deleteDocumentTemplate(id, name) {
+            if (!confirm(`Are you sure you want to delete "${name}"?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/DocumentTemplates/${id}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+
+                if (response.ok) {
+                    // Some APIs return 204 No Content on successful delete
+                    if (response.status === 204) {
+                        updateResponseBox({ message: 'Document Template deleted successfully' });
+                    } else {
+                        const contentType = response.headers.get('content-type');
+                        if (contentType && contentType.includes('application/json')) {
+                            const result = await response.json();
+                            updateResponseBox(result);
+                        } else {
+                            updateResponseBox({ message: 'Document Template deleted successfully' });
+                        }
+                    }
+                    showAlert('Document Template deleted successfully!', 'success');
+                    getAllDocumentTemplates(); // Refresh list
+                } else {
+                    let result;
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        result = await response.json();
+                    } else {
+                        const text = await response.text();
+                        result = { error: text, statusCode: response.status };
+                    }
+                    updateResponseBox(result);
+                    showAlert(`Error: ${result.message || result.error || 'Failed to delete document template'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+    </script>
+</body>
+</html>

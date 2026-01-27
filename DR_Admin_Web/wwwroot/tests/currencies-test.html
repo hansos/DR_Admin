@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Currencies API Test - DR Admin</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Test Page Styles -->
+    <link href="/assets/css/test-page.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/choose-test.html">DR Admin - Currencies API</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <span class="user-info" id="userInfo"></span>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/choose-test.html" class="btn btn-back">&#8592; Back to Tests</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-main">
+        <div class="header-card">
+            <h1>&#128176; Currencies API Test</h1>
+            <p>Test CRUD operations for Currencies API endpoint</p>
+        </div>
+
+        <!-- Alert Messages -->
+        <div id="alertContainer"></div>
+
+        <!-- Create Currency Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#10133; Create Currency</h2>
+            <form id="createForm">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="createCode" class="form-label">Currency Code *</label>
+                        <input type="text" class="form-control" id="createCode" placeholder="e.g., USD" maxlength="3" required>
+                        <small class="text-muted">3-character ISO code</small>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="createSymbol" class="form-label">Symbol *</label>
+                        <input type="text" class="form-control" id="createSymbol" placeholder="e.g., $" required>
+                        <small class="text-muted">Currency symbol</small>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="createName" class="form-label">Name *</label>
+                        <input type="text" class="form-control" id="createName" placeholder="e.g., US Dollar" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="createDecimalPlaces" class="form-label">Decimal Places</label>
+                        <input type="number" class="form-control" id="createDecimalPlaces" placeholder="e.g., 2" min="0" max="4" value="2">
+                        <small class="text-muted">Number of decimal places (0-4)</small>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="createIsActive" checked>
+                        <label class="form-check-label" for="createIsActive">
+                            Is Active
+                        </label>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Create Currency</button>
+            </form>
+        </div>
+
+        <!-- Get All Currencies Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128203; Get All Currencies</h2>
+            <button class="btn btn-primary mb-3" onclick="getAllCurrencies()">Load All Currencies</button>
+            <div class="loading" id="loadingAll">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="currenciesTableContainer"></div>
+        </div>
+
+        <!-- Get Currency by ID Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128269; Get Currency by ID</h2>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="getCurrencyId" class="form-label">Currency ID</label>
+                    <input type="number" class="form-control" id="getCurrencyId" placeholder="Enter ID">
+                </div>
+                <div class="col-md-8 mb-3 d-flex align-items-end">
+                    <button class="btn btn-primary" onclick="getCurrencyById()">Get Currency</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingById">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="currencyByIdResult"></div>
+        </div>
+
+        <!-- API Response Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128225; Last API Response</h2>
+            <div class="response-box" id="responseBox">No API calls made yet...</div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">&#9998; Edit Currency</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editForm">
+                        <input type="hidden" id="editId">
+                        <div class="mb-3">
+                            <label for="editCode" class="form-label">Currency Code *</label>
+                            <input type="text" class="form-control" id="editCode" maxlength="3" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editSymbol" class="form-label">Symbol *</label>
+                            <input type="text" class="form-control" id="editSymbol" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editName" class="form-label">Name *</label>
+                            <input type="text" class="form-control" id="editName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editDecimalPlaces" class="form-label">Decimal Places</label>
+                            <input type="number" class="form-control" id="editDecimalPlaces" min="0" max="4">
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="editIsActive">
+                                <label class="form-check-label" for="editIsActive">
+                                    Is Active
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="updateCurrency()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Auth Client -->
+    <script src="/assets/js/authClient.js"></script>
+    
+    <script>
+        // API_BASE_URL is already defined in authClient.js
+        let currentCurrencies = [];
+        let editModal;
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            // Check authentication
+            const token = authClient.getToken();
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            // Verify token
+            const result = await authClient.verifyToken();
+            if (result.authenticated && result.data?.username) {
+                document.getElementById('userInfo').textContent = `Hello, ${result.data.username}!`;
+            } else {
+                document.getElementById('userInfo').textContent = 'Hello, User!';
+            }
+
+            // Initialize edit modal
+            editModal = new bootstrap.Modal(document.getElementById('editModal'));
+
+            // Setup create form
+            document.getElementById('createForm').addEventListener('submit', handleCreate);
+
+            // Load all currencies on init
+            getAllCurrencies();
+        });
+
+        // Show alert message
+        function showAlert(message, type = 'info') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertHtml = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            alertContainer.innerHTML = alertHtml;
+            
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                const alert = alertContainer.querySelector('.alert');
+                if (alert) {
+                    bootstrap.Alert.getOrCreateInstance(alert).close();
+                }
+            }, 5000);
+        }
+
+        // Update response box
+        function updateResponseBox(data) {
+            const responseBox = document.getElementById('responseBox');
+            responseBox.textContent = JSON.stringify(data, null, 2);
+        }
+
+        // Get authorization headers
+        function getAuthHeaders() {
+            const token = authClient.getToken();
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            };
+        }
+
+        // Handle Create Currency
+        async function handleCreate(e) {
+            e.preventDefault();
+            
+            const data = {
+                code: document.getElementById('createCode').value.trim().toUpperCase(),
+                symbol: document.getElementById('createSymbol').value.trim(),
+                name: document.getElementById('createName').value.trim(),
+                decimalPlaces: parseInt(document.getElementById('createDecimalPlaces').value) || 2,
+                isActive: document.getElementById('createIsActive').checked
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Currencies/rates`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(data)
+                });
+
+                let result;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    result = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(result);
+
+                if (response.ok) {
+                    showAlert('Currency created successfully!', 'success');
+                    document.getElementById('createForm').reset();
+                    document.getElementById('createIsActive').checked = true;
+                    document.getElementById('createDecimalPlaces').value = 2;
+                    getAllCurrencies(); // Refresh list
+                } else {
+                    showAlert(`Error: ${result.message || result.error || 'Failed to create currency'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+
+        // Get All Currencies
+        async function getAllCurrencies() {
+            const loading = document.getElementById('loadingAll');
+            const container = document.getElementById('currenciesTableContainer');
+            
+            loading.style.display = 'block';
+            container.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Currencies/rates`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    currentCurrencies = data;
+                    renderCurrenciesTable(data);
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Failed to fetch currencies'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Render Currencies Table
+        function renderCurrenciesTable(currencies) {
+            const container = document.getElementById('currenciesTableContainer');
+            
+            if (!currencies || currencies.length === 0) {
+                container.innerHTML = '<div class="empty-state">No currencies found</div>';
+                return;
+            }
+
+            const tableHtml = `
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Code</th>
+                                <th>Symbol</th>
+                                <th>Name</th>
+                                <th>Decimal Places</th>
+                                <th>Status</th>
+                                <th>Created At</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${currencies.map(currency => `
+                                <tr>
+                                    <td>${currency.id}</td>
+                                    <td><strong>${currency.code}</strong></td>
+                                    <td><strong>${currency.symbol}</strong></td>
+                                    <td>${currency.name}</td>
+                                    <td>${currency.decimalPlaces !== undefined ? currency.decimalPlaces : 2}</td>
+                                    <td>
+                                        <span class="badge ${currency.isActive ? 'badge-success' : 'badge-secondary'}">
+                                            ${currency.isActive ? 'Active' : 'Inactive'}
+                                        </span>
+                                    </td>
+                                    <td>${new Date(currency.createdAt).toLocaleString()}</td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="btn btn-sm btn-warning" onclick="openEditModal(${currency.id})">
+                                                Edit
+                                            </button>
+                                            <button class="btn btn-sm btn-danger" onclick="deleteCurrency(${currency.id}, '${currency.name.replace(/'/g, "\\'")}')">
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            container.innerHTML = tableHtml;
+        }
+
+        // Get Currency by ID
+        async function getCurrencyById() {
+            const id = document.getElementById('getCurrencyId').value;
+            
+            if (!id) {
+                showAlert('Please enter a currency ID', 'warning');
+                return;
+            }
+
+            const loading = document.getElementById('loadingById');
+            const result = document.getElementById('currencyByIdResult');
+            
+            loading.style.display = 'block';
+            result.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Currencies/rates/${id}`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    result.innerHTML = `
+                        <div class="alert alert-success">
+                            <h5>Currency Found:</h5>
+                            <p><strong>ID:</strong> ${data.id}</p>
+                            <p><strong>Code:</strong> ${data.code}</p>
+                            <p><strong>Symbol:</strong> ${data.symbol}</p>
+                            <p><strong>Name:</strong> ${data.name}</p>
+                            <p><strong>Decimal Places:</strong> ${data.decimalPlaces !== undefined ? data.decimalPlaces : 'N/A'}</p>
+                            <p><strong>Status:</strong> ${data.isActive ? 'Active' : 'Inactive'}</p>
+                            <p><strong>Created:</strong> ${new Date(data.createdAt).toLocaleString()}</p>
+                            <p><strong>Updated:</strong> ${new Date(data.updatedAt).toLocaleString()}</p>
+                        </div>
+                    `;
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Currency not found'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Open Edit Modal
+        function openEditModal(id) {
+            const currency = currentCurrencies.find(c => c.id === id);
+            
+            if (!currency) {
+                showAlert('Currency not found', 'danger');
+                return;
+            }
+
+            document.getElementById('editId').value = currency.id;
+            document.getElementById('editCode').value = currency.code;
+            document.getElementById('editSymbol').value = currency.symbol;
+            document.getElementById('editName').value = currency.name;
+            document.getElementById('editDecimalPlaces').value = currency.decimalPlaces !== undefined ? currency.decimalPlaces : 2;
+            document.getElementById('editIsActive').checked = currency.isActive;
+
+            editModal.show();
+        }
+
+        // Update Currency
+        async function updateCurrency() {
+            const id = document.getElementById('editId').value;
+            const data = {
+                code: document.getElementById('editCode').value.trim().toUpperCase(),
+                symbol: document.getElementById('editSymbol').value.trim(),
+                name: document.getElementById('editName').value.trim(),
+                decimalPlaces: parseInt(document.getElementById('editDecimalPlaces').value) || 2,
+                isActive: document.getElementById('editIsActive').checked
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Currencies/api/v1/Currencies/rates/${id}`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(data)
+                });
+
+                let result;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    result = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(result);
+
+                if (response.ok) {
+                    showAlert('Currency updated successfully!', 'success');
+                    editModal.hide();
+                    getAllCurrencies(); // Refresh list
+                } else {
+                    showAlert(`Error: ${result.message || result.error || 'Failed to update currency'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+
+        // Delete Currency
+        async function deleteCurrency(id, name) {
+            if (!confirm(`Are you sure you want to delete "${name}"?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Currencies/rates/${id}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+
+                if (response.ok) {
+                    // Some APIs return 204 No Content on successful delete
+                    if (response.status === 204) {
+                        updateResponseBox({ message: 'Currency deleted successfully' });
+                    } else {
+                        const contentType = response.headers.get('content-type');
+                        if (contentType && contentType.includes('application/json')) {
+                            const result = await response.json();
+                            updateResponseBox(result);
+                        } else {
+                            updateResponseBox({ message: 'Currency deleted successfully' });
+                        }
+                    }
+                    showAlert('Currency deleted successfully!', 'success');
+                    getAllCurrencies(); // Refresh list
+                } else {
+                    let result;
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        result = await response.json();
+                    } else {
+                        const text = await response.text();
+                        result = { error: text, statusCode: response.status };
+                    }
+                    updateResponseBox(result);
+                    showAlert(`Error: ${result.message || result.error || 'Failed to delete currency'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+    </script>
+</body>
+</html>

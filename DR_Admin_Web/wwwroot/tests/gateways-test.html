@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gateways API Test - DR Admin</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Test Page Styles -->
+    <link href="/assets/css/test-page.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/choose-test.html">DR Admin - Gateways API</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <span class="user-info" id="userInfo"></span>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/choose-test.html" class="btn btn-back">&#8592; Back to Tests</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-main">
+        <div class="header-card">
+            <h1>&#128179; Gateways API Test</h1>
+            <p>Test CRUD operations for Gateways API endpoint</p>
+        </div>
+
+        <!-- Alert Messages -->
+        <div id="alertContainer"></div>
+
+        <!-- Create Gateway Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#10133; Create Gateway</h2>
+            <form id="createForm">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="createName" class="form-label">Name *</label>
+                        <input type="text" class="form-control" id="createName" placeholder="e.g., Stripe Payment Gateway" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="createCode" class="form-label">Code</label>
+                        <input type="text" class="form-control" id="createCode" placeholder="e.g., STRIPE">
+                        <small class="text-muted">Unique identifier code</small>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label for="createDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="createDescription" rows="3" placeholder="Enter description..."></textarea>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="createGatewayType" class="form-label">Gateway Type</label>
+                        <select class="form-select" id="createGatewayType">
+                            <option value="">Select type...</option>
+                            <option value="CreditCard">Credit Card</option>
+                            <option value="BankTransfer">Bank Transfer</option>
+                            <option value="PayPal">PayPal</option>
+                            <option value="Stripe">Stripe</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="createSortOrder" class="form-label">Sort Order</label>
+                        <input type="number" class="form-control" id="createSortOrder" placeholder="e.g., 1" value="0">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="createApiKey" class="form-label">API Key</label>
+                        <input type="text" class="form-control" id="createApiKey" placeholder="Enter API key">
+                        <small class="text-muted">Stored securely</small>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="createApiSecret" class="form-label">API Secret</label>
+                        <input type="password" class="form-control" id="createApiSecret" placeholder="Enter API secret">
+                        <small class="text-muted">Stored securely</small>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="createWebhookUrl" class="form-label">Webhook URL</label>
+                    <input type="url" class="form-control" id="createWebhookUrl" placeholder="https://example.com/webhook">
+                </div>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="createIsActive" checked>
+                        <label class="form-check-label" for="createIsActive">
+                            Is Active
+                        </label>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Create Gateway</button>
+            </form>
+        </div>
+
+        <!-- Get All Gateways Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128203; Get All Gateways</h2>
+            <button class="btn btn-primary mb-3" onclick="getAllGateways()">Load All Gateways</button>
+            <div class="loading" id="loadingAll">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="gatewaysTableContainer"></div>
+        </div>
+
+        <!-- Get Gateway by ID Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128269; Get Gateway by ID</h2>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="getGatewayId" class="form-label">Gateway ID</label>
+                    <input type="number" class="form-control" id="getGatewayId" placeholder="Enter ID">
+                </div>
+                <div class="col-md-8 mb-3 d-flex align-items-end">
+                    <button class="btn btn-primary" onclick="getGatewayById()">Get Gateway</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingById">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="gatewayByIdResult"></div>
+        </div>
+
+        <!-- API Response Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128225; Last API Response</h2>
+            <div class="response-box" id="responseBox">No API calls made yet...</div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">&#9998; Edit Gateway</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editForm">
+                        <input type="hidden" id="editId">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editName" class="form-label">Name *</label>
+                                <input type="text" class="form-control" id="editName" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editCode" class="form-label">Code</label>
+                                <input type="text" class="form-control" id="editCode">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="editDescription" rows="3"></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editGatewayType" class="form-label">Gateway Type</label>
+                                <select class="form-select" id="editGatewayType">
+                                    <option value="">Select type...</option>
+                                    <option value="CreditCard">Credit Card</option>
+                                    <option value="BankTransfer">Bank Transfer</option>
+                                    <option value="PayPal">PayPal</option>
+                                    <option value="Stripe">Stripe</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editSortOrder" class="form-label">Sort Order</label>
+                                <input type="number" class="form-control" id="editSortOrder">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editApiKey" class="form-label">API Key</label>
+                                <input type="text" class="form-control" id="editApiKey">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editApiSecret" class="form-label">API Secret</label>
+                                <input type="password" class="form-control" id="editApiSecret" placeholder="Leave blank to keep current">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editWebhookUrl" class="form-label">Webhook URL</label>
+                            <input type="url" class="form-control" id="editWebhookUrl">
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="editIsActive">
+                                <label class="form-check-label" for="editIsActive">
+                                    Is Active
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="updateGateway()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Auth Client -->
+    <script src="/assets/js/authClient.js"></script>
+    
+    <script>
+        // API_BASE_URL is already defined in authClient.js
+        let currentGateways = [];
+        let editModal;
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            // Check authentication
+            const token = authClient.getToken();
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            // Verify token
+            const result = await authClient.verifyToken();
+            if (result.authenticated && result.data?.username) {
+                document.getElementById('userInfo').textContent = `Hello, ${result.data.username}!`;
+            } else {
+                document.getElementById('userInfo').textContent = 'Hello, User!';
+            }
+
+            // Initialize edit modal
+            editModal = new bootstrap.Modal(document.getElementById('editModal'));
+
+            // Setup create form
+            document.getElementById('createForm').addEventListener('submit', handleCreate);
+
+            // Load all gateways on init
+            getAllGateways();
+        });
+
+        // Show alert message
+        function showAlert(message, type = 'info') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertHtml = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            alertContainer.innerHTML = alertHtml;
+            
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                const alert = alertContainer.querySelector('.alert');
+                if (alert) {
+                    bootstrap.Alert.getOrCreateInstance(alert).close();
+                }
+            }, 5000);
+        }
+
+        // Update response box
+        function updateResponseBox(data) {
+            const responseBox = document.getElementById('responseBox');
+            responseBox.textContent = JSON.stringify(data, null, 2);
+        }
+
+        // Get authorization headers
+        function getAuthHeaders() {
+            const token = authClient.getToken();
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            };
+        }
+
+        // Handle Create Gateway
+        async function handleCreate(e) {
+            e.preventDefault();
+            
+            const data = {
+                name: document.getElementById('createName').value.trim(),
+                code: document.getElementById('createCode').value.trim() || null,
+                description: document.getElementById('createDescription').value.trim() || null,
+                gatewayType: document.getElementById('createGatewayType').value || null,
+                sortOrder: parseInt(document.getElementById('createSortOrder').value) || 0,
+                apiKey: document.getElementById('createApiKey').value.trim() || null,
+                apiSecret: document.getElementById('createApiSecret').value.trim() || null,
+                webhookUrl: document.getElementById('createWebhookUrl').value.trim() || null,
+                isActive: document.getElementById('createIsActive').checked
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Orders`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(data)
+                });
+
+                let result;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    result = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(result);
+
+                if (response.ok) {
+                    showAlert('Gateway created successfully!', 'success');
+                    document.getElementById('createForm').reset();
+                    document.getElementById('createIsActive').checked = true;
+                    document.getElementById('createSortOrder').value = 0;
+                    getAllGateways(); // Refresh list
+                } else {
+                    showAlert(`Error: ${result.message || result.error || 'Failed to create gateway'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+
+        // Get All Gateways
+        async function getAllGateways() {
+            const loading = document.getElementById('loadingAll');
+            const container = document.getElementById('gatewaysTableContainer');
+            
+            loading.style.display = 'block';
+            container.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Orders`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    currentGateways = data;
+                    renderGatewaysTable(data);
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Failed to fetch gateways'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Render Gateways Table
+        function renderGatewaysTable(gateways) {
+            const container = document.getElementById('gatewaysTableContainer');
+            
+            if (!gateways || gateways.length === 0) {
+                container.innerHTML = '<div class="empty-state">No gateways found</div>';
+                return;
+            }
+
+            const tableHtml = `
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Code</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Sort Order</th>
+                                <th>Status</th>
+                                <th>Created At</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${gateways.map(gateway => {
+                                return `
+                                    <tr>
+                                        <td>${gateway.id}</td>
+                                        <td><strong>${gateway.name}</strong></td>
+                                        <td>${gateway.code || '-'}</td>
+                                        <td>${gateway.gatewayType || '-'}</td>
+                                        <td>${gateway.description || '-'}</td>
+                                        <td>${gateway.sortOrder !== undefined ? gateway.sortOrder : '-'}</td>
+                                        <td>
+                                            <span class="badge ${gateway.isActive ? 'badge-success' : 'badge-secondary'}">
+                                                ${gateway.isActive ? 'Active' : 'Inactive'}
+                                            </span>
+                                        </td>
+                                        <td>${gateway.createdAt ? new Date(gateway.createdAt).toLocaleString() : '-'}</td>
+                                        <td>
+                                            <div class="action-buttons">
+                                                <button class="btn btn-sm btn-warning" onclick="openEditModal(${gateway.id})">
+                                                    Edit
+                                                </button>
+                                                <button class="btn btn-sm btn-danger" onclick="deleteGateway(${gateway.id}, '${gateway.name.replace(/'/g, "\\'")}')">
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            container.innerHTML = tableHtml;
+        }
+
+        // Get Gateway by ID
+        async function getGatewayById() {
+            const id = document.getElementById('getGatewayId').value;
+            
+            if (!id) {
+                showAlert('Please enter a gateway ID', 'warning');
+                return;
+            }
+
+            const loading = document.getElementById('loadingById');
+            const result = document.getElementById('gatewayByIdResult');
+            
+            loading.style.display = 'block';
+            result.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Orders/${id}`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    result.innerHTML = `
+                        <div class="alert alert-success">
+                            <h5>Gateway Found:</h5>
+                            <p><strong>ID:</strong> ${data.id}</p>
+                            <p><strong>Name:</strong> ${data.name}</p>
+                            <p><strong>Code:</strong> ${data.code || 'N/A'}</p>
+                            <p><strong>Type:</strong> ${data.gatewayType || 'N/A'}</p>
+                            <p><strong>Description:</strong> ${data.description || 'N/A'}</p>
+                            <p><strong>Sort Order:</strong> ${data.sortOrder !== undefined ? data.sortOrder : 'N/A'}</p>
+                            <p><strong>API Key:</strong> ${data.apiKey ? '***' + data.apiKey.slice(-4) : 'N/A'}</p>
+                            <p><strong>Webhook URL:</strong> ${data.webhookUrl || 'N/A'}</p>
+                            <p><strong>Status:</strong> ${data.isActive ? 'Active' : 'Inactive'}</p>
+                            <p><strong>Created:</strong> ${data.createdAt ? new Date(data.createdAt).toLocaleString() : 'N/A'}</p>
+                            <p><strong>Updated:</strong> ${data.updatedAt ? new Date(data.updatedAt).toLocaleString() : 'N/A'}</p>
+                        </div>
+                    `;
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Gateway not found'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Open Edit Modal
+        function openEditModal(id) {
+            const gateway = currentGateways.find(g => g.id === id);
+            
+            if (!gateway) {
+                showAlert('Gateway not found', 'danger');
+                return;
+            }
+
+            document.getElementById('editId').value = gateway.id;
+            document.getElementById('editName').value = gateway.name;
+            document.getElementById('editCode').value = gateway.code || '';
+            document.getElementById('editDescription').value = gateway.description || '';
+            document.getElementById('editGatewayType').value = gateway.gatewayType || '';
+            document.getElementById('editSortOrder').value = gateway.sortOrder !== undefined ? gateway.sortOrder : 0;
+            document.getElementById('editApiKey').value = gateway.apiKey || '';
+            document.getElementById('editApiSecret').value = ''; // Don't populate secret
+            document.getElementById('editWebhookUrl').value = gateway.webhookUrl || '';
+            document.getElementById('editIsActive').checked = gateway.isActive;
+
+            editModal.show();
+        }
+
+        // Update Gateway
+        async function updateGateway() {
+            const id = document.getElementById('editId').value;
+            const data = {
+                name: document.getElementById('editName').value.trim(),
+                code: document.getElementById('editCode').value.trim() || null,
+                description: document.getElementById('editDescription').value.trim() || null,
+                gatewayType: document.getElementById('editGatewayType').value || null,
+                sortOrder: parseInt(document.getElementById('editSortOrder').value) || 0,
+                apiKey: document.getElementById('editApiKey').value.trim() || null,
+                webhookUrl: document.getElementById('editWebhookUrl').value.trim() || null,
+                isActive: document.getElementById('editIsActive').checked
+            };
+
+            // Only include API secret if it was changed
+            const apiSecret = document.getElementById('editApiSecret').value.trim();
+            if (apiSecret) {
+                data.apiSecret = apiSecret;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Orders/${id}`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(data)
+                });
+
+                let result;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    result = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(result);
+
+                if (response.ok) {
+                    showAlert('Gateway updated successfully!', 'success');
+                    editModal.hide();
+                    getAllGateways(); // Refresh list
+                } else {
+                    showAlert(`Error: ${result.message || result.error || 'Failed to update gateway'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+
+        // Delete Gateway
+        async function deleteGateway(id, name) {
+            if (!confirm(`Are you sure you want to delete "${name}"?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Orders/${id}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+
+                if (response.ok) {
+                    // Some APIs return 204 No Content on successful delete
+                    if (response.status === 204) {
+                        updateResponseBox({ message: 'Gateway deleted successfully' });
+                    } else {
+                        const contentType = response.headers.get('content-type');
+                        if (contentType && contentType.includes('application/json')) {
+                            const result = await response.json();
+                            updateResponseBox(result);
+                        } else {
+                            updateResponseBox({ message: 'Gateway deleted successfully' });
+                        }
+                    }
+                    showAlert('Gateway deleted successfully!', 'success');
+                    getAllGateways(); // Refresh list
+                } else {
+                    let result;
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        result = await response.json();
+                    } else {
+                        const text = await response.text();
+                        result = { error: text, statusCode: response.status };
+                    }
+                    updateResponseBox(result);
+                    showAlert(`Error: ${result.message || result.error || 'Failed to delete gateway'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+    </script>
+</body>
+</html>

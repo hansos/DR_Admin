@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Server IP Addresses API Test - DR Admin</title>
+  <link href="/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/assets/css/test-page.css" rel="stylesheet">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-light">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="/choose-test.html">DR Admin - Server IPs API</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><span id="userInfo" class="user-info"></span></li>
+          <li class="nav-item"><a href="/choose-test.html" class="btn btn-back">&#8592; Back to Tests</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container-main">
+    <div class="header-card">
+      <h1>&#128246; Server IP Addresses API Test</h1>
+      <p>CRUD and server-specific lookup for server IP addresses</p>
+    </div>
+
+    <div id="alertContainer"></div>
+
+    <div class="test-section">
+      <h2 class="section-title">&#10133; Create Server IP</h2>
+      <form id="createForm">
+        <div class="row">
+          <div class="col-md-4 mb-3"><label class="form-label">Server ID *</label><input id="createServerId" class="form-control" type="number" required /></div>
+          <div class="col-md-4 mb-3"><label class="form-label">IP Address *</label><input id="createIp" class="form-control" required /></div>
+          <div class="col-md-4 mb-3"><label class="form-label">Is Primary</label><select id="createIsPrimary" class="form-control"><option value="true">Yes</option><option value="false">No</option></select></div>
+        </div>
+        <button class="btn btn-primary" type="submit">Create</button>
+      </form>
+    </div>
+
+    <div class="test-section">
+      <h2 class="section-title">&#128203; Get All Server IPs</h2>
+      <button class="btn btn-primary mb-3" onclick="getAll()">Load All</button>
+      <div class="loading" id="loadingAll"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>
+      <div id="tableContainer"></div>
+    </div>
+
+    <div class="test-section">
+      <h2 class="section-title">&#128269; Get IPs for Server</h2>
+      <div class="row"><div class="col-md-4 mb-3"><input id="forServerId" class="form-control" placeholder="Server ID" type="number" /></div><div class="col-md-8 d-flex align-items-end"><button class="btn btn-primary" onclick="getForServer()">Get</button></div></div>
+      <div id="forServerContainer"></div>
+    </div>
+
+    <div class="test-section">
+      <h2 class="section-title">&#128225; Last API Response</h2>
+      <div class="response-box" id="responseBox">No API calls made yet...</div>
+    </div>
+  </div>
+
+  <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/assets/js/authClient.js"></script>
+  <script>
+    function showAlert(message,type='info'){ const c=document.getElementById('alertContainer'); c.innerHTML=`<div class="alert alert-${type} alert-dismissible fade show" role="alert">${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`; setTimeout(()=>{ const a=c.querySelector('.alert'); if(a) bootstrap.Alert.getOrCreateInstance(a).close(); },5000); }
+    function updateResponseBox(d){ document.getElementById('responseBox').textContent = JSON.stringify(d,null,2); }
+    function getAuthHeaders(){ const token=authClient.getToken(); return {'Content-Type':'application/json','Authorization': `Bearer ${token}`}; }
+
+    async function getAll(){ const loading=document.getElementById('loadingAll'); const container=document.getElementById('tableContainer'); loading.style.display='block'; container.innerHTML=''; try{ const res=await fetch(`${API_BASE_URL}/api/v1/ServerIpAddresses`,{ method:'GET', headers:getAuthHeaders() }); let data; const ct=res.headers.get('content-type'); if(ct && ct.includes('application/json')) data=await res.json(); else { const t=await res.text(); data={ error: t, statusCode: res.status }; } updateResponseBox(data); if(res.ok){ renderTable(data); } else showAlert('Failed to fetch','danger'); }catch(err){ showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } finally{ loading.style.display='none'; } }
+
+    function renderTable(items){ const c=document.getElementById('tableContainer'); if(!items||items.length===0){ c.innerHTML='<div class="empty-state">No items found</div>'; return; } let html=`<div class="table-responsive"><table class="table"><thead><tr><th>ID</th><th>Server ID</th><th>IP</th><th>Primary</th><th>Actions</th></tr></thead><tbody>`; html+=items.map(i=>`<tr><td>${i.id}</td><td>${i.serverId}</td><td>${i.ipAddress||'-'}</td><td>${i.isPrimary? 'Yes':'No'}</td><td><button class="btn btn-sm btn-warning" onclick="openEdit(${i.id})">Edit</button> <button class="btn btn-sm btn-danger" onclick="deleteItem(${i.id}, '${(i.ipAddress||'').replace(/'/g, "\\'") }')">Delete</button></td></tr>`).join(''); html+='</tbody></table></div>'; c.innerHTML=html; }
+
+    async function getForServer(){ const id=document.getElementById('forServerId').value; if(!id){ showAlert('Provide server id','warning'); return; } try{ const res=await fetch(`${API_BASE_URL}/api/v1/ServerIpAddresses/server/${id}`,{ method:'GET', headers:getAuthHeaders() }); let data; const ct=res.headers.get('content-type'); if(ct && ct.includes('application/json')) data=await res.json(); else { const t=await res.text(); data={ error: t, statusCode: res.status }; } updateResponseBox(data); if(res.ok) document.getElementById('forServerContainer').innerHTML = JSON.stringify(data,null,2); else showAlert('Failed','danger'); }catch(err){ showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } }
+  </script>
+</body>
+</html>

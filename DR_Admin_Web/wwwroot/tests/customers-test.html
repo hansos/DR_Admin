@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customers API Test - DR Admin</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Test Page Styles -->
+    <link href="/assets/css/test-page.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/choose-test.html">DR Admin - Customers API</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <span class="user-info" id="userInfo"></span>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/choose-test.html" class="btn btn-back">&#8592; Back to Tests</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-main">
+        <div class="header-card">
+            <h1>&#128100; Customers API Test</h1>
+            <p>Test CRUD operations for Customers API endpoint</p>
+        </div>
+
+        <!-- Alert Messages -->
+        <div id="alertContainer"></div>
+
+        <!-- Create Customer Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#10133; Create Customer</h2>
+            <form id="createForm">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="createFirstName" class="form-label">First Name *</label>
+                        <input type="text" class="form-control" id="createFirstName" placeholder="e.g., John" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="createLastName" class="form-label">Last Name *</label>
+                        <input type="text" class="form-control" id="createLastName" placeholder="e.g., Doe" required>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="createEmail" class="form-label">Email *</label>
+                        <input type="email" class="form-control" id="createEmail" placeholder="e.g., john.doe@example.com" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="createPhone" class="form-label">Phone</label>
+                        <input type="tel" class="form-control" id="createPhone" placeholder="e.g., +1 234 567 8900">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label for="createCompany" class="form-label">Company</label>
+                        <input type="text" class="form-control" id="createCompany" placeholder="e.g., Acme Corp">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label for="createAddress" class="form-label">Address</label>
+                        <textarea class="form-control" id="createAddress" rows="2" placeholder="Enter address..."></textarea>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="createCity" class="form-label">City</label>
+                        <input type="text" class="form-control" id="createCity" placeholder="e.g., New York">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="createState" class="form-label">State/Province</label>
+                        <input type="text" class="form-control" id="createState" placeholder="e.g., NY">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="createZipCode" class="form-label">ZIP/Postal Code</label>
+                        <input type="text" class="form-control" id="createZipCode" placeholder="e.g., 10001">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="createCountry" class="form-label">Country</label>
+                        <input type="text" class="form-control" id="createCountry" placeholder="e.g., United States">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="createCustomerType" class="form-label">Customer Type</label>
+                        <select class="form-control" id="createCustomerType">
+                            <option value="">Select Type...</option>
+                            <option value="Individual">Individual</option>
+                            <option value="Business">Business</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="createIsActive" checked>
+                        <label class="form-check-label" for="createIsActive">
+                            Is Active
+                        </label>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Create Customer</button>
+            </form>
+        </div>
+
+        <!-- Get All Customers Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128203; Get All Customers</h2>
+            <button class="btn btn-primary mb-3" onclick="getAllCustomers()">Load All Customers</button>
+            <div class="loading" id="loadingAll">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="customersTableContainer"></div>
+        </div>
+
+        <!-- Get Customer by ID Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128269; Get Customer by ID</h2>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="getCustomerId" class="form-label">Customer ID</label>
+                    <input type="number" class="form-control" id="getCustomerId" placeholder="Enter ID">
+                </div>
+                <div class="col-md-8 mb-3 d-flex align-items-end">
+                    <button class="btn btn-primary" onclick="getCustomerById()">Get Customer</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingById">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="customerByIdResult"></div>
+        </div>
+
+        <!-- API Response Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128225; Last API Response</h2>
+            <div class="response-box" id="responseBox">No API calls made yet...</div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">&#9998; Edit Customer</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editForm">
+                        <input type="hidden" id="editId">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editFirstName" class="form-label">First Name *</label>
+                                <input type="text" class="form-control" id="editFirstName" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editLastName" class="form-label">Last Name *</label>
+                                <input type="text" class="form-control" id="editLastName" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editEmail" class="form-label">Email *</label>
+                                <input type="email" class="form-control" id="editEmail" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editPhone" class="form-label">Phone</label>
+                                <input type="tel" class="form-control" id="editPhone">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editCompany" class="form-label">Company</label>
+                            <input type="text" class="form-control" id="editCompany">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editAddress" class="form-label">Address</label>
+                            <textarea class="form-control" id="editAddress" rows="2"></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="editCity" class="form-label">City</label>
+                                <input type="text" class="form-control" id="editCity">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="editState" class="form-label">State/Province</label>
+                                <input type="text" class="form-control" id="editState">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="editZipCode" class="form-label">ZIP/Postal Code</label>
+                                <input type="text" class="form-control" id="editZipCode">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editCountry" class="form-label">Country</label>
+                                <input type="text" class="form-control" id="editCountry">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editCustomerType" class="form-label">Customer Type</label>
+                                <select class="form-control" id="editCustomerType">
+                                    <option value="">Select Type...</option>
+                                    <option value="Individual">Individual</option>
+                                    <option value="Business">Business</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="editIsActive">
+                                <label class="form-check-label" for="editIsActive">
+                                    Is Active
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="updateCustomer()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Auth Client -->
+    <script src="/assets/js/authClient.js"></script>
+    
+    <script>
+        // API_BASE_URL is already defined in authClient.js
+        let currentCustomers = [];
+        let editModal;
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            // Check authentication
+            const token = authClient.getToken();
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            // Verify token
+            const result = await authClient.verifyToken();
+            if (result.authenticated && result.data?.username) {
+                document.getElementById('userInfo').textContent = `Hello, ${result.data.username}!`;
+            } else {
+                document.getElementById('userInfo').textContent = 'Hello, User!';
+            }
+
+            // Initialize edit modal
+            editModal = new bootstrap.Modal(document.getElementById('editModal'));
+
+            // Setup create form
+            document.getElementById('createForm').addEventListener('submit', handleCreate);
+
+            // Load all customers on init
+            getAllCustomers();
+        });
+
+        // Show alert message
+        function showAlert(message, type = 'info') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertHtml = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            alertContainer.innerHTML = alertHtml;
+            
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                const alert = alertContainer.querySelector('.alert');
+                if (alert) {
+                    bootstrap.Alert.getOrCreateInstance(alert).close();
+                }
+            }, 5000);
+        }
+
+        // Update response box
+        function updateResponseBox(data) {
+            const responseBox = document.getElementById('responseBox');
+            responseBox.textContent = JSON.stringify(data, null, 2);
+        }
+
+        // Get authorization headers
+        function getAuthHeaders() {
+            const token = authClient.getToken();
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            };
+        }
+
+        // Handle Create Customer
+        async function handleCreate(e) {
+            e.preventDefault();
+            
+            const data = {
+                firstName: document.getElementById('createFirstName').value.trim(),
+                lastName: document.getElementById('createLastName').value.trim(),
+                email: document.getElementById('createEmail').value.trim(),
+                phone: document.getElementById('createPhone').value.trim() || null,
+                company: document.getElementById('createCompany').value.trim() || null,
+                address: document.getElementById('createAddress').value.trim() || null,
+                city: document.getElementById('createCity').value.trim() || null,
+                state: document.getElementById('createState').value.trim() || null,
+                zipCode: document.getElementById('createZipCode').value.trim() || null,
+                country: document.getElementById('createCountry').value.trim() || null,
+                customerType: document.getElementById('createCustomerType').value || null,
+                isActive: document.getElementById('createIsActive').checked
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Customers`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(data)
+                });
+
+                let result;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    result = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(result);
+
+                if (response.ok) {
+                    showAlert('Customer created successfully!', 'success');
+                    document.getElementById('createForm').reset();
+                    document.getElementById('createIsActive').checked = true;
+                    getAllCustomers(); // Refresh list
+                } else {
+                    showAlert(`Error: ${result.message || result.error || 'Failed to create customer'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+
+        // Get All Customers
+        async function getAllCustomers() {
+            const loading = document.getElementById('loadingAll');
+            const container = document.getElementById('customersTableContainer');
+            
+            loading.style.display = 'block';
+            container.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Customers`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    currentCustomers = data;
+                    renderCustomersTable(data);
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Failed to fetch customers'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Render Customers Table
+        function renderCustomersTable(customers) {
+            const container = document.getElementById('customersTableContainer');
+            
+            if (!customers || customers.length === 0) {
+                container.innerHTML = '<div class="empty-state">No customers found</div>';
+                return;
+            }
+
+            const tableHtml = `
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Company</th>
+                                <th>Type</th>
+                                <th>Location</th>
+                                <th>Status</th>
+                                <th>Created At</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${customers.map(customer => {
+                                const fullName = `${customer.firstName || ''} ${customer.lastName || ''}`.trim() || 'N/A';
+                                const location = [customer.city, customer.state, customer.country].filter(x => x).join(', ') || '-';
+                                
+                                return `
+                                    <tr>
+                                        <td>${customer.id}</td>
+                                        <td><strong>${fullName}</strong></td>
+                                        <td>${customer.email || '-'}</td>
+                                        <td>${customer.phone || '-'}</td>
+                                        <td>${customer.company || '-'}</td>
+                                        <td>${customer.customerType ? `<span class="badge badge-info">${customer.customerType}</span>` : '-'}</td>
+                                        <td>${location}</td>
+                                        <td>
+                                            <span class="badge ${customer.isActive ? 'badge-success' : 'badge-secondary'}">
+                                                ${customer.isActive ? 'Active' : 'Inactive'}
+                                            </span>
+                                        </td>
+                                        <td>${customer.createdAt ? new Date(customer.createdAt).toLocaleString() : '-'}</td>
+                                        <td>
+                                            <div class="action-buttons">
+                                                <button class="btn btn-sm btn-warning" onclick="openEditModal(${customer.id})">
+                                                    Edit
+                                                </button>
+                                                <button class="btn btn-sm btn-danger" onclick="deleteCustomer(${customer.id}, '${fullName.replace(/'/g, "\\'")}')">
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            container.innerHTML = tableHtml;
+        }
+
+        // Get Customer by ID
+        async function getCustomerById() {
+            const id = document.getElementById('getCustomerId').value;
+            
+            if (!id) {
+                showAlert('Please enter a customer ID', 'warning');
+                return;
+            }
+
+            const loading = document.getElementById('loadingById');
+            const result = document.getElementById('customerByIdResult');
+            
+            loading.style.display = 'block';
+            result.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Customers/${id}`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    const fullName = `${data.firstName || ''} ${data.lastName || ''}`.trim() || 'N/A';
+                    const fullAddress = [data.address, data.city, data.state, data.zipCode, data.country].filter(x => x).join(', ') || 'N/A';
+                    
+                    result.innerHTML = `
+                        <div class="alert alert-success">
+                            <h5>Customer Found:</h5>
+                            <p><strong>ID:</strong> ${data.id}</p>
+                            <p><strong>Name:</strong> ${fullName}</p>
+                            <p><strong>Email:</strong> ${data.email || 'N/A'}</p>
+                            <p><strong>Phone:</strong> ${data.phone || 'N/A'}</p>
+                            <p><strong>Company:</strong> ${data.company || 'N/A'}</p>
+                            <p><strong>Customer Type:</strong> ${data.customerType || 'N/A'}</p>
+                            <p><strong>Address:</strong> ${fullAddress}</p>
+                            <p><strong>Status:</strong> ${data.isActive ? 'Active' : 'Inactive'}</p>
+                            <p><strong>Created:</strong> ${data.createdAt ? new Date(data.createdAt).toLocaleString() : 'N/A'}</p>
+                            <p><strong>Updated:</strong> ${data.updatedAt ? new Date(data.updatedAt).toLocaleString() : 'N/A'}</p>
+                        </div>
+                    `;
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Customer not found'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Open Edit Modal
+        function openEditModal(id) {
+            const customer = currentCustomers.find(c => c.id === id);
+            
+            if (!customer) {
+                showAlert('Customer not found', 'danger');
+                return;
+            }
+
+            document.getElementById('editId').value = customer.id;
+            document.getElementById('editFirstName').value = customer.firstName || '';
+            document.getElementById('editLastName').value = customer.lastName || '';
+            document.getElementById('editEmail').value = customer.email || '';
+            document.getElementById('editPhone').value = customer.phone || '';
+            document.getElementById('editCompany').value = customer.company || '';
+            document.getElementById('editAddress').value = customer.address || '';
+            document.getElementById('editCity').value = customer.city || '';
+            document.getElementById('editState').value = customer.state || '';
+            document.getElementById('editZipCode').value = customer.zipCode || '';
+            document.getElementById('editCountry').value = customer.country || '';
+            document.getElementById('editCustomerType').value = customer.customerType || '';
+            document.getElementById('editIsActive').checked = customer.isActive;
+
+            editModal.show();
+        }
+
+        // Update Customer
+        async function updateCustomer() {
+            const id = document.getElementById('editId').value;
+            const data = {
+                firstName: document.getElementById('editFirstName').value.trim(),
+                lastName: document.getElementById('editLastName').value.trim(),
+                email: document.getElementById('editEmail').value.trim(),
+                phone: document.getElementById('editPhone').value.trim() || null,
+                company: document.getElementById('editCompany').value.trim() || null,
+                address: document.getElementById('editAddress').value.trim() || null,
+                city: document.getElementById('editCity').value.trim() || null,
+                state: document.getElementById('editState').value.trim() || null,
+                zipCode: document.getElementById('editZipCode').value.trim() || null,
+                country: document.getElementById('editCountry').value.trim() || null,
+                customerType: document.getElementById('editCustomerType').value || null,
+                isActive: document.getElementById('editIsActive').checked
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Customers/${id}`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(data)
+                });
+
+                let result;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    result = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(result);
+
+                if (response.ok) {
+                    showAlert('Customer updated successfully!', 'success');
+                    editModal.hide();
+                    getAllCustomers(); // Refresh list
+                } else {
+                    showAlert(`Error: ${result.message || result.error || 'Failed to update customer'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+
+        // Delete Customer
+        async function deleteCustomer(id, name) {
+            if (!confirm(`Are you sure you want to delete "${name}"?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Customers/${id}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+
+                if (response.ok) {
+                    // Some APIs return 204 No Content on successful delete
+                    if (response.status === 204) {
+                        updateResponseBox({ message: 'Customer deleted successfully' });
+                    } else {
+                        const contentType = response.headers.get('content-type');
+                        if (contentType && contentType.includes('application/json')) {
+                            const result = await response.json();
+                            updateResponseBox(result);
+                        } else {
+                            updateResponseBox({ message: 'Customer deleted successfully' });
+                        }
+                    }
+                    showAlert('Customer deleted successfully!', 'success');
+                    getAllCustomers(); // Refresh list
+                } else {
+                    let result;
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        result = await response.json();
+                    } else {
+                        const text = await response.text();
+                        result = { error: text, statusCode: response.status };
+                    }
+                    updateResponseBox(result);
+                    showAlert(`Error: ${result.message || result.error || 'Failed to delete customer'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+    </script>
+</body>
+</html>

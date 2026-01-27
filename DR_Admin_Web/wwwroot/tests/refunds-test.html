@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Refunds API Test - DR Admin</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Test Page Styles -->
+    <link href="/assets/css/test-page.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/choose-test.html">DR Admin - Refunds API</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <span class="user-info" id="userInfo"></span>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/choose-test.html" class="btn btn-back">&#8592; Back to Tests</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-main">
+        <div class="header-card">
+            <h1>&#128178; Refunds API Test</h1>
+            <p>Test operations for Refunds API endpoint</p>
+        </div>
+
+        <div id="alertContainer"></div>
+
+        <!-- Create Refund Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#10133; Create Refund</h2>
+            <form id="createForm">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="createInvoiceId" class="form-label">Invoice ID *</label>
+                        <input type="number" class="form-control" id="createInvoiceId" placeholder="e.g., 1" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="createAmount" class="form-label">Amount *</label>
+                        <input type="number" class="form-control" id="createAmount" placeholder="e.g., 25.00" step="0.01" min="0" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="createCurrencyId" class="form-label">Currency ID</label>
+                        <input type="number" class="form-control" id="createCurrencyId" placeholder="e.g., 1">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="createReason" class="form-label">Reason</label>
+                    <input type="text" class="form-control" id="createReason" placeholder="e.g., Customer request">
+                </div>
+                <div class="mb-3">
+                    <label for="createNotes" class="form-label">Notes</label>
+                    <textarea class="form-control" id="createNotes" rows="2"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Create Refund</button>
+            </form>
+        </div>
+
+        <!-- Get All Refunds Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128203; Get All Refunds</h2>
+            <button class="btn btn-primary mb-3" onclick="getAllRefunds()">Load All Refunds</button>
+            <div class="loading" id="loadingAll">
+                <div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div>
+            </div>
+            <div id="refundsTableContainer"></div>
+        </div>
+
+        <!-- Get Refund by ID Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128269; Get Refund by ID</h2>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="getRefundId" class="form-label">Refund ID</label>
+                    <input type="number" class="form-control" id="getRefundId" placeholder="Enter ID">
+                </div>
+                <div class="col-md-8 mb-3 d-flex align-items-end">
+                    <button class="btn btn-primary" onclick="getRefundById()">Get Refund</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingById"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>
+            <div id="refundByIdResult"></div>
+        </div>
+
+        <!-- Get Refunds by Invoice -->
+        <div class="test-section">
+            <h2 class="section-title">&#128179; Get Refunds by Invoice</h2>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="getByInvoiceId" class="form-label">Invoice ID</label>
+                    <input type="number" class="form-control" id="getByInvoiceId" placeholder="Enter Invoice ID">
+                </div>
+                <div class="col-md-8 mb-3 d-flex align-items-end">
+                    <button class="btn btn-primary" onclick="getRefundsByInvoice()">Get Refunds</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingByInvoice"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>
+            <div id="refundsByInvoiceContainer"></div>
+        </div>
+
+        <!-- Process Refund Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#9889; Process Refund</h2>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="processRefundId" class="form-label">Refund ID</label>
+                    <input type="number" class="form-control" id="processRefundId" placeholder="Enter ID">
+                </div>
+                <div class="col-md-8 mb-3 d-flex align-items-end">
+                    <button class="btn btn-warning" onclick="processRefund()">Process Refund</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingProcess"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>
+            <div id="processResult"></div>
+        </div>
+
+        <!-- API Response -->
+        <div class="test-section">
+            <h2 class="section-title">&#128225; Last API Response</h2>
+            <div class="response-box" id="responseBox">No API calls made yet...</div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/assets/js/authClient.js"></script>
+    <script>
+        let currentRefunds = [];
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            const token = authClient.getToken();
+            if (!token) { window.location.href = '/login.html'; return; }
+
+            const result = await authClient.verifyToken();
+            if (result.authenticated && result.data?.username) document.getElementById('userInfo').textContent = `Hello, ${result.data.username}!`;
+            else document.getElementById('userInfo').textContent = 'Hello, User!';
+
+            document.getElementById('createForm').addEventListener('submit', handleCreate);
+            getAllRefunds();
+        });
+
+        function showAlert(message, type='info') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertHtml = `\n                <div class="alert alert-${type} alert-dismissible fade show" role="alert">\n                    ${message}\n                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>\n                </div>\n            `;
+            alertContainer.innerHTML = alertHtml;
+            setTimeout(()=>{ const alert = alertContainer.querySelector('.alert'); if (alert) bootstrap.Alert.getOrCreateInstance(alert).close(); },5000);
+        }
+
+        function updateResponseBox(data) { document.getElementById('responseBox').textContent = JSON.stringify(data, null, 2); }
+        function getAuthHeaders() { const token = authClient.getToken(); return { 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` }; }
+
+        async function handleCreate(e) {
+            e.preventDefault();
+            const data = {
+                invoiceId: parseInt(document.getElementById('createInvoiceId').value),
+                amount: parseFloat(document.getElementById('createAmount').value),
+                currencyId: parseInt(document.getElementById('createCurrencyId').value) || null,
+                reason: document.getElementById('createReason').value.trim() || null,
+                notes: document.getElementById('createNotes').value.trim() || null
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Refunds`, { method:'POST', headers: getAuthHeaders(), body: JSON.stringify(data) });
+                let result; const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) result = await response.json(); else { const text = await response.text(); result = { error: text, statusCode: response.status }; }
+                updateResponseBox(result);
+                if (response.ok) { showAlert('Refund created successfully!', 'success'); document.getElementById('createForm').reset(); getAllRefunds(); } else showAlert(`Error: ${result.message || result.error || 'Failed to create refund'}`, 'danger');
+            } catch (error) { showAlert(`Error: ${error.message}`, 'danger'); updateResponseBox({ error: error.message }); }
+        }
+
+        async function getAllRefunds() {
+            const loading = document.getElementById('loadingAll'); const container = document.getElementById('refundsTableContainer'); loading.style.display='block'; container.innerHTML='';
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Refunds`, { method:'GET', headers: getAuthHeaders() });
+                let data; const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) data = await response.json(); else { const text = await response.text(); data = { error: text, statusCode: response.status }; }
+                updateResponseBox(data);
+                if (response.ok) { currentRefunds = data; renderRefundsTable(data); } else showAlert(`Error: ${data.message || data.error || 'Failed to fetch refunds'}`, 'danger');
+            } catch (error) { showAlert(`Error: ${error.message}`, 'danger'); updateResponseBox({ error: error.message }); } finally { loading.style.display='none'; }
+        }
+
+        function renderRefundsTable(refunds) {
+            const container = document.getElementById('refundsTableContainer'); if (!refunds || refunds.length===0) { container.innerHTML = '<div class="empty-state">No refunds found</div>'; return; }
+            const tableHtml = `
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Invoice ID</th>
+                                <th>Amount</th>
+                                <th>Currency</th>
+                                <th>Status</th>
+                                <th>Reason</th>
+                                <th>Created At</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${refunds.map(r => `
+                                <tr>
+                                    <td>${r.id}</td>
+                                    <td>${r.invoiceId || '-'}</td>
+                                    <td>${r.amount !== undefined ? r.amount.toFixed(2) : '-'}</td>
+                                    <td>${r.currencyId || '-'}</td>
+                                    <td><span class="badge ${r.status==='Processed'?'badge-success':'badge-secondary'}">${r.status || 'Pending'}</span></td>
+                                    <td><code>${r.reason || '-'}</code></td>
+                                    <td>${r.createdAt ? new Date(r.createdAt).toLocaleString() : '-'}</td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            ${r.status !== 'Processed' ? `<button class="btn btn-sm btn-warning" onclick="processRefundQuick(${r.id})">Process</button>` : ''}
+                                            <button class="btn btn-sm btn-primary" onclick="getRefundByIdQuick(${r.id})">View</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            container.innerHTML = tableHtml;
+        }
+
+        async function getRefundById() {
+            const id = document.getElementById('getRefundId').value; if (!id) { showAlert('Please enter a refund ID','warning'); return; }
+            const loading = document.getElementById('loadingById'); const result = document.getElementById('refundByIdResult'); loading.style.display='block'; result.innerHTML='';
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Refunds/${id}`, { method:'GET', headers: getAuthHeaders() });
+                let data; const contentType = response.headers.get('content-type'); if (contentType && contentType.includes('application/json')) data = await response.json(); else { const text = await response.text(); data = { error: text, statusCode: response.status }; }
+                updateResponseBox(data);
+                if (response.ok) {
+                    result.innerHTML = `<div class="alert alert-success"><h5>Refund Found:</h5><p><strong>ID:</strong> ${data.id}</p><p><strong>Invoice ID:</strong> ${data.invoiceId}</p><p><strong>Amount:</strong> ${data.amount !== undefined ? data.amount.toFixed(2) : 'N/A'}</p><p><strong>Status:</strong> ${data.status || 'N/A'}</p><p><strong>Reason:</strong> ${data.reason || 'N/A'}</p><p><strong>Notes:</strong> ${data.notes || 'N/A'}</p><p><strong>Created:</strong> ${data.createdAt ? new Date(data.createdAt).toLocaleString() : 'N/A'}</p><p><strong>Updated:</strong> ${data.updatedAt ? new Date(data.updatedAt).toLocaleString() : 'N/A'}</p></div>`;
+                } else showAlert(`Error: ${data.message || data.error || 'Refund not found'}`,'danger');
+            } catch (error) { showAlert(`Error: ${error.message}`,'danger'); updateResponseBox({ error: error.message }); } finally { loading.style.display='none'; }
+        }
+
+        function getRefundByIdQuick(id) { document.getElementById('getRefundId').value = id; getRefundById(); }
+
+        async function getRefundsByInvoice() {
+            const invoiceId = document.getElementById('getByInvoiceId').value; if (!invoiceId) { showAlert('Please enter an invoice ID','warning'); return; }
+            const loading = document.getElementById('loadingByInvoice'); const container = document.getElementById('refundsByInvoiceContainer'); loading.style.display='block'; container.innerHTML='';
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Refunds/invoice/${invoiceId}`, { method:'GET', headers: getAuthHeaders() });
+                let data; const contentType = response.headers.get('content-type'); if (contentType && contentType.includes('application/json')) data = await response.json(); else { const text = await response.text(); data = { error: text, statusCode: response.status }; }
+                updateResponseBox(data);
+                if (response.ok) {
+                    if (!data || data.length===0) container.innerHTML = '<div class="empty-state">No refunds found for this invoice</div>';
+                    else {
+                        const listHtml = `<div class="alert alert-success"><h5>Refunds for Invoice ${invoiceId} (${data.length}):</h5><ul>${data.map(r=>`<li><strong>ID ${r.id}</strong> - ${r.amount? r.amount.toFixed(2): '0.00'} - Status: ${r.status}</li>`).join('')}</ul></div>`;
+                        container.innerHTML = listHtml;
+                    }
+                } else showAlert(`Error: ${data.message || data.error || 'Failed to fetch refunds'}`,'danger');
+            } catch (error) { showAlert(`Error: ${error.message}`,'danger'); updateResponseBox({ error: error.message }); } finally { loading.style.display='none'; }
+        }
+
+        async function processRefund() {
+            const id = document.getElementById('processRefundId').value; if (!id) { showAlert('Please enter a refund ID','warning'); return; }
+            if (!confirm('Process this refund?')) return; const loading = document.getElementById('loadingProcess'); const result = document.getElementById('processResult'); loading.style.display='block'; result.innerHTML='';
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Refunds/${id}/process`, { method:'POST', headers: getAuthHeaders() });
+                let data; const contentType = response.headers.get('content-type'); if (contentType && contentType.includes('application/json')) data = await response.json(); else if (response.ok) data = { message: 'Refund processed' }; else { const text = await response.text(); data = { error: text, statusCode: response.status }; }
+                updateResponseBox(data);
+                if (response.ok) { result.innerHTML = '<div class="alert alert-success">Refund processed successfully</div>'; showAlert('Refund processed successfully!','success'); getAllRefunds(); } else showAlert(`Error: ${data.message || data.error || 'Failed to process refund'}`,'danger');
+            } catch (error) { showAlert(`Error: ${error.message}`,'danger'); updateResponseBox({ error: error.message }); } finally { loading.style.display='none'; }
+        }
+
+        async function processRefundQuick(id) { if (!confirm('Process this refund?')) return; try { const response = await fetch(`${API_BASE_URL}/api/v1/Refunds/${id}/process`, { method:'POST', headers: getAuthHeaders() }); let data; const contentType = response.headers.get('content-type'); if (contentType && contentType.includes('application/json')) data = await response.json(); else if (response.ok) data = { message: 'Refund processed' }; else { const text = await response.text(); data = { error: text, statusCode: response.status }; } updateResponseBox(data); if (response.ok) { showAlert('Refund processed successfully!','success'); getAllRefunds(); } else showAlert(`Error: ${data.message || data.error || 'Failed to process refund'}`,'danger'); } catch (error) { showAlert(`Error: ${error.message}`,'danger'); updateResponseBox({ error: error.message }); } }
+    </script>
+</body>
+</html>

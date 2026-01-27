@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TLDs API Test - DR Admin</title>
+  <link href="/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/assets/css/test-page.css" rel="stylesheet">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-light">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="/choose-test.html">DR Admin - TLDs API</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><span id="userInfo" class="user-info"></span></li>
+          <li class="nav-item"><a href="/choose-test.html" class="btn btn-back">&#8592; Back to Tests</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container-main">
+    <div class="header-card">
+      <h1>&#127760; TLDs API Test</h1>
+      <p>Manage TLDs and related lookups</p>
+    </div>
+
+    <div id="alertContainer"></div>
+
+    <div class="test-section">
+      <h2 class="section-title">&#10133; Create TLD</h2>
+      <form id="createForm"><div class="row"><div class="col-md-6 mb-3"><label class="form-label">Extension *</label><input id="createExt" class="form-control" required /></div><div class="col-md-6 mb-3"><label class="form-label">Is Active</label><select id="createActive" class="form-control"><option value="true">Yes</option><option value="false">No</option></select></div></div><button class="btn btn-primary" type="submit">Create</button></form>
+    </div>
+
+    <div class="test-section">
+      <h2 class="section-title">&#128203; Get TLDs</h2>
+      <button class="btn btn-primary mb-3" onclick="getAll()">Load All</button>
+      <div class="loading" id="loadingAll"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>
+      <div id="tableContainer"></div>
+    </div>
+
+    <div class="test-section">
+      <h2 class="section-title">&#128065; Lookups</h2>
+      <div class="row mb-3"><div class="col-md-4"><input id="forTldId" class="form-control" placeholder="TLD ID" /></div><div class="col-md-8 d-flex align-items-end"><button class="btn btn-primary" onclick="getRegistrarsForTld()">Get Registrars</button></div></div>
+      <div class="row mb-3"><div class="col-md-4"><input id="forExtension" class="form-control" placeholder="Extension" /></div><div class="col-md-8 d-flex align-items-end"><button class="btn btn-primary" onclick="getByExtension()">Get by Extension</button><button class="btn btn-success ms-2" onclick="getActive()">Active TLDs</button></div></div>
+      <div id="lookupResult"></div>
+    </div>
+
+    <div class="test-section">
+      <h2 class="section-title">&#128225; Last API Response</h2>
+      <div class="response-box" id="responseBox">No API calls made yet...</div>
+    </div>
+  </div>
+
+  <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/assets/js/authClient.js"></script>
+  <script>
+    function showAlert(message,type='info'){ const c=document.getElementById('alertContainer'); c.innerHTML=`<div class="alert alert-${type} alert-dismissible fade show" role="alert">${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`; setTimeout(()=>{ const a=c.querySelector('.alert'); if(a) bootstrap.Alert.getOrCreateInstance(a).close(); },5000); }
+    function updateResponseBox(d){ document.getElementById('responseBox').textContent = JSON.stringify(d,null,2); }
+    function getAuthHeaders(){ const token=authClient.getToken(); return {'Content-Type':'application/json','Authorization': `Bearer ${token}`}; }
+
+    async function getAll(){ const loading=document.getElementById('loadingAll'); const container=document.getElementById('tableContainer'); loading.style.display='block'; container.innerHTML=''; try{ const res=await fetch(`${API_BASE_URL}/api/v1/Tlds`,{ method:'GET', headers:getAuthHeaders() }); let data; const ct=res.headers.get('content-type'); if(ct && ct.includes('application/json')) data=await res.json(); else { const t=await res.text(); data={ error: t, statusCode: res.status }; } updateResponseBox(data); if(res.ok) document.getElementById('tableContainer').innerHTML = JSON.stringify(data,null,2); else showAlert('Failed','danger'); }catch(err){ showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } finally{ loading.style.display='none'; } }
+
+    async function getRegistrarsForTld(){ const id=document.getElementById('forTldId').value; if(!id){ showAlert('Provide tld id','warning'); return; } try{ const res=await fetch(`${API_BASE_URL}/api/v1/Tlds/${id}/registrars`,{ method:'GET', headers:getAuthHeaders() }); let data; const ct=res.headers.get('content-type'); if(ct && ct.includes('application/json')) data=await res.json(); else { const t=await res.text(); data={ error: t, statusCode: res.status }; } updateResponseBox(data); if(res.ok) document.getElementById('lookupResult').innerHTML = JSON.stringify(data,null,2); else showAlert('Failed','danger'); }catch(err){ showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } }
+
+    async function getByExtension(){ const ext=document.getElementById('forExtension').value.trim(); if(!ext){ showAlert('Provide extension','warning'); return; } try{ const res=await fetch(`${API_BASE_URL}/api/v1/Tlds/extension/${encodeURIComponent(ext)}`,{ method:'GET', headers:getAuthHeaders() }); let data; const ct=res.headers.get('content-type'); if(ct && ct.includes('application/json')) data=await res.json(); else { const t=await res.text(); data={ error: t, statusCode: res.status }; } updateResponseBox(data); if(res.ok) document.getElementById('lookupResult').innerHTML = JSON.stringify(data,null,2); else showAlert('Failed','danger'); }catch(err){ showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } }
+
+    async function getActive(){ try{ const res=await fetch(`${API_BASE_URL}/api/v1/Tlds/active`,{ method:'GET', headers:getAuthHeaders() }); let data; const ct=res.headers.get('content-type'); if(ct && ct.includes('application/json')) data=await res.json(); else { const t=await res.text(); data={ error: t, statusCode: res.status }; } updateResponseBox(data); if(res.ok) document.getElementById('lookupResult').innerHTML = JSON.stringify(data,null,2); else showAlert('Failed','danger'); }catch(err){ showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } }
+  </script>
+</body>
+</html>

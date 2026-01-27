@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNS Records API Test - DR Admin</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Test Page Styles -->
+    <link href="/assets/css/test-page.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/choose-test.html">DR Admin - DNS Records API</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <span class="user-info" id="userInfo"></span>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/choose-test.html" class="btn btn-back">&#8592; Back to Tests</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-main">
+        <div class="header-card">
+            <h1>&#127760; DNS Records API Test</h1>
+            <p>Test CRUD operations for DNS Records API endpoint</p>
+        </div>
+
+        <!-- Alert Messages -->
+        <div id="alertContainer"></div>
+
+        <!-- Create DNS Record Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#10133; Create DNS Record</h2>
+            <form id="createForm">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="createDomainId" class="form-label">Domain ID *</label>
+                        <input type="number" class="form-control" id="createDomainId" placeholder="e.g., 1" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="createRecordType" class="form-label">Record Type *</label>
+                        <select class="form-control" id="createRecordType" required>
+                            <option value="">Select Type...</option>
+                            <option value="A">A - IPv4 Address</option>
+                            <option value="AAAA">AAAA - IPv6 Address</option>
+                            <option value="CNAME">CNAME - Canonical Name</option>
+                            <option value="MX">MX - Mail Exchange</option>
+                            <option value="TXT">TXT - Text Record</option>
+                            <option value="NS">NS - Name Server</option>
+                            <option value="SRV">SRV - Service</option>
+                            <option value="PTR">PTR - Pointer</option>
+                            <option value="SOA">SOA - Start of Authority</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="createName" class="form-label">Name/Host *</label>
+                        <input type="text" class="form-control" id="createName" placeholder="e.g., www or @" required>
+                        <small class="text-muted">Use @ for root domain</small>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="createValue" class="form-label">Value/Target *</label>
+                        <input type="text" class="form-control" id="createValue" placeholder="e.g., 192.168.1.1 or example.com" required>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="createTTL" class="form-label">TTL (seconds)</label>
+                        <input type="number" class="form-control" id="createTTL" placeholder="e.g., 3600" value="3600">
+                        <small class="text-muted">Time To Live</small>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="createPriority" class="form-label">Priority</label>
+                        <input type="number" class="form-control" id="createPriority" placeholder="e.g., 10">
+                        <small class="text-muted">For MX and SRV records</small>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="createPort" class="form-label">Port</label>
+                        <input type="number" class="form-control" id="createPort" placeholder="e.g., 443">
+                        <small class="text-muted">For SRV records</small>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="createIsActive" checked>
+                        <label class="form-check-label" for="createIsActive">
+                            Is Active
+                        </label>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Create DNS Record</button>
+            </form>
+        </div>
+
+        <!-- Get All DNS Records Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128203; Get All DNS Records</h2>
+            <button class="btn btn-primary mb-3" onclick="getAllDnsRecords()">Load All DNS Records</button>
+            <div class="loading" id="loadingAll">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="dnsRecordsTableContainer"></div>
+        </div>
+
+        <!-- Get DNS Record by ID Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128269; Get DNS Record by ID</h2>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="getDnsRecordId" class="form-label">DNS Record ID</label>
+                    <input type="number" class="form-control" id="getDnsRecordId" placeholder="Enter ID">
+                </div>
+                <div class="col-md-8 mb-3 d-flex align-items-end">
+                    <button class="btn btn-primary" onclick="getDnsRecordById()">Get DNS Record</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingById">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="dnsRecordByIdResult"></div>
+        </div>
+
+        <!-- Get DNS Records by Domain Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128194; Get DNS Records by Domain</h2>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="getDomainId" class="form-label">Domain ID</label>
+                    <input type="number" class="form-control" id="getDomainId" placeholder="Enter Domain ID">
+                </div>
+                <div class="col-md-8 mb-3 d-flex align-items-end">
+                    <button class="btn btn-primary" onclick="getDnsRecordsByDomain()">Get Records by Domain</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingByDomain">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="dnsRecordsByDomainContainer"></div>
+        </div>
+
+        <!-- Get DNS Records by Type Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128196; Get DNS Records by Type</h2>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="getRecordType" class="form-label">Record Type</label>
+                    <select class="form-control" id="getRecordType">
+                        <option value="">Select Type...</option>
+                        <option value="A">A</option>
+                        <option value="AAAA">AAAA</option>
+                        <option value="CNAME">CNAME</option>
+                        <option value="MX">MX</option>
+                        <option value="TXT">TXT</option>
+                        <option value="NS">NS</option>
+                        <option value="SRV">SRV</option>
+                        <option value="PTR">PTR</option>
+                        <option value="SOA">SOA</option>
+                    </select>
+                </div>
+                <div class="col-md-8 mb-3 d-flex align-items-end">
+                    <button class="btn btn-primary" onclick="getDnsRecordsByType()">Get Records by Type</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingByType">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="dnsRecordsByTypeContainer"></div>
+        </div>
+
+        <!-- API Response Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128225; Last API Response</h2>
+            <div class="response-box" id="responseBox">No API calls made yet...</div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">&#9998; Edit DNS Record</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editForm">
+                        <input type="hidden" id="editId">
+                        <div class="mb-3">
+                            <label for="editDomainId" class="form-label">Domain ID *</label>
+                            <input type="number" class="form-control" id="editDomainId" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editRecordType" class="form-label">Record Type *</label>
+                            <select class="form-control" id="editRecordType" required>
+                                <option value="A">A - IPv4 Address</option>
+                                <option value="AAAA">AAAA - IPv6 Address</option>
+                                <option value="CNAME">CNAME - Canonical Name</option>
+                                <option value="MX">MX - Mail Exchange</option>
+                                <option value="TXT">TXT - Text Record</option>
+                                <option value="NS">NS - Name Server</option>
+                                <option value="SRV">SRV - Service</option>
+                                <option value="PTR">PTR - Pointer</option>
+                                <option value="SOA">SOA - Start of Authority</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editName" class="form-label">Name/Host *</label>
+                            <input type="text" class="form-control" id="editName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editValue" class="form-label">Value/Target *</label>
+                            <input type="text" class="form-control" id="editValue" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editTTL" class="form-label">TTL (seconds)</label>
+                                <input type="number" class="form-control" id="editTTL">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editPriority" class="form-label">Priority</label>
+                                <input type="number" class="form-control" id="editPriority">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editPort" class="form-label">Port</label>
+                            <input type="number" class="form-control" id="editPort">
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="editIsActive">
+                                <label class="form-check-label" for="editIsActive">
+                                    Is Active
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="updateDnsRecord()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Auth Client -->
+    <script src="/assets/js/authClient.js"></script>
+    
+    <script>
+        // API_BASE_URL is already defined in authClient.js
+        let currentDnsRecords = [];
+        let editModal;
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            // Check authentication
+            const token = authClient.getToken();
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            // Verify token
+            const result = await authClient.verifyToken();
+            if (result.authenticated && result.data?.username) {
+                document.getElementById('userInfo').textContent = `Hello, ${result.data.username}!`;
+            } else {
+                document.getElementById('userInfo').textContent = 'Hello, User!';
+            }
+
+            // Initialize edit modal
+            editModal = new bootstrap.Modal(document.getElementById('editModal'));
+
+            // Setup create form
+            document.getElementById('createForm').addEventListener('submit', handleCreate);
+
+            // Load all DNS records on init
+            getAllDnsRecords();
+        });
+
+        // Show alert message
+        function showAlert(message, type = 'info') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertHtml = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            alertContainer.innerHTML = alertHtml;
+            
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                const alert = alertContainer.querySelector('.alert');
+                if (alert) {
+                    bootstrap.Alert.getOrCreateInstance(alert).close();
+                }
+            }, 5000);
+        }
+
+        // Update response box
+        function updateResponseBox(data) {
+            const responseBox = document.getElementById('responseBox');
+            responseBox.textContent = JSON.stringify(data, null, 2);
+        }
+
+        // Get authorization headers
+        function getAuthHeaders() {
+            const token = authClient.getToken();
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            };
+        }
+
+        // Handle Create DNS Record
+        async function handleCreate(e) {
+            e.preventDefault();
+            
+            const data = {
+                domainId: parseInt(document.getElementById('createDomainId').value),
+                recordType: document.getElementById('createRecordType').value,
+                name: document.getElementById('createName').value.trim(),
+                value: document.getElementById('createValue').value.trim(),
+                ttl: parseInt(document.getElementById('createTTL').value) || 3600,
+                priority: parseInt(document.getElementById('createPriority').value) || null,
+                port: parseInt(document.getElementById('createPort').value) || null,
+                isActive: document.getElementById('createIsActive').checked
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/DnsRecords`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(data)
+                });
+
+                let result;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    result = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(result);
+
+                if (response.ok) {
+                    showAlert('DNS Record created successfully!', 'success');
+                    document.getElementById('createForm').reset();
+                    document.getElementById('createIsActive').checked = true;
+                    document.getElementById('createTTL').value = 3600;
+                    getAllDnsRecords(); // Refresh list
+                } else {
+                    showAlert(`Error: ${result.message || result.error || 'Failed to create DNS record'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+
+        // Get All DNS Records
+        async function getAllDnsRecords() {
+            const loading = document.getElementById('loadingAll');
+            const container = document.getElementById('dnsRecordsTableContainer');
+            
+            loading.style.display = 'block';
+            container.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/DnsRecords`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    currentDnsRecords = data;
+                    renderDnsRecordsTable(data, container);
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Failed to fetch DNS records'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Render DNS Records Table
+        function renderDnsRecordsTable(dnsRecords, container) {
+            if (!dnsRecords || dnsRecords.length === 0) {
+                container.innerHTML = '<div class="empty-state">No DNS records found</div>';
+                return;
+            }
+
+            const tableHtml = `
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Domain ID</th>
+                                <th>Type</th>
+                                <th>Name</th>
+                                <th>Value</th>
+                                <th>TTL</th>
+                                <th>Priority</th>
+                                <th>Port</th>
+                                <th>Status</th>
+                                <th>Created At</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${dnsRecords.map(record => {
+                                return `
+                                    <tr>
+                                        <td>${record.id}</td>
+                                        <td><strong>${record.domainId}</strong></td>
+                                        <td>
+                                            <span class="badge badge-primary">
+                                                ${record.recordType || record.type || 'N/A'}
+                                            </span>
+                                        </td>
+                                        <td><strong>${record.name || '@'}</strong></td>
+                                        <td>${record.value || record.target || '-'}</td>
+                                        <td>${record.ttl || '-'}</td>
+                                        <td>${record.priority !== null && record.priority !== undefined ? record.priority : '-'}</td>
+                                        <td>${record.port !== null && record.port !== undefined ? record.port : '-'}</td>
+                                        <td>
+                                            <span class="badge ${record.isActive ? 'badge-success' : 'badge-secondary'}">
+                                                ${record.isActive ? 'Active' : 'Inactive'}
+                                            </span>
+                                        </td>
+                                        <td>${record.createdAt ? new Date(record.createdAt).toLocaleString() : '-'}</td>
+                                        <td>
+                                            <div class="action-buttons">
+                                                <button class="btn btn-sm btn-warning" onclick="openEditModal(${record.id})">
+                                                    Edit
+                                                </button>
+                                                <button class="btn btn-sm btn-danger" onclick="deleteDnsRecord(${record.id}, '${(record.name || '@').replace(/'/g, "\\'")}')">
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            container.innerHTML = tableHtml;
+        }
+
+        // Get DNS Record by ID
+        async function getDnsRecordById() {
+            const id = document.getElementById('getDnsRecordId').value;
+            
+            if (!id) {
+                showAlert('Please enter a DNS record ID', 'warning');
+                return;
+            }
+
+            const loading = document.getElementById('loadingById');
+            const result = document.getElementById('dnsRecordByIdResult');
+            
+            loading.style.display = 'block';
+            result.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/DnsRecords/${id}`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    result.innerHTML = `
+                        <div class="alert alert-success">
+                            <h5>DNS Record Found:</h5>
+                            <p><strong>ID:</strong> ${data.id}</p>
+                            <p><strong>Domain ID:</strong> ${data.domainId}</p>
+                            <p><strong>Type:</strong> ${data.recordType || data.type || 'N/A'}</p>
+                            <p><strong>Name:</strong> ${data.name || '@'}</p>
+                            <p><strong>Value:</strong> ${data.value || data.target || 'N/A'}</p>
+                            <p><strong>TTL:</strong> ${data.ttl || 'N/A'}</p>
+                            <p><strong>Priority:</strong> ${data.priority !== null && data.priority !== undefined ? data.priority : 'N/A'}</p>
+                            <p><strong>Port:</strong> ${data.port !== null && data.port !== undefined ? data.port : 'N/A'}</p>
+                            <p><strong>Status:</strong> ${data.isActive ? 'Active' : 'Inactive'}</p>
+                            <p><strong>Created:</strong> ${data.createdAt ? new Date(data.createdAt).toLocaleString() : 'N/A'}</p>
+                            <p><strong>Updated:</strong> ${data.updatedAt ? new Date(data.updatedAt).toLocaleString() : 'N/A'}</p>
+                        </div>
+                    `;
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'DNS record not found'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Get DNS Records by Domain
+        async function getDnsRecordsByDomain() {
+            const domainId = document.getElementById('getDomainId').value;
+            
+            if (!domainId) {
+                showAlert('Please enter a domain ID', 'warning');
+                return;
+            }
+
+            const loading = document.getElementById('loadingByDomain');
+            const container = document.getElementById('dnsRecordsByDomainContainer');
+            
+            loading.style.display = 'block';
+            container.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/DnsRecords/domain/${domainId}`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    renderDnsRecordsTable(data, container);
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Failed to fetch DNS records for domain'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Get DNS Records by Type
+        async function getDnsRecordsByType() {
+            const type = document.getElementById('getRecordType').value;
+            
+            if (!type) {
+                showAlert('Please select a record type', 'warning');
+                return;
+            }
+
+            const loading = document.getElementById('loadingByType');
+            const container = document.getElementById('dnsRecordsByTypeContainer');
+            
+            loading.style.display = 'block';
+            container.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/DnsRecords/type/${type}`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    renderDnsRecordsTable(data, container);
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Failed to fetch DNS records by type'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Open Edit Modal
+        function openEditModal(id) {
+            const record = currentDnsRecords.find(r => r.id === id);
+            
+            if (!record) {
+                showAlert('DNS record not found', 'danger');
+                return;
+            }
+
+            document.getElementById('editId').value = record.id;
+            document.getElementById('editDomainId').value = record.domainId;
+            document.getElementById('editRecordType').value = record.recordType || record.type || 'A';
+            document.getElementById('editName').value = record.name || '';
+            document.getElementById('editValue').value = record.value || record.target || '';
+            document.getElementById('editTTL').value = record.ttl || 3600;
+            document.getElementById('editPriority').value = record.priority !== null && record.priority !== undefined ? record.priority : '';
+            document.getElementById('editPort').value = record.port !== null && record.port !== undefined ? record.port : '';
+            document.getElementById('editIsActive').checked = record.isActive;
+
+            editModal.show();
+        }
+
+        // Update DNS Record
+        async function updateDnsRecord() {
+            const id = document.getElementById('editId').value;
+            const data = {
+                domainId: parseInt(document.getElementById('editDomainId').value),
+                recordType: document.getElementById('editRecordType').value,
+                name: document.getElementById('editName').value.trim(),
+                value: document.getElementById('editValue').value.trim(),
+                ttl: parseInt(document.getElementById('editTTL').value) || 3600,
+                priority: parseInt(document.getElementById('editPriority').value) || null,
+                port: parseInt(document.getElementById('editPort').value) || null,
+                isActive: document.getElementById('editIsActive').checked
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/DnsRecords/${id}`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(data)
+                });
+
+                let result;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    result = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(result);
+
+                if (response.ok) {
+                    showAlert('DNS Record updated successfully!', 'success');
+                    editModal.hide();
+                    getAllDnsRecords(); // Refresh list
+                } else {
+                    showAlert(`Error: ${result.message || result.error || 'Failed to update DNS record'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+
+        // Delete DNS Record
+        async function deleteDnsRecord(id, name) {
+            if (!confirm(`Are you sure you want to delete DNS record "${name}"?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/DnsRecords/${id}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+
+                if (response.ok) {
+                    // Some APIs return 204 No Content on successful delete
+                    if (response.status === 204) {
+                        updateResponseBox({ message: 'DNS Record deleted successfully' });
+                    } else {
+                        const contentType = response.headers.get('content-type');
+                        if (contentType && contentType.includes('application/json')) {
+                            const result = await response.json();
+                            updateResponseBox(result);
+                        } else {
+                            updateResponseBox({ message: 'DNS Record deleted successfully' });
+                        }
+                    }
+                    showAlert('DNS Record deleted successfully!', 'success');
+                    getAllDnsRecords(); // Refresh list
+                } else {
+                    let result;
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        result = await response.json();
+                    } else {
+                        const text = await response.text();
+                        result = { error: text, statusCode: response.status };
+                    }
+                    updateResponseBox(result);
+                    showAlert(`Error: ${result.message || result.error || 'Failed to delete DNS record'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+    </script>
+</body>
+</html>

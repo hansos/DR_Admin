@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Queue API Test - DR Admin</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Test Page Styles -->
+    <link href="/assets/css/test-page.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/choose-test.html">DR Admin - Email Queue API</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <span class="user-info" id="userInfo"></span>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/choose-test.html" class="btn btn-back">&#8592; Back to Tests</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-main">
+        <div class="header-card">
+            <h1>&#128231; Email Queue API Test</h1>
+            <p>Test email queue operations</p>
+        </div>
+
+        <!-- Alert Messages -->
+        <div id="alertContainer"></div>
+
+        <!-- Queue Email Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#10133; Queue Email</h2>
+            <form id="queueEmailForm">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="queueTo" class="form-label">To Email Address *</label>
+                        <input type="email" class="form-control" id="queueTo" placeholder="e.g., recipient@example.com" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="queueFrom" class="form-label">From Email Address</label>
+                        <input type="email" class="form-control" id="queueFrom" placeholder="e.g., sender@example.com">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label for="queueSubject" class="form-label">Subject *</label>
+                        <input type="text" class="form-control" id="queueSubject" placeholder="Enter email subject" required>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label for="queueBody" class="form-label">Email Body *</label>
+                        <textarea class="form-control" id="queueBody" rows="6" placeholder="Enter email body..." required></textarea>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="queueCc" class="form-label">CC (Comma-separated)</label>
+                        <input type="text" class="form-control" id="queueCc" placeholder="e.g., cc1@example.com, cc2@example.com">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="queueBcc" class="form-label">BCC (Comma-separated)</label>
+                        <input type="text" class="form-control" id="queueBcc" placeholder="e.g., bcc1@example.com, bcc2@example.com">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="queuePriority" class="form-label">Priority</label>
+                        <select class="form-control" id="queuePriority">
+                            <option value="">Normal</option>
+                            <option value="Low">Low</option>
+                            <option value="Normal" selected>Normal</option>
+                            <option value="High">High</option>
+                            <option value="Urgent">Urgent</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="queueScheduledTime" class="form-label">Scheduled Send Time</label>
+                        <input type="datetime-local" class="form-control" id="queueScheduledTime">
+                        <small class="text-muted">Leave empty to send immediately</small>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="queueIsHtml" checked>
+                        <label class="form-check-label" for="queueIsHtml">
+                            Is HTML Email
+                        </label>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Queue Email</button>
+            </form>
+        </div>
+
+        <!-- Get Email Status Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128269; Get Email Status</h2>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="statusEmailId" class="form-label">Email Queue ID</label>
+                    <input type="number" class="form-control" id="statusEmailId" placeholder="Enter Email ID">
+                </div>
+                <div class="col-md-8 mb-3 d-flex align-items-end">
+                    <button class="btn btn-primary" onclick="getEmailStatus()">Get Email Status</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingStatus">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="emailStatusResult"></div>
+        </div>
+
+        <!-- Queued Emails History Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128202; Recently Queued Emails</h2>
+            <div id="queuedEmailsContainer">
+                <div class="empty-state">No emails queued in this session yet</div>
+            </div>
+        </div>
+
+        <!-- API Response Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128225; Last API Response</h2>
+            <div class="response-box" id="responseBox">No API calls made yet...</div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Auth Client -->
+    <script src="/assets/js/authClient.js"></script>
+    
+    <script>
+        // API_BASE_URL is already defined in authClient.js
+        let queuedEmails = [];
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            // Check authentication
+            const token = authClient.getToken();
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            // Verify token
+            const result = await authClient.verifyToken();
+            if (result.authenticated && result.data?.username) {
+                document.getElementById('userInfo').textContent = `Hello, ${result.data.username}!`;
+            } else {
+                document.getElementById('userInfo').textContent = 'Hello, User!';
+            }
+
+            // Setup queue email form
+            document.getElementById('queueEmailForm').addEventListener('submit', handleQueueEmail);
+        });
+
+        // Show alert message
+        function showAlert(message, type = 'info') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertHtml = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            alertContainer.innerHTML = alertHtml;
+            
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                const alert = alertContainer.querySelector('.alert');
+                if (alert) {
+                    bootstrap.Alert.getOrCreateInstance(alert).close();
+                }
+            }, 5000);
+        }
+
+        // Update response box
+        function updateResponseBox(data) {
+            const responseBox = document.getElementById('responseBox');
+            responseBox.textContent = JSON.stringify(data, null, 2);
+        }
+
+        // Get authorization headers
+        function getAuthHeaders() {
+            const token = authClient.getToken();
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            };
+        }
+
+        // Handle Queue Email
+        async function handleQueueEmail(e) {
+            e.preventDefault();
+            
+            const scheduledTime = document.getElementById('queueScheduledTime').value;
+            const ccValue = document.getElementById('queueCc').value.trim();
+            const bccValue = document.getElementById('queueBcc').value.trim();
+            
+            const data = {
+                to: document.getElementById('queueTo').value.trim(),
+                from: document.getElementById('queueFrom').value.trim() || null,
+                subject: document.getElementById('queueSubject').value.trim(),
+                body: document.getElementById('queueBody').value.trim(),
+                cc: ccValue ? ccValue.split(',').map(e => e.trim()) : null,
+                bcc: bccValue ? bccValue.split(',').map(e => e.trim()) : null,
+                priority: document.getElementById('queuePriority').value || 'Normal',
+                scheduledTime: scheduledTime ? new Date(scheduledTime).toISOString() : null,
+                isHtml: document.getElementById('queueIsHtml').checked
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/EmailQueue/queue`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(data)
+                });
+
+                let result;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    result = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(result);
+
+                if (response.ok) {
+                    showAlert(`Email queued successfully! ID: ${result.id || result.emailId || 'N/A'}`, 'success');
+                    
+                    // Add to queued emails list
+                    const emailInfo = {
+                        id: result.id || result.emailId,
+                        to: data.to,
+                        subject: data.subject,
+                        status: result.status || 'Queued',
+                        queuedAt: new Date().toISOString(),
+                        ...result
+                    };
+                    queuedEmails.unshift(emailInfo);
+                    renderQueuedEmails();
+                    
+                    // Optionally pre-fill status check
+                    if (emailInfo.id) {
+                        document.getElementById('statusEmailId').value = emailInfo.id;
+                    }
+                    
+                    // Reset form
+                    document.getElementById('queueEmailForm').reset();
+                    document.getElementById('queueIsHtml').checked = true;
+                    document.getElementById('queuePriority').value = 'Normal';
+                } else {
+                    showAlert(`Error: ${result.message || result.error || 'Failed to queue email'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+
+        // Get Email Status
+        async function getEmailStatus() {
+            const id = document.getElementById('statusEmailId').value;
+            
+            if (!id) {
+                showAlert('Please enter an email queue ID', 'warning');
+                return;
+            }
+
+            const loading = document.getElementById('loadingStatus');
+            const result = document.getElementById('emailStatusResult');
+            
+            loading.style.display = 'block';
+            result.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/EmailQueue/status/${id}`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    const statusBadgeClass = getStatusBadgeClass(data.status);
+                    
+                    result.innerHTML = `
+                        <div class="alert alert-success">
+                            <h5>Email Status:</h5>
+                            <p><strong>ID:</strong> ${data.id || data.emailId || id}</p>
+                            <p><strong>Status:</strong> <span class="badge ${statusBadgeClass}">${data.status || 'Unknown'}</span></p>
+                            <p><strong>To:</strong> ${data.to || data.toEmail || 'N/A'}</p>
+                            <p><strong>Subject:</strong> ${data.subject || 'N/A'}</p>
+                            <p><strong>Priority:</strong> ${data.priority || 'Normal'}</p>
+                            ${data.scheduledTime ? `<p><strong>Scheduled Time:</strong> ${new Date(data.scheduledTime).toLocaleString()}</p>` : ''}
+                            ${data.sentTime ? `<p><strong>Sent Time:</strong> ${new Date(data.sentTime).toLocaleString()}</p>` : ''}
+                            ${data.attempts !== undefined ? `<p><strong>Attempts:</strong> ${data.attempts}</p>` : ''}
+                            ${data.errorMessage ? `<p><strong>Error Message:</strong> <span class="text-danger">${data.errorMessage}</span></p>` : ''}
+                            <p><strong>Queued At:</strong> ${data.queuedAt || data.createdAt ? new Date(data.queuedAt || data.createdAt).toLocaleString() : 'N/A'}</p>
+                            ${data.updatedAt ? `<p><strong>Updated At:</strong> ${new Date(data.updatedAt).toLocaleString()}</p>` : ''}
+                        </div>
+                    `;
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Email not found in queue'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Get Status Badge Class
+        function getStatusBadgeClass(status) {
+            if (!status) return 'badge-secondary';
+            
+            const statusLower = status.toLowerCase();
+            if (statusLower.includes('sent') || statusLower.includes('delivered')) {
+                return 'badge-success';
+            } else if (statusLower.includes('queued') || statusLower.includes('pending')) {
+                return 'badge-info';
+            } else if (statusLower.includes('sending') || statusLower.includes('processing')) {
+                return 'badge-warning';
+            } else if (statusLower.includes('failed') || statusLower.includes('error')) {
+                return 'badge-danger';
+            } else {
+                return 'badge-secondary';
+            }
+        }
+
+        // Render Queued Emails
+        function renderQueuedEmails() {
+            const container = document.getElementById('queuedEmailsContainer');
+            
+            if (!queuedEmails || queuedEmails.length === 0) {
+                container.innerHTML = '<div class="empty-state">No emails queued in this session yet</div>';
+                return;
+            }
+
+            const tableHtml = `
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>To</th>
+                                <th>Subject</th>
+                                <th>Priority</th>
+                                <th>Status</th>
+                                <th>Queued At</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${queuedEmails.map(email => {
+                                const statusBadgeClass = getStatusBadgeClass(email.status);
+                                
+                                return `
+                                    <tr>
+                                        <td>${email.id || email.emailId || '-'}</td>
+                                        <td>${email.to || email.toEmail || '-'}</td>
+                                        <td><strong>${email.subject || '-'}</strong></td>
+                                        <td>
+                                            <span class="badge ${email.priority === 'High' || email.priority === 'Urgent' ? 'badge-warning' : 'badge-info'}">
+                                                ${email.priority || 'Normal'}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge ${statusBadgeClass}">
+                                                ${email.status || 'Queued'}
+                                            </span>
+                                        </td>
+                                        <td>${email.queuedAt ? new Date(email.queuedAt).toLocaleString() : '-'}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-primary" onclick="checkEmailStatus(${email.id || email.emailId})">
+                                                Check Status
+                                            </button>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            container.innerHTML = tableHtml;
+        }
+
+        // Check Email Status (from table button)
+        function checkEmailStatus(id) {
+            if (!id) {
+                showAlert('Invalid email ID', 'warning');
+                return;
+            }
+            
+            document.getElementById('statusEmailId').value = id;
+            getEmailStatus();
+            
+            // Scroll to status section
+            document.getElementById('emailStatusResult').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    </script>
+</body>
+</html>

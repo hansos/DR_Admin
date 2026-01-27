@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Subscriptions API Test - DR Admin</title>
+  <link href="/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/assets/css/test-page.css" rel="stylesheet">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-light">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="/choose-test.html">DR Admin - Subscriptions API</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><span id="userInfo" class="user-info"></span></li>
+          <li class="nav-item"><a href="/choose-test.html" class="btn btn-back">&#8592; Back to Tests</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container-main">
+    <div class="header-card">
+      <h1>&#128176; Subscriptions API Test</h1>
+      <p>Manage subscriptions and perform lifecycle actions</p>
+    </div>
+
+    <div id="alertContainer"></div>
+
+    <div class="test-section">
+      <h2 class="section-title">&#10133; Create Subscription</h2>
+      <form id="createForm">
+        <div class="mb-3"><label class="form-label">Customer ID *</label><input id="createCustomerId" class="form-control" type="number" required /></div>
+        <div class="mb-3"><label class="form-label">Plan Code *</label><input id="createPlanCode" class="form-control" required /></div>
+        <button class="btn btn-primary" type="submit">Create</button>
+      </form>
+    </div>
+
+    <div class="test-section">
+      <h2 class="section-title">&#128203; Get Subscriptions</h2>
+      <div class="d-flex gap-2 mb-3"><button class="btn btn-primary" onclick="getAll()">All</button><button class="btn btn-success" onclick="getDue()">Due</button></div>
+      <div class="row mb-3"><div class="col-md-4"><input id="filterCustomerId" class="form-control" placeholder="Customer ID" type="number" /></div><div class="col-md-4"><input id="filterStatus" class="form-control" placeholder="Status" /></div><div class="col-md-4 d-flex"><button class="btn btn-primary" onclick="getByCustomer()">By Customer</button><button class="btn btn-primary ms-2" onclick="getByStatus()">By Status</button></div></div>
+      <div id="subscriptionsContainer"></div>
+    </div>
+
+    <div class="test-section">
+      <h2 class="section-title">&#9888; Actions</h2>
+      <div class="row"><div class="col-md-3 mb-3"><input id="actionSubId" class="form-control" placeholder="Subscription ID" type="number" /></div><div class="col-md-9 d-flex gap-2"><button class="btn btn-warning" onclick="cancelSub()">Cancel</button><button class="btn btn-secondary" onclick="pauseSub()">Pause</button><button class="btn btn-success" onclick="resumeSub()">Resume</button><button class="btn btn-info" onclick="processBilling()">Process Billing</button></div></div>
+    </div>
+
+    <div class="test-section">
+      <h2 class="section-title">&#128225; Last API Response</h2>
+      <div class="response-box" id="responseBox">No API calls made yet...</div>
+    </div>
+  </div>
+
+  <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/assets/js/authClient.js"></script>
+  <script>
+    function showAlert(message,type='info'){ const c=document.getElementById('alertContainer'); c.innerHTML=`<div class="alert alert-${type} alert-dismissible fade show" role="alert">${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`; setTimeout(()=>{ const a=c.querySelector('.alert'); if(a) bootstrap.Alert.getOrCreateInstance(a).close(); },5000); }
+    function updateResponseBox(d){ document.getElementById('responseBox').textContent = JSON.stringify(d,null,2); }
+    function getAuthHeaders(){ const token=authClient.getToken(); return {'Content-Type':'application/json','Authorization': `Bearer ${token}`}; }
+
+    async function getAll(){ try{ const res=await fetch(`${API_BASE_URL}/api/v1/Subscriptions`,{ method:'GET', headers:getAuthHeaders() }); let data; const ct=res.headers.get('content-type'); if(ct && ct.includes('application/json')) data=await res.json(); else { const t=await res.text(); data={ error: t, statusCode: res.status }; } updateResponseBox(data); if(res.ok) document.getElementById('subscriptionsContainer').innerHTML = JSON.stringify(data,null,2); else showAlert('Failed','danger'); }catch(err){ showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } }
+
+    async function getByCustomer(){ const id=document.getElementById('filterCustomerId').value; if(!id){ showAlert('Provide customer id','warning'); return; } try{ const res=await fetch(`${API_BASE_URL}/api/v1/Subscriptions/customer/${id}`,{ method:'GET', headers:getAuthHeaders() }); let data; const ct=res.headers.get('content-type'); if(ct && ct.includes('application/json')) data=await res.json(); else { const t=await res.text(); data={ error: t, statusCode: res.status }; } updateResponseBox(data); if(res.ok) document.getElementById('subscriptionsContainer').innerHTML = JSON.stringify(data,null,2); else showAlert('Failed','danger'); }catch(err){ showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } }
+
+    async function getByStatus(){ const status=document.getElementById('filterStatus').value.trim(); if(!status){ showAlert('Provide status','warning'); return; } try{ const res=await fetch(`${API_BASE_URL}/api/v1/Subscriptions/status/${encodeURIComponent(status)}`,{ method:'GET', headers:getAuthHeaders() }); let data; const ct=res.headers.get('content-type'); if(ct && ct.includes('application/json')) data=await res.json(); else { const t=await res.text(); data={ error: t, statusCode: res.status }; } updateResponseBox(data); if(res.ok) document.getElementById('subscriptionsContainer').innerHTML = JSON.stringify(data,null,2); else showAlert('Failed','danger'); }catch(err){ showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } }
+
+    async function getDue(){ try{ const res=await fetch(`${API_BASE_URL}/api/v1/Subscriptions/due`,{ method:'GET', headers:getAuthHeaders() }); let data; const ct=res.headers.get('content-type'); if(ct && ct.includes('application/json')) data=await res.json(); else { const t=await res.text(); data={ error: t, statusCode: res.status }; } updateResponseBox(data); if(res.ok) document.getElementById('subscriptionsContainer').innerHTML = JSON.stringify(data,null,2); else showAlert('Failed','danger'); }catch(err){ showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } }
+
+    async function cancelSub(){ const id=document.getElementById('actionSubId').value; if(!id){ showAlert('Provide subscription id','warning'); return; } try{ const res=await fetch(`${API_BASE_URL}/api/v1/Subscriptions/${id}/cancel`,{ method:'POST', headers:getAuthHeaders() }); let data; const ct=res.headers.get('content-type'); if(ct && ct.includes('application/json')) data=await res.json(); else if(res.ok) data={ message: 'Cancelled' }; else { const t=await res.text(); data={ error: t, statusCode: res.status }; } updateResponseBox(data); if(res.ok) showAlert('Cancelled','success'); else showAlert('Failed','danger'); }catch(err){ showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } }
+
+    async function pauseSub(){ const id=document.getElementById('actionSubId').value; if(!id){ showAlert('Provide subscription id','warning'); return; } try{ const res=await fetch(`${API_BASE_URL}/api/v1/Subscriptions/${id}/pause`,{ method:'POST', headers:getAuthHeaders() }); let data; const ct=res.headers.get('content-type'); if(ct && ct.includes('application/json')) data=await res.json(); else if(res.ok) data={ message: 'Paused' }; else { const t=await res.text(); data={ error: t, statusCode: res.status }; } updateResponseBox(data); if(res.ok) showAlert('Paused','success'); else showAlert('Failed','danger'); }catch(err){ showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } }
+
+    async function resumeSub(){ const id=document.getElementById('actionSubId').value; if(!id){ showAlert('Provide subscription id','warning'); return; } try{ const res=await fetch(`${API_BASE_URL}/api/v1/Subscriptions/${id}/resume`,{ method:'POST', headers:getAuthHeaders() }); let data; const ct=res.headers.get('content-type'); if(ct && ct.includes('application/json')) data=await res.json(); else if(res.ok) data={ message: 'Resumed' }; else { const t=await res.text(); data={ error: t, statusCode: res.status }; } updateResponseBox(data); if(res.ok) showAlert('Resumed','success'); else showAlert('Failed','danger'); }catch(err){ showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } }
+
+    async function processBilling(){ const id=document.getElementById('actionSubId').value; if(!id){ showAlert('Provide subscription id','warning'); return; } try{ const res=await fetch(`${API_BASE_URL}/api/v1/Subscriptions/${id}/process-billing`,{ method:'POST', headers:getAuthHeaders() }); let data; const ct=res.headers.get('content-type'); if(ct && ct.includes('application/json')) data=await res.json(); else if(res.ok) data={ message: 'Processed' }; else { const t=await res.text(); data={ error: t, statusCode: res.status }; } updateResponseBox(data); if(res.ok) showAlert('Billing processed','success'); else showAlert('Failed','danger'); }catch(err){ showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } }
+  </script>
+</body>
+</html>

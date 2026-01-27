@@ -1,0 +1,541 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Countries API Test - DR Admin</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Test Page Styles -->
+    <link href="/assets/css/test-page.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/choose-test.html">DR Admin - Countries API</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <span class="user-info" id="userInfo"></span>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/choose-test.html" class="btn btn-back">← Back to Tests</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-main">
+        <div class="header-card">
+            <h1>🌍 Countries API Test</h1>
+            <p>Test CRUD operations for Countries API endpoint</p>
+        </div>
+
+        <!-- Alert Messages -->
+        <div id="alertContainer"></div>
+
+        <!-- Create Country Section -->
+        <div class="test-section">
+            <h2 class="section-title">➕ Create Country</h2>
+            <form id="createForm">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="createCode" class="form-label">Country Code *</label>
+                        <input type="text" class="form-control" id="createCode" placeholder="e.g., US" maxlength="2" required>
+                        <small class="text-muted">2-character ISO code</small>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="createTld" class="form-label">TLD *</label>
+                        <input type="text" class="form-control" id="createTld" placeholder="e.g., .us" required>
+                        <small class="text-muted">Top-level domain</small>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="createEnglishName" class="form-label">English Name *</label>
+                        <input type="text" class="form-control" id="createEnglishName" placeholder="e.g., United States" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="createLocalName" class="form-label">Local Name</label>
+                        <input type="text" class="form-control" id="createLocalName" placeholder="e.g., United States">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="createIsActive" checked>
+                        <label class="form-check-label" for="createIsActive">
+                            Is Active
+                        </label>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Create Country</button>
+            </form>
+        </div>
+
+        <!-- Get All Countries Section -->
+        <div class="test-section">
+            <h2 class="section-title">📋 Get All Countries</h2>
+            <button class="btn btn-primary mb-3" onclick="getAllCountries()">Load All Countries</button>
+            <div class="loading" id="loadingAll">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="countriesTableContainer"></div>
+        </div>
+
+        <!-- Get Country by ID Section -->
+        <div class="test-section">
+            <h2 class="section-title">🔍 Get Country by ID</h2>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="getCountryId" class="form-label">Country ID</label>
+                    <input type="number" class="form-control" id="getCountryId" placeholder="Enter ID">
+                </div>
+                <div class="col-md-8 mb-3 d-flex align-items-end">
+                    <button class="btn btn-primary" onclick="getCountryById()">Get Country</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingById">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="countryByIdResult"></div>
+        </div>
+
+        <!-- API Response Section -->
+        <div class="test-section">
+            <h2 class="section-title">📡 Last API Response</h2>
+            <div class="response-box" id="responseBox">No API calls made yet...</div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">✏️ Edit Country</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editForm">
+                        <input type="hidden" id="editId">
+                        <div class="mb-3">
+                            <label for="editCode" class="form-label">Country Code *</label>
+                            <input type="text" class="form-control" id="editCode" maxlength="2" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editTld" class="form-label">TLD *</label>
+                            <input type="text" class="form-control" id="editTld" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editEnglishName" class="form-label">English Name *</label>
+                            <input type="text" class="form-control" id="editEnglishName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editLocalName" class="form-label">Local Name</label>
+                            <input type="text" class="form-control" id="editLocalName">
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="editIsActive">
+                                <label class="form-check-label" for="editIsActive">
+                                    Is Active
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="updateCountry()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Auth Client -->
+    <script src="/assets/js/authClient.js"></script>
+    
+    <script>
+        // API_BASE_URL is already defined in authClient.js
+        let currentCountries = [];
+        let editModal;
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            // Check authentication
+            const token = authClient.getToken();
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            // Verify token
+            const result = await authClient.verifyToken();
+            if (result.authenticated && result.data?.username) {
+                document.getElementById('userInfo').textContent = `Hello, ${result.data.username}!`;
+            } else {
+                document.getElementById('userInfo').textContent = 'Hello, User!';
+            }
+
+            // Initialize edit modal
+            editModal = new bootstrap.Modal(document.getElementById('editModal'));
+
+            // Setup create form
+            document.getElementById('createForm').addEventListener('submit', handleCreate);
+
+            // Load all countries on init
+            getAllCountries();
+        });
+
+        // Show alert message
+        function showAlert(message, type = 'info') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertHtml = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            alertContainer.innerHTML = alertHtml;
+            
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                const alert = alertContainer.querySelector('.alert');
+                if (alert) {
+                    bootstrap.Alert.getOrCreateInstance(alert).close();
+                }
+            }, 5000);
+        }
+
+        // Update response box
+        function updateResponseBox(data) {
+            const responseBox = document.getElementById('responseBox');
+            responseBox.textContent = JSON.stringify(data, null, 2);
+        }
+
+        // Get authorization headers
+        function getAuthHeaders() {
+            const token = authClient.getToken();
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            };
+        }
+
+        // Handle Create Country
+        async function handleCreate(e) {
+            e.preventDefault();
+            
+            const data = {
+                code: document.getElementById('createCode').value.trim().toUpperCase(),
+                tld: document.getElementById('createTld').value.trim(),
+                englishName: document.getElementById('createEnglishName').value.trim(),
+                localName: document.getElementById('createLocalName').value.trim() || null,
+                isActive: document.getElementById('createIsActive').checked
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Countries`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(data)
+                });
+
+                let result;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    result = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(result);
+
+                if (response.ok) {
+                    showAlert('Country created successfully!', 'success');
+                    document.getElementById('createForm').reset();
+                    document.getElementById('createIsActive').checked = true;
+                    getAllCountries(); // Refresh list
+                } else {
+                    showAlert(`Error: ${result.message || result.error || 'Failed to create country'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+
+        // Get All Countries
+        async function getAllCountries() {
+            const loading = document.getElementById('loadingAll');
+            const container = document.getElementById('countriesTableContainer');
+            
+            loading.style.display = 'block';
+            container.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Countries`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    currentCountries = data;
+                    renderCountriesTable(data);
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Failed to fetch countries'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Render Countries Table
+        function renderCountriesTable(countries) {
+            const container = document.getElementById('countriesTableContainer');
+            
+            if (!countries || countries.length === 0) {
+                container.innerHTML = '<div class="empty-state">No countries found</div>';
+                return;
+            }
+
+            const tableHtml = `
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Code</th>
+                                <th>TLD</th>
+                                <th>English Name</th>
+                                <th>Local Name</th>
+                                <th>Status</th>
+                                <th>Created At</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${countries.map(country => `
+                                <tr>
+                                    <td>${country.id}</td>
+                                    <td><strong>${country.code}</strong></td>
+                                    <td>${country.tld || '-'}</td>
+                                    <td>${country.englishName}</td>
+                                    <td>${country.localName || '-'}</td>
+                                    <td>
+                                        <span class="badge ${country.isActive ? 'badge-success' : 'badge-secondary'}">
+                                            ${country.isActive ? 'Active' : 'Inactive'}
+                                        </span>
+                                    </td>
+                                    <td>${new Date(country.createdAt).toLocaleString()}</td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="btn btn-sm btn-warning" onclick="openEditModal(${country.id})">
+                                                Edit
+                                            </button>
+                                            <button class="btn btn-sm btn-danger" onclick="deleteCountry(${country.id}, '${country.englishName}')">
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            container.innerHTML = tableHtml;
+        }
+
+        // Get Country by ID
+        async function getCountryById() {
+            const id = document.getElementById('getCountryId').value;
+            
+            if (!id) {
+                showAlert('Please enter a country ID', 'warning');
+                return;
+            }
+
+            const loading = document.getElementById('loadingById');
+            const result = document.getElementById('countryByIdResult');
+            
+            loading.style.display = 'block';
+            result.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Countries/${id}`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    result.innerHTML = `
+                        <div class="alert alert-success">
+                            <h5>Country Found:</h5>
+                            <p><strong>ID:</strong> ${data.id}</p>
+                            <p><strong>Code:</strong> ${data.code}</p>
+                            <p><strong>TLD:</strong> ${data.tld || 'N/A'}</p>
+                            <p><strong>English Name:</strong> ${data.englishName}</p>
+                            <p><strong>Local Name:</strong> ${data.localName || 'N/A'}</p>
+                            <p><strong>Status:</strong> ${data.isActive ? 'Active' : 'Inactive'}</p>
+                            <p><strong>Created:</strong> ${new Date(data.createdAt).toLocaleString()}</p>
+                            <p><strong>Updated:</strong> ${new Date(data.updatedAt).toLocaleString()}</p>
+                        </div>
+                    `;
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Country not found'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Open Edit Modal
+        function openEditModal(id) {
+            const country = currentCountries.find(c => c.id === id);
+            
+            if (!country) {
+                showAlert('Country not found', 'danger');
+                return;
+            }
+
+            document.getElementById('editId').value = country.id;
+            document.getElementById('editCode').value = country.code;
+            document.getElementById('editTld').value = country.tld || '';
+            document.getElementById('editEnglishName').value = country.englishName;
+            document.getElementById('editLocalName').value = country.localName || '';
+            document.getElementById('editIsActive').checked = country.isActive;
+
+            editModal.show();
+        }
+
+        // Update Country
+        async function updateCountry() {
+            const id = document.getElementById('editId').value;
+            const data = {
+                code: document.getElementById('editCode').value.trim().toUpperCase(),
+                tld: document.getElementById('editTld').value.trim(),
+                englishName: document.getElementById('editEnglishName').value.trim(),
+                localName: document.getElementById('editLocalName').value.trim() || null,
+                isActive: document.getElementById('editIsActive').checked
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Countries/${id}`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(data)
+                });
+
+                let result;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    result = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(result);
+
+                if (response.ok) {
+                    showAlert('Country updated successfully!', 'success');
+                    editModal.hide();
+                    getAllCountries(); // Refresh list
+                } else {
+                    showAlert(`Error: ${result.message || result.error || 'Failed to update country'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+
+        // Delete Country
+        async function deleteCountry(id, name) {
+            if (!confirm(`Are you sure you want to delete "${name}"?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Countries/${id}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+
+                if (response.ok) {
+                    // Some APIs return 204 No Content on successful delete
+                    if (response.status === 204) {
+                        updateResponseBox({ message: 'Country deleted successfully' });
+                    } else {
+                        const contentType = response.headers.get('content-type');
+                        if (contentType && contentType.includes('application/json')) {
+                            const result = await response.json();
+                            updateResponseBox(result);
+                        } else {
+                            updateResponseBox({ message: 'Country deleted successfully' });
+                        }
+                    }
+                    showAlert('Country deleted successfully!', 'success');
+                    getAllCountries(); // Refresh list
+                } else {
+                    let result;
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        result = await response.json();
+                    } else {
+                        const text = await response.text();
+                        result = { error: text, statusCode: response.status };
+                    }
+                    updateResponseBox(result);
+                    showAlert(`Error: ${result.message || result.error || 'Failed to delete country'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+    </script>
+</body>
+</html>

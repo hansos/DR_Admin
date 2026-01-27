@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tax Rules API Test - DR Admin</title>
+  <link href="/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/assets/css/test-page.css" rel="stylesheet">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-light">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="/choose-test.html">DR Admin - Tax Rules API</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><span id="userInfo" class="user-info"></span></li>
+          <li class="nav-item"><a href="/choose-test.html" class="btn btn-back">&#8592; Back to Tests</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container-main">
+    <div class="header-card">
+      <h1>&#128176; Tax Rules API Test</h1>
+      <p>Tax rules CRUD and lookup endpoints</p>
+    </div>
+
+    <div id="alertContainer"></div>
+
+    <div class="test-section">
+      <h2 class="section-title">&#128203; Get Tax Rules</h2>
+      <button class="btn btn-primary mb-3" onclick="getAll()">Load All</button>
+      <div class="loading" id="loadingAll"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>
+      <div id="tableContainer"></div>
+    </div>
+
+    <div class="test-section">
+      <h2 class="section-title">&#128065; Lookups</h2>
+      <div class="row mb-3"><div class="col-md-4"><input id="countryCode" class="form-control" placeholder="Country Code" /></div><div class="col-md-4"><input id="calculateAmount" class="form-control" placeholder="Amount" /></div><div class="col-md-4 d-flex"><button class="btn btn-primary" onclick="getByCountry()">By Country</button><button class="btn btn-primary ms-2" onclick="calculate()">Calculate</button></div></div>
+      <div class="row mb-3"><div class="col-md-4"><input id="vatNumber" class="form-control" placeholder="VAT Number" /></div><div class="col-md-8 d-flex"><button class="btn btn-primary" onclick="validateVat()">Validate VAT</button></div></div>
+      <div id="lookupResult"></div>
+    </div>
+
+    <div class="test-section">
+      <h2 class="section-title">&#128225; Last API Response</h2>
+      <div class="response-box" id="responseBox">No API calls made yet...</div>
+    </div>
+  </div>
+
+  <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/assets/js/authClient.js"></script>
+  <script>
+    function showAlert(message,type='info'){ const c=document.getElementById('alertContainer'); c.innerHTML=`<div class="alert alert-${type} alert-dismissible fade show" role="alert">${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`; setTimeout(()=>{ const a=c.querySelector('.alert'); if(a) bootstrap.Alert.getOrCreateInstance(a).close(); },5000); }
+    function updateResponseBox(d){ document.getElementById('responseBox').textContent = JSON.stringify(d,null,2); }
+    function getAuthHeaders(){ const token=authClient.getToken(); return {'Content-Type':'application/json','Authorization': `Bearer ${token}`}; }
+
+    async function getAll(){ const loading=document.getElementById('loadingAll'); const container=document.getElementById('tableContainer'); loading.style.display='block'; container.innerHTML=''; try{ const res=await fetch(`${API_BASE_URL}/api/v1/TaxRules`,{ method:'GET', headers:getAuthHeaders() }); let data; const ct=res.headers.get('content-type'); if(ct && ct.includes('application/json')) data=await res.json(); else { const t=await res.text(); data={ error: t, statusCode: res.status }; } updateResponseBox(data); if(res.ok) document.getElementById('tableContainer').innerHTML = JSON.stringify(data,null,2); else showAlert('Failed','danger'); }catch(err){ showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } finally{ loading.style.display='none'; } }
+
+    async function getByCountry(){ const cc=document.getElementById('countryCode').value.trim(); if(!cc){ showAlert('Provide country code','warning'); return; } try{ const res=await fetch(`${API_BASE_URL}/api/v1/TaxRules/location/${encodeURIComponent(cc)}`,{ method:'GET', headers:getAuthHeaders() }); let data; const ct=res.headers.get('content-type'); if(ct && ct.includes('application/json')) data=await res.json(); else { const t=await res.text(); data={ error: t, statusCode: res.status }; } updateResponseBox(data); if(res.ok) document.getElementById('lookupResult').innerHTML = JSON.stringify(data,null,2); else showAlert('Failed','danger'); }catch(err){ showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } }
+
+    async function calculate(){ const amt=document.getElementById('calculateAmount').value; if(!amt){ showAlert('Provide amount','warning'); return; } try{ const res=await fetch(`${API_BASE_URL}/api/v1/TaxRules/calculate?amount=${encodeURIComponent(amt)}`,{ method:'GET', headers:getAuthHeaders() }); let data; const ct=res.headers.get('content-type'); if(ct && ct.includes('application/json')) data=await res.json(); else { const t=await res.text(); data={ error: t, statusCode: res.status }; } updateResponseBox(data); if(res.ok) document.getElementById('lookupResult').innerHTML = JSON.stringify(data,null,2); else showAlert('Failed','danger'); }catch(err){ showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } }
+
+    async function validateVat(){ const vat=document.getElementById('vatNumber').value.trim(); if(!vat){ showAlert('Provide VAT number','warning'); return; } try{ const res=await fetch(`${API_BASE_URL}/api/v1/TaxRules/validate-vat`,{ method:'POST', headers:getAuthHeaders(), body: JSON.stringify({ vatNumber: vat }) }); let data; const ct=res.headers.get('content-type'); if(ct && ct.includes('application/json')) data=await res.json(); else { const t=await res.text(); data={ error: t, statusCode: res.status }; } updateResponseBox(data); if(res.ok) document.getElementById('lookupResult').innerHTML = JSON.stringify(data,null,2); else showAlert('Failed','danger'); }catch(err){ showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } }
+  </script>
+</body>
+</html>
