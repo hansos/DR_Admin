@@ -115,8 +115,7 @@ public class BillingCycleService : IBillingCycleService
 
             if (string.IsNullOrWhiteSpace(billingCycle.Name))
             {
-                _log.Warning("Billing cycle name cannot be empty);
-                return null;
+                throw new ArgumentException("Billing cycle name cannot be empty");
             }
 
             billingCycle.Code = updateDto.Code?.ToUpper().Trim() ?? updateDto.Name!.ToUpper().Trim();
