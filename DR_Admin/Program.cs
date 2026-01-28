@@ -139,6 +139,11 @@ var exchangeRateSettings = builder.Configuration.GetSection("ExchangeRate").Get<
 builder.Services.AddSingleton(exchangeRateSettings);
 builder.Services.AddSingleton<ExchangeRateLib.Factories.ExchangeRateFactory>();
 
+// Database Backup Settings
+var databaseBackupSettings = builder.Configuration.GetSection("DatabaseBackup").Get<ISPAdmin.Infrastructure.Settings.DatabaseBackupSettings>()
+    ?? new ISPAdmin.Infrastructure.Settings.DatabaseBackupSettings();
+builder.Services.AddSingleton(databaseBackupSettings);
+
 // Domain Lifecycle Workflows - Domain Services
 builder.Services.AddTransient<ISPAdmin.Domain.Services.IDomainEventPublisher, ISPAdmin.Domain.Services.DomainEventPublisher>();
 
@@ -159,6 +164,7 @@ builder.Services.AddHostedService<EmailQueueBackgroundService>();
 builder.Services.AddHostedService<ISPAdmin.BackgroundServices.DomainExpirationMonitorService>();
 builder.Services.AddHostedService<ISPAdmin.BackgroundServices.OutboxProcessorService>();
 builder.Services.AddHostedService<ISPAdmin.BackgroundServices.ExchangeRateUpdateService>();
+builder.Services.AddHostedService<ISPAdmin.BackgroundServices.DatabaseBackupService>();
 
 // Configure CORS from appsettings
 var corsSettings = builder.Configuration.GetSection("CorsSettings");
