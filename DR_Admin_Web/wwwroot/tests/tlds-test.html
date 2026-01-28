@@ -56,20 +56,392 @@
     </div>
   </div>
 
+  <!-- Edit Modal -->
+  <div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">&#9998; Edit TLD</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="editForm">
+            <input type="hidden" id="editId">
+            <div class="mb-3">
+              <label for="editExt" class="form-label">Extension *</label>
+              <input type="text" class="form-control" id="editExt" required>
+            </div>
+            <div class="mb-3">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="editActive">
+                <label class="form-check-label" for="editActive">Is Active</label>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" onclick="updateTld()">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
   <script src="/assets/js/authClient.js"></script>
   <script>
-    function showAlert(message,type='info'){ const c=document.getElementById('alertContainer'); c.innerHTML=`<div class="alert alert-${type} alert-dismissible fade show" role="alert">${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`; setTimeout(()=>{ const a=c.querySelector('.alert'); if(a) bootstrap.Alert.getOrCreateInstance(a).close(); },5000); }
-    function updateResponseBox(d){ document.getElementById('responseBox').textContent = JSON.stringify(d,null,2); }
-    function getAuthHeaders(){ const token=authClient.getToken(); return {'Content-Type':'application/json','Authorization': `Bearer ${token}`}; }
+    let currentTlds = [];
+    let editModal;
 
-    async function getAll(){ const loading=document.getElementById('loadingAll'); const container=document.getElementById('tableContainer'); loading.style.display='block'; container.innerHTML=''; try{ const res=await fetch(`${API_BASE_URL}/api/v1/Tlds`,{ method:'GET', headers:getAuthHeaders() }); let data; const ct=res.headers.get('content-type'); if(ct && ct.includes('application/json')) data=await res.json(); else { const t=await res.text(); data={ error: t, statusCode: res.status }; } updateResponseBox(data); if(res.ok) document.getElementById('tableContainer').innerHTML = JSON.stringify(data,null,2); else showAlert('Failed','danger'); }catch(err){ showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } finally{ loading.style.display='none'; } }
+    window.addEventListener('DOMContentLoaded', async () => {
+      const token = authClient.getToken();
+      if (!token) {
+        window.location.href = '/login.html';
+        return;
+      }
+      const result = await authClient.verifyToken();
+      if (result.authenticated && result.data?.username) {
+        document.getElementById('userInfo').textContent = `Hello, ${result.data.username}!`;
+      }
+      editModal = new bootstrap.Modal(document.getElementById('editModal'));
+      document.getElementById('createForm').addEventListener('submit', handleCreate);
+      getAll();
+    });
 
-    async function getRegistrarsForTld(){ const id=document.getElementById('forTldId').value; if(!id){ showAlert('Provide tld id','warning'); return; } try{ const res=await fetch(`${API_BASE_URL}/api/v1/Tlds/${id}/registrars`,{ method:'GET', headers:getAuthHeaders() }); let data; const ct=res.headers.get('content-type'); if(ct && ct.includes('application/json')) data=await res.json(); else { const t=await res.text(); data={ error: t, statusCode: res.status }; } updateResponseBox(data); if(res.ok) document.getElementById('lookupResult').innerHTML = JSON.stringify(data,null,2); else showAlert('Failed','danger'); }catch(err){ showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } }
+    function showAlert(message, type = 'info') {
+      const c = document.getElementById('alertContainer');
+      c.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+      setTimeout(() => {
+        const a = c.querySelector('.alert');
+        if (a) bootstrap.Alert.getOrCreateInstance(a).close();
+      }, 5000);
+    }
 
-    async function getByExtension(){ const ext=document.getElementById('forExtension').value.trim(); if(!ext){ showAlert('Provide extension','warning'); return; } try{ const res=await fetch(`${API_BASE_URL}/api/v1/Tlds/extension/${encodeURIComponent(ext)}`,{ method:'GET', headers:getAuthHeaders() }); let data; const ct=res.headers.get('content-type'); if(ct && ct.includes('application/json')) data=await res.json(); else { const t=await res.text(); data={ error: t, statusCode: res.status }; } updateResponseBox(data); if(res.ok) document.getElementById('lookupResult').innerHTML = JSON.stringify(data,null,2); else showAlert('Failed','danger'); }catch(err){ showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } }
+    function updateResponseBox(d) {
+      document.getElementById('responseBox').textContent = JSON.stringify(d, null, 2);
+    }
 
-    async function getActive(){ try{ const res=await fetch(`${API_BASE_URL}/api/v1/Tlds/active`,{ method:'GET', headers:getAuthHeaders() }); let data; const ct=res.headers.get('content-type'); if(ct && ct.includes('application/json')) data=await res.json(); else { const t=await res.text(); data={ error: t, statusCode: res.status }; } updateResponseBox(data); if(res.ok) document.getElementById('lookupResult').innerHTML = JSON.stringify(data,null,2); else showAlert('Failed','danger'); }catch(err){ showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } }
+    function getAuthHeaders() {
+      const token = authClient.getToken();
+      return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+    }
+
+    async function handleCreate(e) {
+      e.preventDefault();
+      const data = {
+        extension: document.getElementById('createExt').value.trim(),
+        isActive: document.getElementById('createActive').value === 'true'
+      };
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/v1/Tlds`, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify(data)
+        });
+        let result;
+        const ct = res.headers.get('content-type');
+        if (ct && ct.includes('application/json')) result = await res.json();
+        else {
+          const t = await res.text();
+          result = { error: t, statusCode: res.status };
+        }
+        updateResponseBox(result);
+        if (res.ok) {
+          showAlert('TLD created successfully!', 'success');
+          document.getElementById('createForm').reset();
+          getAll();
+        } else {
+          showAlert(`Error: ${result.message || result.error || 'Failed to create TLD'}`, 'danger');
+        }
+      } catch (err) {
+        showAlert(`Error: ${err.message}`, 'danger');
+        updateResponseBox({ error: err.message });
+      }
+    }
+
+    async function getAll() {
+      const loading = document.getElementById('loadingAll');
+      const container = document.getElementById('tableContainer');
+      loading.style.display = 'block';
+      container.innerHTML = '';
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/v1/Tlds`, {
+          method: 'GET',
+          headers: getAuthHeaders()
+        });
+        let data;
+        const ct = res.headers.get('content-type');
+        if (ct && ct.includes('application/json')) data = await res.json();
+        else {
+          const t = await res.text();
+          data = { error: t, statusCode: res.status };
+        }
+        updateResponseBox(data);
+        if (res.ok) {
+          currentTlds = data;
+          renderTldsTable(data);
+        } else {
+          showAlert(`Error: ${data.message || data.error || 'Failed to fetch TLDs'}`, 'danger');
+        }
+      } catch (err) {
+        showAlert(`Error: ${err.message}`, 'danger');
+        updateResponseBox({ error: err.message });
+      } finally {
+        loading.style.display = 'none';
+      }
+    }
+
+    function renderTldsTable(tlds) {
+      const container = document.getElementById('tableContainer');
+      if (!tlds || tlds.length === 0) {
+        container.innerHTML = '<div class="empty-state">No TLDs found</div>';
+        return;
+      }
+      const tableHtml = `
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Extension</th>
+                <th>Status</th>
+                <th>Created At</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${tlds.map(tld => `
+                <tr>
+                  <td>${tld.id}</td>
+                  <td><strong>${tld.extension}</strong></td>
+                  <td>
+                    <span class="badge ${tld.isActive ? 'badge-success' : 'badge-secondary'}">
+                      ${tld.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                  </td>
+                  <td>${new Date(tld.createdAt).toLocaleString()}</td>
+                  <td>
+                    <div class="action-buttons">
+                      <button class="btn btn-sm btn-warning" onclick="openEditModal(${tld.id})">Edit</button>
+                      <button class="btn btn-sm btn-danger" onclick="deleteTld(${tld.id}, '${tld.extension}')">Delete</button>
+                    </div>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+      container.innerHTML = tableHtml;
+    }
+
+    function openEditModal(id) {
+      const tld = currentTlds.find(t => t.id === id);
+      if (!tld) {
+        showAlert('TLD not found', 'danger');
+        return;
+      }
+      document.getElementById('editId').value = tld.id;
+      document.getElementById('editExt').value = tld.extension;
+      document.getElementById('editActive').checked = tld.isActive;
+      editModal.show();
+    }
+
+    async function updateTld() {
+      const id = document.getElementById('editId').value;
+      const data = {
+        extension: document.getElementById('editExt').value.trim(),
+        isActive: document.getElementById('editActive').checked
+      };
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/v1/Tlds/${id}`, {
+          method: 'PUT',
+          headers: getAuthHeaders(),
+          body: JSON.stringify(data)
+        });
+        let result;
+        const ct = res.headers.get('content-type');
+        if (ct && ct.includes('application/json')) result = await res.json();
+        else {
+          const t = await res.text();
+          result = { error: t, statusCode: res.status };
+        }
+        updateResponseBox(result);
+        if (res.ok) {
+          showAlert('TLD updated successfully!', 'success');
+          editModal.hide();
+          getAll();
+        } else {
+          showAlert(`Error: ${result.message || result.error || 'Failed to update TLD'}`, 'danger');
+        }
+      } catch (err) {
+        showAlert(`Error: ${err.message}`, 'danger');
+        updateResponseBox({ error: err.message });
+      }
+    }
+
+    async function deleteTld(id, ext) {
+      if (!confirm(`Are you sure you want to delete TLD "${ext}"?`)) return;
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/v1/Tlds/${id}`, {
+          method: 'DELETE',
+          headers: getAuthHeaders()
+        });
+        let result;
+        const ct = res.headers.get('content-type');
+        if (ct && ct.includes('application/json')) result = await res.json();
+        else {
+          const t = await res.text();
+          result = { error: t, statusCode: res.status };
+        }
+        updateResponseBox(result);
+        if (res.ok) {
+          showAlert('TLD deleted successfully!', 'success');
+          getAll();
+        } else {
+          showAlert(`Error: ${result.message || result.error || 'Failed to delete TLD'}`, 'danger');
+        }
+      } catch (err) {
+        showAlert(`Error: ${err.message}`, 'danger');
+        updateResponseBox({ error: err.message });
+      }
+    }
+
+    async function getRegistrarsForTld() {
+      const id = document.getElementById('forTldId').value;
+      if (!id) {
+        showAlert('Provide TLD ID', 'warning');
+        return;
+      }
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/v1/Tlds/${id}/registrars`, {
+          method: 'GET',
+          headers: getAuthHeaders()
+        });
+        let data;
+        const ct = res.headers.get('content-type');
+        if (ct && ct.includes('application/json')) data = await res.json();
+        else {
+          const t = await res.text();
+          data = { error: t, statusCode: res.status };
+        }
+        updateResponseBox(data);
+        if (res.ok) {
+          renderLookupTable(data, 'Registrars for TLD');
+        } else {
+          showAlert(`Error: ${data.message || data.error || 'Failed'}`, 'danger');
+        }
+      } catch (err) {
+        showAlert(`Error: ${err.message}`, 'danger');
+        updateResponseBox({ error: err.message });
+      }
+    }
+
+    async function getByExtension() {
+      const ext = document.getElementById('forExtension').value.trim();
+      if (!ext) {
+        showAlert('Provide extension', 'warning');
+        return;
+      }
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/v1/Tlds/extension/${encodeURIComponent(ext)}`, {
+          method: 'GET',
+          headers: getAuthHeaders()
+        });
+        let data;
+        const ct = res.headers.get('content-type');
+        if (ct && ct.includes('application/json')) data = await res.json();
+        else {
+          const t = await res.text();
+          data = { error: t, statusCode: res.status };
+        }
+        updateResponseBox(data);
+        if (res.ok) {
+          renderLookupSingle(data);
+        } else {
+          showAlert(`Error: ${data.message || data.error || 'Failed'}`, 'danger');
+        }
+      } catch (err) {
+        showAlert(`Error: ${err.message}`, 'danger');
+        updateResponseBox({ error: err.message });
+      }
+    }
+
+    async function getActive() {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/v1/Tlds/active`, {
+          method: 'GET',
+          headers: getAuthHeaders()
+        });
+        let data;
+        const ct = res.headers.get('content-type');
+        if (ct && ct.includes('application/json')) data = await res.json();
+        else {
+          const t = await res.text();
+          data = { error: t, statusCode: res.status };
+        }
+        updateResponseBox(data);
+        if (res.ok) {
+          renderLookupTable(data, 'Active TLDs');
+        } else {
+          showAlert(`Error: ${data.message || data.error || 'Failed'}`, 'danger');
+        }
+      } catch (err) {
+        showAlert(`Error: ${err.message}`, 'danger');
+        updateResponseBox({ error: err.message });
+      }
+    }
+
+    function renderLookupTable(items, title) {
+      const container = document.getElementById('lookupResult');
+      if (!items || items.length === 0) {
+        container.innerHTML = `<div class="alert alert-info">${title}: No items found</div>`;
+        return;
+      }
+      const isRegistrar = items[0].hasOwnProperty('name') || items[0].hasOwnProperty('code');
+      const tableHtml = `
+        <div class="alert alert-success"><strong>${title}</strong> (${items.length} found)</div>
+        <div class="table-responsive">
+          <table class="table table-sm">
+            <thead>
+              <tr>
+                <th>ID</th>
+                ${isRegistrar ? '<th>Name</th><th>Code</th>' : '<th>Extension</th>'}
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${items.map(item => `
+                <tr>
+                  <td>${item.id}</td>
+                  ${isRegistrar ? `<td>${item.name || '-'}</td><td>${item.code || '-'}</td>` : `<td><strong>${item.extension}</strong></td>`}
+                  <td><span class="badge ${item.isActive ? 'badge-success' : 'badge-secondary'}">${item.isActive ? 'Active' : 'Inactive'}</span></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+      container.innerHTML = tableHtml;
+    }
+
+    function renderLookupSingle(item) {
+      const container = document.getElementById('lookupResult');
+      if (!item) {
+        container.innerHTML = '<div class="alert alert-warning">TLD not found</div>';
+        return;
+      }
+      container.innerHTML = `
+        <div class="alert alert-success">
+          <h5>TLD Found:</h5>
+          <p><strong>ID:</strong> ${item.id}</p>
+          <p><strong>Extension:</strong> ${item.extension}</p>
+          <p><strong>Status:</strong> ${item.isActive ? 'Active' : 'Inactive'}</p>
+          <p><strong>Created:</strong> ${new Date(item.createdAt).toLocaleString()}</p>
+          <p><strong>Updated:</strong> ${new Date(item.updatedAt).toLocaleString()}</p>
+        </div>
+      `;
+    }
   </script>
 </body>
 </html>

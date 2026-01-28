@@ -58,7 +58,7 @@ public class ApplicationDbContext : DbContext
 
             case Customer customer:
                 customer.NormalizedName = NormalizationHelper.Normalize(customer.Name) ?? string.Empty;
-                customer.NormalizedCompanyName = NormalizationHelper.Normalize(customer.CompanyName);
+                customer.NormalizedCustomerName = NormalizationHelper.Normalize(customer.CustomerName);
                 customer.NormalizedContactPerson = NormalizationHelper.Normalize(customer.ContactPerson);
                 break;
 
@@ -95,10 +95,16 @@ public class ApplicationDbContext : DbContext
             case User user:
                 user.NormalizedUsername = NormalizationHelper.Normalize(user.Username) ?? string.Empty;
                 break;
+
+            case ContactPerson contactPerson:
+                contactPerson.NormalizedFirstName = NormalizationHelper.Normalize(contactPerson.FirstName) ?? string.Empty;
+                contactPerson.NormalizedLastName = NormalizationHelper.Normalize(contactPerson.LastName) ?? string.Empty;
+                break;
         }
     }
 
     public DbSet<Customer> Customers { get; set; }
+    public DbSet<ContactPerson> ContactPersons { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<Role> Roles { get; set; }
     public DbSet<UserRole> UserRoles { get; set; }
@@ -174,7 +180,7 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.State).HasMaxLength(100);
             entity.Property(e => e.PostalCode).HasMaxLength(20);
             entity.Property(e => e.CountryCode).HasMaxLength(2);
-            entity.Property(e => e.CompanyName).HasMaxLength(200);
+            entity.Property(e => e.CustomerName).HasMaxLength(200);
             entity.Property(e => e.TaxId).HasMaxLength(50);
             entity.Property(e => e.VatNumber).HasMaxLength(50);
             entity.Property(e => e.ContactPerson).HasMaxLength(200);
@@ -185,7 +191,7 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.BillingEmail).HasMaxLength(200);
             entity.Property(e => e.PreferredPaymentMethod).HasMaxLength(50);
             entity.Property(e => e.NormalizedName).IsRequired().HasMaxLength(200);
-            entity.Property(e => e.NormalizedCompanyName).HasMaxLength(200);
+            entity.Property(e => e.NormalizedCustomerName).HasMaxLength(200);
             entity.Property(e => e.NormalizedContactPerson).HasMaxLength(200);
             
             entity.HasIndex(e => e.Email);
@@ -194,13 +200,39 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => e.VatNumber);
             entity.HasIndex(e => e.IsActive);
             entity.HasIndex(e => e.NormalizedName);
-            entity.HasIndex(e => e.NormalizedCompanyName);
+            entity.HasIndex(e => e.NormalizedCustomerName);
             
             entity.HasOne(e => e.Country)
                 .WithMany(c => c.Customers)
                 .HasForeignKey(e => e.CountryCode)
                 .HasPrincipalKey(c => c.Code)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ContactPerson configuration
+        modelBuilder.Entity<ContactPerson>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.FirstName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.LastName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Email).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Phone).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Position).HasMaxLength(100);
+            entity.Property(e => e.Department).HasMaxLength(100);
+            entity.Property(e => e.Notes).HasMaxLength(2000);
+            entity.Property(e => e.NormalizedFirstName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.NormalizedLastName).IsRequired().HasMaxLength(100);
+            
+            entity.HasIndex(e => e.CustomerId);
+            entity.HasIndex(e => e.Email);
+            entity.HasIndex(e => e.IsPrimary);
+            entity.HasIndex(e => e.IsActive);
+            entity.HasIndex(e => new { e.NormalizedFirstName, e.NormalizedLastName });
+            
+            entity.HasOne(e => e.Customer)
+                .WithMany()
+                .HasForeignKey(e => e.CustomerId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         // User configuration

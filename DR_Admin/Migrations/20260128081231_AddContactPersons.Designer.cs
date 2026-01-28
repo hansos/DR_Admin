@@ -3,6 +3,7 @@ using System;
 using ISPAdmin.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ISPAdmin.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260128081231_AddContactPersons")]
+    partial class AddContactPersons
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.2");
@@ -599,6 +602,10 @@ namespace ISPAdmin.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("CompanyName")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("ContactPerson")
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
@@ -612,10 +619,6 @@ namespace ISPAdmin.Migrations
 
                     b.Property<decimal>("CreditLimit")
                         .HasPrecision(18, 2)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("CustomerName")
-                        .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Email")
@@ -634,11 +637,11 @@ namespace ISPAdmin.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("NormalizedContactPerson")
+                    b.Property<string>("NormalizedCompanyName")
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("NormalizedCustomerName")
+                    b.Property<string>("NormalizedContactPerson")
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
@@ -698,7 +701,7 @@ namespace ISPAdmin.Migrations
 
                     b.HasIndex("IsActive");
 
-                    b.HasIndex("NormalizedCustomerName");
+                    b.HasIndex("NormalizedCompanyName");
 
                     b.HasIndex("NormalizedName");
 

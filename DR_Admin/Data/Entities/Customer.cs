@@ -10,7 +10,7 @@ public class Customer : EntityBase
     public string State { get; set; } = string.Empty;
     public string PostalCode { get; set; } = string.Empty;
     public string? CountryCode { get; set; }
-    public string? CompanyName { get; set; }
+    public string? CustomerName { get; set; }
     public string? TaxId { get; set; }
     public string? VatNumber { get; set; }
     public string? ContactPerson { get; set; }
@@ -24,9 +24,9 @@ public class Customer : EntityBase
     public string NormalizedName { get; set; } = string.Empty;
 
     /// <summary>
-    /// Normalized version of CompanyName for case-insensitive searches
+    /// Normalized version of CustomerName for case-insensitive searches
     /// </summary>
-    public string? NormalizedCompanyName { get; set; }
+    public string? NormalizedCustomerName { get; set; }
 
     /// <summary>
     /// Normalized version of ContactPerson for case-insensitive searches

@@ -80,7 +80,7 @@ public class CustomerService : ICustomerService
                 State = createDto.State,
                 PostalCode = createDto.PostalCode,
                 CountryCode = createDto.CountryCode,
-                CompanyName = createDto.CompanyName,
+                CustomerName = createDto.CustomerName,
                 TaxId = createDto.TaxId,
                 VatNumber = createDto.VatNumber,
                 ContactPerson = createDto.ContactPerson,
@@ -133,7 +133,7 @@ public class CustomerService : ICustomerService
             customer.State = updateDto.State;
             customer.PostalCode = updateDto.PostalCode;
             customer.CountryCode = updateDto.CountryCode;
-            customer.CompanyName = updateDto.CompanyName;
+            customer.CustomerName = updateDto.CustomerName;
             customer.TaxId = updateDto.TaxId;
             customer.VatNumber = updateDto.VatNumber;
             customer.ContactPerson = updateDto.ContactPerson;
@@ -200,7 +200,7 @@ public class CustomerService : ICustomerService
             State = customer.State,
             PostalCode = customer.PostalCode,
             CountryCode = customer.CountryCode,
-            CompanyName = customer.CompanyName,
+            CustomerName = customer.CustomerName,
             TaxId = customer.TaxId,
             VatNumber = customer.VatNumber,
             ContactPerson = customer.ContactPerson,

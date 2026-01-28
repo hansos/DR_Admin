@@ -305,7 +305,7 @@ public class CustomersControllerTests : IClassFixture<TestWebApplicationFactory>
             State = "UC",
             PostalCode = "99999",
             IsCompany = true,
-            CompanyName = "Updated Company",
+            CustomerName = "Updated Company",
             IsActive = true,
             Status = "Active",
             CreditLimit = 5000
@@ -523,7 +523,7 @@ public class CustomersControllerTests : IClassFixture<TestWebApplicationFactory>
             State = "UC",
             PostalCode = "22222",
             IsCompany = true,
-            CompanyName = "CRUD Company Inc.",
+            CustomerName = "CRUD Company Inc.",
             IsActive = true,
             Status = "Active",
             CreditLimit = 5000

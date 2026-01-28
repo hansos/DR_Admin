@@ -1,0 +1,51 @@
+using ISPAdmin.DTOs;
+
+namespace ISPAdmin.Services;
+
+/// <summary>
+/// Service interface for managing contact persons associated with customers
+/// </summary>
+public interface IContactPersonService
+{
+    /// <summary>
+    /// Retrieves all contact persons in the system
+    /// </summary>
+    /// <returns>A collection of contact person DTOs</returns>
+    Task<IEnumerable<ContactPersonDto>> GetAllContactPersonsAsync();
+    
+    /// <summary>
+    /// Retrieves all contact persons for a specific customer
+    /// </summary>
+    /// <param name="customerId">The customer ID</param>
+    /// <returns>A collection of contact person DTOs for the specified customer</returns>
+    Task<IEnumerable<ContactPersonDto>> GetContactPersonsByCustomerIdAsync(int customerId);
+    
+    /// <summary>
+    /// Retrieves a specific contact person by their unique identifier
+    /// </summary>
+    /// <param name="id">The contact person ID</param>
+    /// <returns>The contact person DTO if found, otherwise null</returns>
+    Task<ContactPersonDto?> GetContactPersonByIdAsync(int id);
+    
+    /// <summary>
+    /// Creates a new contact person
+    /// </summary>
+    /// <param name="createDto">The contact person creation data</param>
+    /// <returns>The newly created contact person DTO</returns>
+    Task<ContactPersonDto> CreateContactPersonAsync(CreateContactPersonDto createDto);
+    
+    /// <summary>
+    /// Updates an existing contact person
+    /// </summary>
+    /// <param name="id">The contact person ID</param>
+    /// <param name="updateDto">The contact person update data</param>
+    /// <returns>The updated contact person DTO if found, otherwise null</returns>
+    Task<ContactPersonDto?> UpdateContactPersonAsync(int id, UpdateContactPersonDto updateDto);
+    
+    /// <summary>
+    /// Deletes a contact person
+    /// </summary>
+    /// <param name="id">The contact person ID</param>
+    /// <returns>True if the contact person was deleted, otherwise false</returns>
+    Task<bool> DeleteContactPersonAsync(int id);
+}

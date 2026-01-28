@@ -51,9 +51,9 @@ public class CustomerDto
     public string? CountryCode { get; set; }
     
     /// <summary>
-    /// Gets or sets the company name (if customer is a company)
+    /// Gets or sets the customer name (company or individual name)
     /// </summary>
-    public string? CompanyName { get; set; }
+    public string? CustomerName { get; set; }
     
     /// <summary>
     /// Gets or sets the tax identification number
@@ -178,9 +178,9 @@ public class CreateCustomerDto
     public string? CountryCode { get; set; }
     
     /// <summary>
-    /// Company name (if customer is a company)
+    /// Customer name (company or individual name)
     /// </summary>
-    public string? CompanyName { get; set; }
+    public string? CustomerName { get; set; }
     
     /// <summary>
     /// Tax identification number
@@ -290,9 +290,9 @@ public class UpdateCustomerDto
     public string? CountryCode { get; set; }
     
     /// <summary>
-    /// Company name (if customer is a company)
+    /// Customer name (company or individual name)
     /// </summary>
-    public string? CompanyName { get; set; }
+    public string? CustomerName { get; set; }
     
     /// <summary>
     /// Tax identification number

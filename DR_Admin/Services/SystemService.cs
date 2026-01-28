@@ -141,7 +141,7 @@ public class SystemService : ISystemService
         foreach (var customer in customers)
         {
             customer.NormalizedName = NormalizationHelper.Normalize(customer.Name) ?? string.Empty;
-            customer.NormalizedCompanyName = NormalizationHelper.Normalize(customer.CompanyName);
+            customer.NormalizedCustomerName = NormalizationHelper.Normalize(customer.CustomerName);
             customer.NormalizedContactPerson = NormalizationHelper.Normalize(customer.ContactPerson);
         }
 
