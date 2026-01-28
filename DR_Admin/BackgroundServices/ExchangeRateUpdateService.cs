@@ -36,11 +36,20 @@ public class ExchangeRateUpdateService : BackgroundService
     {
         _log.Information("Exchange Rate Update Service starting");
 
-        // Update on startup if configured
+        // Update on startup if configured and allowed by constraints
         if (_exchangeRateSettings.UpdateOnStartup)
         {
-            _log.Information("UpdateOnStartup is enabled, updating exchange rates immediately");
-            await UpdateExchangeRatesAsync(stoppingToken);
+            _log.Information("UpdateOnStartup is enabled, checking if update is allowed");
+            
+            if (await IsUpdateAllowedAsync(stoppingToken))
+            {
+                _log.Information("Update constraints satisfied, updating exchange rates on startup");
+                await UpdateExchangeRatesAsync(stoppingToken);
+            }
+            else
+            {
+                _log.Information("Update constraints not satisfied (MaxUpdatesPerDay or HoursBetweenUpdates), skipping startup update");
+            }
         }
 
         // Continue with periodic updates
@@ -116,7 +125,6 @@ public class ExchangeRateUpdateService : BackgroundService
         var ratesDownloadedCount = 0;
         string? errorMessage = null;
         string? errorCode = null;
-        bool success = false;
 
         try
         {
@@ -232,8 +240,7 @@ public class ExchangeRateUpdateService : BackgroundService
                         .FirstOrDefaultAsync(r => 
                             r.BaseCurrency == baseCurrency &&
                             r.TargetCurrency == targetCurrency &&
-                            r.IsActive &&
-                            r.Source == source,
+                            r.IsActive,
                             stoppingToken);
 
                     if (existingRate != null)
@@ -319,7 +326,6 @@ public class ExchangeRateUpdateService : BackgroundService
             // Save all changes
             var savedCount = await dbContext.SaveChangesAsync(stoppingToken);
 
-            success = true;
             _log.Information(
                 "Exchange rate update completed: {Added} added, {Updated} updated, {Total} total changes saved", 
                 addedCount, updatedCount, savedCount);
@@ -363,6 +369,71 @@ public class ExchangeRateUpdateService : BackgroundService
             {
                 _log.Error(logEx, "Failed to log exchange rate download failure");
             }
+        }
+    }
+
+    /// <summary>
+    /// Checks if an update is allowed based on MaxUpdatesPerDay and HoursBetweenUpdates constraints
+    /// by querying the ExchangeRateDownloadLogs table
+    /// </summary>
+    private async Task<bool> IsUpdateAllowedAsync(CancellationToken stoppingToken)
+    {
+        try
+        {
+            using var scope = _serviceProvider.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var source = MapProviderToSource(_exchangeRateSettings.Provider);
+            var now = DateTime.UtcNow;
+            var todayStart = now.Date;
+
+            // Check HoursBetweenUpdates constraint
+            // Get the most recent successful download
+            var lastSuccessfulDownload = await dbContext.ExchangeRateDownloadLogs
+                .Where(log => log.Success && log.Source == source)
+                .OrderByDescending(log => log.DownloadTimestamp)
+                .FirstOrDefaultAsync(stoppingToken);
+
+            if (lastSuccessfulDownload != null)
+            {
+                var timeSinceLastDownload = now - lastSuccessfulDownload.DownloadTimestamp;
+                if (timeSinceLastDownload.TotalHours < _exchangeRateSettings.HoursBetweenUpdates)
+                {
+                    _log.Information(
+                        "Update not allowed: Only {Hours:F2} hours since last download, minimum is {MinHours} hours",
+                        timeSinceLastDownload.TotalHours,
+                        _exchangeRateSettings.HoursBetweenUpdates);
+                    return false;
+                }
+            }
+
+            // Check MaxUpdatesPerDay constraint (0 = unlimited)
+            if (_exchangeRateSettings.MaxUpdatesPerDay > 0)
+            {
+                var downloadsToday = await dbContext.ExchangeRateDownloadLogs
+                    .Where(log => log.Success && 
+                                  log.Source == source && 
+                                  log.DownloadTimestamp >= todayStart &&
+                                  log.TargetCurrency == null) // Only count summary/bulk downloads
+                    .CountAsync(stoppingToken);
+
+                if (downloadsToday >= _exchangeRateSettings.MaxUpdatesPerDay)
+                {
+                    _log.Information(
+                        "Update not allowed: Already performed {Count} downloads today, maximum is {Max}",
+                        downloadsToday,
+                        _exchangeRateSettings.MaxUpdatesPerDay);
+                    return false;
+                }
+            }
+
+            _log.Information("Update is allowed based on download log constraints");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error checking if update is allowed, defaulting to allow");
+            // If we can't check the logs, allow the update to proceed
+            return true;
         }
     }
 
