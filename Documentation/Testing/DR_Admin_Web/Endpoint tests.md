@@ -31,7 +31,7 @@ Endpoint tests using DR_Admin_Web
 | `RegistrarsController`                   |        |                                                                                                                         |
 | `RegistrarTldsController`                |        |                                                                                                                         |
 | `ResellerCompaniesController`            | ISSUE  | - Not possible to register company                                                                                      |
-| `RolesController`                        | ISSUE  | - Cannot register rolesD                                                                                                |
+| `RolesController`                        | ISSUE  | - Cannot register roles                                                                                                 |
 | `SalesAgentsController`                  | ISSUE  | - Should be related to a user                                                                                           |
 | `SentEmailsController`                   | ISSUE  | - Test when i'ts possible to send mails                                                                                 |
 | `ServerControlPanelsController`          |        |                                                                                                                         |
@@ -45,5 +45,5 @@ Endpoint tests using DR_Admin_Web
 | `TaxRulesController`                     | ISSUES | - Not all endpoints are included.                                                                                       |
 | `TldsController`                         | OK     |                                                                                                                         |
 | `TokensController`                       |        |                                                                                                                         |
-| `UnitsController`                        | ISSUES | - Not all endpoints are included.                                                                                       |
+| `UnitsController`                        | OK     |                                                                                                                         |
 | `UsersController`                        | ISSUES | - Get all users presents json only.<br>- Not all endpoints are included.<br>- Properties missing from POST              |

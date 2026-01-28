@@ -96,6 +96,10 @@ public class ApplicationDbContext : DbContext
                 user.NormalizedUsername = NormalizationHelper.Normalize(user.Username) ?? string.Empty;
                 break;
 
+            case Unit unit:
+                unit.Code = NormalizationHelper.Normalize(unit.Code) ?? string.Empty;
+                break;
+
             case ContactPerson contactPerson:
                 contactPerson.NormalizedFirstName = NormalizationHelper.Normalize(contactPerson.FirstName) ?? string.Empty;
                 contactPerson.NormalizedLastName = NormalizationHelper.Normalize(contactPerson.LastName) ?? string.Empty;

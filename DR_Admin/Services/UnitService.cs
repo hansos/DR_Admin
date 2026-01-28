@@ -1,6 +1,7 @@
 using ISPAdmin.Data;
 using ISPAdmin.Data.Entities;
 using ISPAdmin.DTOs;
+using ISPAdmin.Utilities;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -73,7 +74,7 @@ public class UnitService : IUnitService
             
             var unit = await _context.Units
                 .AsNoTracking()
-                .FirstOrDefaultAsync(u => u.Code == code && u.DeletedAt == null);
+                .FirstOrDefaultAsync(u => u.Code == NormalizationHelper.Normalize(code) && u.DeletedAt == null);
 
             if (unit == null)
             {
