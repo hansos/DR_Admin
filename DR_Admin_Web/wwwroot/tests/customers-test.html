@@ -116,25 +116,23 @@
                 <!-- Tax and Company Information -->
                 <h5 class="mb-3 mt-4" style="color: #667eea; font-weight: 600;">Tax & Company Information</h5>
                 <div class="row">
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-4 mb-3">
+                        <label for="createIsCompany" class="form-label">Customer Type *</label>
+                        <select class="form-control" id="createIsCompany" required>
+                            <option value="false">Individual</option>
+                            <option value="true">Company</option>
+                        </select>
+                        <small class="text-muted">Select if this is a company or individual</small>
+                    </div>
+                    <div class="col-md-4 mb-3">
                         <label for="createTaxId" class="form-label">Tax ID</label>
                         <input type="text" class="form-control" id="createTaxId" placeholder="e.g., 12-3456789">
                         <small class="text-muted">Tax identification number</small>
                     </div>
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-4 mb-3">
                         <label for="createVatNumber" class="form-label">VAT Number</label>
                         <input type="text" class="form-control" id="createVatNumber" placeholder="e.g., GB123456789">
                         <small class="text-muted">Value Added Tax number</small>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="createIsCompany">
-                            <label class="form-check-label" for="createIsCompany">
-                                Is Company
-                            </label>
-                        </div>
                     </div>
                 </div>
 
@@ -415,7 +413,7 @@
                 taxId: document.getElementById('createTaxId').value.trim() || null,
                 vatNumber: document.getElementById('createVatNumber').value.trim() || null,
                 contactPerson: document.getElementById('createContactPerson').value.trim() || null,
-                isCompany: document.getElementById('createIsCompany').checked,
+                isCompany: document.getElementById('createIsCompany').value === 'true',
                 isActive: document.getElementById('createIsActive').checked,
                 status: document.getElementById('createStatus').value || null,
                 creditLimit: parseFloat(document.getElementById('createCreditLimit').value) || 0,
@@ -448,6 +446,7 @@
                     document.getElementById('createForm').reset();
                     document.getElementById('createIsActive').checked = true;
                     document.getElementById('createCreditLimit').value = 0;
+                    document.getElementById('createIsCompany').value = 'false';
                     getAllCustomers(); // Refresh list
                 } else {
                     showAlert(`Error: ${result.message || result.error || 'Failed to create customer'}`, 'danger');
