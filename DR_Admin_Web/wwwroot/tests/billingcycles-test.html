@@ -65,24 +65,12 @@
                 </div>
                 <div class="row">
                     <div class="col-md-4 mb-3">
-                        <label for="createDurationDays" class="form-label">Duration (Days)</label>
-                        <input type="number" class="form-control" id="createDurationDays" placeholder="e.g., 30" min="1">
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <label for="createDurationMonths" class="form-label">Duration (Months)</label>
-                        <input type="number" class="form-control" id="createDurationMonths" placeholder="e.g., 1" min="0">
+                        <label for="createDurationInDays" class="form-label">Duration (Days)</label>
+                        <input type="number" class="form-control" id="createDurationInDays" placeholder="e.g., 30" min="0" value="0">
                     </div>
                     <div class="col-md-4 mb-3">
                         <label for="createSortOrder" class="form-label">Sort Order</label>
                         <input type="number" class="form-control" id="createSortOrder" placeholder="e.g., 1" value="0">
-                    </div>
-                </div>
-                <div class="mb-3">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="createIsActive" checked>
-                        <label class="form-check-label" for="createIsActive">
-                            Is Active
-                        </label>
                     </div>
                 </div>
                 <button type="submit" class="btn btn-primary">Create Billing Cycle</button>
@@ -153,24 +141,12 @@
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="editDurationDays" class="form-label">Duration (Days)</label>
-                                <input type="number" class="form-control" id="editDurationDays" min="1">
+                                <label for="editDurationInDays" class="form-label">Duration (Days)</label>
+                                <input type="number" class="form-control" id="editDurationInDays" min="0">
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="editDurationMonths" class="form-label">Duration (Months)</label>
-                                <input type="number" class="form-control" id="editDurationMonths" min="0">
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="editSortOrder" class="form-label">Sort Order</label>
-                            <input type="number" class="form-control" id="editSortOrder">
-                        </div>
-                        <div class="mb-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="editIsActive">
-                                <label class="form-check-label" for="editIsActive">
-                                    Is Active
-                                </label>
+                                <label for="editSortOrder" class="form-label">Sort Order</label>
+                                <input type="number" class="form-control" id="editSortOrder">
                             </div>
                         </div>
                     </form>
@@ -247,6 +223,15 @@
             responseBox.textContent = JSON.stringify(data, null, 2);
         }
 
+        // Parse integer but allow 0; return null when input empty or invalid
+        function parseNullableInt(value) {
+            if (value === null || value === undefined) return null;
+            const s = String(value).trim();
+            if (s === '') return null;
+            const n = parseInt(s, 10);
+            return Number.isFinite(n) ? n : null;
+        }
+
         // Get authorization headers
         function getAuthHeaders() {
             const token = authClient.getToken();
@@ -260,15 +245,17 @@
         async function handleCreate(e) {
             e.preventDefault();
             
+            const daysValue = document.getElementById('createDurationInDays').value;
+            
             const data = {
                 name: document.getElementById('createName').value.trim(),
-                code: document.getElementById('createCode').value.trim() || null,
-                description: document.getElementById('createDescription').value.trim() || null,
-                durationDays: parseInt(document.getElementById('createDurationDays').value) || null,
-                durationMonths: parseInt(document.getElementById('createDurationMonths').value) || null,
-                sortOrder: parseInt(document.getElementById('createSortOrder').value) || 0,
-                isActive: document.getElementById('createIsActive').checked
+                code: document.getElementById('createCode').value.trim(),
+                description: document.getElementById('createDescription').value.trim(),
+                durationInDays: daysValue ? parseInt(daysValue, 10) : 0,
+                sortOrder: parseInt(document.getElementById('createSortOrder').value, 10) || 0
             };
+
+            console.log('Creating billing cycle with data:', data);
 
             try {
                 const response = await fetch(`${API_BASE_URL}/api/v1/BillingCycles`, {
@@ -290,7 +277,7 @@
                 if (response.ok) {
                     showAlert('Billing Cycle created successfully!', 'success');
                     document.getElementById('createForm').reset();
-                    document.getElementById('createIsActive').checked = true;
+                    document.getElementById('createDurationInDays').value = 0;
                     document.getElementById('createSortOrder').value = 0;
                     getAllBillingCycles(); // Refresh list
                 } else {
@@ -355,40 +342,25 @@
                         <thead>
                             <tr>
                                 <th>ID</th>
-                                <th>Name</th>
                                 <th>Code</th>
+                                <th>Name</th>
                                 <th>Description</th>
-                                <th>Duration</th>
+                                <th>Duration (Days)</th>
                                 <th>Sort Order</th>
-                                <th>Status</th>
                                 <th>Created At</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             ${billingCycles.map(cycle => {
-                                let duration = '';
-                                if (cycle.durationMonths) {
-                                    duration = `${cycle.durationMonths} month${cycle.durationMonths > 1 ? 's' : ''}`;
-                                } else if (cycle.durationDays) {
-                                    duration = `${cycle.durationDays} day${cycle.durationDays > 1 ? 's' : ''}`;
-                                } else {
-                                    duration = '-';
-                                }
-                                
                                 return `
                                     <tr>
                                         <td>${cycle.id}</td>
-                                        <td><strong>${cycle.name}</strong></td>
-                                        <td>${cycle.code || '-'}</td>
+                                        <td><strong>${cycle.code || '-'}</strong></td>
+                                        <td>${cycle.name}</td>
                                         <td>${cycle.description || '-'}</td>
-                                        <td>${duration}</td>
-                                        <td>${cycle.sortOrder !== undefined ? cycle.sortOrder : '-'}</td>
-                                        <td>
-                                            <span class="badge ${cycle.isActive ? 'badge-success' : 'badge-secondary'}">
-                                                ${cycle.isActive ? 'Active' : 'Inactive'}
-                                            </span>
-                                        </td>
+                                        <td>${cycle.durationInDays}</td>
+                                        <td>${cycle.sortOrder}</td>
                                         <td>${cycle.createdAt ? new Date(cycle.createdAt).toLocaleString() : '-'}</td>
                                         <td>
                                             <div class="action-buttons">
@@ -443,15 +415,6 @@
                 updateResponseBox(data);
 
                 if (response.ok) {
-                    let duration = '';
-                    if (data.durationMonths) {
-                        duration = `${data.durationMonths} month${data.durationMonths > 1 ? 's' : ''}`;
-                    } else if (data.durationDays) {
-                        duration = `${data.durationDays} day${data.durationDays > 1 ? 's' : ''}`;
-                    } else {
-                        duration = 'N/A';
-                    }
-                    
                     result.innerHTML = `
                         <div class="alert alert-success">
                             <h5>Billing Cycle Found:</h5>
@@ -459,9 +422,8 @@
                             <p><strong>Name:</strong> ${data.name}</p>
                             <p><strong>Code:</strong> ${data.code || 'N/A'}</p>
                             <p><strong>Description:</strong> ${data.description || 'N/A'}</p>
-                            <p><strong>Duration:</strong> ${duration}</p>
-                            <p><strong>Sort Order:</strong> ${data.sortOrder !== undefined ? data.sortOrder : 'N/A'}</p>
-                            <p><strong>Status:</strong> ${data.isActive ? 'Active' : 'Inactive'}</p>
+                            <p><strong>Duration (Days):</strong> ${data.durationInDays}</p>
+                            <p><strong>Sort Order:</strong> ${data.sortOrder}</p>
                             <p><strong>Created:</strong> ${data.createdAt ? new Date(data.createdAt).toLocaleString() : 'N/A'}</p>
                             <p><strong>Updated:</strong> ${data.updatedAt ? new Date(data.updatedAt).toLocaleString() : 'N/A'}</p>
                         </div>
@@ -490,10 +452,8 @@
             document.getElementById('editName').value = cycle.name;
             document.getElementById('editCode').value = cycle.code || '';
             document.getElementById('editDescription').value = cycle.description || '';
-            document.getElementById('editDurationDays').value = cycle.durationDays || '';
-            document.getElementById('editDurationMonths').value = cycle.durationMonths || '';
-            document.getElementById('editSortOrder').value = cycle.sortOrder !== undefined ? cycle.sortOrder : 0;
-            document.getElementById('editIsActive').checked = cycle.isActive;
+            document.getElementById('editDurationInDays').value = cycle.durationInDays || 0;
+            document.getElementById('editSortOrder').value = cycle.sortOrder || 0;
 
             editModal.show();
         }
@@ -501,15 +461,18 @@
         // Update Billing Cycle
         async function updateBillingCycle() {
             const id = document.getElementById('editId').value;
+            
+            const daysValue = document.getElementById('editDurationInDays').value;
+            
             const data = {
                 name: document.getElementById('editName').value.trim(),
-                code: document.getElementById('editCode').value.trim() || null,
-                description: document.getElementById('editDescription').value.trim() || null,
-                durationDays: parseInt(document.getElementById('editDurationDays').value) || null,
-                durationMonths: parseInt(document.getElementById('editDurationMonths').value) || null,
-                sortOrder: parseInt(document.getElementById('editSortOrder').value) || 0,
-                isActive: document.getElementById('editIsActive').checked
+                code: document.getElementById('editCode').value.trim(),
+                description: document.getElementById('editDescription').value.trim(),
+                durationInDays: daysValue ? parseInt(daysValue, 10) : 0,
+                sortOrder: parseInt(document.getElementById('editSortOrder').value, 10) || 0
             };
+
+            console.log('Updating billing cycle with data:', data);
 
             try {
                 const response = await fetch(`${API_BASE_URL}/api/v1/BillingCycles/${id}`, {

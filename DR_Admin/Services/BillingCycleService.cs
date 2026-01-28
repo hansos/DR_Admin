@@ -70,11 +70,19 @@ public class BillingCycleService : IBillingCycleService
         {
             _log.Information("Creating new billing cycle with name: {BillingCycleName}", createDto.Name);
 
+            if (string.IsNullOrWhiteSpace(billingCycle.Name))
+            {
+                _log.Warning("Billing cycle name cannot be empty);
+                return null;
+            }
+
             var billingCycle = new BillingCycle
             {
+                Code = createDto.Code?.ToUpper() ?? string.Empty,
                 Name = createDto.Name,
                 DurationInDays = createDto.DurationInDays,
                 Description = createDto.Description,
+                SortOrder = createDto.SortOrder,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -106,9 +114,17 @@ public class BillingCycleService : IBillingCycleService
                 return null;
             }
 
+            if (string.IsNullOrWhiteSpace(billingCycle.Name))
+            {
+                _log.Warning("Billing cycle name cannot be empty);
+                return null;
+            }
+
+            billingCycle.Code = updateDto.Code?.ToUpper().Trim() ?? updateDto.Name!.ToUpper().Trim();
             billingCycle.Name = updateDto.Name;
             billingCycle.DurationInDays = updateDto.DurationInDays;
             billingCycle.Description = updateDto.Description;
+            billingCycle.SortOrder = updateDto.SortOrder;
             billingCycle.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
@@ -155,9 +171,11 @@ public class BillingCycleService : IBillingCycleService
         return new BillingCycleDto
         {
             Id = billingCycle.Id,
+            Code = billingCycle.Code,
             Name = billingCycle.Name,
             DurationInDays = billingCycle.DurationInDays,
             Description = billingCycle.Description,
+            SortOrder = billingCycle.SortOrder,
             CreatedAt = billingCycle.CreatedAt,
             UpdatedAt = billingCycle.UpdatedAt
         };

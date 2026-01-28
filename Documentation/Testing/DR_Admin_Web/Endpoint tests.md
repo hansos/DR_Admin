@@ -43,7 +43,7 @@ Endpoint tests using DR_Admin_Web
 | `SubscriptionsController`                |        |                                                                                                                         |
 | `SystemController`                       |        |                                                                                                                         |
 | `TaxRulesController`                     | ISSUES | - Not all endpoints are included.                                                                                       |
-| `TldsController`                         |        |                                                                                                                         |
+| `TldsController`                         | OK     |                                                                                                                         |
 | `TokensController`                       |        |                                                                                                                         |
 | `UnitsController`                        | ISSUES | - Not all endpoints are included.                                                                                       |
 | `UsersController`                        | ISSUES | - Get all users presents json only.<br>- Not all endpoints are included.<br>- Properties missing from POST              |

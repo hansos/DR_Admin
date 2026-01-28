@@ -33,7 +33,49 @@
 
     <div class="test-section">
       <h2 class="section-title">&#10133; Create TLD</h2>
-      <form id="createForm"><div class="row"><div class="col-md-6 mb-3"><label class="form-label">Extension *</label><input id="createExt" class="form-control" required /></div><div class="col-md-6 mb-3"><label class="form-label">Is Active</label><select id="createActive" class="form-control"><option value="true">Yes</option><option value="false">No</option></select></div></div><button class="btn btn-primary" type="submit">Create</button></form>
+      <form id="createForm">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Extension *</label>
+            <input id="createExt" class="form-control" required />
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Description</label>
+            <input id="createDescription" class="form-control" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Default Registration Years</label>
+            <input id="createDefaultYears" type="number" class="form-control" value="1" min="0" />
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Max Registration Years</label>
+            <input id="createMaxYears" type="number" class="form-control" value="10" min="0" />
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Requires Privacy</label>
+            <select id="createRequiresPrivacy" class="form-control">
+              <option value="true">Yes</option>
+              <option value="false">No</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-8 mb-3">
+            <label class="form-label">Notes</label>
+            <input id="createNotes" class="form-control" />
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="form-label">Is Active</label>
+            <select id="createActive" class="form-control"><option value="true">Yes</option><option value="false">No</option></select>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" type="submit">Create</button>
+      </form>
     </div>
 
     <div class="test-section">
@@ -41,6 +83,21 @@
       <button class="btn btn-primary mb-3" onclick="getAll()">Load All</button>
       <div class="loading" id="loadingAll"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>
       <div id="tableContainer"></div>
+    </div>
+
+    <div class="test-section">
+      <h2 class="section-title">&#128269; Get TLD by ID</h2>
+      <div class="row">
+        <div class="col-md-4 mb-3">
+          <label for="getTldId" class="form-label">TLD ID</label>
+          <input id="getTldId" class="form-control" placeholder="Enter ID" />
+        </div>
+        <div class="col-md-8 mb-3 d-flex align-items-end">
+          <button class="btn btn-primary" onclick="getById()">Get TLD</button>
+        </div>
+      </div>
+      <div class="loading" id="loadingById"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>
+      <div id="tldByIdResult"></div>
     </div>
 
     <div class="test-section">
@@ -72,6 +129,28 @@
               <input type="text" class="form-control" id="editExt" required>
             </div>
             <div class="mb-3">
+              <label for="editDescription" class="form-label">Description</label>
+              <input type="text" class="form-control" id="editDescription">
+            </div>
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label for="editDefaultYears" class="form-label">Default Registration Years</label>
+                <input id="editDefaultYears" type="number" class="form-control" min="0" />
+              </div>
+              <div class="col-md-4 mb-3">
+                <label for="editMaxYears" class="form-label">Max Registration Years</label>
+                <input id="editMaxYears" type="number" class="form-control" min="0" />
+              </div>
+              <div class="col-md-4 mb-3">
+                <label for="editRequiresPrivacy" class="form-label">Requires Privacy</label>
+                <select id="editRequiresPrivacy" class="form-control"><option value="true">Yes</option><option value="false">No</option></select>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="editNotes" class="form-label">Notes</label>
+              <input id="editNotes" class="form-control" />
+            </div>
+            <div class="mb-3">
               <div class="form-check">
                 <input class="form-check-input" type="checkbox" id="editActive">
                 <label class="form-check-label" for="editActive">Is Active</label>
@@ -99,6 +178,7 @@
         window.location.href = '/login.html';
         return;
       }
+ 
       const result = await authClient.verifyToken();
       if (result.authenticated && result.data?.username) {
         document.getElementById('userInfo').textContent = `Hello, ${result.data.username}!`;
@@ -130,7 +210,12 @@
       e.preventDefault();
       const data = {
         extension: document.getElementById('createExt').value.trim(),
-        isActive: document.getElementById('createActive').value === 'true'
+        description: document.getElementById('createDescription').value.trim() || null,
+        isActive: document.getElementById('createActive').value === 'true',
+        defaultRegistrationYears: parseInt(document.getElementById('createDefaultYears').value) || 0,
+        maxRegistrationYears: parseInt(document.getElementById('createMaxYears').value) || 0,
+        requiresPrivacy: document.getElementById('createRequiresPrivacy').value === 'true',
+        notes: document.getElementById('createNotes').value.trim() || null
       };
       try {
         const res = await fetch(`${API_BASE_URL}/api/v1/Tlds`, {
@@ -204,6 +289,10 @@
               <tr>
                 <th>ID</th>
                 <th>Extension</th>
+                <th>Description</th>
+                <th>Default Years</th>
+                <th>Max Years</th>
+                <th>Privacy</th>
                 <th>Status</th>
                 <th>Created At</th>
                 <th>Actions</th>
@@ -214,12 +303,16 @@
                 <tr>
                   <td>${tld.id}</td>
                   <td><strong>${tld.extension}</strong></td>
+                  <td>${tld.description || '-'}</td>
+                  <td>${tld.defaultRegistrationYears !== undefined ? tld.defaultRegistrationYears : '-'}</td>
+                  <td>${tld.maxRegistrationYears !== undefined ? tld.maxRegistrationYears : '-'}</td>
+                  <td>${tld.requiresPrivacy ? 'Yes' : 'No'}</td>
                   <td>
                     <span class="badge ${tld.isActive ? 'badge-success' : 'badge-secondary'}">
                       ${tld.isActive ? 'Active' : 'Inactive'}
                     </span>
                   </td>
-                  <td>${new Date(tld.createdAt).toLocaleString()}</td>
+                  <td>${tld.createdAt ? new Date(tld.createdAt).toLocaleString() : '-'}</td>
                   <td>
                     <div class="action-buttons">
                       <button class="btn btn-sm btn-warning" onclick="openEditModal(${tld.id})">Edit</button>
@@ -235,6 +328,57 @@
       container.innerHTML = tableHtml;
     }
 
+    // Get TLD by ID
+    async function getById() {
+      const id = document.getElementById('getTldId').value;
+      if (!id) {
+        showAlert('Please enter a TLD ID', 'warning');
+        return;
+      }
+      const loading = document.getElementById('loadingById');
+      const container = document.getElementById('tldByIdResult');
+      loading.style.display = 'block';
+      container.innerHTML = '';
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/v1/Tlds/${id}`, {
+          method: 'GET',
+          headers: getAuthHeaders()
+        });
+        let data;
+        const ct = res.headers.get('content-type');
+        if (ct && ct.includes('application/json')) data = await res.json();
+        else {
+          const t = await res.text();
+          data = { error: t, statusCode: res.status };
+        }
+        updateResponseBox(data);
+        if (res.ok) {
+          container.innerHTML = `
+            <div class="alert alert-success">
+              <h5>TLD Found:</h5>
+              <p><strong>ID:</strong> ${data.id}</p>
+              <p><strong>Extension:</strong> ${data.extension}</p>
+              <p><strong>Description:</strong> ${data.description || 'N/A'}</p>
+              <p><strong>Default Registration Years:</strong> ${data.defaultRegistrationYears !== undefined ? data.defaultRegistrationYears : 'N/A'}</p>
+              <p><strong>Max Registration Years:</strong> ${data.maxRegistrationYears !== undefined ? data.maxRegistrationYears : 'N/A'}</p>
+              <p><strong>Requires Privacy:</strong> ${data.requiresPrivacy ? 'Yes' : 'No'}</p>
+              <p><strong>Notes:</strong> ${data.notes || 'N/A'}</p>
+              <p><strong>Status:</strong> ${data.isActive ? 'Active' : 'Inactive'}</p>
+              <p><strong>Created:</strong> ${data.createdAt ? new Date(data.createdAt).toLocaleString() : 'N/A'}</p>
+              <p><strong>Updated:</strong> ${data.updatedAt ? new Date(data.updatedAt).toLocaleString() : 'N/A'}</p>
+            </div>
+          `;
+        } else {
+          showAlert(`Error: ${data.message || data.error || 'TLD not found'}`, 'danger');
+        }
+      } catch (err) {
+        showAlert(`Error: ${err.message}`, 'danger');
+        updateResponseBox({ error: err.message });
+      } finally {
+        loading.style.display = 'none';
+      }
+    }
+
     function openEditModal(id) {
       const tld = currentTlds.find(t => t.id === id);
       if (!tld) {
@@ -243,7 +387,12 @@
       }
       document.getElementById('editId').value = tld.id;
       document.getElementById('editExt').value = tld.extension;
-      document.getElementById('editActive').checked = tld.isActive;
+      document.getElementById('editDescription').value = tld.description || '';
+      document.getElementById('editDefaultYears').value = tld.defaultRegistrationYears !== undefined ? tld.defaultRegistrationYears : '';
+      document.getElementById('editMaxYears').value = tld.maxRegistrationYears !== undefined ? tld.maxRegistrationYears : '';
+      document.getElementById('editRequiresPrivacy').value = tld.requiresPrivacy ? 'true' : 'false';
+      document.getElementById('editNotes').value = tld.notes || '';
+      document.getElementById('editActive').checked = !!tld.isActive;
       editModal.show();
     }
 
@@ -251,7 +400,12 @@
       const id = document.getElementById('editId').value;
       const data = {
         extension: document.getElementById('editExt').value.trim(),
-        isActive: document.getElementById('editActive').checked
+        description: document.getElementById('editDescription').value.trim() || null,
+        isActive: document.getElementById('editActive').checked,
+        defaultRegistrationYears: parseInt(document.getElementById('editDefaultYears').value) || 0,
+        maxRegistrationYears: parseInt(document.getElementById('editMaxYears').value) || 0,
+        requiresPrivacy: document.getElementById('editRequiresPrivacy').value === 'true',
+        notes: document.getElementById('editNotes').value.trim() || null
       };
       try {
         const res = await fetch(`${API_BASE_URL}/api/v1/Tlds/${id}`, {
