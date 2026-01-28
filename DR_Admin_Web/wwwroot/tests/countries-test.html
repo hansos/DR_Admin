@@ -112,6 +112,39 @@
             <div id="countryByIdResult"></div>
         </div>
 
+        <!-- Get Active Countries Section -->
+        <div class="test-section">
+            <h2 class="section-title">✅ Get Active Countries</h2>
+            <button class="btn btn-primary mb-3" onclick="getActiveCountries()">Load Active Countries</button>
+            <div class="loading" id="loadingActive">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="activeCountriesTableContainer"></div>
+        </div>
+
+        <!-- Get Country by Code Section -->
+        <div class="test-section">
+            <h2 class="section-title">🔎 Get Country by Code</h2>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="getCountryCode" class="form-label">Country Code</label>
+                    <input type="text" class="form-control" id="getCountryCode" placeholder="e.g., US" maxlength="2">
+                    <small class="text-muted">2-character ISO code</small>
+                </div>
+                <div class="col-md-8 mb-3 d-flex align-items-end">
+                    <button class="btn btn-primary" onclick="getCountryByCode()">Get Country by Code</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingByCode">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="countryByCodeResult"></div>
+        </div>
+
         <!-- API Response Section -->
         <div class="test-section">
             <h2 class="section-title">📡 Last API Response</h2>
@@ -319,8 +352,8 @@
         }
 
         // Render Countries Table
-        function renderCountriesTable(countries) {
-            const container = document.getElementById('countriesTableContainer');
+        function renderCountriesTable(countries, targetContainer = null) {
+            const container = targetContainer || document.getElementById('countriesTableContainer');
             
             if (!countries || countries.length === 0) {
                 container.innerHTML = '<div class="empty-state">No countries found</div>';
@@ -393,6 +426,99 @@
 
             try {
                 const response = await fetch(`${API_BASE_URL}/api/v1/Countries/${id}`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    result.innerHTML = `
+                        <div class="alert alert-success">
+                            <h5>Country Found:</h5>
+                            <p><strong>ID:</strong> ${data.id}</p>
+                            <p><strong>Code:</strong> ${data.code}</p>
+                            <p><strong>TLD:</strong> ${data.tld || 'N/A'}</p>
+                            <p><strong>English Name:</strong> ${data.englishName}</p>
+                            <p><strong>Local Name:</strong> ${data.localName || 'N/A'}</p>
+                            <p><strong>Status:</strong> ${data.isActive ? 'Active' : 'Inactive'}</p>
+                            <p><strong>Created:</strong> ${new Date(data.createdAt).toLocaleString()}</p>
+                            <p><strong>Updated:</strong> ${new Date(data.updatedAt).toLocaleString()}</p>
+                        </div>
+                    `;
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Country not found'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Get Active Countries
+        async function getActiveCountries() {
+            const loading = document.getElementById('loadingActive');
+            const container = document.getElementById('activeCountriesTableContainer');
+            
+            loading.style.display = 'block';
+            container.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Countries/active`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    renderCountriesTable(data, container);
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Failed to fetch active countries'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Get Country by Code
+        async function getCountryByCode() {
+            const code = document.getElementById('getCountryCode').value.trim().toUpperCase();
+            
+            if (!code) {
+                showAlert('Please enter a country code', 'warning');
+                return;
+            }
+
+            const loading = document.getElementById('loadingByCode');
+            const result = document.getElementById('countryByCodeResult');
+            
+            loading.style.display = 'block';
+            result.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Countries/code/${code}`, {
                     method: 'GET',
                     headers: getAuthHeaders()
                 });

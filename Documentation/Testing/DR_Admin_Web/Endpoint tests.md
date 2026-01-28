@@ -5,7 +5,7 @@ Endpoint tests using DR_Admin_Web
 | `AuthController`                         |        | No test page                                                                                                            |
 | `BillingCyclesController`                | ISSUES | - Duration and Sort order not set                                                                                       |
 | `ControlPanelTypesController`            |        |                                                                                                                         |
-| `CountriesController`                    | ISSUES | - Not all endpints are included. <br>- Initial dot for  Tld is not removed.                                             |
+| `CountriesController`                    | OK     |                                                                                                                         |
 | `CouponsController`                      | ISSUES | - Cannot create coupon                                                                                                  |
 | `CurrenciesController`                   | ISSUES | - Cannot create Currency                                                                                                |
 | `CustomerCreditsController`              | ISSUES | - Cannot register                                                                                                       |

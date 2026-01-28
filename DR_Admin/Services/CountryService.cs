@@ -133,7 +133,7 @@ public class CountryService : ICountryService
             var country = new Country
             {
                 Code = createDto.Code.ToUpper(),
-                Tld = createDto.Tld,
+                Tld = createDto.Tld?.TrimStart('.') ?? string.Empty,
                 EnglishName = createDto.EnglishName,
                 LocalName = createDto.LocalName,
                 IsActive = createDto.IsActive,
@@ -178,7 +178,7 @@ public class CountryService : ICountryService
             }
 
             country.Code = updateDto.Code.ToUpper();
-            country.Tld = updateDto.Tld;
+            country.Tld = updateDto.Tld?.TrimStart('.') ?? string.Empty;
             country.EnglishName = updateDto.EnglishName;
             country.LocalName = updateDto.LocalName;
             country.IsActive = updateDto.IsActive;
