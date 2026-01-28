@@ -39,6 +39,7 @@
   <ItemGroup>
     <ProjectReference Include="..\EmailSenderLib\EmailSenderLib.csproj" />
     <ProjectReference Include="..\DomainRegistrationLib\DomainRegistrationLib.csproj" />
+    <ProjectReference Include="..\ExchangeRateLib\ExchangeRateLib.csproj" />
     <ProjectReference Include="..\HostingPanelLib\HostingPanelLib.csproj" />
     <ProjectReference Include="..\PaymentGatewayLib\PaymentGatewayLib.csproj" />
     <ProjectReference Include="..\SMSSenderLib\SMSSenderLib.csproj" />
