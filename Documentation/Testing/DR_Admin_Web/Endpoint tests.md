@@ -25,7 +25,7 @@ Endpoint tests using DR_Admin_Web
 | `OrdersController`                       |        |                                                                                                                         |
 | `PaymentGatewaysController`              |        |                                                                                                                         |
 | `PaymentIntentsController`               |        |                                                                                                                         |
-| `PostalCodesController`                  | ISSUES | - Get Postal Codes by City: Case sensitivity                                                                            |
+| `PostalCodesController`                  | OK     |                                                                                                                         |
 | `QuotesController`                       |        |                                                                                                                         |
 | `RefundsController`                      |        |                                                                                                                         |
 | `RegistrarsController`                   |        |                                                                                                                         |

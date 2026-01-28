@@ -1,6 +1,7 @@
 using ISPAdmin.Data;
 using ISPAdmin.Data.Entities;
 using ISPAdmin.DTOs;
+using ISPAdmin.Utilities;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -68,11 +69,17 @@ public class PostalCodeService : IPostalCodeService
     {
         try
         {
+
+            if (string.IsNullOrWhiteSpace(city))
+            {
+                throw new NullReferenceException("City name is mandatory.");
+            }
+
             _log.Information("Fetching postal codes for city: {City}", city);
             
             var postalCodes = await _context.PostalCodes
                 .AsNoTracking()
-                .Where(p => p.City.Contains(city))
+                .Where(p => p.NormalizedCity.Contains(NormalizationHelper.Normalize(city)!))
                 .OrderBy(p => p.CountryCode)
                 .ThenBy(p => p.Code)
                 .ToListAsync();
