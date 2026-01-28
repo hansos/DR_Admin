@@ -418,6 +418,7 @@
     <script>
         // API_BASE_URL is already defined in authClient.js
         let currentCustomers = [];
+        let customerStatuses = [];
         let editModal;
 
         // Initialize on page load
@@ -442,6 +443,9 @@
 
             // Setup create form
             document.getElementById('createForm').addEventListener('submit', handleCreate);
+
+            // Load customer statuses
+            await loadCustomerStatuses();
 
             // Load all customers on init
             getAllCustomers();
@@ -480,6 +484,102 @@
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             };
+        }
+
+        // Load Customer Statuses
+        async function loadCustomerStatuses() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/CustomerStatuses/active`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    customerStatuses = data;
+                    populateStatusDropdowns();
+                } else {
+                    console.error('Failed to load customer statuses');
+                    // Fallback to hardcoded values if API fails
+                    customerStatuses = [
+                        { code: 'ACTIVE', name: 'Active', isDefault: true },
+                        { code: 'INACTIVE', name: 'Inactive', isDefault: false },
+                        { code: 'SUSPENDED', name: 'Suspended', isDefault: false },
+                        { code: 'PENDING', name: 'Pending', isDefault: false }
+                    ];
+                    populateStatusDropdowns();
+                }
+            } catch (error) {
+                console.error('Error loading customer statuses:', error);
+                // Fallback to hardcoded values if API fails
+                customerStatuses = [
+                    { code: 'ACTIVE', name: 'Active', isDefault: true },
+                    { code: 'INACTIVE', name: 'Inactive', isDefault: false },
+                    { code: 'SUSPENDED', name: 'Suspended', isDefault: false },
+                    { code: 'PENDING', name: 'Pending', isDefault: false }
+                ];
+                populateStatusDropdowns();
+            }
+        }
+
+        // Populate Status Dropdowns
+        function populateStatusDropdowns() {
+            const createStatusSelect = document.getElementById('createStatus');
+            const editStatusSelect = document.getElementById('editStatus');
+            
+            // Sort by sortOrder if available, otherwise by name
+            const sortedStatuses = [...customerStatuses].sort((a, b) => {
+                if (a.sortOrder !== undefined && b.sortOrder !== undefined) {
+                    return a.sortOrder - b.sortOrder;
+                }
+                return (a.name || '').localeCompare(b.name || '');
+            });
+
+            // Clear existing options except the first placeholder
+            createStatusSelect.innerHTML = '<option value="">Select Status...</option>';
+            editStatusSelect.innerHTML = '<option value="">Select Status...</option>';
+
+            // Add options from API data
+            sortedStatuses.forEach(status => {
+                const optionCreate = document.createElement('option');
+                optionCreate.value = status.code;
+                optionCreate.textContent = status.name;
+                if (status.isDefault) {
+                    optionCreate.selected = true;
+                }
+                createStatusSelect.appendChild(optionCreate);
+
+                const optionEdit = document.createElement('option');
+                optionEdit.value = status.code;
+                optionEdit.textContent = status.name;
+                editStatusSelect.appendChild(optionEdit);
+            });
+        }
+
+        // Get Status Color
+        function getStatusColor(statusCode) {
+            if (!statusCode) return null;
+            const status = customerStatuses.find(s => s.code === statusCode || s.name === statusCode);
+            return status?.color || null;
+        }
+
+        // Calculate contrasting text color (white or black) based on background color
+        function getContrastColor(hexColor) {
+            if (!hexColor) return '#000';
+            
+            // Remove # if present
+            const hex = hexColor.replace('#', '');
+            
+            // Convert to RGB
+            const r = parseInt(hex.substr(0, 2), 16);
+            const g = parseInt(hex.substr(2, 2), 16);
+            const b = parseInt(hex.substr(4, 2), 16);
+            
+            // Calculate luminance
+            const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+            
+            // Return white for dark backgrounds, black for light backgrounds
+            return luminance > 0.5 ? '#000' : '#fff';
         }
 
         // Handle Create Customer
@@ -610,6 +710,21 @@
                         <tbody>
                             ${customers.map(customer => {
                                 const location = [customer.city, customer.state, customer.countryCode].filter(x => x).join(', ') || '-';
+                                const statusCode = customer.status || (customer.isActive ? 'ACTIVE' : 'INACTIVE');
+                                const statusColor = getStatusColor(statusCode);
+                                const textColor = getContrastColor(statusColor);
+                                
+                                // Create status badge with custom color or fallback to default badge classes
+                                let statusBadge;
+                                if (statusColor) {
+                                    statusBadge = `<span class="badge" style="background-color: ${statusColor}; color: ${textColor};">
+                                        ${customer.status || (customer.isActive ? 'Active' : 'Inactive')}
+                                    </span>`;
+                                } else {
+                                    statusBadge = `<span class="badge ${customer.isActive ? 'badge-success' : 'badge-secondary'}">
+                                        ${customer.status || (customer.isActive ? 'Active' : 'Inactive')}
+                                    </span>`;
+                                }
                                 
                                 return `
                                     <tr>
@@ -621,9 +736,7 @@
                                         <td>${customer.customerName || '-'}</td>
                                         <td>${location}</td>
                                         <td>
-                                            <span class="badge ${customer.isActive ? 'badge-success' : 'badge-secondary'}">
-                                                ${customer.status || (customer.isActive ? 'Active' : 'Inactive')}
-                                            </span>
+                                            ${statusBadge}
                                         </td>
                                         <td>${customer.createdAt ? new Date(customer.createdAt).toLocaleString() : '-'}</td>
                                         <td>
