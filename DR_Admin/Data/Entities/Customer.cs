@@ -17,6 +17,11 @@ public class Customer : EntityBase
     public bool IsCompany { get; set; }
     public bool IsActive { get; set; }
     public string Status { get; set; } = "Active";
+    
+    /// <summary>
+    /// Gets or sets the customer status ID (foreign key to CustomerStatus table)
+    /// </summary>
+    public int? CustomerStatusId { get; set; }
 
     /// <summary>
     /// Normalized version of Name for case-insensitive searches
@@ -49,6 +54,7 @@ public class Customer : EntityBase
     public bool AllowCurrencyOverride { get; set; } = true;
 
     public Country? Country { get; set; }
+    public CustomerStatus? CustomerStatus { get; set; }
     public ICollection<User> Users { get; set; } = new List<User>();
     public ICollection<Invoice> Invoices { get; set; } = new List<Invoice>();
     public ICollection<Order> Orders { get; set; } = new List<Order>();

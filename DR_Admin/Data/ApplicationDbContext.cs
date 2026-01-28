@@ -105,10 +105,16 @@ public class ApplicationDbContext : DbContext
                 contactPerson.NormalizedFirstName = NormalizationHelper.Normalize(contactPerson.FirstName) ?? string.Empty;
                 contactPerson.NormalizedLastName = NormalizationHelper.Normalize(contactPerson.LastName) ?? string.Empty;
                 break;
+
+            case CustomerStatus customerStatus:
+                customerStatus.NormalizedCode = NormalizationHelper.Normalize(customerStatus.Code) ?? string.Empty;
+                customerStatus.NormalizedName = NormalizationHelper.Normalize(customerStatus.Name) ?? string.Empty;
+                break;
         }
     }
 
     public DbSet<Customer> Customers { get; set; }
+    public DbSet<CustomerStatus> CustomerStatuses { get; set; }
     public DbSet<ContactPerson> ContactPersons { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<Role> Roles { get; set; }
@@ -213,6 +219,29 @@ public class ApplicationDbContext : DbContext
                 .HasForeignKey(e => e.CountryCode)
                 .HasPrincipalKey(c => c.Code)
                 .OnDelete(DeleteBehavior.Restrict);
+            
+            entity.HasOne(e => e.CustomerStatus)
+                .WithMany()
+                .HasForeignKey(e => e.CustomerStatusId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // CustomerStatus configuration
+        modelBuilder.Entity<CustomerStatus>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Code).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.Color).HasMaxLength(20);
+            entity.Property(e => e.NormalizedCode).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.NormalizedName).IsRequired().HasMaxLength(100);
+            
+            entity.HasIndex(e => e.Code).IsUnique();
+            entity.HasIndex(e => e.NormalizedCode).IsUnique();
+            entity.HasIndex(e => e.IsActive);
+            entity.HasIndex(e => e.IsDefault);
+            entity.HasIndex(e => e.SortOrder);
         });
 
         // ContactPerson configuration

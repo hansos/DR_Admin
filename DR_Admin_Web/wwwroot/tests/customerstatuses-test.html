@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Statuses API Test - DR Admin</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Test Page Styles -->
+    <link href="/assets/css/test-page.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/choose-test.html">DR Admin - Customer Statuses API</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <span class="user-info" id="userInfo"></span>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/choose-test.html" class="btn btn-back">&#8592; Back to Tests</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-main">
+        <div class="header-card">
+            <h1>&#128310; Customer Statuses API Test</h1>
+            <p>Test CRUD operations for Customer Statuses API endpoint</p>
+        </div>
+
+        <!-- Alert Messages -->
+        <div id="alertContainer"></div>
+
+        <!-- Create Customer Status Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#10133; Create Customer Status</h2>
+            <form id="createForm">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="createCode" class="form-label">Status Code *</label>
+                        <input type="text" class="form-control" id="createCode" placeholder="e.g., ACTIVE" maxlength="50" required>
+                        <small class="text-muted">Unique status code (e.g., ACTIVE, INACTIVE, SUSPENDED)</small>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="createName" class="form-label">Status Name *</label>
+                        <input type="text" class="form-control" id="createName" placeholder="e.g., Active" required>
+                        <small class="text-muted">Display name for the status</small>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="createColor" class="form-label">Color</label>
+                        <input type="color" class="form-control form-control-color" id="createColor" value="#28a745">
+                        <small class="text-muted">Color for UI display</small>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="createSortOrder" class="form-label">Sort Order</label>
+                        <input type="number" class="form-control" id="createSortOrder" placeholder="e.g., 1" value="0">
+                        <small class="text-muted">Order for displaying statuses</small>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="createDescription" class="form-label">Description</label>
+                    <textarea class="form-control" id="createDescription" rows="3" placeholder="Enter description..."></textarea>
+                </div>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="createIsActive" checked>
+                        <label class="form-check-label" for="createIsActive">
+                            Is Active
+                        </label>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="createIsDefault">
+                        <label class="form-check-label" for="createIsDefault">
+                            Is Default (for new customers)
+                        </label>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Create Customer Status</button>
+            </form>
+        </div>
+
+        <!-- Get All Customer Statuses Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128203; Get All Customer Statuses</h2>
+            <button class="btn btn-primary mb-3" onclick="getAllCustomerStatuses()">Load All Customer Statuses</button>
+            <div class="loading" id="loadingAll">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="customerStatusesTableContainer"></div>
+        </div>
+
+        <!-- Get Customer Status by ID Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128269; Get Customer Status by ID</h2>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="getCustomerStatusId" class="form-label">Customer Status ID</label>
+                    <input type="number" class="form-control" id="getCustomerStatusId" placeholder="Enter ID">
+                </div>
+                <div class="col-md-8 mb-3 d-flex align-items-end">
+                    <button class="btn btn-primary" onclick="getCustomerStatusById()">Get Customer Status</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingById">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="customerStatusByIdResult"></div>
+        </div>
+
+        <!-- Get Default Customer Status Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#11088; Get Default Customer Status</h2>
+            <button class="btn btn-primary mb-3" onclick="getDefaultCustomerStatus()">Load Default Customer Status</button>
+            <div class="loading" id="loadingDefault">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="defaultCustomerStatusResult"></div>
+        </div>
+
+        <!-- Get Active Customer Statuses Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#9989; Get Active Customer Statuses</h2>
+            <button class="btn btn-primary mb-3" onclick="getActiveCustomerStatuses()">Load Active Customer Statuses</button>
+            <div class="loading" id="loadingActive">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="activeCustomerStatusesTableContainer"></div>
+        </div>
+
+        <!-- Get Customer Status by Code Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128273; Get Customer Status by Code</h2>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="getCustomerStatusCode" class="form-label">Status Code</label>
+                    <input type="text" class="form-control" id="getCustomerStatusCode" placeholder="e.g., ACTIVE">
+                </div>
+                <div class="col-md-8 mb-3 d-flex align-items-end">
+                    <button class="btn btn-primary" onclick="getCustomerStatusByCode()">Get Customer Status by Code</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingByCode">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="customerStatusByCodeResult"></div>
+        </div>
+
+        <!-- API Response Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128225; Last API Response</h2>
+            <div class="response-box" id="responseBox">No API calls made yet...</div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">&#9998; Edit Customer Status</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editForm">
+                        <input type="hidden" id="editId">
+                        <div class="mb-3">
+                            <label for="editCode" class="form-label">Status Code *</label>
+                            <input type="text" class="form-control" id="editCode" readonly>
+                            <small class="text-muted">Code cannot be changed</small>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editName" class="form-label">Status Name *</label>
+                            <input type="text" class="form-control" id="editName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editColor" class="form-label">Color</label>
+                            <input type="color" class="form-control form-control-color" id="editColor">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editSortOrder" class="form-label">Sort Order</label>
+                            <input type="number" class="form-control" id="editSortOrder">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="editDescription" rows="3"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="editIsActive">
+                                <label class="form-check-label" for="editIsActive">
+                                    Is Active
+                                </label>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="editIsDefault">
+                                <label class="form-check-label" for="editIsDefault">
+                                    Is Default
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="updateCustomerStatus()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Auth Client -->
+    <script src="/assets/js/authClient.js"></script>
+    
+    <script>
+        // API_BASE_URL is already defined in authClient.js
+        let currentCustomerStatuses = [];
+        let editModal;
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            // Check authentication
+            const token = authClient.getToken();
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            // Verify token
+            const result = await authClient.verifyToken();
+            if (result.authenticated && result.data?.username) {
+                document.getElementById('userInfo').textContent = `Hello, ${result.data.username}!`;
+            } else {
+                document.getElementById('userInfo').textContent = 'Hello, User!';
+            }
+
+            // Initialize edit modal
+            editModal = new bootstrap.Modal(document.getElementById('editModal'));
+
+            // Setup create form
+            document.getElementById('createForm').addEventListener('submit', handleCreate);
+
+            // Load all customer statuses on init
+            getAllCustomerStatuses();
+        });
+
+        // Show alert message
+        function showAlert(message, type = 'info') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertHtml = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            alertContainer.innerHTML = alertHtml;
+            
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                const alert = alertContainer.querySelector('.alert');
+                if (alert) {
+                    bootstrap.Alert.getOrCreateInstance(alert).close();
+                }
+            }, 5000);
+        }
+
+        // Update response box
+        function updateResponseBox(data) {
+            const responseBox = document.getElementById('responseBox');
+            responseBox.textContent = JSON.stringify(data, null, 2);
+        }
+
+        // Get authorization headers
+        function getAuthHeaders() {
+            const token = authClient.getToken();
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            };
+        }
+
+        // Handle Create Customer Status
+        async function handleCreate(e) {
+            e.preventDefault();
+            
+            const colorInput = document.getElementById('createColor').value;
+            
+            const data = {
+                code: document.getElementById('createCode').value.trim().toUpperCase(),
+                name: document.getElementById('createName').value.trim(),
+                description: document.getElementById('createDescription').value.trim() || null,
+                color: colorInput || null,
+                isActive: document.getElementById('createIsActive').checked,
+                isDefault: document.getElementById('createIsDefault').checked,
+                sortOrder: parseInt(document.getElementById('createSortOrder').value) || 0
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/CustomerStatuses`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(data)
+                });
+
+                let result;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    result = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(result);
+
+                if (response.ok) {
+                    showAlert('Customer Status created successfully!', 'success');
+                    document.getElementById('createForm').reset();
+                    document.getElementById('createIsActive').checked = true;
+                    document.getElementById('createColor').value = '#28a745';
+                    document.getElementById('createSortOrder').value = '0';
+                    getAllCustomerStatuses(); // Refresh list
+                } else {
+                    showAlert(`Error: ${result.message || result.error || 'Failed to create customer status'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+
+        // Get All Customer Statuses
+        async function getAllCustomerStatuses() {
+            const loading = document.getElementById('loadingAll');
+            const container = document.getElementById('customerStatusesTableContainer');
+            
+            loading.style.display = 'block';
+            container.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/CustomerStatuses`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    currentCustomerStatuses = data;
+                    renderCustomerStatusesTable(data, container);
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Failed to fetch customer statuses'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Get Active Customer Statuses
+        async function getActiveCustomerStatuses() {
+            const loading = document.getElementById('loadingActive');
+            const container = document.getElementById('activeCustomerStatusesTableContainer');
+            
+            loading.style.display = 'block';
+            container.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/CustomerStatuses/active`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    renderCustomerStatusesTable(data, container);
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Failed to fetch active customer statuses'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Get Default Customer Status
+        async function getDefaultCustomerStatus() {
+            const loading = document.getElementById('loadingDefault');
+            const container = document.getElementById('defaultCustomerStatusResult');
+            
+            loading.style.display = 'block';
+            container.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/CustomerStatuses/default`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    renderSingleCustomerStatus(data, container);
+                } else {
+                    container.innerHTML = '<div class="empty-state">No default customer status found</div>';
+                    showAlert(`Error: ${data.message || data.error || 'Failed to fetch default customer status'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Render Customer Statuses Table
+        function renderCustomerStatusesTable(customerStatuses, container) {
+            if (!customerStatuses || customerStatuses.length === 0) {
+                container.innerHTML = '<div class="empty-state">No customer statuses found</div>';
+                return;
+            }
+
+            const tableHtml = `
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Code</th>
+                                <th>Name</th>
+                                <th>Color</th>
+                                <th>Description</th>
+                                <th>Sort Order</th>
+                                <th>Status</th>
+                                <th>Default</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${customerStatuses.map(status => `
+                                <tr>
+                                    <td>${status.id}</td>
+                                    <td><strong>${status.code}</strong></td>
+                                    <td>${status.name}</td>
+                                    <td>
+                                        ${status.color ? `
+                                            <div style="display: inline-flex; align-items: center; gap: 5px;">
+                                                <span style="display: inline-block; width: 20px; height: 20px; background-color: ${status.color}; border: 1px solid #ccc; border-radius: 3px;"></span>
+                                                <code>${status.color}</code>
+                                            </div>
+                                        ` : '-'}
+                                    </td>
+                                    <td>${status.description || '-'}</td>
+                                    <td>${status.sortOrder}</td>
+                                    <td>
+                                        <span class="badge ${status.isActive ? 'bg-success' : 'bg-secondary'}">
+                                            ${status.isActive ? 'Active' : 'Inactive'}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        ${status.isDefault ? '<span class="badge bg-primary">Default</span>' : '-'}
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="btn btn-sm btn-warning" onclick="openEditModal(${status.id})">
+                                                Edit
+                                            </button>
+                                            <button class="btn btn-sm btn-danger" onclick="deleteCustomerStatus(${status.id}, '${status.name}')">
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            container.innerHTML = tableHtml;
+        }
+
+        // Render Single Customer Status
+        function renderSingleCustomerStatus(status, container) {
+            const cardHtml = `
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">${status.name} (${status.code})</h5>
+                        <p class="card-text">
+                            <strong>Description:</strong> ${status.description || 'N/A'}<br>
+                            <strong>Color:</strong> ${status.color ? `<span style="display: inline-block; width: 20px; height: 20px; background-color: ${status.color}; border: 1px solid #ccc; border-radius: 3px; margin-left: 5px;"></span> ${status.color}` : 'N/A'}<br>
+                            <strong>Sort Order:</strong> ${status.sortOrder}<br>
+                            <strong>Status:</strong> <span class="badge ${status.isActive ? 'bg-success' : 'bg-secondary'}">${status.isActive ? 'Active' : 'Inactive'}</span><br>
+                            <strong>Default:</strong> ${status.isDefault ? '<span class="badge bg-primary">Yes</span>' : 'No'}<br>
+                            <strong>Created At:</strong> ${new Date(status.createdAt).toLocaleString()}<br>
+                            <strong>Updated At:</strong> ${new Date(status.updatedAt).toLocaleString()}
+                        </p>
+                    </div>
+                </div>
+            `;
+            container.innerHTML = cardHtml;
+        }
+
+        // Get Customer Status by ID
+        async function getCustomerStatusById() {
+            const id = document.getElementById('getCustomerStatusId').value;
+            if (!id) {
+                showAlert('Please enter a customer status ID', 'warning');
+                return;
+            }
+
+            const loading = document.getElementById('loadingById');
+            const container = document.getElementById('customerStatusByIdResult');
+            
+            loading.style.display = 'block';
+            container.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/CustomerStatuses/${id}`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    renderSingleCustomerStatus(data, container);
+                } else {
+                    container.innerHTML = '<div class="empty-state">Customer status not found</div>';
+                    showAlert(`Error: ${data.message || data.error || 'Failed to fetch customer status'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Get Customer Status by Code
+        async function getCustomerStatusByCode() {
+            const code = document.getElementById('getCustomerStatusCode').value.trim();
+            if (!code) {
+                showAlert('Please enter a customer status code', 'warning');
+                return;
+            }
+
+            const loading = document.getElementById('loadingByCode');
+            const container = document.getElementById('customerStatusByCodeResult');
+            
+            loading.style.display = 'block';
+            container.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/CustomerStatuses/code/${encodeURIComponent(code)}`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    renderSingleCustomerStatus(data, container);
+                } else {
+                    container.innerHTML = '<div class="empty-state">Customer status not found</div>';
+                    showAlert(`Error: ${data.message || data.error || 'Failed to fetch customer status'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Open Edit Modal
+        function openEditModal(id) {
+            const status = currentCustomerStatuses.find(cs => cs.id === id);
+            if (!status) {
+                showAlert('Customer status not found', 'danger');
+                return;
+            }
+
+            document.getElementById('editId').value = status.id;
+            document.getElementById('editCode').value = status.code;
+            document.getElementById('editName').value = status.name;
+            document.getElementById('editDescription').value = status.description || '';
+            document.getElementById('editColor').value = status.color || '#28a745';
+            document.getElementById('editSortOrder').value = status.sortOrder;
+            document.getElementById('editIsActive').checked = status.isActive;
+            document.getElementById('editIsDefault').checked = status.isDefault;
+
+            editModal.show();
+        }
+
+        // Update Customer Status
+        async function updateCustomerStatus() {
+            const id = document.getElementById('editId').value;
+            const colorInput = document.getElementById('editColor').value;
+            
+            const data = {
+                name: document.getElementById('editName').value.trim(),
+                description: document.getElementById('editDescription').value.trim() || null,
+                color: colorInput || null,
+                isActive: document.getElementById('editIsActive').checked,
+                isDefault: document.getElementById('editIsDefault').checked,
+                sortOrder: parseInt(document.getElementById('editSortOrder').value) || 0
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/CustomerStatuses/${id}`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(data)
+                });
+
+                let result;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    result = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(result);
+
+                if (response.ok) {
+                    showAlert('Customer Status updated successfully!', 'success');
+                    editModal.hide();
+                    getAllCustomerStatuses(); // Refresh list
+                } else {
+                    showAlert(`Error: ${result.message || result.error || 'Failed to update customer status'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+
+        // Delete Customer Status
+        async function deleteCustomerStatus(id, name) {
+            if (!confirm(`Are you sure you want to delete the customer status "${name}"?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/CustomerStatuses/${id}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+
+                let result = { message: 'Deleted successfully' };
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else if (response.status !== 204) {
+                    const text = await response.text();
+                    result = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(result);
+
+                if (response.ok || response.status === 204) {
+                    showAlert('Customer Status deleted successfully!', 'success');
+                    getAllCustomerStatuses(); // Refresh list
+                } else {
+                    showAlert(`Error: ${result.message || result.error || 'Failed to delete customer status'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+    </script>
+</body>
+</html>
