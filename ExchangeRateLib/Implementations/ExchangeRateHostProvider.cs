@@ -16,6 +16,17 @@ namespace ExchangeRateLib.Implementations
             _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
         }
 
+        private string AddApiKeyToEndpoint(string endpoint)
+        {
+            if (string.IsNullOrWhiteSpace(_apiKey))
+            {
+                return endpoint;
+            }
+
+            var separator = endpoint.Contains("?") ? "&" : "?";
+            return $"{endpoint}{separator}access_key={_apiKey}";
+        }
+
         public override async Task<ExchangeRateResult> GetExchangeRateAsync(string fromCurrency, string toCurrency)
         {
             try
@@ -30,7 +41,7 @@ namespace ExchangeRateLib.Implementations
                     return CreateExchangeRateErrorResult("To currency is required", "INVALID_TO_CURRENCY");
                 }
 
-                var endpoint = $"/convert?from={fromCurrency.ToUpper()}&to={toCurrency.ToUpper()}";
+                var endpoint = AddApiKeyToEndpoint($"/convert?from={fromCurrency.ToUpper()}&to={toCurrency.ToUpper()}");
                 
                 var response = await _httpClient.GetAsync(endpoint);
                 var responseContent = await response.Content.ReadAsStringAsync();
@@ -111,7 +122,7 @@ namespace ExchangeRateLib.Implementations
                 }
 
                 var symbols = string.Join(",", targetCurrencies.Select(c => c.ToUpper()));
-                var endpoint = $"/latest?base={baseCurrency.ToUpper()}&symbols={symbols}";
+                var endpoint = AddApiKeyToEndpoint($"/live?source={baseCurrency.ToUpper()}&currencies={symbols}");
 
                 var response = await _httpClient.GetAsync(endpoint);
                 var responseContent = await response.Content.ReadAsStringAsync();
@@ -130,8 +141,33 @@ namespace ExchangeRateLib.Implementations
                 if (root.TryGetProperty("success", out var successElement) && successElement.GetBoolean())
                 {
                     var rates = new Dictionary<string, decimal>();
+                    
+                    // Get the source (base) currency
+                    var sourceCurrency = root.TryGetProperty("source", out var sourceElement)
+                        ? sourceElement.GetString()?.ToUpper() ?? baseCurrency.ToUpper()
+                        : baseCurrency.ToUpper();
 
-                    if (root.TryGetProperty("rates", out var ratesElement))
+                    // CurrencyLayer format uses "quotes" with concatenated currency pairs (e.g., "EURUSD")
+                    if (root.TryGetProperty("quotes", out var quotesElement))
+                    {
+                        foreach (var quote in quotesElement.EnumerateObject())
+                        {
+                            // Quote name is like "EURUSD" - strip the base currency prefix
+                            var quoteName = quote.Name;
+                            if (quoteName.StartsWith(sourceCurrency, StringComparison.OrdinalIgnoreCase))
+                            {
+                                var targetCurrency = quoteName.Substring(sourceCurrency.Length);
+                                rates[targetCurrency] = quote.Value.GetDecimal();
+                            }
+                            else
+                            {
+                                // Fallback: use the full quote name
+                                rates[quoteName] = quote.Value.GetDecimal();
+                            }
+                        }
+                    }
+                    // Fallback: try "rates" property for other API formats
+                    else if (root.TryGetProperty("rates", out var ratesElement))
                     {
                         foreach (var rate in ratesElement.EnumerateObject())
                         {
@@ -139,15 +175,17 @@ namespace ExchangeRateLib.Implementations
                         }
                     }
 
-                    var timestamp = root.TryGetProperty("date", out var dateElement)
-                        ? DateTime.Parse(dateElement.GetString() ?? DateTime.UtcNow.ToString())
-                        : DateTime.UtcNow;
+                    var timestamp = root.TryGetProperty("timestamp", out var timestampElement)
+                        ? DateTimeOffset.FromUnixTimeSeconds(timestampElement.GetInt64()).UtcDateTime
+                        : (root.TryGetProperty("date", out var dateElement)
+                            ? DateTime.Parse(dateElement.GetString() ?? DateTime.UtcNow.ToString())
+                            : DateTime.UtcNow);
 
                     return new ExchangeRatesResult
                     {
                         Success = true,
                         Message = "Exchange rates retrieved successfully",
-                        BaseCurrency = baseCurrency.ToUpper(),
+                        BaseCurrency = sourceCurrency,
                         Rates = rates,
                         Date = timestamp,
                         Timestamp = DateTime.UtcNow
@@ -178,7 +216,7 @@ namespace ExchangeRateLib.Implementations
                     return CreateConversionErrorResult("Amount must be greater than zero", "INVALID_AMOUNT");
                 }
 
-                var endpoint = $"/convert?from={fromCurrency.ToUpper()}&to={toCurrency.ToUpper()}&amount={amount}";
+                var endpoint = AddApiKeyToEndpoint($"/convert?from={fromCurrency.ToUpper()}&to={toCurrency.ToUpper()}&amount={amount}");
 
                 var response = await _httpClient.GetAsync(endpoint);
                 var responseContent = await response.Content.ReadAsStringAsync();
@@ -243,7 +281,7 @@ namespace ExchangeRateLib.Implementations
             try
             {
                 var dateStr = date.ToString("yyyy-MM-dd");
-                var endpoint = $"/{dateStr}?base={fromCurrency.ToUpper()}&symbols={toCurrency.ToUpper()}";
+                var endpoint = AddApiKeyToEndpoint($"/{dateStr}?base={fromCurrency.ToUpper()}&symbols={toCurrency.ToUpper()}");
 
                 var response = await _httpClient.GetAsync(endpoint);
                 var responseContent = await response.Content.ReadAsStringAsync();
@@ -301,7 +339,7 @@ namespace ExchangeRateLib.Implementations
             {
                 var startDateStr = startDate.ToString("yyyy-MM-dd");
                 var endDateStr = endDate.ToString("yyyy-MM-dd");
-                var endpoint = $"/timeseries?start_date={startDateStr}&end_date={endDateStr}&base={baseCurrency.ToUpper()}&symbols={targetCurrency.ToUpper()}";
+                var endpoint = AddApiKeyToEndpoint($"/timeseries?start_date={startDateStr}&end_date={endDateStr}&base={baseCurrency.ToUpper()}&symbols={targetCurrency.ToUpper()}");
 
                 var response = await _httpClient.GetAsync(endpoint);
                 var responseContent = await response.Content.ReadAsStringAsync();
@@ -364,7 +402,8 @@ namespace ExchangeRateLib.Implementations
         {
             try
             {
-                var endpoint = "/symbols";
+                // Using /list endpoint for supported currencies
+                var endpoint = AddApiKeyToEndpoint("/list");
 
                 var response = await _httpClient.GetAsync(endpoint);
                 var responseContent = await response.Content.ReadAsStringAsync();
@@ -419,7 +458,7 @@ namespace ExchangeRateLib.Implementations
         {
             try
             {
-                var endpoint = $"/latest?base={baseCurrency.ToUpper()}";
+                var endpoint = AddApiKeyToEndpoint($"/live?source={baseCurrency.ToUpper()}");
 
                 var response = await _httpClient.GetAsync(endpoint);
                 var responseContent = await response.Content.ReadAsStringAsync();
@@ -438,8 +477,33 @@ namespace ExchangeRateLib.Implementations
                 if (root.TryGetProperty("success", out var successElement) && successElement.GetBoolean())
                 {
                     var rates = new Dictionary<string, decimal>();
+                    
+                    // Get the source (base) currency
+                    var sourceCurrency = root.TryGetProperty("source", out var sourceElement)
+                        ? sourceElement.GetString()?.ToUpper() ?? baseCurrency.ToUpper()
+                        : baseCurrency.ToUpper();
 
-                    if (root.TryGetProperty("rates", out var ratesElement))
+                    // CurrencyLayer format uses "quotes" with concatenated currency pairs (e.g., "EURUSD")
+                    if (root.TryGetProperty("quotes", out var quotesElement))
+                    {
+                        foreach (var quote in quotesElement.EnumerateObject())
+                        {
+                            // Quote name is like "EURUSD" - strip the base currency prefix
+                            var quoteName = quote.Name;
+                            if (quoteName.StartsWith(sourceCurrency, StringComparison.OrdinalIgnoreCase))
+                            {
+                                var targetCurrency = quoteName.Substring(sourceCurrency.Length);
+                                rates[targetCurrency] = quote.Value.GetDecimal();
+                            }
+                            else
+                            {
+                                // Fallback: use the full quote name
+                                rates[quoteName] = quote.Value.GetDecimal();
+                            }
+                        }
+                    }
+                    // Fallback: try "rates" property for other API formats
+                    else if (root.TryGetProperty("rates", out var ratesElement))
                     {
                         foreach (var rate in ratesElement.EnumerateObject())
                         {
@@ -447,15 +511,17 @@ namespace ExchangeRateLib.Implementations
                         }
                     }
 
-                    var timestamp = root.TryGetProperty("date", out var dateElement)
-                        ? DateTime.Parse(dateElement.GetString() ?? DateTime.UtcNow.ToString())
-                        : DateTime.UtcNow;
+                    var timestamp = root.TryGetProperty("timestamp", out var timestampElement)
+                        ? DateTimeOffset.FromUnixTimeSeconds(timestampElement.GetInt64()).UtcDateTime
+                        : (root.TryGetProperty("date", out var dateElement)
+                            ? DateTime.Parse(dateElement.GetString() ?? DateTime.UtcNow.ToString())
+                            : DateTime.UtcNow);
 
                     return new ExchangeRatesResult
                     {
                         Success = true,
                         Message = "Latest exchange rates retrieved successfully",
-                        BaseCurrency = baseCurrency.ToUpper(),
+                        BaseCurrency = sourceCurrency,
                         Rates = rates,
                         Date = timestamp,
                         Timestamp = DateTime.UtcNow

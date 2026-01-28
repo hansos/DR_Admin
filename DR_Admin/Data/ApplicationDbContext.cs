@@ -165,6 +165,7 @@ public class ApplicationDbContext : DbContext
     
     // Currency entities
     public DbSet<CurrencyExchangeRate> CurrencyExchangeRates { get; set; }
+    public DbSet<ExchangeRateDownloadLog> ExchangeRateDownloadLogs { get; set; }
     
     // Domain Lifecycle Workflow entities
     public DbSet<OutboxEvent> OutboxEvents { get; set; }

@@ -36,6 +36,21 @@ public enum CurrencyRateSource
     XE = 5,
 
     /// <summary>
+    /// Exchange rate from ExchangeRate.host API
+    /// </summary>
+    ExchangeRateHost = 6,
+
+    /// <summary>
+    /// Exchange rate from Frankfurter.app API
+    /// </summary>
+    Frankfurter = 7,
+
+    /// <summary>
+    /// Exchange rate from OANDA API
+    /// </summary>
+    OANDA = 8,
+
+    /// <summary>
     /// Exchange rate from a custom/other source
     /// </summary>
     Other = 99

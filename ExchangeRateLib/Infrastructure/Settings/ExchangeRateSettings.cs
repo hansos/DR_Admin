@@ -11,5 +11,20 @@ namespace ExchangeRateLib.Infrastructure.Settings
         public FixerSettings? Fixer { get; set; }
         public XeSettings? Xe { get; set; }
         public OandaSettings? Oanda { get; set; }
+
+        /// <summary>
+        /// Maximum number of updates per day (0 = unlimited)
+        /// </summary>
+        public int MaxUpdatesPerDay { get; set; } = 24;
+
+        /// <summary>
+        /// Hours between each update
+        /// </summary>
+        public int HoursBetweenUpdates { get; set; } = 1;
+
+        /// <summary>
+        /// Whether to download exchange rates on application startup
+        /// </summary>
+        public bool UpdateOnStartup { get; set; } = true;
     }
 }

@@ -111,6 +111,7 @@ builder.Services.AddTransient<IPaymentGatewayService, PaymentGatewayService>();
 builder.Services.AddTransient<IEmailQueueService, EmailQueueService>();
 builder.Services.AddTransient<IDocumentTemplateService, DocumentTemplateService>();
 builder.Services.AddTransient<ICurrencyService, CurrencyService>();
+builder.Services.AddTransient<IExchangeRateDownloadLogService, ExchangeRateDownloadLogService>();
 builder.Services.AddTransient<ISystemService, SystemService>();
 
 // Sales and Payment Flow services
@@ -132,6 +133,12 @@ builder.Services.AddSingleton(registrarSettings);
 // Domain Registration Library - Registrar Factory
 builder.Services.AddSingleton<DomainRegistrationLib.Factories.DomainRegistrarFactory>();
 
+// Exchange Rate Library - Settings and Factory
+var exchangeRateSettings = builder.Configuration.GetSection("ExchangeRate").Get<ExchangeRateLib.Infrastructure.Settings.ExchangeRateSettings>()
+    ?? new ExchangeRateLib.Infrastructure.Settings.ExchangeRateSettings();
+builder.Services.AddSingleton(exchangeRateSettings);
+builder.Services.AddSingleton<ExchangeRateLib.Factories.ExchangeRateFactory>();
+
 // Domain Lifecycle Workflows - Domain Services
 builder.Services.AddTransient<ISPAdmin.Domain.Services.IDomainEventPublisher, ISPAdmin.Domain.Services.DomainEventPublisher>();
 
@@ -151,6 +158,7 @@ builder.Services.AddTransient<ISPAdmin.Domain.Workflows.IOrderProvisioningWorkfl
 builder.Services.AddHostedService<EmailQueueBackgroundService>();
 builder.Services.AddHostedService<ISPAdmin.BackgroundServices.DomainExpirationMonitorService>();
 builder.Services.AddHostedService<ISPAdmin.BackgroundServices.OutboxProcessorService>();
+builder.Services.AddHostedService<ISPAdmin.BackgroundServices.ExchangeRateUpdateService>();
 
 // Configure CORS from appsettings
 var corsSettings = builder.Configuration.GetSection("CorsSettings");
