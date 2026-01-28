@@ -57,6 +57,7 @@ public class ApplicationDbContext : DbContext
                 break;
 
             case Customer customer:
+                customer.CountryCode = NormalizationHelper.Normalize(customer.CountryCode) ?? string.Empty;
                 customer.NormalizedName = NormalizationHelper.Normalize(customer.Name) ?? string.Empty;
                 customer.NormalizedCustomerName = NormalizationHelper.Normalize(customer.CustomerName);
                 customer.NormalizedContactPerson = NormalizationHelper.Normalize(customer.ContactPerson);

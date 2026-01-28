@@ -46,14 +46,18 @@
         <div class="test-section">
             <h2 class="section-title">&#10133; Create Customer</h2>
             <form id="createForm">
+                <!-- Basic Information -->
+                <h5 class="mb-3" style="color: #667eea; font-weight: 600;">Basic Information</h5>
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label for="createFirstName" class="form-label">First Name *</label>
-                        <input type="text" class="form-control" id="createFirstName" placeholder="e.g., John" required>
+                        <label for="createName" class="form-label">Name *</label>
+                        <input type="text" class="form-control" id="createName" placeholder="e.g., John Doe" required>
+                        <small class="text-muted">Full name or company name</small>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label for="createLastName" class="form-label">Last Name *</label>
-                        <input type="text" class="form-control" id="createLastName" placeholder="e.g., Doe" required>
+                        <label for="createCustomerName" class="form-label">Customer Name</label>
+                        <input type="text" class="form-control" id="createCustomerName" placeholder="e.g., JOHNDOE">
+                        <small class="text-muted">Unique customer identifier</small>
                     </div>
                 </div>
                 <div class="row">
@@ -62,20 +66,29 @@
                         <input type="email" class="form-control" id="createEmail" placeholder="e.g., john.doe@example.com" required>
                     </div>
                     <div class="col-md-6 mb-3">
+                        <label for="createBillingEmail" class="form-label">Billing Email</label>
+                        <input type="email" class="form-control" id="createBillingEmail" placeholder="e.g., billing@example.com">
+                        <small class="text-muted">Separate email for billing communications</small>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
                         <label for="createPhone" class="form-label">Phone</label>
                         <input type="tel" class="form-control" id="createPhone" placeholder="e.g., +1 234 567 8900">
                     </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-12 mb-3">
-                        <label for="createCompany" class="form-label">Company</label>
-                        <input type="text" class="form-control" id="createCompany" placeholder="e.g., Acme Corp">
+                    <div class="col-md-6 mb-3">
+                        <label for="createContactPerson" class="form-label">Contact Person</label>
+                        <input type="text" class="form-control" id="createContactPerson" placeholder="e.g., Jane Smith">
+                        <small class="text-muted">Primary contact person</small>
                     </div>
                 </div>
+
+                <!-- Address Information -->
+                <h5 class="mb-3 mt-4" style="color: #667eea; font-weight: 600;">Address Information</h5>
                 <div class="row">
                     <div class="col-md-12 mb-3">
                         <label for="createAddress" class="form-label">Address</label>
-                        <textarea class="form-control" id="createAddress" rows="2" placeholder="Enter address..."></textarea>
+                        <textarea class="form-control" id="createAddress" rows="2" placeholder="Enter street address..."></textarea>
                     </div>
                 </div>
                 <div class="row">
@@ -84,26 +97,96 @@
                         <input type="text" class="form-control" id="createCity" placeholder="e.g., New York">
                     </div>
                     <div class="col-md-4 mb-3">
-                        <label for="createState" class="form-label">State/Province</label>
+                        <label for="createState" class="form-label">State/Province *</label>
                         <input type="text" class="form-control" id="createState" placeholder="e.g., NY">
                     </div>
                     <div class="col-md-4 mb-3">
-                        <label for="createZipCode" class="form-label">ZIP/Postal Code</label>
-                        <input type="text" class="form-control" id="createZipCode" placeholder="e.g., 10001">
+                        <label for="createPostalCode" class="form-label">Postal Code</label>
+                        <input type="text" class="form-control" id="createPostalCode" placeholder="e.g., 10001">
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label for="createCountry" class="form-label">Country</label>
-                        <input type="text" class="form-control" id="createCountry" placeholder="e.g., United States">
+                        <label for="createCountryCode" class="form-label">Country Code *</label>
+                        <input type="text" class="form-control" id="createCountryCode" placeholder="e.g., US" maxlength="2">
+                        <small class="text-muted">2-letter ISO country code</small>
+                    </div>
+                </div>
+
+                <!-- Tax and Company Information -->
+                <h5 class="mb-3 mt-4" style="color: #667eea; font-weight: 600;">Tax & Company Information</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="createTaxId" class="form-label">Tax ID</label>
+                        <input type="text" class="form-control" id="createTaxId" placeholder="e.g., 12-3456789">
+                        <small class="text-muted">Tax identification number</small>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label for="createCustomerType" class="form-label">Customer Type</label>
-                        <select class="form-control" id="createCustomerType">
-                            <option value="">Select Type...</option>
-                            <option value="Individual">Individual</option>
-                            <option value="Business">Business</option>
+                        <label for="createVatNumber" class="form-label">VAT Number</label>
+                        <input type="text" class="form-control" id="createVatNumber" placeholder="e.g., GB123456789">
+                        <small class="text-muted">Value Added Tax number</small>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="createIsCompany">
+                            <label class="form-check-label" for="createIsCompany">
+                                Is Company
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Financial Information -->
+                <h5 class="mb-3 mt-4" style="color: #667eea; font-weight: 600;">Financial Information</h5>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="createCreditLimit" class="form-label">Credit Limit</label>
+                        <input type="number" class="form-control" id="createCreditLimit" placeholder="e.g., 5000.00" step="0.01" min="0" value="0">
+                        <small class="text-muted">Maximum credit allowed</small>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="createPreferredPaymentMethod" class="form-label">Preferred Payment Method</label>
+                        <input type="text" class="form-control" id="createPreferredPaymentMethod" placeholder="e.g., CreditCard">
+                        <small class="text-muted">Default payment method</small>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="createPreferredCurrency" class="form-label">Preferred Currency *</label>
+                        <input type="text" class="form-control" id="createPreferredCurrency" placeholder="e.g., USD" maxlength="3">
+                        <small class="text-muted">3-letter currency code</small>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="createAllowCurrencyOverride">
+                            <label class="form-check-label" for="createAllowCurrencyOverride">
+                                Allow Currency Override
+                            </label>
+                            <small class="text-muted d-block">Allow customer to override preferred currency</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status and Notes -->
+                <h5 class="mb-3 mt-4" style="color: #667eea; font-weight: 600;">Status & Notes</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="createStatus" class="form-label">Status *</label>
+                        <select class="form-control" id="createStatus">
+                            <option value="">Select Status...</option>
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                            <option value="Suspended">Suspended</option>
+                            <option value="Pending">Pending</option>
                         </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label for="createNotes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="createNotes" rows="3" placeholder="Additional notes about the customer..."></textarea>
                     </div>
                 </div>
                 <div class="mb-3">
@@ -320,18 +403,27 @@
             e.preventDefault();
             
             const data = {
-                firstName: document.getElementById('createFirstName').value.trim(),
-                lastName: document.getElementById('createLastName').value.trim(),
+                name: document.getElementById('createName').value.trim(),
                 email: document.getElementById('createEmail').value.trim(),
                 phone: document.getElementById('createPhone').value.trim() || null,
-                company: document.getElementById('createCompany').value.trim() || null,
                 address: document.getElementById('createAddress').value.trim() || null,
                 city: document.getElementById('createCity').value.trim() || null,
                 state: document.getElementById('createState').value.trim() || null,
-                zipCode: document.getElementById('createZipCode').value.trim() || null,
-                country: document.getElementById('createCountry').value.trim() || null,
-                customerType: document.getElementById('createCustomerType').value || null,
-                isActive: document.getElementById('createIsActive').checked
+                postalCode: document.getElementById('createPostalCode').value.trim() || null,
+                countryCode: document.getElementById('createCountryCode').value.trim() || null,
+                customerName: document.getElementById('createCustomerName').value.trim() || null,
+                taxId: document.getElementById('createTaxId').value.trim() || null,
+                vatNumber: document.getElementById('createVatNumber').value.trim() || null,
+                contactPerson: document.getElementById('createContactPerson').value.trim() || null,
+                isCompany: document.getElementById('createIsCompany').checked,
+                isActive: document.getElementById('createIsActive').checked,
+                status: document.getElementById('createStatus').value || null,
+                creditLimit: parseFloat(document.getElementById('createCreditLimit').value) || 0,
+                notes: document.getElementById('createNotes').value.trim() || null,
+                billingEmail: document.getElementById('createBillingEmail').value.trim() || null,
+                preferredPaymentMethod: document.getElementById('createPreferredPaymentMethod').value.trim() || null,
+                preferredCurrency: document.getElementById('createPreferredCurrency').value.trim() || null,
+                allowCurrencyOverride: document.getElementById('createAllowCurrencyOverride').checked
             };
 
             try {
@@ -355,6 +447,7 @@
                     showAlert('Customer created successfully!', 'success');
                     document.getElementById('createForm').reset();
                     document.getElementById('createIsActive').checked = true;
+                    document.getElementById('createCreditLimit').value = 0;
                     getAllCustomers(); // Refresh list
                 } else {
                     showAlert(`Error: ${result.message || result.error || 'Failed to create customer'}`, 'danger');
