@@ -162,6 +162,62 @@
             font-size: 64px;
             margin-bottom: 20px;
         }
+
+        .section-panel {
+            margin-bottom: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.3s;
+        }
+
+        .section-header:hover {
+            background: linear-gradient(135deg, #5568d3 0%, #653a8b 100%);
+        }
+
+        .section-header h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .section-toggle {
+            font-size: 20px;
+            transition: transform 0.3s;
+        }
+
+        .section-toggle.expanded {
+            transform: rotate(90deg);
+        }
+
+        .section-content {
+            display: none;
+            padding: 20px;
+            background: #f9f9f9;
+        }
+
+        .section-content.show {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .section-content.show {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
@@ -195,14 +251,8 @@
         <div class="test-links-container">
             <h2 class="section-title">&#128295; Available API Tests</h2>
             
-            <div class="test-links-grid" id="testLinksGrid">
-                <!-- Test links will be added here -->
-                <!-- Example structure:
-                <a href="/tests/auth-test.html" class="test-link">
-                    <div class="test-link-title">Authentication API</div>
-                    <p class="test-link-description">Test login, logout, and token validation</p>
-                </a>
-                -->
+            <div id="testLinksGrid">
+                <!-- Test links will be added here as collapsible sections -->
             </div>
 
             <!-- Empty state when no tests are available -->
@@ -306,29 +356,48 @@
                 return;
             }
             
-            grid.style.display = 'grid';
+            grid.style.display = 'block';
             emptyState.style.display = 'none';
             
-            // Render grouped test links
+            // Render grouped test links as collapsible sections
             let html = '';
+            let sectionIndex = 0;
             for (const [groupName, links] of Object.entries(testLinksConfig)) {
                 if (links.length > 0) {
                     html += `
-                        <div style="grid-column: 1 / -1;">
-                            <h3 style="color: #667eea; font-size: 18px; font-weight: 600; margin: 20px 0 10px 0; padding-bottom: 8px; border-bottom: 2px solid #e0e0e0;">
-                                ${groupName}
-                            </h3>
+                        <div class="section-panel">
+                            <div class="section-header" onclick="toggleSection(${sectionIndex})">
+                                <h3>${groupName}</h3>
+                                <span class="section-toggle" id="toggle-${sectionIndex}">&#9654;</span>
+                            </div>
+                            <div class="section-content" id="section-${sectionIndex}">
+                                ${links.map(link => `
+                                    <a href="${link.url}" class="test-link">
+                                        <div class="test-link-title">${link.title}</div>
+                                        <p class="test-link-description">${link.description}</p>
+                                    </a>
+                                `).join('')}
+                            </div>
                         </div>
                     `;
-                    html += links.map(link => `
-                        <a href="${link.url}" class="test-link">
-                            <div class="test-link-title">${link.title}</div>
-                            <p class="test-link-description">${link.description}</p>
-                        </a>
-                    `).join('');
+                    sectionIndex++;
                 }
             }
             grid.innerHTML = html;
+        }
+
+        // Toggle section collapse/expand
+        function toggleSection(index) {
+            const content = document.getElementById(`section-${index}`);
+            const toggle = document.getElementById(`toggle-${index}`);
+            
+            if (content.classList.contains('show')) {
+                content.classList.remove('show');
+                toggle.classList.remove('expanded');
+            } else {
+                content.classList.add('show');
+                toggle.classList.add('expanded');
+            }
         }
 
         // Check authentication on page load
