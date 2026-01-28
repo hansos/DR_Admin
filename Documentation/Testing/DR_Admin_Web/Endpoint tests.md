@@ -3,7 +3,7 @@ Endpoint tests using DR_Admin_Web
 | Controller                               | Status | Comments                                                                                                                |
 | ---------------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------- |
 | `AuthController`                         |        | No test page                                                                                                            |
-| `BillingCyclesController`                | ISSUES | - Duration and Sort order not set                                                                                       |
+| `BillingCyclesController`                | OK     |                                                                                                                         |
 | `ControlPanelTypesController`            |        |                                                                                                                         |
 | `CountriesController`                    | OK     |                                                                                                                         |
 | `CouponsController`                      | ISSUES | - Cannot create coupon                                                                                                  |
@@ -36,7 +36,7 @@ Endpoint tests using DR_Admin_Web
 | `SentEmailsController`                   | ISSUE  | - Test when i'ts possible to send mails                                                                                 |
 | `ServerControlPanelsController`          |        |                                                                                                                         |
 | `ServerIpAddressesController`            |        |                                                                                                                         |
-| `ServersController`                      | ISSuE  | - Cannot register servers                                                                                               |
+| `ServersController`                      | ISSUE  | - Cannot register servers                                                                                               |
 | `ServicesController`                     |        |                                                                                                                         |
 | `ServiceTypesController`                 |        |                                                                                                                         |
 | `SubscriptionBillingHistoriesController` |        |                                                                                                                         |

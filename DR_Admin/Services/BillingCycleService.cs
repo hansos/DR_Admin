@@ -70,15 +70,14 @@ public class BillingCycleService : IBillingCycleService
         {
             _log.Information("Creating new billing cycle with name: {BillingCycleName}", createDto.Name);
 
-            if (string.IsNullOrWhiteSpace(billingCycle.Name))
+            if (string.IsNullOrWhiteSpace(createDto.Name))
             {
-                _log.Warning("Billing cycle name cannot be empty);
-                return null;
+                throw new ArgumentException("Billing cycle name cannot be empty");
             }
 
             var billingCycle = new BillingCycle
             {
-                Code = createDto.Code?.ToUpper() ?? string.Empty,
+                Code = createDto.Code?.ToUpper() ?? createDto.Name!.ToUpper(),
                 Name = createDto.Name,
                 DurationInDays = createDto.DurationInDays,
                 Description = createDto.Description,
