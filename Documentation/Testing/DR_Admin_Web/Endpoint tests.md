@@ -10,7 +10,7 @@ Endpoint tests using DR_Admin_Web
 | `CurrenciesController`                   | OK     |                                                                                                                         |
 | `CustomerCreditsController`              | ISSUES | - Cannot register                                                                                                       |
 | `CustomerPaymentMethodsController`       | ISSUES | - Test page not implemented?                                                                                            |
-| `CustomersController`                    | ISSUES | - Connect customer to PostalCodes<br>- Extend with different addresses<br>- Country picker<br>- Set isCompany           |
+| `CustomersController`                    | OK     | - Connect customer to PostalCodes<br>- Extend with different addresses                                                  |
 | `DnsRecordsController`                   |        |                                                                                                                         |
 | `DnsRecordTypesController`               |        |                                                                                                                         |
 | `DnsZonePackageRecordsController`        |        |                                                                                                                         |

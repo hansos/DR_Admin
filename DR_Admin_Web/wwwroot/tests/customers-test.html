@@ -240,7 +240,7 @@
 
     <!-- Edit Modal -->
     <div class="modal fade" id="editModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-xl">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">&#9998; Edit Customer</h5>
@@ -249,14 +249,19 @@
                 <div class="modal-body">
                     <form id="editForm">
                         <input type="hidden" id="editId">
+                        
+                        <!-- Basic Information -->
+                        <h5 class="mb-3" style="color: #667eea; font-weight: 600;">Basic Information</h5>
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="editFirstName" class="form-label">First Name *</label>
-                                <input type="text" class="form-control" id="editFirstName" required>
+                                <label for="editName" class="form-label">Name *</label>
+                                <input type="text" class="form-control" id="editName" required>
+                                <small class="text-muted">Full name or company name</small>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="editLastName" class="form-label">Last Name *</label>
-                                <input type="text" class="form-control" id="editLastName" required>
+                                <label for="editCustomerName" class="form-label">Customer Name</label>
+                                <input type="text" class="form-control" id="editCustomerName">
+                                <small class="text-muted">Unique customer identifier</small>
                             </div>
                         </div>
                         <div class="row">
@@ -265,17 +270,30 @@
                                 <input type="email" class="form-control" id="editEmail" required>
                             </div>
                             <div class="col-md-6 mb-3">
+                                <label for="editBillingEmail" class="form-label">Billing Email</label>
+                                <input type="email" class="form-control" id="editBillingEmail">
+                                <small class="text-muted">Separate email for billing communications</small>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
                                 <label for="editPhone" class="form-label">Phone</label>
                                 <input type="tel" class="form-control" id="editPhone">
                             </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editContactPerson" class="form-label">Contact Person</label>
+                                <input type="text" class="form-control" id="editContactPerson">
+                                <small class="text-muted">Primary contact person</small>
+                            </div>
                         </div>
-                        <div class="mb-3">
-                            <label for="editCompany" class="form-label">Company</label>
-                            <input type="text" class="form-control" id="editCompany">
-                        </div>
-                        <div class="mb-3">
-                            <label for="editAddress" class="form-label">Address</label>
-                            <textarea class="form-control" id="editAddress" rows="2"></textarea>
+
+                        <!-- Address Information -->
+                        <h5 class="mb-3 mt-4" style="color: #667eea; font-weight: 600;">Address Information</h5>
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="editAddress" class="form-label">Address</label>
+                                <textarea class="form-control" id="editAddress" rows="2"></textarea>
+                            </div>
                         </div>
                         <div class="row">
                             <div class="col-md-4 mb-3">
@@ -287,22 +305,90 @@
                                 <input type="text" class="form-control" id="editState">
                             </div>
                             <div class="col-md-4 mb-3">
-                                <label for="editZipCode" class="form-label">ZIP/Postal Code</label>
-                                <input type="text" class="form-control" id="editZipCode">
+                                <label for="editPostalCode" class="form-label">Postal Code</label>
+                                <input type="text" class="form-control" id="editPostalCode">
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="editCountry" class="form-label">Country</label>
-                                <input type="text" class="form-control" id="editCountry">
+                                <label for="editCountryCode" class="form-label">Country Code</label>
+                                <input type="text" class="form-control" id="editCountryCode" maxlength="2">
+                                <small class="text-muted">2-letter ISO country code</small>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="editCustomerType" class="form-label">Customer Type</label>
-                                <select class="form-control" id="editCustomerType">
-                                    <option value="">Select Type...</option>
-                                    <option value="Individual">Individual</option>
-                                    <option value="Business">Business</option>
+                        </div>
+
+                        <!-- Tax and Company Information -->
+                        <h5 class="mb-3 mt-4" style="color: #667eea; font-weight: 600;">Tax & Company Information</h5>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="editIsCompany" class="form-label">Customer Type *</label>
+                                <select class="form-control" id="editIsCompany" required>
+                                    <option value="false">Individual</option>
+                                    <option value="true">Company</option>
                                 </select>
+                                <small class="text-muted">Select if this is a company or individual</small>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="editTaxId" class="form-label">Tax ID</label>
+                                <input type="text" class="form-control" id="editTaxId">
+                                <small class="text-muted">Tax identification number</small>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="editVatNumber" class="form-label">VAT Number</label>
+                                <input type="text" class="form-control" id="editVatNumber">
+                                <small class="text-muted">Value Added Tax number</small>
+                            </div>
+                        </div>
+
+                        <!-- Financial Information -->
+                        <h5 class="mb-3 mt-4" style="color: #667eea; font-weight: 600;">Financial Information</h5>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="editCreditLimit" class="form-label">Credit Limit</label>
+                                <input type="number" class="form-control" id="editCreditLimit" step="0.01" min="0">
+                                <small class="text-muted">Maximum credit allowed</small>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="editPreferredPaymentMethod" class="form-label">Preferred Payment Method</label>
+                                <input type="text" class="form-control" id="editPreferredPaymentMethod">
+                                <small class="text-muted">Default payment method</small>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="editPreferredCurrency" class="form-label">Preferred Currency</label>
+                                <input type="text" class="form-control" id="editPreferredCurrency" maxlength="3">
+                                <small class="text-muted">3-letter currency code</small>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="editAllowCurrencyOverride">
+                                    <label class="form-check-label" for="editAllowCurrencyOverride">
+                                        Allow Currency Override
+                                    </label>
+                                    <small class="text-muted d-block">Allow customer to override preferred currency</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Status and Notes -->
+                        <h5 class="mb-3 mt-4" style="color: #667eea; font-weight: 600;">Status & Notes</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editStatus" class="form-label">Status</label>
+                                <select class="form-control" id="editStatus">
+                                    <option value="">Select Status...</option>
+                                    <option value="Active">Active</option>
+                                    <option value="Inactive">Inactive</option>
+                                    <option value="Suspended">Suspended</option>
+                                    <option value="Pending">Pending</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="editNotes" class="form-label">Notes</label>
+                                <textarea class="form-control" id="editNotes" rows="3"></textarea>
                             </div>
                         </div>
                         <div class="mb-3">
@@ -511,10 +597,10 @@
                             <tr>
                                 <th>ID</th>
                                 <th>Name</th>
+                                <th>Type</th>
                                 <th>Email</th>
                                 <th>Phone</th>
-                                <th>Company</th>
-                                <th>Type</th>
+                                <th>Customer Name</th>
                                 <th>Location</th>
                                 <th>Status</th>
                                 <th>Created At</th>
@@ -523,21 +609,20 @@
                         </thead>
                         <tbody>
                             ${customers.map(customer => {
-                                const fullName = `${customer.firstName || ''} ${customer.lastName || ''}`.trim() || 'N/A';
-                                const location = [customer.city, customer.state, customer.country].filter(x => x).join(', ') || '-';
+                                const location = [customer.city, customer.state, customer.countryCode].filter(x => x).join(', ') || '-';
                                 
                                 return `
                                     <tr>
                                         <td>${customer.id}</td>
-                                        <td><strong>${fullName}</strong></td>
+                                        <td><strong>${customer.name || 'N/A'}</strong></td>
+                                        <td>${customer.isCompany ? '<span class="badge badge-info">Company</span>' : '<span class="badge badge-secondary">Individual</span>'}</td>
                                         <td>${customer.email || '-'}</td>
                                         <td>${customer.phone || '-'}</td>
-                                        <td>${customer.company || '-'}</td>
-                                        <td>${customer.customerType ? `<span class="badge badge-info">${customer.customerType}</span>` : '-'}</td>
+                                        <td>${customer.customerName || '-'}</td>
                                         <td>${location}</td>
                                         <td>
                                             <span class="badge ${customer.isActive ? 'badge-success' : 'badge-secondary'}">
-                                                ${customer.isActive ? 'Active' : 'Inactive'}
+                                                ${customer.status || (customer.isActive ? 'Active' : 'Inactive')}
                                             </span>
                                         </td>
                                         <td>${customer.createdAt ? new Date(customer.createdAt).toLocaleString() : '-'}</td>
@@ -546,7 +631,7 @@
                                                 <button class="btn btn-sm btn-warning" onclick="openEditModal(${customer.id})">
                                                     Edit
                                                 </button>
-                                                <button class="btn btn-sm btn-danger" onclick="deleteCustomer(${customer.id}, '${fullName.replace(/'/g, "\\'")}')">
+                                                <button class="btn btn-sm btn-danger" onclick="deleteCustomer(${customer.id}, '${(customer.name || 'Customer').replace(/'/g, "\\'")}')">
                                                     Delete
                                                 </button>
                                             </div>
@@ -594,20 +679,28 @@
                 updateResponseBox(data);
 
                 if (response.ok) {
-                    const fullName = `${data.firstName || ''} ${data.lastName || ''}`.trim() || 'N/A';
-                    const fullAddress = [data.address, data.city, data.state, data.zipCode, data.country].filter(x => x).join(', ') || 'N/A';
+                    const fullAddress = [data.address, data.city, data.state, data.postalCode, data.countryCode].filter(x => x).join(', ') || 'N/A';
                     
                     result.innerHTML = `
                         <div class="alert alert-success">
                             <h5>Customer Found:</h5>
                             <p><strong>ID:</strong> ${data.id}</p>
-                            <p><strong>Name:</strong> ${fullName}</p>
+                            <p><strong>Name:</strong> ${data.name || 'N/A'}</p>
+                            <p><strong>Customer Name:</strong> ${data.customerName || 'N/A'}</p>
+                            <p><strong>Type:</strong> ${data.isCompany ? 'Company' : 'Individual'}</p>
                             <p><strong>Email:</strong> ${data.email || 'N/A'}</p>
+                            <p><strong>Billing Email:</strong> ${data.billingEmail || 'N/A'}</p>
                             <p><strong>Phone:</strong> ${data.phone || 'N/A'}</p>
-                            <p><strong>Company:</strong> ${data.company || 'N/A'}</p>
-                            <p><strong>Customer Type:</strong> ${data.customerType || 'N/A'}</p>
+                            <p><strong>Contact Person:</strong> ${data.contactPerson || 'N/A'}</p>
                             <p><strong>Address:</strong> ${fullAddress}</p>
-                            <p><strong>Status:</strong> ${data.isActive ? 'Active' : 'Inactive'}</p>
+                            <p><strong>Tax ID:</strong> ${data.taxId || 'N/A'}</p>
+                            <p><strong>VAT Number:</strong> ${data.vatNumber || 'N/A'}</p>
+                            <p><strong>Credit Limit:</strong> ${data.creditLimit || 0}</p>
+                            <p><strong>Preferred Payment Method:</strong> ${data.preferredPaymentMethod || 'N/A'}</p>
+                            <p><strong>Preferred Currency:</strong> ${data.preferredCurrency || 'EUR'}</p>
+                            <p><strong>Allow Currency Override:</strong> ${data.allowCurrencyOverride ? 'Yes' : 'No'}</p>
+                            <p><strong>Status:</strong> ${data.status || 'N/A'} ${data.isActive ? '(Active)' : '(Inactive)'}</p>
+                            <p><strong>Notes:</strong> ${data.notes || 'N/A'}</p>
                             <p><strong>Created:</strong> ${data.createdAt ? new Date(data.createdAt).toLocaleString() : 'N/A'}</p>
                             <p><strong>Updated:</strong> ${data.updatedAt ? new Date(data.updatedAt).toLocaleString() : 'N/A'}</p>
                         </div>
@@ -633,17 +726,26 @@
             }
 
             document.getElementById('editId').value = customer.id;
-            document.getElementById('editFirstName').value = customer.firstName || '';
-            document.getElementById('editLastName').value = customer.lastName || '';
+            document.getElementById('editName').value = customer.name || '';
+            document.getElementById('editCustomerName').value = customer.customerName || '';
             document.getElementById('editEmail').value = customer.email || '';
+            document.getElementById('editBillingEmail').value = customer.billingEmail || '';
             document.getElementById('editPhone').value = customer.phone || '';
-            document.getElementById('editCompany').value = customer.company || '';
+            document.getElementById('editContactPerson').value = customer.contactPerson || '';
             document.getElementById('editAddress').value = customer.address || '';
             document.getElementById('editCity').value = customer.city || '';
             document.getElementById('editState').value = customer.state || '';
-            document.getElementById('editZipCode').value = customer.zipCode || '';
-            document.getElementById('editCountry').value = customer.country || '';
-            document.getElementById('editCustomerType').value = customer.customerType || '';
+            document.getElementById('editPostalCode').value = customer.postalCode || '';
+            document.getElementById('editCountryCode').value = customer.countryCode || '';
+            document.getElementById('editIsCompany').value = customer.isCompany ? 'true' : 'false';
+            document.getElementById('editTaxId').value = customer.taxId || '';
+            document.getElementById('editVatNumber').value = customer.vatNumber || '';
+            document.getElementById('editCreditLimit').value = customer.creditLimit || 0;
+            document.getElementById('editPreferredPaymentMethod').value = customer.preferredPaymentMethod || '';
+            document.getElementById('editPreferredCurrency').value = customer.preferredCurrency || '';
+            document.getElementById('editAllowCurrencyOverride').checked = customer.allowCurrencyOverride !== false;
+            document.getElementById('editStatus').value = customer.status || '';
+            document.getElementById('editNotes').value = customer.notes || '';
             document.getElementById('editIsActive').checked = customer.isActive;
 
             editModal.show();
@@ -653,18 +755,27 @@
         async function updateCustomer() {
             const id = document.getElementById('editId').value;
             const data = {
-                firstName: document.getElementById('editFirstName').value.trim(),
-                lastName: document.getElementById('editLastName').value.trim(),
+                name: document.getElementById('editName').value.trim(),
                 email: document.getElementById('editEmail').value.trim(),
                 phone: document.getElementById('editPhone').value.trim() || null,
-                company: document.getElementById('editCompany').value.trim() || null,
                 address: document.getElementById('editAddress').value.trim() || null,
                 city: document.getElementById('editCity').value.trim() || null,
                 state: document.getElementById('editState').value.trim() || null,
-                zipCode: document.getElementById('editZipCode').value.trim() || null,
-                country: document.getElementById('editCountry').value.trim() || null,
-                customerType: document.getElementById('editCustomerType').value || null,
-                isActive: document.getElementById('editIsActive').checked
+                postalCode: document.getElementById('editPostalCode').value.trim() || null,
+                countryCode: document.getElementById('editCountryCode').value.trim() || null,
+                customerName: document.getElementById('editCustomerName').value.trim() || null,
+                taxId: document.getElementById('editTaxId').value.trim() || null,
+                vatNumber: document.getElementById('editVatNumber').value.trim() || null,
+                contactPerson: document.getElementById('editContactPerson').value.trim() || null,
+                isCompany: document.getElementById('editIsCompany').value === 'true',
+                isActive: document.getElementById('editIsActive').checked,
+                status: document.getElementById('editStatus').value || null,
+                creditLimit: parseFloat(document.getElementById('editCreditLimit').value) || 0,
+                notes: document.getElementById('editNotes').value.trim() || null,
+                billingEmail: document.getElementById('editBillingEmail').value.trim() || null,
+                preferredPaymentMethod: document.getElementById('editPreferredPaymentMethod').value.trim() || null,
+                preferredCurrency: document.getElementById('editPreferredCurrency').value.trim() || null,
+                allowCurrencyOverride: document.getElementById('editAllowCurrencyOverride').checked
             };
 
             try {
