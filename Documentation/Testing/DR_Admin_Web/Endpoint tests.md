@@ -6,7 +6,7 @@ Endpoint tests using DR_Admin_Web
 | `BillingCyclesController`                | OK     |                                                                                                                         |
 | `ControlPanelTypesController`            |        |                                                                                                                         |
 | `CountriesController`                    | OK     |                                                                                                                         |
-| `CouponsController`                      | ISSUES | - Cannot create coupon                                                                                                  |
+| `CouponsController`                      | OK     |                                                                                                                         |
 | `CurrenciesController`                   | ISSUES | - Cannot create Currency                                                                                                |
 | `CustomerCreditsController`              | ISSUES | - Cannot register                                                                                                       |
 | `CustomerPaymentMethodsController`       | ISSUES | - Test page not implemented?                                                                                            |

@@ -35,8 +35,8 @@
     <!-- Main Content -->
     <div class="container-main">
         <div class="header-card">
-            <h1>&#128176; Currencies API Test</h1>
-            <p>Test CRUD operations for Currencies API endpoint</p>
+            <h1>&#128176; Currency Exchange Rates API Test</h1>
+            <p>Test CRUD operations for Currency Exchange Rates API endpoint</p>
         </div>
 
         <!-- Alert Messages -->
@@ -44,29 +44,57 @@
 
         <!-- Create Currency Section -->
         <div class="test-section">
-            <h2 class="section-title">&#10133; Create Currency</h2>
+            <h2 class="section-title">&#10133; Create Currency Exchange Rate</h2>
             <form id="createForm">
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label for="createCode" class="form-label">Currency Code *</label>
-                        <input type="text" class="form-control" id="createCode" placeholder="e.g., USD" maxlength="3" required>
+                        <label for="createBaseCurrency" class="form-label">Base Currency *</label>
+                        <input type="text" class="form-control" id="createBaseCurrency" placeholder="e.g., EUR" maxlength="3" value="EUR" required>
                         <small class="text-muted">3-character ISO code</small>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label for="createSymbol" class="form-label">Symbol *</label>
-                        <input type="text" class="form-control" id="createSymbol" placeholder="e.g., $" required>
-                        <small class="text-muted">Currency symbol</small>
+                        <label for="createTargetCurrency" class="form-label">Target Currency *</label>
+                        <input type="text" class="form-control" id="createTargetCurrency" placeholder="e.g., USD" maxlength="3" required>
+                        <small class="text-muted">3-character ISO code</small>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="createRate" class="form-label">Exchange Rate *</label>
+                        <input type="number" class="form-control" id="createRate" placeholder="e.g., 1.12" step="0.000001" min="0" required>
+                        <small class="text-muted">Rate from base to target currency</small>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="createMarkup" class="form-label">Markup (%)</label>
+                        <input type="number" class="form-control" id="createMarkup" placeholder="e.g., 2.5" step="0.01" min="0" value="0">
+                        <small class="text-muted">Markup percentage</small>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="createSource" class="form-label">Source</label>
+                        <select class="form-control" id="createSource">
+                            <option value="0">Manual</option>
+                            <option value="1">API</option>
+                            <option value="2">Bank</option>
+                            <option value="3">Other</option>
+                        </select>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label for="createName" class="form-label">Name *</label>
-                        <input type="text" class="form-control" id="createName" placeholder="e.g., US Dollar" required>
+                        <label for="createEffectiveDate" class="form-label">Effective Date *</label>
+                        <input type="datetime-local" class="form-control" id="createEffectiveDate" required>
+                        <small class="text-muted">When this rate becomes effective</small>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label for="createDecimalPlaces" class="form-label">Decimal Places</label>
-                        <input type="number" class="form-control" id="createDecimalPlaces" placeholder="e.g., 2" min="0" max="4" value="2">
-                        <small class="text-muted">Number of decimal places (0-4)</small>
+                        <label for="createExpiryDate" class="form-label">Expiry Date</label>
+                        <input type="datetime-local" class="form-control" id="createExpiryDate">
+                        <small class="text-muted">When this rate expires (optional)</small>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label for="createNotes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="createNotes" rows="2" placeholder="Optional notes..."></textarea>
                     </div>
                 </div>
                 <div class="mb-3">
@@ -77,14 +105,14 @@
                         </label>
                     </div>
                 </div>
-                <button type="submit" class="btn btn-primary">Create Currency</button>
+                <button type="submit" class="btn btn-primary">Create Exchange Rate</button>
             </form>
         </div>
 
         <!-- Get All Currencies Section -->
         <div class="test-section">
-            <h2 class="section-title">&#128203; Get All Currencies</h2>
-            <button class="btn btn-primary mb-3" onclick="getAllCurrencies()">Load All Currencies</button>
+            <h2 class="section-title">&#128203; Get All Exchange Rates</h2>
+            <button class="btn btn-primary mb-3" onclick="getAllCurrencies()">Load All Exchange Rates</button>
             <div class="loading" id="loadingAll">
                 <div class="spinner-border" role="status">
                     <span class="visually-hidden">Loading...</span>
@@ -95,14 +123,14 @@
 
         <!-- Get Currency by ID Section -->
         <div class="test-section">
-            <h2 class="section-title">&#128269; Get Currency by ID</h2>
+            <h2 class="section-title">&#128269; Get Exchange Rate by ID</h2>
             <div class="row">
                 <div class="col-md-4 mb-3">
-                    <label for="getCurrencyId" class="form-label">Currency ID</label>
+                    <label for="getCurrencyId" class="form-label">Exchange Rate ID</label>
                     <input type="number" class="form-control" id="getCurrencyId" placeholder="Enter ID">
                 </div>
                 <div class="col-md-8 mb-3 d-flex align-items-end">
-                    <button class="btn btn-primary" onclick="getCurrencyById()">Get Currency</button>
+                    <button class="btn btn-primary" onclick="getCurrencyById()">Get Exchange Rate</button>
                 </div>
             </div>
             <div class="loading" id="loadingById">
@@ -111,6 +139,106 @@
                 </div>
             </div>
             <div id="currencyByIdResult"></div>
+        </div>
+
+        <!-- Get Active Rates Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#9989; Get Active Currency Rates</h2>
+            <p>Retrieve all active currency exchange rates</p>
+            <button class="btn btn-primary mb-3" onclick="getActiveRates()">Load Active Rates</button>
+            <div class="loading" id="loadingActive">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="activeRatesContainer"></div>
+        </div>
+
+        <!-- Get Exchange Rate Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128177; Get Exchange Rate</h2>
+            <p>Get the current exchange rate between two currencies</p>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="exchangeFromCurrency" class="form-label">From Currency *</label>
+                    <input type="text" class="form-control" id="exchangeFromCurrency" placeholder="e.g., EUR" maxlength="3">
+                    <small class="text-muted">3-character ISO code</small>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="exchangeToCurrency" class="form-label">To Currency *</label>
+                    <input type="text" class="form-control" id="exchangeToCurrency" placeholder="e.g., USD" maxlength="3">
+                    <small class="text-muted">3-character ISO code</small>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="exchangeDate" class="form-label">Date (Optional)</label>
+                    <input type="datetime-local" class="form-control" id="exchangeDate">
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="getExchangeRate()">Get Exchange Rate</button>
+            <div class="loading" id="loadingExchange">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="exchangeRateResult"></div>
+        </div>
+
+        <!-- Get Rates for Currency Pair Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128260; Get Rates for Currency Pair</h2>
+            <p>Retrieve all exchange rates for a specific currency pair</p>
+            <div class="row">
+                <div class="col-md-5 mb-3">
+                    <label for="pairFromCurrency" class="form-label">From Currency *</label>
+                    <input type="text" class="form-control" id="pairFromCurrency" placeholder="e.g., EUR" maxlength="3">
+                    <small class="text-muted">3-character ISO code</small>
+                </div>
+                <div class="col-md-5 mb-3">
+                    <label for="pairToCurrency" class="form-label">To Currency *</label>
+                    <input type="text" class="form-control" id="pairToCurrency" placeholder="e.g., USD" maxlength="3">
+                    <small class="text-muted">3-character ISO code</small>
+                </div>
+                <div class="col-md-2 mb-3 d-flex align-items-end">
+                    <button class="btn btn-primary w-100" onclick="getRatesForPair()">Get Rates</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingPair">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="pairRatesContainer"></div>
+        </div>
+
+        <!-- Convert Currency Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128178; Convert Currency</h2>
+            <p>Convert an amount from one currency to another</p>
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label for="convertAmount" class="form-label">Amount *</label>
+                    <input type="number" class="form-control" id="convertAmount" placeholder="e.g., 100.00" step="0.01" min="0" required>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="convertFromCurrency" class="form-label">From Currency *</label>
+                    <input type="text" class="form-control" id="convertFromCurrency" placeholder="e.g., EUR" maxlength="3" required>
+                    <small class="text-muted">3-character ISO code</small>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="convertToCurrency" class="form-label">To Currency *</label>
+                    <input type="text" class="form-control" id="convertToCurrency" placeholder="e.g., USD" maxlength="3" required>
+                    <small class="text-muted">3-character ISO code</small>
+                </div>
+                <div class="col-md-3 mb-3 d-flex align-items-end">
+                    <button class="btn btn-primary w-100" onclick="convertCurrency()">Convert</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingConvert">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="convertResult"></div>
         </div>
 
         <!-- API Response Section -->
@@ -125,27 +253,48 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">&#9998; Edit Currency</h5>
+                    <h5 class="modal-title">&#9998; Edit Exchange Rate</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <form id="editForm">
                         <input type="hidden" id="editId">
                         <div class="mb-3">
-                            <label for="editCode" class="form-label">Currency Code *</label>
-                            <input type="text" class="form-control" id="editCode" maxlength="3" required>
+                            <label for="editBaseCurrency" class="form-label">Base Currency *</label>
+                            <input type="text" class="form-control" id="editBaseCurrency" maxlength="3" required>
                         </div>
                         <div class="mb-3">
-                            <label for="editSymbol" class="form-label">Symbol *</label>
-                            <input type="text" class="form-control" id="editSymbol" required>
+                            <label for="editTargetCurrency" class="form-label">Target Currency *</label>
+                            <input type="text" class="form-control" id="editTargetCurrency" maxlength="3" required>
                         </div>
                         <div class="mb-3">
-                            <label for="editName" class="form-label">Name *</label>
-                            <input type="text" class="form-control" id="editName" required>
+                            <label for="editRate" class="form-label">Exchange Rate *</label>
+                            <input type="number" class="form-control" id="editRate" step="0.000001" min="0" required>
                         </div>
                         <div class="mb-3">
-                            <label for="editDecimalPlaces" class="form-label">Decimal Places</label>
-                            <input type="number" class="form-control" id="editDecimalPlaces" min="0" max="4">
+                            <label for="editMarkup" class="form-label">Markup (%)</label>
+                            <input type="number" class="form-control" id="editMarkup" step="0.01" min="0">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editSource" class="form-label">Source</label>
+                            <select class="form-control" id="editSource">
+                                <option value="0">Manual</option>
+                                <option value="1">API</option>
+                                <option value="2">Bank</option>
+                                <option value="3">Other</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editEffectiveDate" class="form-label">Effective Date *</label>
+                            <input type="datetime-local" class="form-control" id="editEffectiveDate" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editExpiryDate" class="form-label">Expiry Date</label>
+                            <input type="datetime-local" class="form-control" id="editExpiryDate">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editNotes" class="form-label">Notes</label>
+                            <textarea class="form-control" id="editNotes" rows="2"></textarea>
                         </div>
                         <div class="mb-3">
                             <div class="form-check">
@@ -199,6 +348,11 @@
             // Setup create form
             document.getElementById('createForm').addEventListener('submit', handleCreate);
 
+            // Set default effective date to now
+            const now = new Date();
+            const nowLocal = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+            document.getElementById('createEffectiveDate').value = nowLocal;
+
             // Load all currencies on init
             getAllCurrencies();
         });
@@ -243,11 +397,15 @@
             e.preventDefault();
             
             const data = {
-                code: document.getElementById('createCode').value.trim().toUpperCase(),
-                symbol: document.getElementById('createSymbol').value.trim(),
-                name: document.getElementById('createName').value.trim(),
-                decimalPlaces: parseInt(document.getElementById('createDecimalPlaces').value) || 2,
-                isActive: document.getElementById('createIsActive').checked
+                baseCurrency: document.getElementById('createBaseCurrency').value.trim().toUpperCase(),
+                targetCurrency: document.getElementById('createTargetCurrency').value.trim().toUpperCase(),
+                rate: parseFloat(document.getElementById('createRate').value),
+                effectiveDate: document.getElementById('createEffectiveDate').value,
+                expiryDate: document.getElementById('createExpiryDate').value || null,
+                source: parseInt(document.getElementById('createSource').value),
+                isActive: document.getElementById('createIsActive').checked,
+                markup: parseFloat(document.getElementById('createMarkup').value) || 0,
+                notes: document.getElementById('createNotes').value.trim() || null
             };
 
             try {
@@ -268,13 +426,15 @@
                 updateResponseBox(result);
 
                 if (response.ok) {
-                    showAlert('Currency created successfully!', 'success');
+                    showAlert('Exchange rate created successfully!', 'success');
                     document.getElementById('createForm').reset();
                     document.getElementById('createIsActive').checked = true;
-                    document.getElementById('createDecimalPlaces').value = 2;
+                    document.getElementById('createBaseCurrency').value = 'EUR';
+                    document.getElementById('createMarkup').value = 0;
+                    document.getElementById('createSource').value = 0;
                     getAllCurrencies(); // Refresh list
                 } else {
-                    showAlert(`Error: ${result.message || result.error || 'Failed to create currency'}`, 'danger');
+                    showAlert(`Error: ${result.message || result.error || 'Failed to create exchange rate'}`, 'danger');
                 }
             } catch (error) {
                 showAlert(`Error: ${error.message}`, 'danger');
@@ -310,7 +470,7 @@
                     currentCurrencies = data;
                     renderCurrenciesTable(data);
                 } else {
-                    showAlert(`Error: ${data.message || data.error || 'Failed to fetch currencies'}`, 'danger');
+                    showAlert(`Error: ${data.message || data.error || 'Failed to fetch exchange rates'}`, 'danger');
                 }
             } catch (error) {
                 showAlert(`Error: ${error.message}`, 'danger');
@@ -325,7 +485,7 @@
             const container = document.getElementById('currenciesTableContainer');
             
             if (!currencies || currencies.length === 0) {
-                container.innerHTML = '<div class="empty-state">No currencies found</div>';
+                container.innerHTML = '<div class="empty-state">No exchange rates found</div>';
                 return;
             }
 
@@ -335,12 +495,14 @@
                         <thead>
                             <tr>
                                 <th>ID</th>
-                                <th>Code</th>
-                                <th>Symbol</th>
-                                <th>Name</th>
-                                <th>Decimal Places</th>
+                                <th>Base</th>
+                                <th>Target</th>
+                                <th>Rate</th>
+                                <th>Markup</th>
+                                <th>Effective Date</th>
+                                <th>Expiry Date</th>
+                                <th>Source</th>
                                 <th>Status</th>
-                                <th>Created At</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -348,22 +510,24 @@
                             ${currencies.map(currency => `
                                 <tr>
                                     <td>${currency.id}</td>
-                                    <td><strong>${currency.code}</strong></td>
-                                    <td><strong>${currency.symbol}</strong></td>
-                                    <td>${currency.name}</td>
-                                    <td>${currency.decimalPlaces !== undefined ? currency.decimalPlaces : 2}</td>
+                                    <td><strong>${currency.baseCurrency}</strong></td>
+                                    <td><strong>${currency.targetCurrency}</strong></td>
+                                    <td>${currency.rate}</td>
+                                    <td>${currency.markup}%</td>
+                                    <td>${new Date(currency.effectiveDate).toLocaleString()}</td>
+                                    <td>${currency.expiryDate ? new Date(currency.expiryDate).toLocaleString() : 'N/A'}</td>
+                                    <td>${currency.source}</td>
                                     <td>
                                         <span class="badge ${currency.isActive ? 'badge-success' : 'badge-secondary'}">
                                             ${currency.isActive ? 'Active' : 'Inactive'}
                                         </span>
                                     </td>
-                                    <td>${new Date(currency.createdAt).toLocaleString()}</td>
                                     <td>
                                         <div class="action-buttons">
                                             <button class="btn btn-sm btn-warning" onclick="openEditModal(${currency.id})">
                                                 Edit
                                             </button>
-                                            <button class="btn btn-sm btn-danger" onclick="deleteCurrency(${currency.id}, '${currency.name.replace(/'/g, "\\'")}')">
+                                            <button class="btn btn-sm btn-danger" onclick="deleteCurrency(${currency.id}, '${currency.baseCurrency}-${currency.targetCurrency}')">
                                                 Delete
                                             </button>
                                         </div>
@@ -383,7 +547,7 @@
             const id = document.getElementById('getCurrencyId').value;
             
             if (!id) {
-                showAlert('Please enter a currency ID', 'warning');
+                showAlert('Please enter an exchange rate ID', 'warning');
                 return;
             }
 
@@ -412,19 +576,23 @@
                 if (response.ok) {
                     result.innerHTML = `
                         <div class="alert alert-success">
-                            <h5>Currency Found:</h5>
+                            <h5>Exchange Rate Found:</h5>
                             <p><strong>ID:</strong> ${data.id}</p>
-                            <p><strong>Code:</strong> ${data.code}</p>
-                            <p><strong>Symbol:</strong> ${data.symbol}</p>
-                            <p><strong>Name:</strong> ${data.name}</p>
-                            <p><strong>Decimal Places:</strong> ${data.decimalPlaces !== undefined ? data.decimalPlaces : 'N/A'}</p>
+                            <p><strong>Base Currency:</strong> ${data.baseCurrency}</p>
+                            <p><strong>Target Currency:</strong> ${data.targetCurrency}</p>
+                            <p><strong>Rate:</strong> ${data.rate}</p>
+                            <p><strong>Markup:</strong> ${data.markup}%</p>
+                            <p><strong>Effective Date:</strong> ${new Date(data.effectiveDate).toLocaleString()}</p>
+                            <p><strong>Expiry Date:</strong> ${data.expiryDate ? new Date(data.expiryDate).toLocaleString() : 'N/A'}</p>
+                            <p><strong>Source:</strong> ${data.source}</p>
                             <p><strong>Status:</strong> ${data.isActive ? 'Active' : 'Inactive'}</p>
+                            ${data.notes ? `<p><strong>Notes:</strong> ${data.notes}</p>` : ''}
                             <p><strong>Created:</strong> ${new Date(data.createdAt).toLocaleString()}</p>
                             <p><strong>Updated:</strong> ${new Date(data.updatedAt).toLocaleString()}</p>
                         </div>
                     `;
                 } else {
-                    showAlert(`Error: ${data.message || data.error || 'Currency not found'}`, 'danger');
+                    showAlert(`Error: ${data.message || data.error || 'Exchange rate not found'}`, 'danger');
                 }
             } catch (error) {
                 showAlert(`Error: ${error.message}`, 'danger');
@@ -439,15 +607,31 @@
             const currency = currentCurrencies.find(c => c.id === id);
             
             if (!currency) {
-                showAlert('Currency not found', 'danger');
+                showAlert('Exchange rate not found', 'danger');
                 return;
             }
 
             document.getElementById('editId').value = currency.id;
-            document.getElementById('editCode').value = currency.code;
-            document.getElementById('editSymbol').value = currency.symbol;
-            document.getElementById('editName').value = currency.name;
-            document.getElementById('editDecimalPlaces').value = currency.decimalPlaces !== undefined ? currency.decimalPlaces : 2;
+            document.getElementById('editBaseCurrency').value = currency.baseCurrency;
+            document.getElementById('editTargetCurrency').value = currency.targetCurrency;
+            document.getElementById('editRate').value = currency.rate;
+            document.getElementById('editMarkup').value = currency.markup;
+            document.getElementById('editSource').value = currency.source;
+            
+            // Convert to datetime-local format
+            if (currency.effectiveDate) {
+                const effectiveDate = new Date(currency.effectiveDate);
+                document.getElementById('editEffectiveDate').value = effectiveDate.toISOString().slice(0, 16);
+            }
+            
+            if (currency.expiryDate) {
+                const expiryDate = new Date(currency.expiryDate);
+                document.getElementById('editExpiryDate').value = expiryDate.toISOString().slice(0, 16);
+            } else {
+                document.getElementById('editExpiryDate').value = '';
+            }
+            
+            document.getElementById('editNotes').value = currency.notes || '';
             document.getElementById('editIsActive').checked = currency.isActive;
 
             editModal.show();
@@ -457,15 +641,19 @@
         async function updateCurrency() {
             const id = document.getElementById('editId').value;
             const data = {
-                code: document.getElementById('editCode').value.trim().toUpperCase(),
-                symbol: document.getElementById('editSymbol').value.trim(),
-                name: document.getElementById('editName').value.trim(),
-                decimalPlaces: parseInt(document.getElementById('editDecimalPlaces').value) || 2,
+                baseCurrency: document.getElementById('editBaseCurrency').value.trim().toUpperCase(),
+                targetCurrency: document.getElementById('editTargetCurrency').value.trim().toUpperCase(),
+                rate: parseFloat(document.getElementById('editRate').value),
+                markup: parseFloat(document.getElementById('editMarkup').value) || 0,
+                source: parseInt(document.getElementById('editSource').value),
+                effectiveDate: document.getElementById('editEffectiveDate').value,
+                expiryDate: document.getElementById('editExpiryDate').value || null,
+                notes: document.getElementById('editNotes').value.trim() || null,
                 isActive: document.getElementById('editIsActive').checked
             };
 
             try {
-                const response = await fetch(`${API_BASE_URL}/api/v1/Currencies/api/v1/Currencies/rates/${id}`, {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Currencies/rates/${id}`, {
                     method: 'PUT',
                     headers: getAuthHeaders(),
                     body: JSON.stringify(data)
@@ -482,11 +670,11 @@
                 updateResponseBox(result);
 
                 if (response.ok) {
-                    showAlert('Currency updated successfully!', 'success');
+                    showAlert('Exchange rate updated successfully!', 'success');
                     editModal.hide();
                     getAllCurrencies(); // Refresh list
                 } else {
-                    showAlert(`Error: ${result.message || result.error || 'Failed to update currency'}`, 'danger');
+                    showAlert(`Error: ${result.message || result.error || 'Failed to update exchange rate'}`, 'danger');
                 }
             } catch (error) {
                 showAlert(`Error: ${error.message}`, 'danger');
@@ -509,17 +697,17 @@
                 if (response.ok) {
                     // Some APIs return 204 No Content on successful delete
                     if (response.status === 204) {
-                        updateResponseBox({ message: 'Currency deleted successfully' });
+                        updateResponseBox({ message: 'Exchange rate deleted successfully' });
                     } else {
                         const contentType = response.headers.get('content-type');
                         if (contentType && contentType.includes('application/json')) {
                             const result = await response.json();
                             updateResponseBox(result);
                         } else {
-                            updateResponseBox({ message: 'Currency deleted successfully' });
+                            updateResponseBox({ message: 'Exchange rate deleted successfully' });
                         }
                     }
-                    showAlert('Currency deleted successfully!', 'success');
+                    showAlert('Exchange rate deleted successfully!', 'success');
                     getAllCurrencies(); // Refresh list
                 } else {
                     let result;
@@ -531,13 +719,271 @@
                         result = { error: text, statusCode: response.status };
                     }
                     updateResponseBox(result);
-                    showAlert(`Error: ${result.message || result.error || 'Failed to delete currency'}`, 'danger');
+                    showAlert(`Error: ${result.message || result.error || 'Failed to delete exchange rate'}`, 'danger');
                 }
             } catch (error) {
                 showAlert(`Error: ${error.message}`, 'danger');
                 updateResponseBox({ error: error.message });
             }
         }
+
+        // Get Active Rates
+        async function getActiveRates() {
+            const loading = document.getElementById('loadingActive');
+            const container = document.getElementById('activeRatesContainer');
+            
+            loading.style.display = 'block';
+            container.innerHTML = '';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Currencies/rates/active`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    renderRatesTable(data, container);
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Failed to fetch active rates'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Get Exchange Rate
+        async function getExchangeRate() {
+            const fromCurrency = document.getElementById('exchangeFromCurrency').value.trim().toUpperCase();
+            const toCurrency = document.getElementById('exchangeToCurrency').value.trim().toUpperCase();
+            const date = document.getElementById('exchangeDate').value;
+
+            if (!fromCurrency || !toCurrency) {
+                showAlert('Please enter both currencies', 'warning');
+                return;
+            }
+
+            const loading = document.getElementById('loadingExchange');
+            const result = document.getElementById('exchangeRateResult');
+            
+            loading.style.display = 'block';
+            result.innerHTML = '';
+
+            try {
+                let url = `${API_BASE_URL}/api/v1/Currencies/rates/exchange?from=${fromCurrency}&to=${toCurrency}`;
+                if (date) {
+                    url += `&date=${encodeURIComponent(date)}`;
+                }
+
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    result.innerHTML = `
+                        <div class="alert alert-success">
+                            <h5>Exchange Rate Found:</h5>
+                            <p><strong>From:</strong> ${data.baseCurrency} → <strong>To:</strong> ${data.targetCurrency}</p>
+                            <p><strong>Rate:</strong> ${data.rate}</p>
+                            <p><strong>Effective Date:</strong> ${new Date(data.effectiveDate).toLocaleString()}</p>
+                            ${data.expiryDate ? `<p><strong>Expiry Date:</strong> ${new Date(data.expiryDate).toLocaleString()}</p>` : ''}
+                            <p><strong>Source:</strong> ${data.source}</p>
+                            <p><strong>Status:</strong> ${data.isActive ? 'Active' : 'Inactive'}</p>
+                            ${data.markup > 0 ? `<p><strong>Markup:</strong> ${data.markup}%</p>` : ''}
+                            ${data.notes ? `<p><strong>Notes:</strong> ${data.notes}</p>` : ''}
+                        </div>
+                    `;
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Exchange rate not found'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Get Rates for Currency Pair
+        async function getRatesForPair() {
+            const fromCurrency = document.getElementById('pairFromCurrency').value.trim().toUpperCase();
+            const toCurrency = document.getElementById('pairToCurrency').value.trim().toUpperCase();
+
+            if (!fromCurrency || !toCurrency) {
+                showAlert('Please enter both currencies', 'warning');
+                return;
+            }
+
+            const loading = document.getElementById('loadingPair');
+            const container = document.getElementById('pairRatesContainer');
+            
+            loading.style.display = 'block';
+            container.innerHTML = '';
+
+            try {
+                const url = `${API_BASE_URL}/api/v1/Currencies/rates/pair?from=${fromCurrency}&to=${toCurrency}`;
+
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    renderRatesTable(data, container);
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Failed to fetch rates for currency pair'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Convert Currency
+        async function convertCurrency() {
+            const amount = parseFloat(document.getElementById('convertAmount').value);
+            const fromCurrency = document.getElementById('convertFromCurrency').value.trim().toUpperCase();
+            const toCurrency = document.getElementById('convertToCurrency').value.trim().toUpperCase();
+
+            if (!amount || amount <= 0 || !fromCurrency || !toCurrency) {
+                showAlert('Please enter valid amount and currencies', 'warning');
+                return;
+            }
+
+            const loading = document.getElementById('loadingConvert');
+            const result = document.getElementById('convertResult');
+            
+            loading.style.display = 'block';
+            result.innerHTML = '';
+
+            try {
+                const data = {
+                    amount: amount,
+                    fromCurrency: fromCurrency,
+                    toCurrency: toCurrency
+                };
+
+                const response = await fetch(`${API_BASE_URL}/api/v1/Currencies/convert`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(data)
+                });
+
+                let responseData;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    responseData = await response.json();
+                } else {
+                    const text = await response.text();
+                    responseData = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(responseData);
+
+                if (response.ok) {
+                    result.innerHTML = `
+                        <div class="alert alert-success">
+                            <h5>Conversion Result:</h5>
+                            <p><strong>Original Amount:</strong> ${responseData.originalAmount} ${responseData.fromCurrency}</p>
+                            <p><strong>Converted Amount:</strong> ${responseData.convertedAmount} ${responseData.toCurrency}</p>
+                            <p><strong>Exchange Rate:</strong> ${responseData.exchangeRate}</p>
+                            <p><strong>Conversion Date:</strong> ${new Date(responseData.conversionDate).toLocaleString()}</p>
+                        </div>
+                    `;
+                } else {
+                    showAlert(`Error: ${responseData.message || responseData.error || 'Conversion failed'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Render Rates Table (shared by active and pair functions)
+        function renderRatesTable(rates, container) {
+            if (!rates || rates.length === 0) {
+                container.innerHTML = '<div class="empty-state">No rates found</div>';
+                return;
+            }
+
+            const tableHtml = `
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Base Currency</th>
+                                <th>Target Currency</th>
+                                <th>Rate</th>
+                                <th>Effective Date</th>
+                                <th>Expiry Date</th>
+                                <th>Source</th>
+                                <th>Markup</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rates.map(rate => `
+                                <tr>
+                                    <td>${rate.id}</td>
+                                    <td><strong>${rate.baseCurrency}</strong></td>
+                                    <td><strong>${rate.targetCurrency}</strong></td>
+                                    <td>${rate.rate}</td>
+                                    <td>${new Date(rate.effectiveDate).toLocaleString()}</td>
+                                    <td>${rate.expiryDate ? new Date(rate.expiryDate).toLocaleString() : 'N/A'}</td>
+                                    <td>${rate.source}</td>
+                                    <td>${rate.markup}%</td>
+                                    <td>
+                                        <span class="badge ${rate.isActive ? 'badge-success' : 'badge-secondary'}">
+                                            ${rate.isActive ? 'Active' : 'Inactive'}
+                                        </span>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            container.innerHTML = tableHtml;
+        }
     </script>
 </body>
 </html>
+
