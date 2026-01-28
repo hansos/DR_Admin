@@ -53,21 +53,71 @@
                         <small class="text-muted">Unique coupon code</small>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label for="createDiscountPercentage" class="form-label">Discount Percentage</label>
-                        <input type="number" class="form-control" id="createDiscountPercentage" placeholder="e.g., 20" min="0" max="100" step="0.01">
-                        <small class="text-muted">Percentage discount (0-100)</small>
+                        <label for="createName" class="form-label">Name *</label>
+                        <input type="text" class="form-control" id="createName" placeholder="e.g., 20% Off Sale" required>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label for="createDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="createDescription" rows="2" placeholder="Enter coupon description..."></textarea>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label for="createDiscountAmount" class="form-label">Discount Amount</label>
-                        <input type="number" class="form-control" id="createDiscountAmount" placeholder="e.g., 10.00" min="0" step="0.01">
-                        <small class="text-muted">Fixed discount amount</small>
+                        <label for="createType" class="form-label">Type *</label>
+                        <select class="form-select" id="createType" required>
+                            <option value="0">Percentage</option>
+                            <option value="1">Fixed Amount</option>
+                        </select>
+                        <small class="text-muted">Type of discount</small>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label for="createMaxUses" class="form-label">Max Uses</label>
-                        <input type="number" class="form-control" id="createMaxUses" placeholder="e.g., 100" min="0">
-                        <small class="text-muted">Maximum number of uses (0 = unlimited)</small>
+                        <label for="createValue" class="form-label">Value *</label>
+                        <input type="number" class="form-control" id="createValue" placeholder="e.g., 20 or 10.00" min="0" step="0.01" required>
+                        <small class="text-muted">Percentage (0-100) or fixed amount</small>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="createAppliesTo" class="form-label">Applies To *</label>
+                        <select class="form-select" id="createAppliesTo" required>
+                            <option value="0">All Products</option>
+                            <option value="1">Specific Products</option>
+                            <option value="2">Specific Categories</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="createMinimumAmount" class="form-label">Minimum Amount</label>
+                        <input type="number" class="form-control" id="createMinimumAmount" placeholder="e.g., 50.00" min="0" step="0.01" value="0">
+                        <small class="text-muted">Minimum order amount</small>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="createMaximumDiscount" class="form-label">Maximum Discount</label>
+                        <input type="number" class="form-control" id="createMaximumDiscount" placeholder="e.g., 100.00" min="0" step="0.01" value="0">
+                        <small class="text-muted">Maximum discount amount (0 = unlimited)</small>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="createMaxUsages" class="form-label">Max Usages</label>
+                        <input type="number" class="form-control" id="createMaxUsages" placeholder="e.g., 100" min="0" value="0">
+                        <small class="text-muted">Maximum total uses (0 = unlimited)</small>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="createMaxUsagesPerCustomer" class="form-label">Max Usages Per Customer</label>
+                        <input type="number" class="form-control" id="createMaxUsagesPerCustomer" placeholder="e.g., 1" min="0" value="0">
+                        <small class="text-muted">Maximum uses per customer (0 = unlimited)</small>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="form-check" style="margin-top: 32px;">
+                            <input class="form-check-input" type="checkbox" id="createIsActive" checked>
+                            <label class="form-check-label" for="createIsActive">
+                                Is Active
+                            </label>
+                        </div>
                     </div>
                 </div>
                 <div class="row">
@@ -80,16 +130,17 @@
                         <input type="datetime-local" class="form-control" id="createValidUntil">
                     </div>
                 </div>
-                <div class="mb-3">
-                    <label for="createDescription" class="form-label">Description</label>
-                    <textarea class="form-control" id="createDescription" rows="2" placeholder="Enter coupon description..."></textarea>
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label for="createAllowedServiceTypeIds" class="form-label">Allowed Service Type IDs</label>
+                        <input type="text" class="form-control" id="createAllowedServiceTypeIds" placeholder="e.g., 1,2,3">
+                        <small class="text-muted">Comma-separated list of service type IDs (leave empty for all)</small>
+                    </div>
                 </div>
-                <div class="mb-3">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="createIsActive" checked>
-                        <label class="form-check-label" for="createIsActive">
-                            Is Active
-                        </label>
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label for="createInternalNotes" class="form-label">Internal Notes</label>
+                        <textarea class="form-control" id="createInternalNotes" rows="2" placeholder="Enter internal notes..."></textarea>
                     </div>
                 </div>
                 <button type="submit" class="btn btn-primary">Create Coupon</button>
@@ -137,7 +188,7 @@
 
     <!-- Edit Modal -->
     <div class="modal fade" id="editModal" tabindex="-1">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">&#9998; Edit Coupon</h5>
@@ -146,41 +197,89 @@
                 <div class="modal-body">
                     <form id="editForm">
                         <input type="hidden" id="editId">
-                        <div class="mb-3">
-                            <label for="editCode" class="form-label">Coupon Code *</label>
-                            <input type="text" class="form-control" id="editCode" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="editDiscountPercentage" class="form-label">Discount Percentage</label>
-                            <input type="number" class="form-control" id="editDiscountPercentage" min="0" max="100" step="0.01">
-                        </div>
-                        <div class="mb-3">
-                            <label for="editDiscountAmount" class="form-label">Discount Amount</label>
-                            <input type="number" class="form-control" id="editDiscountAmount" min="0" step="0.01">
-                        </div>
-                        <div class="mb-3">
-                            <label for="editMaxUses" class="form-label">Max Uses</label>
-                            <input type="number" class="form-control" id="editMaxUses" min="0">
-                        </div>
-                        <div class="mb-3">
-                            <label for="editValidFrom" class="form-label">Valid From</label>
-                            <input type="datetime-local" class="form-control" id="editValidFrom">
-                        </div>
-                        <div class="mb-3">
-                            <label for="editValidUntil" class="form-label">Valid Until</label>
-                            <input type="datetime-local" class="form-control" id="editValidUntil">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editCode" class="form-label">Coupon Code *</label>
+                                <input type="text" class="form-control" id="editCode" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editName" class="form-label">Name *</label>
+                                <input type="text" class="form-control" id="editName" required>
+                            </div>
                         </div>
                         <div class="mb-3">
                             <label for="editDescription" class="form-label">Description</label>
                             <textarea class="form-control" id="editDescription" rows="2"></textarea>
                         </div>
-                        <div class="mb-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="editIsActive">
-                                <label class="form-check-label" for="editIsActive">
-                                    Is Active
-                                </label>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editType" class="form-label">Type *</label>
+                                <select class="form-select" id="editType" required>
+                                    <option value="0">Percentage</option>
+                                    <option value="1">Fixed Amount</option>
+                                </select>
                             </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editValue" class="form-label">Value *</label>
+                                <input type="number" class="form-control" id="editValue" min="0" step="0.01" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editAppliesTo" class="form-label">Applies To *</label>
+                                <select class="form-select" id="editAppliesTo" required>
+                                    <option value="0">All Products</option>
+                                    <option value="1">Specific Products</option>
+                                    <option value="2">Specific Categories</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editMinimumAmount" class="form-label">Minimum Amount</label>
+                                <input type="number" class="form-control" id="editMinimumAmount" min="0" step="0.01">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editMaximumDiscount" class="form-label">Maximum Discount</label>
+                                <input type="number" class="form-control" id="editMaximumDiscount" min="0" step="0.01">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editMaxUsages" class="form-label">Max Usages</label>
+                                <input type="number" class="form-control" id="editMaxUsages" min="0">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editMaxUsagesPerCustomer" class="form-label">Max Usages Per Customer</label>
+                                <input type="number" class="form-control" id="editMaxUsagesPerCustomer" min="0">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check" style="margin-top: 32px;">
+                                    <input class="form-check-input" type="checkbox" id="editIsActive">
+                                    <label class="form-check-label" for="editIsActive">
+                                        Is Active
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editValidFrom" class="form-label">Valid From</label>
+                                <input type="datetime-local" class="form-control" id="editValidFrom">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editValidUntil" class="form-label">Valid Until</label>
+                                <input type="datetime-local" class="form-control" id="editValidUntil">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editAllowedServiceTypeIds" class="form-label">Allowed Service Type IDs</label>
+                            <input type="text" class="form-control" id="editAllowedServiceTypeIds" placeholder="e.g., 1,2,3">
+                            <small class="text-muted">Comma-separated list of service type IDs</small>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editInternalNotes" class="form-label">Internal Notes</label>
+                            <textarea class="form-control" id="editInternalNotes" rows="2"></textarea>
                         </div>
                     </form>
                 </div>
@@ -281,16 +380,31 @@
         async function handleCreate(e) {
             e.preventDefault();
             
+            // Parse allowed service type IDs
+            const allowedServiceTypeIdsInput = document.getElementById('createAllowedServiceTypeIds').value.trim();
+            const allowedServiceTypeIds = allowedServiceTypeIdsInput 
+                ? allowedServiceTypeIdsInput.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id))
+                : [];
+            
             const data = {
-                code: document.getElementById('createCode').value.trim().toUpperCase(),
-                discountPercentage: parseFloat(document.getElementById('createDiscountPercentage').value) || null,
-                discountAmount: parseFloat(document.getElementById('createDiscountAmount').value) || null,
-                maxUses: parseInt(document.getElementById('createMaxUses').value) || null,
-                validFrom: document.getElementById('createValidFrom').value || null,
-                validUntil: document.getElementById('createValidUntil').value || null,
-                description: document.getElementById('createDescription').value.trim() || null,
-                isActive: document.getElementById('createIsActive').checked
+                code: document.getElementById('createCode').value.trim(),
+                name: document.getElementById('createName').value.trim(),
+                description: document.getElementById('createDescription').value.trim(),
+                type: parseInt(document.getElementById('createType').value),
+                value: parseFloat(document.getElementById('createValue').value) || 0,
+                appliesTo: parseInt(document.getElementById('createAppliesTo').value),
+                minimumAmount: parseFloat(document.getElementById('createMinimumAmount').value) || 0,
+                maximumDiscount: parseFloat(document.getElementById('createMaximumDiscount').value) || 0,
+                validFrom: document.getElementById('createValidFrom').value || new Date().toISOString(),
+                validUntil: document.getElementById('createValidUntil').value || new Date(Date.now() + 365*24*60*60*1000).toISOString(),
+                maxUsages: parseInt(document.getElementById('createMaxUsages').value) || 0,
+                maxUsagesPerCustomer: parseInt(document.getElementById('createMaxUsagesPerCustomer').value) || 0,
+                isActive: document.getElementById('createIsActive').checked,
+                allowedServiceTypeIds: allowedServiceTypeIds,
+                internalNotes: document.getElementById('createInternalNotes').value.trim()
             };
+
+            console.log('Creating coupon with data:', data);
 
             try {
                 const response = await fetch(`${API_BASE_URL}/api/v1/Coupons`, {
@@ -299,16 +413,29 @@
                     body: JSON.stringify(data)
                 });
 
-                const result = await response.json();
+                let result;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    result = { error: text, statusCode: response.status };
+                }
                 updateResponseBox(result);
 
                 if (response.ok) {
                     showAlert('Coupon created successfully!', 'success');
                     document.getElementById('createForm').reset();
                     document.getElementById('createIsActive').checked = true;
+                    document.getElementById('createType').value = '0';
+                    document.getElementById('createAppliesTo').value = '0';
+                    document.getElementById('createMinimumAmount').value = '0';
+                    document.getElementById('createMaximumDiscount').value = '0';
+                    document.getElementById('createMaxUsages').value = '0';
+                    document.getElementById('createMaxUsagesPerCustomer').value = '0';
                     getAllCoupons(); // Refresh list
                 } else {
-                    showAlert(`Error: ${result.message || 'Failed to create coupon'}`, 'danger');
+                    showAlert(`Error: ${result.message || result.error || 'Failed to create coupon'}`, 'danger');
                 }
             } catch (error) {
                 showAlert(`Error: ${error.message}`, 'danger');
@@ -363,10 +490,11 @@
                             <tr>
                                 <th>ID</th>
                                 <th>Code</th>
-                                <th>Discount %</th>
-                                <th>Discount Amount</th>
-                                <th>Max Uses</th>
-                                <th>Current Uses</th>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Value</th>
+                                <th>Applies To</th>
+                                <th>Max Usages</th>
                                 <th>Valid From</th>
                                 <th>Valid Until</th>
                                 <th>Status</th>
@@ -374,33 +502,40 @@
                             </tr>
                         </thead>
                         <tbody>
-                            ${coupons.map(coupon => `
-                                <tr>
-                                    <td>${coupon.id}</td>
-                                    <td><strong>${coupon.code}</strong></td>
-                                    <td>${coupon.discountPercentage ? coupon.discountPercentage + '%' : '-'}</td>
-                                    <td>${coupon.discountAmount ? '$' + coupon.discountAmount.toFixed(2) : '-'}</td>
-                                    <td>${coupon.maxUses || 'Unlimited'}</td>
-                                    <td>${coupon.currentUses || 0}</td>
-                                    <td>${coupon.validFrom ? new Date(coupon.validFrom).toLocaleDateString() : '-'}</td>
-                                    <td>${coupon.validUntil ? new Date(coupon.validUntil).toLocaleDateString() : '-'}</td>
-                                    <td>
-                                        <span class="badge ${coupon.isActive ? 'badge-success' : 'badge-secondary'}">
-                                            ${coupon.isActive ? 'Active' : 'Inactive'}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="action-buttons">
-                                            <button class="btn btn-sm btn-warning" onclick="openEditModal(${coupon.id})">
-                                                Edit
-                                            </button>
-                                            <button class="btn btn-sm btn-danger" onclick="deleteCoupon(${coupon.id}, '${coupon.code}')">
-                                                Delete
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            `).join('')}
+                            ${coupons.map(coupon => {
+                                const typeLabel = coupon.type === 0 ? 'Percentage' : 'Fixed Amount';
+                                const valueDisplay = coupon.type === 0 ? `${coupon.value}%` : `$${coupon.value?.toFixed(2)}`;
+                                const appliesToLabel = coupon.appliesTo === 0 ? 'All' : coupon.appliesTo === 1 ? 'Specific Products' : 'Categories';
+                                
+                                return `
+                                    <tr>
+                                        <td>${coupon.id}</td>
+                                        <td><strong>${coupon.code}</strong></td>
+                                        <td>${coupon.name || '-'}</td>
+                                        <td>${typeLabel}</td>
+                                        <td>${valueDisplay}</td>
+                                        <td>${appliesToLabel}</td>
+                                        <td>${coupon.maxUsages || 'Unlimited'}</td>
+                                        <td>${coupon.validFrom ? new Date(coupon.validFrom).toLocaleDateString() : '-'}</td>
+                                        <td>${coupon.validUntil ? new Date(coupon.validUntil).toLocaleDateString() : '-'}</td>
+                                        <td>
+                                            <span class="badge ${coupon.isActive ? 'badge-success' : 'badge-secondary'}">
+                                                ${coupon.isActive ? 'Active' : 'Inactive'}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="action-buttons">
+                                                <button class="btn btn-sm btn-warning" onclick="openEditModal(${coupon.id})">
+                                                    Edit
+                                                </button>
+                                                <button class="btn btn-sm btn-danger" onclick="deleteCoupon(${coupon.id}, '${coupon.code.replace(/'/g, "\\'")}')">
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
                         </tbody>
                     </table>
                 </div>
@@ -434,21 +569,31 @@
                 updateResponseBox(data);
 
                 if (response.ok) {
+                    const typeLabel = data.type === 0 ? 'Percentage' : 'Fixed Amount';
+                    const valueDisplay = data.type === 0 ? `${data.value}%` : `$${data.value?.toFixed(2)}`;
+                    const appliesToLabel = data.appliesTo === 0 ? 'All Products' : data.appliesTo === 1 ? 'Specific Products' : 'Specific Categories';
+                    
                     result.innerHTML = `
                         <div class="alert alert-success">
                             <h5>Coupon Found:</h5>
                             <p><strong>ID:</strong> ${data.id}</p>
                             <p><strong>Code:</strong> ${data.code}</p>
-                            <p><strong>Discount Percentage:</strong> ${data.discountPercentage ? data.discountPercentage + '%' : 'N/A'}</p>
-                            <p><strong>Discount Amount:</strong> ${data.discountAmount ? '$' + data.discountAmount.toFixed(2) : 'N/A'}</p>
-                            <p><strong>Max Uses:</strong> ${data.maxUses || 'Unlimited'}</p>
-                            <p><strong>Current Uses:</strong> ${data.currentUses || 0}</p>
+                            <p><strong>Name:</strong> ${data.name || 'N/A'}</p>
+                            <p><strong>Description:</strong> ${data.description || 'N/A'}</p>
+                            <p><strong>Type:</strong> ${typeLabel}</p>
+                            <p><strong>Value:</strong> ${valueDisplay}</p>
+                            <p><strong>Applies To:</strong> ${appliesToLabel}</p>
+                            <p><strong>Minimum Amount:</strong> $${data.minimumAmount?.toFixed(2) || '0.00'}</p>
+                            <p><strong>Maximum Discount:</strong> ${data.maximumDiscount ? '$' + data.maximumDiscount.toFixed(2) : 'Unlimited'}</p>
+                            <p><strong>Max Usages:</strong> ${data.maxUsages || 'Unlimited'}</p>
+                            <p><strong>Max Usages Per Customer:</strong> ${data.maxUsagesPerCustomer || 'Unlimited'}</p>
                             <p><strong>Valid From:</strong> ${data.validFrom ? new Date(data.validFrom).toLocaleString() : 'N/A'}</p>
                             <p><strong>Valid Until:</strong> ${data.validUntil ? new Date(data.validUntil).toLocaleString() : 'N/A'}</p>
-                            <p><strong>Description:</strong> ${data.description || 'N/A'}</p>
+                            <p><strong>Allowed Service Type IDs:</strong> ${data.allowedServiceTypeIds?.join(', ') || 'All'}</p>
+                            <p><strong>Internal Notes:</strong> ${data.internalNotes || 'N/A'}</p>
                             <p><strong>Status:</strong> ${data.isActive ? 'Active' : 'Inactive'}</p>
-                            <p><strong>Created:</strong> ${new Date(data.createdAt).toLocaleString()}</p>
-                            <p><strong>Updated:</strong> ${new Date(data.updatedAt).toLocaleString()}</p>
+                            <p><strong>Created:</strong> ${data.createdAt ? new Date(data.createdAt).toLocaleString() : 'N/A'}</p>
+                            <p><strong>Updated:</strong> ${data.updatedAt ? new Date(data.updatedAt).toLocaleString() : 'N/A'}</p>
                         </div>
                     `;
                 } else {
@@ -473,12 +618,19 @@
 
             document.getElementById('editId').value = coupon.id;
             document.getElementById('editCode').value = coupon.code;
-            document.getElementById('editDiscountPercentage').value = coupon.discountPercentage || '';
-            document.getElementById('editDiscountAmount').value = coupon.discountAmount || '';
-            document.getElementById('editMaxUses').value = coupon.maxUses || '';
+            document.getElementById('editName').value = coupon.name || '';
+            document.getElementById('editDescription').value = coupon.description || '';
+            document.getElementById('editType').value = coupon.type || 0;
+            document.getElementById('editValue').value = coupon.value || 0;
+            document.getElementById('editAppliesTo').value = coupon.appliesTo || 0;
+            document.getElementById('editMinimumAmount').value = coupon.minimumAmount || 0;
+            document.getElementById('editMaximumDiscount').value = coupon.maximumDiscount || 0;
+            document.getElementById('editMaxUsages').value = coupon.maxUsages || 0;
+            document.getElementById('editMaxUsagesPerCustomer').value = coupon.maxUsagesPerCustomer || 0;
             document.getElementById('editValidFrom').value = formatDateTimeForInput(coupon.validFrom);
             document.getElementById('editValidUntil').value = formatDateTimeForInput(coupon.validUntil);
-            document.getElementById('editDescription').value = coupon.description || '';
+            document.getElementById('editAllowedServiceTypeIds').value = coupon.allowedServiceTypeIds ? coupon.allowedServiceTypeIds.join(',') : '';
+            document.getElementById('editInternalNotes').value = coupon.internalNotes || '';
             document.getElementById('editIsActive').checked = coupon.isActive;
 
             editModal.show();
@@ -487,16 +639,32 @@
         // Update Coupon
         async function updateCoupon() {
             const id = document.getElementById('editId').value;
+            
+            // Parse allowed service type IDs
+            const allowedServiceTypeIdsInput = document.getElementById('editAllowedServiceTypeIds').value.trim();
+            const allowedServiceTypeIds = allowedServiceTypeIdsInput 
+                ? allowedServiceTypeIdsInput.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id))
+                : [];
+            
             const data = {
-                code: document.getElementById('editCode').value.trim().toUpperCase(),
-                discountPercentage: parseFloat(document.getElementById('editDiscountPercentage').value) || null,
-                discountAmount: parseFloat(document.getElementById('editDiscountAmount').value) || null,
-                maxUses: parseInt(document.getElementById('editMaxUses').value) || null,
-                validFrom: document.getElementById('editValidFrom').value || null,
-                validUntil: document.getElementById('editValidUntil').value || null,
-                description: document.getElementById('editDescription').value.trim() || null,
-                isActive: document.getElementById('editIsActive').checked
+                code: document.getElementById('editCode').value.trim(),
+                name: document.getElementById('editName').value.trim(),
+                description: document.getElementById('editDescription').value.trim(),
+                type: parseInt(document.getElementById('editType').value),
+                value: parseFloat(document.getElementById('editValue').value) || 0,
+                appliesTo: parseInt(document.getElementById('editAppliesTo').value),
+                minimumAmount: parseFloat(document.getElementById('editMinimumAmount').value) || 0,
+                maximumDiscount: parseFloat(document.getElementById('editMaximumDiscount').value) || 0,
+                validFrom: document.getElementById('editValidFrom').value || new Date().toISOString(),
+                validUntil: document.getElementById('editValidUntil').value || new Date(Date.now() + 365*24*60*60*1000).toISOString(),
+                maxUsages: parseInt(document.getElementById('editMaxUsages').value) || 0,
+                maxUsagesPerCustomer: parseInt(document.getElementById('editMaxUsagesPerCustomer').value) || 0,
+                isActive: document.getElementById('editIsActive').checked,
+                allowedServiceTypeIds: allowedServiceTypeIds,
+                internalNotes: document.getElementById('editInternalNotes').value.trim()
             };
+
+            console.log('Updating coupon with data:', data);
 
             try {
                 const response = await fetch(`${API_BASE_URL}/api/v1/Coupons/${id}`, {

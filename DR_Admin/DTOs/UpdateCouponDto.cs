@@ -8,6 +8,11 @@ namespace ISPAdmin.DTOs;
 public class UpdateCouponDto
 {
     /// <summary>
+    /// Unique coupon code
+    /// </summary>
+    public string Code { get; set; } = string.Empty;
+
+    /// <summary>
     /// Display name
     /// </summary>
     public string Name { get; set; } = string.Empty;
