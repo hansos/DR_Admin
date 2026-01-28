@@ -46,4 +46,4 @@ Endpoint tests using DR_Admin_Web
 | `TldsController`                         | OK     |                                                                                                                         |
 | `TokensController`                       |        |                                                                                                                         |
 | `UnitsController`                        | OK     |                                                                                                                         |
-| `UsersController`                        | ISSUES | - Get all users presents json only.<br>- Not all endpoints are included.<br>- Properties missing from POST              |
+| `UsersController`                        | ISSUES | - Not all endpoints are included.<br>- Properties missing from POST                                                     |
