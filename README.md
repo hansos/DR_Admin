@@ -175,7 +175,9 @@ dotnet test DR_Admin.IntegrationTests
 
 ## License
 
-This project is proprietary software.
+This project is licensed under the MIT License.
+See the LICENSE file for details.
+
 
 ## Contributing
 
