@@ -1,4 +1,5 @@
 using ISPAdmin.DTOs;
+using System.IO;
 
 namespace ISPAdmin.Services;
 
@@ -11,4 +12,5 @@ public interface ICountryService
     Task<CountryDto> CreateCountryAsync(CreateCountryDto createDto);
     Task<CountryDto?> UpdateCountryAsync(int id, UpdateCountryDto updateDto);
     Task<bool> DeleteCountryAsync(int id);
+    Task<int> MergeCountriesFromCsvAsync(Stream csvStream);
 }

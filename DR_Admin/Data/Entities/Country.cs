@@ -2,8 +2,17 @@ namespace ISPAdmin.Data.Entities;
 
 public class Country : EntityBase
 {
+    /// <summary>
+    /// Iso2
+    /// </summary>
     public string Code { get; set; } = string.Empty;
+
+
     public string Tld { get; set; } = string.Empty;
+    // Iso3 (nullable)
+    public string? Iso3 { get; set; }
+    // Numeric (nullable)
+    public int? Numeric { get; set; }
     public string EnglishName { get; set; } = string.Empty;
     public string LocalName { get; set; } = string.Empty;
     public bool IsActive { get; set; }

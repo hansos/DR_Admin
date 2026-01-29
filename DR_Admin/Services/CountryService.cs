@@ -16,6 +16,119 @@ public class CountryService : ICountryService
         _context = context;
     }
 
+    public async Task<int> MergeCountriesFromCsvAsync(System.IO.Stream csvStream)
+    {
+        try
+        {
+            _log.Information("Merging countries from CSV");
+
+            using var reader = new System.IO.StreamReader(csvStream);
+
+            string? headerLine = await reader.ReadLineAsync();
+            if (string.IsNullOrWhiteSpace(headerLine))
+            {
+                throw new InvalidOperationException("CSV file is empty");
+            }
+
+            // expected headers: Name,Iso2,Iso3,Tld,Numeric
+            var merged = 0;
+
+            while (!reader.EndOfStream)
+            {
+                var line = await reader.ReadLineAsync();
+                if (string.IsNullOrWhiteSpace(line)) continue;
+
+                var parts = line.Split(',');
+                if (parts.Length < 5) continue;
+
+                var name = parts[0].Trim();
+                var iso2 = parts[1].Trim().ToUpper();
+                var iso3 = parts[2].Trim();
+                var tld = parts[3].Trim();
+                var numericStr = parts[4].Trim();
+
+                int? numeric = null;
+                if (int.TryParse(numericStr, out var n)) numeric = n;
+
+                if (string.IsNullOrEmpty(iso2)) continue;
+
+                var country = await _context.Countries.FirstOrDefaultAsync(c => c.Code == iso2);
+
+                if (country == null)
+                {
+                    country = new Country
+                    {
+                        Code = iso2,
+                        Iso3 = string.IsNullOrWhiteSpace(iso3) ? null : iso3,
+                        Tld = tld.StartsWith('.') ? tld.Substring(1) : tld,
+                        Numeric = numeric,
+                        EnglishName = name,
+                        LocalName = name,
+                        NormalizedEnglishName = name.ToUpperInvariant(),
+                        NormalizedLocalName = name.ToUpperInvariant(),
+                        IsActive = true,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    };
+
+                    _context.Countries.Add(country);
+                    merged++;
+                }
+                else
+                {
+                    // update fields if different
+                    var changed = false;
+                    if (!string.Equals(country.EnglishName, name, StringComparison.Ordinal))
+                    {
+                        country.EnglishName = name;
+                        country.NormalizedEnglishName = name.ToUpperInvariant();
+                        changed = true;
+                    }
+
+                    if (!string.Equals(country.Code, iso2, StringComparison.OrdinalIgnoreCase))
+                    {
+                        country.Code = iso2;
+                        changed = true;
+                    }
+
+                    if (country.Iso3 != iso3)
+                    {
+                        country.Iso3 = string.IsNullOrWhiteSpace(iso3) ? null : iso3;
+                        changed = true;
+                    }
+
+                    if (country.Numeric != numeric)
+                    {
+                        country.Numeric = numeric;
+                        changed = true;
+                    }
+
+                    if (!string.Equals(country.Tld, tld.StartsWith('.') ? tld.Substring(1) : tld, StringComparison.Ordinal))
+                    {
+                        country.Tld = tld.StartsWith('.') ? tld.Substring(1) : tld;
+                        changed = true;
+                    }
+
+                    if (changed)
+                    {
+                        country.UpdatedAt = DateTime.UtcNow;
+                        merged++;
+                    }
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            _log.Information("Successfully merged {Count} countries from CSV", merged);
+            return merged;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while merging countries from CSV");
+            throw;
+        }
+    }
+
     public async Task<IEnumerable<CountryDto>> GetAllCountriesAsync()
     {
         try
@@ -134,6 +247,8 @@ public class CountryService : ICountryService
             {
                 Code = createDto.Code.ToUpper(),
                 Tld = createDto.Tld?.TrimStart('.') ?? string.Empty,
+                Iso3 = createDto.Iso3,
+                Numeric = createDto.Numeric,
                 EnglishName = createDto.EnglishName,
                 LocalName = createDto.LocalName,
                 IsActive = createDto.IsActive,
@@ -179,6 +294,8 @@ public class CountryService : ICountryService
 
             country.Code = updateDto.Code.ToUpper();
             country.Tld = updateDto.Tld?.TrimStart('.') ?? string.Empty;
+            country.Iso3 = updateDto.Iso3;
+            country.Numeric = updateDto.Numeric;
             country.EnglishName = updateDto.EnglishName;
             country.LocalName = updateDto.LocalName;
             country.IsActive = updateDto.IsActive;
@@ -244,6 +361,8 @@ public class CountryService : ICountryService
             Id = country.Id,
             Code = country.Code,
             Tld = country.Tld,
+                Iso3 = country.Iso3,
+                Numeric = country.Numeric,
             EnglishName = country.EnglishName,
             LocalName = country.LocalName,
             IsActive = country.IsActive,

@@ -340,6 +340,8 @@ if (app.Environment.EnvironmentName != "Testing")
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    // Show detailed exceptions in development to help diagnose Swagger generation errors
+    app.UseDeveloperExceptionPage();
     app.UseSwagger();
     app.UseSwaggerUI(options =>
     {

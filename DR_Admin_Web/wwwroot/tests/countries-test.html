@@ -68,6 +68,16 @@
                         <input type="text" class="form-control" id="createLocalName" placeholder="e.g., United States">
                     </div>
                 </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="createIso3" class="form-label">ISO3</label>
+                        <input type="text" class="form-control" id="createIso3" placeholder="e.g., USA" maxlength="3">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="createNumeric" class="form-label">Numeric</label>
+                        <input type="number" class="form-control" id="createNumeric" placeholder="e.g., 840">
+                    </div>
+                </div>
                 <div class="mb-3">
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" id="createIsActive" checked>
@@ -176,6 +186,14 @@
                             <input type="text" class="form-control" id="editEnglishName" required>
                         </div>
                         <div class="mb-3">
+                            <label for="editIso3" class="form-label">ISO3</label>
+                            <input type="text" class="form-control" id="editIso3" maxlength="3">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editNumeric" class="form-label">Numeric</label>
+                            <input type="number" class="form-control" id="editNumeric">
+                        </div>
+                        <div class="mb-3">
                             <label for="editLocalName" class="form-label">Local Name</label>
                             <input type="text" class="form-control" id="editLocalName">
                         </div>
@@ -279,6 +297,8 @@
                 tld: document.getElementById('createTld').value.trim(),
                 englishName: document.getElementById('createEnglishName').value.trim(),
                 localName: document.getElementById('createLocalName').value.trim() || null,
+                iso3: document.getElementById('createIso3').value.trim() || null,
+                numeric: document.getElementById('createNumeric').value ? parseInt(document.getElementById('createNumeric').value, 10) : null,
                 isActive: document.getElementById('createIsActive').checked
             };
 
@@ -368,6 +388,8 @@
                                 <th>ID</th>
                                 <th>Code</th>
                                 <th>TLD</th>
+                                <th>ISO3</th>
+                                <th>Numeric</th>
                                 <th>English Name</th>
                                 <th>Local Name</th>
                                 <th>Status</th>
@@ -381,6 +403,8 @@
                                     <td>${country.id}</td>
                                     <td><strong>${country.code}</strong></td>
                                     <td>${country.tld || '-'}</td>
+                                    <td>${country.iso3 || '-'}</td>
+                                    <td>${country.numeric ?? '-'}</td>
                                     <td>${country.englishName}</td>
                                     <td>${country.localName || '-'}</td>
                                     <td>
@@ -572,6 +596,8 @@
             document.getElementById('editTld').value = country.tld || '';
             document.getElementById('editEnglishName').value = country.englishName;
             document.getElementById('editLocalName').value = country.localName || '';
+            document.getElementById('editIso3').value = country.iso3 || '';
+            document.getElementById('editNumeric').value = country.numeric || '';
             document.getElementById('editIsActive').checked = country.isActive;
 
             editModal.show();
@@ -585,6 +611,8 @@
                 tld: document.getElementById('editTld').value.trim(),
                 englishName: document.getElementById('editEnglishName').value.trim(),
                 localName: document.getElementById('editLocalName').value.trim() || null,
+                iso3: document.getElementById('editIso3').value.trim() || null,
+                numeric: document.getElementById('editNumeric').value ? parseInt(document.getElementById('editNumeric').value, 10) : null,
                 isActive: document.getElementById('editIsActive').checked
             };
 

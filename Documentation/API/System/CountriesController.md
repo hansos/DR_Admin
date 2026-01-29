@@ -97,6 +97,7 @@ Creates a new country in the system.
   "name": "Canada",
   "code": "CA",
   "isoCode": "CAN",
+  "numeric": 124,
   "phoneCode": "+1",
   "currencyCode": "CAD",
   "isActive": true
