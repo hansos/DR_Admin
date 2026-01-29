@@ -3,6 +3,8 @@ using ISPAdmin.Data.Entities;
 using ISPAdmin.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using System.Text;
+using System.Collections.Generic;
 
 namespace ISPAdmin.Services;
 
@@ -14,6 +16,45 @@ public class CountryService : ICountryService
     public CountryService(ApplicationDbContext context)
     {
         _context = context;
+    }
+
+    private static List<string> ParseCsvLine(string line)
+    {
+        var result = new List<string>();
+        if (line == null) return result;
+
+        var current = new System.Text.StringBuilder();
+        var inQuotes = false;
+        for (int i = 0; i < line.Length; i++)
+        {
+            var c = line[i];
+
+            if (c == '"')
+            {
+                if (inQuotes && i + 1 < line.Length && line[i + 1] == '"')
+                {
+                    // escaped quote
+                    current.Append('"');
+                    i++; // skip next quote
+                }
+                else
+                {
+                    inQuotes = !inQuotes;
+                }
+            }
+            else if (c == ',' && !inQuotes)
+            {
+                result.Add(current.ToString());
+                current.Clear();
+            }
+            else
+            {
+                current.Append(c);
+            }
+        }
+
+        result.Add(current.ToString());
+        return result;
     }
 
     public async Task<int> MergeCountriesFromCsvAsync(System.IO.Stream csvStream)
@@ -39,8 +80,8 @@ public class CountryService : ICountryService
                 var line = await reader.ReadLineAsync();
                 if (string.IsNullOrWhiteSpace(line)) continue;
 
-                var parts = line.Split(',');
-                if (parts.Length < 5) continue;
+                var parts = ParseCsvLine(line);
+                if (parts.Count < 5) continue;
 
                 var name = parts[0].Trim();
                 var iso2 = parts[1].Trim().ToUpper();
