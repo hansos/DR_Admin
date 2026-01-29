@@ -2,14 +2,10 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace ISPAdmin.Infrastructure;
 
+using static RoleNames;
+
 public static class AuthorizationPoliciesConfiguration
 {
-    private const string ADMIN = "Admin";
-    private const string SUPPORT = "Support";
-    private const string SALES = "Sales";
-    private const string FINANCE = "Finance";
-    private const string CUSTOMER = "Customer";
-
     public static void ConfigureAuthorizationPolicies(this AuthorizationOptions options)
     {
         // Admin policies

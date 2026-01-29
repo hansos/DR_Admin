@@ -237,11 +237,12 @@
                         </div>
                     `;
 
-                    // Add to history
+                    // Add to history (mask password)
+                    const sanitizedOptions = data ? { ...data, password: '***' } : data;
                     const historyItem = {
                         timestamp: new Date().toISOString(),
                         status: 'Success',
-                        options: data,
+                        options: sanitizedOptions,
                         result: result
                     };
                     initializationHistory.unshift(historyItem);
@@ -262,11 +263,12 @@
                         </div>
                     `;
 
-                    // Add to history
+                    // Add to history (mask password)
+                    const sanitizedOptions = data ? { ...data, password: '***' } : data;
                     const historyItem = {
                         timestamp: new Date().toISOString(),
                         status: 'Failed',
-                        options: data,
+                        options: sanitizedOptions,
                         error: result.message || result.error
                     };
                     initializationHistory.unshift(historyItem);
@@ -285,11 +287,12 @@
                     </div>
                 `;
 
-                // Add to history
+                // Add to history (mask password)
+                const sanitizedOptions = data ? { ...data, password: '***' } : data;
                 const historyItem = {
                     timestamp: new Date().toISOString(),
                     status: 'Error',
-                    options: data,
+                    options: sanitizedOptions,
                     error: error.message
                 };
                 initializationHistory.unshift(historyItem);
