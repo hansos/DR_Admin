@@ -4,7 +4,7 @@ A comprehensive ISP/Domain Reseller administration system built with .NET 10. Th
 
 [See developer's documentation](Documentation/Index.md)
 
-## ??? Solution Structure
+## Solution Structure
 
 | Project | Description |
 |---------|-------------|
@@ -18,7 +18,7 @@ A comprehensive ISP/Domain Reseller administration system built with .NET 10. Th
 | **ExchangeRateLib** | Currency exchange rate provider integrations |
 | **DR_Admin.IntegrationTests** | Integration test suite |
 
-## ? Features
+## Features
 
 ### Core Functionality
 - **Customer Management** - Full customer lifecycle with contact persons, credit management, and payment methods
@@ -53,13 +53,13 @@ A comprehensive ISP/Domain Reseller administration system built with .NET 10. Th
 - Domain expiration monitoring
 - Outbox pattern for reliable event processing
 
-## ??? Database Support
+## Database Support
 
 - SQLite (default for development)
 - SQL Server
 - PostgreSQL
 
-## ?? Getting Started
+## Getting Started
 
 ### Prerequisites
 - [.NET 10 SDK](https://dotnet.microsoft.com/download)
@@ -104,7 +104,7 @@ dotnet run --project DR_Admin_Web
 Once running, Swagger UI is available at:
 - `https://localhost:{port}/swagger`
 
-## ?? Integrations
+## Integrations
 
 ### Domain Registrars
 - Namecheap
@@ -166,17 +166,17 @@ Once running, Swagger UI is available at:
 - CloudPanel
 - ISPConfig
 
-## ?? Testing
+## Testing
 
 ```bash
 # Run integration tests
 dotnet test DR_Admin.IntegrationTests
 ```
 
-## ?? License
+## License
 
 This project is proprietary software.
 
-## ?? Contributing
+## Contributing
 
 Please read the contribution guidelines before submitting pull requests.
