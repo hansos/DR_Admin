@@ -431,6 +431,49 @@ namespace DomainRegistrationLib.Implementations
             }
         }
 
+        public override async Task<List<TldInfo>> GetSupportedTldsAsync()
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync("/v1/domains/tlds");
+                response.EnsureSuccessStatusCode();
+
+                var content = await response.Content.ReadAsStringAsync();
+                var result = JsonSerializer.Deserialize<JsonElement>(content);
+
+                var tlds = new List<TldInfo>();
+                foreach (var tld in result.EnumerateArray())
+                {
+                    var name = tld.GetProperty("name").GetString();
+                    if (!string.IsNullOrEmpty(name))
+                    {
+                        var tldInfo = new TldInfo
+                        {
+                            Name = name,
+                            Currency = "USD"
+                        };
+
+                        if (tld.TryGetProperty("type", out var typeProp))
+                            tldInfo.Type = typeProp.GetString();
+                        if (tld.TryGetProperty("minRegistrationYears", out var minYears))
+                            tldInfo.MinRegistrationYears = minYears.GetInt32();
+                        if (tld.TryGetProperty("maxRegistrationYears", out var maxYears))
+                            tldInfo.MaxRegistrationYears = maxYears.GetInt32();
+                        if (tld.TryGetProperty("supportsPrivacy", out var privacy))
+                            tldInfo.SupportsPrivacy = privacy.GetBoolean();
+
+                        tlds.Add(tldInfo);
+                    }
+                }
+
+                return tlds;
+            }
+            catch (Exception)
+            {
+                return [];
+            }
+        }
+
         private object MapContact(ContactInformation contact)
         {
             return new

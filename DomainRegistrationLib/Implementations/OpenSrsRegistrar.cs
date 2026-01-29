@@ -441,5 +441,54 @@ namespace DomainRegistrationLib.Implementations
                 { "country", contact.Country }
             };
         }
+
+        public override async Task<List<TldInfo>> GetSupportedTldsAsync()
+        {
+            try
+            {
+                var attributes = new Dictionary<string, object>();
+                var xmlRequest = BuildXmlRequest("GET_PRICE", attributes);
+                var response = await MakeXmlApiCallAsync(xmlRequest);
+
+                // Parse TLDs from pricing response
+                var doc = XDocument.Parse(response);
+                var tldElements = doc.Descendants("item")
+                    .Where(i => i.Attribute("key")?.Value?.StartsWith(".") == true)
+                    .GroupBy(i => i.Attribute("key")?.Value?.TrimStart('.'))
+                    .Where(g => !string.IsNullOrEmpty(g.Key));
+
+                var tlds = new List<TldInfo>();
+                foreach (var group in tldElements)
+                {
+                    var tldInfo = new TldInfo
+                    {
+                        Name = group.Key!,
+                        Currency = "USD"
+                    };
+
+                    // Parse pricing from the grouped items
+                    foreach (var item in group)
+                    {
+                        var priceType = item.Attribute("key")?.Value;
+                        var priceValue = decimal.TryParse(item.Value, out var price) ? price : (decimal?)null;
+
+                        if (priceType?.Contains("register") == true && tldInfo.RegistrationPrice == null)
+                            tldInfo.RegistrationPrice = priceValue;
+                        else if (priceType?.Contains("renew") == true && tldInfo.RenewalPrice == null)
+                            tldInfo.RenewalPrice = priceValue;
+                        else if (priceType?.Contains("transfer") == true && tldInfo.TransferPrice == null)
+                            tldInfo.TransferPrice = priceValue;
+                    }
+
+                    tlds.Add(tldInfo);
+                }
+
+                return tlds;
+            }
+            catch (Exception)
+            {
+                return [];
+            }
+        }
     }
 }

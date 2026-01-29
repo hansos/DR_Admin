@@ -651,5 +651,53 @@ namespace DomainRegistrationLib.Implementations
                 new XElement("country", contact.Country)
             );
         }
+
+        public override async Task<List<TldInfo>> GetSupportedTldsAsync()
+        {
+            try
+            {
+                var xml = BuildCommand("GetTldList", new XElement("request"));
+                var response = await MakeApiCallAsync(xml);
+
+                var resultElement = response.Descendants("result").FirstOrDefault();
+                var code = resultElement?.Attribute("code")?.Value;
+                var success = code == "200";
+
+                if (!success)
+                {
+                    return [];
+                }
+
+                var tlds = resultElement?.Descendants("tld")
+                    .Select(t => 
+                    {
+                        var name = t.Element("name")?.Value;
+                        if (string.IsNullOrEmpty(name)) return null;
+
+                        return new TldInfo
+                        {
+                            Name = name,
+                            Currency = t.Element("currency")?.Value ?? "EUR",
+                            RegistrationPrice = decimal.TryParse(t.Element("register-price")?.Value, out var regPrice) ? regPrice : null,
+                            RenewalPrice = decimal.TryParse(t.Element("renew-price")?.Value, out var renewPrice) ? renewPrice : null,
+                            TransferPrice = decimal.TryParse(t.Element("transfer-price")?.Value, out var transPrice) ? transPrice : null,
+                            MinRegistrationYears = int.TryParse(t.Element("min-period")?.Value, out var minYears) ? minYears : null,
+                            MaxRegistrationYears = int.TryParse(t.Element("max-period")?.Value, out var maxYears) ? maxYears : null,
+                            Type = t.Element("type")?.Value,
+                            SupportsPrivacy = t.Element("privacy")?.Value == "1",
+                            SupportsDnssec = t.Element("dnssec")?.Value == "1"
+                        };
+                    })
+                    .Where(t => t != null)
+                    .Cast<TldInfo>()
+                    .ToList() ?? [];
+
+                return tlds;
+            }
+            catch (Exception)
+            {
+                return [];
+            }
+        }
     }
 }

@@ -2,6 +2,7 @@ using DomainRegistrationLib.Models;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Web;
+using System.Xml.Linq;
 
 namespace DomainRegistrationLib.Implementations
 {
@@ -368,6 +369,46 @@ namespace DomainRegistrationLib.Implementations
             response.EnsureSuccessStatusCode();
 
             return await response.Content.ReadAsStringAsync();
+        }
+
+        public override async Task<List<TldInfo>> GetSupportedTldsAsync()
+        {
+            try
+            {
+                var parameters = BuildBaseParameters("namecheap.domains.getTldList");
+
+                var responseXml = await MakeApiCallAsync(parameters);
+                var doc = XDocument.Parse(responseXml);
+                var ns = doc.Root?.GetDefaultNamespace() ?? XNamespace.None;
+
+                var tlds = doc.Descendants(ns + "Tld")
+                    .Select(t => 
+                    {
+                        var name = t.Attribute("Name")?.Value;
+                        if (string.IsNullOrEmpty(name)) return null;
+
+                        return new TldInfo
+                        {
+                            Name = name,
+                            Currency = "USD",
+                            IsGeneric = t.Attribute("IsGenericTld")?.Value == "true",
+                            IsCountryCode = t.Attribute("IsCcTld")?.Value == "true",
+                            Type = t.Attribute("Type")?.Value,
+                            MinRegistrationYears = int.TryParse(t.Attribute("MinRegYears")?.Value, out var minYears) ? minYears : null,
+                            MaxRegistrationYears = int.TryParse(t.Attribute("MaxRegYears")?.Value, out var maxYears) ? maxYears : null,
+                            SupportsPrivacy = t.Attribute("SupportsPrivacy")?.Value == "true"
+                        };
+                    })
+                    .Where(t => t != null)
+                    .Cast<TldInfo>()
+                    .ToList();
+
+                return tlds;
+            }
+            catch (Exception)
+            {
+                return [];
+            }
         }
     }
 }

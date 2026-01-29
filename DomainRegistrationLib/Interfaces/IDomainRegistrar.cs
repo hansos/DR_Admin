@@ -68,5 +68,10 @@ namespace DomainRegistrationLib.Interfaces
         /// Enables/disables auto-renewal
         /// </summary>
         Task<DomainUpdateResult> SetAutoRenewAsync(string domainName, bool enable);
+
+        /// <summary>
+        /// Gets all supported top-level domains for this registrar
+        /// </summary>
+        Task<List<TldInfo>> GetSupportedTldsAsync();
     }
 }

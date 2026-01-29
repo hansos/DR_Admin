@@ -366,5 +366,53 @@ namespace DomainRegistrationLib.Implementations
                 }
             };
         }
+
+        public override async Task<List<TldInfo>> GetSupportedTldsAsync()
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync("/v3/tlds");
+                response.EnsureSuccessStatusCode();
+
+                var content = await response.Content.ReadAsStringAsync();
+                var result = JsonSerializer.Deserialize<JsonElement>(content);
+
+                var tlds = new List<TldInfo>();
+                if (result.TryGetProperty("tlds", out var tldsArray))
+                {
+                    foreach (var tld in tldsArray.EnumerateArray())
+                    {
+                        var name = tld.GetProperty("name").GetString();
+                        if (!string.IsNullOrEmpty(name))
+                        {
+                            var tldInfo = new TldInfo
+                            {
+                                Name = name,
+                                Currency = "USD"
+                            };
+
+                            if (tld.TryGetProperty("registration_price", out var regPrice))
+                                tldInfo.RegistrationPrice = regPrice.GetDecimal();
+                            if (tld.TryGetProperty("renewal_price", out var renewPrice))
+                                tldInfo.RenewalPrice = renewPrice.GetDecimal();
+                            if (tld.TryGetProperty("transfer_price", out var transPrice))
+                                tldInfo.TransferPrice = transPrice.GetDecimal();
+                            if (tld.TryGetProperty("type", out var typeProp))
+                                tldInfo.Type = typeProp.GetString();
+                            if (tld.TryGetProperty("currency", out var currencyProp))
+                                tldInfo.Currency = currencyProp.GetString();
+
+                            tlds.Add(tldInfo);
+                        }
+                    }
+                }
+
+                return tlds;
+            }
+            catch (Exception)
+            {
+                return [];
+            }
+        }
     }
 }

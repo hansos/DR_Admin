@@ -448,5 +448,57 @@ namespace DomainRegistrationLib.Implementations
             // and return the contact ID from the response
             return 1;
         }
+
+        public override async Task<List<TldInfo>> GetSupportedTldsAsync()
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync("/tlds");
+                response.EnsureSuccessStatusCode();
+
+                var content = await response.Content.ReadAsStringAsync();
+                var result = JsonSerializer.Deserialize<JsonElement>(content);
+
+                var tlds = new List<TldInfo>();
+                if (result.TryGetProperty("data", out var dataArray))
+                {
+                    foreach (var tld in dataArray.EnumerateArray())
+                    {
+                        var name = tld.GetProperty("tld").GetString();
+                        if (!string.IsNullOrEmpty(name))
+                        {
+                            var tldInfo = new TldInfo
+                            {
+                                Name = name,
+                                Currency = "USD"
+                            };
+
+                            if (tld.TryGetProperty("registration_price", out var regPrice))
+                                tldInfo.RegistrationPrice = regPrice.GetDecimal();
+                            if (tld.TryGetProperty("renewal_price", out var renewPrice))
+                                tldInfo.RenewalPrice = renewPrice.GetDecimal();
+                            if (tld.TryGetProperty("transfer_price", out var transPrice))
+                                tldInfo.TransferPrice = transPrice.GetDecimal();
+                            if (tld.TryGetProperty("minimum_registration", out var minYears))
+                                tldInfo.MinRegistrationYears = minYears.GetInt32();
+                            if (tld.TryGetProperty("maximum_registration", out var maxYears))
+                                tldInfo.MaxRegistrationYears = maxYears.GetInt32();
+                            if (tld.TryGetProperty("whois_privacy", out var privacy))
+                                tldInfo.SupportsPrivacy = privacy.GetBoolean();
+                            if (tld.TryGetProperty("dnssec_interface_type", out var dnssec))
+                                tldInfo.SupportsDnssec = !string.IsNullOrEmpty(dnssec.GetString());
+
+                            tlds.Add(tldInfo);
+                        }
+                    }
+                }
+
+                return tlds;
+            }
+            catch (Exception)
+            {
+                return [];
+            }
+        }
     }
 }

@@ -30,6 +30,7 @@ namespace DomainRegistrationLib.Implementations
         public abstract Task<DomainUpdateResult> UpdateNameserversAsync(string domainName, List<string> nameservers);
         public abstract Task<DomainUpdateResult> SetPrivacyProtectionAsync(string domainName, bool enable);
         public abstract Task<DomainUpdateResult> SetAutoRenewAsync(string domainName, bool enable);
+        public abstract Task<List<TldInfo>> GetSupportedTldsAsync();
 
         protected virtual DomainRegistrationResult CreateErrorResult(string message, string? errorCode = null)
         {

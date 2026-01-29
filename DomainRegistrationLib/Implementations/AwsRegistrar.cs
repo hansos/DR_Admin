@@ -595,6 +595,51 @@ namespace DomainRegistrationLib.Implementations
             return Convert.ToHexString(bytes).ToLowerInvariant();
         }
 
+        public override async Task<List<TldInfo>> GetSupportedTldsAsync()
+        {
+            try
+            {
+                var endpoint = "/2013-04-01/domains/tlds";
+                var response = await MakeAwsRequestAsync(HttpMethod.Get, endpoint);
+                var content = await response.Content.ReadAsStringAsync();
+                var result = JsonSerializer.Deserialize<JsonElement>(content);
+
+                var tlds = new List<TldInfo>();
+                if (result.TryGetProperty("Prices", out var pricesArray))
+                {
+                    foreach (var tld in pricesArray.EnumerateArray())
+                    {
+                        var name = tld.GetProperty("Name").GetString();
+                        if (!string.IsNullOrEmpty(name))
+                        {
+                            var tldInfo = new TldInfo
+                            {
+                                Name = name,
+                                Currency = "USD"
+                            };
+
+                            if (tld.TryGetProperty("RegistrationPrice", out var regPrice))
+                                tldInfo.RegistrationPrice = regPrice.GetDecimal();
+                            if (tld.TryGetProperty("RenewalPrice", out var renewPrice))
+                                tldInfo.RenewalPrice = renewPrice.GetDecimal();
+                            if (tld.TryGetProperty("TransferPrice", out var transPrice))
+                                tldInfo.TransferPrice = transPrice.GetDecimal();
+                            if (tld.TryGetProperty("Type", out var typeProp))
+                                tldInfo.Type = typeProp.GetString();
+
+                            tlds.Add(tldInfo);
+                        }
+                    }
+                }
+
+                return tlds;
+            }
+            catch (Exception)
+            {
+                return [];
+            }
+        }
+
         private object MapAwsContact(ContactInformation contact)
         {
             return new

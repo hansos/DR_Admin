@@ -740,5 +740,44 @@ namespace DomainRegistrationLib.Implementations
                 new XElement("Country", contact.Country)
             );
         }
+
+        public override async Task<List<TldInfo>> GetSupportedTldsAsync()
+        {
+            try
+            {
+                var requestXml = BuildSoapRequest("GetTldList", new XElement("Request"));
+                var response = await MakeApiCallAsync(requestXml);
+
+                var tlds = response.Descendants("Tld")
+                    .Select(t => 
+                    {
+                        var name = t.Element("Name")?.Value;
+                        if (string.IsNullOrEmpty(name)) return null;
+
+                        return new TldInfo
+                        {
+                            Name = name,
+                            Currency = t.Element("Currency")?.Value ?? "USD",
+                            RegistrationPrice = decimal.TryParse(t.Element("RegistrationPrice")?.Value, out var regPrice) ? regPrice : null,
+                            RenewalPrice = decimal.TryParse(t.Element("RenewalPrice")?.Value, out var renewPrice) ? renewPrice : null,
+                            TransferPrice = decimal.TryParse(t.Element("TransferPrice")?.Value, out var transPrice) ? transPrice : null,
+                            MinRegistrationYears = int.TryParse(t.Element("MinPeriod")?.Value, out var minYears) ? minYears : null,
+                            MaxRegistrationYears = int.TryParse(t.Element("MaxPeriod")?.Value, out var maxYears) ? maxYears : null,
+                            Type = t.Element("Type")?.Value,
+                            SupportsPrivacy = t.Element("PrivacyAvailable")?.Value == "true",
+                            SupportsDnssec = t.Element("DnssecSupported")?.Value == "true"
+                        };
+                    })
+                    .Where(t => t != null)
+                    .Cast<TldInfo>()
+                    .ToList();
+
+                return tlds;
+            }
+            catch (Exception)
+            {
+                return [];
+            }
+        }
     }
 }
