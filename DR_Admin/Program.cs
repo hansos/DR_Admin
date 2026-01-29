@@ -74,6 +74,20 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+// Register DB Role to Claims Transformation
+builder.Services.AddScoped<Microsoft.AspNetCore.Authentication.IClaimsTransformation, ISPAdmin.Infrastructure.DbRoleClaimsTransformation>();
+
+// Register Role Permission Service
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<ISPAdmin.Infrastructure.IRolePermissionService, ISPAdmin.Infrastructure.RolePermissionService>();
+
+// Register Role Sync Service for runtime role updates
+builder.Services.AddScoped<ISPAdmin.Infrastructure.IRoleSyncService, ISPAdmin.Infrastructure.RoleSyncService>();
+
+// Register Authorization Handlers
+builder.Services.AddScoped<Microsoft.AspNetCore.Authorization.IAuthorizationHandler, ISPAdmin.Infrastructure.Authorization.ResourcePermissionHandler>();
+builder.Services.AddScoped<Microsoft.AspNetCore.Authorization.IAuthorizationHandler, ISPAdmin.Infrastructure.Authorization.ResourceOwnerHandler>();
+
 // Configure Authorization Policies
 builder.Services.AddAuthorization(options =>
 {
