@@ -20,7 +20,7 @@ public class CountryService : ICountryService
     {
         try
         {
-            _log.Information("Merging countries from CSV");
+            _log.Information("Merging countries from CSV with batching");
 
             using var reader = new System.IO.StreamReader(csvStream);
 
@@ -30,8 +30,9 @@ public class CountryService : ICountryService
                 throw new InvalidOperationException("CSV file is empty");
             }
 
-            // expected headers: Name,Iso2,Iso3,Tld,Numeric
+            const int batchSize = 50;
             var merged = 0;
+            var processedInBatch = 0;
 
             while (!reader.EndOfStream)
             {
@@ -52,7 +53,12 @@ public class CountryService : ICountryService
 
                 if (string.IsNullOrEmpty(iso2)) continue;
 
-                var country = await _context.Countries.FirstOrDefaultAsync(c => c.Code == iso2);
+                // First check the DbContext local tracker for entities already added in this session
+                var country = _context.Countries.Local.FirstOrDefault(c => c.Code == iso2);
+                if (country == null)
+                {
+                    country = await _context.Countries.FirstOrDefaultAsync(c => c.Code == iso2);
+                }
 
                 if (country == null)
                 {
@@ -115,9 +121,22 @@ public class CountryService : ICountryService
                         merged++;
                     }
                 }
+
+                processedInBatch++;
+
+                if (processedInBatch >= batchSize)
+                {
+                    await _context.SaveChangesAsync();
+                    _context.ChangeTracker.Clear();
+                    processedInBatch = 0;
+                }
             }
 
-            await _context.SaveChangesAsync();
+            if (processedInBatch > 0)
+            {
+                await _context.SaveChangesAsync();
+                _context.ChangeTracker.Clear();
+            }
 
             _log.Information("Successfully merged {Count} countries from CSV", merged);
             return merged;
