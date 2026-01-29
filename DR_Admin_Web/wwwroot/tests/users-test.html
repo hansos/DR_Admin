@@ -53,11 +53,7 @@
           <div class="col-md-6 mb-3">
             <label for="createRole" class="form-label">Role</label>
             <select class="form-control" id="createRole">
-              <option value="">Select Role...</option>
-              <option value="Admin">Admin</option>
-              <option value="User">User</option>
-              <option value="Support">Support</option>
-              <option value="Sales">Sales</option>
+              <option value="">Loading roles...</option>
             </select>
           </div>
         </div>
@@ -124,6 +120,12 @@
               <input type="email" class="form-control" id="editEmail" required>
             </div>
             <div class="mb-3">
+              <label for="editRole" class="form-label">Role</label>
+              <select class="form-control" id="editRole">
+                <option value="">Loading roles...</option>
+              </select>
+            </div>
+            <div class="mb-3">
               <div class="form-check">
                 <input class="form-check-input" type="checkbox" id="editIsActive">
                 <label class="form-check-label" for="editIsActive">
@@ -145,6 +147,7 @@
   <script src="/assets/js/authClient.js"></script>
   <script>
     let currentUsers = [];
+    let availableRoles = [];
     let editModal;
 
     // Initialize on page load
@@ -164,6 +167,9 @@
 
       editModal = new bootstrap.Modal(document.getElementById('editModal'));
       document.getElementById('createForm').addEventListener('submit', handleCreate);
+      
+      // Load roles and users
+      await loadRoles();
       getAllUsers();
     });
 
@@ -194,15 +200,69 @@
       };
     }
 
+    // Load Roles from API
+    async function loadRoles() {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/v1/Roles`, {
+          method: 'GET',
+          headers: getAuthHeaders()
+        });
+
+        if (response.ok) {
+          const roles = await response.json();
+          availableRoles = roles;
+          populateRoleDropdowns(roles);
+        } else {
+          console.error('Failed to load roles');
+          // Set default roles as fallback
+          availableRoles = [
+            { id: 1, name: 'Admin' },
+            { id: 2, name: 'User' },
+            { id: 3, name: 'Support' },
+            { id: 4, name: 'Sales' }
+          ];
+          populateRoleDropdowns(availableRoles);
+        }
+      } catch (error) {
+        console.error('Error loading roles:', error);
+        // Set default roles as fallback
+        availableRoles = [
+          { id: 1, name: 'Admin' },
+          { id: 2, name: 'User' },
+          { id: 3, name: 'Support' },
+          { id: 4, name: 'Sales' }
+        ];
+        populateRoleDropdowns(availableRoles);
+      }
+    }
+
+    // Populate Role Dropdowns
+    function populateRoleDropdowns(roles) {
+      const createRoleSelect = document.getElementById('createRole');
+      const editRoleSelect = document.getElementById('editRole');
+      
+      // Build options HTML
+      const optionsHtml = `
+        <option value="">Select Role...</option>
+        ${roles.map(role => `<option value="${role.id}">${role.name}</option>`).join('')}
+      `;
+      
+      createRoleSelect.innerHTML = optionsHtml;
+      editRoleSelect.innerHTML = optionsHtml;
+    }
+
     // Handle Create User
     async function handleCreate(e) {
       e.preventDefault();
+      
+      const roleId = document.getElementById('createRole').value;
+      const roleName = roleId ? availableRoles.find(r => r.id == roleId)?.name : null;
       
       const data = {
         username: document.getElementById('createUsername').value.trim(),
         email: document.getElementById('createEmail').value.trim(),
         password: document.getElementById('createPassword').value,
-        role: document.getElementById('createRole').value || null
+        role: roleName
       };
 
       try {
@@ -297,12 +357,17 @@
               </tr>
             </thead>
             <tbody>
-              ${users.map(user => `
+              ${users.map(user => {
+                const rolesDisplay = user.roles && user.roles.length > 0 
+                  ? user.roles.map(role => `<span class="badge badge-info">${role}</span>`).join(' ')
+                  : '<span class="text-muted">-</span>';
+                
+                return `
                 <tr>
                   <td>${user.id}</td>
                   <td><strong>${user.username || 'N/A'}</strong></td>
                   <td>${user.email || '-'}</td>
-                  <td>${user.role ? `<span class="badge badge-info">${user.role}</span>` : '-'}</td>
+                  <td>${rolesDisplay}</td>
                   <td>
                     <span class="badge ${user.isActive ? 'badge-success' : 'badge-secondary'}">
                       ${user.isActive ? 'Active' : 'Inactive'}
@@ -320,7 +385,7 @@
                     </div>
                   </td>
                 </tr>
-              `).join('')}
+              `}).join('')}
             </tbody>
           </table>
         </div>
@@ -393,10 +458,13 @@
         return;
       }
 
+      // Find the role ID from the role name
+      const userRole = availableRoles.find(r => r.name === user.role);
+      
       document.getElementById('editId').value = user.id;
       document.getElementById('editUsername').value = user.username || '';
       document.getElementById('editEmail').value = user.email || '';
-      document.getElementById('editRole').value = user.role || '';
+      document.getElementById('editRole').value = userRole ? userRole.id : '';
       document.getElementById('editIsActive').checked = user.isActive;
 
       editModal.show();
@@ -405,10 +473,13 @@
     // Update User
     async function updateUser() {
       const id = document.getElementById('editId').value;
+      const roleId = document.getElementById('editRole').value;
+      const roleName = roleId ? availableRoles.find(r => r.id == roleId)?.name : null;
+      
       const data = {
         username: document.getElementById('editUsername').value.trim(),
         email: document.getElementById('editEmail').value.trim(),
-        role: document.getElementById('editRole').value || null,
+        role: roleName,
         isActive: document.getElementById('editIsActive').checked
       };
 
