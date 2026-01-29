@@ -33,7 +33,7 @@ public class CustomerCreditsController : ControllerBase
     /// <response code="403">If user doesn't have required role</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("customer/{customerId}")]
-    [Authorize(Roles = "Admin,Support")]
+    [Authorize(Policy = "CustomerCredit.Read")]
     [ProducesResponseType(typeof(CustomerCreditDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -72,7 +72,7 @@ public class CustomerCreditsController : ControllerBase
     /// <response code="403">If user doesn't have required role</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("customer/{customerId}/transactions")]
-    [Authorize(Roles = "Admin,Support")]
+    [Authorize(Policy = "CustomerCredit.Read")]
     [ProducesResponseType(typeof(IEnumerable<CreditTransactionDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -104,7 +104,7 @@ public class CustomerCreditsController : ControllerBase
     /// <response code="403">If user doesn't have required role</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpPost("transactions")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "CustomerCredit.Write")]
     [ProducesResponseType(typeof(CreditTransactionDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -156,7 +156,7 @@ public class CustomerCreditsController : ControllerBase
     /// <response code="403">If user doesn't have required role</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpPost("customer/{customerId}/add")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "CustomerCredit.Write")]
     [ProducesResponseType(typeof(decimal), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

@@ -31,7 +31,7 @@ public class TokensController : ControllerBase
     /// <response code="403">If user doesn't have Admin role</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "Token.Read")]
     [ProducesResponseType(typeof(IEnumerable<TokenDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -63,7 +63,7 @@ public class TokensController : ControllerBase
     /// <response code="404">If token is not found</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("{id}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "Token.Read")]
     [ProducesResponseType(typeof(TokenDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]

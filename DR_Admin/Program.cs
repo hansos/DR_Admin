@@ -74,6 +74,417 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+// Configure Authorization Policies
+builder.Services.AddAuthorization(options =>
+{
+    // Admin only policy
+    options.AddPolicy("Admin.Only", policy =>
+        policy.RequireRole("Admin"));
+    
+    // Read policies (view/list operations)
+    options.AddPolicy("Customer.Read", policy =>
+        policy.RequireRole("Admin", "Support", "Sales"));
+    
+    options.AddPolicy("User.Read", policy =>
+        policy.RequireRole("Admin", "Support"));
+    
+    options.AddPolicy("Role.Read", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("BillingCycle.Read", policy =>
+        policy.RequireRole("Admin", "Support", "Sales"));
+    
+    options.AddPolicy("ContactPerson.Read", policy =>
+        policy.RequireRole("Admin", "Support", "Sales"));
+    
+    options.AddPolicy("ControlPanelType.Read", policy =>
+        policy.RequireRole("Admin", "Support", "Sales"));
+    
+    options.AddPolicy("Country.Read", policy =>
+        policy.RequireRole("Admin", "Support", "Sales"));
+    
+    options.AddPolicy("Coupon.Read", policy =>
+        policy.RequireRole("Admin", "Sales"));
+    
+    options.AddPolicy("Currency.Read", policy =>
+        policy.RequireRole("Admin", "Finance"));
+    
+    options.AddPolicy("CustomerCredit.Read", policy =>
+        policy.RequireRole("Admin", "Support"));
+    
+    options.AddPolicy("CustomerPaymentMethod.Read", policy =>
+        policy.RequireRole("Admin", "Support"));
+    
+    options.AddPolicy("CustomerStatus.Read", policy =>
+        policy.RequireRole("Admin", "Support", "Sales"));
+    
+    options.AddPolicy("DnsRecord.Read", policy =>
+        policy.RequireRole("Admin", "Support"));
+    
+    options.AddPolicy("DnsRecord.ReadOwn", policy =>
+        policy.RequireRole("Admin", "Support", "Customer"));
+    
+    // Write policies (create/update operations)
+    options.AddPolicy("Customer.Write", policy =>
+        policy.RequireRole("Admin", "Sales"));
+    
+    options.AddPolicy("User.Write", policy =>
+        policy.RequireRole("Admin", "Support"));
+    
+    options.AddPolicy("Role.Write", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("BillingCycle.Write", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("ContactPerson.Write", policy =>
+        policy.RequireRole("Admin", "Sales"));
+    
+    options.AddPolicy("ControlPanelType.Write", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("Country.Write", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("Coupon.Write", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("Currency.Write", policy =>
+        policy.RequireRole("Admin", "Finance"));
+    
+    options.AddPolicy("CustomerCredit.Write", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("CustomerPaymentMethod.Write", policy =>
+        policy.RequireRole("Admin", "Support"));
+    
+    options.AddPolicy("CustomerStatus.Write", policy =>
+        policy.RequireRole("Admin", "Support", "Sales"));
+    
+    options.AddPolicy("DnsRecord.Write", policy =>
+        policy.RequireRole("Admin", "Support"));
+    
+    options.AddPolicy("DnsRecord.WriteOwn", policy =>
+        policy.RequireRole("Admin", "Support", "Customer"));
+    
+    // Delete policies
+    options.AddPolicy("Customer.Delete", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("User.Delete", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("Role.Delete", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("BillingCycle.Delete", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("ContactPerson.Delete", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("ControlPanelType.Delete", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("Country.Delete", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("Coupon.Delete", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("Currency.Delete", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("CustomerCredit.Delete", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("CustomerPaymentMethod.Delete", policy =>
+        policy.RequireRole("Admin", "Support"));
+    
+    options.AddPolicy("CustomerStatus.Delete", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("DnsRecord.Delete", policy =>
+        policy.RequireRole("Admin", "Support"));
+    
+    options.AddPolicy("ServerIpAddress.Read", policy =>
+        policy.RequireRole("Admin", "Support"));
+    
+    options.AddPolicy("ServerIpAddress.Write", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("ServerIpAddress.Delete", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("Order.Read", policy =>
+        policy.RequireRole("Admin", "Support", "Sales"));
+    
+    options.AddPolicy("Order.Write", policy =>
+        policy.RequireRole("Admin", "Sales"));
+    
+    options.AddPolicy("Order.Delete", policy =>
+        policy.RequireRole("Admin"));
+    
+    // DNS-related policies
+    options.AddPolicy("DnsRecord.Read", policy =>
+        policy.RequireRole("Admin", "Support"));
+    
+    options.AddPolicy("DnsRecord.ReadOwn", policy =>
+        policy.RequireRole("Admin", "Support", "Customer"));
+    
+    options.AddPolicy("DnsRecord.Write", policy =>
+        policy.RequireRole("Admin", "Support"));
+    
+    options.AddPolicy("DnsRecord.WriteOwn", policy =>
+        policy.RequireRole("Admin", "Support", "Customer"));
+    
+    options.AddPolicy("DnsRecord.Delete", policy =>
+        policy.RequireRole("Admin", "Support"));
+    
+    options.AddPolicy("DnsRecordType.Read", policy =>
+        policy.RequireRole("Admin", "Support", "Customer"));
+    
+    options.AddPolicy("DnsRecordType.Write", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("DnsRecordType.Delete", policy =>
+        policy.RequireRole("Admin"));
+    
+    // Server-related policies
+    options.AddPolicy("Server.Read", policy =>
+        policy.RequireRole("Admin", "Support"));
+    
+    options.AddPolicy("Server.Write", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("Server.Delete", policy =>
+        policy.RequireRole("Admin"));
+    
+    // Service-related policies
+    options.AddPolicy("Service.Read", policy =>
+        policy.RequireRole("Admin", "Support", "Sales"));
+    
+    options.AddPolicy("Service.Write", policy =>
+        policy.RequireRole("Admin", "Sales"));
+    
+    options.AddPolicy("Service.Delete", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("ServiceType.Read", policy =>
+        policy.RequireRole("Admin", "Support", "Sales"));
+    
+    options.AddPolicy("ServiceType.Write", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("ServiceType.Delete", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("Invoice.Read", policy =>
+        policy.RequireRole("Admin", "Support", "Sales"));
+    
+    options.AddPolicy("Invoice.Write", policy =>
+        policy.RequireRole("Admin", "Sales"));
+    
+    options.AddPolicy("Invoice.Delete", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("Tld.Read", policy =>
+        policy.RequireRole("Admin", "Support", "Sales", "Customer"));
+    
+    options.AddPolicy("Tld.Write", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("Tld.Delete", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("Registrar.Read", policy =>
+        policy.RequireRole("Admin", "Support", "Sales", "Customer"));
+    
+    options.AddPolicy("Registrar.Write", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("Registrar.Delete", policy =>
+        policy.RequireRole("Admin"));
+    
+    // Additional entity policies
+    options.AddPolicy("HostingPackage.Read", policy =>
+        policy.RequireRole("Admin", "Support", "Sales"));
+    
+    options.AddPolicy("HostingPackage.Write", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("HostingPackage.Delete", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("PostalCode.Read", policy =>
+        policy.RequireRole("Admin", "Support", "Customer"));
+    
+    options.AddPolicy("PostalCode.Write", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("PostalCode.Delete", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("PaymentGateway.Read", policy =>
+        policy.RequireRole("Admin", "Support", "Customer"));
+    
+    options.AddPolicy("PaymentGateway.Write", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("PaymentGateway.Delete", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("SalesAgent.Read", policy =>
+        policy.RequireRole("Admin", "Sales"));
+    
+    options.AddPolicy("SalesAgent.Write", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("SalesAgent.Delete", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("ResellerCompany.Read", policy =>
+        policy.RequireRole("Admin", "Sales"));
+    
+    options.AddPolicy("ResellerCompany.Write", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("ResellerCompany.Delete", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("DnsZonePackage.Read", policy =>
+        policy.RequireRole("Admin", "Support", "Sales"));
+    
+    options.AddPolicy("DnsZonePackage.Write", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("DnsZonePackage.Delete", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("DocumentTemplate.Read", policy =>
+        policy.RequireRole("Admin", "Support"));
+    
+    options.AddPolicy("DocumentTemplate.Write", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("DocumentTemplate.Delete", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("SentEmail.Read", policy =>
+        policy.RequireRole("Admin", "Support"));
+    
+    options.AddPolicy("Unit.Read", policy =>
+        policy.RequireRole("Admin", "Support", "Sales"));
+    
+    options.AddPolicy("Unit.Write", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("Unit.Delete", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("InvoiceLine.Read", policy =>
+        policy.RequireRole("Admin", "Support", "Sales"));
+    
+    options.AddPolicy("InvoiceLine.Write", policy =>
+        policy.RequireRole("Admin", "Sales"));
+    
+    options.AddPolicy("InvoiceLine.Delete", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("ServerControlPanel.Read", policy =>
+        policy.RequireRole("Admin", "Support"));
+    
+    options.AddPolicy("ServerControlPanel.Write", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("ServerControlPanel.Delete", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("DnsZonePackageRecord.Read", policy =>
+        policy.RequireRole("Admin", "Support", "Sales"));
+    
+    options.AddPolicy("DnsZonePackageRecord.Write", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("DnsZonePackageRecord.Delete", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("RegistrarTld.Read", policy =>
+        policy.RequireRole("Admin", "Support", "Sales", "Customer"));
+    
+    options.AddPolicy("RegistrarTld.Write", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("RegistrarTld.Delete", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("EmailQueue.Write", policy =>
+        policy.RequireRole("Admin", "Support", "Sales"));
+    
+    options.AddPolicy("EmailQueue.Read", policy =>
+        policy.RequireRole("Admin", "Support", "Sales"));
+    
+    options.AddPolicy("Quote.Read", policy =>
+        policy.RequireRole("Admin", "Sales", "Support"));
+    
+    options.AddPolicy("Quote.Write", policy =>
+        policy.RequireRole("Admin", "Sales"));
+    
+    options.AddPolicy("Quote.Delete", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("Refund.Read", policy =>
+        policy.RequireRole("Admin", "Support"));
+    
+    options.AddPolicy("Refund.Write", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("Refund.Delete", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("Subscription.Read", policy =>
+        policy.RequireRole("Admin", "Support", "Sales"));
+    
+    options.AddPolicy("Subscription.Write", policy =>
+        policy.RequireRole("Admin", "Sales"));
+    
+    options.AddPolicy("Subscription.Delete", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("SubscriptionBillingHistory.Read", policy =>
+        policy.RequireRole("Admin", "Support", "Sales"));
+    
+    options.AddPolicy("TaxRule.Read", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("TaxRule.Write", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("TaxRule.Delete", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("Token.Read", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("Token.Write", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("Token.Delete", policy =>
+        policy.RequireRole("Admin"));
+    
+    options.AddPolicy("ExchangeRateDownloadLog.Read", policy =>
+        policy.RequireRole("Admin", "Finance"));
+    
+    options.AddPolicy("PaymentIntent.Read", policy =>
+        policy.RequireRole("Admin", "Support"));
+    
+    options.AddPolicy("PaymentIntent.Write", policy =>
+        policy.RequireRole("Admin", "Support", "Customer"));
+    
+    options.AddPolicy("PaymentIntent.Delete", policy =>
+        policy.RequireRole("Admin"));
+});
+
 // Add services to the container.
 builder.Services.AddTransient<IAuthService, AuthService>();
 builder.Services.AddTransient<IInitializationService, InitializationService>();

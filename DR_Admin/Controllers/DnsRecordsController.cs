@@ -31,7 +31,7 @@ public class DnsRecordsController : ControllerBase
     /// <response code="403">If user doesn't have required role</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet]
-    [Authorize(Roles = "Admin,Support")]
+    [Authorize(Policy = "DnsRecord.Read")]
     [ProducesResponseType(typeof(IEnumerable<DnsRecordDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -63,7 +63,7 @@ public class DnsRecordsController : ControllerBase
     /// <response code="404">If DNS record is not found</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("{id}")]
-    [Authorize(Roles = "Admin,Support,Customer")]
+    [Authorize(Policy = "DnsRecord.ReadOwn")]
     [ProducesResponseType(typeof(DnsRecordDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -102,7 +102,7 @@ public class DnsRecordsController : ControllerBase
     /// <response code="403">If user doesn't have required role</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("domain/{domainId}")]
-    [Authorize(Roles = "Admin,Support,Customer")]
+    [Authorize(Policy = "DnsRecord.ReadOwn")]
     [ProducesResponseType(typeof(IEnumerable<DnsRecordDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -133,7 +133,7 @@ public class DnsRecordsController : ControllerBase
     /// <response code="403">If user doesn't have required role</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("type/{type}")]
-    [Authorize(Roles = "Admin,Support")]
+    [Authorize(Policy = "DnsRecord.Read")]
     [ProducesResponseType(typeof(IEnumerable<DnsRecordDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -165,7 +165,7 @@ public class DnsRecordsController : ControllerBase
     /// <response code="403">If user doesn't have required role</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpPost]
-    [Authorize(Roles = "Admin,Support,Customer")]
+    [Authorize(Policy = "DnsRecord.WriteOwn")]
     [ProducesResponseType(typeof(DnsRecordDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

@@ -161,7 +161,7 @@ public class CountriesController : ControllerBase
     /// <response code="403">If user doesn't have Admin role</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "Country.Write")]
     [ProducesResponseType(typeof(CountryDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -202,7 +202,7 @@ public class CountriesController : ControllerBase
     /// Update an existing country
     /// </summary>
     [HttpPut("{id}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "Country.Write")]
     public async Task<ActionResult<CountryDto>> UpdateCountry(int id, [FromBody] UpdateCountryDto updateDto)
     {
         try
@@ -241,7 +241,7 @@ public class CountriesController : ControllerBase
     /// Delete a country
     /// </summary>
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "Country.Delete")]
     public async Task<ActionResult> DeleteCountry(int id)
     {
         try

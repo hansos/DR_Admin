@@ -31,7 +31,7 @@ public class DnsRecordTypesController : ControllerBase
     /// <response code="403">If user doesn't have required role</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet]
-    [Authorize(Roles = "Admin,Support,Customer")]
+    [Authorize(Policy = "DnsRecordType.Read")]
     [ProducesResponseType(typeof(IEnumerable<DnsRecordTypeDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -61,7 +61,7 @@ public class DnsRecordTypesController : ControllerBase
     /// <response code="403">If user doesn't have required role</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("active")]
-    [Authorize(Roles = "Admin,Support,Customer")]
+    [Authorize(Policy = "DnsRecordType.Read")]
     [ProducesResponseType(typeof(IEnumerable<DnsRecordTypeDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -93,7 +93,7 @@ public class DnsRecordTypesController : ControllerBase
     /// <response code="404">If DNS record type is not found</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("{id}")]
-    [Authorize(Roles = "Admin,Support")]
+    [Authorize(Policy = "DnsRecord.Read")]
     [ProducesResponseType(typeof(DnsRecordTypeDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -133,7 +133,7 @@ public class DnsRecordTypesController : ControllerBase
     /// <response code="404">If DNS record type is not found</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("type/{type}")]
-    [Authorize(Roles = "Admin,Support,Customer")]
+    [Authorize(Policy = "DnsRecordType.Read")]
     [ProducesResponseType(typeof(DnsRecordTypeDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -166,7 +166,7 @@ public class DnsRecordTypesController : ControllerBase
     /// Create a new DNS record type
     /// </summary>
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "DnsRecordType.Write")]
     public async Task<ActionResult<DnsRecordTypeDto>> CreateDnsRecordType([FromBody] CreateDnsRecordTypeDto createDto)
     {
         try

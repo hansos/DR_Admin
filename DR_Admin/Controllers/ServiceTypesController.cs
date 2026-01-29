@@ -31,7 +31,7 @@ public class ServiceTypesController : ControllerBase
     /// <response code="403">If user doesn't have required role</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet]
-    [Authorize(Roles = "Admin,Support,Sales")]
+    [Authorize(Policy = "ServiceType.Read")]
     [ProducesResponseType(typeof(IEnumerable<ServiceTypeDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -63,7 +63,7 @@ public class ServiceTypesController : ControllerBase
     /// <response code="404">If service type is not found</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("{id}")]
-    [Authorize(Roles = "Admin,Support,Sales")]
+    [Authorize(Policy = "ServiceType.Read")]
     [ProducesResponseType(typeof(ServiceTypeDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -103,7 +103,7 @@ public class ServiceTypesController : ControllerBase
     /// <response code="403">If user doesn't have Admin role</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "ServiceType.Write")]
     [ProducesResponseType(typeof(ServiceTypeDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

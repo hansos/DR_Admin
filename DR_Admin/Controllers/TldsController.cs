@@ -182,7 +182,7 @@ public class TldsController : ControllerBase
     /// Create a new TLD
     /// </summary>
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "Tld.Write")]
     public async Task<ActionResult<TldDto>> CreateTld([FromBody] CreateTldDto createDto)
     {
         try

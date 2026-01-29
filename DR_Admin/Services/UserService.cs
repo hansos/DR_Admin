@@ -209,9 +209,7 @@ public class UserService : IUserService
 
     private static string HashPassword(string password)
     {
-        // Simple hash for now - in production use BCrypt.Net or ASP.NET Core Identity
-        using var sha256 = System.Security.Cryptography.SHA256.Create();
-        var hashedBytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
-        return Convert.ToBase64String(hashedBytes);
+        // Using BCrypt with work factor of 12 (configurable, higher = more secure but slower)
+        return BCrypt.Net.BCrypt.HashPassword(password, workFactor: 12);
     }
 }

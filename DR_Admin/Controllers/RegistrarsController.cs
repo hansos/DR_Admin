@@ -62,7 +62,7 @@ public class RegistrarsController : ControllerBase
     /// <response code="403">If user doesn't have Admin role</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpPost("{registrarId}/tld/{tldId}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "Registrar.Write")]
     [ProducesResponseType(typeof(RegistrarTldDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -102,7 +102,7 @@ public class RegistrarsController : ControllerBase
     /// <response code="403">If user doesn't have Admin role</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpPost("{registrarId}/tld")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "Registrar.Write")]
     [ProducesResponseType(typeof(RegistrarTldDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -145,7 +145,7 @@ public class RegistrarsController : ControllerBase
     /// <response code="403">If user doesn't have required role</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet]
-    [Authorize(Roles = "Admin,Support")]
+    [Authorize(Policy = "Registrar.Read")]
     [ProducesResponseType(typeof(IEnumerable<RegistrarDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -190,7 +190,7 @@ public class RegistrarsController : ControllerBase
     /// Get registrar by ID
     /// </summary>
     [HttpGet("{id}")]
-    [Authorize(Roles = "Admin,Support")]
+    [Authorize(Policy = "Registrar.Read")]
     public async Task<ActionResult<RegistrarDto>> GetRegistrarById(int id)
     {
         try

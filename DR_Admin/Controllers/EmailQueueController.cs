@@ -32,7 +32,7 @@ public class EmailQueueController : ControllerBase
     /// <response code="401">If user is not authenticated</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpPost("queue")]
-    [Authorize(Roles = "Admin,Support,Sales")]
+    [Authorize(Policy = "EmailQueue.Write")]
     [ProducesResponseType(typeof(QueueEmailResponseDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -80,7 +80,7 @@ public class EmailQueueController : ControllerBase
     /// <response code="401">If user is not authenticated</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("status/{id}")]
-    [Authorize(Roles = "Admin,Support,Sales")]
+    [Authorize(Policy = "EmailQueue.Read")]
     [ProducesResponseType(typeof(SentEmailDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

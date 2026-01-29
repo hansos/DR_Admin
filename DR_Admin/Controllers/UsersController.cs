@@ -31,7 +31,7 @@ public class UsersController : ControllerBase
     /// <response code="403">If user doesn't have required role (Admin or Support)</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet]
-    [Authorize(Roles = "Admin,Support")]
+    [Authorize(Policy = "User.Read")]
     [ProducesResponseType(typeof(IEnumerable<UserDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -63,7 +63,7 @@ public class UsersController : ControllerBase
     /// <response code="404">If user is not found</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("{id}")]
-    [Authorize(Roles = "Admin,Support")]
+    [Authorize(Policy = "User.Read")]
     [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -103,7 +103,7 @@ public class UsersController : ControllerBase
     /// <response code="403">If user doesn't have Admin role</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "User.Write")]
     [ProducesResponseType(typeof(UserDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -148,7 +148,7 @@ public class UsersController : ControllerBase
     /// <response code="404">If user is not found</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpPut("{id}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "User.Write")]
     [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -195,7 +195,7 @@ public class UsersController : ControllerBase
     /// <response code="404">If user is not found</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "User.Delete")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]

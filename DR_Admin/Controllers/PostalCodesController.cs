@@ -31,7 +31,7 @@ public class PostalCodesController : ControllerBase
     /// <response code="403">If user doesn't have required role</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet]
-    [Authorize(Roles = "Admin,Support")]
+    [Authorize(Policy = "PostalCode.Read")]
     [ProducesResponseType(typeof(IEnumerable<PostalCodeDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -192,7 +192,7 @@ public class PostalCodesController : ControllerBase
     /// Create a new postal code
     /// </summary>
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "PostalCode.Write")]
     public async Task<ActionResult<PostalCodeDto>> CreatePostalCode([FromBody] CreatePostalCodeDto createDto)
     {
         try

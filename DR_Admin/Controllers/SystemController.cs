@@ -48,7 +48,7 @@ public class SystemController : ControllerBase
     /// <response code="403">If user doesn't have Admin role</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpPost("normalize-all-records")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "Admin.Only")]
     [ProducesResponseType(typeof(NormalizationResultDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]

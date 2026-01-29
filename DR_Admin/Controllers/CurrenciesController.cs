@@ -31,7 +31,7 @@ public class CurrenciesController : ControllerBase
     /// <response code="403">If user doesn't have required role (Admin, Finance)</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("rates")]
-    [Authorize(Roles = "Admin,Finance")]
+    [Authorize(Policy = "Currency.Read")]
     [ProducesResponseType(typeof(IEnumerable<CurrencyExchangeRateDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -90,7 +90,7 @@ public class CurrenciesController : ControllerBase
     /// <response code="404">If exchange rate is not found</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("rates/{id}")]
-    [Authorize(Roles = "Admin,Finance")]
+    [Authorize(Policy = "Currency.Read")]
     [ProducesResponseType(typeof(CurrencyExchangeRateDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -169,7 +169,7 @@ public class CurrenciesController : ControllerBase
     /// <response code="403">If user doesn't have required role (Admin, Finance)</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("rates/pair")]
-    [Authorize(Roles = "Admin,Finance")]
+    [Authorize(Policy = "Currency.Read")]
     [ProducesResponseType(typeof(IEnumerable<CurrencyExchangeRateDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]

@@ -31,7 +31,7 @@ public class ContactPersonsController : ControllerBase
     /// <response code="403">If user doesn't have required role (Admin, Support, or Sales)</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet]
-    [Authorize(Roles = "Admin,Support,Sales")]
+    [Authorize(Policy = "ContactPerson.Read")]
     [ProducesResponseType(typeof(IEnumerable<ContactPersonDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -62,7 +62,7 @@ public class ContactPersonsController : ControllerBase
     /// <response code="403">If user doesn't have required role (Admin, Support, or Sales)</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("customer/{customerId}")]
-    [Authorize(Roles = "Admin,Support,Sales")]
+    [Authorize(Policy = "ContactPerson.Read")]
     [ProducesResponseType(typeof(IEnumerable<ContactPersonDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -94,7 +94,7 @@ public class ContactPersonsController : ControllerBase
     /// <response code="404">If contact person is not found</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("{id}")]
-    [Authorize(Roles = "Admin,Support,Sales")]
+    [Authorize(Policy = "ContactPerson.Read")]
     [ProducesResponseType(typeof(ContactPersonDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -134,7 +134,7 @@ public class ContactPersonsController : ControllerBase
     /// <response code="403">If user doesn't have required role (Admin or Sales)</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpPost]
-    [Authorize(Roles = "Admin,Sales")]
+    [Authorize(Policy = "ContactPerson.Write")]
     [ProducesResponseType(typeof(ContactPersonDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -179,7 +179,7 @@ public class ContactPersonsController : ControllerBase
     /// <response code="404">If contact person is not found</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpPut("{id}")]
-    [Authorize(Roles = "Admin,Sales")]
+    [Authorize(Policy = "ContactPerson.Write")]
     [ProducesResponseType(typeof(ContactPersonDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -226,7 +226,7 @@ public class ContactPersonsController : ControllerBase
     /// <response code="404">If contact person is not found</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "ContactPerson.Delete")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]

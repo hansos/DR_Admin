@@ -31,7 +31,7 @@ public class CustomerStatusesController : ControllerBase
     /// <response code="403">If user doesn't have required role (Admin, Support, or Sales)</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet]
-    [Authorize(Roles = "Admin,Support,Sales")]
+    [Authorize(Policy = "CustomerStatus.Read")]
     [ProducesResponseType(typeof(IEnumerable<CustomerStatusDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -61,7 +61,7 @@ public class CustomerStatusesController : ControllerBase
     /// <response code="403">If user doesn't have required role (Admin, Support, or Sales)</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("active")]
-    [Authorize(Roles = "Admin,Support,Sales")]
+    [Authorize(Policy = "CustomerStatus.Read")]
     [ProducesResponseType(typeof(IEnumerable<CustomerStatusDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -92,7 +92,7 @@ public class CustomerStatusesController : ControllerBase
     /// <response code="404">If no default customer status is found</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("default")]
-    [Authorize(Roles = "Admin,Support,Sales")]
+    [Authorize(Policy = "CustomerStatus.Read")]
     [ProducesResponseType(typeof(CustomerStatusDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -132,7 +132,7 @@ public class CustomerStatusesController : ControllerBase
     /// <response code="404">If customer status is not found</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("{id}")]
-    [Authorize(Roles = "Admin,Support,Sales")]
+    [Authorize(Policy = "CustomerStatus.Read")]
     [ProducesResponseType(typeof(CustomerStatusDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -172,7 +172,7 @@ public class CustomerStatusesController : ControllerBase
     /// <response code="404">If customer status is not found</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("code/{code}")]
-    [Authorize(Roles = "Admin,Support,Sales")]
+    [Authorize(Policy = "CustomerStatus.Read")]
     [ProducesResponseType(typeof(CustomerStatusDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]

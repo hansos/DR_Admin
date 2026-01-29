@@ -28,6 +28,7 @@ public class ExchangeRateDownloadLogsController : ControllerBase
     /// </summary>
     /// <returns>List of all download logs</returns>
     [HttpGet]
+    [Authorize(Policy = "ExchangeRateDownloadLog.Read")]
     [ProducesResponseType(typeof(IEnumerable<ExchangeRateDownloadLogDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<IEnumerable<ExchangeRateDownloadLogDto>>> GetAllLogs()
@@ -53,6 +54,7 @@ public class ExchangeRateDownloadLogsController : ControllerBase
     /// <param name="endDate">End date of the period (ISO 8601 format)</param>
     /// <returns>List of download logs for the period</returns>
     [HttpGet("period")]
+    [Authorize(Policy = "ExchangeRateDownloadLog.Read")]
     [ProducesResponseType(typeof(IEnumerable<ExchangeRateDownloadLogDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -86,6 +88,7 @@ public class ExchangeRateDownloadLogsController : ControllerBase
     /// <param name="id">The log ID</param>
     /// <returns>The download log</returns>
     [HttpGet("{id}")]
+    [Authorize(Policy = "ExchangeRateDownloadLog.Read")]
     [ProducesResponseType(typeof(ExchangeRateDownloadLogDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -118,6 +121,7 @@ public class ExchangeRateDownloadLogsController : ControllerBase
     /// <param name="source">The currency rate source</param>
     /// <returns>List of download logs for the source</returns>
     [HttpGet("by-source/{source}")]
+    [Authorize(Policy = "ExchangeRateDownloadLog.Read")]
     [ProducesResponseType(typeof(IEnumerable<ExchangeRateDownloadLogDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -144,6 +148,7 @@ public class ExchangeRateDownloadLogsController : ControllerBase
     /// <param name="targetCurrency">The target currency code (optional, e.g., USD)</param>
     /// <returns>List of download logs for the currency pair</returns>
     [HttpGet("by-currency/{baseCurrency}")]
+    [Authorize(Policy = "ExchangeRateDownloadLog.Read")]
     [ProducesResponseType(typeof(IEnumerable<ExchangeRateDownloadLogDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<IEnumerable<ExchangeRateDownloadLogDto>>> GetLogsByCurrency(

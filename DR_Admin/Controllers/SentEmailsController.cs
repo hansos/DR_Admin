@@ -31,7 +31,7 @@ public class SentEmailsController : ControllerBase
     /// <response code="403">If user doesn't have required role</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet]
-    [Authorize(Roles = "Admin,Support")]
+    [Authorize(Policy = "SentEmail.Read")]
     [ProducesResponseType(typeof(IEnumerable<SentEmailDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -62,7 +62,7 @@ public class SentEmailsController : ControllerBase
     /// <response code="403">If user doesn't have required role</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("by-customer/{customerId}")]
-    [Authorize(Roles = "Admin,Support,Sales")]
+    [Authorize(Policy = "Customer.Read")]
     [ProducesResponseType(typeof(IEnumerable<SentEmailDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -94,7 +94,7 @@ public class SentEmailsController : ControllerBase
     /// <response code="403">If user doesn't have required role</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("by-user/{userId}")]
-    [Authorize(Roles = "Admin,Support")]
+    [Authorize(Policy = "SentEmail.Read")]
     [ProducesResponseType(typeof(IEnumerable<SentEmailDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]

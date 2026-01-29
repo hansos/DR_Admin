@@ -31,7 +31,7 @@ public class CouponsController : ControllerBase
     /// <response code="403">If user doesn't have required role</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet]
-    [Authorize(Roles = "Admin,Sales")]
+    [Authorize(Policy = "Coupon.Read")]
     [ProducesResponseType(typeof(IEnumerable<CouponDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -60,7 +60,7 @@ public class CouponsController : ControllerBase
     /// <response code="403">If user doesn't have required role</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("active")]
-    [Authorize(Roles = "Admin,Sales")]
+    [Authorize(Policy = "Coupon.Read")]
     [ProducesResponseType(typeof(IEnumerable<CouponDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -91,7 +91,7 @@ public class CouponsController : ControllerBase
     /// <response code="403">If user doesn't have required role</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("{id}")]
-    [Authorize(Roles = "Admin,Sales")]
+    [Authorize(Policy = "Coupon.Read")]
     [ProducesResponseType(typeof(CouponDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -167,7 +167,7 @@ public class CouponsController : ControllerBase
     /// <response code="403">If user doesn't have required role</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "Coupon.Write")]
     [ProducesResponseType(typeof(CouponDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -209,7 +209,7 @@ public class CouponsController : ControllerBase
     /// <response code="403">If user doesn't have required role</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpPut("{id}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "Coupon.Write")]
     [ProducesResponseType(typeof(CouponDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -256,7 +256,7 @@ public class CouponsController : ControllerBase
     /// <response code="403">If user doesn't have required role</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "Coupon.Delete")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

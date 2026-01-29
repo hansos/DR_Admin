@@ -39,9 +39,8 @@ public class AuthService : IAuthService
                 return null;
             }
 
-            // Note: In production, you should use proper password hashing (e.g., BCrypt, PBKDF2)
-            // For now, this is a simple comparison - REPLACE THIS WITH PROPER PASSWORD VERIFICATION
-            if (user.PasswordHash != password)
+            // Verify password using BCrypt
+            if (!VerifyPassword(password, user.PasswordHash))
             {
                 _log.Warning("Login attempt failed: Invalid password - {Username}", username);
                 return null;
@@ -218,5 +217,17 @@ public class AuthService : IAuthService
             _log.Error(ex, "Error occurred while revoking refresh token");
             return false;
         }
+    }
+
+    private static string HashPassword(string password)
+    {
+        // Using BCrypt with work factor of 12 (configurable, higher = more secure but slower)
+        return BCrypt.Net.BCrypt.HashPassword(password, workFactor: 12);
+    }
+
+    private static bool VerifyPassword(string password, string passwordHash)
+    {
+        // BCrypt verification - compares plain password with hashed password
+        return BCrypt.Net.BCrypt.Verify(password, passwordHash);
     }
 }

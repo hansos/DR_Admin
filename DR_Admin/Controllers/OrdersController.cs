@@ -31,7 +31,7 @@ public class OrdersController : ControllerBase
     /// <response code="403">If user doesn't have required role</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet]
-    [Authorize(Roles = "Admin,Support,Sales")]
+    [Authorize(Policy = "Order.Read")]
     [ProducesResponseType(typeof(IEnumerable<OrderDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -62,7 +62,7 @@ public class OrdersController : ControllerBase
     /// <response code="404">If order is not found</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("{id}")]
-    [Authorize(Roles = "Admin,Support,Sales")]
+    [Authorize(Policy = "Order.Read")]
     [ProducesResponseType(typeof(OrderDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -101,7 +101,7 @@ public class OrdersController : ControllerBase
     /// <response code="403">If user doesn't have required role</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpPost]
-    [Authorize(Roles = "Admin,Sales")]
+    [Authorize(Policy = "Order.Write")]
     [ProducesResponseType(typeof(OrderDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -142,7 +142,7 @@ public class OrdersController : ControllerBase
     /// <response code="404">If order is not found</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpPut("{id}")]
-    [Authorize(Roles = "Admin,Sales")]
+    [Authorize(Policy = "Order.Write")]
     [ProducesResponseType(typeof(OrderDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -189,7 +189,7 @@ public class OrdersController : ControllerBase
     /// <response code="404">If order is not found</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "Order.Delete")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]

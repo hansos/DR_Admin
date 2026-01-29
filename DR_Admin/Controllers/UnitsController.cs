@@ -31,7 +31,7 @@ public class UnitsController : ControllerBase
     /// <response code="403">If user doesn't have required role</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet]
-    [Authorize(Roles = "Admin,Support,Sales")]
+    [Authorize(Policy = "Unit.Read")]
     [ProducesResponseType(typeof(IEnumerable<UnitDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -63,7 +63,7 @@ public class UnitsController : ControllerBase
     /// <response code="404">If unit is not found</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("{id}")]
-    [Authorize(Roles = "Admin,Support,Sales")]
+    [Authorize(Policy = "Unit.Read")]
     [ProducesResponseType(typeof(UnitDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
