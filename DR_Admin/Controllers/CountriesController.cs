@@ -24,6 +24,60 @@ public class CountriesController : ControllerBase
     }
 
     /// <summary>
+    /// Set active flag for all countries
+    /// </summary>
+    [HttpPost("set-all-active/{isActive}")]
+    [Authorize(Policy = "Country.Write")]
+    public async Task<ActionResult> SetAllCountriesActive(bool isActive)
+    {
+        try
+        {
+            _log.Information("API: SetAllCountriesActive called by user {User} to {IsActive}", User.Identity?.Name, isActive);
+            var updated = await _countryService.SetAllCountriesActiveAsync(isActive);
+            return Ok(new { updated });
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in SetAllCountriesActive");
+            return StatusCode(500, "An error occurred while updating countries");
+        }
+    }
+
+    /// <summary>
+    /// Set active flag for a selection of countries by codes (comma separated or JSON array)
+    /// </summary>
+    [HttpPost("set-active-by-codes")]
+    [Authorize(Policy = "Country.Write")]
+    public async Task<ActionResult> SetCountriesActiveByCodes([FromQuery] string? codes, [FromQuery] bool isActive = false, [FromBody] IEnumerable<string>? bodyCodes = null)
+    {
+        try
+        {
+            _log.Information("API: SetCountriesActiveByCodes called by user {User} to {IsActive}", User.Identity?.Name, isActive);
+
+            IEnumerable<string> codeList = bodyCodes ?? Enumerable.Empty<string>();
+            if (!string.IsNullOrWhiteSpace(codes))
+            {
+                var split = codes.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(s => s.Trim().ToUpperInvariant());
+                codeList = codeList.Concat(split).Distinct(StringComparer.OrdinalIgnoreCase);
+            }
+
+            if (!codeList.Any())
+            {
+                return BadRequest("No country codes provided");
+            }
+
+            var updated = await _countryService.SetCountriesActiveByCodesAsync(codeList, isActive);
+            return Ok(new { updated });
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in SetCountriesActiveByCodes");
+            return StatusCode(500, "An error occurred while updating countries");
+        }
+    }
+
+    /// <summary>
     /// Upload a CSV file with localized country names to merge into the Country.LocalName field
     /// Expected CSV columns: Iso2,LocalName
     /// </summary>

@@ -14,4 +14,6 @@ public interface ICountryService
     Task<bool> DeleteCountryAsync(int id);
     Task<int> MergeCountriesFromCsvAsync(Stream csvStream);
     Task<int> MergeLocalizedNamesFromCsvAsync(Stream csvStream);
+    Task<int> SetAllCountriesActiveAsync(bool isActive);
+    Task<int> SetCountriesActiveByCodesAsync(IEnumerable<string> codes, bool isActive);
 }

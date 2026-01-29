@@ -18,6 +18,58 @@ public class CountryService : ICountryService
         _context = context;
     }
 
+    public async Task<int> SetAllCountriesActiveAsync(bool isActive)
+    {
+        try
+        {
+            _log.Information("Setting IsActive={IsActive} for all countries", isActive);
+            var countries = await _context.Countries.ToListAsync();
+            foreach (var c in countries)
+            {
+                if (c.IsActive != isActive)
+                {
+                    c.IsActive = isActive;
+                    c.UpdatedAt = DateTime.UtcNow;
+                }
+            }
+            await _context.SaveChangesAsync();
+            return countries.Count(c => c.IsActive == isActive);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while setting all countries active flag");
+            throw;
+        }
+    }
+
+    public async Task<int> SetCountriesActiveByCodesAsync(IEnumerable<string> codes, bool isActive)
+    {
+        try
+        {
+            var codeSet = new HashSet<string>(codes.Where(s => !string.IsNullOrWhiteSpace(s)).Select(s => s.ToUpperInvariant()));
+            if (!codeSet.Any()) return 0;
+
+            _log.Information("Setting IsActive={IsActive} for codes: {Codes}", isActive, string.Join(',', codeSet));
+
+            var countries = await _context.Countries.Where(c => codeSet.Contains(c.Code)).ToListAsync();
+            foreach (var c in countries)
+            {
+                if (c.IsActive != isActive)
+                {
+                    c.IsActive = isActive;
+                    c.UpdatedAt = DateTime.UtcNow;
+                }
+            }
+            await _context.SaveChangesAsync();
+            return countries.Count;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while setting countries active flag by codes");
+            throw;
+        }
+    }
+
     public async Task<int> MergeLocalizedNamesFromCsvAsync(System.IO.Stream csvStream)
     {
         try
