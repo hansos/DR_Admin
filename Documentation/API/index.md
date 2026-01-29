@@ -1,8 +1,8 @@
 # Controllers Documentation
 
 ## Installation
-[Installation](Installation/Installation.md)
-[Configuration](Installation/Configuration.md)
+- [Installation](Installation/Installation.md)
+- [Configuration](Installation/Configuration.md)
 
 ## Groups
 

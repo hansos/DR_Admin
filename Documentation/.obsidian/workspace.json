@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Installation/Build.md",
+                "file": "Index.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Build"
+              "title": "Index"
             }
           }
         ]
@@ -94,7 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Installation/Build.md",
+                "file": "Index.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +104,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for Build"
+              "title": "Backlinks for Index"
             }
           },
           {
@@ -113,12 +113,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Installation/Build.md",
+                "file": "Index.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from Build"
+              "title": "Outgoing links from Index"
             }
           },
           {
@@ -156,13 +156,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Installation/Build.md",
+                "file": "Index.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of Build"
+              "title": "Outline of Index"
             }
           }
         ]
@@ -185,10 +185,10 @@
   },
   "active": "a1e9204f0da1f4d9",
   "lastOpenFiles": [
-    "Installation/Configuration.md",
-    "Installation/Build.md",
-    "Installation/Installation.md",
     "API/index.md",
+    "Installation/Installation.md",
+    "Installation/Build.md",
+    "Installation/Configuration.md",
     "Index.md",
     "Installation",
     "API/CustomerManagement/index.md",
