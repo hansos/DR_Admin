@@ -1,5 +1,9 @@
 # Controllers Documentation
 
+## Installation
+[Installation](Installation/Installation.md)
+[Configuration](Installation/Configuration.md)
+
 ## Groups
 
 - [Authentication](Authentication/index.md)
