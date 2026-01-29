@@ -39,6 +39,10 @@
           <input id="createName" class="form-control" required />
         </div>
         <div class="mb-3">
+          <label for="createCode" class="form-label">Code *</label>
+          <input id="createCode" class="form-control" required />
+        </div>
+        <div class="mb-3">
           <label for="createDescription" class="form-label">Description</label>
           <textarea id="createDescription" class="form-control" rows="2"></textarea>
         </div>
@@ -88,6 +92,10 @@
               <input id="editName" class="form-control" required />
             </div>
             <div class="mb-3">
+              <label class="form-label">Code *</label>
+              <input id="editCode" class="form-control" required />
+            </div>
+            <div class="mb-3">
               <label class="form-label">Description</label>
               <textarea id="editDescription" class="form-control" rows="2"></textarea>
             </div>
@@ -121,7 +129,7 @@
 
     async function handleCreate(e) {
       e.preventDefault();
-      const data = { name: document.getElementById('createName').value.trim(), description: document.getElementById('createDescription').value.trim() || null };
+      const data = { name: document.getElementById('createName').value.trim(), code: document.getElementById('createCode').value.trim(), description: document.getElementById('createDescription').value.trim() || null };
       try {
         const res = await fetch(`${API_BASE_URL}/api/v1/Roles`, { method:'POST', headers: getAuthHeaders(), body: JSON.stringify(data) });
         let result; const ct = res.headers.get('content-type'); if (ct && ct.includes('application/json')) result = await res.json(); else { const t = await res.text(); result = { error: t, statusCode: res.status }; }
@@ -142,7 +150,7 @@
 
     function renderRolesTable(items) {
       const container = document.getElementById('rolesTable'); if (!items || items.length===0) { container.innerHTML = '<div class="empty-state">No roles found</div>'; return; }
-      const html = `<div class="table-responsive"><table class="table"><thead><tr><th>ID</th><th>Name</th><th>Description</th><th>Actions</th></tr></thead><tbody>${items.map(i=>`<tr><td>${i.id}</td><td>${i.name}</td><td>${i.description||'-'}</td><td><button class="btn btn-sm btn-warning" onclick="openEditModal(${i.id})">Edit</button> <button class="btn btn-sm btn-danger" onclick="deleteRole(${i.id}, '${(i.name||'').replace(/'/g, "\\'" )}')">Delete</button></td></tr>`).join('')}</tbody></table></div>`;
+      const html = `<div class="table-responsive"><table class="table"><thead><tr><th>ID</th><th>Name</th><th>Code</th><th>Description</th><th>Actions</th></tr></thead><tbody>${items.map(i=>`<tr><td>${i.id}</td><td>${i.name}</td><td>${i.code||'-'}</td><td>${i.description||'-'}</td><td><button class="btn btn-sm btn-warning" onclick="openEditModal(${i.id})">Edit</button> <button class="btn btn-sm btn-danger" onclick="deleteRole(${i.id}, '${(i.name||'').replace(/'/g, "\\'" )}')">Delete</button></td></tr>`).join('')}</tbody></table></div>`;
       container.innerHTML = html;
     }
 
@@ -153,14 +161,14 @@
         const res = await fetch(`${API_BASE_URL}/api/v1/Roles/${id}`, { method:'GET', headers: getAuthHeaders() });
         let data; const ct = res.headers.get('content-type'); if (ct && ct.includes('application/json')) data = await res.json(); else { const t = await res.text(); data = { error: t, statusCode: res.status }; }
         updateResponseBox(data);
-        if (res.ok) { result.innerHTML = `<div class="alert alert-success"><h5>Role:</h5><p><strong>ID:</strong> ${data.id}</p><p><strong>Name:</strong> ${data.name}</p><p><strong>Description:</strong> ${data.description||'N/A'}</p></div>`; } else showAlert(`Error: ${data.message||data.error||'Not found'}`,'danger');
+        if (res.ok) { result.innerHTML = `<div class="alert alert-success"><h5>Role:</h5><p><strong>ID:</strong> ${data.id}</p><p><strong>Name:</strong> ${data.name}</p><p><strong>Code:</strong> ${data.code||'N/A'}</p><p><strong>Description:</strong> ${data.description||'N/A'}</p></div>`; } else showAlert(`Error: ${data.message||data.error||'Not found'}`,'danger');
       } catch (err) { showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } finally { loading.style.display='none'; }
     }
 
-    function openEditModal(id) { const item = currentRoles.find(x=>x.id===id); if (!item) { showAlert('Role not found','danger'); return; } document.getElementById('editId').value=item.id; document.getElementById('editName').value=item.name||''; document.getElementById('editDescription').value=item.description||''; editModal.show(); }
+    function openEditModal(id) { const item = currentRoles.find(x=>x.id===id); if (!item) { showAlert('Role not found','danger'); return; } document.getElementById('editId').value=item.id; document.getElementById('editName').value=item.name||''; document.getElementById('editCode').value=item.code||''; document.getElementById('editDescription').value=item.description||''; editModal.show(); }
 
     async function updateRole() {
-      const id = document.getElementById('editId').value; const data = { name: document.getElementById('editName').value.trim(), description: document.getElementById('editDescription').value.trim() || null };
+      const id = document.getElementById('editId').value; const data = { name: document.getElementById('editName').value.trim(), code: document.getElementById('editCode').value.trim(), description: document.getElementById('editDescription').value.trim() || null };
       try {
         const res = await fetch(`${API_BASE_URL}/api/v1/Roles/${id}`, { method:'PUT', headers: getAuthHeaders(), body: JSON.stringify(data) });
         let result; const ct = res.headers.get('content-type'); if (ct && ct.includes('application/json')) result = await res.json(); else { const t = await res.text(); result = { error: t, statusCode: res.status }; }

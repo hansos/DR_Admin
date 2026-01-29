@@ -88,6 +88,10 @@ public class ApplicationDbContext : DbContext
                 registrar.NormalizedName = NormalizationHelper.Normalize(registrar.Name) ?? string.Empty;
                 break;
 
+            case Role role:
+                role.Code = NormalizationHelper.Normalize(role.Code) ?? string.Empty;
+                break;
+
             case SalesAgent salesAgent:
                 salesAgent.NormalizedFirstName = NormalizationHelper.Normalize(salesAgent.FirstName) ?? string.Empty;
                 salesAgent.NormalizedLastName = NormalizationHelper.Normalize(salesAgent.LastName) ?? string.Empty;

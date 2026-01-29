@@ -21,6 +21,11 @@ public class RoleDto
     public string Description { get; set; } = string.Empty;
     
     /// <summary>
+    /// Gets or sets the role code
+    /// </summary>
+    public string Code { get; set; } = string.Empty;
+    
+    /// <summary>
     /// Gets or sets the date and time when the role was created
     /// </summary>
     public DateTime CreatedAt { get; set; }
@@ -37,8 +42,20 @@ public class RoleDto
 /// </summary>
 public class CreateRoleDto
 {
+    /// <summary>
+    /// Gets or sets the role name
+    /// </summary>
     public string Name { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Gets or sets the role description
+    /// </summary>
     public string Description { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Gets or sets the role code
+    /// </summary>
+    public string Code { get; set; } = string.Empty;
 }
 
 
@@ -47,6 +64,18 @@ public class CreateRoleDto
 /// </summary>
 public class UpdateRoleDto
 {
+    /// <summary>
+    /// Gets or sets the role name
+    /// </summary>
     public string Name { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Gets or sets the role description
+    /// </summary>
     public string Description { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Gets or sets the role code
+    /// </summary>
+    public string Code { get; set; } = string.Empty;
 }

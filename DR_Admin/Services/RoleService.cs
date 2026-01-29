@@ -6,6 +6,9 @@ using Serilog;
 
 namespace ISPAdmin.Services;
 
+/// <summary>
+/// Service for managing user roles
+/// </summary>
 public class RoleService : IRoleService
 {
     private readonly ApplicationDbContext _context;
@@ -16,6 +19,10 @@ public class RoleService : IRoleService
         _context = context;
     }
 
+    /// <summary>
+    /// Retrieves all roles from the system
+    /// </summary>
+    /// <returns>A collection of role DTOs</returns>
     public async Task<IEnumerable<RoleDto>> GetAllRolesAsync()
     {
         try
@@ -38,6 +45,11 @@ public class RoleService : IRoleService
         }
     }
 
+    /// <summary>
+    /// Retrieves a specific role by its unique identifier
+    /// </summary>
+    /// <param name="id">The unique identifier of the role</param>
+    /// <returns>The role DTO if found, otherwise null</returns>
     public async Task<RoleDto?> GetRoleByIdAsync(int id)
     {
         try
@@ -64,6 +76,11 @@ public class RoleService : IRoleService
         }
     }
 
+    /// <summary>
+    /// Creates a new role in the system
+    /// </summary>
+    /// <param name="createDto">The data transfer object containing role information</param>
+    /// <returns>The created role DTO</returns>
     public async Task<RoleDto> CreateRoleAsync(CreateRoleDto createDto)
     {
         try
@@ -74,6 +91,7 @@ public class RoleService : IRoleService
             {
                 Name = createDto.Name,
                 Description = createDto.Description,
+                Code = createDto.Code,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -91,6 +109,12 @@ public class RoleService : IRoleService
         }
     }
 
+    /// <summary>
+    /// Updates an existing role's information
+    /// </summary>
+    /// <param name="id">The unique identifier of the role to update</param>
+    /// <param name="updateDto">The data transfer object containing updated role information</param>
+    /// <returns>The updated role DTO if found, otherwise null</returns>
     public async Task<RoleDto?> UpdateRoleAsync(int id, UpdateRoleDto updateDto)
     {
         try
@@ -107,6 +131,7 @@ public class RoleService : IRoleService
 
             role.Name = updateDto.Name;
             role.Description = updateDto.Description;
+            role.Code = updateDto.Code;
             role.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
@@ -121,6 +146,11 @@ public class RoleService : IRoleService
         }
     }
 
+    /// <summary>
+    /// Deletes a role from the system
+    /// </summary>
+    /// <param name="id">The unique identifier of the role to delete</param>
+    /// <returns>True if the role was deleted, false if the role was not found</returns>
     public async Task<bool> DeleteRoleAsync(int id)
     {
         try
@@ -148,6 +178,11 @@ public class RoleService : IRoleService
         }
     }
 
+    /// <summary>
+    /// Ensures that a role with the specified name exists in the system, creating it if necessary
+    /// </summary>
+    /// <param name="roleName">The name of the role to ensure exists</param>
+    /// <param name="description">Optional description for the role if it needs to be created</param>
     public async Task EnsureRoleExistsAsync(string roleName, string description = "")
     {
         try
@@ -193,6 +228,7 @@ public class RoleService : IRoleService
             Id = role.Id,
             Name = role.Name,
             Description = role.Description,
+            Code = role.Code,
             CreatedAt = role.CreatedAt,
             UpdatedAt = role.UpdatedAt
         };
