@@ -18,6 +18,83 @@ public class CountryService : ICountryService
         _context = context;
     }
 
+    public async Task<int> MergeLocalizedNamesFromCsvAsync(System.IO.Stream csvStream)
+    {
+        try
+        {
+            _log.Information("Merging localized names from CSV with batching");
+
+            using var reader = new System.IO.StreamReader(csvStream);
+
+            string? headerLine = await reader.ReadLineAsync();
+            if (string.IsNullOrWhiteSpace(headerLine))
+            {
+                throw new InvalidOperationException("CSV file is empty");
+            }
+
+            const int batchSize = 200;
+            var merged = 0;
+            var processedInBatch = 0;
+
+            while (!reader.EndOfStream)
+            {
+                var line = await reader.ReadLineAsync();
+                if (string.IsNullOrWhiteSpace(line)) continue;
+
+                var parts = ParseCsvLine(line);
+                if (parts.Count < 2) continue;
+
+                var iso2 = parts[0].Trim().ToUpper();
+                var localName = parts[1].Trim();
+
+                if (string.IsNullOrEmpty(iso2)) continue;
+
+                var country = _context.Countries.Local.FirstOrDefault(c => c.Code == iso2);
+                if (country == null)
+                {
+                    country = await _context.Countries.FirstOrDefaultAsync(c => c.Code == iso2);
+                }
+
+                if (country == null)
+                {
+                    // skip unknown countries
+                    continue;
+                }
+
+                if (!string.Equals(country.LocalName, localName, StringComparison.Ordinal))
+                {
+                    country.LocalName = localName;
+                    country.NormalizedLocalName = localName.ToUpperInvariant();
+                    country.UpdatedAt = DateTime.UtcNow;
+                    merged++;
+                }
+
+                processedInBatch++;
+
+                if (processedInBatch >= batchSize)
+                {
+                    await _context.SaveChangesAsync();
+                    _context.ChangeTracker.Clear();
+                    processedInBatch = 0;
+                }
+            }
+
+            if (processedInBatch > 0)
+            {
+                await _context.SaveChangesAsync();
+                _context.ChangeTracker.Clear();
+            }
+
+            _log.Information("Successfully merged {Count} localized names from CSV", merged);
+            return merged;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while merging localized names from CSV");
+            throw;
+        }
+    }
+
     private static List<string> ParseCsvLine(string line)
     {
         var result = new List<string>();

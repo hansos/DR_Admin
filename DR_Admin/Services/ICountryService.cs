@@ -13,4 +13,5 @@ public interface ICountryService
     Task<CountryDto?> UpdateCountryAsync(int id, UpdateCountryDto updateDto);
     Task<bool> DeleteCountryAsync(int id);
     Task<int> MergeCountriesFromCsvAsync(Stream csvStream);
+    Task<int> MergeLocalizedNamesFromCsvAsync(Stream csvStream);
 }

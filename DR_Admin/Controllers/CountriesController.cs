@@ -24,6 +24,47 @@ public class CountriesController : ControllerBase
     }
 
     /// <summary>
+    /// Upload a CSV file with localized country names to merge into the Country.LocalName field
+    /// Expected CSV columns: Iso2,LocalName
+    /// </summary>
+    [HttpPost("upload-localized-names-csv")]
+    [Consumes("multipart/form-data")]
+    [Authorize(Policy = "Country.Write")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult> UploadLocalizedNamesCsv([FromForm] DTOs.UploadCountriesCsvDto dto)
+    {
+        try
+        {
+            _log.Information("API: UploadLocalizedNamesCsv called by user {User}", User.Identity?.Name);
+
+            var file = dto?.File;
+
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest("File is required");
+            }
+
+            using var stream = file.OpenReadStream();
+            var mergedCount = await _countryService.MergeLocalizedNamesFromCsvAsync(stream);
+
+            return Ok(new { merged = mergedCount });
+        }
+        catch (InvalidOperationException ex)
+        {
+            _log.Warning(ex, "API: Invalid operation in UploadLocalizedNamesCsv");
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in UploadLocalizedNamesCsv");
+            return StatusCode(500, "An error occurred while processing the CSV file");
+        }
+    }
+
+    /// <summary>
     /// Upload a CSV file with countries to merge into the Country table
     /// </summary>
     /// <param name="file">CSV file (multipart/form-data)</param>
