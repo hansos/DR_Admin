@@ -50,9 +50,16 @@
             </div>
             <form id="initializeForm">
                 <div class="mb-3">
-                    <label for="initOptions" class="form-label">Initialization Options (Optional)</label>
-                    <textarea class="form-control" id="initOptions" rows="4" placeholder='Enter JSON options (optional)&#10;Example: { "seedData": true, "resetDatabase": false }'></textarea>
-                    <small class="text-muted">Enter any initialization parameters as JSON, or leave empty for default initialization</small>
+                    <label for="username" class="form-label">Username *</label>
+                    <input type="text" class="form-control" id="username" required placeholder="Enter username">
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password *</label>
+                    <input type="password" class="form-control" id="password" required placeholder="Enter password">
+                </div>
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email *</label>
+                    <input type="email" class="form-control" id="email" required placeholder="Enter email address">
                 </div>
                 <div class="mb-3">
                     <div class="form-check">
@@ -169,18 +176,23 @@
                 return;
             }
 
-            const optionsText = document.getElementById('initOptions').value.trim();
-            let data = null;
+            // Collect form data
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const email = document.getElementById('email').value.trim();
 
-            // Parse JSON options if provided
-            if (optionsText) {
-                try {
-                    data = JSON.parse(optionsText);
-                } catch (error) {
-                    showAlert(`Invalid JSON in options: ${error.message}`, 'danger');
-                    return;
-                }
+            // Validate required fields
+            if (!username || !password || !email) {
+                showAlert('Please fill in all required fields', 'warning');
+                return;
             }
+
+            // Construct payload
+            const data = {
+                username: username,
+                password: password,
+                email: email
+            };
 
             const loading = document.getElementById('loadingStatus');
             const statusResult = document.getElementById('initializationStatusResult');
@@ -192,7 +204,7 @@
                 const response = await fetch(`${API_BASE_URL}/api/v1/Initialization/initialize`, {
                     method: 'POST',
                     headers: getAuthHeaders(),
-                    body: data ? JSON.stringify(data) : null
+                    body: JSON.stringify(data)
                 });
 
                 let result;
