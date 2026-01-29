@@ -31,6 +31,16 @@ public class UserDto
     public bool IsActive { get; set; }
     
     /// <summary>
+    /// Gets or sets the roles assigned to this user
+    /// </summary>
+    public List<string> Roles { get; set; } = new List<string>();
+    
+    /// <summary>
+    /// Gets or sets the primary role (for backward compatibility with UI)
+    /// </summary>
+    public string? Role => Roles.FirstOrDefault();
+    
+    /// <summary>
     /// Gets or sets the date and time when the user was created
     /// </summary>
     public DateTime CreatedAt { get; set; }
@@ -68,6 +78,11 @@ public class CreateUserDto
     public string Email { get; set; } = string.Empty;
     
     /// <summary>
+    /// Gets or sets the role name to assign to the user (optional)
+    /// </summary>
+    public string? Role { get; set; }
+    
+    /// <summary>
     /// Gets or sets a value indicating whether the user account is active (default: true)
     /// </summary>
     public bool IsActive { get; set; } = true;
@@ -82,5 +97,6 @@ public class UpdateUserDto
     public int? CustomerId { get; set; }
     public string Username { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
+    public string? Role { get; set; }
     public bool IsActive { get; set; }
 }

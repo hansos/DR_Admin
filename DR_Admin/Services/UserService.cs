@@ -23,6 +23,8 @@ public class UserService : IUserService
             _log.Information("Fetching all users");
             
             var users = await _context.Users
+                .Include(u => u.UserRoles)
+                    .ThenInclude(ur => ur.Role)
                 .AsNoTracking()
                 .ToListAsync();
 
@@ -45,6 +47,8 @@ public class UserService : IUserService
             _log.Information("Fetching user with ID: {UserId}", id);
             
             var user = await _context.Users
+                .Include(u => u.UserRoles)
+                    .ThenInclude(ur => ur.Role)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(u => u.Id == id);
 
@@ -104,6 +108,34 @@ public class UserService : IUserService
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
+            // Assign role if provided
+            if (!string.IsNullOrWhiteSpace(createDto.Role))
+            {
+                var role = await _context.Roles
+                    .FirstOrDefaultAsync(r => r.Name == createDto.Role);
+
+                if (role != null)
+                {
+                    var userRole = new UserRole
+                    {
+                        UserId = user.Id,
+                        RoleId = role.Id
+                    };
+                    _context.UserRoles.Add(userRole);
+                    await _context.SaveChangesAsync();
+
+                    // Load the role for the DTO mapping
+                    user.UserRoles.Add(userRole);
+                    userRole.Role = role;
+                    
+                    _log.Information("Assigned role {RoleName} to user {UserId}", createDto.Role, user.Id);
+                }
+                else
+                {
+                    _log.Warning("Role {RoleName} not found, user created without role", createDto.Role);
+                }
+            }
+
             _log.Information("Successfully created user with ID: {UserId}", user.Id);
             return MapToDto(user);
         }
@@ -156,8 +188,49 @@ public class UserService : IUserService
 
             await _context.SaveChangesAsync();
 
+            // Update role if provided
+            if (updateDto.Role != null)
+            {
+                // Remove existing roles
+                var existingUserRoles = await _context.UserRoles
+                    .Where(ur => ur.UserId == id)
+                    .ToListAsync();
+                
+                _context.UserRoles.RemoveRange(existingUserRoles);
+
+                // Add new role if not empty
+                if (!string.IsNullOrWhiteSpace(updateDto.Role))
+                {
+                    var role = await _context.Roles
+                        .FirstOrDefaultAsync(r => r.Name == updateDto.Role);
+
+                    if (role != null)
+                    {
+                        var userRole = new UserRole
+                        {
+                            UserId = id,
+                            RoleId = role.Id
+                        };
+                        _context.UserRoles.Add(userRole);
+                        _log.Information("Updated role to {RoleName} for user {UserId}", updateDto.Role, id);
+                    }
+                    else
+                    {
+                        _log.Warning("Role {RoleName} not found, existing roles removed", updateDto.Role);
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+            }
+
+            // Reload user with roles for DTO mapping
+            var updatedUser = await _context.Users
+                .Include(u => u.UserRoles)
+                    .ThenInclude(ur => ur.Role)
+                .FirstOrDefaultAsync(u => u.Id == id);
+
             _log.Information("Successfully updated user with ID: {UserId}", id);
-            return MapToDto(user);
+            return updatedUser != null ? MapToDto(updatedUser) : MapToDto(user);
         }
         catch (Exception ex)
         {
@@ -202,6 +275,7 @@ public class UserService : IUserService
             Username = user.Username,
             Email = user.Email,
             IsActive = user.IsActive,
+            Roles = user.UserRoles?.Select(ur => ur.Role.Name).ToList() ?? new List<string>(),
             CreatedAt = user.CreatedAt,
             UpdatedAt = user.UpdatedAt
         };
