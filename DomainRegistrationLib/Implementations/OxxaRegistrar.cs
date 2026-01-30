@@ -259,6 +259,7 @@ namespace DomainRegistrationLib.Implementations
             }
             catch (Exception ex)
             {
+                _logger.Error("Error getting DNS zone for {DomainName}: {Error}", domainName, ex.Message);
                 return new DnsZone { DomainName = domainName };
             }
         }
@@ -362,6 +363,11 @@ namespace DomainRegistrationLib.Implementations
         {
             try
             {
+                if(!record.Id.HasValue)
+                {
+                    _logger.Error("Record ID is required for updating DNS record on domain {DomainName}", domainName);
+                    return CreateDnsErrorResult("Record ID is required for updating DNS record");
+                }
                 var commandData = new XElement("domain", domainName);
                 var recordElement = new XElement("record",
                     new XAttribute("id", record.Id),

@@ -105,8 +105,7 @@ namespace DomainRegistrationLib.Factories
                     ? new AwsRegistrar(
                         _registrarSettings.Aws.AccessKeyId,
                         _registrarSettings.Aws.SecretAccessKey,
-                        _registrarSettings.Aws.Region,
-                        _registrarSettings.Aws.Route53HostedZoneId
+                        _registrarSettings.Aws.Region
                     )
                     : throw new InvalidOperationException("AWS settings are not configured"),
 

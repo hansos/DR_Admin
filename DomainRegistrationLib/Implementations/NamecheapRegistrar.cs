@@ -169,6 +169,7 @@ namespace DomainRegistrationLib.Implementations
             }
             catch (Exception ex)
             {
+                _logger.Error("Error getting DNS zone for {DomainName}: {Error}", domainName, ex.Message);
                 return new DnsZone { DomainName = domainName };
             }
         }

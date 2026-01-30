@@ -18,16 +18,14 @@ namespace DomainRegistrationLib.Implementations
         private readonly string _accessKeyId;
         private readonly string _secretAccessKey;
         private readonly string _region;
-        private readonly string _hostedZoneId;
 
-        public AwsRegistrar(string accessKeyId, string secretAccessKey, string region, string hostedZoneId)
+        public AwsRegistrar(string accessKeyId, string secretAccessKey, string region)
             : base($"https://route53.{region}.amazonaws.com")
         {
             _logger = Log.ForContext<AwsRegistrar>();
             _accessKeyId = accessKeyId;
             _secretAccessKey = secretAccessKey;
             _region = region;
-            _hostedZoneId = hostedZoneId;
 
             _httpClient.DefaultRequestHeaders.Accept.Add(
                 new MediaTypeWithQualityHeaderValue("application/json"));
@@ -201,7 +199,7 @@ namespace DomainRegistrationLib.Implementations
             _logger.Information("Getting DNS zone for domain: {DomainName}", domainName);
             try
             {
-                var endpoint = $"/2013-04-01/hostedzone/{_hostedZoneId}/rrset";
+                var endpoint = $"/2013-04-01/hostedzone/???/rrset";
                 var response = await MakeAwsRequestAsync(HttpMethod.Get, endpoint);
                 var content = await response.Content.ReadAsStringAsync();
                 var result = JsonSerializer.Deserialize<JsonElement>(content);
@@ -269,7 +267,7 @@ namespace DomainRegistrationLib.Implementations
                     });
                 }
 
-                var endpoint = $"/2013-04-01/hostedzone/{_hostedZoneId}/rrset/";
+                var endpoint = $"/2013-04-01/hostedzone/???/rrset/";
                 var payload = new
                 {
                     ChangeBatch = new
@@ -301,7 +299,7 @@ namespace DomainRegistrationLib.Implementations
             _logger.Information("Adding DNS record {RecordName} ({RecordType}) for domain: {DomainName}", record.Name, record.Type, domainName);
             try
             {
-                var endpoint = $"/2013-04-01/hostedzone/{_hostedZoneId}/rrset/";
+                var endpoint = $"/2013-04-01/hostedzone/===/rrset/";
                 var payload = new
                 {
                     ChangeBatch = new
@@ -346,7 +344,7 @@ namespace DomainRegistrationLib.Implementations
             _logger.Information("Updating DNS record {RecordName} ({RecordType}) for domain: {DomainName}", record.Name, record.Type, domainName);
             try
             {
-                var endpoint = $"/2013-04-01/hostedzone/{_hostedZoneId}/rrset/";
+                var endpoint = $"/2013-04-01/hostedzone/{0}/rrset/";
                 var payload = new
                 {
                     ChangeBatch = new
