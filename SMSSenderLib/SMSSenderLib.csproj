@@ -17,7 +17,7 @@
 
   <ItemGroup>
     <!-- Required for LocalModemSmsSender to access SerialPort, Parity, and StopBits -->
-    <PackageReference Include="System.IO.Ports" Version="9.0.0" />
+    <PackageReference Include="System.IO.Ports" Version="10.0.2" />
   </ItemGroup>
 
 </Project>

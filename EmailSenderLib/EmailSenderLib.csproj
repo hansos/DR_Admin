@@ -11,4 +11,8 @@
     <Folder Include="Extensions\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="AWSSDK.Core" Version="4.0.3.12" />
+  </ItemGroup>
+
 </Project>
