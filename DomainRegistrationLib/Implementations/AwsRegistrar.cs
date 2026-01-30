@@ -1,34 +1,38 @@
+using Amazon.Route53;
+using Amazon.Route53.Model;
+using Amazon.Route53Domains;
+using Amazon.Route53Domains.Model;
 using DomainRegistrationLib.Models;
 using Serilog;
-using System.Net.Http.Headers;
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.Json;
+using ContactDetail = Amazon.Route53Domains.Model.ContactDetail;
+using Nameserver = Amazon.Route53Domains.Model.Nameserver;
+using ResourceRecord = Amazon.Route53.Model.ResourceRecord;
+using ResourceRecordSet = Amazon.Route53.Model.ResourceRecordSet;
 
 namespace DomainRegistrationLib.Implementations
 {
     /// <summary>
     /// AWS Route 53 Registrar Implementation
     /// API Documentation: https://docs.aws.amazon.com/Route53/latest/APIReference/
-    /// Uses AWS SDK-style REST API with AWS Signature Version 4
+    /// Uses AWS SDK for .NET (AWSSDK.Route53 and AWSSDK.Route53Domains)
     /// </summary>
     public class AwsRegistrar : BaseRegistrar
     {
         private readonly ILogger _logger;
-        private readonly string _accessKeyId;
-        private readonly string _secretAccessKey;
-        private readonly string _region;
+        private readonly IAmazonRoute53 _route53Client;
+        private readonly IAmazonRoute53Domains _route53DomainsClient;
+        private readonly Dictionary<string, string> _hostedZoneCache = new();
 
         public AwsRegistrar(string accessKeyId, string secretAccessKey, string region)
             : base($"https://route53.{region}.amazonaws.com")
         {
             _logger = Log.ForContext<AwsRegistrar>();
-            _accessKeyId = accessKeyId;
-            _secretAccessKey = secretAccessKey;
-            _region = region;
-
-            _httpClient.DefaultRequestHeaders.Accept.Add(
-                new MediaTypeWithQualityHeaderValue("application/json"));
+            
+            var credentials = new Amazon.Runtime.BasicAWSCredentials(accessKeyId, secretAccessKey);
+            var regionEndpoint = Amazon.RegionEndpoint.GetBySystemName(region);
+            
+            _route53Client = new AmazonRoute53Client(credentials, regionEndpoint);
+            _route53DomainsClient = new AmazonRoute53DomainsClient(credentials, Amazon.RegionEndpoint.USEast1); // Route53Domains is only available in us-east-1
         }
 
         public override async Task<DomainAvailabilityResult> CheckAvailabilityAsync(string domainName)
@@ -36,23 +40,20 @@ namespace DomainRegistrationLib.Implementations
             _logger.Information("Checking availability for domain: {DomainName}", domainName);
             try
             {
-                var endpoint = "/2013-04-01/domain/availability";
-                var payload = new { DomainName = domainName };
-                var json = JsonSerializer.Serialize(payload);
+                var request = new CheckDomainAvailabilityRequest
+                {
+                    DomainName = domainName
+                };
 
-                var response = await MakeAwsRequestAsync(HttpMethod.Post, endpoint, json);
-                var content = await response.Content.ReadAsStringAsync();
-                var result = JsonSerializer.Deserialize<JsonElement>(content);
-
-                var availability = result.GetProperty("Availability").GetString();
-                var isAvailable = availability?.Equals("AVAILABLE", StringComparison.OrdinalIgnoreCase) ?? false;
+                var response = await _route53DomainsClient.CheckDomainAvailabilityAsync(request);
+                var isAvailable = response.Availability == DomainAvailability.AVAILABLE;
 
                 return new DomainAvailabilityResult
                 {
                     Success = true,
                     DomainName = domainName,
                     IsAvailable = isAvailable,
-                    Message = availability ?? "Unknown"
+                    Message = response.Availability.Value
                 };
             }
             catch (Exception ex)
@@ -74,8 +75,7 @@ namespace DomainRegistrationLib.Implementations
             _logger.Information("Registering domain: {DomainName} for {Years} years", request.DomainName, request.Years);
             try
             {
-                var endpoint = "/2013-04-01/domain";
-                var payload = new
+                var registerRequest = new RegisterDomainRequest
                 {
                     DomainName = request.DomainName,
                     DurationInYears = request.Years,
@@ -83,24 +83,19 @@ namespace DomainRegistrationLib.Implementations
                     PrivacyProtectAdminContact = request.PrivacyProtection,
                     PrivacyProtectRegistrantContact = request.PrivacyProtection,
                     PrivacyProtectTechContact = request.PrivacyProtection,
-                    AdminContact = MapAwsContact(request.AdminContact ?? request.RegistrantContact),
-                    RegistrantContact = MapAwsContact(request.RegistrantContact),
-                    TechContact = MapAwsContact(request.TechContact ?? request.RegistrantContact)
+                    AdminContact = MapToAwsContact(request.AdminContact ?? request.RegistrantContact),
+                    RegistrantContact = MapToAwsContact(request.RegistrantContact),
+                    TechContact = MapToAwsContact(request.TechContact ?? request.RegistrantContact)
                 };
 
-                var json = JsonSerializer.Serialize(payload);
-                var response = await MakeAwsRequestAsync(HttpMethod.Post, endpoint, json);
-                var content = await response.Content.ReadAsStringAsync();
-                var result = JsonSerializer.Deserialize<JsonElement>(content);
-
-                var operationId = result.GetProperty("OperationId").GetString();
+                var response = await _route53DomainsClient.RegisterDomainAsync(registerRequest);
 
                 return new DomainRegistrationResult
                 {
                     Success = true,
                     DomainName = request.DomainName,
                     Message = "Domain registration initiated via AWS Route 53",
-                    OrderId = operationId,
+                    OrderId = response.OperationId,
                     RegistrationDate = DateTime.UtcNow,
                     ExpirationDate = DateTime.UtcNow.AddYears(request.Years)
                 };
@@ -117,20 +112,14 @@ namespace DomainRegistrationLib.Implementations
             _logger.Information("Renewing domain: {DomainName} for {Years} years", request.DomainName, request.Years);
             try
             {
-                var endpoint = "/2013-04-01/domain/renew";
-                var payload = new
+                var renewRequest = new RenewDomainRequest
                 {
                     DomainName = request.DomainName,
                     DurationInYears = request.Years,
                     CurrentExpiryYear = DateTime.UtcNow.Year
                 };
 
-                var json = JsonSerializer.Serialize(payload);
-                var response = await MakeAwsRequestAsync(HttpMethod.Post, endpoint, json);
-                var content = await response.Content.ReadAsStringAsync();
-                var result = JsonSerializer.Deserialize<JsonElement>(content);
-
-                var operationId = result.GetProperty("OperationId").GetString();
+                var response = await _route53DomainsClient.RenewDomainAsync(renewRequest);
 
                 return new DomainRenewalResult
                 {
@@ -152,8 +141,7 @@ namespace DomainRegistrationLib.Implementations
             _logger.Information("Transferring domain: {DomainName}", request.DomainName);
             try
             {
-                var endpoint = "/2013-04-01/domain/transfer";
-                var payload = new
+                var transferRequest = new TransferDomainRequest
                 {
                     DomainName = request.DomainName,
                     AuthCode = request.AuthCode,
@@ -161,18 +149,17 @@ namespace DomainRegistrationLib.Implementations
                     DurationInYears = 1,
                     PrivacyProtectAdminContact = request.PrivacyProtection,
                     PrivacyProtectRegistrantContact = request.PrivacyProtection,
-                    PrivacyProtectTechContact = request.PrivacyProtection,
-                    AdminContact = request.AdminContact != null ? MapAwsContact(request.AdminContact) : null,
-                    RegistrantContact = request.RegistrantContact != null ? MapAwsContact(request.RegistrantContact) : null,
-                    TechContact = request.TechContact != null ? MapAwsContact(request.TechContact) : null
+                    PrivacyProtectTechContact = request.PrivacyProtection
                 };
 
-                var json = JsonSerializer.Serialize(payload);
-                var response = await MakeAwsRequestAsync(HttpMethod.Post, endpoint, json);
-                var content = await response.Content.ReadAsStringAsync();
-                var result = JsonSerializer.Deserialize<JsonElement>(content);
+                if (request.AdminContact != null)
+                    transferRequest.AdminContact = MapToAwsContact(request.AdminContact);
+                if (request.RegistrantContact != null)
+                    transferRequest.RegistrantContact = MapToAwsContact(request.RegistrantContact);
+                if (request.TechContact != null)
+                    transferRequest.TechContact = MapToAwsContact(request.TechContact);
 
-                var operationId = result.GetProperty("OperationId").GetString();
+                var response = await _route53DomainsClient.TransferDomainAsync(transferRequest);
 
                 return new DomainTransferResult
                 {
@@ -199,32 +186,36 @@ namespace DomainRegistrationLib.Implementations
             _logger.Information("Getting DNS zone for domain: {DomainName}", domainName);
             try
             {
-                var endpoint = $"/2013-04-01/hostedzone/???/rrset";
-                var response = await MakeAwsRequestAsync(HttpMethod.Get, endpoint);
-                var content = await response.Content.ReadAsStringAsync();
-                var result = JsonSerializer.Deserialize<JsonElement>(content);
+                var hostedZoneId = await GetHostedZoneIdAsync(domainName);
+                if (string.IsNullOrEmpty(hostedZoneId))
+                {
+                    _logger.Warning("No hosted zone found for domain: {DomainName}", domainName);
+                    return new DnsZone { DomainName = domainName };
+                }
 
+                var request = new ListResourceRecordSetsRequest
+                {
+                    HostedZoneId = hostedZoneId
+                };
+
+                var response = await _route53Client.ListResourceRecordSetsAsync(request);
                 var records = new List<DnsRecordModel>();
-                var recordSets = result.GetProperty("ResourceRecordSets");
 
                 int idCounter = 1;
-                foreach (var recordSet in recordSets.EnumerateArray())
+                foreach (var recordSet in response.ResourceRecordSets)
                 {
-                    var name = recordSet.GetProperty("Name").GetString()?.TrimEnd('.') ?? "";
-                    var type = recordSet.GetProperty("Type").GetString() ?? "";
-                    var ttl = recordSet.TryGetProperty("TTL", out var ttlProp) ? ttlProp.GetInt32() : 300;
+                    var name = recordSet.Name.TrimEnd('.');
+                    var type = recordSet.Type.Value;
+                    var ttl = (int)(recordSet.TTL ?? 300);
 
-                    var resourceRecords = recordSet.GetProperty("ResourceRecords");
-                    foreach (var rr in resourceRecords.EnumerateArray())
+                    foreach (var rr in recordSet.ResourceRecords)
                     {
-                        var value = rr.GetProperty("Value").GetString() ?? "";
-                        
                         records.Add(new DnsRecordModel
                         {
                             Id = idCounter++,
                             Name = name,
                             Type = type,
-                            Value = value,
+                            Value = rr.Value,
                             TTL = ttl,
                             Priority = null
                         });
@@ -249,36 +240,43 @@ namespace DomainRegistrationLib.Implementations
             _logger.Information("Updating DNS zone for domain: {DomainName} with {RecordCount} records", domainName, dnsZone.Records.Count);
             try
             {
-                // AWS Route 53 requires individual record updates via change batches
-                var changes = new List<object>();
+                var hostedZoneId = await GetHostedZoneIdAsync(domainName);
+                if (string.IsNullOrEmpty(hostedZoneId))
+                {
+                    return CreateDnsErrorResult($"No hosted zone found for domain: {domainName}");
+                }
+
+                var changes = new List<Change>();
 
                 foreach (var record in dnsZone.Records)
                 {
-                    changes.Add(new
+                    changes.Add(new Change
                     {
-                        Action = "UPSERT",
-                        ResourceRecordSet = new
+                        Action = ChangeAction.UPSERT,
+                        ResourceRecordSet = new ResourceRecordSet
                         {
                             Name = record.Name,
                             Type = record.Type,
                             TTL = record.TTL,
-                            ResourceRecords = new[] { new { Value = record.Value } }
+                            ResourceRecords = new List<ResourceRecord>
+                            {
+                                new ResourceRecord { Value = record.Value }
+                            }
                         }
                     });
                 }
 
-                var endpoint = $"/2013-04-01/hostedzone/???/rrset/";
-                var payload = new
+                var changeBatchRequest = new ChangeResourceRecordSetsRequest
                 {
-                    ChangeBatch = new
+                    HostedZoneId = hostedZoneId,
+                    ChangeBatch = new ChangeBatch
                     {
                         Changes = changes,
                         Comment = "Bulk DNS zone update"
                     }
                 };
 
-                var json = JsonSerializer.Serialize(payload);
-                var response = await MakeAwsRequestAsync(HttpMethod.Post, endpoint, json);
+                await _route53Client.ChangeResourceRecordSetsAsync(changeBatchRequest);
 
                 return new DnsUpdateResult
                 {
@@ -299,22 +297,31 @@ namespace DomainRegistrationLib.Implementations
             _logger.Information("Adding DNS record {RecordName} ({RecordType}) for domain: {DomainName}", record.Name, record.Type, domainName);
             try
             {
-                var endpoint = $"/2013-04-01/hostedzone/===/rrset/";
-                var payload = new
+                var hostedZoneId = await GetHostedZoneIdAsync(domainName);
+                if (string.IsNullOrEmpty(hostedZoneId))
                 {
-                    ChangeBatch = new
+                    return CreateDnsErrorResult($"No hosted zone found for domain: {domainName}");
+                }
+
+                var changeRequest = new ChangeResourceRecordSetsRequest
+                {
+                    HostedZoneId = hostedZoneId,
+                    ChangeBatch = new ChangeBatch
                     {
-                        Changes = new[]
+                        Changes = new List<Change>
                         {
-                            new
+                            new Change
                             {
-                                Action = "CREATE",
-                                ResourceRecordSet = new
+                                Action = ChangeAction.CREATE,
+                                ResourceRecordSet = new ResourceRecordSet
                                 {
                                     Name = record.Name,
                                     Type = record.Type,
                                     TTL = record.TTL,
-                                    ResourceRecords = new[] { new { Value = record.Value } }
+                                    ResourceRecords = new List<ResourceRecord>
+                                    {
+                                        new ResourceRecord { Value = record.Value }
+                                    }
                                 }
                             }
                         },
@@ -322,8 +329,7 @@ namespace DomainRegistrationLib.Implementations
                     }
                 };
 
-                var json = JsonSerializer.Serialize(payload);
-                var response = await MakeAwsRequestAsync(HttpMethod.Post, endpoint, json);
+                await _route53Client.ChangeResourceRecordSetsAsync(changeRequest);
 
                 return new DnsUpdateResult
                 {
@@ -344,22 +350,31 @@ namespace DomainRegistrationLib.Implementations
             _logger.Information("Updating DNS record {RecordName} ({RecordType}) for domain: {DomainName}", record.Name, record.Type, domainName);
             try
             {
-                var endpoint = $"/2013-04-01/hostedzone/{0}/rrset/";
-                var payload = new
+                var hostedZoneId = await GetHostedZoneIdAsync(domainName);
+                if (string.IsNullOrEmpty(hostedZoneId))
                 {
-                    ChangeBatch = new
+                    return CreateDnsErrorResult($"No hosted zone found for domain: {domainName}");
+                }
+
+                var changeRequest = new ChangeResourceRecordSetsRequest
+                {
+                    HostedZoneId = hostedZoneId,
+                    ChangeBatch = new ChangeBatch
                     {
-                        Changes = new[]
+                        Changes = new List<Change>
                         {
-                            new
+                            new Change
                             {
-                                Action = "UPSERT",
-                                ResourceRecordSet = new
+                                Action = ChangeAction.UPSERT,
+                                ResourceRecordSet = new ResourceRecordSet
                                 {
                                     Name = record.Name,
                                     Type = record.Type,
                                     TTL = record.TTL,
-                                    ResourceRecords = new[] { new { Value = record.Value } }
+                                    ResourceRecords = new List<ResourceRecord>
+                                    {
+                                        new ResourceRecord { Value = record.Value }
+                                    }
                                 }
                             }
                         },
@@ -367,8 +382,7 @@ namespace DomainRegistrationLib.Implementations
                     }
                 };
 
-                var json = JsonSerializer.Serialize(payload);
-                var response = await MakeAwsRequestAsync(HttpMethod.Post, endpoint, json);
+                await _route53Client.ChangeResourceRecordSetsAsync(changeRequest);
 
                 return new DnsUpdateResult
                 {
@@ -389,13 +403,54 @@ namespace DomainRegistrationLib.Implementations
             _logger.Information("Deleting DNS record {RecordId} for domain: {DomainName}", recordId, domainName);
             try
             {
-                // Note: In real implementation, you'd need to fetch the record details first
-                // This is a simplified version
+                var hostedZoneId = await GetHostedZoneIdAsync(domainName);
+                if (string.IsNullOrEmpty(hostedZoneId))
+                {
+                    return CreateDnsErrorResult($"No hosted zone found for domain: {domainName}");
+                }
+
+                // First, fetch the current DNS zone to find the record
+                var dnsZone = await GetDnsZoneAsync(domainName);
+                var recordToDelete = dnsZone.Records.FirstOrDefault(r => r.Id == recordId);
+
+                if (recordToDelete == null)
+                {
+                    return CreateDnsErrorResult($"Record with ID {recordId} not found");
+                }
+
+                var changeRequest = new ChangeResourceRecordSetsRequest
+                {
+                    HostedZoneId = hostedZoneId,
+                    ChangeBatch = new ChangeBatch
+                    {
+                        Changes = new List<Change>
+                        {
+                            new Change
+                            {
+                                Action = ChangeAction.DELETE,
+                                ResourceRecordSet = new ResourceRecordSet
+                                {
+                                    Name = recordToDelete.Name,
+                                    Type = recordToDelete.Type,
+                                    TTL = recordToDelete.TTL,
+                                    ResourceRecords = new List<ResourceRecord>
+                                    {
+                                        new ResourceRecord { Value = recordToDelete.Value }
+                                    }
+                                }
+                            }
+                        },
+                        Comment = "Delete DNS record"
+                    }
+                };
+
+                await _route53Client.ChangeResourceRecordSetsAsync(changeRequest);
+
                 return new DnsUpdateResult
                 {
-                    Success = false,
+                    Success = true,
                     DomainName = domainName,
-                    Message = "Delete operation requires fetching record details first"
+                    Message = "DNS record deleted successfully"
                 };
             }
             catch (Exception ex)
@@ -410,52 +465,24 @@ namespace DomainRegistrationLib.Implementations
             _logger.Information("Getting domain info for: {DomainName}", domainName);
             try
             {
-                var endpoint = $"/2013-04-01/domain/{domainName}";
-                var response = await MakeAwsRequestAsync(HttpMethod.Get, endpoint);
-                var content = await response.Content.ReadAsStringAsync();
-                var result = JsonSerializer.Deserialize<JsonElement>(content);
-
-                var status = result.TryGetProperty("StatusList", out var statusList) && statusList.GetArrayLength() > 0
-                    ? statusList[0].GetString() ?? "active"
-                    : "active";
-
-                DateTime? expirationDate = null;
-                if (result.TryGetProperty("ExpirationDate", out var expDateProp))
+                var request = new GetDomainDetailRequest
                 {
-                    var timestamp = expDateProp.GetInt64();
-                    expirationDate = DateTimeOffset.FromUnixTimeSeconds(timestamp).DateTime;
-                }
+                    DomainName = domainName
+                };
 
-                DateTime? registrationDate = null;
-                if (result.TryGetProperty("CreationDate", out var regDateProp))
-                {
-                    var timestamp = regDateProp.GetInt64();
-                    registrationDate = DateTimeOffset.FromUnixTimeSeconds(timestamp).DateTime;
-                }
+                var response = await _route53DomainsClient.GetDomainDetailAsync(request);
 
-                var autoRenew = result.TryGetProperty("AutoRenew", out var autoRenewProp) && autoRenewProp.GetBoolean();
-
-                var nameservers = new List<string>();
-                if (result.TryGetProperty("Nameservers", out var nsArray))
-                {
-                    foreach (var ns in nsArray.EnumerateArray())
-                    {
-                        var nsName = ns.GetProperty("Name").GetString();
-                        if (!string.IsNullOrEmpty(nsName))
-                        {
-                            nameservers.Add(nsName);
-                        }
-                    }
-                }
+                var status = response.StatusList.Count > 0 ? response.StatusList[0] : "active";
+                var nameservers = response.Nameservers?.Select(ns => ns.Name).ToList() ?? new List<string>();
 
                 return new DomainInfoResult
                 {
                     Success = true,
                     DomainName = domainName,
                     Status = status,
-                    RegistrationDate = registrationDate,
-                    ExpirationDate = expirationDate,
-                    AutoRenew = autoRenew,
+                    RegistrationDate = response.CreationDate,
+                    ExpirationDate = response.ExpirationDate,
+                    AutoRenew = response.AutoRenew ?? false,
                     Nameservers = nameservers,
                     Message = "Domain information retrieved successfully"
                 };
@@ -477,14 +504,13 @@ namespace DomainRegistrationLib.Implementations
             _logger.Information("Updating nameservers for domain: {DomainName} with {Count} nameservers", domainName, nameservers.Count);
             try
             {
-                var endpoint = $"/2013-04-01/domain/{domainName}/nameservers";
-                var payload = new
+                var request = new UpdateDomainNameserversRequest
                 {
-                    Nameservers = nameservers.Select(ns => new { Name = ns }).ToList()
+                    DomainName = domainName,
+                    Nameservers = nameservers.Select(ns => new Nameserver { Name = ns }).ToList()
                 };
 
-                var json = JsonSerializer.Serialize(payload);
-                var response = await MakeAwsRequestAsync(HttpMethod.Post, endpoint, json);
+                await _route53DomainsClient.UpdateDomainNameserversAsync(request);
 
                 return new DomainUpdateResult
                 {
@@ -505,11 +531,15 @@ namespace DomainRegistrationLib.Implementations
             _logger.Information("Setting privacy protection to {Enable} for domain: {DomainName}", enable, domainName);
             try
             {
-                var endpoint = $"/2013-04-01/domain/{domainName}/privacy";
-                var payload = new { PrivacyProtection = enable };
+                var request = new UpdateDomainContactPrivacyRequest
+                {
+                    DomainName = domainName,
+                    AdminPrivacy = enable,
+                    RegistrantPrivacy = enable,
+                    TechPrivacy = enable
+                };
 
-                var json = JsonSerializer.Serialize(payload);
-                var response = await MakeAwsRequestAsync(HttpMethod.Post, endpoint, json);
+                await _route53DomainsClient.UpdateDomainContactPrivacyAsync(request);
 
                 return new DomainUpdateResult
                 {
@@ -530,11 +560,22 @@ namespace DomainRegistrationLib.Implementations
             _logger.Information("Setting auto-renew to {Enable} for domain: {DomainName}", enable, domainName);
             try
             {
-                var endpoint = $"/2013-04-01/domain/{domainName}/autorenew";
-                var payload = new { AutoRenew = enable };
-
-                var json = JsonSerializer.Serialize(payload);
-                var response = await MakeAwsRequestAsync(HttpMethod.Post, endpoint, json);
+                if (enable)
+                {
+                    var request = new EnableDomainAutoRenewRequest
+                    {
+                        DomainName = domainName
+                    };
+                    await _route53DomainsClient.EnableDomainAutoRenewAsync(request);
+                }
+                else
+                {
+                    var request = new DisableDomainAutoRenewRequest
+                    {
+                        DomainName = domainName
+                    };
+                    await _route53DomainsClient.DisableDomainAutoRenewAsync(request);
+                }
 
                 return new DomainUpdateResult
                 {
@@ -550,114 +591,28 @@ namespace DomainRegistrationLib.Implementations
             }
         }
 
-        private async Task<HttpResponseMessage> MakeAwsRequestAsync(HttpMethod method, string endpoint, string? jsonPayload = null)
-        {
-            var request = new HttpRequestMessage(method, endpoint);
-            
-            if (!string.IsNullOrEmpty(jsonPayload))
-            {
-                request.Content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
-            }
-
-            // Add AWS Signature Version 4 authentication
-            var timestamp = DateTime.UtcNow.ToString("yyyyMMddTHHmmssZ");
-            var dateStamp = DateTime.UtcNow.ToString("yyyyMMdd");
-            
-            request.Headers.Add("X-Amz-Date", timestamp);
-            request.Headers.Add("Host", $"route53.{_region}.amazonaws.com");
-
-            // Generate AWS Signature V4
-            var signature = GenerateAwsSignatureV4(method.Method, endpoint, timestamp, dateStamp, jsonPayload ?? "");
-            request.Headers.Authorization = new AuthenticationHeaderValue("AWS4-HMAC-SHA256", signature);
-
-            var response = await _httpClient.SendAsync(request);
-            response.EnsureSuccessStatusCode();
-            
-            return response;
-        }
-
-        private string GenerateAwsSignatureV4(string httpMethod, string endpoint, string timestamp, string dateStamp, string payload)
-        {
-            // Simplified AWS Signature V4 - In production, use AWS SDK
-            var credentialScope = $"{dateStamp}/{_region}/route53/aws4_request";
-            
-            var canonicalRequest = $"{httpMethod}\n{endpoint}\n\n" +
-                                  $"host:route53.{_region}.amazonaws.com\n" +
-                                  $"x-amz-date:{timestamp}\n\n" +
-                                  $"host;x-amz-date\n" +
-                                  ComputeSha256Hash(payload);
-
-            var stringToSign = $"AWS4-HMAC-SHA256\n{timestamp}\n{credentialScope}\n{ComputeSha256Hash(canonicalRequest)}";
-            
-            var signingKey = GetSigningKey(dateStamp);
-            var signature = ComputeHmacSha256(stringToSign, signingKey);
-
-            return $"Credential={_accessKeyId}/{credentialScope}, SignedHeaders=host;x-amz-date, Signature={ToHex(signature)}";
-        }
-
-        private byte[] GetSigningKey(string dateStamp)
-        {
-            var kSecret = Encoding.UTF8.GetBytes($"AWS4{_secretAccessKey}");
-            var kDate = ComputeHmacSha256(dateStamp, kSecret);
-            var kRegion = ComputeHmacSha256(_region, kDate);
-            var kService = ComputeHmacSha256("route53", kRegion);
-            return ComputeHmacSha256("aws4_request", kService);
-        }
-
-        private byte[] ComputeHmacSha256(string data, byte[] key)
-        {
-            using var hmac = new HMACSHA256(key);
-            return hmac.ComputeHash(Encoding.UTF8.GetBytes(data));
-        }
-
-        private string ComputeSha256Hash(string data)
-        {
-            using var sha256 = SHA256.Create();
-            var hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(data));
-            return ToHex(hashBytes);
-        }
-
-        private string ToHex(byte[] bytes)
-        {
-            return Convert.ToHexString(bytes).ToLowerInvariant();
-        }
 
         public override async Task<List<TldInfo>> GetSupportedTldsAsync()
         {
             _logger.Information("Getting supported TLDs from AWS Route 53");
             try
             {
-                var endpoint = "/2013-04-01/domains/tlds";
-                var response = await MakeAwsRequestAsync(HttpMethod.Get, endpoint);
-                var content = await response.Content.ReadAsStringAsync();
-                var result = JsonSerializer.Deserialize<JsonElement>(content);
+                var request = new ListPricesRequest();
+                var response = await _route53DomainsClient.ListPricesAsync(request);
 
                 var tlds = new List<TldInfo>();
-                if (result.TryGetProperty("Prices", out var pricesArray))
+                foreach (var price in response.Prices)
                 {
-                    foreach (var tld in pricesArray.EnumerateArray())
+                    var tldInfo = new TldInfo
                     {
-                        var name = tld.GetProperty("Name").GetString();
-                        if (!string.IsNullOrEmpty(name))
-                        {
-                            var tldInfo = new TldInfo
-                            {
-                                Name = name,
-                                Currency = "USD"
-                            };
+                        Name = price.Name,
+                        Currency = "USD",
+                        RegistrationPrice = (decimal?)(price.RegistrationPrice?.Price ?? 0),
+                        RenewalPrice = (decimal?)(price.RenewalPrice?.Price ?? 0),
+                        TransferPrice = (decimal?)(price.TransferPrice?.Price ?? 0)
+                    };
 
-                            if (tld.TryGetProperty("RegistrationPrice", out var regPrice))
-                                tldInfo.RegistrationPrice = regPrice.GetDecimal();
-                            if (tld.TryGetProperty("RenewalPrice", out var renewPrice))
-                                tldInfo.RenewalPrice = renewPrice.GetDecimal();
-                            if (tld.TryGetProperty("TransferPrice", out var transPrice))
-                                tldInfo.TransferPrice = transPrice.GetDecimal();
-                            if (tld.TryGetProperty("Type", out var typeProp))
-                                tldInfo.Type = typeProp.GetString();
-
-                            tlds.Add(tldInfo);
-                        }
-                    }
+                    tlds.Add(tldInfo);
                 }
 
                 return tlds;
@@ -665,25 +620,71 @@ namespace DomainRegistrationLib.Implementations
             catch (Exception ex)
             {
                 _logger.Error(ex, "Error getting supported TLDs from AWS Route 53");
-                return [];
+                return new List<TldInfo>();
             }
         }
 
-        private object MapAwsContact(ContactInformation contact)
+        private async Task<string?> GetHostedZoneIdAsync(string domainName)
         {
-            return new
+            // Check cache first
+            if (_hostedZoneCache.TryGetValue(domainName, out var cachedId))
+            {
+                return cachedId;
+            }
+
+            try
+            {
+                var request = new ListHostedZonesByNameRequest
+                {
+                    DNSName = domainName,
+                    MaxItems = "1"
+                };
+
+                var response = await _route53Client.ListHostedZonesByNameAsync(request);
+                
+                if (response.HostedZones.Count > 0)
+                {
+                    var zone = response.HostedZones[0];
+                    // Check if the zone name matches (AWS includes trailing dot)
+                    if (zone.Name.TrimEnd('.').Equals(domainName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        var hostedZoneId = zone.Id;
+                        _hostedZoneCache[domainName] = hostedZoneId;
+                        return hostedZoneId;
+                    }
+                }
+
+                _logger.Warning("No hosted zone found for domain: {DomainName}", domainName);
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error getting hosted zone ID for domain: {DomainName}", domainName);
+                return null;
+            }
+        }
+
+        private ContactDetail MapToAwsContact(ContactInformation contact)
+        {
+            return new ContactDetail
             {
                 FirstName = contact.FirstName,
                 LastName = contact.LastName,
-                OrganizationName = contact.Organization ?? "",
+                OrganizationName = contact.Organization,
                 Email = contact.Email,
                 PhoneNumber = contact.Phone,
                 AddressLine1 = contact.Address1,
-                AddressLine2 = contact.Address2 ?? "",
+                AddressLine2 = contact.Address2,
                 City = contact.City,
                 State = contact.State,
                 ZipCode = contact.PostalCode,
-                CountryCode = contact.Country
+                CountryCode = contact.Country switch
+                {
+                    "US" => Amazon.Route53Domains.CountryCode.US,
+                    "CA" => Amazon.Route53Domains.CountryCode.CA,
+                    "GB" => Amazon.Route53Domains.CountryCode.GB,
+                    _ => Amazon.Route53Domains.CountryCode.FindValue(contact.Country)
+                }
             };
         }
     }
