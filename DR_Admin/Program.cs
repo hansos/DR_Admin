@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi;
+using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Text;
@@ -246,7 +246,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
-    options.SwaggerDoc("v1", new OpenApiInfo
+    options.SwaggerDoc("v1", new Microsoft.OpenApi.OpenApiInfo
     {
         Title = "DR Admin API",
         Version = "v1",
@@ -262,19 +262,20 @@ builder.Services.AddSwaggerGen(options =>
     }
     
     // Add JWT Authentication to Swagger
-    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.OpenApiSecurityScheme
     {
         Description = "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token in the text input below.",
         Name = "Authorization",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer"
+        In = Microsoft.OpenApi.ParameterLocation.Header,
+        Type = Microsoft.OpenApi.SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT"
     });
     
-    options.AddSecurityRequirement((doc) => new OpenApiSecurityRequirement
+    options.AddSecurityRequirement((document) => new Microsoft.OpenApi.OpenApiSecurityRequirement
     {
         {
-            new OpenApiSecuritySchemeReference("Bearer", doc, null),
+            new Microsoft.OpenApi.OpenApiSecuritySchemeReference("Bearer", document),
             new List<string>()
         }
     });
