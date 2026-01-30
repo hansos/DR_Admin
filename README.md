@@ -2,12 +2,12 @@
 
 A comprehensive ISP/Domain Reseller administration system built with .NET 10. This solution provides a complete backend API and web interface for managing domain registrations, hosting services, billing, invoicing, and customer management.
 
-/*
- * ⚠️ DR_Admin is currently under active development.
- * Several features are not yet implemented, and the system requires extensive testing.
- * Functionality may change frequently, and the API is not considered stable.
- * Use at your own discretion for development and testing purposes only.
- */
+---
+⚠️ DR_Admin is currently under active development.   
+Several features are not yet implemented, and the system requires extensive testing.   
+Functionality may change frequently, and the API is not considered stable.   
+Use at your own discretion for development and testing purposes only.
+---
 
 
 [See developer's documentation](Documentation/Index.md)
