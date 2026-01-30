@@ -117,7 +117,7 @@ public class InvoiceLinesControllerTests : IClassFixture<TestWebApplicationFacto
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<InvoiceLineDto>();
+        var result = await response.Content.ReadFromJsonAsync<InvoiceLineDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.Equal(lineId, result.Id);
 
@@ -232,12 +232,12 @@ public class InvoiceLinesControllerTests : IClassFixture<TestWebApplicationFacto
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/InvoiceLines", createDto);
+        var response = await _client.PostAsJsonAsync("/api/v1/InvoiceLines", createDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<InvoiceLineDto>();
+        var result = await response.Content.ReadFromJsonAsync<InvoiceLineDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.True(result.Id > 0);
         Assert.Equal(createDto.Description, result.Description);
@@ -270,7 +270,7 @@ public class InvoiceLinesControllerTests : IClassFixture<TestWebApplicationFacto
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/InvoiceLines", createDto);
+        var response = await _client.PostAsJsonAsync("/api/v1/InvoiceLines", createDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
@@ -299,7 +299,7 @@ public class InvoiceLinesControllerTests : IClassFixture<TestWebApplicationFacto
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/InvoiceLines", createDto);
+        var response = await _client.PostAsJsonAsync("/api/v1/InvoiceLines", createDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -333,12 +333,12 @@ public class InvoiceLinesControllerTests : IClassFixture<TestWebApplicationFacto
         };
 
         // Act
-        var response = await _client.PutAsJsonAsync($"/api/v1/InvoiceLines/{lineId}", updateDto);
+        var response = await _client.PutAsJsonAsync($"/api/v1/InvoiceLines/{lineId}", updateDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<InvoiceLineDto>();
+        var result = await response.Content.ReadFromJsonAsync<InvoiceLineDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.Equal(lineId, result.Id);
         Assert.Equal(updateDto.Description, result.Description);
@@ -369,7 +369,7 @@ public class InvoiceLinesControllerTests : IClassFixture<TestWebApplicationFacto
         };
 
         // Act
-        var response = await _client.PutAsJsonAsync("/api/v1/InvoiceLines/99999", updateDto);
+        var response = await _client.PutAsJsonAsync("/api/v1/InvoiceLines/99999", updateDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -397,7 +397,7 @@ public class InvoiceLinesControllerTests : IClassFixture<TestWebApplicationFacto
         };
 
         // Act
-        var response = await _client.PutAsJsonAsync($"/api/v1/InvoiceLines/{lineId}", updateDto);
+        var response = await _client.PutAsJsonAsync($"/api/v1/InvoiceLines/{lineId}", updateDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -425,7 +425,7 @@ public class InvoiceLinesControllerTests : IClassFixture<TestWebApplicationFacto
         };
 
         // Act
-        var response = await _client.PutAsJsonAsync($"/api/v1/InvoiceLines/{lineId}", updateDto);
+        var response = await _client.PutAsJsonAsync($"/api/v1/InvoiceLines/{lineId}", updateDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);

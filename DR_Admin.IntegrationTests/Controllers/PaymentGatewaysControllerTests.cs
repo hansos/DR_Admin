@@ -142,7 +142,7 @@ public class PaymentGatewaysControllerTests : IClassFixture<TestWebApplicationFa
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<PaymentGatewayDto>();
+        var result = await response.Content.ReadFromJsonAsync<PaymentGatewayDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.True(result.IsDefault);
 
@@ -184,7 +184,7 @@ public class PaymentGatewaysControllerTests : IClassFixture<TestWebApplicationFa
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<PaymentGatewayDto>();
+        var result = await response.Content.ReadFromJsonAsync<PaymentGatewayDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.Equal(gatewayId, result.Id);
 
@@ -226,7 +226,7 @@ public class PaymentGatewaysControllerTests : IClassFixture<TestWebApplicationFa
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<PaymentGatewayDto>();
+        var result = await response.Content.ReadFromJsonAsync<PaymentGatewayDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.Equal("stripe", result.ProviderCode);
 
@@ -278,12 +278,12 @@ public class PaymentGatewaysControllerTests : IClassFixture<TestWebApplicationFa
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/PaymentGateways", createDto);
+        var response = await _client.PostAsJsonAsync("/api/v1/PaymentGateways", createDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<PaymentGatewayDto>();
+        var result = await response.Content.ReadFromJsonAsync<PaymentGatewayDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.Equal(createDto.Name, result.Name);
         Assert.Equal(createDto.ProviderCode, result.ProviderCode);
@@ -306,7 +306,7 @@ public class PaymentGatewaysControllerTests : IClassFixture<TestWebApplicationFa
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/PaymentGateways", createDto);
+        var response = await _client.PostAsJsonAsync("/api/v1/PaymentGateways", createDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -340,12 +340,12 @@ public class PaymentGatewaysControllerTests : IClassFixture<TestWebApplicationFa
         };
 
         // Act
-        var response = await _client.PutAsJsonAsync($"/api/v1/PaymentGateways/{gatewayId}", updateDto);
+        var response = await _client.PutAsJsonAsync($"/api/v1/PaymentGateways/{gatewayId}", updateDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<PaymentGatewayDto>();
+        var result = await response.Content.ReadFromJsonAsync<PaymentGatewayDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.Equal(updateDto.Name, result.Name);
         Assert.Equal(updateDto.FeePercentage, result.FeePercentage);
@@ -368,7 +368,7 @@ public class PaymentGatewaysControllerTests : IClassFixture<TestWebApplicationFa
         };
 
         // Act
-        var response = await _client.PutAsJsonAsync("/api/v1/PaymentGateways/99999", updateDto);
+        var response = await _client.PutAsJsonAsync("/api/v1/PaymentGateways/99999", updateDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -427,7 +427,7 @@ public class PaymentGatewaysControllerTests : IClassFixture<TestWebApplicationFa
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.PostAsJsonAsync($"/api/v1/PaymentGateways/{gatewayId}/set-active", false);
+        var response = await _client.PostAsJsonAsync($"/api/v1/PaymentGateways/{gatewayId}/set-active", false, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);

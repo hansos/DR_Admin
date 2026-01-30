@@ -42,7 +42,7 @@ public class MyAccountControllerTests : IClassFixture<TestWebApplicationFactory>
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/MyAccount/register", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/MyAccount/register", request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
@@ -79,7 +79,7 @@ public class MyAccountControllerTests : IClassFixture<TestWebApplicationFactory>
             CustomerAddress = "123 Test St"
         };
 
-        await _client.PostAsJsonAsync("/api/v1/MyAccount/register", request1);
+        await _client.PostAsJsonAsync("/api/v1/MyAccount/register", request1, TestContext.Current.CancellationToken);
 
         // Act - Second registration with same email
         var request2 = new RegisterAccountRequestDto
@@ -94,7 +94,7 @@ public class MyAccountControllerTests : IClassFixture<TestWebApplicationFactory>
             CustomerAddress = "456 Test Ave"
         };
 
-        var response = await _client.PostAsJsonAsync("/api/v1/MyAccount/register", request2);
+        var response = await _client.PostAsJsonAsync("/api/v1/MyAccount/register", request2, TestContext.Current.CancellationToken  );
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -118,7 +118,7 @@ public class MyAccountControllerTests : IClassFixture<TestWebApplicationFactory>
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/MyAccount/register", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/MyAccount/register", request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -146,7 +146,7 @@ public class MyAccountControllerTests : IClassFixture<TestWebApplicationFactory>
             CustomerAddress = "321 Confirm St"
         };
 
-        var registerResponse = await _client.PostAsJsonAsync("/api/v1/MyAccount/register", registerRequest);
+        var registerResponse = await _client.PostAsJsonAsync("/api/v1/MyAccount/register", registerRequest, TestContext.Current.CancellationToken);
         var registerResult = await registerResponse.Content.ReadFromJsonAsync<RegisterAccountResponseDto>(TestContext.Current.CancellationToken);
 
         Assert.NotNull(registerResult);
@@ -159,12 +159,12 @@ public class MyAccountControllerTests : IClassFixture<TestWebApplicationFactory>
             ConfirmationToken = registerResult.EmailConfirmationToken
         };
 
-        var response = await _client.PostAsJsonAsync("/api/v1/MyAccount/confirm-email", confirmRequest);
+        var response = await _client.PostAsJsonAsync("/api/v1/MyAccount/confirm-email", confirmRequest, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var content = await response.Content.ReadAsStringAsync();
+        var content = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         Console.WriteLine($"Confirm Email Response: {content}");
     }
 
@@ -180,7 +180,7 @@ public class MyAccountControllerTests : IClassFixture<TestWebApplicationFactory>
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/MyAccount/confirm-email", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/MyAccount/confirm-email", request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -253,7 +253,7 @@ public class MyAccountControllerTests : IClassFixture<TestWebApplicationFactory>
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/MyAccount/change-password", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/MyAccount/change-password", request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -283,7 +283,7 @@ public class MyAccountControllerTests : IClassFixture<TestWebApplicationFactory>
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/MyAccount/change-password", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/MyAccount/change-password", request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -311,7 +311,7 @@ public class MyAccountControllerTests : IClassFixture<TestWebApplicationFactory>
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/MyAccount/change-password", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/MyAccount/change-password", request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);

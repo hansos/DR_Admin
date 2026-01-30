@@ -131,7 +131,7 @@ public class CustomersControllerTests : IClassFixture<TestWebApplicationFactory>
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<CustomerDto>();
+        var result = await response.Content.ReadFromJsonAsync<CustomerDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.Equal(customerId, result.Id);
         Assert.NotEmpty(result.Name);
@@ -200,7 +200,7 @@ public class CustomersControllerTests : IClassFixture<TestWebApplicationFactory>
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<CustomerDto>();
+        var result = await response.Content.ReadFromJsonAsync<CustomerDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.True(result.Id > 0);
         Assert.Equal(createDto.Name, result.Name);
@@ -316,7 +316,7 @@ public class CustomersControllerTests : IClassFixture<TestWebApplicationFactory>
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<CustomerDto>();
+        var result = await response.Content.ReadFromJsonAsync<CustomerDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.Equal(customerId, result.Id);
         Assert.Equal(updateDto.Name, result.Name);

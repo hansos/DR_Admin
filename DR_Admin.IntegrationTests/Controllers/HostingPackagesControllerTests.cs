@@ -159,7 +159,7 @@ public class HostingPackagesControllerTests : IClassFixture<TestWebApplicationFa
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<HostingPackageDto>();
+        var result = await response.Content.ReadFromJsonAsync<HostingPackageDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.Equal(packageId, result.Id);
 
@@ -257,7 +257,7 @@ public class HostingPackagesControllerTests : IClassFixture<TestWebApplicationFa
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/HostingPackages", createDto);
+        var response = await _client.PostAsJsonAsync("/api/v1/HostingPackages", createDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -292,12 +292,12 @@ public class HostingPackagesControllerTests : IClassFixture<TestWebApplicationFa
         };
 
         // Act
-        var response = await _client.PutAsJsonAsync($"/api/v1/HostingPackages/{packageId}", updateDto);
+        var response = await _client.PutAsJsonAsync($"/api/v1/HostingPackages/{packageId}", updateDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<HostingPackageDto>();
+        var result = await response.Content.ReadFromJsonAsync<HostingPackageDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.Equal(packageId, result.Id);
         Assert.Equal(updateDto.Name, result.Name);
@@ -323,7 +323,7 @@ public class HostingPackagesControllerTests : IClassFixture<TestWebApplicationFa
         };
 
         // Act
-        var response = await _client.PutAsJsonAsync("/api/v1/HostingPackages/99999", updateDto);
+        var response = await _client.PutAsJsonAsync("/api/v1/HostingPackages/99999", updateDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -347,7 +347,7 @@ public class HostingPackagesControllerTests : IClassFixture<TestWebApplicationFa
         };
 
         // Act
-        var response = await _client.PutAsJsonAsync($"/api/v1/HostingPackages/{packageId}", updateDto);
+        var response = await _client.PutAsJsonAsync($"/api/v1/HostingPackages/{packageId}", updateDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);

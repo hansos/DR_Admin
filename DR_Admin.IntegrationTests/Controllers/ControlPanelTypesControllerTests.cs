@@ -189,7 +189,7 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<ControlPanelTypeDto>();
+        var result = await response.Content.ReadFromJsonAsync<ControlPanelTypeDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.Equal(controlPanelTypeId, result.Id);
         Assert.NotEmpty(result.Name);
@@ -268,12 +268,12 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/ControlPanelTypes", createDto);
+        var response = await _client.PostAsJsonAsync("/api/v1/ControlPanelTypes", createDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<ControlPanelTypeDto>();
+        var result = await response.Content.ReadFromJsonAsync<ControlPanelTypeDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.True(result.Id > 0);
         Assert.Equal(createDto.Name, result.Name);
@@ -310,7 +310,7 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/ControlPanelTypes", createDto);
+        var response = await _client.PostAsJsonAsync("/api/v1/ControlPanelTypes", createDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -332,7 +332,7 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/ControlPanelTypes", createDto);
+        var response = await _client.PostAsJsonAsync("/api/v1/ControlPanelTypes", createDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -351,7 +351,7 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/ControlPanelTypes", createDto);
+        var response = await _client.PostAsJsonAsync("/api/v1/ControlPanelTypes", createDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -373,7 +373,7 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
 
         // Get the original control panel type to compare timestamps
         var getResponse = await _client.GetAsync($"/api/v1/ControlPanelTypes/{controlPanelTypeId}", TestContext.Current.CancellationToken);
-        var originalType = await getResponse.Content.ReadFromJsonAsync<ControlPanelTypeDto>();
+        var originalType = await getResponse.Content.ReadFromJsonAsync<ControlPanelTypeDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(originalType);
 
         // Wait a bit to ensure UpdatedAt will be different
@@ -390,12 +390,12 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
         };
 
         // Act
-        var response = await _client.PutAsJsonAsync($"/api/v1/ControlPanelTypes/{controlPanelTypeId}", updateDto);
+        var response = await _client.PutAsJsonAsync($"/api/v1/ControlPanelTypes/{controlPanelTypeId}", updateDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<ControlPanelTypeDto>();
+        var result = await response.Content.ReadFromJsonAsync<ControlPanelTypeDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.Equal(controlPanelTypeId, result.Id);
         Assert.Equal(updateDto.Name, result.Name);
@@ -430,7 +430,7 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
         };
 
         // Act
-        var response = await _client.PutAsJsonAsync("/api/v1/ControlPanelTypes/99999", updateDto);
+        var response = await _client.PutAsJsonAsync("/api/v1/ControlPanelTypes/99999", updateDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -453,7 +453,7 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
         };
 
         // Act
-        var response = await _client.PutAsJsonAsync($"/api/v1/ControlPanelTypes/{controlPanelTypeId}", updateDto);
+        var response = await _client.PutAsJsonAsync($"/api/v1/ControlPanelTypes/{controlPanelTypeId}", updateDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -472,7 +472,7 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
         };
 
         // Act
-        var response = await _client.PutAsJsonAsync("/api/v1/ControlPanelTypes/1", updateDto);
+        var response = await _client.PutAsJsonAsync("/api/v1/ControlPanelTypes/1", updateDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -574,10 +574,10 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
             IsActive = true
         };
 
-        var createResponse = await _client.PostAsJsonAsync("/api/v1/ControlPanelTypes", createDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/ControlPanelTypes", createDto, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
 
-        var created = await createResponse.Content.ReadFromJsonAsync<ControlPanelTypeDto>();
+        var created = await createResponse.Content.ReadFromJsonAsync<ControlPanelTypeDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(created);
         Console.WriteLine($"   Created ID: {created.Id}, Name: {created.DisplayName}");
 
@@ -586,7 +586,7 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
         var readResponse = await _client.GetAsync($"/api/v1/ControlPanelTypes/{created.Id}", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, readResponse.StatusCode);
 
-        var read = await readResponse.Content.ReadFromJsonAsync<ControlPanelTypeDto>();
+        var read = await readResponse.Content.ReadFromJsonAsync<ControlPanelTypeDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(read);
         Assert.Equal(created.Id, read.Id);
         Assert.Equal(createDto.Name, read.Name);
@@ -605,10 +605,10 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
             IsActive = true
         };
 
-        var updateResponse = await _client.PutAsJsonAsync($"/api/v1/ControlPanelTypes/{created.Id}", updateDto);
+        var updateResponse = await _client.PutAsJsonAsync($"/api/v1/ControlPanelTypes/{created.Id}", updateDto, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, updateResponse.StatusCode);
 
-        var updated = await updateResponse.Content.ReadFromJsonAsync<ControlPanelTypeDto>();
+        var updated = await updateResponse.Content.ReadFromJsonAsync<ControlPanelTypeDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(updated);
         Assert.Equal(updateDto.DisplayName, updated.DisplayName);
         Assert.Equal(updateDto.Version, updated.Version);
@@ -646,7 +646,7 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
             Description = "Active control panel",
             IsActive = true
         };
-        await _client.PostAsJsonAsync("/api/v1/ControlPanelTypes", activeDto);
+        await _client.PostAsJsonAsync("/api/v1/ControlPanelTypes", activeDto, TestContext.Current.CancellationToken);
 
         // Create inactive control panel type
         var inactiveDto = new CreateControlPanelTypeDto
@@ -656,7 +656,7 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
             Description = "Inactive control panel",
             IsActive = false
         };
-        await _client.PostAsJsonAsync("/api/v1/ControlPanelTypes", inactiveDto);
+        await _client.PostAsJsonAsync("/api/v1/ControlPanelTypes", inactiveDto, TestContext.Current.CancellationToken);
 
         // Act
         var response = await _client.GetAsync("/api/v1/ControlPanelTypes/active", TestContext.Current.CancellationToken);

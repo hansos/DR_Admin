@@ -128,7 +128,7 @@ public class ContactPersonsControllerTests : IClassFixture<TestWebApplicationFac
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<ContactPersonDto>();
+        var result = await response.Content.ReadFromJsonAsync<ContactPersonDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.Equal(contactPersonId, result.Id);
         Assert.NotEmpty(result.FirstName);
@@ -230,7 +230,7 @@ public class ContactPersonsControllerTests : IClassFixture<TestWebApplicationFac
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/ContactPersons", createDto);
+        var response = await _client.PostAsJsonAsync("/api/v1/ContactPersons", createDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
@@ -255,7 +255,7 @@ public class ContactPersonsControllerTests : IClassFixture<TestWebApplicationFac
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/ContactPersons", createDto);
+        var response = await _client.PostAsJsonAsync("/api/v1/ContactPersons", createDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -276,7 +276,7 @@ public class ContactPersonsControllerTests : IClassFixture<TestWebApplicationFac
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/ContactPersons", createDto);
+        var response = await _client.PostAsJsonAsync("/api/v1/ContactPersons", createDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -311,12 +311,12 @@ public class ContactPersonsControllerTests : IClassFixture<TestWebApplicationFac
         };
 
         // Act
-        var response = await _client.PutAsJsonAsync($"/api/v1/ContactPersons/{contactPersonId}", updateDto);
+        var response = await _client.PutAsJsonAsync($"/api/v1/ContactPersons/{contactPersonId}", updateDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<ContactPersonDto>();
+        var result = await response.Content.ReadFromJsonAsync<ContactPersonDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.Equal(contactPersonId, result.Id);
         Assert.Equal(updateDto.FirstName, result.FirstName);
@@ -347,7 +347,7 @@ public class ContactPersonsControllerTests : IClassFixture<TestWebApplicationFac
         };
 
         // Act
-        var response = await _client.PutAsJsonAsync("/api/v1/ContactPersons/99999", updateDto);
+        var response = await _client.PutAsJsonAsync("/api/v1/ContactPersons/99999", updateDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -372,7 +372,7 @@ public class ContactPersonsControllerTests : IClassFixture<TestWebApplicationFac
         };
 
         // Act
-        var response = await _client.PutAsJsonAsync($"/api/v1/ContactPersons/{contactPersonId}", updateDto);
+        var response = await _client.PutAsJsonAsync($"/api/v1/ContactPersons/{contactPersonId}", updateDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -464,10 +464,10 @@ public class ContactPersonsControllerTests : IClassFixture<TestWebApplicationFac
             CustomerId = customerId
         };
 
-        var createResponse = await _client.PostAsJsonAsync("/api/v1/ContactPersons", createDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/ContactPersons", createDto, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
 
-        var created = await createResponse.Content.ReadFromJsonAsync<ContactPersonDto>();
+        var created = await createResponse.Content.ReadFromJsonAsync<ContactPersonDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(created);
         Console.WriteLine($"   Created ID: {created.Id}, Name: {created.FirstName} {created.LastName}");
 
@@ -476,7 +476,7 @@ public class ContactPersonsControllerTests : IClassFixture<TestWebApplicationFac
         var readResponse = await _client.GetAsync($"/api/v1/ContactPersons/{created.Id}", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, readResponse.StatusCode);
 
-        var read = await readResponse.Content.ReadFromJsonAsync<ContactPersonDto>();
+        var read = await readResponse.Content.ReadFromJsonAsync<ContactPersonDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(read);
         Assert.Equal(created.Id, read.Id);
         Assert.Equal(createDto.FirstName, read.FirstName);
@@ -499,10 +499,10 @@ public class ContactPersonsControllerTests : IClassFixture<TestWebApplicationFac
             CustomerId = customerId
         };
 
-        var updateResponse = await _client.PutAsJsonAsync($"/api/v1/ContactPersons/{created.Id}", updateDto);
+        var updateResponse = await _client.PutAsJsonAsync($"/api/v1/ContactPersons/{created.Id}", updateDto, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, updateResponse.StatusCode);
 
-        var updated = await updateResponse.Content.ReadFromJsonAsync<ContactPersonDto>();
+        var updated = await updateResponse.Content.ReadFromJsonAsync<ContactPersonDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(updated);
         Assert.Equal(updateDto.FirstName, updated.FirstName);
         Assert.Equal(updateDto.LastName, updated.LastName);

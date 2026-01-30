@@ -197,7 +197,7 @@ public class OrdersControllerTests : IClassFixture<TestWebApplicationFactory>
 
         using var scope = _factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var order = await context.Orders.FindAsync(orderId);
+        var order = await context.Orders.FindAsync(new object[] { orderId }, TestContext.Current.CancellationToken);
 
         var updateDto = new UpdateOrderDto
         {

@@ -243,7 +243,7 @@ public class BillingCyclesControllerTests : IClassFixture<TestWebApplicationFact
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/BillingCycles", createDto);
+        var response = await _client.PostAsJsonAsync("/api/v1/BillingCycles", createDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -279,12 +279,12 @@ public class BillingCyclesControllerTests : IClassFixture<TestWebApplicationFact
         };
 
         // Act
-        var response = await _client.PutAsJsonAsync($"/api/v1/BillingCycles/{billingCycleId}", updateDto);
+        var response = await _client.PutAsJsonAsync($"/api/v1/BillingCycles/{billingCycleId}", updateDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<BillingCycleDto>();
+        var result = await response.Content.ReadFromJsonAsync<BillingCycleDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.Equal(billingCycleId, result.Id);
         Assert.Equal(updateDto.Name, result.Name);
@@ -316,7 +316,7 @@ public class BillingCyclesControllerTests : IClassFixture<TestWebApplicationFact
         };
 
         // Act
-        var response = await _client.PutAsJsonAsync("/api/v1/BillingCycles/99999", updateDto);
+        var response = await _client.PutAsJsonAsync("/api/v1/BillingCycles/99999", updateDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -358,7 +358,7 @@ public class BillingCyclesControllerTests : IClassFixture<TestWebApplicationFact
         };
 
         // Act
-        var response = await _client.PutAsJsonAsync("/api/v1/BillingCycles/1", updateDto);
+        var response = await _client.PutAsJsonAsync("/api/v1/BillingCycles/1", updateDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -457,10 +457,10 @@ public class BillingCyclesControllerTests : IClassFixture<TestWebApplicationFact
             Description = "Billed twice per year"
         };
 
-        var createResponse = await _client.PostAsJsonAsync("/api/v1/BillingCycles", createDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/BillingCycles", createDto, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
 
-        var created = await createResponse.Content.ReadFromJsonAsync<BillingCycleDto>();
+        var created = await createResponse.Content.ReadFromJsonAsync<BillingCycleDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(created);
         Console.WriteLine($"   Created ID: {created.Id}, Name: {created.Name}");
 
@@ -469,7 +469,7 @@ public class BillingCyclesControllerTests : IClassFixture<TestWebApplicationFact
         var readResponse = await _client.GetAsync($"/api/v1/BillingCycles/{created.Id}", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, readResponse.StatusCode);
 
-        var read = await readResponse.Content.ReadFromJsonAsync<BillingCycleDto>();
+        var read = await readResponse.Content.ReadFromJsonAsync<BillingCycleDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(read);
         Assert.Equal(created.Id, read.Id);
         Assert.Equal(createDto.Name, read.Name);
@@ -484,10 +484,10 @@ public class BillingCyclesControllerTests : IClassFixture<TestWebApplicationFact
             Description = "Updated: Billed every 6 months"
         };
 
-        var updateResponse = await _client.PutAsJsonAsync($"/api/v1/BillingCycles/{created.Id}", updateDto);
+        var updateResponse = await _client.PutAsJsonAsync($"/api/v1/BillingCycles/{created.Id}", updateDto, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, updateResponse.StatusCode);
 
-        var updated = await updateResponse.Content.ReadFromJsonAsync<BillingCycleDto>();
+        var updated = await updateResponse.Content.ReadFromJsonAsync<BillingCycleDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(updated);
         Assert.Equal(updateDto.Name, updated.Name);
         Assert.Equal(updateDto.DurationInDays, updated.DurationInDays);

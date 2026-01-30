@@ -190,7 +190,7 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<CountryDto>();
+        var result = await response.Content.ReadFromJsonAsync<CountryDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.Equal(countryId, result.Id);
         Assert.NotEmpty(result.Code);
@@ -265,7 +265,7 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<CountryDto>();
+        var result = await response.Content.ReadFromJsonAsync<CountryDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.Equal("US", result.Code);
         Assert.Equal("United States", result.EnglishName);
@@ -324,12 +324,12 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/Countries", createDto);
+        var response = await _client.PostAsJsonAsync("/api/v1/Countries", createDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<CountryDto>();
+        var result = await response.Content.ReadFromJsonAsync<CountryDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.True(result.Id > 0);
         Assert.Equal(createDto.Code, result.Code);
@@ -366,7 +366,7 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/Countries", createDto);
+        var response = await _client.PostAsJsonAsync("/api/v1/Countries", createDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -389,7 +389,7 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/Countries", createDto);
+        var response = await _client.PostAsJsonAsync("/api/v1/Countries", createDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -409,7 +409,7 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/Countries", createDto);
+        var response = await _client.PostAsJsonAsync("/api/v1/Countries", createDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);

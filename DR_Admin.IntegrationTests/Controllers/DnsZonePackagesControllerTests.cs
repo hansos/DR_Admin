@@ -177,7 +177,7 @@ public class DnsZonePackagesControllerTests : IClassFixture<TestWebApplicationFa
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<DnsZonePackageDto>();
+        var result = await response.Content.ReadFromJsonAsync<DnsZonePackageDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.True(result.IsDefault);
         Assert.NotEmpty(result.Records);
@@ -204,7 +204,7 @@ public class DnsZonePackagesControllerTests : IClassFixture<TestWebApplicationFa
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<DnsZonePackageDto>();
+        var result = await response.Content.ReadFromJsonAsync<DnsZonePackageDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.Equal(packageId, result.Id);
 
@@ -249,12 +249,12 @@ public class DnsZonePackagesControllerTests : IClassFixture<TestWebApplicationFa
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/DnsZonePackages", createDto);
+        var response = await _client.PostAsJsonAsync("/api/v1/DnsZonePackages", createDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<DnsZonePackageDto>();
+        var result = await response.Content.ReadFromJsonAsync<DnsZonePackageDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.True(result.Id > 0);
         Assert.Equal(createDto.Name, result.Name);
@@ -281,7 +281,7 @@ public class DnsZonePackagesControllerTests : IClassFixture<TestWebApplicationFa
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/DnsZonePackages", createDto);
+        var response = await _client.PostAsJsonAsync("/api/v1/DnsZonePackages", createDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -311,12 +311,12 @@ public class DnsZonePackagesControllerTests : IClassFixture<TestWebApplicationFa
         };
 
         // Act
-        var response = await _client.PutAsJsonAsync($"/api/v1/DnsZonePackages/{packageId}", updateDto);
+        var response = await _client.PutAsJsonAsync($"/api/v1/DnsZonePackages/{packageId}", updateDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<DnsZonePackageDto>();
+        var result = await response.Content.ReadFromJsonAsync<DnsZonePackageDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.Equal(packageId, result.Id);
         Assert.Equal(updateDto.Name, result.Name);
@@ -372,7 +372,7 @@ public class DnsZonePackagesControllerTests : IClassFixture<TestWebApplicationFa
         // Verify DNS records were created
         using var scope = _factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var dnsRecords = await context.DnsRecords.Where(r => r.DomainId == domainId).ToListAsync();
+        var dnsRecords = await context.DnsRecords.Where(r => r.DomainId == domainId).ToListAsync(TestContext.Current.CancellationToken);
         Assert.NotEmpty(dnsRecords);
 
         Console.WriteLine($"Created {dnsRecords.Count} DNS records");

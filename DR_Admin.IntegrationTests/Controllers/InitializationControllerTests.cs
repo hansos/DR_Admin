@@ -46,7 +46,7 @@ public class InitializationControllerTests : IClassFixture<TestWebApplicationFac
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<InitializationResponseDto>();
+        var result = await response.Content.ReadFromJsonAsync<InitializationResponseDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.Equal(request.Username, result.Username);
 
@@ -96,7 +96,7 @@ public class InitializationControllerTests : IClassFixture<TestWebApplicationFac
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
 
-        var content = await response.Content.ReadAsStringAsync();
+        var content = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         Assert.Contains("Username", content, StringComparison.OrdinalIgnoreCase);
 
         Console.WriteLine("Initialization correctly rejected when username is missing");
@@ -122,7 +122,7 @@ public class InitializationControllerTests : IClassFixture<TestWebApplicationFac
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
 
-        var content = await response.Content.ReadAsStringAsync();
+        var content = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         Assert.Contains("password", content, StringComparison.OrdinalIgnoreCase);
 
         Console.WriteLine("Initialization correctly rejected when password is missing");
@@ -143,12 +143,12 @@ public class InitializationControllerTests : IClassFixture<TestWebApplicationFac
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/Initialization/initialize", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/Initialization/initialize", request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
 
-        var content = await response.Content.ReadAsStringAsync();
+        var content = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         Assert.Contains("email", content, StringComparison.OrdinalIgnoreCase);
 
         Console.WriteLine("Initialization correctly rejected when email is missing");
@@ -169,7 +169,7 @@ public class InitializationControllerTests : IClassFixture<TestWebApplicationFac
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/Initialization/initialize", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/Initialization/initialize", request, TestContext.Current.CancellationToken    );
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -177,7 +177,7 @@ public class InitializationControllerTests : IClassFixture<TestWebApplicationFac
         // Verify Admin role was created
         using var scope = _factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var adminRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == "Admin");
+        var adminRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == "Admin", TestContext.Current.CancellationToken);
         Assert.NotNull(adminRole);
 
         Console.WriteLine("Admin role successfully created during initialization");

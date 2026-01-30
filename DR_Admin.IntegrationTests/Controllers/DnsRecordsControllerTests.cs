@@ -301,12 +301,12 @@ public class DnsRecordsControllerTests : IClassFixture<TestWebApplicationFactory
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/DnsRecords", createDto);
+        var response = await _client.PostAsJsonAsync("/api/v1/DnsRecords", createDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<DnsRecordDto>();
+        var result = await response.Content.ReadFromJsonAsync<DnsRecordDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.True(result.Id > 0);
         Assert.Equal(createDto.DomainId, result.DomainId);
@@ -336,12 +336,12 @@ public class DnsRecordsControllerTests : IClassFixture<TestWebApplicationFactory
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/DnsRecords", createDto);
+        var response = await _client.PostAsJsonAsync("/api/v1/DnsRecords", createDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<DnsRecordDto>();
+        var result = await response.Content.ReadFromJsonAsync<DnsRecordDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.Equal(10, result.Priority);
 
@@ -367,7 +367,7 @@ public class DnsRecordsControllerTests : IClassFixture<TestWebApplicationFactory
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/DnsRecords", createDto);
+        var response = await _client.PostAsJsonAsync("/api/v1/DnsRecords", createDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
@@ -391,7 +391,7 @@ public class DnsRecordsControllerTests : IClassFixture<TestWebApplicationFactory
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/DnsRecords", createDto);
+        var response = await _client.PostAsJsonAsync("/api/v1/DnsRecords", createDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -421,12 +421,12 @@ public class DnsRecordsControllerTests : IClassFixture<TestWebApplicationFactory
         };
 
         // Act
-        var response = await _client.PutAsJsonAsync($"/api/v1/DnsRecords/{recordId}", updateDto);
+        var response = await _client.PutAsJsonAsync($"/api/v1/DnsRecords/{recordId}", updateDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<DnsRecordDto>();
+        var result = await response.Content.ReadFromJsonAsync<DnsRecordDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.Equal(recordId, result.Id);
         Assert.Equal(updateDto.Name, result.Name);
@@ -455,7 +455,7 @@ public class DnsRecordsControllerTests : IClassFixture<TestWebApplicationFactory
         };
 
         // Act
-        var response = await _client.PutAsJsonAsync("/api/v1/DnsRecords/99999", updateDto);
+        var response = await _client.PutAsJsonAsync("/api/v1/DnsRecords/99999", updateDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -480,7 +480,7 @@ public class DnsRecordsControllerTests : IClassFixture<TestWebApplicationFactory
         };
 
         // Act
-        var response = await _client.PutAsJsonAsync($"/api/v1/DnsRecords/{recordId}", updateDto);
+        var response = await _client.PutAsJsonAsync($"/api/v1/DnsRecords/{recordId}", updateDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -505,7 +505,7 @@ public class DnsRecordsControllerTests : IClassFixture<TestWebApplicationFactory
         };
 
         // Act
-        var response = await _client.PutAsJsonAsync($"/api/v1/DnsRecords/{recordId}", updateDto);
+        var response = await _client.PutAsJsonAsync($"/api/v1/DnsRecords/{recordId}", updateDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -532,7 +532,7 @@ public class DnsRecordsControllerTests : IClassFixture<TestWebApplicationFactory
         };
 
         // Act
-        var response = await _client.PutAsJsonAsync($"/api/v1/DnsRecords/{recordId}", updateDto);
+        var response = await _client.PutAsJsonAsync($"/api/v1/DnsRecords/{recordId}", updateDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
