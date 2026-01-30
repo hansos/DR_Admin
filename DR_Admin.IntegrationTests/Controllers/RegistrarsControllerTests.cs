@@ -34,7 +34,7 @@ public class RegistrarsControllerTests : IClassFixture<TestWebApplicationFactory
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync($"/api/v1/Registrars/{registrarId}/tlds");
+        var response = await _client.GetAsync($"/api/v1/Registrars/{registrarId}/tlds", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -46,7 +46,7 @@ public class RegistrarsControllerTests : IClassFixture<TestWebApplicationFactory
     public async Task GetTldsByRegistrar_WithoutAuthentication_ReturnsUnauthorized()
     {
         // Act
-        var response = await _client.GetAsync("/api/v1/Registrars/1/tlds");
+        var response = await _client.GetAsync("/api/v1/Registrars/1/tlds", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);

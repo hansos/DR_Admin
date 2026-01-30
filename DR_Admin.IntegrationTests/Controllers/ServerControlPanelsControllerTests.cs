@@ -34,7 +34,7 @@ public class ServerControlPanelsControllerTests : IClassFixture<TestWebApplicati
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/ServerControlPanels");
+        var response = await _client.GetAsync("/api/v1/ServerControlPanels", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -46,7 +46,7 @@ public class ServerControlPanelsControllerTests : IClassFixture<TestWebApplicati
     public async Task GetAllServerControlPanels_WithoutAuthentication_ReturnsUnauthorized()
     {
         // Act
-        var response = await _client.GetAsync("/api/v1/ServerControlPanels");
+        var response = await _client.GetAsync("/api/v1/ServerControlPanels", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);

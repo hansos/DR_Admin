@@ -36,12 +36,12 @@ public class UsersControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/Users");
+        var response = await _client.GetAsync("/api/v1/Users", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<IEnumerable<UserDto>>();
+        var result = await response.Content.ReadFromJsonAsync<IEnumerable<UserDto>>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.NotEmpty(result);
 
@@ -57,7 +57,7 @@ public class UsersControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/Users");
+        var response = await _client.GetAsync("/api/v1/Users", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -68,7 +68,7 @@ public class UsersControllerTests : IClassFixture<TestWebApplicationFactory>
     public async Task GetAllUsers_WithoutAuthentication_ReturnsUnauthorized()
     {
         // Act
-        var response = await _client.GetAsync("/api/v1/Users");
+        var response = await _client.GetAsync("/api/v1/Users", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -83,7 +83,7 @@ public class UsersControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/Users");
+        var response = await _client.GetAsync("/api/v1/Users", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -104,12 +104,12 @@ public class UsersControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync($"/api/v1/Users/{userId}");
+        var response = await _client.GetAsync($"/api/v1/Users/{userId}", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<UserDto>();
+        var result = await response.Content.ReadFromJsonAsync<UserDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.Equal(userId, result.Id);
 
@@ -125,7 +125,7 @@ public class UsersControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/Users/99999");
+        var response = await _client.GetAsync("/api/v1/Users/99999", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -251,11 +251,11 @@ public class UsersControllerTests : IClassFixture<TestWebApplicationFactory>
             Password = "Test@1234"
         };
 
-        var response = await _client.PostAsJsonAsync("/api/v1/Auth/login", loginRequest);
+        var response = await _client.PostAsJsonAsync("/api/v1/Auth/login", loginRequest, TestContext.Current.CancellationToken);
         
         if (!response.IsSuccessStatusCode)
         {
-            var error = await response.Content.ReadAsStringAsync();
+            var error = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
             throw new Exception($"Login failed for {username}: {response.StatusCode} - {error}");
         }
 

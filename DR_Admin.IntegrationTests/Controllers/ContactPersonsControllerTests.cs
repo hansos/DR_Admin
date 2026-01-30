@@ -37,12 +37,12 @@ public class ContactPersonsControllerTests : IClassFixture<TestWebApplicationFac
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/ContactPersons");
+        var response = await _client.GetAsync("/api/v1/ContactPersons", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<IEnumerable<ContactPersonDto>>();
+        var result = await response.Content.ReadFromJsonAsync<IEnumerable<ContactPersonDto>>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.NotEmpty(result);
 
@@ -63,7 +63,7 @@ public class ContactPersonsControllerTests : IClassFixture<TestWebApplicationFac
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/ContactPersons");
+        var response = await _client.GetAsync("/api/v1/ContactPersons", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -74,7 +74,7 @@ public class ContactPersonsControllerTests : IClassFixture<TestWebApplicationFac
     public async Task GetAllContactPersons_WithoutAuthentication_ReturnsUnauthorized()
     {
         // Act
-        var response = await _client.GetAsync("/api/v1/ContactPersons");
+        var response = await _client.GetAsync("/api/v1/ContactPersons", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -95,12 +95,12 @@ public class ContactPersonsControllerTests : IClassFixture<TestWebApplicationFac
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync($"/api/v1/ContactPersons/customer/{customerId}");
+        var response = await _client.GetAsync($"/api/v1/ContactPersons/customer/{customerId}", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<IEnumerable<ContactPersonDto>>();
+        var result = await response.Content.ReadFromJsonAsync<IEnumerable<ContactPersonDto>>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.NotEmpty(result);
         Assert.All(result, cp => Assert.Equal(customerId, cp.CustomerId));
@@ -123,7 +123,7 @@ public class ContactPersonsControllerTests : IClassFixture<TestWebApplicationFac
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync($"/api/v1/ContactPersons/{contactPersonId}");
+        var response = await _client.GetAsync($"/api/v1/ContactPersons/{contactPersonId}", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -146,7 +146,7 @@ public class ContactPersonsControllerTests : IClassFixture<TestWebApplicationFac
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/ContactPersons/99999");
+        var response = await _client.GetAsync("/api/v1/ContactPersons/99999", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -157,7 +157,7 @@ public class ContactPersonsControllerTests : IClassFixture<TestWebApplicationFac
     public async Task GetContactPersonById_WithoutAuthentication_ReturnsUnauthorized()
     {
         // Act
-        var response = await _client.GetAsync("/api/v1/ContactPersons/1");
+        var response = await _client.GetAsync("/api/v1/ContactPersons/1", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -192,12 +192,12 @@ public class ContactPersonsControllerTests : IClassFixture<TestWebApplicationFac
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/ContactPersons", createDto);
+        var response = await _client.PostAsJsonAsync("/api/v1/ContactPersons", createDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<ContactPersonDto>();
+        var result = await response.Content.ReadFromJsonAsync<ContactPersonDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.True(result.Id > 0);
         Assert.Equal(createDto.FirstName, result.FirstName);
@@ -393,7 +393,7 @@ public class ContactPersonsControllerTests : IClassFixture<TestWebApplicationFac
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.DeleteAsync($"/api/v1/ContactPersons/{contactPersonId}");
+        var response = await _client.DeleteAsync($"/api/v1/ContactPersons/{contactPersonId}", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
@@ -410,7 +410,7 @@ public class ContactPersonsControllerTests : IClassFixture<TestWebApplicationFac
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.DeleteAsync("/api/v1/ContactPersons/99999");
+        var response = await _client.DeleteAsync("/api/v1/ContactPersons/99999", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -426,7 +426,7 @@ public class ContactPersonsControllerTests : IClassFixture<TestWebApplicationFac
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.DeleteAsync($"/api/v1/ContactPersons/{contactPersonId}");
+        var response = await _client.DeleteAsync($"/api/v1/ContactPersons/{contactPersonId}", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -473,7 +473,7 @@ public class ContactPersonsControllerTests : IClassFixture<TestWebApplicationFac
 
         // Read
         Console.WriteLine("\n2. READ:");
-        var readResponse = await _client.GetAsync($"/api/v1/ContactPersons/{created.Id}");
+        var readResponse = await _client.GetAsync($"/api/v1/ContactPersons/{created.Id}", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, readResponse.StatusCode);
 
         var read = await readResponse.Content.ReadFromJsonAsync<ContactPersonDto>();
@@ -511,13 +511,13 @@ public class ContactPersonsControllerTests : IClassFixture<TestWebApplicationFac
 
         // Delete
         Console.WriteLine("\n4. DELETE:");
-        var deleteResponse = await _client.DeleteAsync($"/api/v1/ContactPersons/{created.Id}");
+        var deleteResponse = await _client.DeleteAsync($"/api/v1/ContactPersons/{created.Id}", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
         Console.WriteLine($"   Deleted ID: {created.Id}");
 
         // Verify deletion
         Console.WriteLine("\n5. VERIFY DELETION:");
-        var verifyResponse = await _client.GetAsync($"/api/v1/ContactPersons/{created.Id}");
+        var verifyResponse = await _client.GetAsync($"/api/v1/ContactPersons/{created.Id}", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NotFound, verifyResponse.StatusCode);
         Console.WriteLine("   Confirmed: Resource no longer exists");
 

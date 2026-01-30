@@ -34,7 +34,7 @@ public class SentEmailsControllerTests : IClassFixture<TestWebApplicationFactory
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/SentEmails");
+        var response = await _client.GetAsync("/api/v1/SentEmails", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -46,7 +46,7 @@ public class SentEmailsControllerTests : IClassFixture<TestWebApplicationFactory
     public async Task GetAllSentEmails_WithoutAuthentication_ReturnsUnauthorized()
     {
         // Act
-        var response = await _client.GetAsync("/api/v1/SentEmails");
+        var response = await _client.GetAsync("/api/v1/SentEmails", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);

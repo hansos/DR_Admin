@@ -33,12 +33,12 @@ public class RolesControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/Roles");
+        var response = await _client.GetAsync("/api/v1/Roles", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<IEnumerable<RoleDto>>();
+        var result = await response.Content.ReadFromJsonAsync<IEnumerable<RoleDto>>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.NotEmpty(result);
 
@@ -50,7 +50,7 @@ public class RolesControllerTests : IClassFixture<TestWebApplicationFactory>
     public async Task GetAllRoles_WithoutAuthentication_ReturnsUnauthorized()
     {
         // Act
-        var response = await _client.GetAsync("/api/v1/Roles");
+        var response = await _client.GetAsync("/api/v1/Roles", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -65,7 +65,7 @@ public class RolesControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/Roles");
+        var response = await _client.GetAsync("/api/v1/Roles", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -134,8 +134,8 @@ public class RolesControllerTests : IClassFixture<TestWebApplicationFactory>
     private async Task<string> LoginAndGetTokenAsync(string username)
     {
         var loginRequest = new LoginRequestDto { Username = username, Password = "Test@1234" };
-        var response = await _client.PostAsJsonAsync("/api/v1/Auth/login", loginRequest);
-        var result = await response.Content.ReadFromJsonAsync<LoginResponseDto>();
+        var response = await _client.PostAsJsonAsync("/api/v1/Auth/login", loginRequest, TestContext.Current.CancellationToken);
+        var result = await response.Content.ReadFromJsonAsync<LoginResponseDto>(TestContext.Current.CancellationToken);
         return result!.AccessToken;
     }
 }

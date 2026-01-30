@@ -38,7 +38,7 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
             CustomerAddress = "456 Auth St"
         };
 
-        await _client.PostAsJsonAsync("/api/v1/MyAccount/register", registerRequest);
+        await _client.PostAsJsonAsync("/api/v1/MyAccount/register", registerRequest, TestContext.Current.CancellationToken);
 
         var loginRequest = new LoginRequestDto
         {
@@ -47,12 +47,12 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/Auth/login", loginRequest);
+        var response = await _client.PostAsJsonAsync("/api/v1/Auth/login", loginRequest, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<LoginResponseDto>();
+        var result = await response.Content.ReadFromJsonAsync<LoginResponseDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.NotEmpty(result.AccessToken);
         Assert.NotEmpty(result.RefreshToken);
@@ -85,12 +85,12 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/Auth/login", loginRequest);
+        var response = await _client.PostAsJsonAsync("/api/v1/Auth/login", loginRequest, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
 
-        var content = await response.Content.ReadAsStringAsync();
+        var content = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         Assert.Contains("Invalid username/email or password", content);
 
         Console.WriteLine($"Response: {content}");
@@ -113,7 +113,7 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
             CustomerAddress = "789 Password St"
         };
 
-        await _client.PostAsJsonAsync("/api/v1/MyAccount/register", registerRequest);
+        await _client.PostAsJsonAsync("/api/v1/MyAccount/register", registerRequest, TestContext.Current.CancellationToken);
 
         var loginRequest = new LoginRequestDto
         {
@@ -122,12 +122,12 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/Auth/login", loginRequest);
+        var response = await _client.PostAsJsonAsync("/api/v1/Auth/login", loginRequest, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
 
-        var content = await response.Content.ReadAsStringAsync();
+        var content = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         Assert.Contains("Invalid username/email or password", content);
 
         Console.WriteLine($"Response: {content}");
@@ -145,12 +145,12 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/Auth/login", loginRequest);
+        var response = await _client.PostAsJsonAsync("/api/v1/Auth/login", loginRequest, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
 
-        var content = await response.Content.ReadAsStringAsync();
+        var content = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         Assert.Contains("Username/email and password are required", content);
 
         Console.WriteLine($"Response: {content}");
@@ -168,12 +168,12 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/Auth/login", loginRequest);
+        var response = await _client.PostAsJsonAsync("/api/v1/Auth/login", loginRequest, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
 
-        var content = await response.Content.ReadAsStringAsync();
+        var content = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         Assert.Contains("Username/email and password are required", content);
 
         Console.WriteLine($"Response: {content}");
@@ -200,7 +200,7 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
             CustomerAddress = "321 Refresh St"
         };
 
-        await _client.PostAsJsonAsync("/api/v1/MyAccount/register", registerRequest);
+        await _client.PostAsJsonAsync("/api/v1/MyAccount/register", registerRequest, TestContext.Current.CancellationToken);
 
         var loginRequest = new LoginRequestDto
         {
@@ -208,11 +208,11 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
             Password = "Refresh@1234"
         };
 
-        var loginResponse = await _client.PostAsJsonAsync("/api/v1/Auth/login", loginRequest);
-        var loginResult = await loginResponse.Content.ReadFromJsonAsync<LoginResponseDto>();
+        var loginResponse = await _client.PostAsJsonAsync("/api/v1/Auth/login", loginRequest, TestContext.Current.CancellationToken);
+        var loginResult = await loginResponse.Content.ReadFromJsonAsync<LoginResponseDto>(TestContext.Current.CancellationToken);
 
         // Small delay to ensure tokens are different
-        await Task.Delay(1000);
+        await Task.Delay(1000, TestContext.Current.CancellationToken);
 
         var refreshRequest = new RefreshTokenRequestDto
         {
@@ -220,12 +220,12 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/Auth/refresh", refreshRequest);
+        var response = await _client.PostAsJsonAsync("/api/v1/Auth/refresh", refreshRequest, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<LoginResponseDto>();
+        var result = await response.Content.ReadFromJsonAsync<LoginResponseDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.NotEmpty(result.AccessToken);
         Assert.NotEmpty(result.RefreshToken);
@@ -251,12 +251,12 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/Auth/refresh", refreshRequest);
+        var response = await _client.PostAsJsonAsync("/api/v1/Auth/refresh", refreshRequest, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
 
-        var content = await response.Content.ReadAsStringAsync();
+        var content = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         Assert.Contains("Invalid or expired refresh token", content);
 
         Console.WriteLine($"Response: {content}");
@@ -273,12 +273,12 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/Auth/refresh", refreshRequest);
+        var response = await _client.PostAsJsonAsync("/api/v1/Auth/refresh", refreshRequest, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
 
-        var content = await response.Content.ReadAsStringAsync();
+        var content = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         Assert.Contains("Refresh token is required", content);
 
         Console.WriteLine($"Response: {content}");
@@ -301,7 +301,7 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
             CustomerAddress = "654 Revoke St"
         };
 
-        await _client.PostAsJsonAsync("/api/v1/MyAccount/register", registerRequest);
+        await _client.PostAsJsonAsync("/api/v1/MyAccount/register", registerRequest, TestContext.Current.CancellationToken);
 
         var loginRequest = new LoginRequestDto
         {
@@ -309,8 +309,8 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
             Password = "Revoke@1234"
         };
 
-        var loginResponse = await _client.PostAsJsonAsync("/api/v1/Auth/login", loginRequest);
-        var loginResult = await loginResponse.Content.ReadFromJsonAsync<LoginResponseDto>();
+        var loginResponse = await _client.PostAsJsonAsync("/api/v1/Auth/login", loginRequest, TestContext.Current.CancellationToken);
+        var loginResult = await loginResponse.Content.ReadFromJsonAsync<LoginResponseDto>(TestContext.Current.CancellationToken);
 
         // Logout to revoke the refresh token
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", loginResult!.AccessToken);
@@ -318,7 +318,7 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
         {
             RefreshToken = loginResult.RefreshToken
         };
-        await _client.PostAsJsonAsync("/api/v1/Auth/logout", logoutRequest);
+        await _client.PostAsJsonAsync("/api/v1/Auth/logout", logoutRequest, TestContext.Current.CancellationToken);
 
         // Reset authorization header
         _client.DefaultRequestHeaders.Authorization = null;
@@ -329,12 +329,12 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
         };
 
         // Act - Try to refresh with revoked token
-        var response = await _client.PostAsJsonAsync("/api/v1/Auth/refresh", refreshRequest);
+        var response = await _client.PostAsJsonAsync("/api/v1/Auth/refresh", refreshRequest, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
 
-        var content = await response.Content.ReadAsStringAsync();
+        var content = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         Assert.Contains("Invalid or expired refresh token", content);
 
         Console.WriteLine($"Response: {content}");
@@ -361,7 +361,7 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
             CustomerAddress = "987 Logout St"
         };
 
-        await _client.PostAsJsonAsync("/api/v1/MyAccount/register", registerRequest);
+        await _client.PostAsJsonAsync("/api/v1/MyAccount/register", registerRequest, TestContext.Current.CancellationToken);
 
         var loginRequest = new LoginRequestDto
         {
@@ -369,8 +369,8 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
             Password = "Logout@1234"
         };
 
-        var loginResponse = await _client.PostAsJsonAsync("/api/v1/Auth/login", loginRequest);
-        var loginResult = await loginResponse.Content.ReadFromJsonAsync<LoginResponseDto>();
+        var loginResponse = await _client.PostAsJsonAsync("/api/v1/Auth/login", loginRequest, TestContext.Current.CancellationToken);
+        var loginResult = await loginResponse.Content.ReadFromJsonAsync<LoginResponseDto>(TestContext.Current.CancellationToken);
 
         // Set authorization header
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", loginResult!.AccessToken);
@@ -381,12 +381,12 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/Auth/logout", logoutRequest);
+        var response = await _client.PostAsJsonAsync("/api/v1/Auth/logout", logoutRequest, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var content = await response.Content.ReadAsStringAsync();
+        var content = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         Assert.Contains("Logged out successfully", content);
 
         Console.WriteLine($"Response: {content}");
@@ -406,7 +406,7 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/Auth/logout", logoutRequest);
+        var response = await _client.PostAsJsonAsync("/api/v1/Auth/logout", logoutRequest, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -431,7 +431,7 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
             CustomerAddress = "111 Empty Logout St"
         };
 
-        await _client.PostAsJsonAsync("/api/v1/MyAccount/register", registerRequest);
+        await _client.PostAsJsonAsync("/api/v1/MyAccount/register", registerRequest, TestContext.Current.CancellationToken);
 
         var loginRequest = new LoginRequestDto
         {
@@ -439,8 +439,8 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
             Password = "EmptyLogout@1234"
         };
 
-        var loginResponse = await _client.PostAsJsonAsync("/api/v1/Auth/login", loginRequest);
-        var loginResult = await loginResponse.Content.ReadFromJsonAsync<LoginResponseDto>();
+        var loginResponse = await _client.PostAsJsonAsync("/api/v1/Auth/login", loginRequest, TestContext.Current.CancellationToken);
+        var loginResult = await loginResponse.Content.ReadFromJsonAsync<LoginResponseDto>(TestContext.Current.CancellationToken);
 
         // Set authorization header
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", loginResult!.AccessToken);
@@ -451,12 +451,12 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/Auth/logout", logoutRequest);
+        var response = await _client.PostAsJsonAsync("/api/v1/Auth/logout", logoutRequest, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
 
-        var content = await response.Content.ReadAsStringAsync();
+        var content = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         Assert.Contains("Refresh token is required", content);
 
         Console.WriteLine($"Response: {content}");
@@ -486,7 +486,7 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
             CustomerAddress = "222 Verify St"
         };
 
-        await _client.PostAsJsonAsync("/api/v1/MyAccount/register", registerRequest);
+        await _client.PostAsJsonAsync("/api/v1/MyAccount/register", registerRequest, TestContext.Current.CancellationToken);
 
         var loginRequest = new LoginRequestDto
         {
@@ -494,19 +494,19 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
             Password = "Verify@1234"
         };
 
-        var loginResponse = await _client.PostAsJsonAsync("/api/v1/Auth/login", loginRequest);
-        var loginResult = await loginResponse.Content.ReadFromJsonAsync<LoginResponseDto>();
+        var loginResponse = await _client.PostAsJsonAsync("/api/v1/Auth/login", loginRequest, TestContext.Current.CancellationToken);
+        var loginResult = await loginResponse.Content.ReadFromJsonAsync<LoginResponseDto>(TestContext.Current.CancellationToken);
 
         // Set authorization header
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", loginResult!.AccessToken);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/Auth/verify");
+        var response = await _client.GetAsync("/api/v1/Auth/verify", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var content = await response.Content.ReadAsStringAsync();
+        var content = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         Assert.Contains("verifyuser", content);
         Assert.Contains("isAuthenticated", content);
 
@@ -523,7 +523,7 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
         // Arrange - No authentication header
 
         // Act
-        var response = await _client.GetAsync("/api/v1/Auth/verify");
+        var response = await _client.GetAsync("/api/v1/Auth/verify", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -539,7 +539,7 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "invalid.jwt.token");
 
         // Act
-        var response = await _client.GetAsync("/api/v1/Auth/verify");
+        var response = await _client.GetAsync("/api/v1/Auth/verify", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -559,7 +559,7 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", expiredToken);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/Auth/verify");
+        var response = await _client.GetAsync("/api/v1/Auth/verify", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -592,7 +592,7 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
             CustomerAddress = "333 FullFlow St"
         };
 
-        var registerResponse = await _client.PostAsJsonAsync("/api/v1/MyAccount/register", registerRequest);
+        var registerResponse = await _client.PostAsJsonAsync("/api/v1/MyAccount/register", registerRequest, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Created, registerResponse.StatusCode);
         Console.WriteLine("? Registration successful");
 
@@ -603,28 +603,28 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
             Password = "FullFlow@1234"
         };
 
-        var loginResponse = await _client.PostAsJsonAsync("/api/v1/Auth/login", loginRequest);
+        var loginResponse = await _client.PostAsJsonAsync("/api/v1/Auth/login", loginRequest, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, loginResponse.StatusCode);
-        var loginResult = await loginResponse.Content.ReadFromJsonAsync<LoginResponseDto>();
+        var loginResult = await loginResponse.Content.ReadFromJsonAsync<LoginResponseDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(loginResult);
         Console.WriteLine("? Login successful");
 
         // 3. Verify token
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", loginResult.AccessToken);
-        var verifyResponse = await _client.GetAsync("/api/v1/Auth/verify");
+        var verifyResponse = await _client.GetAsync("/api/v1/Auth/verify", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, verifyResponse.StatusCode);
         Console.WriteLine("? Token verification successful");
 
         // 4. Refresh token
-        await Task.Delay(1000); // Ensure new tokens
+        await Task.Delay(1000, TestContext.Current.CancellationToken); // Ensure new tokens
         var refreshRequest = new RefreshTokenRequestDto
         {
             RefreshToken = loginResult.RefreshToken
         };
 
-        var refreshResponse = await _client.PostAsJsonAsync("/api/v1/Auth/refresh", refreshRequest);
+        var refreshResponse = await _client.PostAsJsonAsync("/api/v1/Auth/refresh", refreshRequest, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, refreshResponse.StatusCode);
-        var refreshResult = await refreshResponse.Content.ReadFromJsonAsync<LoginResponseDto>();
+        var refreshResult = await refreshResponse.Content.ReadFromJsonAsync<LoginResponseDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(refreshResult);
         Console.WriteLine("? Token refresh successful");
 
@@ -635,7 +635,7 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
             RefreshToken = refreshResult.RefreshToken
         };
 
-        var logoutResponse = await _client.PostAsJsonAsync("/api/v1/Auth/logout", logoutRequest);
+        var logoutResponse = await _client.PostAsJsonAsync("/api/v1/Auth/logout", logoutRequest, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, logoutResponse.StatusCode);
         Console.WriteLine("? Logout successful");
 
@@ -644,7 +644,7 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
         var refreshAfterLogout = await _client.PostAsJsonAsync("/api/v1/Auth/refresh", new RefreshTokenRequestDto
         {
             RefreshToken = refreshResult.RefreshToken
-        });
+        }, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Unauthorized, refreshAfterLogout.StatusCode);
         Console.WriteLine("? Token properly revoked after logout");
 

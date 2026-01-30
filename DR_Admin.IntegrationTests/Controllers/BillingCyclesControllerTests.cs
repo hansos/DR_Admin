@@ -37,12 +37,12 @@ public class BillingCyclesControllerTests : IClassFixture<TestWebApplicationFact
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/BillingCycles");
+        var response = await _client.GetAsync("/api/v1/BillingCycles", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<IEnumerable<BillingCycleDto>>();
+        var result = await response.Content.ReadFromJsonAsync<IEnumerable<BillingCycleDto>>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.NotEmpty(result);
 
@@ -63,7 +63,7 @@ public class BillingCyclesControllerTests : IClassFixture<TestWebApplicationFact
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/BillingCycles");
+        var response = await _client.GetAsync("/api/v1/BillingCycles", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -79,7 +79,7 @@ public class BillingCyclesControllerTests : IClassFixture<TestWebApplicationFact
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/BillingCycles");
+        var response = await _client.GetAsync("/api/v1/BillingCycles", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -90,7 +90,7 @@ public class BillingCyclesControllerTests : IClassFixture<TestWebApplicationFact
     public async Task GetAllBillingCycles_WithoutAuthentication_ReturnsUnauthorized()
     {
         // Act
-        var response = await _client.GetAsync("/api/v1/BillingCycles");
+        var response = await _client.GetAsync("/api/v1/BillingCycles", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -105,7 +105,7 @@ public class BillingCyclesControllerTests : IClassFixture<TestWebApplicationFact
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/BillingCycles");
+        var response = await _client.GetAsync("/api/v1/BillingCycles", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -126,12 +126,12 @@ public class BillingCyclesControllerTests : IClassFixture<TestWebApplicationFact
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync($"/api/v1/BillingCycles/{billingCycleId}");
+        var response = await _client.GetAsync($"/api/v1/BillingCycles/{billingCycleId}", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<BillingCycleDto>();
+        var result = await response.Content.ReadFromJsonAsync<BillingCycleDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.Equal(billingCycleId, result.Id);
         Assert.NotEmpty(result.Name);
@@ -148,7 +148,7 @@ public class BillingCyclesControllerTests : IClassFixture<TestWebApplicationFact
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/BillingCycles/99999");
+        var response = await _client.GetAsync("/api/v1/BillingCycles/99999", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -159,7 +159,7 @@ public class BillingCyclesControllerTests : IClassFixture<TestWebApplicationFact
     public async Task GetBillingCycleById_WithoutAuthentication_ReturnsUnauthorized()
     {
         // Act
-        var response = await _client.GetAsync("/api/v1/BillingCycles/1");
+        var response = await _client.GetAsync("/api/v1/BillingCycles/1", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -186,12 +186,12 @@ public class BillingCyclesControllerTests : IClassFixture<TestWebApplicationFact
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/BillingCycles", createDto);
+        var response = await _client.PostAsJsonAsync("/api/v1/BillingCycles", createDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<BillingCycleDto>();
+        var result = await response.Content.ReadFromJsonAsync<BillingCycleDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.True(result.Id > 0);
         Assert.Equal(createDto.Name, result.Name);
@@ -224,7 +224,7 @@ public class BillingCyclesControllerTests : IClassFixture<TestWebApplicationFact
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/BillingCycles", createDto);
+        var response = await _client.PostAsJsonAsync("/api/v1/BillingCycles", createDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -264,12 +264,12 @@ public class BillingCyclesControllerTests : IClassFixture<TestWebApplicationFact
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Get the original billing cycle to compare timestamps
-        var getResponse = await _client.GetAsync($"/api/v1/BillingCycles/{billingCycleId}");
-        var originalBillingCycle = await getResponse.Content.ReadFromJsonAsync<BillingCycleDto>();
+        var getResponse = await _client.GetAsync($"/api/v1/BillingCycles/{billingCycleId}", TestContext.Current.CancellationToken);
+        var originalBillingCycle = await getResponse.Content.ReadFromJsonAsync<BillingCycleDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(originalBillingCycle);
 
         // Wait a bit to ensure UpdatedAt will be different
-        await Task.Delay(100);
+        await Task.Delay(100, TestContext.Current.CancellationToken);
 
         var updateDto = new UpdateBillingCycleDto
         {
@@ -339,7 +339,7 @@ public class BillingCyclesControllerTests : IClassFixture<TestWebApplicationFact
         };
 
         // Act
-        var response = await _client.PutAsJsonAsync($"/api/v1/BillingCycles/{billingCycleId}", updateDto);
+        var response = await _client.PutAsJsonAsync($"/api/v1/BillingCycles/{billingCycleId}", updateDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -379,7 +379,7 @@ public class BillingCyclesControllerTests : IClassFixture<TestWebApplicationFact
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.DeleteAsync($"/api/v1/BillingCycles/{billingCycleId}");
+        var response = await _client.DeleteAsync($"/api/v1/BillingCycles/{billingCycleId}", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
@@ -387,7 +387,7 @@ public class BillingCyclesControllerTests : IClassFixture<TestWebApplicationFact
         Console.WriteLine($"Successfully deleted billing cycle ID: {billingCycleId}");
 
         // Verify it's actually deleted
-        var getResponse = await _client.GetAsync($"/api/v1/BillingCycles/{billingCycleId}");
+        var getResponse = await _client.GetAsync($"/api/v1/BillingCycles/{billingCycleId}", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NotFound, getResponse.StatusCode);
     }
 
@@ -400,7 +400,7 @@ public class BillingCyclesControllerTests : IClassFixture<TestWebApplicationFact
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.DeleteAsync("/api/v1/BillingCycles/99999");
+        var response = await _client.DeleteAsync("/api/v1/BillingCycles/99999", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -416,7 +416,7 @@ public class BillingCyclesControllerTests : IClassFixture<TestWebApplicationFact
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.DeleteAsync($"/api/v1/BillingCycles/{billingCycleId}");
+        var response = await _client.DeleteAsync($"/api/v1/BillingCycles/{billingCycleId}", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -427,7 +427,7 @@ public class BillingCyclesControllerTests : IClassFixture<TestWebApplicationFact
     public async Task DeleteBillingCycle_WithoutAuthentication_ReturnsUnauthorized()
     {
         // Act
-        var response = await _client.DeleteAsync("/api/v1/BillingCycles/1");
+        var response = await _client.DeleteAsync("/api/v1/BillingCycles/1", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -466,7 +466,7 @@ public class BillingCyclesControllerTests : IClassFixture<TestWebApplicationFact
 
         // Read
         Console.WriteLine("\n2. READ:");
-        var readResponse = await _client.GetAsync($"/api/v1/BillingCycles/{created.Id}");
+        var readResponse = await _client.GetAsync($"/api/v1/BillingCycles/{created.Id}", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, readResponse.StatusCode);
 
         var read = await readResponse.Content.ReadFromJsonAsync<BillingCycleDto>();
@@ -495,13 +495,13 @@ public class BillingCyclesControllerTests : IClassFixture<TestWebApplicationFact
 
         // Delete
         Console.WriteLine("\n4. DELETE:");
-        var deleteResponse = await _client.DeleteAsync($"/api/v1/BillingCycles/{created.Id}");
+        var deleteResponse = await _client.DeleteAsync($"/api/v1/BillingCycles/{created.Id}", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
         Console.WriteLine($"   Deleted ID: {created.Id}");
 
         // Verify deletion
         Console.WriteLine("\n5. VERIFY DELETION:");
-        var verifyResponse = await _client.GetAsync($"/api/v1/BillingCycles/{created.Id}");
+        var verifyResponse = await _client.GetAsync($"/api/v1/BillingCycles/{created.Id}", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NotFound, verifyResponse.StatusCode);
         Console.WriteLine("   Confirmed: Resource no longer exists");
 

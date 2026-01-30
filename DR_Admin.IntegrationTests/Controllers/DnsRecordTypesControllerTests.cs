@@ -37,12 +37,12 @@ public class DnsRecordTypesControllerTests : IClassFixture<TestWebApplicationFac
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/DnsRecordTypes");
+        var response = await _client.GetAsync("/api/v1/DnsRecordTypes", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<IEnumerable<DnsRecordTypeDto>>();
+        var result = await response.Content.ReadFromJsonAsync<IEnumerable<DnsRecordTypeDto>>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.NotEmpty(result);
 
@@ -63,7 +63,7 @@ public class DnsRecordTypesControllerTests : IClassFixture<TestWebApplicationFac
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/DnsRecordTypes");
+        var response = await _client.GetAsync("/api/v1/DnsRecordTypes", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -79,7 +79,7 @@ public class DnsRecordTypesControllerTests : IClassFixture<TestWebApplicationFac
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/DnsRecordTypes");
+        var response = await _client.GetAsync("/api/v1/DnsRecordTypes", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -90,7 +90,7 @@ public class DnsRecordTypesControllerTests : IClassFixture<TestWebApplicationFac
     public async Task GetAllDnsRecordTypes_WithoutAuthentication_ReturnsUnauthorized()
     {
         // Act
-        var response = await _client.GetAsync("/api/v1/DnsRecordTypes");
+        var response = await _client.GetAsync("/api/v1/DnsRecordTypes", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -111,12 +111,12 @@ public class DnsRecordTypesControllerTests : IClassFixture<TestWebApplicationFac
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/DnsRecordTypes/active");
+        var response = await _client.GetAsync("/api/v1/DnsRecordTypes/active", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<IEnumerable<DnsRecordTypeDto>>();
+        var result = await response.Content.ReadFromJsonAsync<IEnumerable<DnsRecordTypeDto>>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.All(result, recordType => Assert.True(recordType.IsActive));
 
@@ -133,7 +133,7 @@ public class DnsRecordTypesControllerTests : IClassFixture<TestWebApplicationFac
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/DnsRecordTypes/active");
+        var response = await _client.GetAsync("/api/v1/DnsRecordTypes/active", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -154,12 +154,12 @@ public class DnsRecordTypesControllerTests : IClassFixture<TestWebApplicationFac
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync($"/api/v1/DnsRecordTypes/{recordTypeId}");
+        var response = await _client.GetAsync($"/api/v1/DnsRecordTypes/{recordTypeId}", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<DnsRecordTypeDto>();
+        var result = await response.Content.ReadFromJsonAsync<DnsRecordTypeDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.Equal(recordTypeId, result.Id);
 
@@ -175,7 +175,7 @@ public class DnsRecordTypesControllerTests : IClassFixture<TestWebApplicationFac
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/DnsRecordTypes/99999");
+        var response = await _client.GetAsync("/api/v1/DnsRecordTypes/99999", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -191,7 +191,7 @@ public class DnsRecordTypesControllerTests : IClassFixture<TestWebApplicationFac
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync($"/api/v1/DnsRecordTypes/{recordTypeId}");
+        var response = await _client.GetAsync($"/api/v1/DnsRecordTypes/{recordTypeId}", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -212,7 +212,7 @@ public class DnsRecordTypesControllerTests : IClassFixture<TestWebApplicationFac
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/DnsRecordTypes/type/A");
+        var response = await _client.GetAsync("/api/v1/DnsRecordTypes/type/A", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -233,7 +233,7 @@ public class DnsRecordTypesControllerTests : IClassFixture<TestWebApplicationFac
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/DnsRecordTypes/type/INVALID");
+        var response = await _client.GetAsync("/api/v1/DnsRecordTypes/type/INVALID", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -249,7 +249,7 @@ public class DnsRecordTypesControllerTests : IClassFixture<TestWebApplicationFac
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/DnsRecordTypes/type/A");
+        var response = await _client.GetAsync("/api/v1/DnsRecordTypes/type/A", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -282,12 +282,12 @@ public class DnsRecordTypesControllerTests : IClassFixture<TestWebApplicationFac
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/DnsRecordTypes", createDto);
+        var response = await _client.PostAsJsonAsync("/api/v1/DnsRecordTypes", createDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<DnsRecordTypeDto>();
+        var result = await response.Content.ReadFromJsonAsync<DnsRecordTypeDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.True(result.Id > 0);
         Assert.Equal(createDto.Type, result.Type);
@@ -319,12 +319,12 @@ public class DnsRecordTypesControllerTests : IClassFixture<TestWebApplicationFac
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/DnsRecordTypes", createDto);
+        var response = await _client.PostAsJsonAsync("/api/v1/DnsRecordTypes", createDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<DnsRecordTypeDto>();
+        var result = await response.Content.ReadFromJsonAsync<DnsRecordTypeDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.True(result.HasPriority);
 
@@ -456,7 +456,7 @@ public class DnsRecordTypesControllerTests : IClassFixture<TestWebApplicationFac
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.DeleteAsync($"/api/v1/DnsRecordTypes/{recordTypeId}");
+        var response = await _client.DeleteAsync($"/api/v1/DnsRecordTypes/{recordTypeId}", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
@@ -473,7 +473,7 @@ public class DnsRecordTypesControllerTests : IClassFixture<TestWebApplicationFac
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.DeleteAsync("/api/v1/DnsRecordTypes/99999");
+        var response = await _client.DeleteAsync("/api/v1/DnsRecordTypes/99999", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -489,7 +489,7 @@ public class DnsRecordTypesControllerTests : IClassFixture<TestWebApplicationFac
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.DeleteAsync($"/api/v1/DnsRecordTypes/{recordTypeId}");
+        var response = await _client.DeleteAsync($"/api/v1/DnsRecordTypes/{recordTypeId}", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);

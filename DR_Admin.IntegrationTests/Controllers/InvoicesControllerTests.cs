@@ -38,12 +38,12 @@ public class InvoicesControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/Invoices");
+        var response = await _client.GetAsync("/api/v1/Invoices", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<IEnumerable<InvoiceDto>>();
+        var result = await response.Content.ReadFromJsonAsync<IEnumerable<InvoiceDto>>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.NotEmpty(result);
 
@@ -64,7 +64,7 @@ public class InvoicesControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/Invoices");
+        var response = await _client.GetAsync("/api/v1/Invoices", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -80,7 +80,7 @@ public class InvoicesControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/Invoices");
+        var response = await _client.GetAsync("/api/v1/Invoices", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -91,7 +91,7 @@ public class InvoicesControllerTests : IClassFixture<TestWebApplicationFactory>
     public async Task GetAllInvoices_WithoutAuthentication_ReturnsUnauthorized()
     {
         // Act
-        var response = await _client.GetAsync("/api/v1/Invoices");
+        var response = await _client.GetAsync("/api/v1/Invoices", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -112,12 +112,12 @@ public class InvoicesControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync($"/api/v1/Invoices/customer/{customerId}");
+        var response = await _client.GetAsync($"/api/v1/Invoices/customer/{customerId}", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<IEnumerable<InvoiceDto>>();
+        var result = await response.Content.ReadFromJsonAsync<IEnumerable<InvoiceDto>>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.NotEmpty(result);
         Assert.All(result, invoice => Assert.Equal(customerId, invoice.CustomerId));
@@ -135,12 +135,12 @@ public class InvoicesControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync($"/api/v1/Invoices/customer/{customerId}");
+        var response = await _client.GetAsync($"/api/v1/Invoices/customer/{customerId}", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<IEnumerable<InvoiceDto>>();
+        var result = await response.Content.ReadFromJsonAsync<IEnumerable<InvoiceDto>>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
     }
 
@@ -159,12 +159,12 @@ public class InvoicesControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync($"/api/v1/Invoices/status/{InvoiceStatus.Draft}");
+        var response = await _client.GetAsync($"/api/v1/Invoices/status/{InvoiceStatus.Draft}", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<IEnumerable<InvoiceDto>>();
+        var result = await response.Content.ReadFromJsonAsync<IEnumerable<InvoiceDto>>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.All(result, invoice => Assert.Equal(InvoiceStatus.Draft, invoice.Status));
 
@@ -181,12 +181,12 @@ public class InvoicesControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync($"/api/v1/Invoices/status/{InvoiceStatus.Paid}");
+        var response = await _client.GetAsync($"/api/v1/Invoices/status/{InvoiceStatus.Paid}", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<IEnumerable<InvoiceDto>>();
+        var result = await response.Content.ReadFromJsonAsync<IEnumerable<InvoiceDto>>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.All(result, invoice => Assert.Equal(InvoiceStatus.Paid, invoice.Status));
 
@@ -208,12 +208,12 @@ public class InvoicesControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync($"/api/v1/Invoices/{invoiceId}");
+        var response = await _client.GetAsync($"/api/v1/Invoices/{invoiceId}", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<InvoiceDto>();
+        var result = await response.Content.ReadFromJsonAsync<InvoiceDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.Equal(invoiceId, result.Id);
 
@@ -229,7 +229,7 @@ public class InvoicesControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/Invoices/99999");
+        var response = await _client.GetAsync("/api/v1/Invoices/99999", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -250,12 +250,12 @@ public class InvoicesControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync($"/api/v1/Invoices/number/{invoiceNumber}");
+        var response = await _client.GetAsync($"/api/v1/Invoices/number/{invoiceNumber}", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<InvoiceDto>();
+        var result = await response.Content.ReadFromJsonAsync<InvoiceDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.Equal(invoiceNumber, result.InvoiceNumber);
 
@@ -271,7 +271,7 @@ public class InvoicesControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/Invoices/number/INVALID-999");
+        var response = await _client.GetAsync("/api/v1/Invoices/number/INVALID-999", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -311,7 +311,7 @@ public class InvoicesControllerTests : IClassFixture<TestWebApplicationFactory>
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<InvoiceDto>();
+        var result = await response.Content.ReadFromJsonAsync<InvoiceDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.True(result.Id > 0);
         Assert.Equal(createDto.InvoiceNumber, result.InvoiceNumber);
@@ -494,7 +494,7 @@ public class InvoicesControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.DeleteAsync($"/api/v1/Invoices/{invoiceId}");
+        var response = await _client.DeleteAsync($"/api/v1/Invoices/{invoiceId}", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
@@ -511,7 +511,7 @@ public class InvoicesControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.DeleteAsync("/api/v1/Invoices/99999");
+        var response = await _client.DeleteAsync("/api/v1/Invoices/99999", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -527,7 +527,7 @@ public class InvoicesControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.DeleteAsync($"/api/v1/Invoices/{invoiceId}");
+        var response = await _client.DeleteAsync($"/api/v1/Invoices/{invoiceId}", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -822,7 +822,7 @@ public class InvoicesControllerTests : IClassFixture<TestWebApplicationFactory>
             throw new Exception($"Login failed for {username}: {response.StatusCode} - {error}");
         }
 
-        var result = await response.Content.ReadFromJsonAsync<LoginResponseDto>();
+        var result = await response.Content.ReadFromJsonAsync<LoginResponseDto>(TestContext.Current.CancellationToken);
         if (result == null || string.IsNullOrEmpty(result.AccessToken))
         {
             throw new Exception($"Failed to get access token for {username}");

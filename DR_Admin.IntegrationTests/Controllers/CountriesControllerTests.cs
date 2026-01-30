@@ -37,12 +37,12 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/Countries");
+        var response = await _client.GetAsync("/api/v1/Countries", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<IEnumerable<CountryDto>>();
+        var result = await response.Content.ReadFromJsonAsync<IEnumerable<CountryDto>>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.NotEmpty(result);
 
@@ -63,7 +63,7 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/Countries");
+        var response = await _client.GetAsync("/api/v1/Countries", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -79,7 +79,7 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/Countries");
+        var response = await _client.GetAsync("/api/v1/Countries", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -90,7 +90,7 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
     public async Task GetAllCountries_WithoutAuthentication_ReturnsUnauthorized()
     {
         // Act
-        var response = await _client.GetAsync("/api/v1/Countries");
+        var response = await _client.GetAsync("/api/v1/Countries", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -106,7 +106,7 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/Countries");
+        var response = await _client.GetAsync("/api/v1/Countries", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -127,12 +127,12 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/Countries/active");
+        var response = await _client.GetAsync("/api/v1/Countries/active", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<IEnumerable<CountryDto>>();
+        var result = await response.Content.ReadFromJsonAsync<IEnumerable<CountryDto>>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.All(result, country => Assert.True(country.IsActive));
 
@@ -153,7 +153,7 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/Countries/active");
+        var response = await _client.GetAsync("/api/v1/Countries/active", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -164,7 +164,7 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
     public async Task GetActiveCountries_WithoutAuthentication_ReturnsUnauthorized()
     {
         // Act
-        var response = await _client.GetAsync("/api/v1/Countries/active");
+        var response = await _client.GetAsync("/api/v1/Countries/active", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -185,7 +185,7 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync($"/api/v1/Countries/{countryId}");
+        var response = await _client.GetAsync($"/api/v1/Countries/{countryId}", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -212,7 +212,7 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/Countries/99999");
+        var response = await _client.GetAsync("/api/v1/Countries/99999", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -223,7 +223,7 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
     public async Task GetCountryById_WithoutAuthentication_ReturnsUnauthorized()
     {
         // Act
-        var response = await _client.GetAsync("/api/v1/Countries/1");
+        var response = await _client.GetAsync("/api/v1/Countries/1", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -239,7 +239,7 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync($"/api/v1/Countries/{countryId}");
+        var response = await _client.GetAsync($"/api/v1/Countries/{countryId}", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -260,7 +260,7 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/Countries/code/US");
+        var response = await _client.GetAsync("/api/v1/Countries/code/US", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -284,7 +284,7 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/Countries/code/XX");
+        var response = await _client.GetAsync("/api/v1/Countries/code/XX", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -295,7 +295,7 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
     public async Task GetCountryByCode_WithoutAuthentication_ReturnsUnauthorized()
     {
         // Act
-        var response = await _client.GetAsync("/api/v1/Countries/code/US");
+        var response = await _client.GetAsync("/api/v1/Countries/code/US", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -430,12 +430,12 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Get the original country to compare timestamps
-        var getResponse = await _client.GetAsync($"/api/v1/Countries/{countryId}");
-        var originalCountry = await getResponse.Content.ReadFromJsonAsync<CountryDto>();
+        var getResponse = await _client.GetAsync($"/api/v1/Countries/{countryId}", TestContext.Current.CancellationToken);
+        var originalCountry = await getResponse.Content.ReadFromJsonAsync<CountryDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(originalCountry);
 
         // Wait a bit to ensure UpdatedAt will be different
-        await Task.Delay(100);
+        await Task.Delay(100, TestContext.Current.CancellationToken);
 
         var updateDto = new UpdateCountryDto
         {
@@ -447,12 +447,12 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
         };
 
         // Act
-        var response = await _client.PutAsJsonAsync($"/api/v1/Countries/{countryId}", updateDto);
+        var response = await _client.PutAsJsonAsync($"/api/v1/Countries/{countryId}", updateDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<CountryDto>();
+        var result = await response.Content.ReadFromJsonAsync<CountryDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.Equal(countryId, result.Id);
         Assert.Equal(updateDto.Code, result.Code);
@@ -487,7 +487,7 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
         };
 
         // Act
-        var response = await _client.PutAsJsonAsync("/api/v1/Countries/99999", updateDto);
+        var response = await _client.PutAsJsonAsync("/api/v1/Countries/99999", updateDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -511,7 +511,7 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
         };
 
         // Act
-        var response = await _client.PutAsJsonAsync($"/api/v1/Countries/{countryId}", updateDto);
+        var response = await _client.PutAsJsonAsync($"/api/v1/Countries/{countryId}", updateDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -531,7 +531,7 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
         };
 
         // Act
-        var response = await _client.PutAsJsonAsync("/api/v1/Countries/1", updateDto);
+        var response = await _client.PutAsJsonAsync("/api/v1/Countries/1", updateDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -552,7 +552,7 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.DeleteAsync($"/api/v1/Countries/{countryId}");
+        var response = await _client.DeleteAsync($"/api/v1/Countries/{countryId}", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
@@ -560,7 +560,7 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
         Console.WriteLine($"Successfully deleted country ID: {countryId}");
 
         // Verify it's actually deleted
-        var getResponse = await _client.GetAsync($"/api/v1/Countries/{countryId}");
+        var getResponse = await _client.GetAsync($"/api/v1/Countries/{countryId}", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NotFound, getResponse.StatusCode);
     }
 
@@ -573,7 +573,7 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.DeleteAsync("/api/v1/Countries/99999");
+        var response = await _client.DeleteAsync("/api/v1/Countries/99999", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -589,7 +589,7 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.DeleteAsync($"/api/v1/Countries/{countryId}");
+        var response = await _client.DeleteAsync($"/api/v1/Countries/{countryId}", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -600,7 +600,7 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
     public async Task DeleteCountry_WithoutAuthentication_ReturnsUnauthorized()
     {
         // Act
-        var response = await _client.DeleteAsync("/api/v1/Countries/1");
+        var response = await _client.DeleteAsync("/api/v1/Countries/1", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -632,19 +632,19 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
             IsActive = true
         };
 
-        var createResponse = await _client.PostAsJsonAsync("/api/v1/Countries", createDto);
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/Countries", createDto, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
 
-        var created = await createResponse.Content.ReadFromJsonAsync<CountryDto>();
+        var created = await createResponse.Content.ReadFromJsonAsync<CountryDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(created);
         Console.WriteLine($"   Created ID: {created.Id}, Name: {created.EnglishName}");
 
         // Read
         Console.WriteLine("\n2. READ:");
-        var readResponse = await _client.GetAsync($"/api/v1/Countries/{created.Id}");
+        var readResponse = await _client.GetAsync($"/api/v1/Countries/{created.Id}", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, readResponse.StatusCode);
 
-        var read = await readResponse.Content.ReadFromJsonAsync<CountryDto>();
+        var read = await readResponse.Content.ReadFromJsonAsync<CountryDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(read);
         Assert.Equal(created.Id, read.Id);
         Assert.Equal(createDto.Code, read.Code);
@@ -662,23 +662,23 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
             IsActive = true
         };
 
-        var updateResponse = await _client.PutAsJsonAsync($"/api/v1/Countries/{created.Id}", updateDto);
+        var updateResponse = await _client.PutAsJsonAsync($"/api/v1/Countries/{created.Id}", updateDto, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, updateResponse.StatusCode);
 
-        var updated = await updateResponse.Content.ReadFromJsonAsync<CountryDto>();
+        var updated = await updateResponse.Content.ReadFromJsonAsync<CountryDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(updated);
         Assert.Equal(updateDto.EnglishName, updated.EnglishName);
         Console.WriteLine($"   Updated to: {updated.EnglishName}");
 
         // Delete
         Console.WriteLine("\n4. DELETE:");
-        var deleteResponse = await _client.DeleteAsync($"/api/v1/Countries/{created.Id}");
+        var deleteResponse = await _client.DeleteAsync($"/api/v1/Countries/{created.Id}", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
         Console.WriteLine($"   Deleted ID: {created.Id}");
 
         // Verify deletion
         Console.WriteLine("\n5. VERIFY DELETION:");
-        var verifyResponse = await _client.GetAsync($"/api/v1/Countries/{created.Id}");
+        var verifyResponse = await _client.GetAsync($"/api/v1/Countries/{created.Id}", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NotFound, verifyResponse.StatusCode);
         Console.WriteLine("   Confirmed: Resource no longer exists");
 
@@ -703,7 +703,7 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
             LocalName = "New Zealand",
             IsActive = true
         };
-        await _client.PostAsJsonAsync("/api/v1/Countries", activeDto);
+        await _client.PostAsJsonAsync("/api/v1/Countries", activeDto, TestContext.Current.CancellationToken);
 
         // Create inactive country
         var inactiveDto = new CreateCountryDto
@@ -714,14 +714,14 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
             LocalName = "Inactive",
             IsActive = false
         };
-        await _client.PostAsJsonAsync("/api/v1/Countries", inactiveDto);
+        await _client.PostAsJsonAsync("/api/v1/Countries", inactiveDto, TestContext.Current.CancellationToken);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/Countries/active");
+        var response = await _client.GetAsync("/api/v1/Countries/active", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var result = await response.Content.ReadFromJsonAsync<IEnumerable<CountryDto>>();
+        var result = await response.Content.ReadFromJsonAsync<IEnumerable<CountryDto>>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.All(result, country => Assert.True(country.IsActive));
         Assert.DoesNotContain(result, country => country.Code == "XX");

@@ -34,12 +34,12 @@ public class ServicesControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/Services");
+        var response = await _client.GetAsync("/api/v1/Services", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<IEnumerable<ServiceDto>>();
+        var result = await response.Content.ReadFromJsonAsync<IEnumerable<ServiceDto>>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.NotEmpty(result);
 
@@ -51,7 +51,7 @@ public class ServicesControllerTests : IClassFixture<TestWebApplicationFactory>
     public async Task GetAllServices_WithoutAuthentication_ReturnsUnauthorized()
     {
         // Act
-        var response = await _client.GetAsync("/api/v1/Services");
+        var response = await _client.GetAsync("/api/v1/Services", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -155,8 +155,8 @@ public class ServicesControllerTests : IClassFixture<TestWebApplicationFactory>
     private async Task<string> LoginAndGetTokenAsync(string username)
     {
         var loginRequest = new LoginRequestDto { Username = username, Password = "Test@1234" };
-        var response = await _client.PostAsJsonAsync("/api/v1/Auth/login", loginRequest);
-        var result = await response.Content.ReadFromJsonAsync<LoginResponseDto>();
+        var response = await _client.PostAsJsonAsync("/api/v1/Auth/login", loginRequest, TestContext.Current.CancellationToken);
+        var result = await response.Content.ReadFromJsonAsync<LoginResponseDto>(TestContext.Current.CancellationToken);
         return result!.AccessToken;
     }
 }

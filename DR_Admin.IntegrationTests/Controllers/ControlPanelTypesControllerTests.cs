@@ -37,12 +37,12 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/ControlPanelTypes");
+        var response = await _client.GetAsync("/api/v1/ControlPanelTypes", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<IEnumerable<ControlPanelTypeDto>>();
+        var result = await response.Content.ReadFromJsonAsync<IEnumerable<ControlPanelTypeDto>>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.NotEmpty(result);
 
@@ -63,7 +63,7 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/ControlPanelTypes");
+        var response = await _client.GetAsync("/api/v1/ControlPanelTypes", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -79,7 +79,7 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/ControlPanelTypes");
+        var response = await _client.GetAsync("/api/v1/ControlPanelTypes", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -90,7 +90,7 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
     public async Task GetAllControlPanelTypes_WithoutAuthentication_ReturnsUnauthorized()
     {
         // Act
-        var response = await _client.GetAsync("/api/v1/ControlPanelTypes");
+        var response = await _client.GetAsync("/api/v1/ControlPanelTypes", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -105,7 +105,7 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/ControlPanelTypes");
+        var response = await _client.GetAsync("/api/v1/ControlPanelTypes", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -126,12 +126,12 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/ControlPanelTypes/active");
+        var response = await _client.GetAsync("/api/v1/ControlPanelTypes/active", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<IEnumerable<ControlPanelTypeDto>>();
+        var result = await response.Content.ReadFromJsonAsync<IEnumerable<ControlPanelTypeDto>>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.All(result, type => Assert.True(type.IsActive));
 
@@ -152,7 +152,7 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/ControlPanelTypes/active");
+        var response = await _client.GetAsync("/api/v1/ControlPanelTypes/active", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -163,7 +163,7 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
     public async Task GetActiveControlPanelTypes_WithoutAuthentication_ReturnsUnauthorized()
     {
         // Act
-        var response = await _client.GetAsync("/api/v1/ControlPanelTypes/active");
+        var response = await _client.GetAsync("/api/v1/ControlPanelTypes/active", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -184,7 +184,7 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync($"/api/v1/ControlPanelTypes/{controlPanelTypeId}");
+        var response = await _client.GetAsync($"/api/v1/ControlPanelTypes/{controlPanelTypeId}", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -211,7 +211,7 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/ControlPanelTypes/99999");
+        var response = await _client.GetAsync("/api/v1/ControlPanelTypes/99999", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -222,7 +222,7 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
     public async Task GetControlPanelTypeById_WithoutAuthentication_ReturnsUnauthorized()
     {
         // Act
-        var response = await _client.GetAsync("/api/v1/ControlPanelTypes/1");
+        var response = await _client.GetAsync("/api/v1/ControlPanelTypes/1", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -238,7 +238,7 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync($"/api/v1/ControlPanelTypes/{controlPanelTypeId}");
+        var response = await _client.GetAsync($"/api/v1/ControlPanelTypes/{controlPanelTypeId}", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -372,12 +372,12 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Get the original control panel type to compare timestamps
-        var getResponse = await _client.GetAsync($"/api/v1/ControlPanelTypes/{controlPanelTypeId}");
+        var getResponse = await _client.GetAsync($"/api/v1/ControlPanelTypes/{controlPanelTypeId}", TestContext.Current.CancellationToken);
         var originalType = await getResponse.Content.ReadFromJsonAsync<ControlPanelTypeDto>();
         Assert.NotNull(originalType);
 
         // Wait a bit to ensure UpdatedAt will be different
-        await Task.Delay(100);
+        await Task.Delay(100, TestContext.Current.CancellationToken);
 
         var updateDto = new UpdateControlPanelTypeDto
         {
@@ -493,7 +493,7 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.DeleteAsync($"/api/v1/ControlPanelTypes/{controlPanelTypeId}");
+        var response = await _client.DeleteAsync($"/api/v1/ControlPanelTypes/{controlPanelTypeId}", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
@@ -501,7 +501,7 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
         Console.WriteLine($"Successfully deleted control panel type ID: {controlPanelTypeId}");
 
         // Verify it's actually deleted
-        var getResponse = await _client.GetAsync($"/api/v1/ControlPanelTypes/{controlPanelTypeId}");
+        var getResponse = await _client.GetAsync($"/api/v1/ControlPanelTypes/{controlPanelTypeId}", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NotFound, getResponse.StatusCode);
     }
 
@@ -514,7 +514,7 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.DeleteAsync("/api/v1/ControlPanelTypes/99999");
+        var response = await _client.DeleteAsync("/api/v1/ControlPanelTypes/99999", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -530,7 +530,7 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.DeleteAsync($"/api/v1/ControlPanelTypes/{controlPanelTypeId}");
+        var response = await _client.DeleteAsync($"/api/v1/ControlPanelTypes/{controlPanelTypeId}", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -541,7 +541,7 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
     public async Task DeleteControlPanelType_WithoutAuthentication_ReturnsUnauthorized()
     {
         // Act
-        var response = await _client.DeleteAsync("/api/v1/ControlPanelTypes/1");
+        var response = await _client.DeleteAsync("/api/v1/ControlPanelTypes/1", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -583,7 +583,7 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
 
         // Read
         Console.WriteLine("\n2. READ:");
-        var readResponse = await _client.GetAsync($"/api/v1/ControlPanelTypes/{created.Id}");
+        var readResponse = await _client.GetAsync($"/api/v1/ControlPanelTypes/{created.Id}", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, readResponse.StatusCode);
 
         var read = await readResponse.Content.ReadFromJsonAsync<ControlPanelTypeDto>();
@@ -616,13 +616,13 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
 
         // Delete
         Console.WriteLine("\n4. DELETE:");
-        var deleteResponse = await _client.DeleteAsync($"/api/v1/ControlPanelTypes/{created.Id}");
+        var deleteResponse = await _client.DeleteAsync($"/api/v1/ControlPanelTypes/{created.Id}", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
         Console.WriteLine($"   Deleted ID: {created.Id}");
 
         // Verify deletion
         Console.WriteLine("\n5. VERIFY DELETION:");
-        var verifyResponse = await _client.GetAsync($"/api/v1/ControlPanelTypes/{created.Id}");
+        var verifyResponse = await _client.GetAsync($"/api/v1/ControlPanelTypes/{created.Id}", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NotFound, verifyResponse.StatusCode);
         Console.WriteLine("   Confirmed: Resource no longer exists");
 
@@ -659,11 +659,11 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
         await _client.PostAsJsonAsync("/api/v1/ControlPanelTypes", inactiveDto);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/ControlPanelTypes/active");
+        var response = await _client.GetAsync("/api/v1/ControlPanelTypes/active", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var result = await response.Content.ReadFromJsonAsync<IEnumerable<ControlPanelTypeDto>>();
+        var result = await response.Content.ReadFromJsonAsync<IEnumerable<ControlPanelTypeDto>>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.All(result, type => Assert.True(type.IsActive));
         Assert.DoesNotContain(result, type => type.Name == "discontinued");

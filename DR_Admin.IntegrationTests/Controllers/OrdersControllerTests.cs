@@ -38,12 +38,12 @@ public class OrdersControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/Orders");
+        var response = await _client.GetAsync("/api/v1/Orders", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<IEnumerable<OrderDto>>();
+        var result = await response.Content.ReadFromJsonAsync<IEnumerable<OrderDto>>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.NotEmpty(result);
 
@@ -59,7 +59,7 @@ public class OrdersControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/Orders");
+        var response = await _client.GetAsync("/api/v1/Orders", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -70,7 +70,7 @@ public class OrdersControllerTests : IClassFixture<TestWebApplicationFactory>
     public async Task GetAllOrders_WithoutAuthentication_ReturnsUnauthorized()
     {
         // Act
-        var response = await _client.GetAsync("/api/v1/Orders");
+        var response = await _client.GetAsync("/api/v1/Orders", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -91,12 +91,12 @@ public class OrdersControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync($"/api/v1/Orders/{orderId}");
+        var response = await _client.GetAsync($"/api/v1/Orders/{orderId}", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<OrderDto>();
+        var result = await response.Content.ReadFromJsonAsync<OrderDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.Equal(orderId, result.Id);
     }
@@ -110,7 +110,7 @@ public class OrdersControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/Orders/99999");
+        var response = await _client.GetAsync("/api/v1/Orders/99999", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -141,12 +141,12 @@ public class OrdersControllerTests : IClassFixture<TestWebApplicationFactory>
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/Orders", createDto);
+        var response = await _client.PostAsJsonAsync("/api/v1/Orders", createDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<OrderDto>();
+        var result = await response.Content.ReadFromJsonAsync<OrderDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.True(result.Id > 0);
         Assert.Equal(createDto.CustomerId, result.CustomerId);
@@ -175,7 +175,7 @@ public class OrdersControllerTests : IClassFixture<TestWebApplicationFactory>
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/Orders", createDto);
+        var response = await _client.PostAsJsonAsync("/api/v1/Orders", createDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -211,12 +211,12 @@ public class OrdersControllerTests : IClassFixture<TestWebApplicationFactory>
         };
 
         // Act
-        var response = await _client.PutAsJsonAsync($"/api/v1/Orders/{orderId}", updateDto);
+        var response = await _client.PutAsJsonAsync($"/api/v1/Orders/{orderId}", updateDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<OrderDto>();
+        var result = await response.Content.ReadFromJsonAsync<OrderDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.Equal(OrderStatus.Suspended, result.Status);
     }
@@ -242,7 +242,7 @@ public class OrdersControllerTests : IClassFixture<TestWebApplicationFactory>
         };
 
         // Act
-        var response = await _client.PutAsJsonAsync("/api/v1/Orders/99999", updateDto);
+        var response = await _client.PutAsJsonAsync("/api/v1/Orders/99999", updateDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -263,7 +263,7 @@ public class OrdersControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.DeleteAsync($"/api/v1/Orders/{orderId}");
+        var response = await _client.DeleteAsync($"/api/v1/Orders/{orderId}", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
@@ -280,7 +280,7 @@ public class OrdersControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.DeleteAsync("/api/v1/Orders/99999");
+        var response = await _client.DeleteAsync("/api/v1/Orders/99999", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -484,7 +484,7 @@ public class OrdersControllerTests : IClassFixture<TestWebApplicationFactory>
         };
 
         var response = await _client.PostAsJsonAsync("/api/v1/Auth/login", loginRequest);
-        var result = await response.Content.ReadFromJsonAsync<LoginResponseDto>();
+        var result = await response.Content.ReadFromJsonAsync<LoginResponseDto>(TestContext.Current.CancellationToken);
         return result!.AccessToken;
     }
 

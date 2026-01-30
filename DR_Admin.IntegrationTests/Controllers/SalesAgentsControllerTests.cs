@@ -34,7 +34,7 @@ public class SalesAgentsControllerTests : IClassFixture<TestWebApplicationFactor
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/SalesAgents");
+        var response = await _client.GetAsync("/api/v1/SalesAgents", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -46,7 +46,7 @@ public class SalesAgentsControllerTests : IClassFixture<TestWebApplicationFactor
     public async Task GetAllSalesAgents_WithoutAuthentication_ReturnsUnauthorized()
     {
         // Act
-        var response = await _client.GetAsync("/api/v1/SalesAgents");
+        var response = await _client.GetAsync("/api/v1/SalesAgents", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);

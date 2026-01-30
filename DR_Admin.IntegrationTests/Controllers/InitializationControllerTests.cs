@@ -41,7 +41,7 @@ public class InitializationControllerTests : IClassFixture<TestWebApplicationFac
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/Initialization/initialize", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/Initialization/initialize", request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -68,7 +68,7 @@ public class InitializationControllerTests : IClassFixture<TestWebApplicationFac
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/Initialization/initialize", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/Initialization/initialize", request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -91,7 +91,7 @@ public class InitializationControllerTests : IClassFixture<TestWebApplicationFac
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/Initialization/initialize", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/Initialization/initialize", request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -117,7 +117,7 @@ public class InitializationControllerTests : IClassFixture<TestWebApplicationFac
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/Initialization/initialize", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/Initialization/initialize", request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -198,7 +198,7 @@ public class InitializationControllerTests : IClassFixture<TestWebApplicationFac
         };
 
         // Act - No authorization header set
-        var response = await _client.PostAsJsonAsync("/api/v1/Initialization/initialize", request);
+        var response = await _client.PostAsJsonAsync("/api/v1/Initialization/initialize", request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);

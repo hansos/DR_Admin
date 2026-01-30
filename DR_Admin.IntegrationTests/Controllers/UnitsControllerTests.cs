@@ -34,12 +34,12 @@ public class UnitsControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/Units");
+        var response = await _client.GetAsync("/api/v1/Units", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<IEnumerable<UnitDto>>();
+        var result = await response.Content.ReadFromJsonAsync<IEnumerable<UnitDto>>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.NotEmpty(result);
 
@@ -51,7 +51,7 @@ public class UnitsControllerTests : IClassFixture<TestWebApplicationFactory>
     public async Task GetAllUnits_WithoutAuthentication_ReturnsUnauthorized()
     {
         // Act
-        var response = await _client.GetAsync("/api/v1/Units");
+        var response = await _client.GetAsync("/api/v1/Units", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);

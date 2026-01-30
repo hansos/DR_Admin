@@ -34,12 +34,12 @@ public class TldsControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/Tlds");
+        var response = await _client.GetAsync("/api/v1/Tlds", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<IEnumerable<TldDto>>();
+        var result = await response.Content.ReadFromJsonAsync<IEnumerable<TldDto>>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.NotEmpty(result);
 
@@ -51,7 +51,7 @@ public class TldsControllerTests : IClassFixture<TestWebApplicationFactory>
     public async Task GetAllTlds_WithoutAuthentication_ReturnsUnauthorized()
     {
         // Act
-        var response = await _client.GetAsync("/api/v1/Tlds");
+        var response = await _client.GetAsync("/api/v1/Tlds", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -132,8 +132,8 @@ public class TldsControllerTests : IClassFixture<TestWebApplicationFactory>
     private async Task<string> LoginAndGetTokenAsync(string username)
     {
         var loginRequest = new LoginRequestDto { Username = username, Password = "Test@1234" };
-        var response = await _client.PostAsJsonAsync("/api/v1/Auth/login", loginRequest);
-        var result = await response.Content.ReadFromJsonAsync<LoginResponseDto>();
+        var response = await _client.PostAsJsonAsync("/api/v1/Auth/login", loginRequest, TestContext.Current.CancellationToken);
+        var result = await response.Content.ReadFromJsonAsync<LoginResponseDto>(TestContext.Current.CancellationToken);
         return result!.AccessToken;
     }
 }

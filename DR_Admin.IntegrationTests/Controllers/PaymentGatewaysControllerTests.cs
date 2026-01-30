@@ -37,12 +37,12 @@ public class PaymentGatewaysControllerTests : IClassFixture<TestWebApplicationFa
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/PaymentGateways");
+        var response = await _client.GetAsync("/api/v1/PaymentGateways", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<IEnumerable<PaymentGatewayDto>>();
+        var result = await response.Content.ReadFromJsonAsync<IEnumerable<PaymentGatewayDto>>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.NotEmpty(result);
 
@@ -63,7 +63,7 @@ public class PaymentGatewaysControllerTests : IClassFixture<TestWebApplicationFa
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/PaymentGateways");
+        var response = await _client.GetAsync("/api/v1/PaymentGateways", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -78,7 +78,7 @@ public class PaymentGatewaysControllerTests : IClassFixture<TestWebApplicationFa
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/PaymentGateways");
+        var response = await _client.GetAsync("/api/v1/PaymentGateways", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -89,7 +89,7 @@ public class PaymentGatewaysControllerTests : IClassFixture<TestWebApplicationFa
     public async Task GetAllPaymentGateways_WithoutAuthentication_ReturnsUnauthorized()
     {
         // Act
-        var response = await _client.GetAsync("/api/v1/PaymentGateways");
+        var response = await _client.GetAsync("/api/v1/PaymentGateways", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -110,12 +110,12 @@ public class PaymentGatewaysControllerTests : IClassFixture<TestWebApplicationFa
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/PaymentGateways/active");
+        var response = await _client.GetAsync("/api/v1/PaymentGateways/active", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<IEnumerable<PaymentGatewayDto>>();
+        var result = await response.Content.ReadFromJsonAsync<IEnumerable<PaymentGatewayDto>>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.All(result, gateway => Assert.True(gateway.IsActive));
 
@@ -137,7 +137,7 @@ public class PaymentGatewaysControllerTests : IClassFixture<TestWebApplicationFa
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/PaymentGateways/default");
+        var response = await _client.GetAsync("/api/v1/PaymentGateways/default", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -158,7 +158,7 @@ public class PaymentGatewaysControllerTests : IClassFixture<TestWebApplicationFa
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/PaymentGateways/default");
+        var response = await _client.GetAsync("/api/v1/PaymentGateways/default", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -179,7 +179,7 @@ public class PaymentGatewaysControllerTests : IClassFixture<TestWebApplicationFa
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync($"/api/v1/PaymentGateways/{gatewayId}");
+        var response = await _client.GetAsync($"/api/v1/PaymentGateways/{gatewayId}", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -200,7 +200,7 @@ public class PaymentGatewaysControllerTests : IClassFixture<TestWebApplicationFa
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/PaymentGateways/99999");
+        var response = await _client.GetAsync("/api/v1/PaymentGateways/99999", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -221,7 +221,7 @@ public class PaymentGatewaysControllerTests : IClassFixture<TestWebApplicationFa
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/PaymentGateways/provider/stripe");
+        var response = await _client.GetAsync("/api/v1/PaymentGateways/provider/stripe", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -242,7 +242,7 @@ public class PaymentGatewaysControllerTests : IClassFixture<TestWebApplicationFa
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/PaymentGateways/provider/unknown");
+        var response = await _client.GetAsync("/api/v1/PaymentGateways/provider/unknown", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -389,7 +389,7 @@ public class PaymentGatewaysControllerTests : IClassFixture<TestWebApplicationFa
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.PostAsync($"/api/v1/PaymentGateways/{gatewayId}/set-default", null);
+        var response = await _client.PostAsync($"/api/v1/PaymentGateways/{gatewayId}/set-default", null, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -406,7 +406,7 @@ public class PaymentGatewaysControllerTests : IClassFixture<TestWebApplicationFa
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.PostAsync("/api/v1/PaymentGateways/99999/set-default", null);
+        var response = await _client.PostAsync("/api/v1/PaymentGateways/99999/set-default", null, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -450,7 +450,7 @@ public class PaymentGatewaysControllerTests : IClassFixture<TestWebApplicationFa
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.DeleteAsync($"/api/v1/PaymentGateways/{gatewayId}");
+        var response = await _client.DeleteAsync($"/api/v1/PaymentGateways/{gatewayId}", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -467,7 +467,7 @@ public class PaymentGatewaysControllerTests : IClassFixture<TestWebApplicationFa
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.DeleteAsync("/api/v1/PaymentGateways/99999");
+        var response = await _client.DeleteAsync("/api/v1/PaymentGateways/99999", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -483,7 +483,7 @@ public class PaymentGatewaysControllerTests : IClassFixture<TestWebApplicationFa
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.DeleteAsync($"/api/v1/PaymentGateways/{gatewayId}");
+        var response = await _client.DeleteAsync($"/api/v1/PaymentGateways/{gatewayId}", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);

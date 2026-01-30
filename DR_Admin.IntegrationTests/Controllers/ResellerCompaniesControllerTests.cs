@@ -34,7 +34,7 @@ public class ResellerCompaniesControllerTests : IClassFixture<TestWebApplication
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/ResellerCompanies");
+        var response = await _client.GetAsync("/api/v1/ResellerCompanies", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -46,7 +46,7 @@ public class ResellerCompaniesControllerTests : IClassFixture<TestWebApplication
     public async Task GetAllResellerCompanies_WithoutAuthentication_ReturnsUnauthorized()
     {
         // Act
-        var response = await _client.GetAsync("/api/v1/ResellerCompanies");
+        var response = await _client.GetAsync("/api/v1/ResellerCompanies", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -130,8 +130,8 @@ public class ResellerCompaniesControllerTests : IClassFixture<TestWebApplication
     private async Task<string> LoginAndGetTokenAsync(string username)
     {
         var loginRequest = new LoginRequestDto { Username = username, Password = "Test@1234" };
-        var response = await _client.PostAsJsonAsync("/api/v1/Auth/login", loginRequest);
-        var result = await response.Content.ReadFromJsonAsync<LoginResponseDto>();
+        var response = await _client.PostAsJsonAsync("/api/v1/Auth/login", loginRequest, TestContext.Current.CancellationToken);
+        var result = await response.Content.ReadFromJsonAsync<LoginResponseDto>(TestContext.Current.CancellationToken);
         return result!.AccessToken;
     }
 }

@@ -47,7 +47,7 @@ public class MyAccountControllerTests : IClassFixture<TestWebApplicationFactory>
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<RegisterAccountResponseDto>();
+        var result = await response.Content.ReadFromJsonAsync<RegisterAccountResponseDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.True(result.UserId > 0);
         Assert.Equal(request.Email, result.Email);
@@ -147,7 +147,7 @@ public class MyAccountControllerTests : IClassFixture<TestWebApplicationFactory>
         };
 
         var registerResponse = await _client.PostAsJsonAsync("/api/v1/MyAccount/register", registerRequest);
-        var registerResult = await registerResponse.Content.ReadFromJsonAsync<RegisterAccountResponseDto>();
+        var registerResult = await registerResponse.Content.ReadFromJsonAsync<RegisterAccountResponseDto>(TestContext.Current.CancellationToken);
 
         Assert.NotNull(registerResult);
         Assert.NotNull(registerResult.EmailConfirmationToken);
@@ -202,12 +202,12 @@ public class MyAccountControllerTests : IClassFixture<TestWebApplicationFactory>
             new AuthenticationHeaderValue("Bearer", TestTokenStorage.AccessToken);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/MyAccount/me");
+        var response = await _client.GetAsync("/api/v1/MyAccount/me", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<UserAccountDto>();
+        var result = await response.Content.ReadFromJsonAsync<UserAccountDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.True(result.Id > 0);
         Assert.NotEmpty(result.Email);
@@ -225,7 +225,7 @@ public class MyAccountControllerTests : IClassFixture<TestWebApplicationFactory>
     public async Task GetMyAccount_Unauthenticated_ReturnsUnauthorized()
     {
         // Act
-        var response = await _client.GetAsync("/api/v1/MyAccount/me");
+        var response = await _client.GetAsync("/api/v1/MyAccount/me", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -362,7 +362,7 @@ public class MyAccountControllerTests : IClassFixture<TestWebApplicationFactory>
             throw new Exception($"Registration failed: {registerResponse.StatusCode}");
         }
 
-        var registerResult = await registerResponse.Content.ReadFromJsonAsync<RegisterAccountResponseDto>();
+        var registerResult = await registerResponse.Content.ReadFromJsonAsync<RegisterAccountResponseDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(registerResult);
         Assert.NotNull(registerResult.EmailConfirmationToken);
 
@@ -397,7 +397,7 @@ public class MyAccountControllerTests : IClassFixture<TestWebApplicationFactory>
             throw new Exception($"Login failed: {loginResponse.StatusCode}");
         }
 
-        var loginResult = await loginResponse.Content.ReadFromJsonAsync<LoginResponseDto>();
+        var loginResult = await loginResponse.Content.ReadFromJsonAsync<LoginResponseDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(loginResult);
         Assert.NotEmpty(loginResult.AccessToken);
         Assert.NotEmpty(loginResult.RefreshToken);

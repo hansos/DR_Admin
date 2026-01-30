@@ -37,12 +37,12 @@ public class DnsZonePackagesControllerTests : IClassFixture<TestWebApplicationFa
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/DnsZonePackages");
+        var response = await _client.GetAsync("/api/v1/DnsZonePackages", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<IEnumerable<DnsZonePackageDto>>();
+        var result = await response.Content.ReadFromJsonAsync<IEnumerable<DnsZonePackageDto>>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.NotEmpty(result);
 
@@ -63,7 +63,7 @@ public class DnsZonePackagesControllerTests : IClassFixture<TestWebApplicationFa
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/DnsZonePackages");
+        var response = await _client.GetAsync("/api/v1/DnsZonePackages", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -79,7 +79,7 @@ public class DnsZonePackagesControllerTests : IClassFixture<TestWebApplicationFa
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/DnsZonePackages");
+        var response = await _client.GetAsync("/api/v1/DnsZonePackages", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -90,7 +90,7 @@ public class DnsZonePackagesControllerTests : IClassFixture<TestWebApplicationFa
     public async Task GetAllDnsZonePackages_WithoutAuthentication_ReturnsUnauthorized()
     {
         // Act
-        var response = await _client.GetAsync("/api/v1/DnsZonePackages");
+        var response = await _client.GetAsync("/api/v1/DnsZonePackages", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -111,12 +111,12 @@ public class DnsZonePackagesControllerTests : IClassFixture<TestWebApplicationFa
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/DnsZonePackages/with-records");
+        var response = await _client.GetAsync("/api/v1/DnsZonePackages/with-records", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<IEnumerable<DnsZonePackageDto>>();
+        var result = await response.Content.ReadFromJsonAsync<IEnumerable<DnsZonePackageDto>>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.NotEmpty(result);
         
@@ -145,12 +145,12 @@ public class DnsZonePackagesControllerTests : IClassFixture<TestWebApplicationFa
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/DnsZonePackages/active");
+        var response = await _client.GetAsync("/api/v1/DnsZonePackages/active", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<IEnumerable<DnsZonePackageDto>>();
+        var result = await response.Content.ReadFromJsonAsync<IEnumerable<DnsZonePackageDto>>(TestContext.Current.CancellationToken );
         Assert.NotNull(result);
         Assert.All(result, package => Assert.True(package.IsActive));
 
@@ -172,7 +172,7 @@ public class DnsZonePackagesControllerTests : IClassFixture<TestWebApplicationFa
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/DnsZonePackages/default");
+        var response = await _client.GetAsync("/api/v1/DnsZonePackages/default", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -199,7 +199,7 @@ public class DnsZonePackagesControllerTests : IClassFixture<TestWebApplicationFa
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync($"/api/v1/DnsZonePackages/{packageId}");
+        var response = await _client.GetAsync($"/api/v1/DnsZonePackages/{packageId}", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -220,7 +220,7 @@ public class DnsZonePackagesControllerTests : IClassFixture<TestWebApplicationFa
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/DnsZonePackages/99999");
+        var response = await _client.GetAsync("/api/v1/DnsZonePackages/99999", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -339,7 +339,7 @@ public class DnsZonePackagesControllerTests : IClassFixture<TestWebApplicationFa
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.DeleteAsync($"/api/v1/DnsZonePackages/{packageId}");
+        var response = await _client.DeleteAsync($"/api/v1/DnsZonePackages/{packageId}", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
@@ -362,7 +362,7 @@ public class DnsZonePackagesControllerTests : IClassFixture<TestWebApplicationFa
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.PostAsync($"/api/v1/DnsZonePackages/{packageId}/apply-to-domain/{domainId}", null);
+        var response = await _client.PostAsync($"/api/v1/DnsZonePackages/{packageId}/apply-to-domain/{domainId}", null, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);

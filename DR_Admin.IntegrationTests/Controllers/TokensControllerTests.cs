@@ -33,7 +33,7 @@ public class TokensControllerTests : IClassFixture<TestWebApplicationFactory>
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/Tokens");
+        var response = await _client.GetAsync("/api/v1/Tokens", TestContext.Current.CancellationToken);
 
         // Assert - tokens endpoint typically returns OK for admin
         // Note: The actual behavior depends on the controller implementation
@@ -46,7 +46,7 @@ public class TokensControllerTests : IClassFixture<TestWebApplicationFactory>
     public async Task GetAllTokens_WithoutAuthentication_ReturnsUnauthorized()
     {
         // Act
-        var response = await _client.GetAsync("/api/v1/Tokens");
+        var response = await _client.GetAsync("/api/v1/Tokens", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -109,8 +109,8 @@ public class TokensControllerTests : IClassFixture<TestWebApplicationFactory>
     private async Task<string> LoginAndGetTokenAsync(string username)
     {
         var loginRequest = new LoginRequestDto { Username = username, Password = "Test@1234" };
-        var response = await _client.PostAsJsonAsync("/api/v1/Auth/login", loginRequest);
-        var result = await response.Content.ReadFromJsonAsync<LoginResponseDto>();
+        var response = await _client.PostAsJsonAsync("/api/v1/Auth/login", loginRequest, TestContext.Current.CancellationToken);
+        var result = await response.Content.ReadFromJsonAsync<LoginResponseDto>(TestContext.Current.CancellationToken);
         return result!.AccessToken;
     }
 }

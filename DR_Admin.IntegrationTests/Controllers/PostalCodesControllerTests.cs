@@ -34,12 +34,12 @@ public class PostalCodesControllerTests : IClassFixture<TestWebApplicationFactor
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/PostalCodes");
+        var response = await _client.GetAsync("/api/v1/PostalCodes", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var result = await response.Content.ReadFromJsonAsync<IEnumerable<PostalCodeDto>>();
+        var result = await response.Content.ReadFromJsonAsync<IEnumerable<PostalCodeDto>>(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
         Assert.NotEmpty(result);
 
@@ -55,7 +55,7 @@ public class PostalCodesControllerTests : IClassFixture<TestWebApplicationFactor
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync("/api/v1/PostalCodes");
+        var response = await _client.GetAsync("/api/v1/PostalCodes", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -66,7 +66,7 @@ public class PostalCodesControllerTests : IClassFixture<TestWebApplicationFactor
     public async Task GetAllPostalCodes_WithoutAuthentication_ReturnsUnauthorized()
     {
         // Act
-        var response = await _client.GetAsync("/api/v1/PostalCodes");
+        var response = await _client.GetAsync("/api/v1/PostalCodes", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -82,7 +82,7 @@ public class PostalCodesControllerTests : IClassFixture<TestWebApplicationFactor
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Act
-        var response = await _client.GetAsync($"/api/v1/PostalCodes/{postalCodeId}");
+        var response = await _client.GetAsync($"/api/v1/PostalCodes/{postalCodeId}", TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -104,7 +104,7 @@ public class PostalCodesControllerTests : IClassFixture<TestWebApplicationFactor
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/PostalCodes", createDto);
+        var response = await _client.PostAsJsonAsync("/api/v1/PostalCodes", createDto, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
@@ -212,8 +212,8 @@ public class PostalCodesControllerTests : IClassFixture<TestWebApplicationFactor
     private async Task<string> LoginAndGetTokenAsync(string username)
     {
         var loginRequest = new LoginRequestDto { Username = username, Password = "Test@1234" };
-        var response = await _client.PostAsJsonAsync("/api/v1/Auth/login", loginRequest);
-        var result = await response.Content.ReadFromJsonAsync<LoginResponseDto>();
+        var response = await _client.PostAsJsonAsync("/api/v1/Auth/login", loginRequest, TestContext.Current.CancellationToken);
+        var result = await response.Content.ReadFromJsonAsync<LoginResponseDto>(TestContext.Current.CancellationToken);
         return result!.AccessToken;
     }
 }
