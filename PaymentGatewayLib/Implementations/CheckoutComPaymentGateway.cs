@@ -4,13 +4,15 @@ using System.Linq;
 using System.Threading.Tasks;
 using PaymentGatewayLib.Interfaces;
 using PaymentGatewayLib.Models;
+using Serilog;
 
 namespace PaymentGatewayLib.Implementations
 {
     public class CheckoutComPaymentGateway : BasePaymentGateway, IPaymentGateway
     {
+        private readonly ILogger _logger;
         private readonly string _secretKey;
-        public CheckoutComPaymentGateway(string secretKey, bool useSandbox = true) { _secretKey = secretKey ?? throw new ArgumentNullException(nameof(secretKey)); }
+        public CheckoutComPaymentGateway(string secretKey, bool useSandbox = true) { _logger = Log.ForContext<CheckoutComPaymentGateway>(); _secretKey = secretKey ?? throw new ArgumentNullException(nameof(secretKey)); }
         public Task<PaymentResult> ProcessPaymentAsync(PaymentRequest request) { try { ValidatePaymentRequest(request); return Task.FromResult(new PaymentResult { Success = true, TransactionId = Guid.NewGuid().ToString(), Status = "Authorized", Amount = request.Amount, Currency = request.Currency, ProcessedAt = DateTime.UtcNow }); } catch (Exception ex) { return Task.FromResult(CreateErrorResult($"Error: {ex.Message}", "exception")); } }
         public Task<RefundResult> RefundPaymentAsync(RefundRequest request) { try { ValidateRefundRequest(request); return Task.FromResult(new RefundResult { Success = true, RefundId = Guid.NewGuid().ToString(), OriginalTransactionId = request.TransactionId, Status = "refunded", ProcessedAt = DateTime.UtcNow }); } catch (Exception ex) { return Task.FromResult(new RefundResult { Success = false, ErrorMessage = ex.Message, ProcessedAt = DateTime.UtcNow }); } }
         public Task<TransactionStatusResult> GetTransactionStatusAsync(string transactionId) => Task.FromResult(new TransactionStatusResult { TransactionId = transactionId, Status = "unknown" });

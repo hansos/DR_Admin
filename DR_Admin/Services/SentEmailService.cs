@@ -298,7 +298,10 @@ public class SentEmailService : ISentEmailService
                 return null;
             }
 
-            email.Status = dto.Status;
+            if (dto.Status != null)
+            {
+                email.Status = dto.Status;
+            }
             email.ErrorMessage = dto.ErrorMessage ?? email.ErrorMessage;
             email.RetryCount = dto.RetryCount;
 

@@ -1,5 +1,6 @@
 using PaymentGatewayLib.Interfaces;
 using PaymentGatewayLib.Models;
+using Serilog;
 
 namespace PaymentGatewayLib.Implementations
 {
@@ -8,6 +9,7 @@ namespace PaymentGatewayLib.Implementations
     /// </summary>
     public class BraintreePaymentGateway : BasePaymentGateway, IPaymentGateway
     {
+        private readonly ILogger _logger;
         private readonly string _merchantId;
         private readonly string _publicKey;
         private readonly string _privateKey;
@@ -15,6 +17,7 @@ namespace PaymentGatewayLib.Implementations
 
         public BraintreePaymentGateway(string merchantId, string publicKey, string privateKey, bool useSandbox = true)
         {
+            _logger = Log.ForContext<BraintreePaymentGateway>();
             _merchantId = merchantId ?? throw new ArgumentNullException(nameof(merchantId));
             _publicKey = publicKey ?? throw new ArgumentNullException(nameof(publicKey));
             _privateKey = privateKey ?? throw new ArgumentNullException(nameof(privateKey));

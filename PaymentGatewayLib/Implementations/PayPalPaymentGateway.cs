@@ -1,6 +1,7 @@
 using PaymentGatewayLib.Infrastructure.Settings;
 using PaymentGatewayLib.Interfaces;
 using PaymentGatewayLib.Models;
+using Serilog;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -12,6 +13,7 @@ namespace PaymentGatewayLib.Implementations
     /// </summary>
     public class PayPalPaymentGateway : BasePaymentGateway, IPaymentGateway
     {
+        private readonly ILogger _logger;
         private readonly string _clientId;
         private readonly string _clientSecret;
         private readonly string _apiBaseUrl;
@@ -21,6 +23,7 @@ namespace PaymentGatewayLib.Implementations
 
         public PayPalPaymentGateway(string clientId, string clientSecret, bool useSandbox = true)
         {
+            _logger = Log.ForContext<PayPalPaymentGateway>();
             _clientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
             _clientSecret = clientSecret ?? throw new ArgumentNullException(nameof(clientSecret));
             _apiBaseUrl = useSandbox 

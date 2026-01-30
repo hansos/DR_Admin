@@ -9,6 +9,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using PaymentGatewayLib.Interfaces;
 using PaymentGatewayLib.Models;
+using Serilog;
 
 namespace PaymentGatewayLib.Implementations
 {
@@ -26,6 +27,7 @@ namespace PaymentGatewayLib.Implementations
     /// </remarks>
     public class IPayAfricaPaymentGateway : BasePaymentGateway, IPaymentGateway
     {
+        private readonly ILogger _logger;
         private readonly string _vendorId;
         private readonly string _hashKey;
         private readonly bool _useTestMode;
@@ -101,8 +103,9 @@ namespace PaymentGatewayLib.Implementations
             bool useTestMode,
             string apiBaseUrl,
             string statusEndpoint,
-            HttpClient httpClient = null)
+            HttpClient? httpClient = null)
         {
+            _logger = Log.ForContext<IPayAfricaPaymentGateway>();
             _vendorId = vendorId ?? throw new ArgumentNullException(nameof(vendorId));
             _hashKey = hashKey ?? throw new ArgumentNullException(nameof(hashKey));
             _useTestMode = useTestMode;
@@ -707,7 +710,7 @@ namespace PaymentGatewayLib.Implementations
         /// <param name="httpClient">Optional HttpClient instance</param>
         /// <returns>Configured IPayAfricaPaymentGateway instance</returns>
         /// <exception cref="ArgumentNullException">Thrown when settings is null</exception>
-        public static IPayAfricaPaymentGateway FromSettings(Infrastructure.Settings.IPayAfricaSettings settings, HttpClient httpClient = null)
+        public static IPayAfricaPaymentGateway FromSettings(Infrastructure.Settings.IPayAfricaSettings settings, HttpClient? httpClient = null)
         {
             if (settings == null)
             {

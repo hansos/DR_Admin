@@ -1,11 +1,13 @@
 using PaymentGatewayLib.Interfaces;
 using PaymentGatewayLib.Models;
+using Serilog;
 
 namespace PaymentGatewayLib.Implementations
 {
     public class IntaSendPaymentGateway : BasePaymentGateway, IPaymentGateway
     {
-        public IntaSendPaymentGateway(string publishableKey, string secretKey, bool useTestMode) { }
+        private readonly ILogger _logger;
+        public IntaSendPaymentGateway(string publishableKey, string secretKey, bool useTestMode) { _logger = Log.ForContext<IntaSendPaymentGateway>(); }
 
         public Task<PaymentResult> ProcessPaymentAsync(PaymentRequest request)
             => Task.FromResult(new PaymentResult { Success = false, ErrorMessage = "IntaSend gateway not implemented in this build", ProcessedAt = DateTime.UtcNow });

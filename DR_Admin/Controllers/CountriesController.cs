@@ -121,7 +121,6 @@ public class CountriesController : ControllerBase
     /// <summary>
     /// Upload a CSV file with countries to merge into the Country table
     /// </summary>
-    /// <param name="file">CSV file (multipart/form-data)</param>
     [HttpPost("upload-csv")]
     [Consumes("multipart/form-data")]
     [Authorize(Policy = "Country.Write")]

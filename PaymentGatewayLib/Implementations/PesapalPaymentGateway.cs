@@ -4,14 +4,16 @@ using System.Linq;
 using System.Threading.Tasks;
 using PaymentGatewayLib.Interfaces;
 using PaymentGatewayLib.Models;
+using Serilog;
 
 namespace PaymentGatewayLib.Implementations
 {
     public class PesapalPaymentGateway : BasePaymentGateway, IPaymentGateway
     {
+        private readonly ILogger _logger;
         private readonly string _consumerKey;
         private readonly string _consumerSecret;
-        public PesapalPaymentGateway(string consumerKey, string consumerSecret, bool useSandbox = true) { _consumerKey = consumerKey ?? throw new ArgumentNullException(nameof(consumerKey)); _consumerSecret = consumerSecret ?? throw new ArgumentNullException(nameof(consumerSecret)); }
+        public PesapalPaymentGateway(string consumerKey, string consumerSecret, bool useSandbox = true) { _logger = Log.ForContext<PesapalPaymentGateway>(); _consumerKey = consumerKey ?? throw new ArgumentNullException(nameof(consumerKey)); _consumerSecret = consumerSecret ?? throw new ArgumentNullException(nameof(consumerSecret)); }
         public Task<PaymentResult> ProcessPaymentAsync(PaymentRequest request) { try { ValidatePaymentRequest(request); return Task.FromResult(new PaymentResult { Success = true, TransactionId = Guid.NewGuid().ToString(), Status = "COMPLETED", Amount = request.Amount, Currency = request.Currency, ProcessedAt = DateTime.UtcNow }); } catch (Exception ex) { return Task.FromResult(CreateErrorResult($"Pesapal Error: {ex.Message}", "exception")); } }
         public Task<RefundResult> RefundPaymentAsync(RefundRequest request) { try { ValidateRefundRequest(request); return Task.FromResult(new RefundResult { Success = true, RefundId = Guid.NewGuid().ToString(), OriginalTransactionId = request.TransactionId, Status = "refunded", ProcessedAt = DateTime.UtcNow }); } catch (Exception ex) { return Task.FromResult(new RefundResult { Success = false, ErrorMessage = ex.Message, ProcessedAt = DateTime.UtcNow }); } }
         public Task<TransactionStatusResult> GetTransactionStatusAsync(string transactionId) => Task.FromResult(new TransactionStatusResult { TransactionId = transactionId, Status = "unknown" });

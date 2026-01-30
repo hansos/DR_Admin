@@ -4,15 +4,17 @@ using System.Linq;
 using System.Threading.Tasks;
 using PaymentGatewayLib.Interfaces;
 using PaymentGatewayLib.Models;
+using Serilog;
 
 namespace PaymentGatewayLib.Implementations
 {
     public class AfricasTalkingPaymentGateway : BasePaymentGateway, IPaymentGateway
     {
+        private readonly ILogger _logger;
         private readonly string _username;
         private readonly string _apiKey;
         private readonly string _productName;
-        public AfricasTalkingPaymentGateway(string username, string apiKey, string productName, bool useSandbox = true) { _username = username ?? throw new ArgumentNullException(nameof(username)); _apiKey = apiKey ?? throw new ArgumentNullException(nameof(apiKey)); _productName = productName ?? throw new ArgumentNullException(nameof(productName)); }
+        public AfricasTalkingPaymentGateway(string username, string apiKey, string productName, bool useSandbox = true) { _logger = Log.ForContext<AfricasTalkingPaymentGateway>(); _username = username ?? throw new ArgumentNullException(nameof(username)); _apiKey = apiKey ?? throw new ArgumentNullException(nameof(apiKey)); _productName = productName ?? throw new ArgumentNullException(nameof(productName)); }
         public Task<PaymentResult> ProcessPaymentAsync(PaymentRequest request) { try { ValidatePaymentRequest(request); return Task.FromResult(new PaymentResult { Success = true, TransactionId = Guid.NewGuid().ToString(), Status = "Success", Amount = request.Amount, Currency = request.Currency, ProcessedAt = DateTime.UtcNow }); } catch (Exception ex) { return Task.FromResult(CreateErrorResult($"Africa's Talking Error: {ex.Message}", "exception")); } }
         public Task<RefundResult> RefundPaymentAsync(RefundRequest request) { try { ValidateRefundRequest(request); return Task.FromResult(new RefundResult { Success = true, RefundId = Guid.NewGuid().ToString(), OriginalTransactionId = request.TransactionId, Status = "refunded", ProcessedAt = DateTime.UtcNow }); } catch (Exception ex) { return Task.FromResult(new RefundResult { Success = false, ErrorMessage = ex.Message, ProcessedAt = DateTime.UtcNow }); } }
         public Task<TransactionStatusResult> GetTransactionStatusAsync(string transactionId) => Task.FromResult(new TransactionStatusResult { TransactionId = transactionId, Status = "unknown" });

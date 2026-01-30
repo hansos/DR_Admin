@@ -1,5 +1,6 @@
 using PaymentGatewayLib.Interfaces;
 using PaymentGatewayLib.Models;
+using Serilog;
 
 namespace PaymentGatewayLib.Implementations
 {
@@ -8,12 +9,14 @@ namespace PaymentGatewayLib.Implementations
     /// </summary>
     public class AuthorizeNetPaymentGateway : BasePaymentGateway, IPaymentGateway
     {
+        private readonly ILogger _logger;
         private readonly string _apiLoginId;
         private readonly string _transactionKey;
         private readonly bool _useSandbox;
 
         public AuthorizeNetPaymentGateway(string apiLoginId, string transactionKey, bool useSandbox = true)
         {
+            _logger = Log.ForContext<AuthorizeNetPaymentGateway>();
             _apiLoginId = apiLoginId ?? throw new ArgumentNullException(nameof(apiLoginId));
             _transactionKey = transactionKey ?? throw new ArgumentNullException(nameof(transactionKey));
             _useSandbox = useSandbox;

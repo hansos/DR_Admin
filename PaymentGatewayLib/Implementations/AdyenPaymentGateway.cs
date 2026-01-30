@@ -1,5 +1,6 @@
 using PaymentGatewayLib.Interfaces;
 using PaymentGatewayLib.Models;
+using Serilog;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -11,6 +12,7 @@ namespace PaymentGatewayLib.Implementations
     /// </summary>
     public class AdyenPaymentGateway : BasePaymentGateway, IPaymentGateway
     {
+        private readonly ILogger _logger;
         private readonly string _apiKey;
         private readonly string _merchantAccount;
         private readonly string _apiBaseUrl;
@@ -18,6 +20,7 @@ namespace PaymentGatewayLib.Implementations
 
         public AdyenPaymentGateway(string apiKey, string merchantAccount, bool useTestMode = true)
         {
+            _logger = Log.ForContext<AdyenPaymentGateway>();
             _apiKey = apiKey ?? throw new ArgumentNullException(nameof(apiKey));
             _merchantAccount = merchantAccount ?? throw new ArgumentNullException(nameof(merchantAccount));
             _apiBaseUrl = useTestMode 

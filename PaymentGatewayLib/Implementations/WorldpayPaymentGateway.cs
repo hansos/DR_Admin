@@ -1,5 +1,6 @@
 using PaymentGatewayLib.Interfaces;
 using PaymentGatewayLib.Models;
+using Serilog;
 
 namespace PaymentGatewayLib.Implementations
 {
@@ -8,11 +9,13 @@ namespace PaymentGatewayLib.Implementations
     /// </summary>
     public class WorldpayPaymentGateway : BasePaymentGateway, IPaymentGateway
     {
+        private readonly ILogger _logger;
         private readonly string _serviceKey;
         private readonly bool _useTestMode;
 
         public WorldpayPaymentGateway(string serviceKey, bool useTestMode = true)
         {
+            _logger = Log.ForContext<WorldpayPaymentGateway>();
             _serviceKey = serviceKey ?? throw new ArgumentNullException(nameof(serviceKey));
             _useTestMode = useTestMode;
         }

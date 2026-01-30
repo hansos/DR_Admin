@@ -4,13 +4,15 @@ using System.Linq;
 using System.Threading.Tasks;
 using PaymentGatewayLib.Interfaces;
 using PaymentGatewayLib.Models;
+using Serilog;
 
 namespace PaymentGatewayLib.Implementations
 {
     public class OpenNodePaymentGateway : BasePaymentGateway, IPaymentGateway
     {
+        private readonly ILogger _logger;
         private readonly string _apiKey;
-        public OpenNodePaymentGateway(string apiKey, bool useTestMode = true) { _apiKey = apiKey ?? throw new ArgumentNullException(nameof(apiKey)); }
+        public OpenNodePaymentGateway(string apiKey, bool useTestMode = true) { _logger = Log.ForContext<OpenNodePaymentGateway>(); _apiKey = apiKey ?? throw new ArgumentNullException(nameof(apiKey)); }
         public Task<PaymentResult> ProcessPaymentAsync(PaymentRequest request) { try { ValidatePaymentRequest(request); return Task.FromResult(new PaymentResult { Success = true, TransactionId = Guid.NewGuid().ToString(), Status = "unpaid", Amount = request.Amount, Currency = request.Currency, ProcessedAt = DateTime.UtcNow }); } catch (Exception ex) { return Task.FromResult(CreateErrorResult($"Error: {ex.Message}", "exception")); } }
         public Task<RefundResult> RefundPaymentAsync(RefundRequest request) { try { ValidateRefundRequest(request); return Task.FromResult(new RefundResult { Success = true, RefundId = Guid.NewGuid().ToString(), OriginalTransactionId = request.TransactionId, Status = "refunded", ProcessedAt = DateTime.UtcNow }); } catch (Exception ex) { return Task.FromResult(new RefundResult { Success = false, ErrorMessage = ex.Message, ProcessedAt = DateTime.UtcNow }); } }
         public Task<TransactionStatusResult> GetTransactionStatusAsync(string transactionId) => Task.FromResult(new TransactionStatusResult { TransactionId = transactionId, Status = "unknown" });

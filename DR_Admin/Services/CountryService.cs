@@ -88,9 +88,9 @@ public class CountryService : ICountryService
             var merged = 0;
             var processedInBatch = 0;
 
-            while (!reader.EndOfStream)
+            string? line;
+            while ((line = await reader.ReadLineAsync()) != null)
             {
-                var line = await reader.ReadLineAsync();
                 if (string.IsNullOrWhiteSpace(line)) continue;
 
                 var parts = ParseCsvLine(line);
@@ -204,9 +204,9 @@ public class CountryService : ICountryService
             var merged = 0;
             var processedInBatch = 0;
 
-            while (!reader.EndOfStream)
+            string? line;
+            while ((line = await reader.ReadLineAsync()) != null)
             {
-                var line = await reader.ReadLineAsync();
                 if (string.IsNullOrWhiteSpace(line)) continue;
 
                 var parts = ParseCsvLine(line);

@@ -4,14 +4,16 @@ using System.Linq;
 using System.Threading.Tasks;
 using PaymentGatewayLib.Interfaces;
 using PaymentGatewayLib.Models;
+using Serilog;
 
 namespace PaymentGatewayLib.Implementations
 {
     public class VippsPaymentGateway : BasePaymentGateway, IPaymentGateway
     {
+        private readonly ILogger _logger;
         private readonly string _clientId;
         private readonly string _subscriptionKey;
-        public VippsPaymentGateway(string clientId, string subscriptionKey, bool useTestMode = true) { _clientId = clientId ?? throw new ArgumentNullException(nameof(clientId)); _subscriptionKey = subscriptionKey ?? throw new ArgumentNullException(nameof(subscriptionKey)); }
+        public VippsPaymentGateway(string clientId, string subscriptionKey, bool useTestMode = true) { _logger = Log.ForContext<VippsPaymentGateway>(); _clientId = clientId ?? throw new ArgumentNullException(nameof(clientId)); _subscriptionKey = subscriptionKey ?? throw new ArgumentNullException(nameof(subscriptionKey)); }
         public Task<PaymentResult> ProcessPaymentAsync(PaymentRequest request) { try { ValidatePaymentRequest(request); return Task.FromResult(new PaymentResult { Success = true, TransactionId = Guid.NewGuid().ToString(), Status = "SALE", Amount = request.Amount, Currency = request.Currency, ProcessedAt = DateTime.UtcNow }); } catch (Exception ex) { return Task.FromResult(CreateErrorResult($"Error: {ex.Message}", "exception")); } }
         public Task<RefundResult> RefundPaymentAsync(RefundRequest request) { try { ValidateRefundRequest(request); return Task.FromResult(new RefundResult { Success = true, RefundId = Guid.NewGuid().ToString(), OriginalTransactionId = request.TransactionId, Status = "refunded", ProcessedAt = DateTime.UtcNow }); } catch (Exception ex) { return Task.FromResult(new RefundResult { Success = false, ErrorMessage = ex.Message, ProcessedAt = DateTime.UtcNow }); } }
         public Task<TransactionStatusResult> GetTransactionStatusAsync(string transactionId) => Task.FromResult(new TransactionStatusResult { TransactionId = transactionId, Status = "unknown" });

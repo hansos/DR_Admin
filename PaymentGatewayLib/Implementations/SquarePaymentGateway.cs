@@ -1,6 +1,7 @@
 using PaymentGatewayLib.Infrastructure.Settings;
 using PaymentGatewayLib.Interfaces;
 using PaymentGatewayLib.Models;
+using Serilog;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -12,6 +13,7 @@ namespace PaymentGatewayLib.Implementations
     /// </summary>
     public class SquarePaymentGateway : BasePaymentGateway, IPaymentGateway
     {
+        private readonly ILogger _logger;
         private readonly string _accessToken;
         private readonly string _locationId;
         private readonly string _apiBaseUrl;
@@ -19,6 +21,7 @@ namespace PaymentGatewayLib.Implementations
 
         public SquarePaymentGateway(string accessToken, string locationId, bool useSandbox = true)
         {
+            _logger = Log.ForContext<SquarePaymentGateway>();
             _accessToken = accessToken ?? throw new ArgumentNullException(nameof(accessToken));
             _locationId = locationId ?? throw new ArgumentNullException(nameof(locationId));
             _apiBaseUrl = useSandbox 

@@ -1,6 +1,7 @@
 using PaymentGatewayLib.Infrastructure.Settings;
 using PaymentGatewayLib.Interfaces;
 using PaymentGatewayLib.Models;
+using Serilog;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
@@ -13,12 +14,14 @@ namespace PaymentGatewayLib.Implementations
     /// </summary>
     public class StripePaymentGateway : BasePaymentGateway, IPaymentGateway
     {
+        private readonly ILogger _logger;
         private readonly string _secretKey;
         private readonly string _apiBaseUrl;
         private readonly HttpClient _httpClient;
 
         public StripePaymentGateway(string secretKey, string publishableKey, string apiBaseUrl = "https://api.stripe.com")
         {
+            _logger = Log.ForContext<StripePaymentGateway>();
             _secretKey = secretKey ?? throw new ArgumentNullException(nameof(secretKey));
             _apiBaseUrl = apiBaseUrl;
             
@@ -226,6 +229,7 @@ namespace PaymentGatewayLib.Implementations
             }
             catch (Exception ex)
             {
+                _logger.Error($"Error retrieving transaction status for {transactionId}: {ex.Message}");
                 return new TransactionStatusResult
                 {
                     TransactionId = transactionId,
