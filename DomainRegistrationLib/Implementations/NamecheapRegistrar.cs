@@ -1,4 +1,5 @@
 using DomainRegistrationLib.Models;
+using Serilog;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Web;
@@ -8,6 +9,7 @@ namespace DomainRegistrationLib.Implementations
 {
     public class NamecheapRegistrar : BaseRegistrar
     {
+        private readonly ILogger _logger;
         private readonly string _apiUser;
         private readonly string _apiKey;
         private readonly string _username;
@@ -17,6 +19,7 @@ namespace DomainRegistrationLib.Implementations
         public NamecheapRegistrar(string apiUser, string apiKey, string username, string clientIp, bool useSandbox)
             : base(useSandbox ? "https://api.sandbox.namecheap.com/xml.response" : "https://api.namecheap.com/xml.response")
         {
+            _logger = Log.ForContext<NamecheapRegistrar>();
             _apiUser = apiUser;
             _apiKey = apiKey;
             _username = username;

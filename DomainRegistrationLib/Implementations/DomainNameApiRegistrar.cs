@@ -1,4 +1,5 @@
 using DomainRegistrationLib.Models;
+using Serilog;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Xml.Linq;
@@ -12,6 +13,7 @@ namespace DomainRegistrationLib.Implementations
     /// </summary>
     public class DomainNameApiRegistrar : BaseRegistrar
     {
+        private readonly ILogger _logger;
         private readonly string _username;
         private readonly string _password;
 
@@ -20,6 +22,7 @@ namespace DomainRegistrationLib.Implementations
                 ? "https://api.domainnameapi.com" 
                 : "https://api-test.domainnameapi.com")
         {
+            _logger = Log.ForContext<DomainNameApiRegistrar>();
             _username = username;
             _password = password;
 

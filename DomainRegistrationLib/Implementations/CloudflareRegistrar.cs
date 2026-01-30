@@ -1,4 +1,5 @@
 using DomainRegistrationLib.Models;
+using Serilog;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -7,12 +8,14 @@ namespace DomainRegistrationLib.Implementations
 {
     public class CloudflareRegistrar : BaseRegistrar
     {
+        private readonly ILogger _logger;
         private readonly string _apiToken;
         private readonly string _accountId;
 
         public CloudflareRegistrar(string apiToken, string accountId)
             : base("https://api.cloudflare.com/client/v4")
         {
+            _logger = Log.ForContext<CloudflareRegistrar>();
             _apiToken = apiToken;
             _accountId = accountId;
 

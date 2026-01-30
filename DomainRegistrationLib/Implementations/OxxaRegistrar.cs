@@ -1,4 +1,5 @@
 using DomainRegistrationLib.Models;
+using Serilog;
 using System.Text;
 using System.Xml.Linq;
 
@@ -11,6 +12,7 @@ namespace DomainRegistrationLib.Implementations
     /// </summary>
     public class OxxaRegistrar : BaseRegistrar
     {
+        private readonly ILogger _logger;
         private readonly string _username;
         private readonly string _password;
 
@@ -19,6 +21,7 @@ namespace DomainRegistrationLib.Implementations
                 ? "https://api.oxxa.com" 
                 : "https://api-ote.oxxa.com")
         {
+            _logger = Log.ForContext<OxxaRegistrar>();
             _username = username;
             _password = password;
         }

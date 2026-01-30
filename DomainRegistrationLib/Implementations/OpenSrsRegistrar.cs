@@ -1,4 +1,5 @@
 using DomainRegistrationLib.Models;
+using Serilog;
 using System.Text;
 using System.Xml.Linq;
 
@@ -10,6 +11,7 @@ namespace DomainRegistrationLib.Implementations
     /// </summary>
     public class OpenSrsRegistrar : BaseRegistrar
     {
+        private readonly ILogger _logger;
         private readonly string _username;
         private readonly string _apiKey;
         private readonly string _domain;
@@ -19,6 +21,7 @@ namespace DomainRegistrationLib.Implementations
                 ? "https://rr-n1-tor.opensrs.net:55443" 
                 : "https://horizon.opensrs.net:55443")
         {
+            _logger = Log.ForContext<OpenSrsRegistrar>();
             _username = username;
             _apiKey = apiKey;
             _domain = domain;

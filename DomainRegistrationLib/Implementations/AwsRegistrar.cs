@@ -1,4 +1,5 @@
 using DomainRegistrationLib.Models;
+using Serilog;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
@@ -13,6 +14,7 @@ namespace DomainRegistrationLib.Implementations
     /// </summary>
     public class AwsRegistrar : BaseRegistrar
     {
+        private readonly ILogger _logger;
         private readonly string _accessKeyId;
         private readonly string _secretAccessKey;
         private readonly string _region;
@@ -21,6 +23,7 @@ namespace DomainRegistrationLib.Implementations
         public AwsRegistrar(string accessKeyId, string secretAccessKey, string region, string hostedZoneId)
             : base($"https://route53.{region}.amazonaws.com")
         {
+            _logger = Log.ForContext<AwsRegistrar>();
             _accessKeyId = accessKeyId;
             _secretAccessKey = secretAccessKey;
             _region = region;
@@ -32,6 +35,7 @@ namespace DomainRegistrationLib.Implementations
 
         public override async Task<DomainAvailabilityResult> CheckAvailabilityAsync(string domainName)
         {
+            _logger.Information("Checking availability for domain: {DomainName}", domainName);
             try
             {
                 var endpoint = "/2013-04-01/domain/availability";
@@ -55,6 +59,7 @@ namespace DomainRegistrationLib.Implementations
             }
             catch (Exception ex)
             {
+                _logger.Error(ex, "Error checking availability for domain: {DomainName}", domainName);
                 return new DomainAvailabilityResult
                 {
                     Success = false,
@@ -68,6 +73,7 @@ namespace DomainRegistrationLib.Implementations
 
         public override async Task<DomainRegistrationResult> RegisterDomainAsync(DomainRegistrationRequest request)
         {
+            _logger.Information("Registering domain: {DomainName} for {Years} years", request.DomainName, request.Years);
             try
             {
                 var endpoint = "/2013-04-01/domain";
@@ -103,12 +109,14 @@ namespace DomainRegistrationLib.Implementations
             }
             catch (Exception ex)
             {
+                _logger.Error(ex, "Error registering domain: {DomainName}", request.DomainName);
                 return CreateErrorResult($"Error registering domain: {ex.Message}");
             }
         }
 
         public override async Task<DomainRenewalResult> RenewDomainAsync(DomainRenewalRequest request)
         {
+            _logger.Information("Renewing domain: {DomainName} for {Years} years", request.DomainName, request.Years);
             try
             {
                 var endpoint = "/2013-04-01/domain/renew";
@@ -136,12 +144,14 @@ namespace DomainRegistrationLib.Implementations
             }
             catch (Exception ex)
             {
+                _logger.Error(ex, "Error renewing domain: {DomainName}", request.DomainName);
                 return CreateRenewalErrorResult($"Error renewing domain: {ex.Message}");
             }
         }
 
         public override async Task<DomainTransferResult> TransferDomainAsync(DomainTransferRequest request)
         {
+            _logger.Information("Transferring domain: {DomainName}", request.DomainName);
             try
             {
                 var endpoint = "/2013-04-01/domain/transfer";
@@ -176,6 +186,7 @@ namespace DomainRegistrationLib.Implementations
             }
             catch (Exception ex)
             {
+                _logger.Error(ex, "Error transferring domain: {DomainName}", request.DomainName);
                 return new DomainTransferResult
                 {
                     Success = false,
@@ -187,6 +198,7 @@ namespace DomainRegistrationLib.Implementations
 
         public override async Task<DnsZone> GetDnsZoneAsync(string domainName)
         {
+            _logger.Information("Getting DNS zone for domain: {DomainName}", domainName);
             try
             {
                 var endpoint = $"/2013-04-01/hostedzone/{_hostedZoneId}/rrset";
@@ -229,12 +241,14 @@ namespace DomainRegistrationLib.Implementations
             }
             catch (Exception ex)
             {
+                _logger.Error(ex, "Error retrieving DNS zone for domain: {DomainName}", domainName);
                 return new DnsZone { DomainName = domainName };
             }
         }
 
         public override async Task<DnsUpdateResult> UpdateDnsZoneAsync(string domainName, DnsZone dnsZone)
         {
+            _logger.Information("Updating DNS zone for domain: {DomainName} with {RecordCount} records", domainName, dnsZone.Records.Count);
             try
             {
                 // AWS Route 53 requires individual record updates via change batches
@@ -277,12 +291,14 @@ namespace DomainRegistrationLib.Implementations
             }
             catch (Exception ex)
             {
+                _logger.Error(ex, "Error updating DNS zone for domain: {DomainName}", domainName);
                 return CreateDnsErrorResult($"Error updating DNS zone: {ex.Message}");
             }
         }
 
         public override async Task<DnsUpdateResult> AddDnsRecordAsync(string domainName, DnsRecordModel record)
         {
+            _logger.Information("Adding DNS record {RecordName} ({RecordType}) for domain: {DomainName}", record.Name, record.Type, domainName);
             try
             {
                 var endpoint = $"/2013-04-01/hostedzone/{_hostedZoneId}/rrset/";
@@ -320,12 +336,14 @@ namespace DomainRegistrationLib.Implementations
             }
             catch (Exception ex)
             {
+                _logger.Error(ex, "Error adding DNS record {RecordName} ({RecordType}) for domain: {DomainName}", record.Name, record.Type, domainName);
                 return CreateDnsErrorResult($"Error adding DNS record: {ex.Message}");
             }
         }
 
         public override async Task<DnsUpdateResult> UpdateDnsRecordAsync(string domainName, DnsRecordModel record)
         {
+            _logger.Information("Updating DNS record {RecordName} ({RecordType}) for domain: {DomainName}", record.Name, record.Type, domainName);
             try
             {
                 var endpoint = $"/2013-04-01/hostedzone/{_hostedZoneId}/rrset/";
@@ -363,12 +381,14 @@ namespace DomainRegistrationLib.Implementations
             }
             catch (Exception ex)
             {
+                _logger.Error(ex, "Error updating DNS record {RecordName} ({RecordType}) for domain: {DomainName}", record.Name, record.Type, domainName);
                 return CreateDnsErrorResult($"Error updating DNS record: {ex.Message}");
             }
         }
 
         public override async Task<DnsUpdateResult> DeleteDnsRecordAsync(string domainName, int recordId)
         {
+            _logger.Information("Deleting DNS record {RecordId} for domain: {DomainName}", recordId, domainName);
             try
             {
                 // Note: In real implementation, you'd need to fetch the record details first
@@ -382,12 +402,14 @@ namespace DomainRegistrationLib.Implementations
             }
             catch (Exception ex)
             {
+                _logger.Error(ex, "Error deleting DNS record {RecordId} for domain: {DomainName}", recordId, domainName);
                 return CreateDnsErrorResult($"Error deleting DNS record: {ex.Message}");
             }
         }
 
         public override async Task<DomainInfoResult> GetDomainInfoAsync(string domainName)
         {
+            _logger.Information("Getting domain info for: {DomainName}", domainName);
             try
             {
                 var endpoint = $"/2013-04-01/domain/{domainName}";
@@ -442,6 +464,7 @@ namespace DomainRegistrationLib.Implementations
             }
             catch (Exception ex)
             {
+                _logger.Error(ex, "Error getting domain info for: {DomainName}", domainName);
                 return new DomainInfoResult
                 {
                     Success = false,
@@ -453,6 +476,7 @@ namespace DomainRegistrationLib.Implementations
 
         public override async Task<DomainUpdateResult> UpdateNameserversAsync(string domainName, List<string> nameservers)
         {
+            _logger.Information("Updating nameservers for domain: {DomainName} with {Count} nameservers", domainName, nameservers.Count);
             try
             {
                 var endpoint = $"/2013-04-01/domain/{domainName}/nameservers";
@@ -473,12 +497,14 @@ namespace DomainRegistrationLib.Implementations
             }
             catch (Exception ex)
             {
+                _logger.Error(ex, "Error updating nameservers for domain: {DomainName}", domainName);
                 return CreateUpdateErrorResult($"Error updating nameservers: {ex.Message}");
             }
         }
 
         public override async Task<DomainUpdateResult> SetPrivacyProtectionAsync(string domainName, bool enable)
         {
+            _logger.Information("Setting privacy protection to {Enable} for domain: {DomainName}", enable, domainName);
             try
             {
                 var endpoint = $"/2013-04-01/domain/{domainName}/privacy";
@@ -496,12 +522,14 @@ namespace DomainRegistrationLib.Implementations
             }
             catch (Exception ex)
             {
+                _logger.Error(ex, "Error setting privacy protection for domain: {DomainName}", domainName);
                 return CreateUpdateErrorResult($"Error setting privacy protection: {ex.Message}");
             }
         }
 
         public override async Task<DomainUpdateResult> SetAutoRenewAsync(string domainName, bool enable)
         {
+            _logger.Information("Setting auto-renew to {Enable} for domain: {DomainName}", enable, domainName);
             try
             {
                 var endpoint = $"/2013-04-01/domain/{domainName}/autorenew";
@@ -519,6 +547,7 @@ namespace DomainRegistrationLib.Implementations
             }
             catch (Exception ex)
             {
+                _logger.Error(ex, "Error setting auto-renew for domain: {DomainName}", domainName);
                 return CreateUpdateErrorResult($"Error setting auto-renew: {ex.Message}");
             }
         }
@@ -597,6 +626,7 @@ namespace DomainRegistrationLib.Implementations
 
         public override async Task<List<TldInfo>> GetSupportedTldsAsync()
         {
+            _logger.Information("Getting supported TLDs from AWS Route 53");
             try
             {
                 var endpoint = "/2013-04-01/domains/tlds";
@@ -634,8 +664,9 @@ namespace DomainRegistrationLib.Implementations
 
                 return tlds;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.Error(ex, "Error getting supported TLDs from AWS Route 53");
                 return [];
             }
         }

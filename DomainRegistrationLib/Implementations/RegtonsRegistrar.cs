@@ -1,4 +1,5 @@
 using DomainRegistrationLib.Models;
+using Serilog;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
@@ -13,6 +14,7 @@ namespace DomainRegistrationLib.Implementations
     /// </summary>
     public class RegtonsRegistrar : BaseRegistrar
     {
+        private readonly ILogger _logger;
         private readonly string _apiKey;
         private readonly string _apiSecret;
         private readonly string _username;
@@ -22,6 +24,7 @@ namespace DomainRegistrationLib.Implementations
                 ? "https://api.regtons.com/v1" 
                 : "https://sandbox.regtons.com/v1")
         {
+            _logger = Log.ForContext<RegtonsRegistrar>();
             _apiKey = apiKey;
             _apiSecret = apiSecret;
             _username = username;

@@ -1,4 +1,5 @@
 using DomainRegistrationLib.Models;
+using Serilog;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -7,6 +8,7 @@ namespace DomainRegistrationLib.Implementations
 {
     public class GoDaddyRegistrar : BaseRegistrar
     {
+        private readonly ILogger _logger;
         private readonly string _apiKey;
         private readonly string _apiSecret;
         private readonly bool _useProduction;
@@ -14,6 +16,7 @@ namespace DomainRegistrationLib.Implementations
         public GoDaddyRegistrar(string apiKey, string apiSecret, bool useProduction)
             : base(useProduction ? "https://api.godaddy.com" : "https://api.ote-godaddy.com")
         {
+            _logger = Log.ForContext<GoDaddyRegistrar>();
             _apiKey = apiKey;
             _apiSecret = apiSecret;
             _useProduction = useProduction;

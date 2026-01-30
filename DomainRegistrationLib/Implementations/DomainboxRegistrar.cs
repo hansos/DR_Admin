@@ -1,4 +1,5 @@
 using DomainRegistrationLib.Models;
+using Serilog;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
@@ -12,6 +13,7 @@ namespace DomainRegistrationLib.Implementations
     /// </summary>
     public class DomainboxRegistrar : BaseRegistrar
     {
+        private readonly ILogger _logger;
         private readonly string _apiKey;
         private readonly string _apiSecret;
 
@@ -20,6 +22,7 @@ namespace DomainRegistrationLib.Implementations
                 ? "https://api.domainbox.com/v1" 
                 : "https://sandbox.domainbox.com/v1")
         {
+            _logger = Log.ForContext<DomainboxRegistrar>();
             _apiKey = apiKey;
             _apiSecret = apiSecret;
 

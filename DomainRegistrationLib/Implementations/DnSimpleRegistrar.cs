@@ -1,4 +1,5 @@
 using DomainRegistrationLib.Models;
+using Serilog;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -11,6 +12,7 @@ namespace DomainRegistrationLib.Implementations
     /// </summary>
     public class DnSimpleRegistrar : BaseRegistrar
     {
+        private readonly ILogger _logger;
         private readonly string _accountId;
         private readonly string _apiToken;
 
@@ -19,6 +21,7 @@ namespace DomainRegistrationLib.Implementations
                 ? "https://api.dnsimple.com/v2" 
                 : "https://api.sandbox.dnsimple.com/v2")
         {
+            _logger = Log.ForContext<DnSimpleRegistrar>();
             _accountId = accountId;
             _apiToken = apiToken;
 

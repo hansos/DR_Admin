@@ -1,4 +1,5 @@
 using DomainRegistrationLib.Models;
+using Serilog;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -7,6 +8,7 @@ namespace DomainRegistrationLib.Implementations
 {
     public class CentralNicRegistrar : BaseRegistrar
     {
+        private readonly ILogger _logger;
         private readonly string _username;
         private readonly string _password;
 
@@ -15,6 +17,7 @@ namespace DomainRegistrationLib.Implementations
                 ? "https://api.centralnic.com/v2" 
                 : "https://api-ote.centralnic.com/v2")
         {
+            _logger = Log.ForContext<CentralNicRegistrar>();
             _username = username;
             _password = password;
 
