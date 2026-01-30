@@ -7,7 +7,7 @@ using ISPAdmin.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace DR_Admin.IntegrationTests.Controllers;
 
@@ -15,14 +15,13 @@ namespace DR_Admin.IntegrationTests.Controllers;
 public class DnsZonePackageRecordsControllerTests : IClassFixture<TestWebApplicationFactory>
 {
     private readonly HttpClient _client;
-    private readonly ITestOutputHelper _output;
+    
     private readonly TestWebApplicationFactory _factory;
 
-    public DnsZonePackageRecordsControllerTests(TestWebApplicationFactory factory, ITestOutputHelper output)
+    public DnsZonePackageRecordsControllerTests(TestWebApplicationFactory factory)
     {
         _factory = factory;
         _client = factory.CreateClient();
-        _output = output;
     }
 
     #region Get All DNS Zone Package Records Tests
@@ -47,10 +46,10 @@ public class DnsZonePackageRecordsControllerTests : IClassFixture<TestWebApplica
         Assert.NotNull(result);
         Assert.NotEmpty(result);
 
-        _output.WriteLine($"Retrieved {result.Count()} DNS zone package records");
+        Console.WriteLine($"Retrieved {result.Count()} DNS zone package records");
         foreach (var record in result)
         {
-            _output.WriteLine($"  - {record.Name}: {record.Value} (TTL: {record.TTL})");
+            Console.WriteLine($"  - {record.Name}: {record.Value} (TTL: {record.TTL})");
         }
     }
 
@@ -122,7 +121,7 @@ public class DnsZonePackageRecordsControllerTests : IClassFixture<TestWebApplica
         Assert.NotEmpty(result);
         Assert.All(result, record => Assert.Equal(packageId, record.DnsZonePackageId));
 
-        _output.WriteLine($"Retrieved {result.Count()} records for package {packageId}");
+        Console.WriteLine($"Retrieved {result.Count()} records for package {packageId}");
     }
 
     [Fact]
@@ -185,7 +184,7 @@ public class DnsZonePackageRecordsControllerTests : IClassFixture<TestWebApplica
         Assert.NotNull(result);
         Assert.Equal(recordId, result.Id);
 
-        _output.WriteLine($"Retrieved DNS zone package record: {result.Name} = {result.Value}");
+        Console.WriteLine($"Retrieved DNS zone package record: {result.Name} = {result.Value}");
     }
 
     [Fact]
@@ -256,7 +255,7 @@ public class DnsZonePackageRecordsControllerTests : IClassFixture<TestWebApplica
         Assert.Equal(createDto.Name, result.Name);
         Assert.Equal(createDto.Value, result.Value);
 
-        _output.WriteLine($"Created DNS zone package record with ID: {result.Id}");
+        Console.WriteLine($"Created DNS zone package record with ID: {result.Id}");
     }
 
     [Fact]
@@ -289,7 +288,7 @@ public class DnsZonePackageRecordsControllerTests : IClassFixture<TestWebApplica
         Assert.NotNull(result);
         Assert.Equal(10, result.Priority);
 
-        _output.WriteLine($"Created MX record with priority {result.Priority}");
+        Console.WriteLine($"Created MX record with priority {result.Priority}");
     }
 
     [Fact]
@@ -353,7 +352,7 @@ public class DnsZonePackageRecordsControllerTests : IClassFixture<TestWebApplica
         Assert.Equal(updateDto.Value, result.Value);
         Assert.Equal(updateDto.TTL, result.TTL);
 
-        _output.WriteLine($"Updated DNS zone package record ID: {result.Id}");
+        Console.WriteLine($"Updated DNS zone package record ID: {result.Id}");
     }
 
     [Fact]
@@ -424,7 +423,7 @@ public class DnsZonePackageRecordsControllerTests : IClassFixture<TestWebApplica
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
 
-        _output.WriteLine($"Deleted DNS zone package record ID: {recordId}");
+        Console.WriteLine($"Deleted DNS zone package record ID: {recordId}");
     }
 
     [Fact]
@@ -705,7 +704,7 @@ public class DnsZonePackageRecordsControllerTests : IClassFixture<TestWebApplica
         await context.UserRoles.AddAsync(userRole);
         await context.SaveChangesAsync();
 
-        _output.WriteLine($"Created {roleName} user: {username}");
+        Console.WriteLine($"Created {roleName} user: {username}");
 
         return (username, email);
     }
@@ -740,3 +739,4 @@ public class DnsZonePackageRecordsControllerTests : IClassFixture<TestWebApplica
 
     #endregion
 }
+

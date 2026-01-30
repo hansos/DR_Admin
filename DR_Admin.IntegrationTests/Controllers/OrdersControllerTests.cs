@@ -8,7 +8,7 @@ using ISPAdmin.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace DR_Admin.IntegrationTests.Controllers;
 
@@ -16,14 +16,13 @@ namespace DR_Admin.IntegrationTests.Controllers;
 public class OrdersControllerTests : IClassFixture<TestWebApplicationFactory>
 {
     private readonly HttpClient _client;
-    private readonly ITestOutputHelper _output;
+    
     private readonly TestWebApplicationFactory _factory;
 
-    public OrdersControllerTests(TestWebApplicationFactory factory, ITestOutputHelper output)
+    public OrdersControllerTests(TestWebApplicationFactory factory)
     {
         _factory = factory;
         _client = factory.CreateClient();
-        _output = output;
     }
 
     #region Get All Orders Tests
@@ -48,7 +47,7 @@ public class OrdersControllerTests : IClassFixture<TestWebApplicationFactory>
         Assert.NotNull(result);
         Assert.NotEmpty(result);
 
-        _output.WriteLine($"Retrieved {result.Count()} orders");
+        Console.WriteLine($"Retrieved {result.Count()} orders");
     }
 
     [Fact]
@@ -153,7 +152,7 @@ public class OrdersControllerTests : IClassFixture<TestWebApplicationFactory>
         Assert.Equal(createDto.CustomerId, result.CustomerId);
         Assert.Equal(createDto.ServiceId, result.ServiceId);
 
-        _output.WriteLine($"Created order with ID: {result.Id}");
+        Console.WriteLine($"Created order with ID: {result.Id}");
     }
 
     [Fact]
@@ -269,7 +268,7 @@ public class OrdersControllerTests : IClassFixture<TestWebApplicationFactory>
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
 
-        _output.WriteLine($"Successfully deleted order ID: {orderId}");
+        Console.WriteLine($"Successfully deleted order ID: {orderId}");
     }
 
     [Fact]
@@ -491,3 +490,4 @@ public class OrdersControllerTests : IClassFixture<TestWebApplicationFactory>
 
     #endregion
 }
+

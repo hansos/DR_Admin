@@ -7,7 +7,7 @@ using ISPAdmin.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace DR_Admin.IntegrationTests.Controllers;
 
@@ -15,14 +15,13 @@ namespace DR_Admin.IntegrationTests.Controllers;
 public class RegistrarTldsControllerTests : IClassFixture<TestWebApplicationFactory>
 {
     private readonly HttpClient _client;
-    private readonly ITestOutputHelper _output;
+    
     private readonly TestWebApplicationFactory _factory;
 
-    public RegistrarTldsControllerTests(TestWebApplicationFactory factory, ITestOutputHelper output)
+    public RegistrarTldsControllerTests(TestWebApplicationFactory factory)
     {
         _factory = factory;
         _client = factory.CreateClient();
-        _output = output;
     }
 
     [Fact]
@@ -39,7 +38,7 @@ public class RegistrarTldsControllerTests : IClassFixture<TestWebApplicationFact
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        _output.WriteLine("Retrieved registrar TLDs");
+        Console.WriteLine("Retrieved registrar TLDs");
     }
 
     [Fact]
@@ -161,3 +160,4 @@ public class RegistrarTldsControllerTests : IClassFixture<TestWebApplicationFact
         return result!.AccessToken;
     }
 }
+

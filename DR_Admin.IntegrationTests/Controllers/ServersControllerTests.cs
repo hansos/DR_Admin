@@ -7,7 +7,7 @@ using ISPAdmin.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace DR_Admin.IntegrationTests.Controllers;
 
@@ -15,14 +15,13 @@ namespace DR_Admin.IntegrationTests.Controllers;
 public class ServersControllerTests : IClassFixture<TestWebApplicationFactory>
 {
     private readonly HttpClient _client;
-    private readonly ITestOutputHelper _output;
+    
     private readonly TestWebApplicationFactory _factory;
 
-    public ServersControllerTests(TestWebApplicationFactory factory, ITestOutputHelper output)
+    public ServersControllerTests(TestWebApplicationFactory factory)
     {
         _factory = factory;
         _client = factory.CreateClient();
-        _output = output;
     }
 
     #region Get All Servers Tests
@@ -47,10 +46,10 @@ public class ServersControllerTests : IClassFixture<TestWebApplicationFactory>
         Assert.NotNull(result);
         Assert.NotEmpty(result);
 
-        _output.WriteLine($"Retrieved {result.Count()} servers");
+        Console.WriteLine($"Retrieved {result.Count()} servers");
         foreach (var server in result)
         {
-            _output.WriteLine($"  - {server.Name} ({server.ServerType}): {server.Status}");
+            Console.WriteLine($"  - {server.Name} ({server.ServerType}): {server.Status}");
         }
     }
 
@@ -121,10 +120,10 @@ public class ServersControllerTests : IClassFixture<TestWebApplicationFactory>
         Assert.Equal(serverId, result.Id);
         Assert.NotEmpty(result.Name);
 
-        _output.WriteLine($"Retrieved server: {result.Name}");
-        _output.WriteLine($"  Type: {result.ServerType}");
-        _output.WriteLine($"  OS: {result.OperatingSystem}");
-        _output.WriteLine($"  Status: {result.Status}");
+        Console.WriteLine($"Retrieved server: {result.Name}");
+        Console.WriteLine($"  Type: {result.ServerType}");
+        Console.WriteLine($"  OS: {result.OperatingSystem}");
+        Console.WriteLine($"  Status: {result.Status}");
     }
 
     [Fact]
@@ -188,10 +187,10 @@ public class ServersControllerTests : IClassFixture<TestWebApplicationFactory>
         Assert.Equal(createDto.RamMB, result.RamMB);
         Assert.Equal(createDto.DiskSpaceGB, result.DiskSpaceGB);
 
-        _output.WriteLine($"Created server with ID: {result.Id}");
-        _output.WriteLine($"  Name: {result.Name}");
-        _output.WriteLine($"  Type: {result.ServerType}");
-        _output.WriteLine($"  Specs: {result.CpuCores} cores, {result.RamMB}MB RAM, {result.DiskSpaceGB}GB disk");
+        Console.WriteLine($"Created server with ID: {result.Id}");
+        Console.WriteLine($"  Name: {result.Name}");
+        Console.WriteLine($"  Type: {result.ServerType}");
+        Console.WriteLine($"  Specs: {result.CpuCores} cores, {result.RamMB}MB RAM, {result.DiskSpaceGB}GB disk");
     }
 
     [Fact]
@@ -258,9 +257,9 @@ public class ServersControllerTests : IClassFixture<TestWebApplicationFactory>
         Assert.Equal(updateDto.Status, result.Status);
         Assert.Equal(updateDto.CpuCores, result.CpuCores);
 
-        _output.WriteLine($"Updated server ID: {result.Id}");
-        _output.WriteLine($"  New name: {result.Name}");
-        _output.WriteLine($"  New status: {result.Status}");
+        Console.WriteLine($"Updated server ID: {result.Id}");
+        Console.WriteLine($"  New name: {result.Name}");
+        Console.WriteLine($"  New status: {result.Status}");
     }
 
     [Fact]
@@ -306,7 +305,7 @@ public class ServersControllerTests : IClassFixture<TestWebApplicationFactory>
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
 
-        _output.WriteLine($"Deleted server ID: {serverId}");
+        Console.WriteLine($"Deleted server ID: {serverId}");
     }
 
     [Fact]
@@ -474,7 +473,7 @@ public class ServersControllerTests : IClassFixture<TestWebApplicationFactory>
         await context.UserRoles.AddAsync(userRole);
         await context.SaveChangesAsync();
 
-        _output.WriteLine($"Created {roleName} user: {username}");
+        Console.WriteLine($"Created {roleName} user: {username}");
 
         return (username, email);
     }
@@ -509,3 +508,4 @@ public class ServersControllerTests : IClassFixture<TestWebApplicationFactory>
 
     #endregion
 }
+

@@ -7,7 +7,7 @@ using ISPAdmin.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace DR_Admin.IntegrationTests.Controllers;
 
@@ -15,14 +15,13 @@ namespace DR_Admin.IntegrationTests.Controllers;
 public class BillingCyclesControllerTests : IClassFixture<TestWebApplicationFactory>
 {
     private readonly HttpClient _client;
-    private readonly ITestOutputHelper _output;
+    
     private readonly TestWebApplicationFactory _factory;
 
-    public BillingCyclesControllerTests(TestWebApplicationFactory factory, ITestOutputHelper output)
+    public BillingCyclesControllerTests(TestWebApplicationFactory factory)
     {
         _factory = factory;
         _client = factory.CreateClient();
-        _output = output;
     }
 
     #region Get All Billing Cycles Tests
@@ -47,10 +46,10 @@ public class BillingCyclesControllerTests : IClassFixture<TestWebApplicationFact
         Assert.NotNull(result);
         Assert.NotEmpty(result);
 
-        _output.WriteLine($"Retrieved {result.Count()} billing cycles");
+        Console.WriteLine($"Retrieved {result.Count()} billing cycles");
         foreach (var bc in result)
         {
-            _output.WriteLine($"  - {bc.Name}: {bc.DurationInDays} days");
+            Console.WriteLine($"  - {bc.Name}: {bc.DurationInDays} days");
         }
     }
 
@@ -137,7 +136,7 @@ public class BillingCyclesControllerTests : IClassFixture<TestWebApplicationFact
         Assert.Equal(billingCycleId, result.Id);
         Assert.NotEmpty(result.Name);
 
-        _output.WriteLine($"Retrieved billing cycle: {result.Name} ({result.DurationInDays} days)");
+        Console.WriteLine($"Retrieved billing cycle: {result.Name} ({result.DurationInDays} days)");
     }
 
     [Fact]
@@ -202,11 +201,11 @@ public class BillingCyclesControllerTests : IClassFixture<TestWebApplicationFact
         Assert.True(result.UpdatedAt > DateTime.MinValue);
         Assert.Equal(result.CreatedAt, result.UpdatedAt, TimeSpan.FromSeconds(1)); // Should be equal when first created
 
-        _output.WriteLine($"Created billing cycle with ID: {result.Id}");
-        _output.WriteLine($"  Name: {result.Name}");
-        _output.WriteLine($"  Duration: {result.DurationInDays} days");
-        _output.WriteLine($"  CreatedAt: {result.CreatedAt}");
-        _output.WriteLine($"  UpdatedAt: {result.UpdatedAt}");
+        Console.WriteLine($"Created billing cycle with ID: {result.Id}");
+        Console.WriteLine($"  Name: {result.Name}");
+        Console.WriteLine($"  Duration: {result.DurationInDays} days");
+        Console.WriteLine($"  CreatedAt: {result.CreatedAt}");
+        Console.WriteLine($"  UpdatedAt: {result.UpdatedAt}");
     }
 
     [Fact]
@@ -294,11 +293,11 @@ public class BillingCyclesControllerTests : IClassFixture<TestWebApplicationFact
         Assert.Equal(originalBillingCycle.CreatedAt, result.CreatedAt); // CreatedAt should not change
         Assert.True(result.UpdatedAt > originalBillingCycle.UpdatedAt); // UpdatedAt should be newer
 
-        _output.WriteLine($"Updated billing cycle ID {result.Id}:");
-        _output.WriteLine($"  New Name: {result.Name}");
-        _output.WriteLine($"  New Duration: {result.DurationInDays} days");
-        _output.WriteLine($"  CreatedAt: {result.CreatedAt} (unchanged)");
-        _output.WriteLine($"  UpdatedAt: {result.UpdatedAt} (was: {originalBillingCycle.UpdatedAt})");
+        Console.WriteLine($"Updated billing cycle ID {result.Id}:");
+        Console.WriteLine($"  New Name: {result.Name}");
+        Console.WriteLine($"  New Duration: {result.DurationInDays} days");
+        Console.WriteLine($"  CreatedAt: {result.CreatedAt} (unchanged)");
+        Console.WriteLine($"  UpdatedAt: {result.UpdatedAt} (was: {originalBillingCycle.UpdatedAt})");
     }
 
     [Fact]
@@ -385,7 +384,7 @@ public class BillingCyclesControllerTests : IClassFixture<TestWebApplicationFact
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
 
-        _output.WriteLine($"Successfully deleted billing cycle ID: {billingCycleId}");
+        Console.WriteLine($"Successfully deleted billing cycle ID: {billingCycleId}");
 
         // Verify it's actually deleted
         var getResponse = await _client.GetAsync($"/api/v1/BillingCycles/{billingCycleId}");
@@ -447,10 +446,10 @@ public class BillingCyclesControllerTests : IClassFixture<TestWebApplicationFact
         var token = await GetAdminTokenAsync();
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        _output.WriteLine("=== Starting Full CRUD Flow for Billing Cycles ===");
+        Console.WriteLine("=== Starting Full CRUD Flow for Billing Cycles ===");
 
         // Create
-        _output.WriteLine("\n1. CREATE:");
+        Console.WriteLine("\n1. CREATE:");
         var createDto = new CreateBillingCycleDto
         {
             Name = "Bi-Annual",
@@ -463,10 +462,10 @@ public class BillingCyclesControllerTests : IClassFixture<TestWebApplicationFact
 
         var created = await createResponse.Content.ReadFromJsonAsync<BillingCycleDto>();
         Assert.NotNull(created);
-        _output.WriteLine($"   Created ID: {created.Id}, Name: {created.Name}");
+        Console.WriteLine($"   Created ID: {created.Id}, Name: {created.Name}");
 
         // Read
-        _output.WriteLine("\n2. READ:");
+        Console.WriteLine("\n2. READ:");
         var readResponse = await _client.GetAsync($"/api/v1/BillingCycles/{created.Id}");
         Assert.Equal(HttpStatusCode.OK, readResponse.StatusCode);
 
@@ -474,10 +473,10 @@ public class BillingCyclesControllerTests : IClassFixture<TestWebApplicationFact
         Assert.NotNull(read);
         Assert.Equal(created.Id, read.Id);
         Assert.Equal(createDto.Name, read.Name);
-        _output.WriteLine($"   Retrieved: {read.Name} ({read.DurationInDays} days)");
+        Console.WriteLine($"   Retrieved: {read.Name} ({read.DurationInDays} days)");
 
         // Update
-        _output.WriteLine("\n3. UPDATE:");
+        Console.WriteLine("\n3. UPDATE:");
         var updateDto = new UpdateBillingCycleDto
         {
             Name = "Semi-Annual",
@@ -492,21 +491,21 @@ public class BillingCyclesControllerTests : IClassFixture<TestWebApplicationFact
         Assert.NotNull(updated);
         Assert.Equal(updateDto.Name, updated.Name);
         Assert.Equal(updateDto.DurationInDays, updated.DurationInDays);
-        _output.WriteLine($"   Updated to: {updated.Name} ({updated.DurationInDays} days)");
+        Console.WriteLine($"   Updated to: {updated.Name} ({updated.DurationInDays} days)");
 
         // Delete
-        _output.WriteLine("\n4. DELETE:");
+        Console.WriteLine("\n4. DELETE:");
         var deleteResponse = await _client.DeleteAsync($"/api/v1/BillingCycles/{created.Id}");
         Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
-        _output.WriteLine($"   Deleted ID: {created.Id}");
+        Console.WriteLine($"   Deleted ID: {created.Id}");
 
         // Verify deletion
-        _output.WriteLine("\n5. VERIFY DELETION:");
+        Console.WriteLine("\n5. VERIFY DELETION:");
         var verifyResponse = await _client.GetAsync($"/api/v1/BillingCycles/{created.Id}");
         Assert.Equal(HttpStatusCode.NotFound, verifyResponse.StatusCode);
-        _output.WriteLine("   Confirmed: Resource no longer exists");
+        Console.WriteLine("   Confirmed: Resource no longer exists");
 
-        _output.WriteLine("\n=== Full CRUD Flow Completed Successfully ===");
+        Console.WriteLine("\n=== Full CRUD Flow Completed Successfully ===");
     }
 
     #endregion
@@ -655,7 +654,7 @@ public class BillingCyclesControllerTests : IClassFixture<TestWebApplicationFact
         await context.UserRoles.AddAsync(userRole);
         await context.SaveChangesAsync();
 
-        _output.WriteLine($"Created {roleName} user: {username}");
+        Console.WriteLine($"Created {roleName} user: {username}");
 
         return (username, email);
     }
@@ -690,3 +689,4 @@ public class BillingCyclesControllerTests : IClassFixture<TestWebApplicationFact
 
     #endregion
 }
+

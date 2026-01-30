@@ -15,4 +15,5 @@ public interface IRegistrarService
     Task<RegistrarTldDto> AssignTldToRegistrarAsync(CreateRegistrarTldDto createDto);
     Task<RegistrarTldDto> AssignTldToRegistrarAsync(int registrarId, TldDto tldDto);
     Task<IEnumerable<TldDto>> GetTldsByRegistrarAsync(int registrarId);
+    Task<int> DownloadTldsForRegistrarAsync(int registrarId);
 }

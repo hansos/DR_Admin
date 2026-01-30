@@ -7,7 +7,7 @@ using ISPAdmin.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace DR_Admin.IntegrationTests.Controllers;
 
@@ -15,14 +15,13 @@ namespace DR_Admin.IntegrationTests.Controllers;
 public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
 {
     private readonly HttpClient _client;
-    private readonly ITestOutputHelper _output;
+    
     private readonly TestWebApplicationFactory _factory;
 
-    public CountriesControllerTests(TestWebApplicationFactory factory, ITestOutputHelper output)
+    public CountriesControllerTests(TestWebApplicationFactory factory)
     {
         _factory = factory;
         _client = factory.CreateClient();
-        _output = output;
     }
 
     #region Get All Countries Tests
@@ -47,10 +46,10 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
         Assert.NotNull(result);
         Assert.NotEmpty(result);
 
-        _output.WriteLine($"Retrieved {result.Count()} countries");
+        Console.WriteLine($"Retrieved {result.Count()} countries");
         foreach (var country in result)
         {
-            _output.WriteLine($"  - {country.EnglishName} ({country.Code}): Active={country.IsActive}");
+            Console.WriteLine($"  - {country.EnglishName} ({country.Code}): Active={country.IsActive}");
         }
     }
 
@@ -137,10 +136,10 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
         Assert.NotNull(result);
         Assert.All(result, country => Assert.True(country.IsActive));
 
-        _output.WriteLine($"Retrieved {result.Count()} active countries");
+        Console.WriteLine($"Retrieved {result.Count()} active countries");
         foreach (var country in result)
         {
-            _output.WriteLine($"  - {country.EnglishName} ({country.Code})");
+            Console.WriteLine($"  - {country.EnglishName} ({country.Code})");
         }
     }
 
@@ -197,11 +196,11 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
         Assert.NotEmpty(result.Code);
         Assert.NotEmpty(result.EnglishName);
 
-        _output.WriteLine($"Retrieved country: {result.EnglishName}");
-        _output.WriteLine($"  Code: {result.Code}");
-        _output.WriteLine($"  TLD: {result.Tld}");
-        _output.WriteLine($"  Local Name: {result.LocalName}");
-        _output.WriteLine($"  Active: {result.IsActive}");
+        Console.WriteLine($"Retrieved country: {result.EnglishName}");
+        Console.WriteLine($"  Code: {result.Code}");
+        Console.WriteLine($"  TLD: {result.Tld}");
+        Console.WriteLine($"  Local Name: {result.LocalName}");
+        Console.WriteLine($"  Active: {result.IsActive}");
     }
 
     [Fact]
@@ -271,9 +270,9 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
         Assert.Equal("US", result.Code);
         Assert.Equal("United States", result.EnglishName);
 
-        _output.WriteLine($"Retrieved country by code: {result.EnglishName}");
-        _output.WriteLine($"  Code: {result.Code}");
-        _output.WriteLine($"  TLD: {result.Tld}");
+        Console.WriteLine($"Retrieved country by code: {result.EnglishName}");
+        Console.WriteLine($"  Code: {result.Code}");
+        Console.WriteLine($"  TLD: {result.Tld}");
     }
 
     [Fact]
@@ -342,12 +341,12 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
         Assert.True(result.UpdatedAt > DateTime.MinValue);
         Assert.Equal(result.CreatedAt, result.UpdatedAt, TimeSpan.FromSeconds(1));
 
-        _output.WriteLine($"Created country with ID: {result.Id}");
-        _output.WriteLine($"  Code: {result.Code}");
-        _output.WriteLine($"  English Name: {result.EnglishName}");
-        _output.WriteLine($"  TLD: {result.Tld}");
-        _output.WriteLine($"  CreatedAt: {result.CreatedAt}");
-        _output.WriteLine($"  UpdatedAt: {result.UpdatedAt}");
+        Console.WriteLine($"Created country with ID: {result.Id}");
+        Console.WriteLine($"  Code: {result.Code}");
+        Console.WriteLine($"  English Name: {result.EnglishName}");
+        Console.WriteLine($"  TLD: {result.Tld}");
+        Console.WriteLine($"  CreatedAt: {result.CreatedAt}");
+        Console.WriteLine($"  UpdatedAt: {result.UpdatedAt}");
     }
 
     [Fact]
@@ -464,11 +463,11 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
         Assert.Equal(originalCountry.CreatedAt, result.CreatedAt); // CreatedAt should not change
         Assert.True(result.UpdatedAt > originalCountry.UpdatedAt); // UpdatedAt should be newer
 
-        _output.WriteLine($"Updated country ID {result.Id}:");
-        _output.WriteLine($"  New English Name: {result.EnglishName}");
-        _output.WriteLine($"  New TLD: {result.Tld}");
-        _output.WriteLine($"  CreatedAt: {result.CreatedAt} (unchanged)");
-        _output.WriteLine($"  UpdatedAt: {result.UpdatedAt} (was: {originalCountry.UpdatedAt})");
+        Console.WriteLine($"Updated country ID {result.Id}:");
+        Console.WriteLine($"  New English Name: {result.EnglishName}");
+        Console.WriteLine($"  New TLD: {result.Tld}");
+        Console.WriteLine($"  CreatedAt: {result.CreatedAt} (unchanged)");
+        Console.WriteLine($"  UpdatedAt: {result.UpdatedAt} (was: {originalCountry.UpdatedAt})");
     }
 
     [Fact]
@@ -558,7 +557,7 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
 
-        _output.WriteLine($"Successfully deleted country ID: {countryId}");
+        Console.WriteLine($"Successfully deleted country ID: {countryId}");
 
         // Verify it's actually deleted
         var getResponse = await _client.GetAsync($"/api/v1/Countries/{countryId}");
@@ -620,10 +619,10 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
         var token = await GetAdminTokenAsync();
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        _output.WriteLine("=== Starting Full CRUD Flow for Countries ===");
+        Console.WriteLine("=== Starting Full CRUD Flow for Countries ===");
 
         // Create
-        _output.WriteLine("\n1. CREATE:");
+        Console.WriteLine("\n1. CREATE:");
         var createDto = new CreateCountryDto
         {
             Code = "AU",
@@ -638,10 +637,10 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
 
         var created = await createResponse.Content.ReadFromJsonAsync<CountryDto>();
         Assert.NotNull(created);
-        _output.WriteLine($"   Created ID: {created.Id}, Name: {created.EnglishName}");
+        Console.WriteLine($"   Created ID: {created.Id}, Name: {created.EnglishName}");
 
         // Read
-        _output.WriteLine("\n2. READ:");
+        Console.WriteLine("\n2. READ:");
         var readResponse = await _client.GetAsync($"/api/v1/Countries/{created.Id}");
         Assert.Equal(HttpStatusCode.OK, readResponse.StatusCode);
 
@@ -650,10 +649,10 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
         Assert.Equal(created.Id, read.Id);
         Assert.Equal(createDto.Code, read.Code);
         Assert.Equal(createDto.EnglishName, read.EnglishName);
-        _output.WriteLine($"   Retrieved: {read.EnglishName} ({read.Code})");
+        Console.WriteLine($"   Retrieved: {read.EnglishName} ({read.Code})");
 
         // Update
-        _output.WriteLine("\n3. UPDATE:");
+        Console.WriteLine("\n3. UPDATE:");
         var updateDto = new UpdateCountryDto
         {
             Code = "AU",
@@ -669,21 +668,21 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
         var updated = await updateResponse.Content.ReadFromJsonAsync<CountryDto>();
         Assert.NotNull(updated);
         Assert.Equal(updateDto.EnglishName, updated.EnglishName);
-        _output.WriteLine($"   Updated to: {updated.EnglishName}");
+        Console.WriteLine($"   Updated to: {updated.EnglishName}");
 
         // Delete
-        _output.WriteLine("\n4. DELETE:");
+        Console.WriteLine("\n4. DELETE:");
         var deleteResponse = await _client.DeleteAsync($"/api/v1/Countries/{created.Id}");
         Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
-        _output.WriteLine($"   Deleted ID: {created.Id}");
+        Console.WriteLine($"   Deleted ID: {created.Id}");
 
         // Verify deletion
-        _output.WriteLine("\n5. VERIFY DELETION:");
+        Console.WriteLine("\n5. VERIFY DELETION:");
         var verifyResponse = await _client.GetAsync($"/api/v1/Countries/{created.Id}");
         Assert.Equal(HttpStatusCode.NotFound, verifyResponse.StatusCode);
-        _output.WriteLine("   Confirmed: Resource no longer exists");
+        Console.WriteLine("   Confirmed: Resource no longer exists");
 
-        _output.WriteLine("\n=== Full CRUD Flow Completed Successfully ===");
+        Console.WriteLine("\n=== Full CRUD Flow Completed Successfully ===");
     }
 
     [Fact]
@@ -727,8 +726,8 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
         Assert.All(result, country => Assert.True(country.IsActive));
         Assert.DoesNotContain(result, country => country.Code == "XX");
 
-        _output.WriteLine($"Active filter returned {result.Count()} active countries");
-        _output.WriteLine("Verified that inactive countries are excluded");
+        Console.WriteLine($"Active filter returned {result.Count()} active countries");
+        Console.WriteLine("Verified that inactive countries are excluded");
     }
 
     #endregion
@@ -891,7 +890,7 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
         await context.UserRoles.AddAsync(userRole);
         await context.SaveChangesAsync();
 
-        _output.WriteLine($"Created {roleName} user: {username}");
+        Console.WriteLine($"Created {roleName} user: {username}");
 
         return (username, email);
     }
@@ -926,3 +925,4 @@ public class CountriesControllerTests : IClassFixture<TestWebApplicationFactory>
 
     #endregion
 }
+

@@ -7,7 +7,7 @@ using ISPAdmin.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace DR_Admin.IntegrationTests.Controllers;
 
@@ -15,14 +15,13 @@ namespace DR_Admin.IntegrationTests.Controllers;
 public class CustomersControllerTests : IClassFixture<TestWebApplicationFactory>
 {
     private readonly HttpClient _client;
-    private readonly ITestOutputHelper _output;
+    
     private readonly TestWebApplicationFactory _factory;
 
-    public CustomersControllerTests(TestWebApplicationFactory factory, ITestOutputHelper output)
+    public CustomersControllerTests(TestWebApplicationFactory factory)
     {
         _factory = factory;
         _client = factory.CreateClient();
-        _output = output;
     }
 
     #region Get All Customers Tests
@@ -47,10 +46,10 @@ public class CustomersControllerTests : IClassFixture<TestWebApplicationFactory>
         Assert.NotNull(result);
         Assert.NotEmpty(result);
 
-        _output.WriteLine($"Retrieved {result.Count()} customers");
+        Console.WriteLine($"Retrieved {result.Count()} customers");
         foreach (var customer in result.Take(5))
         {
-            _output.WriteLine($"  - {customer.Name} ({customer.Email})");
+            Console.WriteLine($"  - {customer.Name} ({customer.Email})");
         }
     }
 
@@ -137,7 +136,7 @@ public class CustomersControllerTests : IClassFixture<TestWebApplicationFactory>
         Assert.Equal(customerId, result.Id);
         Assert.NotEmpty(result.Name);
 
-        _output.WriteLine($"Retrieved customer: {result.Name} ({result.Email})");
+        Console.WriteLine($"Retrieved customer: {result.Name} ({result.Email})");
     }
 
     [Fact]
@@ -210,9 +209,9 @@ public class CustomersControllerTests : IClassFixture<TestWebApplicationFactory>
         Assert.True(result.CreatedAt > DateTime.MinValue);
         Assert.True(result.UpdatedAt > DateTime.MinValue);
 
-        _output.WriteLine($"Created customer with ID: {result.Id}");
-        _output.WriteLine($"  Name: {result.Name}");
-        _output.WriteLine($"  Email: {result.Email}");
+        Console.WriteLine($"Created customer with ID: {result.Id}");
+        Console.WriteLine($"  Name: {result.Name}");
+        Console.WriteLine($"  Email: {result.Email}");
     }
 
     [Fact]
@@ -323,9 +322,9 @@ public class CustomersControllerTests : IClassFixture<TestWebApplicationFactory>
         Assert.Equal(updateDto.Name, result.Name);
         Assert.Equal(updateDto.Email, result.Email);
 
-        _output.WriteLine($"Updated customer ID {result.Id}:");
-        _output.WriteLine($"  New Name: {result.Name}");
-        _output.WriteLine($"  New Email: {result.Email}");
+        Console.WriteLine($"Updated customer ID {result.Id}:");
+        Console.WriteLine($"  New Name: {result.Name}");
+        Console.WriteLine($"  New Email: {result.Email}");
     }
 
     [Fact]
@@ -412,7 +411,7 @@ public class CustomersControllerTests : IClassFixture<TestWebApplicationFactory>
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
 
-        _output.WriteLine($"Successfully deleted customer ID: {customerId}");
+        Console.WriteLine($"Successfully deleted customer ID: {customerId}");
 
         // Verify it's actually deleted
         var getResponse = await _client.GetAsync($"/api/v1/Customers/{customerId}");
@@ -474,10 +473,10 @@ public class CustomersControllerTests : IClassFixture<TestWebApplicationFactory>
         var token = await GetAdminTokenAsync();
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        _output.WriteLine("=== Starting Full CRUD Flow for Customers ===");
+        Console.WriteLine("=== Starting Full CRUD Flow for Customers ===");
 
         // Create
-        _output.WriteLine("\n1. CREATE:");
+        Console.WriteLine("\n1. CREATE:");
         var createDto = new CreateCustomerDto
         {
             Name = "CRUD Test Customer",
@@ -498,10 +497,10 @@ public class CustomersControllerTests : IClassFixture<TestWebApplicationFactory>
 
         var created = await createResponse.Content.ReadFromJsonAsync<CustomerDto>();
         Assert.NotNull(created);
-        _output.WriteLine($"   Created ID: {created.Id}, Name: {created.Name}");
+        Console.WriteLine($"   Created ID: {created.Id}, Name: {created.Name}");
 
         // Read
-        _output.WriteLine("\n2. READ:");
+        Console.WriteLine("\n2. READ:");
         var readResponse = await _client.GetAsync($"/api/v1/Customers/{created.Id}");
         Assert.Equal(HttpStatusCode.OK, readResponse.StatusCode);
 
@@ -509,10 +508,10 @@ public class CustomersControllerTests : IClassFixture<TestWebApplicationFactory>
         Assert.NotNull(read);
         Assert.Equal(created.Id, read.Id);
         Assert.Equal(createDto.Name, read.Name);
-        _output.WriteLine($"   Retrieved: {read.Name} ({read.Email})");
+        Console.WriteLine($"   Retrieved: {read.Name} ({read.Email})");
 
         // Update
-        _output.WriteLine("\n3. UPDATE:");
+        Console.WriteLine("\n3. UPDATE:");
         var updateDto = new UpdateCustomerDto
         {
             Name = "CRUD Updated Customer",
@@ -536,21 +535,21 @@ public class CustomersControllerTests : IClassFixture<TestWebApplicationFactory>
         Assert.NotNull(updated);
         Assert.Equal(updateDto.Name, updated.Name);
         Assert.Equal(updateDto.Email, updated.Email);
-        _output.WriteLine($"   Updated to: {updated.Name} ({updated.Email})");
+        Console.WriteLine($"   Updated to: {updated.Name} ({updated.Email})");
 
         // Delete
-        _output.WriteLine("\n4. DELETE:");
+        Console.WriteLine("\n4. DELETE:");
         var deleteResponse = await _client.DeleteAsync($"/api/v1/Customers/{created.Id}");
         Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
-        _output.WriteLine($"   Deleted ID: {created.Id}");
+        Console.WriteLine($"   Deleted ID: {created.Id}");
 
         // Verify deletion
-        _output.WriteLine("\n5. VERIFY DELETION:");
+        Console.WriteLine("\n5. VERIFY DELETION:");
         var verifyResponse = await _client.GetAsync($"/api/v1/Customers/{created.Id}");
         Assert.Equal(HttpStatusCode.NotFound, verifyResponse.StatusCode);
-        _output.WriteLine("   Confirmed: Resource no longer exists");
+        Console.WriteLine("   Confirmed: Resource no longer exists");
 
-        _output.WriteLine("\n=== Full CRUD Flow Completed Successfully ===");
+        Console.WriteLine("\n=== Full CRUD Flow Completed Successfully ===");
     }
 
     #endregion
@@ -704,7 +703,7 @@ public class CustomersControllerTests : IClassFixture<TestWebApplicationFactory>
         await context.UserRoles.AddAsync(userRole);
         await context.SaveChangesAsync();
 
-        _output.WriteLine($"Created {roleName} user: {username}");
+        Console.WriteLine($"Created {roleName} user: {username}");
 
         return (username, email);
     }
@@ -736,3 +735,4 @@ public class CustomersControllerTests : IClassFixture<TestWebApplicationFactory>
 
     #endregion
 }
+

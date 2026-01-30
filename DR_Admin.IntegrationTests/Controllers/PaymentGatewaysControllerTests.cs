@@ -7,7 +7,7 @@ using ISPAdmin.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace DR_Admin.IntegrationTests.Controllers;
 
@@ -15,14 +15,13 @@ namespace DR_Admin.IntegrationTests.Controllers;
 public class PaymentGatewaysControllerTests : IClassFixture<TestWebApplicationFactory>
 {
     private readonly HttpClient _client;
-    private readonly ITestOutputHelper _output;
+    
     private readonly TestWebApplicationFactory _factory;
 
-    public PaymentGatewaysControllerTests(TestWebApplicationFactory factory, ITestOutputHelper output)
+    public PaymentGatewaysControllerTests(TestWebApplicationFactory factory)
     {
         _factory = factory;
         _client = factory.CreateClient();
-        _output = output;
     }
 
     #region Get All Payment Gateways Tests
@@ -47,10 +46,10 @@ public class PaymentGatewaysControllerTests : IClassFixture<TestWebApplicationFa
         Assert.NotNull(result);
         Assert.NotEmpty(result);
 
-        _output.WriteLine($"Retrieved {result.Count()} payment gateways");
+        Console.WriteLine($"Retrieved {result.Count()} payment gateways");
         foreach (var gateway in result)
         {
-            _output.WriteLine($"  - {gateway.Name} ({gateway.ProviderCode}): Active={gateway.IsActive}, Default={gateway.IsDefault}");
+            Console.WriteLine($"  - {gateway.Name} ({gateway.ProviderCode}): Active={gateway.IsActive}, Default={gateway.IsDefault}");
         }
     }
 
@@ -120,7 +119,7 @@ public class PaymentGatewaysControllerTests : IClassFixture<TestWebApplicationFa
         Assert.NotNull(result);
         Assert.All(result, gateway => Assert.True(gateway.IsActive));
 
-        _output.WriteLine($"Retrieved {result.Count()} active payment gateways");
+        Console.WriteLine($"Retrieved {result.Count()} active payment gateways");
     }
 
     #endregion
@@ -147,7 +146,7 @@ public class PaymentGatewaysControllerTests : IClassFixture<TestWebApplicationFa
         Assert.NotNull(result);
         Assert.True(result.IsDefault);
 
-        _output.WriteLine($"Default payment gateway: {result.Name} ({result.ProviderCode})");
+        Console.WriteLine($"Default payment gateway: {result.Name} ({result.ProviderCode})");
     }
 
     [Fact]
@@ -189,7 +188,7 @@ public class PaymentGatewaysControllerTests : IClassFixture<TestWebApplicationFa
         Assert.NotNull(result);
         Assert.Equal(gatewayId, result.Id);
 
-        _output.WriteLine($"Retrieved payment gateway: {result.Name}");
+        Console.WriteLine($"Retrieved payment gateway: {result.Name}");
     }
 
     [Fact]
@@ -231,7 +230,7 @@ public class PaymentGatewaysControllerTests : IClassFixture<TestWebApplicationFa
         Assert.NotNull(result);
         Assert.Equal("stripe", result.ProviderCode);
 
-        _output.WriteLine($"Retrieved payment gateway by provider: {result.Name}");
+        Console.WriteLine($"Retrieved payment gateway by provider: {result.Name}");
     }
 
     [Fact]
@@ -289,7 +288,7 @@ public class PaymentGatewaysControllerTests : IClassFixture<TestWebApplicationFa
         Assert.Equal(createDto.Name, result.Name);
         Assert.Equal(createDto.ProviderCode, result.ProviderCode);
 
-        _output.WriteLine($"Created payment gateway ID: {result.Id}");
+        Console.WriteLine($"Created payment gateway ID: {result.Id}");
     }
 
     [Fact]
@@ -351,7 +350,7 @@ public class PaymentGatewaysControllerTests : IClassFixture<TestWebApplicationFa
         Assert.Equal(updateDto.Name, result.Name);
         Assert.Equal(updateDto.FeePercentage, result.FeePercentage);
 
-        _output.WriteLine($"Updated payment gateway ID: {result.Id}");
+        Console.WriteLine($"Updated payment gateway ID: {result.Id}");
     }
 
     [Fact]
@@ -395,7 +394,7 @@ public class PaymentGatewaysControllerTests : IClassFixture<TestWebApplicationFa
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        _output.WriteLine($"Set payment gateway {gatewayId} as default");
+        Console.WriteLine($"Set payment gateway {gatewayId} as default");
     }
 
     [Fact]
@@ -433,7 +432,7 @@ public class PaymentGatewaysControllerTests : IClassFixture<TestWebApplicationFa
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        _output.WriteLine($"Deactivated payment gateway {gatewayId}");
+        Console.WriteLine($"Deactivated payment gateway {gatewayId}");
     }
 
     #endregion
@@ -456,7 +455,7 @@ public class PaymentGatewaysControllerTests : IClassFixture<TestWebApplicationFa
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        _output.WriteLine($"Deleted payment gateway {gatewayId}");
+        Console.WriteLine($"Deleted payment gateway {gatewayId}");
     }
 
     [Fact]
@@ -742,3 +741,4 @@ public class PaymentGatewaysControllerTests : IClassFixture<TestWebApplicationFa
         }
     }
 }
+

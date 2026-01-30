@@ -51,6 +51,53 @@ public class RegistrarsController : ControllerBase
     }
 
     /// <summary>
+    /// Downloads all TLDs supported by the registrar from their API and updates the database
+    /// </summary>
+    /// <param name="registrarId">The unique identifier of the registrar</param>
+    /// <returns>Number of TLDs downloaded and updated</returns>
+    /// <response code="200">Returns the count of TLDs downloaded</response>
+    /// <response code="400">If the registrar is not found or invalid</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have required permissions</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpPost("{registrarId}/tlds/download")]
+    [Authorize(Policy = "Registrar.Write")]
+    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult> DownloadTldsForRegistrar(int registrarId)
+    {
+        try
+        {
+            _log.Information("API: DownloadTldsForRegistrar called for registrar {RegistrarId} by user {User}", 
+                registrarId, User.Identity?.Name);
+
+            var count = await _registrarService.DownloadTldsForRegistrarAsync(registrarId);
+            
+            _log.Information("API: Successfully downloaded {Count} TLDs for registrar {RegistrarId}", 
+                count, registrarId);
+            
+            return Ok(new { 
+                message = $"Successfully downloaded and updated {count} TLDs for the registrar",
+                count = count,
+                registrarId = registrarId
+            });
+        }
+        catch (InvalidOperationException ex)
+        {
+            _log.Warning(ex, "API: Invalid operation in DownloadTldsForRegistrar for registrar {RegistrarId}", registrarId);
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in DownloadTldsForRegistrar for registrar {RegistrarId}", registrarId);
+            return StatusCode(500, "An error occurred while downloading TLDs for the registrar");
+        }
+    }
+
+    /// <summary>
     /// Assigns a TLD to a registrar using their unique identifiers
     /// </summary>
     /// <param name="registrarId">The unique identifier of the registrar</param>

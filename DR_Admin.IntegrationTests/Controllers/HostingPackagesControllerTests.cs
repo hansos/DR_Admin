@@ -7,7 +7,7 @@ using ISPAdmin.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace DR_Admin.IntegrationTests.Controllers;
 
@@ -15,14 +15,13 @@ namespace DR_Admin.IntegrationTests.Controllers;
 public class HostingPackagesControllerTests : IClassFixture<TestWebApplicationFactory>
 {
     private readonly HttpClient _client;
-    private readonly ITestOutputHelper _output;
+    
     private readonly TestWebApplicationFactory _factory;
 
-    public HostingPackagesControllerTests(TestWebApplicationFactory factory, ITestOutputHelper output)
+    public HostingPackagesControllerTests(TestWebApplicationFactory factory)
     {
         _factory = factory;
         _client = factory.CreateClient();
-        _output = output;
     }
 
     #region Get All Hosting Packages Tests
@@ -47,10 +46,10 @@ public class HostingPackagesControllerTests : IClassFixture<TestWebApplicationFa
         Assert.NotNull(result);
         Assert.NotEmpty(result);
 
-        _output.WriteLine($"Retrieved {result.Count()} hosting packages");
+        Console.WriteLine($"Retrieved {result.Count()} hosting packages");
         foreach (var package in result)
         {
-            _output.WriteLine($"  - {package.Name}: ${package.MonthlyPrice}/month (Active: {package.IsActive})");
+            Console.WriteLine($"  - {package.Name}: ${package.MonthlyPrice}/month (Active: {package.IsActive})");
         }
     }
 
@@ -121,7 +120,7 @@ public class HostingPackagesControllerTests : IClassFixture<TestWebApplicationFa
         Assert.NotNull(result);
         Assert.All(result, package => Assert.True(package.IsActive));
 
-        _output.WriteLine($"Retrieved {result.Count()} active hosting packages");
+        Console.WriteLine($"Retrieved {result.Count()} active hosting packages");
     }
 
     [Fact]
@@ -164,7 +163,7 @@ public class HostingPackagesControllerTests : IClassFixture<TestWebApplicationFa
         Assert.NotNull(result);
         Assert.Equal(packageId, result.Id);
 
-        _output.WriteLine($"Retrieved hosting package: {result.Name} - ${result.MonthlyPrice}");
+        Console.WriteLine($"Retrieved hosting package: {result.Name} - ${result.MonthlyPrice}");
     }
 
     [Fact]
@@ -238,7 +237,7 @@ public class HostingPackagesControllerTests : IClassFixture<TestWebApplicationFa
         Assert.Equal(createDto.MonthlyPrice, result.MonthlyPrice);
         Assert.Equal(createDto.DiskSpaceMB, result.DiskSpaceMB);
 
-        _output.WriteLine($"Created hosting package with ID: {result.Id}");
+        Console.WriteLine($"Created hosting package with ID: {result.Id}");
     }
 
     [Fact]
@@ -304,7 +303,7 @@ public class HostingPackagesControllerTests : IClassFixture<TestWebApplicationFa
         Assert.Equal(updateDto.Name, result.Name);
         Assert.Equal(updateDto.MonthlyPrice, result.MonthlyPrice);
 
-        _output.WriteLine($"Updated hosting package ID: {result.Id}");
+        Console.WriteLine($"Updated hosting package ID: {result.Id}");
     }
 
     [Fact]
@@ -374,7 +373,7 @@ public class HostingPackagesControllerTests : IClassFixture<TestWebApplicationFa
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
 
-        _output.WriteLine($"Deleted hosting package ID: {packageId}");
+        Console.WriteLine($"Deleted hosting package ID: {packageId}");
     }
 
     [Fact]
@@ -557,7 +556,7 @@ public class HostingPackagesControllerTests : IClassFixture<TestWebApplicationFa
         await context.UserRoles.AddAsync(userRole);
         await context.SaveChangesAsync();
 
-        _output.WriteLine($"Created {roleName} user: {username}");
+        Console.WriteLine($"Created {roleName} user: {username}");
 
         return (username, email);
     }
@@ -589,3 +588,4 @@ public class HostingPackagesControllerTests : IClassFixture<TestWebApplicationFa
 
     #endregion
 }
+

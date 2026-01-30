@@ -3,7 +3,6 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using ISPAdmin.DTOs;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace DR_Admin.IntegrationTests.Controllers;
 
@@ -11,14 +10,12 @@ namespace DR_Admin.IntegrationTests.Controllers;
 public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
 {
     private readonly HttpClient _client;
-    private readonly ITestOutputHelper _output;
     private readonly TestWebApplicationFactory _factory;
 
-    public AuthControllerTests(TestWebApplicationFactory factory, ITestOutputHelper output)
+    public AuthControllerTests(TestWebApplicationFactory factory)
     {
         _factory = factory;
         _client = factory.CreateClient();
-        _output = output;
     }
 
     #region Login Tests
@@ -63,11 +60,11 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
         Assert.True(result.ExpiresAt > DateTime.UtcNow);
         Assert.NotNull(result.Roles);
 
-        _output.WriteLine($"Access Token: {result.AccessToken[..20]}...");
-        _output.WriteLine($"Refresh Token: {result.RefreshToken[..20]}...");
-        _output.WriteLine($"Username: {result.Username}");
-        _output.WriteLine($"Expires At: {result.ExpiresAt}");
-        _output.WriteLine($"Roles: {string.Join(", ", result.Roles)}");
+        Console.WriteLine($"Access Token: {result.AccessToken[..20]}...");
+        Console.WriteLine($"Refresh Token: {result.RefreshToken[..20]}...");
+        Console.WriteLine($"Username: {result.Username}");
+        Console.WriteLine($"Expires At: {result.ExpiresAt}");
+        Console.WriteLine($"Roles: {string.Join(", ", result.Roles)}");
 
         // Store for other tests
         TestTokenStorage.AccessToken = result.AccessToken;
@@ -96,7 +93,7 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
         var content = await response.Content.ReadAsStringAsync();
         Assert.Contains("Invalid username/email or password", content);
 
-        _output.WriteLine($"Response: {content}");
+        Console.WriteLine($"Response: {content}");
     }
 
     [Fact]
@@ -133,7 +130,7 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
         var content = await response.Content.ReadAsStringAsync();
         Assert.Contains("Invalid username/email or password", content);
 
-        _output.WriteLine($"Response: {content}");
+        Console.WriteLine($"Response: {content}");
     }
 
     [Fact]
@@ -156,7 +153,7 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
         var content = await response.Content.ReadAsStringAsync();
         Assert.Contains("Username/email and password are required", content);
 
-        _output.WriteLine($"Response: {content}");
+        Console.WriteLine($"Response: {content}");
     }
 
     [Fact]
@@ -179,7 +176,7 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
         var content = await response.Content.ReadAsStringAsync();
         Assert.Contains("Username/email and password are required", content);
 
-        _output.WriteLine($"Response: {content}");
+        Console.WriteLine($"Response: {content}");
     }
 
     #endregion
@@ -238,9 +235,9 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
         // New tokens should be different from old tokens
         Assert.NotEqual(loginResult.AccessToken, result.AccessToken);
 
-        _output.WriteLine($"Old Access Token: {loginResult.AccessToken[..20]}...");
-        _output.WriteLine($"New Access Token: {result.AccessToken[..20]}...");
-        _output.WriteLine($"New Refresh Token: {result.RefreshToken[..20]}...");
+        Console.WriteLine($"Old Access Token: {loginResult.AccessToken[..20]}...");
+        Console.WriteLine($"New Access Token: {result.AccessToken[..20]}...");
+        Console.WriteLine($"New Refresh Token: {result.RefreshToken[..20]}...");
     }
 
     [Fact]
@@ -262,7 +259,7 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
         var content = await response.Content.ReadAsStringAsync();
         Assert.Contains("Invalid or expired refresh token", content);
 
-        _output.WriteLine($"Response: {content}");
+        Console.WriteLine($"Response: {content}");
     }
 
     [Fact]
@@ -284,7 +281,7 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
         var content = await response.Content.ReadAsStringAsync();
         Assert.Contains("Refresh token is required", content);
 
-        _output.WriteLine($"Response: {content}");
+        Console.WriteLine($"Response: {content}");
     }
 
     [Fact]
@@ -340,7 +337,7 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
         var content = await response.Content.ReadAsStringAsync();
         Assert.Contains("Invalid or expired refresh token", content);
 
-        _output.WriteLine($"Response: {content}");
+        Console.WriteLine($"Response: {content}");
     }
 
     #endregion
@@ -392,7 +389,7 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
         var content = await response.Content.ReadAsStringAsync();
         Assert.Contains("Logged out successfully", content);
 
-        _output.WriteLine($"Response: {content}");
+        Console.WriteLine($"Response: {content}");
 
         // Reset authorization header
         _client.DefaultRequestHeaders.Authorization = null;
@@ -414,7 +411,7 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
 
-        _output.WriteLine($"Status: {response.StatusCode}");
+        Console.WriteLine($"Status: {response.StatusCode}");
     }
 
     [Fact]
@@ -462,7 +459,7 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
         var content = await response.Content.ReadAsStringAsync();
         Assert.Contains("Refresh token is required", content);
 
-        _output.WriteLine($"Response: {content}");
+        Console.WriteLine($"Response: {content}");
 
         // Reset authorization header
         _client.DefaultRequestHeaders.Authorization = null;
@@ -513,7 +510,7 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
         Assert.Contains("verifyuser", content);
         Assert.Contains("isAuthenticated", content);
 
-        _output.WriteLine($"Response: {content}");
+        Console.WriteLine($"Response: {content}");
 
         // Reset authorization header
         _client.DefaultRequestHeaders.Authorization = null;
@@ -531,7 +528,7 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
 
-        _output.WriteLine($"Status: {response.StatusCode}");
+        Console.WriteLine($"Status: {response.StatusCode}");
     }
 
     [Fact]
@@ -547,7 +544,7 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
 
-        _output.WriteLine($"Status: {response.StatusCode}");
+        Console.WriteLine($"Status: {response.StatusCode}");
 
         // Reset authorization header
         _client.DefaultRequestHeaders.Authorization = null;
@@ -567,7 +564,7 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
 
-        _output.WriteLine($"Status: {response.StatusCode}");
+        Console.WriteLine($"Status: {response.StatusCode}");
 
         // Reset authorization header
         _client.DefaultRequestHeaders.Authorization = null;
@@ -597,7 +594,7 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
 
         var registerResponse = await _client.PostAsJsonAsync("/api/v1/MyAccount/register", registerRequest);
         Assert.Equal(HttpStatusCode.Created, registerResponse.StatusCode);
-        _output.WriteLine("? Registration successful");
+        Console.WriteLine("? Registration successful");
 
         // 2. Login
         var loginRequest = new LoginRequestDto
@@ -610,13 +607,13 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
         Assert.Equal(HttpStatusCode.OK, loginResponse.StatusCode);
         var loginResult = await loginResponse.Content.ReadFromJsonAsync<LoginResponseDto>();
         Assert.NotNull(loginResult);
-        _output.WriteLine("? Login successful");
+        Console.WriteLine("? Login successful");
 
         // 3. Verify token
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", loginResult.AccessToken);
         var verifyResponse = await _client.GetAsync("/api/v1/Auth/verify");
         Assert.Equal(HttpStatusCode.OK, verifyResponse.StatusCode);
-        _output.WriteLine("? Token verification successful");
+        Console.WriteLine("? Token verification successful");
 
         // 4. Refresh token
         await Task.Delay(1000); // Ensure new tokens
@@ -629,7 +626,7 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
         Assert.Equal(HttpStatusCode.OK, refreshResponse.StatusCode);
         var refreshResult = await refreshResponse.Content.ReadFromJsonAsync<LoginResponseDto>();
         Assert.NotNull(refreshResult);
-        _output.WriteLine("? Token refresh successful");
+        Console.WriteLine("? Token refresh successful");
 
         // 5. Logout
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", refreshResult.AccessToken);
@@ -640,7 +637,7 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
 
         var logoutResponse = await _client.PostAsJsonAsync("/api/v1/Auth/logout", logoutRequest);
         Assert.Equal(HttpStatusCode.OK, logoutResponse.StatusCode);
-        _output.WriteLine("? Logout successful");
+        Console.WriteLine("? Logout successful");
 
         // 6. Verify token is revoked - try to refresh again
         _client.DefaultRequestHeaders.Authorization = null;
@@ -649,10 +646,13 @@ public class AuthControllerTests : IClassFixture<TestWebApplicationFactory>
             RefreshToken = refreshResult.RefreshToken
         });
         Assert.Equal(HttpStatusCode.Unauthorized, refreshAfterLogout.StatusCode);
-        _output.WriteLine("? Token properly revoked after logout");
+        Console.WriteLine("? Token properly revoked after logout");
 
-        _output.WriteLine("\n? Full authentication flow completed successfully!");
+        Console.WriteLine("\n? Full authentication flow completed successfully!");
     }
 
     #endregion
 }
+
+
+

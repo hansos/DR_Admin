@@ -8,7 +8,7 @@ using ISPAdmin.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace DR_Admin.IntegrationTests.Controllers;
 
@@ -16,14 +16,13 @@ namespace DR_Admin.IntegrationTests.Controllers;
 public class InvoiceLinesControllerTests : IClassFixture<TestWebApplicationFactory>
 {
     private readonly HttpClient _client;
-    private readonly ITestOutputHelper _output;
+    
     private readonly TestWebApplicationFactory _factory;
 
-    public InvoiceLinesControllerTests(TestWebApplicationFactory factory, ITestOutputHelper output)
+    public InvoiceLinesControllerTests(TestWebApplicationFactory factory)
     {
         _factory = factory;
         _client = factory.CreateClient();
-        _output = output;
     }
 
     #region Get All Invoice Lines Tests
@@ -48,10 +47,10 @@ public class InvoiceLinesControllerTests : IClassFixture<TestWebApplicationFacto
         Assert.NotNull(result);
         Assert.NotEmpty(result);
 
-        _output.WriteLine($"Retrieved {result.Count()} invoice lines");
+        Console.WriteLine($"Retrieved {result.Count()} invoice lines");
         foreach (var line in result)
         {
-            _output.WriteLine($"  - {line.Description}: {line.Quantity} x ${line.UnitPrice} = ${line.TotalPrice}");
+            Console.WriteLine($"  - {line.Description}: {line.Quantity} x ${line.UnitPrice} = ${line.TotalPrice}");
         }
     }
 
@@ -122,7 +121,7 @@ public class InvoiceLinesControllerTests : IClassFixture<TestWebApplicationFacto
         Assert.NotNull(result);
         Assert.Equal(lineId, result.Id);
 
-        _output.WriteLine($"Retrieved invoice line: {result.Description}");
+        Console.WriteLine($"Retrieved invoice line: {result.Description}");
     }
 
     [Fact]
@@ -181,7 +180,7 @@ public class InvoiceLinesControllerTests : IClassFixture<TestWebApplicationFacto
         Assert.NotEmpty(result);
         Assert.All(result, line => Assert.Equal(invoiceId, line.InvoiceId));
 
-        _output.WriteLine($"Retrieved {result.Count()} invoice lines for invoice {invoiceId}");
+        Console.WriteLine($"Retrieved {result.Count()} invoice lines for invoice {invoiceId}");
     }
 
     [Fact]
@@ -244,7 +243,7 @@ public class InvoiceLinesControllerTests : IClassFixture<TestWebApplicationFacto
         Assert.Equal(createDto.Description, result.Description);
         Assert.Equal(createDto.UnitPrice, result.UnitPrice);
 
-        _output.WriteLine($"Created invoice line with ID: {result.Id}");
+        Console.WriteLine($"Created invoice line with ID: {result.Id}");
     }
 
     [Fact]
@@ -345,7 +344,7 @@ public class InvoiceLinesControllerTests : IClassFixture<TestWebApplicationFacto
         Assert.Equal(updateDto.Description, result.Description);
         Assert.Equal(updateDto.UnitPrice, result.UnitPrice);
 
-        _output.WriteLine($"Updated invoice line ID: {result.Id}");
+        Console.WriteLine($"Updated invoice line ID: {result.Id}");
     }
 
     [Fact]
@@ -452,7 +451,7 @@ public class InvoiceLinesControllerTests : IClassFixture<TestWebApplicationFacto
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
 
-        _output.WriteLine($"Deleted invoice line ID: {lineId}");
+        Console.WriteLine($"Deleted invoice line ID: {lineId}");
     }
 
     [Fact]
@@ -745,7 +744,7 @@ public class InvoiceLinesControllerTests : IClassFixture<TestWebApplicationFacto
         await context.UserRoles.AddAsync(userRole);
         await context.SaveChangesAsync();
 
-        _output.WriteLine($"Created {roleName} user: {username}");
+        Console.WriteLine($"Created {roleName} user: {username}");
 
         return (username, email);
     }
@@ -777,3 +776,4 @@ public class InvoiceLinesControllerTests : IClassFixture<TestWebApplicationFacto
 
     #endregion
 }
+

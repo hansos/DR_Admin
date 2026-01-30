@@ -7,7 +7,7 @@ using ISPAdmin.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace DR_Admin.IntegrationTests.Controllers;
 
@@ -15,14 +15,13 @@ namespace DR_Admin.IntegrationTests.Controllers;
 public class ServerControlPanelsControllerTests : IClassFixture<TestWebApplicationFactory>
 {
     private readonly HttpClient _client;
-    private readonly ITestOutputHelper _output;
+    
     private readonly TestWebApplicationFactory _factory;
 
-    public ServerControlPanelsControllerTests(TestWebApplicationFactory factory, ITestOutputHelper output)
+    public ServerControlPanelsControllerTests(TestWebApplicationFactory factory)
     {
         _factory = factory;
         _client = factory.CreateClient();
-        _output = output;
     }
 
     [Fact]
@@ -39,7 +38,7 @@ public class ServerControlPanelsControllerTests : IClassFixture<TestWebApplicati
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        _output.WriteLine("Retrieved server control panels");
+        Console.WriteLine("Retrieved server control panels");
     }
 
     [Fact]
@@ -159,3 +158,4 @@ public class ServerControlPanelsControllerTests : IClassFixture<TestWebApplicati
         return result!.AccessToken;
     }
 }
+

@@ -7,7 +7,7 @@ using ISPAdmin.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace DR_Admin.IntegrationTests.Controllers;
 
@@ -15,14 +15,13 @@ namespace DR_Admin.IntegrationTests.Controllers;
 public class TokensControllerTests : IClassFixture<TestWebApplicationFactory>
 {
     private readonly HttpClient _client;
-    private readonly ITestOutputHelper _output;
+    
     private readonly TestWebApplicationFactory _factory;
 
-    public TokensControllerTests(TestWebApplicationFactory factory, ITestOutputHelper output)
+    public TokensControllerTests(TestWebApplicationFactory factory)
     {
         _factory = factory;
         _client = factory.CreateClient();
-        _output = output;
     }
 
     [Fact]
@@ -39,7 +38,7 @@ public class TokensControllerTests : IClassFixture<TestWebApplicationFactory>
         // Assert - tokens endpoint typically returns OK for admin
         // Note: The actual behavior depends on the controller implementation
         Assert.True(response.StatusCode == HttpStatusCode.OK || response.StatusCode == HttpStatusCode.Forbidden);
-        _output.WriteLine($"Tokens endpoint returned: {response.StatusCode}");
+        Console.WriteLine($"Tokens endpoint returned: {response.StatusCode}");
     }
 
     [Fact]
@@ -115,3 +114,4 @@ public class TokensControllerTests : IClassFixture<TestWebApplicationFactory>
         return result!.AccessToken;
     }
 }
+

@@ -7,7 +7,7 @@ using ISPAdmin.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace DR_Admin.IntegrationTests.Controllers;
 
@@ -15,14 +15,13 @@ namespace DR_Admin.IntegrationTests.Controllers;
 public class DnsRecordsControllerTests : IClassFixture<TestWebApplicationFactory>
 {
     private readonly HttpClient _client;
-    private readonly ITestOutputHelper _output;
+    
     private readonly TestWebApplicationFactory _factory;
 
-    public DnsRecordsControllerTests(TestWebApplicationFactory factory, ITestOutputHelper output)
+    public DnsRecordsControllerTests(TestWebApplicationFactory factory)
     {
         _factory = factory;
         _client = factory.CreateClient();
-        _output = output;
     }
 
     #region Get All DNS Records Tests
@@ -47,10 +46,10 @@ public class DnsRecordsControllerTests : IClassFixture<TestWebApplicationFactory
         Assert.NotNull(result);
         Assert.NotEmpty(result);
 
-        _output.WriteLine($"Retrieved {result.Count()} DNS records");
+        Console.WriteLine($"Retrieved {result.Count()} DNS records");
         foreach (var record in result)
         {
-            _output.WriteLine($"  - {record.Name} ({record.Type}): {record.Value}");
+            Console.WriteLine($"  - {record.Name} ({record.Type}): {record.Value}");
         }
     }
 
@@ -121,7 +120,7 @@ public class DnsRecordsControllerTests : IClassFixture<TestWebApplicationFactory
         Assert.NotNull(result);
         Assert.Equal(recordId, result.Id);
 
-        _output.WriteLine($"Retrieved DNS record: {result.Name} ({result.Type})");
+        Console.WriteLine($"Retrieved DNS record: {result.Name} ({result.Type})");
     }
 
     [Fact]
@@ -180,7 +179,7 @@ public class DnsRecordsControllerTests : IClassFixture<TestWebApplicationFactory
         Assert.NotEmpty(result);
         Assert.All(result, record => Assert.Equal(domainId, record.DomainId));
 
-        _output.WriteLine($"Retrieved {result.Count()} DNS records for domain {domainId}");
+        Console.WriteLine($"Retrieved {result.Count()} DNS records for domain {domainId}");
     }
 
     [Fact]
@@ -244,7 +243,7 @@ public class DnsRecordsControllerTests : IClassFixture<TestWebApplicationFactory
         Assert.NotEmpty(result);
         Assert.All(result, record => Assert.Equal("A", record.Type));
 
-        _output.WriteLine($"Retrieved {result.Count()} A records");
+        Console.WriteLine($"Retrieved {result.Count()} A records");
     }
 
     [Fact]
@@ -314,7 +313,7 @@ public class DnsRecordsControllerTests : IClassFixture<TestWebApplicationFactory
         Assert.Equal(createDto.Name, result.Name);
         Assert.Equal(createDto.Value, result.Value);
 
-        _output.WriteLine($"Created DNS record with ID: {result.Id}");
+        Console.WriteLine($"Created DNS record with ID: {result.Id}");
     }
 
     [Fact]
@@ -346,7 +345,7 @@ public class DnsRecordsControllerTests : IClassFixture<TestWebApplicationFactory
         Assert.NotNull(result);
         Assert.Equal(10, result.Priority);
 
-        _output.WriteLine($"Created MX record with priority {result.Priority}");
+        Console.WriteLine($"Created MX record with priority {result.Priority}");
     }
 
     [Fact]
@@ -434,7 +433,7 @@ public class DnsRecordsControllerTests : IClassFixture<TestWebApplicationFactory
         Assert.Equal(updateDto.Value, result.Value);
         Assert.Equal(updateDto.TTL, result.TTL);
 
-        _output.WriteLine($"Updated DNS record ID: {result.Id}");
+        Console.WriteLine($"Updated DNS record ID: {result.Id}");
     }
 
     [Fact]
@@ -511,7 +510,7 @@ public class DnsRecordsControllerTests : IClassFixture<TestWebApplicationFactory
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        _output.WriteLine("Admin successfully updated non-editable record");
+        Console.WriteLine("Admin successfully updated non-editable record");
     }
 
     [Fact]
@@ -559,7 +558,7 @@ public class DnsRecordsControllerTests : IClassFixture<TestWebApplicationFactory
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
 
-        _output.WriteLine($"Deleted DNS record ID: {recordId}");
+        Console.WriteLine($"Deleted DNS record ID: {recordId}");
     }
 
     [Fact]
@@ -1015,7 +1014,7 @@ public class DnsRecordsControllerTests : IClassFixture<TestWebApplicationFactory
         await context.UserRoles.AddAsync(userRole);
         await context.SaveChangesAsync();
 
-        _output.WriteLine($"Created {roleName} user: {username}");
+        Console.WriteLine($"Created {roleName} user: {username}");
 
         return (username, email);
     }
@@ -1050,3 +1049,4 @@ public class DnsRecordsControllerTests : IClassFixture<TestWebApplicationFactory
 
     #endregion
 }
+

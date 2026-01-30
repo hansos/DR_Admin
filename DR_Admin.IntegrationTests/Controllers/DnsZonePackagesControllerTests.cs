@@ -7,7 +7,7 @@ using ISPAdmin.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace DR_Admin.IntegrationTests.Controllers;
 
@@ -15,14 +15,13 @@ namespace DR_Admin.IntegrationTests.Controllers;
 public class DnsZonePackagesControllerTests : IClassFixture<TestWebApplicationFactory>
 {
     private readonly HttpClient _client;
-    private readonly ITestOutputHelper _output;
+    
     private readonly TestWebApplicationFactory _factory;
 
-    public DnsZonePackagesControllerTests(TestWebApplicationFactory factory, ITestOutputHelper output)
+    public DnsZonePackagesControllerTests(TestWebApplicationFactory factory)
     {
         _factory = factory;
         _client = factory.CreateClient();
-        _output = output;
     }
 
     #region Get All DNS Zone Packages Tests
@@ -47,10 +46,10 @@ public class DnsZonePackagesControllerTests : IClassFixture<TestWebApplicationFa
         Assert.NotNull(result);
         Assert.NotEmpty(result);
 
-        _output.WriteLine($"Retrieved {result.Count()} DNS zone packages");
+        Console.WriteLine($"Retrieved {result.Count()} DNS zone packages");
         foreach (var package in result)
         {
-            _output.WriteLine($"  - {package.Name}: {(package.IsDefault ? "DEFAULT" : "")}{(package.IsActive ? "Active" : "Inactive")}");
+            Console.WriteLine($"  - {package.Name}: {(package.IsDefault ? "DEFAULT" : "")}{(package.IsActive ? "Active" : "Inactive")}");
         }
     }
 
@@ -125,10 +124,10 @@ public class DnsZonePackagesControllerTests : IClassFixture<TestWebApplicationFa
         Assert.NotNull(packageWithRecords);
         Assert.NotEmpty(packageWithRecords.Records);
 
-        _output.WriteLine($"Retrieved {result.Count()} DNS zone packages with records");
+        Console.WriteLine($"Retrieved {result.Count()} DNS zone packages with records");
         foreach (var package in result)
         {
-            _output.WriteLine($"  - {package.Name}: {package.Records.Count} records");
+            Console.WriteLine($"  - {package.Name}: {package.Records.Count} records");
         }
     }
 
@@ -155,7 +154,7 @@ public class DnsZonePackagesControllerTests : IClassFixture<TestWebApplicationFa
         Assert.NotNull(result);
         Assert.All(result, package => Assert.True(package.IsActive));
 
-        _output.WriteLine($"Retrieved {result.Count()} active DNS zone packages");
+        Console.WriteLine($"Retrieved {result.Count()} active DNS zone packages");
     }
 
     #endregion
@@ -183,7 +182,7 @@ public class DnsZonePackagesControllerTests : IClassFixture<TestWebApplicationFa
         Assert.True(result.IsDefault);
         Assert.NotEmpty(result.Records);
 
-        _output.WriteLine($"Default package: {result.Name} with {result.Records.Count} records");
+        Console.WriteLine($"Default package: {result.Name} with {result.Records.Count} records");
     }
 
     #endregion
@@ -209,7 +208,7 @@ public class DnsZonePackagesControllerTests : IClassFixture<TestWebApplicationFa
         Assert.NotNull(result);
         Assert.Equal(packageId, result.Id);
 
-        _output.WriteLine($"Retrieved package: {result.Name}");
+        Console.WriteLine($"Retrieved package: {result.Name}");
     }
 
     [Fact]
@@ -263,7 +262,7 @@ public class DnsZonePackagesControllerTests : IClassFixture<TestWebApplicationFa
         Assert.Equal(createDto.IsActive, result.IsActive);
         Assert.Equal(createDto.IsDefault, result.IsDefault);
 
-        _output.WriteLine($"Created DNS zone package with ID: {result.Id}");
+        Console.WriteLine($"Created DNS zone package with ID: {result.Id}");
     }
 
     [Fact]
@@ -322,7 +321,7 @@ public class DnsZonePackagesControllerTests : IClassFixture<TestWebApplicationFa
         Assert.Equal(packageId, result.Id);
         Assert.Equal(updateDto.Name, result.Name);
 
-        _output.WriteLine($"Updated package ID: {result.Id}");
+        Console.WriteLine($"Updated package ID: {result.Id}");
     }
 
     #endregion
@@ -345,7 +344,7 @@ public class DnsZonePackagesControllerTests : IClassFixture<TestWebApplicationFa
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
 
-        _output.WriteLine($"Deleted DNS zone package ID: {packageId}");
+        Console.WriteLine($"Deleted DNS zone package ID: {packageId}");
     }
 
     #endregion
@@ -368,7 +367,7 @@ public class DnsZonePackagesControllerTests : IClassFixture<TestWebApplicationFa
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        _output.WriteLine($"Applied package {packageId} to domain {domainId}");
+        Console.WriteLine($"Applied package {packageId} to domain {domainId}");
 
         // Verify DNS records were created
         using var scope = _factory.Services.CreateScope();
@@ -376,7 +375,7 @@ public class DnsZonePackagesControllerTests : IClassFixture<TestWebApplicationFa
         var dnsRecords = await context.DnsRecords.Where(r => r.DomainId == domainId).ToListAsync();
         Assert.NotEmpty(dnsRecords);
 
-        _output.WriteLine($"Created {dnsRecords.Count} DNS records");
+        Console.WriteLine($"Created {dnsRecords.Count} DNS records");
     }
 
     #endregion
@@ -623,7 +622,7 @@ public class DnsZonePackagesControllerTests : IClassFixture<TestWebApplicationFa
         await context.UserRoles.AddAsync(userRole);
         await context.SaveChangesAsync();
 
-        _output.WriteLine($"Created {roleName} user: {username}");
+        Console.WriteLine($"Created {roleName} user: {username}");
 
         return (username, email);
     }
@@ -658,3 +657,4 @@ public class DnsZonePackagesControllerTests : IClassFixture<TestWebApplicationFa
 
     #endregion
 }
+

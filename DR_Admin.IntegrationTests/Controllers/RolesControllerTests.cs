@@ -7,7 +7,7 @@ using ISPAdmin.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace DR_Admin.IntegrationTests.Controllers;
 
@@ -15,14 +15,13 @@ namespace DR_Admin.IntegrationTests.Controllers;
 public class RolesControllerTests : IClassFixture<TestWebApplicationFactory>
 {
     private readonly HttpClient _client;
-    private readonly ITestOutputHelper _output;
+    
     private readonly TestWebApplicationFactory _factory;
 
-    public RolesControllerTests(TestWebApplicationFactory factory, ITestOutputHelper output)
+    public RolesControllerTests(TestWebApplicationFactory factory)
     {
         _factory = factory;
         _client = factory.CreateClient();
-        _output = output;
     }
 
     [Fact]
@@ -43,7 +42,7 @@ public class RolesControllerTests : IClassFixture<TestWebApplicationFactory>
         Assert.NotNull(result);
         Assert.NotEmpty(result);
 
-        _output.WriteLine($"Retrieved {result.Count()} roles");
+        Console.WriteLine($"Retrieved {result.Count()} roles");
     }
 
     [Fact]
@@ -140,3 +139,4 @@ public class RolesControllerTests : IClassFixture<TestWebApplicationFactory>
         return result!.AccessToken;
     }
 }
+

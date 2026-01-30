@@ -7,7 +7,7 @@ using ISPAdmin.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace DR_Admin.IntegrationTests.Controllers;
 
@@ -15,14 +15,13 @@ namespace DR_Admin.IntegrationTests.Controllers;
 public class SalesAgentsControllerTests : IClassFixture<TestWebApplicationFactory>
 {
     private readonly HttpClient _client;
-    private readonly ITestOutputHelper _output;
+    
     private readonly TestWebApplicationFactory _factory;
 
-    public SalesAgentsControllerTests(TestWebApplicationFactory factory, ITestOutputHelper output)
+    public SalesAgentsControllerTests(TestWebApplicationFactory factory)
     {
         _factory = factory;
         _client = factory.CreateClient();
-        _output = output;
     }
 
     [Fact]
@@ -39,7 +38,7 @@ public class SalesAgentsControllerTests : IClassFixture<TestWebApplicationFactor
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        _output.WriteLine("Retrieved sales agents");
+        Console.WriteLine("Retrieved sales agents");
     }
 
     [Fact]
@@ -150,3 +149,4 @@ public class SalesAgentsControllerTests : IClassFixture<TestWebApplicationFactor
         return result!.AccessToken;
     }
 }
+

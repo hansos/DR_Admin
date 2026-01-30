@@ -4,7 +4,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using ISPAdmin.DTOs;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace DR_Admin.IntegrationTests.Controllers;
 
@@ -12,14 +12,13 @@ namespace DR_Admin.IntegrationTests.Controllers;
 public class MyAccountControllerTests : IClassFixture<TestWebApplicationFactory>
 {
     private readonly HttpClient _client;
-    private readonly ITestOutputHelper _output;
+    
     private readonly TestWebApplicationFactory _factory;
 
-    public MyAccountControllerTests(TestWebApplicationFactory factory, ITestOutputHelper output)
+    public MyAccountControllerTests(TestWebApplicationFactory factory)
     {
         _factory = factory;
         _client = factory.CreateClient();
-        _output = output;
     }
 
     #region Registration Tests
@@ -54,9 +53,9 @@ public class MyAccountControllerTests : IClassFixture<TestWebApplicationFactory>
         Assert.Equal(request.Email, result.Email);
         Assert.NotNull(result.EmailConfirmationToken);
 
-        _output.WriteLine($"Registered User ID: {result.UserId}");
-        _output.WriteLine($"Email: {result.Email}");
-        _output.WriteLine($"Confirmation Token: {result.EmailConfirmationToken}");
+        Console.WriteLine($"Registered User ID: {result.UserId}");
+        Console.WriteLine($"Email: {result.Email}");
+        Console.WriteLine($"Confirmation Token: {result.EmailConfirmationToken}");
 
         // Store for later tests
         TestTokenStorage.UserId = result.UserId;
@@ -166,7 +165,7 @@ public class MyAccountControllerTests : IClassFixture<TestWebApplicationFactory>
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
         var content = await response.Content.ReadAsStringAsync();
-        _output.WriteLine($"Confirm Email Response: {content}");
+        Console.WriteLine($"Confirm Email Response: {content}");
     }
 
     [Fact]
@@ -215,10 +214,10 @@ public class MyAccountControllerTests : IClassFixture<TestWebApplicationFactory>
         Assert.NotEmpty(result.Username);
         Assert.NotNull(result.Customer);
 
-        _output.WriteLine($"User ID: {result.Id}");
-        _output.WriteLine($"Username: {result.Username}");
-        _output.WriteLine($"Email: {result.Email}");
-        _output.WriteLine($"Customer: {result.Customer.Name}");
+        Console.WriteLine($"User ID: {result.Id}");
+        Console.WriteLine($"Username: {result.Username}");
+        Console.WriteLine($"Email: {result.Email}");
+        Console.WriteLine($"Customer: {result.Customer.Name}");
     }
 
     [Fact]
@@ -259,7 +258,7 @@ public class MyAccountControllerTests : IClassFixture<TestWebApplicationFactory>
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        _output.WriteLine("Password changed successfully");
+        Console.WriteLine("Password changed successfully");
     }
 
     [Fact]
@@ -331,11 +330,11 @@ public class MyAccountControllerTests : IClassFixture<TestWebApplicationFactory>
         // Check if we already have valid tokens
         if (TestTokenStorage.HasValidAccessToken())
         {
-            _output.WriteLine("Using existing valid access token");
+            Console.WriteLine("Using existing valid access token");
             return TestTokenStorage.UserEmail!;
         }
 
-        _output.WriteLine("Creating new authenticated user...");
+        Console.WriteLine("Creating new authenticated user...");
 
         // Create a new user for testing
         var timestamp = DateTime.UtcNow.Ticks;
@@ -359,7 +358,7 @@ public class MyAccountControllerTests : IClassFixture<TestWebApplicationFactory>
         if (!registerResponse.IsSuccessStatusCode)
         {
             var errorContent = await registerResponse.Content.ReadAsStringAsync();
-            _output.WriteLine($"Registration failed: {registerResponse.StatusCode} - {errorContent}");
+            Console.WriteLine($"Registration failed: {registerResponse.StatusCode} - {errorContent}");
             throw new Exception($"Registration failed: {registerResponse.StatusCode}");
         }
 
@@ -378,7 +377,7 @@ public class MyAccountControllerTests : IClassFixture<TestWebApplicationFactory>
         if (!confirmResponse.IsSuccessStatusCode)
         {
             var errorContent = await confirmResponse.Content.ReadAsStringAsync();
-            _output.WriteLine($"Email confirmation failed: {confirmResponse.StatusCode} - {errorContent}");
+            Console.WriteLine($"Email confirmation failed: {confirmResponse.StatusCode} - {errorContent}");
             throw new Exception($"Email confirmation failed: {confirmResponse.StatusCode}");
         }
 
@@ -394,7 +393,7 @@ public class MyAccountControllerTests : IClassFixture<TestWebApplicationFactory>
         if (!loginResponse.IsSuccessStatusCode)
         {
             var errorContent = await loginResponse.Content.ReadAsStringAsync();
-            _output.WriteLine($"Login failed: {loginResponse.StatusCode} - {errorContent}");
+            Console.WriteLine($"Login failed: {loginResponse.StatusCode} - {errorContent}");
             throw new Exception($"Login failed: {loginResponse.StatusCode}");
         }
 
@@ -411,11 +410,12 @@ public class MyAccountControllerTests : IClassFixture<TestWebApplicationFactory>
         TestTokenStorage.UserId = registerResult.UserId;
         TestTokenStorage.UserEmail = email;
 
-        _output.WriteLine($"Created and authenticated user: {email}");
-        _output.WriteLine($"Access Token: {loginResult.AccessToken[..20]}...");
+        Console.WriteLine($"Created and authenticated user: {email}");
+        Console.WriteLine($"Access Token: {loginResult.AccessToken[..20]}...");
 
         return email;
     }
 
     #endregion
 }
+

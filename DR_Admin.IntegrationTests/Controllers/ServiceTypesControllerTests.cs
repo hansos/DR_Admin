@@ -7,7 +7,7 @@ using ISPAdmin.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace DR_Admin.IntegrationTests.Controllers;
 
@@ -15,14 +15,13 @@ namespace DR_Admin.IntegrationTests.Controllers;
 public class ServiceTypesControllerTests : IClassFixture<TestWebApplicationFactory>
 {
     private readonly HttpClient _client;
-    private readonly ITestOutputHelper _output;
+    
     private readonly TestWebApplicationFactory _factory;
 
-    public ServiceTypesControllerTests(TestWebApplicationFactory factory, ITestOutputHelper output)
+    public ServiceTypesControllerTests(TestWebApplicationFactory factory)
     {
         _factory = factory;
         _client = factory.CreateClient();
-        _output = output;
     }
 
     [Fact]
@@ -44,7 +43,7 @@ public class ServiceTypesControllerTests : IClassFixture<TestWebApplicationFacto
         Assert.NotNull(result);
         Assert.NotEmpty(result);
 
-        _output.WriteLine($"Retrieved {result.Count()} service types");
+        Console.WriteLine($"Retrieved {result.Count()} service types");
     }
 
     [Fact]
@@ -138,3 +137,4 @@ public class ServiceTypesControllerTests : IClassFixture<TestWebApplicationFacto
         return result!.AccessToken;
     }
 }
+

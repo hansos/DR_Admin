@@ -15,6 +15,8 @@ public class Registrar : EntityBase
     /// </summary>
     public string NormalizedName { get; set; } = string.Empty;
 
+
     public ICollection<RegistrarTld> RegistrarTlds { get; set; } = new List<RegistrarTld>();
     public ICollection<Domain> Domains { get; set; } = new List<Domain>();
 }
+

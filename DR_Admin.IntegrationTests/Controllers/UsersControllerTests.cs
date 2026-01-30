@@ -7,7 +7,7 @@ using ISPAdmin.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace DR_Admin.IntegrationTests.Controllers;
 
@@ -15,14 +15,13 @@ namespace DR_Admin.IntegrationTests.Controllers;
 public class UsersControllerTests : IClassFixture<TestWebApplicationFactory>
 {
     private readonly HttpClient _client;
-    private readonly ITestOutputHelper _output;
+    
     private readonly TestWebApplicationFactory _factory;
 
-    public UsersControllerTests(TestWebApplicationFactory factory, ITestOutputHelper output)
+    public UsersControllerTests(TestWebApplicationFactory factory)
     {
         _factory = factory;
         _client = factory.CreateClient();
-        _output = output;
     }
 
     #region Get All Users Tests
@@ -46,7 +45,7 @@ public class UsersControllerTests : IClassFixture<TestWebApplicationFactory>
         Assert.NotNull(result);
         Assert.NotEmpty(result);
 
-        _output.WriteLine($"Retrieved {result.Count()} users");
+        Console.WriteLine($"Retrieved {result.Count()} users");
     }
 
     [Fact]
@@ -114,7 +113,7 @@ public class UsersControllerTests : IClassFixture<TestWebApplicationFactory>
         Assert.NotNull(result);
         Assert.Equal(userId, result.Id);
 
-        _output.WriteLine($"Retrieved user: {result.Username}");
+        Console.WriteLine($"Retrieved user: {result.Username}");
     }
 
     [Fact]
@@ -239,7 +238,7 @@ public class UsersControllerTests : IClassFixture<TestWebApplicationFactory>
         await context.UserRoles.AddAsync(userRole);
         await context.SaveChangesAsync();
 
-        _output.WriteLine($"Created {roleName} user: {username}");
+        Console.WriteLine($"Created {roleName} user: {username}");
 
         return (username, email);
     }
@@ -271,3 +270,4 @@ public class UsersControllerTests : IClassFixture<TestWebApplicationFactory>
 
     #endregion
 }
+

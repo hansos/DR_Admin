@@ -6,7 +6,7 @@ using ISPAdmin.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace DR_Admin.IntegrationTests.Controllers;
 
@@ -14,14 +14,13 @@ namespace DR_Admin.IntegrationTests.Controllers;
 public class InitializationControllerTests : IClassFixture<TestWebApplicationFactory>
 {
     private readonly HttpClient _client;
-    private readonly ITestOutputHelper _output;
+    
     private readonly TestWebApplicationFactory _factory;
 
-    public InitializationControllerTests(TestWebApplicationFactory factory, ITestOutputHelper output)
+    public InitializationControllerTests(TestWebApplicationFactory factory)
     {
         _factory = factory;
         _client = factory.CreateClient();
-        _output = output;
     }
 
     #region Initialize System Tests
@@ -51,7 +50,7 @@ public class InitializationControllerTests : IClassFixture<TestWebApplicationFac
         Assert.NotNull(result);
         Assert.Equal(request.Username, result.Username);
 
-        _output.WriteLine($"System initialized with user: {result.Username}");
+        Console.WriteLine($"System initialized with user: {result.Username}");
     }
 
     [Fact]
@@ -74,7 +73,7 @@ public class InitializationControllerTests : IClassFixture<TestWebApplicationFac
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
 
-        _output.WriteLine("Initialization correctly rejected when users already exist");
+        Console.WriteLine("Initialization correctly rejected when users already exist");
     }
 
     [Fact]
@@ -100,7 +99,7 @@ public class InitializationControllerTests : IClassFixture<TestWebApplicationFac
         var content = await response.Content.ReadAsStringAsync();
         Assert.Contains("Username", content, StringComparison.OrdinalIgnoreCase);
 
-        _output.WriteLine("Initialization correctly rejected when username is missing");
+        Console.WriteLine("Initialization correctly rejected when username is missing");
     }
 
     [Fact]
@@ -126,7 +125,7 @@ public class InitializationControllerTests : IClassFixture<TestWebApplicationFac
         var content = await response.Content.ReadAsStringAsync();
         Assert.Contains("password", content, StringComparison.OrdinalIgnoreCase);
 
-        _output.WriteLine("Initialization correctly rejected when password is missing");
+        Console.WriteLine("Initialization correctly rejected when password is missing");
     }
 
     [Fact]
@@ -152,7 +151,7 @@ public class InitializationControllerTests : IClassFixture<TestWebApplicationFac
         var content = await response.Content.ReadAsStringAsync();
         Assert.Contains("email", content, StringComparison.OrdinalIgnoreCase);
 
-        _output.WriteLine("Initialization correctly rejected when email is missing");
+        Console.WriteLine("Initialization correctly rejected when email is missing");
     }
 
     [Fact]
@@ -181,7 +180,7 @@ public class InitializationControllerTests : IClassFixture<TestWebApplicationFac
         var adminRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == "Admin");
         Assert.NotNull(adminRole);
 
-        _output.WriteLine("Admin role successfully created during initialization");
+        Console.WriteLine("Admin role successfully created during initialization");
     }
 
     [Fact]
@@ -204,7 +203,7 @@ public class InitializationControllerTests : IClassFixture<TestWebApplicationFac
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        _output.WriteLine("Initialization endpoint correctly allows anonymous access");
+        Console.WriteLine("Initialization endpoint correctly allows anonymous access");
     }
 
     #endregion
@@ -230,7 +229,7 @@ public class InitializationControllerTests : IClassFixture<TestWebApplicationFac
 
         await context.SaveChangesAsync();
 
-        _output.WriteLine("Cleaned up all users for initialization test");
+        Console.WriteLine("Cleaned up all users for initialization test");
     }
 
     private async Task EnsureUserExists()
@@ -270,8 +269,9 @@ public class InitializationControllerTests : IClassFixture<TestWebApplicationFac
         context.Users.Add(user);
         await context.SaveChangesAsync();
 
-        _output.WriteLine("Created test user to prevent initialization");
+        Console.WriteLine("Created test user to prevent initialization");
     }
 
     #endregion
 }
+

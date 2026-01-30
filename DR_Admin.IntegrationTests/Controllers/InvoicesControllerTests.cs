@@ -8,7 +8,7 @@ using ISPAdmin.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace DR_Admin.IntegrationTests.Controllers;
 
@@ -16,14 +16,13 @@ namespace DR_Admin.IntegrationTests.Controllers;
 public class InvoicesControllerTests : IClassFixture<TestWebApplicationFactory>
 {
     private readonly HttpClient _client;
-    private readonly ITestOutputHelper _output;
+    
     private readonly TestWebApplicationFactory _factory;
 
-    public InvoicesControllerTests(TestWebApplicationFactory factory, ITestOutputHelper output)
+    public InvoicesControllerTests(TestWebApplicationFactory factory)
     {
         _factory = factory;
         _client = factory.CreateClient();
-        _output = output;
     }
 
     #region Get All Invoices Tests
@@ -48,10 +47,10 @@ public class InvoicesControllerTests : IClassFixture<TestWebApplicationFactory>
         Assert.NotNull(result);
         Assert.NotEmpty(result);
 
-        _output.WriteLine($"Retrieved {result.Count()} invoices");
+        Console.WriteLine($"Retrieved {result.Count()} invoices");
         foreach (var invoice in result)
         {
-            _output.WriteLine($"  - {invoice.InvoiceNumber}: ${invoice.TotalAmount} ({invoice.Status})");
+            Console.WriteLine($"  - {invoice.InvoiceNumber}: ${invoice.TotalAmount} ({invoice.Status})");
         }
     }
 
@@ -123,7 +122,7 @@ public class InvoicesControllerTests : IClassFixture<TestWebApplicationFactory>
         Assert.NotEmpty(result);
         Assert.All(result, invoice => Assert.Equal(customerId, invoice.CustomerId));
 
-        _output.WriteLine($"Retrieved {result.Count()} invoices for customer {customerId}");
+        Console.WriteLine($"Retrieved {result.Count()} invoices for customer {customerId}");
     }
 
     [Fact]
@@ -169,7 +168,7 @@ public class InvoicesControllerTests : IClassFixture<TestWebApplicationFactory>
         Assert.NotNull(result);
         Assert.All(result, invoice => Assert.Equal(InvoiceStatus.Draft, invoice.Status));
 
-        _output.WriteLine($"Retrieved {result.Count()} draft invoices");
+        Console.WriteLine($"Retrieved {result.Count()} draft invoices");
     }
 
     [Fact]
@@ -191,7 +190,7 @@ public class InvoicesControllerTests : IClassFixture<TestWebApplicationFactory>
         Assert.NotNull(result);
         Assert.All(result, invoice => Assert.Equal(InvoiceStatus.Paid, invoice.Status));
 
-        _output.WriteLine($"Retrieved {result.Count()} paid invoices");
+        Console.WriteLine($"Retrieved {result.Count()} paid invoices");
     }
 
     #endregion
@@ -218,7 +217,7 @@ public class InvoicesControllerTests : IClassFixture<TestWebApplicationFactory>
         Assert.NotNull(result);
         Assert.Equal(invoiceId, result.Id);
 
-        _output.WriteLine($"Retrieved invoice: {result.InvoiceNumber}");
+        Console.WriteLine($"Retrieved invoice: {result.InvoiceNumber}");
     }
 
     [Fact]
@@ -260,7 +259,7 @@ public class InvoicesControllerTests : IClassFixture<TestWebApplicationFactory>
         Assert.NotNull(result);
         Assert.Equal(invoiceNumber, result.InvoiceNumber);
 
-        _output.WriteLine($"Retrieved invoice by number: {result.InvoiceNumber}");
+        Console.WriteLine($"Retrieved invoice by number: {result.InvoiceNumber}");
     }
 
     [Fact]
@@ -318,7 +317,7 @@ public class InvoicesControllerTests : IClassFixture<TestWebApplicationFactory>
         Assert.Equal(createDto.InvoiceNumber, result.InvoiceNumber);
         Assert.Equal(createDto.TotalAmount, result.TotalAmount);
 
-        _output.WriteLine($"Created invoice with ID: {result.Id}");
+        Console.WriteLine($"Created invoice with ID: {result.Id}");
     }
 
     [Fact]
@@ -412,7 +411,7 @@ public class InvoicesControllerTests : IClassFixture<TestWebApplicationFactory>
         Assert.Equal(updateDto.Status, result.Status);
         Assert.Equal(updateDto.TotalAmount, result.TotalAmount);
 
-        _output.WriteLine($"Updated invoice ID: {result.Id}");
+        Console.WriteLine($"Updated invoice ID: {result.Id}");
     }
 
     [Fact]
@@ -500,7 +499,7 @@ public class InvoicesControllerTests : IClassFixture<TestWebApplicationFactory>
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
 
-        _output.WriteLine($"Deleted invoice ID: {invoiceId}");
+        Console.WriteLine($"Deleted invoice ID: {invoiceId}");
     }
 
     [Fact]
@@ -802,7 +801,7 @@ public class InvoicesControllerTests : IClassFixture<TestWebApplicationFactory>
         await context.UserRoles.AddAsync(userRole);
         await context.SaveChangesAsync();
 
-        _output.WriteLine($"Created {roleName} user: {username}");
+        Console.WriteLine($"Created {roleName} user: {username}");
 
         return (username, email);
     }
@@ -834,3 +833,4 @@ public class InvoicesControllerTests : IClassFixture<TestWebApplicationFactory>
 
     #endregion
 }
+

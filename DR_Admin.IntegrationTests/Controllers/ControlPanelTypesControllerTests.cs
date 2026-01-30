@@ -7,7 +7,7 @@ using ISPAdmin.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace DR_Admin.IntegrationTests.Controllers;
 
@@ -15,14 +15,13 @@ namespace DR_Admin.IntegrationTests.Controllers;
 public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplicationFactory>
 {
     private readonly HttpClient _client;
-    private readonly ITestOutputHelper _output;
+    
     private readonly TestWebApplicationFactory _factory;
 
-    public ControlPanelTypesControllerTests(TestWebApplicationFactory factory, ITestOutputHelper output)
+    public ControlPanelTypesControllerTests(TestWebApplicationFactory factory)
     {
         _factory = factory;
         _client = factory.CreateClient();
-        _output = output;
     }
 
     #region Get All Control Panel Types Tests
@@ -47,10 +46,10 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
         Assert.NotNull(result);
         Assert.NotEmpty(result);
 
-        _output.WriteLine($"Retrieved {result.Count()} control panel types");
+        Console.WriteLine($"Retrieved {result.Count()} control panel types");
         foreach (var type in result)
         {
-            _output.WriteLine($"  - {type.DisplayName} ({type.Name}): Active={type.IsActive}");
+            Console.WriteLine($"  - {type.DisplayName} ({type.Name}): Active={type.IsActive}");
         }
     }
 
@@ -136,10 +135,10 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
         Assert.NotNull(result);
         Assert.All(result, type => Assert.True(type.IsActive));
 
-        _output.WriteLine($"Retrieved {result.Count()} active control panel types");
+        Console.WriteLine($"Retrieved {result.Count()} active control panel types");
         foreach (var type in result)
         {
-            _output.WriteLine($"  - {type.DisplayName} ({type.Name})");
+            Console.WriteLine($"  - {type.DisplayName} ({type.Name})");
         }
     }
 
@@ -196,11 +195,11 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
         Assert.NotEmpty(result.Name);
         Assert.NotEmpty(result.DisplayName);
 
-        _output.WriteLine($"Retrieved control panel type: {result.DisplayName}");
-        _output.WriteLine($"  Name: {result.Name}");
-        _output.WriteLine($"  Version: {result.Version}");
-        _output.WriteLine($"  Website: {result.WebsiteUrl}");
-        _output.WriteLine($"  Active: {result.IsActive}");
+        Console.WriteLine($"Retrieved control panel type: {result.DisplayName}");
+        Console.WriteLine($"  Name: {result.Name}");
+        Console.WriteLine($"  Version: {result.Version}");
+        Console.WriteLine($"  Website: {result.WebsiteUrl}");
+        Console.WriteLine($"  Active: {result.IsActive}");
     }
 
     [Fact]
@@ -287,12 +286,12 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
         Assert.True(result.UpdatedAt > DateTime.MinValue);
         Assert.Equal(result.CreatedAt, result.UpdatedAt, TimeSpan.FromSeconds(1));
 
-        _output.WriteLine($"Created control panel type with ID: {result.Id}");
-        _output.WriteLine($"  Name: {result.Name}");
-        _output.WriteLine($"  Display Name: {result.DisplayName}");
-        _output.WriteLine($"  Version: {result.Version}");
-        _output.WriteLine($"  CreatedAt: {result.CreatedAt}");
-        _output.WriteLine($"  UpdatedAt: {result.UpdatedAt}");
+        Console.WriteLine($"Created control panel type with ID: {result.Id}");
+        Console.WriteLine($"  Name: {result.Name}");
+        Console.WriteLine($"  Display Name: {result.DisplayName}");
+        Console.WriteLine($"  Version: {result.Version}");
+        Console.WriteLine($"  CreatedAt: {result.CreatedAt}");
+        Console.WriteLine($"  UpdatedAt: {result.UpdatedAt}");
     }
 
     [Fact]
@@ -408,11 +407,11 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
         Assert.Equal(originalType.CreatedAt, result.CreatedAt); // CreatedAt should not change
         Assert.True(result.UpdatedAt > originalType.UpdatedAt); // UpdatedAt should be newer
 
-        _output.WriteLine($"Updated control panel type ID {result.Id}:");
-        _output.WriteLine($"  New Display Name: {result.DisplayName}");
-        _output.WriteLine($"  New Version: {result.Version}");
-        _output.WriteLine($"  CreatedAt: {result.CreatedAt} (unchanged)");
-        _output.WriteLine($"  UpdatedAt: {result.UpdatedAt} (was: {originalType.UpdatedAt})");
+        Console.WriteLine($"Updated control panel type ID {result.Id}:");
+        Console.WriteLine($"  New Display Name: {result.DisplayName}");
+        Console.WriteLine($"  New Version: {result.Version}");
+        Console.WriteLine($"  CreatedAt: {result.CreatedAt} (unchanged)");
+        Console.WriteLine($"  UpdatedAt: {result.UpdatedAt} (was: {originalType.UpdatedAt})");
     }
 
     [Fact]
@@ -499,7 +498,7 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
 
-        _output.WriteLine($"Successfully deleted control panel type ID: {controlPanelTypeId}");
+        Console.WriteLine($"Successfully deleted control panel type ID: {controlPanelTypeId}");
 
         // Verify it's actually deleted
         var getResponse = await _client.GetAsync($"/api/v1/ControlPanelTypes/{controlPanelTypeId}");
@@ -561,10 +560,10 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
         var token = await GetAdminTokenAsync();
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        _output.WriteLine("=== Starting Full CRUD Flow for Control Panel Types ===");
+        Console.WriteLine("=== Starting Full CRUD Flow for Control Panel Types ===");
 
         // Create
-        _output.WriteLine("\n1. CREATE:");
+        Console.WriteLine("\n1. CREATE:");
         var createDto = new CreateControlPanelTypeDto
         {
             Name = "interworx",
@@ -580,10 +579,10 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
 
         var created = await createResponse.Content.ReadFromJsonAsync<ControlPanelTypeDto>();
         Assert.NotNull(created);
-        _output.WriteLine($"   Created ID: {created.Id}, Name: {created.DisplayName}");
+        Console.WriteLine($"   Created ID: {created.Id}, Name: {created.DisplayName}");
 
         // Read
-        _output.WriteLine("\n2. READ:");
+        Console.WriteLine("\n2. READ:");
         var readResponse = await _client.GetAsync($"/api/v1/ControlPanelTypes/{created.Id}");
         Assert.Equal(HttpStatusCode.OK, readResponse.StatusCode);
 
@@ -592,10 +591,10 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
         Assert.Equal(created.Id, read.Id);
         Assert.Equal(createDto.Name, read.Name);
         Assert.Equal(createDto.DisplayName, read.DisplayName);
-        _output.WriteLine($"   Retrieved: {read.DisplayName} (v{read.Version})");
+        Console.WriteLine($"   Retrieved: {read.DisplayName} (v{read.Version})");
 
         // Update
-        _output.WriteLine("\n3. UPDATE:");
+        Console.WriteLine("\n3. UPDATE:");
         var updateDto = new UpdateControlPanelTypeDto
         {
             Name = "interworx",
@@ -613,21 +612,21 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
         Assert.NotNull(updated);
         Assert.Equal(updateDto.DisplayName, updated.DisplayName);
         Assert.Equal(updateDto.Version, updated.Version);
-        _output.WriteLine($"   Updated to: {updated.DisplayName} (v{updated.Version})");
+        Console.WriteLine($"   Updated to: {updated.DisplayName} (v{updated.Version})");
 
         // Delete
-        _output.WriteLine("\n4. DELETE:");
+        Console.WriteLine("\n4. DELETE:");
         var deleteResponse = await _client.DeleteAsync($"/api/v1/ControlPanelTypes/{created.Id}");
         Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
-        _output.WriteLine($"   Deleted ID: {created.Id}");
+        Console.WriteLine($"   Deleted ID: {created.Id}");
 
         // Verify deletion
-        _output.WriteLine("\n5. VERIFY DELETION:");
+        Console.WriteLine("\n5. VERIFY DELETION:");
         var verifyResponse = await _client.GetAsync($"/api/v1/ControlPanelTypes/{created.Id}");
         Assert.Equal(HttpStatusCode.NotFound, verifyResponse.StatusCode);
-        _output.WriteLine("   Confirmed: Resource no longer exists");
+        Console.WriteLine("   Confirmed: Resource no longer exists");
 
-        _output.WriteLine("\n=== Full CRUD Flow Completed Successfully ===");
+        Console.WriteLine("\n=== Full CRUD Flow Completed Successfully ===");
     }
 
     [Fact]
@@ -669,8 +668,8 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
         Assert.All(result, type => Assert.True(type.IsActive));
         Assert.DoesNotContain(result, type => type.Name == "discontinued");
 
-        _output.WriteLine($"Active filter returned {result.Count()} active control panel types");
-        _output.WriteLine("Verified that inactive types are excluded");
+        Console.WriteLine($"Active filter returned {result.Count()} active control panel types");
+        Console.WriteLine("Verified that inactive types are excluded");
     }
 
     #endregion
@@ -836,7 +835,7 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
         await context.UserRoles.AddAsync(userRole);
         await context.SaveChangesAsync();
 
-        _output.WriteLine($"Created {roleName} user: {username}");
+        Console.WriteLine($"Created {roleName} user: {username}");
 
         return (username, email);
     }
@@ -871,3 +870,4 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
 
     #endregion
 }
+

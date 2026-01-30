@@ -7,7 +7,7 @@ using ISPAdmin.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace DR_Admin.IntegrationTests.Controllers;
 
@@ -15,14 +15,13 @@ namespace DR_Admin.IntegrationTests.Controllers;
 public class SentEmailsControllerTests : IClassFixture<TestWebApplicationFactory>
 {
     private readonly HttpClient _client;
-    private readonly ITestOutputHelper _output;
+    
     private readonly TestWebApplicationFactory _factory;
 
-    public SentEmailsControllerTests(TestWebApplicationFactory factory, ITestOutputHelper output)
+    public SentEmailsControllerTests(TestWebApplicationFactory factory)
     {
         _factory = factory;
         _client = factory.CreateClient();
-        _output = output;
     }
 
     [Fact]
@@ -39,7 +38,7 @@ public class SentEmailsControllerTests : IClassFixture<TestWebApplicationFactory
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        _output.WriteLine("Retrieved sent emails");
+        Console.WriteLine("Retrieved sent emails");
     }
 
     [Fact]
@@ -139,3 +138,4 @@ public class SentEmailsControllerTests : IClassFixture<TestWebApplicationFactory
         return result!.AccessToken;
     }
 }
+

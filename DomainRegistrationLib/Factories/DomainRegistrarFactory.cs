@@ -15,6 +15,7 @@ namespace DomainRegistrationLib.Factories
 
         public IDomainRegistrar CreateRegistrar()
         {
+
             return _registrarSettings.Provider.ToLower() switch
             {
                 "namecheap" => _registrarSettings.Namecheap is not null

@@ -7,7 +7,7 @@ using ISPAdmin.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace DR_Admin.IntegrationTests.Controllers;
 
@@ -15,14 +15,13 @@ namespace DR_Admin.IntegrationTests.Controllers;
 public class DnsRecordTypesControllerTests : IClassFixture<TestWebApplicationFactory>
 {
     private readonly HttpClient _client;
-    private readonly ITestOutputHelper _output;
+    
     private readonly TestWebApplicationFactory _factory;
 
-    public DnsRecordTypesControllerTests(TestWebApplicationFactory factory, ITestOutputHelper output)
+    public DnsRecordTypesControllerTests(TestWebApplicationFactory factory)
     {
         _factory = factory;
         _client = factory.CreateClient();
-        _output = output;
     }
 
     #region Get All DNS Record Types Tests
@@ -47,10 +46,10 @@ public class DnsRecordTypesControllerTests : IClassFixture<TestWebApplicationFac
         Assert.NotNull(result);
         Assert.NotEmpty(result);
 
-        _output.WriteLine($"Retrieved {result.Count()} DNS record types");
+        Console.WriteLine($"Retrieved {result.Count()} DNS record types");
         foreach (var recordType in result)
         {
-            _output.WriteLine($"  - {recordType.Type}: {recordType.Description} (Active: {recordType.IsActive})");
+            Console.WriteLine($"  - {recordType.Type}: {recordType.Description} (Active: {recordType.IsActive})");
         }
     }
 
@@ -121,7 +120,7 @@ public class DnsRecordTypesControllerTests : IClassFixture<TestWebApplicationFac
         Assert.NotNull(result);
         Assert.All(result, recordType => Assert.True(recordType.IsActive));
 
-        _output.WriteLine($"Retrieved {result.Count()} active DNS record types");
+        Console.WriteLine($"Retrieved {result.Count()} active DNS record types");
     }
 
     [Fact]
@@ -164,7 +163,7 @@ public class DnsRecordTypesControllerTests : IClassFixture<TestWebApplicationFac
         Assert.NotNull(result);
         Assert.Equal(recordTypeId, result.Id);
 
-        _output.WriteLine($"Retrieved DNS record type: {result.Type}");
+        Console.WriteLine($"Retrieved DNS record type: {result.Type}");
     }
 
     [Fact]
@@ -222,7 +221,7 @@ public class DnsRecordTypesControllerTests : IClassFixture<TestWebApplicationFac
         Assert.NotNull(result);
         Assert.Equal("A", result.Type);
 
-        _output.WriteLine($"Retrieved DNS record type: {result.Type} - {result.Description}");
+        Console.WriteLine($"Retrieved DNS record type: {result.Type} - {result.Description}");
     }
 
     [Fact]
@@ -295,7 +294,7 @@ public class DnsRecordTypesControllerTests : IClassFixture<TestWebApplicationFac
         Assert.Equal(createDto.Description, result.Description);
         Assert.Equal(createDto.DefaultTTL, result.DefaultTTL);
 
-        _output.WriteLine($"Created DNS record type with ID: {result.Id}");
+        Console.WriteLine($"Created DNS record type with ID: {result.Id}");
     }
 
     [Fact]
@@ -329,7 +328,7 @@ public class DnsRecordTypesControllerTests : IClassFixture<TestWebApplicationFac
         Assert.NotNull(result);
         Assert.True(result.HasPriority);
 
-        _output.WriteLine($"Created MX-like DNS record type with priority support");
+        Console.WriteLine($"Created MX-like DNS record type with priority support");
     }
 
     [Fact]
@@ -392,7 +391,7 @@ public class DnsRecordTypesControllerTests : IClassFixture<TestWebApplicationFac
         Assert.Equal(updateDto.Description, result.Description);
         Assert.Equal(updateDto.DefaultTTL, result.DefaultTTL);
 
-        _output.WriteLine($"Updated DNS record type ID: {result.Id}");
+        Console.WriteLine($"Updated DNS record type ID: {result.Id}");
     }
 
     [Fact]
@@ -462,7 +461,7 @@ public class DnsRecordTypesControllerTests : IClassFixture<TestWebApplicationFac
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
 
-        _output.WriteLine($"Deleted DNS record type ID: {recordTypeId}");
+        Console.WriteLine($"Deleted DNS record type ID: {recordTypeId}");
     }
 
     [Fact]
@@ -695,7 +694,7 @@ public class DnsRecordTypesControllerTests : IClassFixture<TestWebApplicationFac
         await context.UserRoles.AddAsync(userRole);
         await context.SaveChangesAsync();
 
-        _output.WriteLine($"Created {roleName} user: {username}");
+        Console.WriteLine($"Created {roleName} user: {username}");
 
         return (username, email);
     }
@@ -730,3 +729,4 @@ public class DnsRecordTypesControllerTests : IClassFixture<TestWebApplicationFac
 
     #endregion
 }
+

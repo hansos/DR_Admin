@@ -7,7 +7,7 @@ using ISPAdmin.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
-using Xunit.Abstractions;
+
 
 namespace DR_Admin.IntegrationTests.Controllers;
 
@@ -15,14 +15,13 @@ namespace DR_Admin.IntegrationTests.Controllers;
 public class PostalCodesControllerTests : IClassFixture<TestWebApplicationFactory>
 {
     private readonly HttpClient _client;
-    private readonly ITestOutputHelper _output;
+    
     private readonly TestWebApplicationFactory _factory;
 
-    public PostalCodesControllerTests(TestWebApplicationFactory factory, ITestOutputHelper output)
+    public PostalCodesControllerTests(TestWebApplicationFactory factory)
     {
         _factory = factory;
         _client = factory.CreateClient();
-        _output = output;
     }
 
     [Fact]
@@ -44,7 +43,7 @@ public class PostalCodesControllerTests : IClassFixture<TestWebApplicationFactor
         Assert.NotNull(result);
         Assert.NotEmpty(result);
 
-        _output.WriteLine($"Retrieved {result.Count()} postal codes");
+        Console.WriteLine($"Retrieved {result.Count()} postal codes");
     }
 
     [Fact]
@@ -218,3 +217,4 @@ public class PostalCodesControllerTests : IClassFixture<TestWebApplicationFactor
         return result!.AccessToken;
     }
 }
+
