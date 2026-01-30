@@ -7,7 +7,8 @@ using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
+using System.Collections.Generic;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Channels;
@@ -270,18 +271,11 @@ builder.Services.AddSwaggerGen(options =>
         Scheme = "Bearer"
     });
     
-    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    options.AddSecurityRequirement((doc) => new OpenApiSecurityRequirement
     {
         {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            Array.Empty<string>()
+            new OpenApiSecuritySchemeReference("Bearer", doc, null),
+            new List<string>()
         }
     });
 });
