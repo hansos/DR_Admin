@@ -14,4 +14,5 @@ public interface ITldService
     Task<bool> DeleteTldAsync(int id);
     Task<IEnumerable<RegistrarDto>> GetRegistrarsByTldAsync(int tldId);
     Task<TldSyncResponseDto> SyncTldsFromIanaAsync(TldSyncRequestDto request);
+    Task<SecondLevelDomainSyncResponseDto> SyncSecondLevelDomainsAsync();
 }

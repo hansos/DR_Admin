@@ -51,3 +51,39 @@ public class TldSyncResponseDto
     /// </summary>
     public DateTime SyncTimestamp { get; set; }
 }
+
+/// <summary>
+/// Data transfer object for second-level domain synchronization response
+/// </summary>
+public class SecondLevelDomainSyncResponseDto
+{
+    /// <summary>
+    /// Indicates whether the synchronization was successful
+    /// </summary>
+    public bool Success { get; set; }
+
+    /// <summary>
+    /// Message describing the result of the synchronization
+    /// </summary>
+    public string Message { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Number of second-level domains added during synchronization
+    /// </summary>
+    public int SecondLevelDomainsAdded { get; set; }
+
+    /// <summary>
+    /// Number of parent TLDs found in the public suffix list
+    /// </summary>
+    public int ParentTldsProcessed { get; set; }
+
+    /// <summary>
+    /// Number of parent TLDs skipped (not found in database)
+    /// </summary>
+    public int ParentTldsSkipped { get; set; }
+
+    /// <summary>
+    /// Timestamp when the synchronization was performed
+    /// </summary>
+    public DateTime SyncTimestamp { get; set; }
+}

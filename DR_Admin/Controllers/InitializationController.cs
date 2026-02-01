@@ -114,4 +114,69 @@ public class InitializationController : ControllerBase
             });
         }
     }
+
+    /// <summary>
+    /// Synchronizes second-level domains from the Public Suffix List into the database
+    /// </summary>
+    /// <returns>Synchronization result with statistics</returns>
+    /// <response code="200">Returns the synchronization result with statistics</response>
+    /// <response code="400">If TLD table is empty</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="500">If an internal server error occurs</response>
+    /// <remarks>
+    /// Downloads the Public Suffix List from https://publicsuffix.org/list/public_suffix_list.dat
+    /// and extracts second-level domains from the ICANN DOMAINS section.
+    /// Only processes second-level domains for TLDs that already exist in the database.
+    /// 
+    /// Prerequisites:
+    /// - TLD table must not be empty (sync TLDs first using sync-tlds endpoint)
+    /// 
+    /// Example:
+    /// For TLD 'ac' with second-level domains 'com.ac', 'edu.ac', etc., 
+    /// these will be added to the TLD table with IsSecondLevel=true if 'ac' exists.
+    /// </remarks>
+    [HttpPost("sync-secondlevel-domains")]
+    //[Authorize]
+    [ProducesResponseType(typeof(SecondLevelDomainSyncResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<SecondLevelDomainSyncResponseDto>> SyncSecondLevelDomains()
+    {
+        try
+        {
+            _log.Information("Second-level domain sync initiated by user: {User}", User.Identity?.Name);
+
+            var result = await _tldService.SyncSecondLevelDomainsAsync();
+
+            if (result.Success)
+            {
+                _log.Information("Second-level domain sync completed successfully. Added: {Added}, Processed: {Processed}, Skipped: {Skipped}", 
+                    result.SecondLevelDomainsAdded, result.ParentTldsProcessed, result.ParentTldsSkipped);
+                return Ok(result);
+            }
+            else
+            {
+                // Check if the error is due to empty TLD table
+                if (result.Message.Contains("TLD table is empty"))
+                {
+                    _log.Warning("Second-level domain sync failed: TLD table is empty");
+                    return BadRequest(result);
+                }
+
+                _log.Warning("Second-level domain sync completed with errors: {Message}", result.Message);
+                return StatusCode(500, result);
+            }
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Unexpected error during second-level domain synchronization");
+            return StatusCode(500, new SecondLevelDomainSyncResponseDto
+            {
+                Success = false,
+                Message = "An unexpected error occurred during second-level domain synchronization",
+                SyncTimestamp = DateTime.UtcNow
+            });
+        }
+    }
 }

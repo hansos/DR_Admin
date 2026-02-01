@@ -493,4 +493,244 @@ public class TldService : ITldService
             throw;
         }
     }
+
+    /// <summary>
+    /// Synchronizes second-level domains from the Public Suffix List
+    /// </summary>
+    /// <returns>Synchronization result with statistics</returns>
+    public async Task<SecondLevelDomainSyncResponseDto> SyncSecondLevelDomainsAsync()
+    {
+        const string publicSuffixUrl = "https://publicsuffix.org/list/public_suffix_list.dat";
+        var syncTimestamp = DateTime.UtcNow;
+        var secondLevelDomainsAdded = 0;
+        var parentTldsProcessed = 0;
+        var parentTldsSkipped = 0;
+
+        try
+        {
+            _log.Information("Starting second-level domain synchronization from Public Suffix List: {Url}", publicSuffixUrl);
+
+            // Check if TLD table is empty
+            var hasTlds = await _context.Tlds.AnyAsync();
+            if (!hasTlds)
+            {
+                _log.Warning("TLD table is empty. Cannot sync second-level domains without base TLDs.");
+                return new SecondLevelDomainSyncResponseDto
+                {
+                    Success = false,
+                    Message = "TLD table is empty. Please import TLDs first using the sync-tlds endpoint.",
+                    SecondLevelDomainsAdded = 0,
+                    ParentTldsProcessed = 0,
+                    ParentTldsSkipped = 0,
+                    SyncTimestamp = syncTimestamp
+                };
+            }
+
+            // Download Public Suffix List
+            using var httpClient = new HttpClient();
+            httpClient.Timeout = TimeSpan.FromSeconds(30);
+            
+            _log.Information("Downloading Public Suffix List");
+            var response = await httpClient.GetAsync(publicSuffixUrl);
+            response.EnsureSuccessStatusCode();
+
+            var content = await response.Content.ReadAsStringAsync();
+            var lines = content.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+
+            // Find ICANN DOMAINS section
+            var inIcannSection = false;
+            string? currentTld = null;
+            var secondLevelDomains = new List<string>();
+            const int batchSize = 100;
+            var processedInBatch = 0;
+
+            foreach (var line in lines)
+            {
+                var trimmedLine = line.Trim();
+
+                // Check for section boundaries
+                if (trimmedLine.Contains("===BEGIN ICANN DOMAINS==="))
+                {
+                    inIcannSection = true;
+                    _log.Information("Found ICANN DOMAINS section");
+                    continue;
+                }
+
+                if (trimmedLine.Contains("===END ICANN DOMAINS==="))
+                {
+                    _log.Information("Reached end of ICANN DOMAINS section");
+                    break;
+                }
+
+                // Only process lines within ICANN section
+                if (!inIcannSection)
+                    continue;
+
+                // Skip comments and empty lines
+                if (string.IsNullOrWhiteSpace(trimmedLine) || trimmedLine.StartsWith("//"))
+                    continue;
+
+                var entry = trimmedLine.ToLowerInvariant();
+
+                // Check if this is a TLD (no dots) or second-level domain (contains dots)
+                if (!entry.Contains('.'))
+                {
+                    // Process previous TLD's second-level domains if any
+                    if (currentTld != null && secondLevelDomains.Count > 0)
+                    {
+                        var result = await ProcessSecondLevelDomainsForTld(currentTld, secondLevelDomains, syncTimestamp);
+                        if (result.processed)
+                        {
+                            parentTldsProcessed++;
+                            secondLevelDomainsAdded += result.added;
+                        }
+                        else
+                        {
+                            parentTldsSkipped++;
+                        }
+
+                        processedInBatch++;
+                        if (processedInBatch >= batchSize)
+                        {
+                            await _context.SaveChangesAsync();
+                            _context.ChangeTracker.Clear();
+                            processedInBatch = 0;
+                        }
+
+                        secondLevelDomains.Clear();
+                    }
+
+                    // Set new current TLD
+                    currentTld = entry;
+                }
+                else
+                {
+                    // This is a second-level domain
+                    if (currentTld != null)
+                    {
+                        secondLevelDomains.Add(entry);
+                    }
+                }
+            }
+
+            // Process the last TLD's second-level domains
+            if (currentTld != null && secondLevelDomains.Count > 0)
+            {
+                var result = await ProcessSecondLevelDomainsForTld(currentTld, secondLevelDomains, syncTimestamp);
+                if (result.processed)
+                {
+                    parentTldsProcessed++;
+                    secondLevelDomainsAdded += result.added;
+                }
+                else
+                {
+                    parentTldsSkipped++;
+                }
+            }
+
+            // Save remaining changes
+            if (processedInBatch > 0)
+            {
+                await _context.SaveChangesAsync();
+                _context.ChangeTracker.Clear();
+            }
+
+            _log.Information("Second-level domain synchronization completed. Added: {Added}, Processed: {Processed}, Skipped: {Skipped}", 
+                secondLevelDomainsAdded, parentTldsProcessed, parentTldsSkipped);
+
+            return new SecondLevelDomainSyncResponseDto
+            {
+                Success = true,
+                Message = "Second-level domain synchronization completed successfully",
+                SecondLevelDomainsAdded = secondLevelDomainsAdded,
+                ParentTldsProcessed = parentTldsProcessed,
+                ParentTldsSkipped = parentTldsSkipped,
+                SyncTimestamp = syncTimestamp
+            };
+        }
+        catch (HttpRequestException ex)
+        {
+            _log.Error(ex, "HTTP error occurred while downloading Public Suffix List");
+            return new SecondLevelDomainSyncResponseDto
+            {
+                Success = false,
+                Message = $"Failed to download Public Suffix List: {ex.Message}",
+                SecondLevelDomainsAdded = secondLevelDomainsAdded,
+                ParentTldsProcessed = parentTldsProcessed,
+                ParentTldsSkipped = parentTldsSkipped,
+                SyncTimestamp = syncTimestamp
+            };
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred during second-level domain synchronization");
+            return new SecondLevelDomainSyncResponseDto
+            {
+                Success = false,
+                Message = $"Error during second-level domain synchronization: {ex.Message}",
+                SecondLevelDomainsAdded = secondLevelDomainsAdded,
+                ParentTldsProcessed = parentTldsProcessed,
+                ParentTldsSkipped = parentTldsSkipped,
+                SyncTimestamp = syncTimestamp
+            };
+        }
+    }
+
+    /// <summary>
+    /// Processes second-level domains for a specific TLD
+    /// </summary>
+    private async Task<(bool processed, int added)> ProcessSecondLevelDomainsForTld(
+        string tld, 
+        List<string> secondLevelDomains, 
+        DateTime syncTimestamp)
+    {
+        // Check if parent TLD exists in database
+        var parentTld = _context.Tlds.Local.FirstOrDefault(t => t.Extension == tld);
+        if (parentTld == null)
+        {
+            parentTld = await _context.Tlds.FirstOrDefaultAsync(t => t.Extension == tld);
+        }
+
+        if (parentTld == null)
+        {
+            _log.Debug("Parent TLD {Tld} not found in database, skipping its second-level domains", tld);
+            return (false, 0);
+        }
+
+        var added = 0;
+
+        foreach (var sld in secondLevelDomains)
+        {
+            // Check if second-level domain already exists
+            var existing = _context.Tlds.Local.FirstOrDefault(t => t.Extension == sld);
+            if (existing == null)
+            {
+                existing = await _context.Tlds.FirstOrDefaultAsync(t => t.Extension == sld);
+            }
+
+            if (existing == null)
+            {
+                // Add new second-level domain
+                var newSld = new Tld
+                {
+                    Extension = sld,
+                    Description = $"Second-Level Domain: {sld}",
+                    IsActive = false, // Not activated by default
+                    IsSecondLevel = true,
+                    DefaultRegistrationYears = parentTld.DefaultRegistrationYears ?? 1,
+                    MaxRegistrationYears = parentTld.MaxRegistrationYears ?? 10,
+                    RequiresPrivacy = parentTld.RequiresPrivacy,
+                    RulesUrl = string.Empty,
+                    CreatedAt = syncTimestamp,
+                    UpdatedAt = syncTimestamp
+                };
+
+                _context.Tlds.Add(newSld);
+                added++;
+                _log.Debug("Adding second-level domain: {Sld} for parent TLD: {Tld}", sld, tld);
+            }
+        }
+
+        return (true, added);
+    }
 }
