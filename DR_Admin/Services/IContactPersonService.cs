@@ -13,6 +13,8 @@ public interface IContactPersonService
     /// <returns>A collection of contact person DTOs</returns>
     Task<IEnumerable<ContactPersonDto>> GetAllContactPersonsAsync();
     
+    Task<PagedResult<ContactPersonDto>> GetAllContactPersonsPagedAsync(PaginationParameters parameters);
+    
     /// <summary>
     /// Retrieves all contact persons for a specific customer
     /// </summary>

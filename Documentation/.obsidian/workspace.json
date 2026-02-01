@@ -185,6 +185,8 @@
   },
   "active": "a1e9204f0da1f4d9",
   "lastOpenFiles": [
+    "shtlxybr.baj~",
+    "PaginationImplementation.md",
     "API/index.md",
     "Installation/Installation.md",
     "Installation/Build.md",
@@ -217,8 +219,6 @@
     "API/BillingAndSales/CouponsController.md",
     "API/BillingAndSales/CurrenciesController.md",
     "API/System/PostalCodesController.md",
-    "API/System/index.md",
-    "API/System/CountriesController.md",
     "00d2xix1.msb~",
     "API/UserManagement"
   ]

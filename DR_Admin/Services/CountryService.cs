@@ -341,6 +341,44 @@ public class CountryService : ICountryService
         }
     }
 
+    public async Task<PagedResult<CountryDto>> GetAllCountriesPagedAsync(PaginationParameters parameters)
+    {
+        try
+        {
+            _log.Information("Fetching paginated countries - Page: {PageNumber}, PageSize: {PageSize}", 
+                parameters.PageNumber, parameters.PageSize);
+            
+            var totalCount = await _context.Countries
+                .AsNoTracking()
+                .CountAsync();
+
+            var countries = await _context.Countries
+                .AsNoTracking()
+                .OrderBy(c => c.EnglishName)
+                .Skip((parameters.PageNumber - 1) * parameters.PageSize)
+                .Take(parameters.PageSize)
+                .ToListAsync();
+
+            var countryDtos = countries.Select(MapToDto).ToList();
+            
+            var result = new PagedResult<CountryDto>(
+                countryDtos, 
+                totalCount, 
+                parameters.PageNumber, 
+                parameters.PageSize);
+
+            _log.Information("Successfully fetched page {PageNumber} of countries - Returned {Count} of {TotalCount} total", 
+                parameters.PageNumber, countryDtos.Count, totalCount);
+            
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while fetching paginated countries");
+            throw;
+        }
+    }
+
     public async Task<IEnumerable<CountryDto>> GetActiveCountriesAsync()
     {
         try
@@ -361,6 +399,46 @@ public class CountryService : ICountryService
         catch (Exception ex)
         {
             _log.Error(ex, "Error occurred while fetching active countries");
+            throw;
+        }
+    }
+
+    public async Task<PagedResult<CountryDto>> GetActiveCountriesPagedAsync(PaginationParameters parameters)
+    {
+        try
+        {
+            _log.Information("Fetching paginated active countries - Page: {PageNumber}, PageSize: {PageSize}", 
+                parameters.PageNumber, parameters.PageSize);
+            
+            var totalCount = await _context.Countries
+                .AsNoTracking()
+                .Where(c => c.IsActive)
+                .CountAsync();
+
+            var countries = await _context.Countries
+                .AsNoTracking()
+                .Where(c => c.IsActive)
+                .OrderBy(c => c.EnglishName)
+                .Skip((parameters.PageNumber - 1) * parameters.PageSize)
+                .Take(parameters.PageSize)
+                .ToListAsync();
+
+            var countryDtos = countries.Select(MapToDto).ToList();
+            
+            var result = new PagedResult<CountryDto>(
+                countryDtos, 
+                totalCount, 
+                parameters.PageNumber, 
+                parameters.PageSize);
+
+            _log.Information("Successfully fetched page {PageNumber} of active countries - Returned {Count} of {TotalCount} total", 
+                parameters.PageNumber, countryDtos.Count, totalCount);
+            
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while fetching paginated active countries");
             throw;
         }
     }

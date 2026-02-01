@@ -5,6 +5,7 @@ namespace ISPAdmin.Services;
 public interface IInvoiceLineService
 {
     Task<IEnumerable<InvoiceLineDto>> GetAllInvoiceLinesAsync();
+    Task<PagedResult<InvoiceLineDto>> GetAllInvoiceLinesPagedAsync(PaginationParameters parameters);
     Task<InvoiceLineDto?> GetInvoiceLineByIdAsync(int id);
     Task<IEnumerable<InvoiceLineDto>> GetInvoiceLinesByInvoiceIdAsync(int invoiceId);
     Task<InvoiceLineDto> CreateInvoiceLineAsync(CreateInvoiceLineDto createDto);

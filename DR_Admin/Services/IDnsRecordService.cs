@@ -5,6 +5,7 @@ namespace ISPAdmin.Services;
 public interface IDnsRecordService
 {
     Task<IEnumerable<DnsRecordDto>> GetAllDnsRecordsAsync();
+    Task<PagedResult<DnsRecordDto>> GetAllDnsRecordsPagedAsync(PaginationParameters parameters);
     Task<DnsRecordDto?> GetDnsRecordByIdAsync(int id);
     Task<IEnumerable<DnsRecordDto>> GetDnsRecordsByDomainIdAsync(int domainId);
     Task<IEnumerable<DnsRecordDto>> GetDnsRecordsByTypeAsync(string type);

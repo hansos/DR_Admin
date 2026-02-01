@@ -45,6 +45,45 @@ public class ContactPersonService : IContactPersonService
         }
     }
 
+    public async Task<PagedResult<ContactPersonDto>> GetAllContactPersonsPagedAsync(PaginationParameters parameters)
+    {
+        try
+        {
+            _log.Information("Fetching paginated contact persons - Page: {PageNumber}, PageSize: {PageSize}", 
+                parameters.PageNumber, parameters.PageSize);
+            
+            var totalCount = await _context.ContactPersons
+                .AsNoTracking()
+                .CountAsync();
+
+            var contactPersons = await _context.ContactPersons
+                .AsNoTracking()
+                .OrderBy(cp => cp.LastName)
+                .ThenBy(cp => cp.FirstName)
+                .Skip((parameters.PageNumber - 1) * parameters.PageSize)
+                .Take(parameters.PageSize)
+                .ToListAsync();
+
+            var contactPersonDtos = contactPersons.Select(MapToDto).ToList();
+            
+            var result = new PagedResult<ContactPersonDto>(
+                contactPersonDtos, 
+                totalCount, 
+                parameters.PageNumber, 
+                parameters.PageSize);
+
+            _log.Information("Successfully fetched page {PageNumber} of contact persons - Returned {Count} of {TotalCount} total", 
+                parameters.PageNumber, contactPersonDtos.Count, totalCount);
+            
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while fetching paginated contact persons");
+            throw;
+        }
+    }
+
     /// <summary>
     /// Retrieves all contact persons for a specific customer
     /// </summary>

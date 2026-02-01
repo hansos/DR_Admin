@@ -161,18 +161,36 @@ public class CountriesController : ControllerBase
     /// <summary>
     /// Retrieves all countries in the system
     /// </summary>
-    /// <returns>List of all countries</returns>
-    /// <response code="200">Returns the list of countries</response>
+    /// <param name="pageNumber">Optional: Page number for pagination (default: returns all)</param>
+    /// <param name="pageSize">Optional: Number of items per page (default: 10, max: 100)</param>
+    /// <returns>List of all countries or paginated result if pagination parameters provided</returns>
+    /// <response code="200">Returns the list of countries or paginated result</response>
     /// <response code="401">If user is not authenticated</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<CountryDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PagedResult<CountryDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<IEnumerable<CountryDto>>> GetAllCountries()
+    public async Task<ActionResult> GetAllCountries([FromQuery] int? pageNumber = null, [FromQuery] int? pageSize = null)
     {
         try
         {
+            if (pageNumber.HasValue || pageSize.HasValue)
+            {
+                var paginationParams = new PaginationParameters
+                {
+                    PageNumber = pageNumber ?? 1,
+                    PageSize = pageSize ?? 10
+                };
+
+                _log.Information("API: GetAllCountries (paginated) called with PageNumber: {PageNumber}, PageSize: {PageSize} by user {User}", 
+                    paginationParams.PageNumber, paginationParams.PageSize, User.Identity?.Name);
+
+                var pagedResult = await _countryService.GetAllCountriesPagedAsync(paginationParams);
+                return Ok(pagedResult);
+            }
+
             _log.Information("API: GetAllCountries called by user {User}", User.Identity?.Name);
             
             var countries = await _countryService.GetAllCountriesAsync();
@@ -188,18 +206,36 @@ public class CountriesController : ControllerBase
     /// <summary>
     /// Retrieves only active countries
     /// </summary>
-    /// <returns>List of active countries</returns>
-    /// <response code="200">Returns the list of active countries</response>
+    /// <param name="pageNumber">Optional: Page number for pagination (default: returns all)</param>
+    /// <param name="pageSize">Optional: Number of items per page (default: 10, max: 100)</param>
+    /// <returns>List of active countries or paginated result if pagination parameters provided</returns>
+    /// <response code="200">Returns the list of active countries or paginated result</response>
     /// <response code="401">If user is not authenticated</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("active")]
     [ProducesResponseType(typeof(IEnumerable<CountryDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PagedResult<CountryDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<IEnumerable<CountryDto>>> GetActiveCountries()
+    public async Task<ActionResult> GetActiveCountries([FromQuery] int? pageNumber = null, [FromQuery] int? pageSize = null)
     {
         try
         {
+            if (pageNumber.HasValue || pageSize.HasValue)
+            {
+                var paginationParams = new PaginationParameters
+                {
+                    PageNumber = pageNumber ?? 1,
+                    PageSize = pageSize ?? 10
+                };
+
+                _log.Information("API: GetActiveCountries (paginated) called with PageNumber: {PageNumber}, PageSize: {PageSize} by user {User}", 
+                    paginationParams.PageNumber, paginationParams.PageSize, User.Identity?.Name);
+
+                var pagedResult = await _countryService.GetActiveCountriesPagedAsync(paginationParams);
+                return Ok(pagedResult);
+            }
+
             _log.Information("API: GetActiveCountries called by user {User}", User.Identity?.Name);
             
             var countries = await _countryService.GetActiveCountriesAsync();

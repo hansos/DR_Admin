@@ -38,6 +38,44 @@ public class InvoiceLineService : IInvoiceLineService
         }
     }
 
+    public async Task<PagedResult<InvoiceLineDto>> GetAllInvoiceLinesPagedAsync(PaginationParameters parameters)
+    {
+        try
+        {
+            _log.Information("Fetching paginated invoice lines - Page: {PageNumber}, PageSize: {PageSize}", 
+                parameters.PageNumber, parameters.PageSize);
+            
+            var totalCount = await _context.InvoiceLines
+                .AsNoTracking()
+                .CountAsync();
+
+            var invoiceLines = await _context.InvoiceLines
+                .AsNoTracking()
+                .OrderByDescending(il => il.CreatedAt)
+                .Skip((parameters.PageNumber - 1) * parameters.PageSize)
+                .Take(parameters.PageSize)
+                .ToListAsync();
+
+            var invoiceLineDtos = invoiceLines.Select(MapToDto).ToList();
+            
+            var result = new PagedResult<InvoiceLineDto>(
+                invoiceLineDtos, 
+                totalCount, 
+                parameters.PageNumber, 
+                parameters.PageSize);
+
+            _log.Information("Successfully fetched page {PageNumber} of invoice lines - Returned {Count} of {TotalCount} total", 
+                parameters.PageNumber, invoiceLineDtos.Count, totalCount);
+            
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while fetching paginated invoice lines");
+            throw;
+        }
+    }
+
     public async Task<InvoiceLineDto?> GetInvoiceLineByIdAsync(int id)
     {
         try

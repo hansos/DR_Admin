@@ -38,6 +38,44 @@ public class CustomerService : ICustomerService
         }
     }
 
+    public async Task<PagedResult<CustomerDto>> GetAllCustomersPagedAsync(PaginationParameters parameters)
+    {
+        try
+        {
+            _log.Information("Fetching paginated customers - Page: {PageNumber}, PageSize: {PageSize}", 
+                parameters.PageNumber, parameters.PageSize);
+            
+            var totalCount = await _context.Customers
+                .AsNoTracking()
+                .CountAsync();
+
+            var customers = await _context.Customers
+                .AsNoTracking()
+                .OrderBy(c => c.Name)
+                .Skip((parameters.PageNumber - 1) * parameters.PageSize)
+                .Take(parameters.PageSize)
+                .ToListAsync();
+
+            var customerDtos = customers.Select(MapToDto).ToList();
+            
+            var result = new PagedResult<CustomerDto>(
+                customerDtos, 
+                totalCount, 
+                parameters.PageNumber, 
+                parameters.PageSize);
+
+            _log.Information("Successfully fetched page {PageNumber} of customers - Returned {Count} of {TotalCount} total", 
+                parameters.PageNumber, customerDtos.Count, totalCount);
+            
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while fetching paginated customers");
+            throw;
+        }
+    }
+
     public async Task<CustomerDto?> GetCustomerByIdAsync(int id)
     {
         try

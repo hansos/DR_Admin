@@ -6,7 +6,9 @@ namespace ISPAdmin.Services;
 public interface ICountryService
 {
     Task<IEnumerable<CountryDto>> GetAllCountriesAsync();
+    Task<PagedResult<CountryDto>> GetAllCountriesPagedAsync(PaginationParameters parameters);
     Task<IEnumerable<CountryDto>> GetActiveCountriesAsync();
+    Task<PagedResult<CountryDto>> GetActiveCountriesPagedAsync(PaginationParameters parameters);
     Task<CountryDto?> GetCountryByIdAsync(int id);
     Task<CountryDto?> GetCountryByCodeAsync(string code);
     Task<CountryDto> CreateCountryAsync(CreateCountryDto createDto);

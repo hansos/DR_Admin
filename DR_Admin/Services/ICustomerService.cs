@@ -5,6 +5,7 @@ namespace ISPAdmin.Services;
 public interface ICustomerService
 {
     Task<IEnumerable<CustomerDto>> GetAllCustomersAsync();
+    Task<PagedResult<CustomerDto>> GetAllCustomersPagedAsync(PaginationParameters parameters);
     Task<CustomerDto?> GetCustomerByIdAsync(int id);
     Task<CustomerDto> CreateCustomerAsync(CreateCustomerDto createDto);
     Task<CustomerDto?> UpdateCustomerAsync(int id, UpdateCustomerDto updateDto);

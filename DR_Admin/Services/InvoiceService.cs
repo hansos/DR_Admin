@@ -41,6 +41,46 @@ public class InvoiceService : IInvoiceService
         }
     }
 
+    public async Task<PagedResult<InvoiceDto>> GetAllInvoicesPagedAsync(PaginationParameters parameters)
+    {
+        try
+        {
+            _log.Information("Fetching paginated invoices - Page: {PageNumber}, PageSize: {PageSize}", 
+                parameters.PageNumber, parameters.PageSize);
+            
+            var totalCount = await _context.Invoices
+                .AsNoTracking()
+                .Where(i => i.DeletedAt == null)
+                .CountAsync();
+
+            var invoices = await _context.Invoices
+                .AsNoTracking()
+                .Where(i => i.DeletedAt == null)
+                .OrderByDescending(i => i.CreatedAt)
+                .Skip((parameters.PageNumber - 1) * parameters.PageSize)
+                .Take(parameters.PageSize)
+                .ToListAsync();
+
+            var invoiceDtos = invoices.Select(MapToDto).ToList();
+            
+            var result = new PagedResult<InvoiceDto>(
+                invoiceDtos, 
+                totalCount, 
+                parameters.PageNumber, 
+                parameters.PageSize);
+
+            _log.Information("Successfully fetched page {PageNumber} of invoices - Returned {Count} of {TotalCount} total", 
+                parameters.PageNumber, invoiceDtos.Count, totalCount);
+            
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while fetching paginated invoices");
+            throw;
+        }
+    }
+
     public async Task<IEnumerable<InvoiceDto>> GetInvoicesByCustomerIdAsync(int customerId)
     {
         try
@@ -61,6 +101,46 @@ public class InvoiceService : IInvoiceService
         catch (Exception ex)
         {
             _log.Error(ex, "Error occurred while fetching invoices for customer ID: {CustomerId}", customerId);
+            throw;
+        }
+    }
+
+    public async Task<PagedResult<InvoiceDto>> GetInvoicesByCustomerIdPagedAsync(int customerId, PaginationParameters parameters)
+    {
+        try
+        {
+            _log.Information("Fetching paginated invoices for customer ID: {CustomerId} - Page: {PageNumber}, PageSize: {PageSize}", 
+                customerId, parameters.PageNumber, parameters.PageSize);
+            
+            var totalCount = await _context.Invoices
+                .AsNoTracking()
+                .Where(i => i.CustomerId == customerId && i.DeletedAt == null)
+                .CountAsync();
+
+            var invoices = await _context.Invoices
+                .AsNoTracking()
+                .Where(i => i.CustomerId == customerId && i.DeletedAt == null)
+                .OrderByDescending(i => i.CreatedAt)
+                .Skip((parameters.PageNumber - 1) * parameters.PageSize)
+                .Take(parameters.PageSize)
+                .ToListAsync();
+
+            var invoiceDtos = invoices.Select(MapToDto).ToList();
+            
+            var result = new PagedResult<InvoiceDto>(
+                invoiceDtos, 
+                totalCount, 
+                parameters.PageNumber, 
+                parameters.PageSize);
+
+            _log.Information("Successfully fetched page {PageNumber} of invoices for customer ID: {CustomerId} - Returned {Count} of {TotalCount} total", 
+                parameters.PageNumber, customerId, invoiceDtos.Count, totalCount);
+            
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while fetching paginated invoices for customer ID: {CustomerId}", customerId);
             throw;
         }
     }

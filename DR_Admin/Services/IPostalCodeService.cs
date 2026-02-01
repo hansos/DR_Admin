@@ -5,6 +5,7 @@ namespace ISPAdmin.Services;
 public interface IPostalCodeService
 {
     Task<IEnumerable<PostalCodeDto>> GetAllPostalCodesAsync();
+    Task<PagedResult<PostalCodeDto>> GetAllPostalCodesPagedAsync(PaginationParameters parameters);
     Task<IEnumerable<PostalCodeDto>> GetPostalCodesByCountryAsync(string countryCode);
     Task<IEnumerable<PostalCodeDto>> GetPostalCodesByCityAsync(string city);
     Task<PostalCodeDto?> GetPostalCodeByIdAsync(int id);

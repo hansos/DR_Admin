@@ -40,6 +40,46 @@ public class DnsRecordService : IDnsRecordService
         }
     }
 
+    public async Task<PagedResult<DnsRecordDto>> GetAllDnsRecordsPagedAsync(PaginationParameters parameters)
+    {
+        try
+        {
+            _log.Information("Fetching paginated DNS records - Page: {PageNumber}, PageSize: {PageSize}", 
+                parameters.PageNumber, parameters.PageSize);
+            
+            var totalCount = await _context.DnsRecords
+                .AsNoTracking()
+                .CountAsync();
+
+            var dnsRecords = await _context.DnsRecords
+                .AsNoTracking()
+                .Include(d => d.Domain)
+                .Include(d => d.DnsRecordType)
+                .OrderBy(d => d.Name)
+                .Skip((parameters.PageNumber - 1) * parameters.PageSize)
+                .Take(parameters.PageSize)
+                .ToListAsync();
+
+            var dnsRecordDtos = dnsRecords.Select(MapToDto).ToList();
+            
+            var result = new PagedResult<DnsRecordDto>(
+                dnsRecordDtos, 
+                totalCount, 
+                parameters.PageNumber, 
+                parameters.PageSize);
+
+            _log.Information("Successfully fetched page {PageNumber} of DNS records - Returned {Count} of {TotalCount} total", 
+                parameters.PageNumber, dnsRecordDtos.Count, totalCount);
+            
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while fetching paginated DNS records");
+            throw;
+        }
+    }
+
     public async Task<DnsRecordDto?> GetDnsRecordByIdAsync(int id)
     {
         try

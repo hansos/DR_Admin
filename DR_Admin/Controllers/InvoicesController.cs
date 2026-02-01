@@ -26,21 +26,39 @@ public class InvoicesController : ControllerBase
     /// <summary>
     /// Retrieves all invoices in the system
     /// </summary>
-    /// <returns>List of all invoices</returns>
-    /// <response code="200">Returns the list of invoices</response>
+    /// <param name="pageNumber">Optional: Page number for pagination (default: returns all)</param>
+    /// <param name="pageSize">Optional: Number of items per page (default: 10, max: 100)</param>
+    /// <returns>List of all invoices or paginated result if pagination parameters provided</returns>
+    /// <response code="200">Returns the list of invoices or paginated result</response>
     /// <response code="401">If user is not authenticated</response>
     /// <response code="403">If user doesn't have required role</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet]
     [Authorize(Policy = "Invoice.Read")]
     [ProducesResponseType(typeof(IEnumerable<InvoiceDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PagedResult<InvoiceDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<IEnumerable<InvoiceDto>>> GetAllInvoices()
+    public async Task<ActionResult> GetAllInvoices([FromQuery] int? pageNumber = null, [FromQuery] int? pageSize = null)
     {
         try
         {
+            if (pageNumber.HasValue || pageSize.HasValue)
+            {
+                var paginationParams = new PaginationParameters
+                {
+                    PageNumber = pageNumber ?? 1,
+                    PageSize = pageSize ?? 10
+                };
+
+                _log.Information("API: GetAllInvoices (paginated) called with PageNumber: {PageNumber}, PageSize: {PageSize} by user {User}", 
+                    paginationParams.PageNumber, paginationParams.PageSize, User.Identity?.Name);
+
+                var pagedResult = await _invoiceService.GetAllInvoicesPagedAsync(paginationParams);
+                return Ok(pagedResult);
+            }
+
             _log.Information("API: GetAllInvoices called by user {User}", User.Identity?.Name);
             var invoices = await _invoiceService.GetAllInvoicesAsync();
             return Ok(invoices);
@@ -56,21 +74,39 @@ public class InvoicesController : ControllerBase
     /// Retrieves all invoices for a specific customer
     /// </summary>
     /// <param name="customerId">The unique identifier of the customer</param>
-    /// <returns>List of invoices for the specified customer</returns>
-    /// <response code="200">Returns the list of customer invoices</response>
+    /// <param name="pageNumber">Optional: Page number for pagination (default: returns all)</param>
+    /// <param name="pageSize">Optional: Number of items per page (default: 10, max: 100)</param>
+    /// <returns>List of invoices for the specified customer or paginated result if pagination parameters provided</returns>
+    /// <response code="200">Returns the list of customer invoices or paginated result</response>
     /// <response code="401">If user is not authenticated</response>
     /// <response code="403">If user doesn't have required role</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("customer/{customerId}")]
     [Authorize(Policy = "Invoice.Read")]
     [ProducesResponseType(typeof(IEnumerable<InvoiceDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PagedResult<InvoiceDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<IEnumerable<InvoiceDto>>> GetInvoicesByCustomerId(int customerId)
+    public async Task<ActionResult> GetInvoicesByCustomerId(int customerId, [FromQuery] int? pageNumber = null, [FromQuery] int? pageSize = null)
     {
         try
         {
+            if (pageNumber.HasValue || pageSize.HasValue)
+            {
+                var paginationParams = new PaginationParameters
+                {
+                    PageNumber = pageNumber ?? 1,
+                    PageSize = pageSize ?? 10
+                };
+
+                _log.Information("API: GetInvoicesByCustomerId (paginated) called for customer {CustomerId} with PageNumber: {PageNumber}, PageSize: {PageSize} by user {User}", 
+                    customerId, paginationParams.PageNumber, paginationParams.PageSize, User.Identity?.Name);
+
+                var pagedResult = await _invoiceService.GetInvoicesByCustomerIdPagedAsync(customerId, paginationParams);
+                return Ok(pagedResult);
+            }
+
             _log.Information("API: GetInvoicesByCustomerId called for customer {CustomerId} by user {User}", customerId, User.Identity?.Name);
             var invoices = await _invoiceService.GetInvoicesByCustomerIdAsync(customerId);
             return Ok(invoices);

@@ -25,21 +25,39 @@ public class PostalCodesController : ControllerBase
     /// <summary>
     /// Retrieves all postal codes in the system
     /// </summary>
-    /// <returns>List of all postal codes</returns>
-    /// <response code="200">Returns the list of postal codes</response>
+    /// <param name="pageNumber">Optional: Page number for pagination (default: returns all)</param>
+    /// <param name="pageSize">Optional: Number of items per page (default: 10, max: 100)</param>
+    /// <returns>List of all postal codes or paginated result if pagination parameters provided</returns>
+    /// <response code="200">Returns the list of postal codes or paginated result</response>
     /// <response code="401">If user is not authenticated</response>
     /// <response code="403">If user doesn't have required role</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet]
     [Authorize(Policy = "PostalCode.Read")]
     [ProducesResponseType(typeof(IEnumerable<PostalCodeDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PagedResult<PostalCodeDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<IEnumerable<PostalCodeDto>>> GetAllPostalCodes()
+    public async Task<ActionResult> GetAllPostalCodes([FromQuery] int? pageNumber = null, [FromQuery] int? pageSize = null)
     {
         try
         {
+            if (pageNumber.HasValue || pageSize.HasValue)
+            {
+                var paginationParams = new PaginationParameters
+                {
+                    PageNumber = pageNumber ?? 1,
+                    PageSize = pageSize ?? 10
+                };
+
+                _log.Information("API: GetAllPostalCodes (paginated) called with PageNumber: {PageNumber}, PageSize: {PageSize} by user {User}", 
+                    paginationParams.PageNumber, paginationParams.PageSize, User.Identity?.Name);
+
+                var pagedResult = await _postalCodeService.GetAllPostalCodesPagedAsync(paginationParams);
+                return Ok(pagedResult);
+            }
+
             _log.Information("API: GetAllPostalCodes called by user {User}", User.Identity?.Name);
             
             var postalCodes = await _postalCodeService.GetAllPostalCodesAsync();

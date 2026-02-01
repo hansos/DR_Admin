@@ -41,6 +41,45 @@ public class PostalCodeService : IPostalCodeService
         }
     }
 
+    public async Task<PagedResult<PostalCodeDto>> GetAllPostalCodesPagedAsync(PaginationParameters parameters)
+    {
+        try
+        {
+            _log.Information("Fetching paginated postal codes - Page: {PageNumber}, PageSize: {PageSize}", 
+                parameters.PageNumber, parameters.PageSize);
+            
+            var totalCount = await _context.PostalCodes
+                .AsNoTracking()
+                .CountAsync();
+
+            var postalCodes = await _context.PostalCodes
+                .AsNoTracking()
+                .OrderBy(p => p.CountryCode)
+                .ThenBy(p => p.Code)
+                .Skip((parameters.PageNumber - 1) * parameters.PageSize)
+                .Take(parameters.PageSize)
+                .ToListAsync();
+
+            var postalCodeDtos = postalCodes.Select(MapToDto).ToList();
+            
+            var result = new PagedResult<PostalCodeDto>(
+                postalCodeDtos, 
+                totalCount, 
+                parameters.PageNumber, 
+                parameters.PageSize);
+
+            _log.Information("Successfully fetched page {PageNumber} of postal codes - Returned {Count} of {TotalCount} total", 
+                parameters.PageNumber, postalCodeDtos.Count, totalCount);
+            
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while fetching paginated postal codes");
+            throw;
+        }
+    }
+
     public async Task<IEnumerable<PostalCodeDto>> GetPostalCodesByCountryAsync(string countryCode)
     {
         try
