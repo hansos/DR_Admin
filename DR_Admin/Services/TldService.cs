@@ -39,6 +39,30 @@ public class TldService : ITldService
         }
     }
 
+    public async Task<IEnumerable<TldDto>> GetAllTldsAsync(bool isSecondLevel)
+    {
+        try
+        {
+            _log.Information("Fetching TLDs filtered by IsSecondLevel: {IsSecondLevel}", isSecondLevel);
+            
+            var tlds = await _context.Tlds
+                .AsNoTracking()
+                .Where(t => t.IsSecondLevel == isSecondLevel)
+                .OrderBy(t => t.Extension)
+                .ToListAsync();
+
+            var tldDtos = tlds.Select(MapToDto);
+            
+            _log.Information("Successfully fetched {Count} TLDs with IsSecondLevel: {IsSecondLevel}", tlds.Count, isSecondLevel);
+            return tldDtos;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while fetching TLDs filtered by IsSecondLevel: {IsSecondLevel}", isSecondLevel);
+            throw;
+        }
+    }
+
     public async Task<IEnumerable<TldDto>> GetActiveTldsAsync()
     {
         try
@@ -245,6 +269,173 @@ public class TldService : ITldService
         {
             _log.Error(ex, "Error occurred while deleting TLD with ID: {TldId}", id);
             throw;
+        }
+    }
+
+    /// <summary>
+    /// Synchronizes TLDs from IANA's official TLD list
+    /// </summary>
+    /// <param name="request">Synchronization configuration options</param>
+    /// <returns>Synchronization result with statistics</returns>
+    public async Task<TldSyncResponseDto> SyncTldsFromIanaAsync(TldSyncRequestDto request)
+    {
+        const string ianaUrl = "https://data.iana.org/TLD/tlds-alpha-by-domain.txt";
+        var syncTimestamp = DateTime.UtcNow;
+        var tldsAdded = 0;
+        var tldsUpdated = 0;
+        var totalTldsInSource = 0;
+
+        try
+        {
+            _log.Information("Starting TLD synchronization from IANA source: {IanaUrl}", ianaUrl);
+
+            if (request.MarkAllInactiveBeforeSync)
+            {
+                _log.Information("Marking all existing TLDs as inactive before sync");
+                var allTlds = await _context.Tlds.ToListAsync();
+                foreach (var tld in allTlds)
+                {
+                    if (tld.IsActive)
+                    {
+                        tld.IsActive = false;
+                        tld.UpdatedAt = syncTimestamp;
+                    }
+                }
+                await _context.SaveChangesAsync();
+                _log.Information("Marked {Count} TLDs as inactive", allTlds.Count(t => !t.IsActive));
+            }
+
+            // Download TLD list from IANA
+            using var httpClient = new HttpClient();
+            httpClient.Timeout = TimeSpan.FromSeconds(30);
+            
+            _log.Information("Downloading TLD list from IANA");
+            var response = await httpClient.GetAsync(ianaUrl);
+            response.EnsureSuccessStatusCode();
+
+            var content = await response.Content.ReadAsStringAsync();
+            var lines = content.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+
+            // Process each line
+            const int batchSize = 100;
+            var processedInBatch = 0;
+
+            foreach (var line in lines)
+            {
+                var trimmedLine = line.Trim();
+
+                // Skip comments (lines starting with #)
+                if (string.IsNullOrWhiteSpace(trimmedLine) || trimmedLine.StartsWith("#"))
+                    continue;
+
+                totalTldsInSource++;
+
+                // Normalize to lowercase for consistency
+                var extension = trimmedLine.ToLowerInvariant();
+
+                // Check if TLD exists in local tracker first, then database
+                var tld = _context.Tlds.Local.FirstOrDefault(t => t.Extension == extension);
+                if (tld == null)
+                {
+                    tld = await _context.Tlds.FirstOrDefaultAsync(t => t.Extension == extension);
+                }
+
+                if (tld == null)
+                {
+                    // Add new TLD
+                    tld = new Tld
+                    {
+                        Extension = extension,
+                        Description = $"Top-Level Domain: .{extension}",
+                        IsActive = request.ActivateNewTlds,
+                        IsSecondLevel = false,
+                        DefaultRegistrationYears = 1,
+                        MaxRegistrationYears = 10,
+                        RequiresPrivacy = false,
+                        RulesUrl = string.Empty,
+                        CreatedAt = syncTimestamp,
+                        UpdatedAt = syncTimestamp
+                    };
+
+                    _context.Tlds.Add(tld);
+                    tldsAdded++;
+                    _log.Debug("Adding new TLD: {Extension}", extension);
+                }
+                else
+                {
+                    // Update existing TLD (reactivate if requested)
+                    var changed = false;
+
+                    if (request.MarkAllInactiveBeforeSync && !tld.IsActive)
+                    {
+                        tld.IsActive = true;
+                        changed = true;
+                    }
+
+                    if (changed)
+                    {
+                        tld.UpdatedAt = syncTimestamp;
+                        tldsUpdated++;
+                        _log.Debug("Updated TLD: {Extension}", extension);
+                    }
+                }
+
+                processedInBatch++;
+
+                // Save in batches to avoid memory issues
+                if (processedInBatch >= batchSize)
+                {
+                    await _context.SaveChangesAsync();
+                    _context.ChangeTracker.Clear();
+                    processedInBatch = 0;
+                }
+            }
+
+            // Save remaining changes
+            if (processedInBatch > 0)
+            {
+                await _context.SaveChangesAsync();
+                _context.ChangeTracker.Clear();
+            }
+
+            _log.Information("TLD synchronization completed successfully. Added: {Added}, Updated: {Updated}, Total in source: {Total}", 
+                tldsAdded, tldsUpdated, totalTldsInSource);
+
+            return new TldSyncResponseDto
+            {
+                Success = true,
+                Message = "TLD synchronization completed successfully",
+                TldsAdded = tldsAdded,
+                TldsUpdated = tldsUpdated,
+                TotalTldsInSource = totalTldsInSource,
+                SyncTimestamp = syncTimestamp
+            };
+        }
+        catch (HttpRequestException ex)
+        {
+            _log.Error(ex, "HTTP error occurred while downloading TLD list from IANA");
+            return new TldSyncResponseDto
+            {
+                Success = false,
+                Message = $"Failed to download TLD list from IANA: {ex.Message}",
+                TldsAdded = tldsAdded,
+                TldsUpdated = tldsUpdated,
+                TotalTldsInSource = totalTldsInSource,
+                SyncTimestamp = syncTimestamp
+            };
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred during TLD synchronization");
+            return new TldSyncResponseDto
+            {
+                Success = false,
+                Message = $"Error during TLD synchronization: {ex.Message}",
+                TldsAdded = tldsAdded,
+                TldsUpdated = tldsUpdated,
+                TotalTldsInSource = totalTldsInSource,
+                SyncTimestamp = syncTimestamp
+            };
         }
     }
 

@@ -697,4 +697,46 @@ public class RegistrarService : IRegistrarService
             throw;
         }
     }
+
+    public async Task<DomainRegistrationLib.Models.DomainAvailabilityResult> CheckDomainAvailabilityAsync(int registrarId, string domainName)
+    {
+        try
+        {
+            _log.Information("Checking domain availability for {DomainName} using registrar {RegistrarId}", domainName, registrarId);
+
+            // Get registrar details
+            var registrar = await _context.Registrars
+                .AsNoTracking()
+                .FirstOrDefaultAsync(r => r.Id == registrarId);
+
+            if (registrar == null)
+            {
+                _log.Warning("Registrar with ID {RegistrarId} not found", registrarId);
+                throw new InvalidOperationException($"Registrar with ID {registrarId} not found");
+            }
+
+            if (!registrar.IsActive)
+            {
+                _log.Warning("Registrar with ID {RegistrarId} is not active", registrarId);
+                throw new InvalidOperationException($"Registrar with ID {registrarId} is not active");
+            }
+
+            // Create registrar client instance
+            var registrarClient = _registrarFactory.CreateRegistrar(registrar.Code);
+
+            // Check domain availability
+            var result = await registrarClient.CheckAvailabilityAsync(domainName);
+            
+            _log.Information("Domain availability check completed for {DomainName}: Available={IsAvailable}", 
+                domainName, result.IsAvailable);
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while checking domain availability for {DomainName} using registrar {RegistrarId}", 
+                domainName, registrarId);
+            throw;
+        }
+    }
 }

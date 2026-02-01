@@ -25,6 +25,7 @@ public class CreateTldDto
 {
     public string Extension { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
+    public bool IsSecondLevel { get; set; }
     public bool IsActive { get; set; } = true;
     public int? DefaultRegistrationYears { get; set; } = 1;
     public int? MaxRegistrationYears { get; set; } = 10;

@@ -183,10 +183,10 @@ builder.Services.AddTransient<ISPAdmin.Domain.Workflows.IOrderProvisioningWorkfl
 
 // Register Background Services
 builder.Services.AddHostedService<EmailQueueBackgroundService>();
-builder.Services.AddHostedService<ISPAdmin.BackgroundServices.DomainExpirationMonitorService>();
-builder.Services.AddHostedService<ISPAdmin.BackgroundServices.OutboxProcessorService>();
-builder.Services.AddHostedService<ISPAdmin.BackgroundServices.ExchangeRateUpdateService>();
-builder.Services.AddHostedService<ISPAdmin.BackgroundServices.DatabaseBackupService>();
+builder.Services.AddHostedService<DomainExpirationMonitorService>();
+builder.Services.AddHostedService<OutboxProcessorService>();
+builder.Services.AddHostedService<ExchangeRateUpdateService>();
+builder.Services.AddHostedService<DatabaseBackupService>();
 
 // Configure CORS from appsettings
 var corsSettings = builder.Configuration.GetSection("CorsSettings");

@@ -4,6 +4,8 @@ public class Tld : EntityBase
 {
     public string Extension { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
+    public string RulesUrl { get; set; } = string.Empty;
+    public bool IsSecondLevel { get; set; }
     public bool IsActive { get; set; }
     public int? DefaultRegistrationYears { get; set; }
     public int? MaxRegistrationYears { get; set; }

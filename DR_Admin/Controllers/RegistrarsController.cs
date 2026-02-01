@@ -399,4 +399,46 @@ public class RegistrarsController : ControllerBase
             return StatusCode(500, "An error occurred while deleting the registrar");
         }
     }
+
+    /// <summary>
+    /// Checks if a domain is available for registration using a specific registrar
+    /// </summary>
+    /// <param name="registrarId">The unique identifier of the registrar</param>
+    /// <param name="domainName">The domain name to check (e.g., example.com)</param>
+    /// <returns>Domain availability information</returns>
+    /// <response code="200">Returns the domain availability result</response>
+    /// <response code="400">If the registrar is not found or not active</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpGet("{registrarId}/isavailable/{domainName}")]
+    [ProducesResponseType(typeof(DomainRegistrationLib.Models.DomainAvailabilityResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<DomainRegistrationLib.Models.DomainAvailabilityResult>> CheckDomainAvailability(
+        int registrarId, 
+        string domainName)
+    {
+        try
+        {
+            _log.Information("API: CheckDomainAvailability called for domain {DomainName} using registrar {RegistrarId} by user {User}", 
+                domainName, registrarId, User.Identity?.Name);
+
+            var result = await _registrarService.CheckDomainAvailabilityAsync(registrarId, domainName);
+            
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _log.Warning(ex, "API: Invalid operation in CheckDomainAvailability for domain {DomainName} using registrar {RegistrarId}", 
+                domainName, registrarId);
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in CheckDomainAvailability for domain {DomainName} using registrar {RegistrarId}", 
+                domainName, registrarId);
+            return StatusCode(500, "An error occurred while checking domain availability");
+        }
+    }
 }

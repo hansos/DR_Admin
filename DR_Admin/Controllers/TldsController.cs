@@ -105,6 +105,60 @@ public class TldsController : ControllerBase
     }
 
     /// <summary>
+    /// Retrieves only second-level Top-Level Domains
+    /// </summary>
+    /// <returns>List of second-level TLDs</returns>
+    /// <response code="200">Returns the list of second-level TLDs</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpGet("secondlevel")]
+    [ProducesResponseType(typeof(IEnumerable<TldDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<IEnumerable<TldDto>>> GetSecondLevelTlds()
+    {
+        try
+        {
+            _log.Information("API: GetSecondLevelTlds called by user {User}", User.Identity?.Name);
+            
+            var tlds = await _tldService.GetAllTldsAsync(isSecondLevel: true);
+            return Ok(tlds);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in GetSecondLevelTlds");
+            return StatusCode(500, "An error occurred while retrieving second-level TLDs");
+        }
+    }
+
+    /// <summary>
+    /// Retrieves only top-level (non-second-level) Top-Level Domains
+    /// </summary>
+    /// <returns>List of top-level TLDs</returns>
+    /// <response code="200">Returns the list of top-level TLDs</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpGet("toplevel")]
+    [ProducesResponseType(typeof(IEnumerable<TldDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<IEnumerable<TldDto>>> GetTopLevelTlds()
+    {
+        try
+        {
+            _log.Information("API: GetTopLevelTlds called by user {User}", User.Identity?.Name);
+            
+            var tlds = await _tldService.GetAllTldsAsync(isSecondLevel: false);
+            return Ok(tlds);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in GetActiveTlds");
+            return StatusCode(500, "An error occurred while retrieving active TLDs");
+        }
+    }
+
+    /// <summary>
     /// Retrieves a specific TLD by its unique identifier
     /// </summary>
     /// <param name="id">The unique identifier of the TLD</param>

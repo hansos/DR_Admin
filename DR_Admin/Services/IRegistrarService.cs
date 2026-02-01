@@ -1,3 +1,4 @@
+using DomainRegistrationLib.Models;
 using ISPAdmin.DTOs;
 
 namespace ISPAdmin.Services;
@@ -16,4 +17,5 @@ public interface IRegistrarService
     Task<RegistrarTldDto> AssignTldToRegistrarAsync(int registrarId, TldDto tldDto);
     Task<IEnumerable<TldDto>> GetTldsByRegistrarAsync(int registrarId);
     Task<int> DownloadTldsForRegistrarAsync(int registrarId);
+    Task<DomainAvailabilityResult> CheckDomainAvailabilityAsync(int registrarId, string domainName);
 }
