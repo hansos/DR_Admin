@@ -112,13 +112,33 @@
         <!-- Get All Invoices Section -->
         <div class="test-section">
             <h2 class="section-title">&#128203; Get All Invoices</h2>
-            <button class="btn btn-primary mb-3" onclick="getAllInvoices()">Load All Invoices</button>
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <label for="pageSize" class="form-label">Page Size</label>
+                    <select id="pageSize" class="form-control" onchange="getAllInvoices()">
+                        <option value="5" selected>5</option>
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="pageNumber" class="form-label">Page Number</label>
+                    <input id="pageNumber" type="number" class="form-control" value="1" min="1" onchange="getAllInvoices()">
+                </div>
+                <div class="col-md-6 d-flex align-items-end">
+                    <button class="btn btn-primary" onclick="getAllInvoices()">Load Invoices</button>
+                </div>
+            </div>
+            <div id="pagingInfo" class="mb-2"></div>
             <div class="loading" id="loadingAll">
                 <div class="spinner-border" role="status">
                     <span class="visually-hidden">Loading...</span>
                 </div>
             </div>
             <div id="invoicesTableContainer"></div>
+            <div id="pagingControls" class="mt-3"></div>
         </div>
 
         <!-- Get Invoice by ID Section -->
@@ -449,14 +469,20 @@
 
         // Get All Invoices
         async function getAllInvoices() {
+            const pageSize = parseInt(document.getElementById('pageSize').value);
+            const pageNumber = parseInt(document.getElementById('pageNumber').value);
             const loading = document.getElementById('loadingAll');
             const container = document.getElementById('invoicesTableContainer');
+            const pagingInfo = document.getElementById('pagingInfo');
+            const pagingControls = document.getElementById('pagingControls');
             
             loading.style.display = 'block';
             container.innerHTML = '';
+            pagingInfo.innerHTML = '';
+            pagingControls.innerHTML = '';
 
             try {
-                const response = await fetch(`${API_BASE_URL}/api/v1/Invoices`, {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Invoices?pageNumber=${pageNumber}&pageSize=${pageSize}`, {
                     method: 'GET',
                     headers: getAuthHeaders()
                 });
@@ -472,8 +498,19 @@
                 updateResponseBox(data);
 
                 if (response.ok) {
-                    currentInvoices = data;
-                    renderInvoicesTable(data, container);
+                    if (data && data.data && Array.isArray(data.data) && data.totalCount !== undefined) {
+                        currentInvoices = data.data;
+                        renderInvoicesTable(data.data, container);
+                        renderPagingInfo(data, 'Invoices');
+                        renderPagingControls(data);
+                    } else if (Array.isArray(data)) {
+                        currentInvoices = data;
+                        renderInvoicesTable(data, container);
+                    } else {
+                        console.error('Unexpected data structure:', data);
+                        showAlert('Unexpected data structure received from API', 'warning');
+                        container.innerHTML = '<div class="empty-state">Error: Unexpected data format</div>';
+                    }
                 } else {
                     showAlert(`Error: ${data.message || data.error || 'Failed to fetch invoices'}`, 'danger');
                 }
@@ -485,9 +522,62 @@
             }
         }
 
+        // Render Paging Info
+        function renderPagingInfo(pagedResult, itemName) {
+            const pagingInfo = document.getElementById('pagingInfo');
+            const startItem = ((pagedResult.currentPage - 1) * pagedResult.pageSize) + 1;
+            const endItem = Math.min(pagedResult.currentPage * pagedResult.pageSize, pagedResult.totalCount);
+            
+            pagingInfo.innerHTML = `
+                <div class="alert alert-info mb-0">
+                    Showing ${startItem}-${endItem} of ${pagedResult.totalCount} ${itemName} 
+                    (Page ${pagedResult.currentPage} of ${pagedResult.totalPages})
+                </div>
+            `;
+        }
+
+        // Render Paging Controls
+        function renderPagingControls(pagedResult) {
+            const pagingControls = document.getElementById('pagingControls');
+            let buttonsHtml = '<nav><ul class="pagination justify-content-center">';
+            
+            buttonsHtml += `<li class="page-item ${!pagedResult.hasPrevious ? 'disabled' : ''}"><a class="page-link" href="#" onclick="goToPage(${pagedResult.currentPage - 1}); return false;">Previous</a></li>`;
+            
+            const maxPagesToShow = 5;
+            let startPage = Math.max(1, pagedResult.currentPage - Math.floor(maxPagesToShow / 2));
+            let endPage = Math.min(pagedResult.totalPages, startPage + maxPagesToShow - 1);
+            
+            if (endPage - startPage < maxPagesToShow - 1) {
+                startPage = Math.max(1, endPage - maxPagesToShow + 1);
+            }
+            
+            if (startPage > 1) {
+                buttonsHtml += `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(1); return false;">1</a></li>`;
+                if (startPage > 2) buttonsHtml += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                buttonsHtml += `<li class="page-item ${i === pagedResult.currentPage ? 'active' : ''}"><a class="page-link" href="#" onclick="goToPage(${i}); return false;">${i}</a></li>`;
+            }
+            
+            if (endPage < pagedResult.totalPages) {
+                if (endPage < pagedResult.totalPages - 1) buttonsHtml += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+                buttonsHtml += `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(${pagedResult.totalPages}); return false;">${pagedResult.totalPages}</a></li>`;
+            }
+            
+            buttonsHtml += `<li class="page-item ${!pagedResult.hasNext ? 'disabled' : ''}"><a class="page-link" href="#" onclick="goToPage(${pagedResult.currentPage + 1}); return false;">Next</a></li>`;
+            buttonsHtml += '</ul></nav>';
+            pagingControls.innerHTML = buttonsHtml;
+        }
+
+        function goToPage(page) {
+            document.getElementById('pageNumber').value = page;
+            getAllInvoices();
+        }
+
         // Render Invoices Table
         function renderInvoicesTable(invoices, container) {
-            if (!invoices || invoices.length === 0) {
+            if (!invoices || !Array.isArray(invoices) || invoices.length === 0) {
                 container.innerHTML = '<div class="empty-state">No invoices found</div>';
                 return;
             }
