@@ -40,6 +40,48 @@ public class UserService : IUserService
         }
     }
 
+    public async Task<PagedResult<UserDto>> GetAllUsersPagedAsync(PaginationParameters parameters)
+    {
+        try
+        {
+            _log.Information("Fetching paginated users - Page: {PageNumber}, PageSize: {PageSize}", 
+                parameters.PageNumber, parameters.PageSize);
+            
+            // Get total count
+            var totalCount = await _context.Users
+                .AsNoTracking()
+                .CountAsync();
+
+            // Get paginated data
+            var users = await _context.Users
+                .Include(u => u.UserRoles)
+                    .ThenInclude(ur => ur.Role)
+                .AsNoTracking()
+                .OrderBy(u => u.Username)
+                .Skip((parameters.PageNumber - 1) * parameters.PageSize)
+                .Take(parameters.PageSize)
+                .ToListAsync();
+
+            var userDtos = users.Select(MapToDto).ToList();
+            
+            var result = new PagedResult<UserDto>(
+                userDtos, 
+                totalCount, 
+                parameters.PageNumber, 
+                parameters.PageSize);
+
+            _log.Information("Successfully fetched page {PageNumber} of users - Returned {Count} of {TotalCount} total", 
+                parameters.PageNumber, userDtos.Count, totalCount);
+            
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while fetching paginated users");
+            throw;
+        }
+    }
+
     public async Task<UserDto?> GetUserByIdAsync(int id)
     {
         try

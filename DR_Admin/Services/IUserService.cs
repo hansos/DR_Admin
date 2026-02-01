@@ -5,6 +5,7 @@ namespace ISPAdmin.Services;
 public interface IUserService
 {
     Task<IEnumerable<UserDto>> GetAllUsersAsync();
+    Task<PagedResult<UserDto>> GetAllUsersPagedAsync(PaginationParameters parameters);
     Task<UserDto?> GetUserByIdAsync(int id);
     Task<UserDto> CreateUserAsync(CreateUserDto createDto);
     Task<UserDto?> UpdateUserAsync(int id, UpdateUserDto updateDto);

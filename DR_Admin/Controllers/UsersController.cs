@@ -25,21 +25,41 @@ public class UsersController : ControllerBase
     /// <summary>
     /// Retrieves all users in the system
     /// </summary>
-    /// <returns>List of all users</returns>
-    /// <response code="200">Returns the list of users</response>
+    /// <param name="pageNumber">Optional: Page number for pagination (default: returns all)</param>
+    /// <param name="pageSize">Optional: Number of items per page (default: 10, max: 100)</param>
+    /// <returns>List of all users or paginated result if pagination parameters provided</returns>
+    /// <response code="200">Returns the list of users or paginated result</response>
     /// <response code="401">If user is not authenticated</response>
     /// <response code="403">If user doesn't have required role (Admin or Support)</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet]
     [Authorize(Policy = "User.Read")]
     [ProducesResponseType(typeof(IEnumerable<UserDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PagedResult<UserDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<IEnumerable<UserDto>>> GetAllUsers()
+    public async Task<ActionResult> GetAllUsers([FromQuery] int? pageNumber = null, [FromQuery] int? pageSize = null)
     {
         try
         {
+            // If pagination parameters are provided, return paginated result
+            if (pageNumber.HasValue || pageSize.HasValue)
+            {
+                var paginationParams = new PaginationParameters
+                {
+                    PageNumber = pageNumber ?? 1,
+                    PageSize = pageSize ?? 10
+                };
+
+                _log.Information("API: GetAllUsers (paginated) called with PageNumber: {PageNumber}, PageSize: {PageSize} by user {User}", 
+                    paginationParams.PageNumber, paginationParams.PageSize, User.Identity?.Name);
+
+                var pagedResult = await _userService.GetAllUsersPagedAsync(paginationParams);
+                return Ok(pagedResult);
+            }
+
+            // Otherwise, return all users (backward compatible)
             _log.Information("API: GetAllUsers called by user {User}", User.Identity?.Name);
             
             var users = await _userService.GetAllUsersAsync();
