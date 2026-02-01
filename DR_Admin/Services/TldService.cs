@@ -63,6 +63,46 @@ public class TldService : ITldService
         }
     }
 
+    public async Task<PagedResult<TldDto>> GetAllTldsPagedAsync(PaginationParameters parameters)
+    {
+        try
+        {
+            _log.Information("Fetching paginated TLDs - Page: {PageNumber}, PageSize: {PageSize}", 
+                parameters.PageNumber, parameters.PageSize);
+            
+            // Get total count
+            var totalCount = await _context.Tlds
+                .AsNoTracking()
+                .CountAsync();
+
+            // Get paginated data
+            var tlds = await _context.Tlds
+                .AsNoTracking()
+                .OrderBy(t => t.Extension)
+                .Skip((parameters.PageNumber - 1) * parameters.PageSize)
+                .Take(parameters.PageSize)
+                .ToListAsync();
+
+            var tldDtos = tlds.Select(MapToDto).ToList();
+            
+            var result = new PagedResult<TldDto>(
+                tldDtos, 
+                totalCount, 
+                parameters.PageNumber, 
+                parameters.PageSize);
+
+            _log.Information("Successfully fetched page {PageNumber} of TLDs - Returned {Count} of {TotalCount} total", 
+                parameters.PageNumber, tldDtos.Count, totalCount);
+            
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while fetching paginated TLDs");
+            throw;
+        }
+    }
+
     public async Task<IEnumerable<TldDto>> GetActiveTldsAsync()
     {
         try
@@ -83,6 +123,132 @@ public class TldService : ITldService
         catch (Exception ex)
         {
             _log.Error(ex, "Error occurred while fetching active TLDs");
+            throw;
+        }
+    }
+
+    public async Task<PagedResult<TldDto>> GetActiveTldsPagedAsync(PaginationParameters parameters)
+    {
+        try
+        {
+            _log.Information("Fetching paginated active TLDs - Page: {PageNumber}, PageSize: {PageSize}", 
+                parameters.PageNumber, parameters.PageSize);
+            
+            // Get total count
+            var totalCount = await _context.Tlds
+                .AsNoTracking()
+                .Where(t => t.IsActive)
+                .CountAsync();
+
+            // Get paginated data
+            var tlds = await _context.Tlds
+                .AsNoTracking()
+                .Where(t => t.IsActive)
+                .OrderBy(t => t.Extension)
+                .Skip((parameters.PageNumber - 1) * parameters.PageSize)
+                .Take(parameters.PageSize)
+                .ToListAsync();
+
+            var tldDtos = tlds.Select(MapToDto).ToList();
+            
+            var result = new PagedResult<TldDto>(
+                tldDtos, 
+                totalCount, 
+                parameters.PageNumber, 
+                parameters.PageSize);
+
+            _log.Information("Successfully fetched page {PageNumber} of active TLDs - Returned {Count} of {TotalCount} total", 
+                parameters.PageNumber, tldDtos.Count, totalCount);
+            
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while fetching paginated active TLDs");
+            throw;
+        }
+    }
+
+    public async Task<PagedResult<TldDto>> GetSecondLevelTldsPagedAsync(PaginationParameters parameters)
+    {
+        try
+        {
+            _log.Information("Fetching paginated second-level TLDs - Page: {PageNumber}, PageSize: {PageSize}", 
+                parameters.PageNumber, parameters.PageSize);
+            
+            // Get total count
+            var totalCount = await _context.Tlds
+                .AsNoTracking()
+                .Where(t => t.IsSecondLevel == true)
+                .CountAsync();
+
+            // Get paginated data
+            var tlds = await _context.Tlds
+                .AsNoTracking()
+                .Where(t => t.IsSecondLevel == true)
+                .OrderBy(t => t.Extension)
+                .Skip((parameters.PageNumber - 1) * parameters.PageSize)
+                .Take(parameters.PageSize)
+                .ToListAsync();
+
+            var tldDtos = tlds.Select(MapToDto).ToList();
+            
+            var result = new PagedResult<TldDto>(
+                tldDtos, 
+                totalCount, 
+                parameters.PageNumber, 
+                parameters.PageSize);
+
+            _log.Information("Successfully fetched page {PageNumber} of second-level TLDs - Returned {Count} of {TotalCount} total", 
+                parameters.PageNumber, tldDtos.Count, totalCount);
+            
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while fetching paginated second-level TLDs");
+            throw;
+        }
+    }
+
+    public async Task<PagedResult<TldDto>> GetTopLevelTldsPagedAsync(PaginationParameters parameters)
+    {
+        try
+        {
+            _log.Information("Fetching paginated top-level TLDs - Page: {PageNumber}, PageSize: {PageSize}", 
+                parameters.PageNumber, parameters.PageSize);
+            
+            // Get total count
+            var totalCount = await _context.Tlds
+                .AsNoTracking()
+                .Where(t => t.IsSecondLevel == false)
+                .CountAsync();
+
+            // Get paginated data
+            var tlds = await _context.Tlds
+                .AsNoTracking()
+                .Where(t => t.IsSecondLevel == false)
+                .OrderBy(t => t.Extension)
+                .Skip((parameters.PageNumber - 1) * parameters.PageSize)
+                .Take(parameters.PageSize)
+                .ToListAsync();
+
+            var tldDtos = tlds.Select(MapToDto).ToList();
+            
+            var result = new PagedResult<TldDto>(
+                tldDtos, 
+                totalCount, 
+                parameters.PageNumber, 
+                parameters.PageSize);
+
+            _log.Information("Successfully fetched page {PageNumber} of top-level TLDs - Returned {Count} of {TotalCount} total", 
+                parameters.PageNumber, tldDtos.Count, totalCount);
+            
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while fetching paginated top-level TLDs");
             throw;
         }
     }

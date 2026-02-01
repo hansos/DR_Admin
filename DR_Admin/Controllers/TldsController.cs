@@ -53,18 +53,38 @@ public class TldsController : ControllerBase
     /// <summary>
     /// Retrieves all Top-Level Domains in the system
     /// </summary>
-    /// <returns>List of all TLDs</returns>
-    /// <response code="200">Returns the list of TLDs</response>
+    /// <param name="pageNumber">Optional: Page number for pagination (default: returns all)</param>
+    /// <param name="pageSize">Optional: Number of items per page (default: 10, max: 100)</param>
+    /// <returns>List of all TLDs or paginated result if pagination parameters provided</returns>
+    /// <response code="200">Returns the list of TLDs or paginated result</response>
     /// <response code="401">If user is not authenticated</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<TldDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PagedResult<TldDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<IEnumerable<TldDto>>> GetAllTlds()
+    public async Task<ActionResult> GetAllTlds([FromQuery] int? pageNumber = null, [FromQuery] int? pageSize = null)
     {
         try
         {
+            // If pagination parameters are provided, return paginated result
+            if (pageNumber.HasValue || pageSize.HasValue)
+            {
+                var paginationParams = new PaginationParameters
+                {
+                    PageNumber = pageNumber ?? 1,
+                    PageSize = pageSize ?? 10
+                };
+
+                _log.Information("API: GetAllTlds (paginated) called with PageNumber: {PageNumber}, PageSize: {PageSize} by user {User}", 
+                    paginationParams.PageNumber, paginationParams.PageSize, User.Identity?.Name);
+
+                var pagedResult = await _tldService.GetAllTldsPagedAsync(paginationParams);
+                return Ok(pagedResult);
+            }
+
+            // Otherwise, return all TLDs (backward compatible)
             _log.Information("API: GetAllTlds called by user {User}", User.Identity?.Name);
             
             var tlds = await _tldService.GetAllTldsAsync();
@@ -80,18 +100,38 @@ public class TldsController : ControllerBase
     /// <summary>
     /// Retrieves only active Top-Level Domains
     /// </summary>
-    /// <returns>List of active TLDs</returns>
-    /// <response code="200">Returns the list of active TLDs</response>
+    /// <param name="pageNumber">Optional: Page number for pagination (default: returns all)</param>
+    /// <param name="pageSize">Optional: Number of items per page (default: 10, max: 100)</param>
+    /// <returns>List of active TLDs or paginated result if pagination parameters provided</returns>
+    /// <response code="200">Returns the list of active TLDs or paginated result</response>
     /// <response code="401">If user is not authenticated</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("active")]
     [ProducesResponseType(typeof(IEnumerable<TldDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PagedResult<TldDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<IEnumerable<TldDto>>> GetActiveTlds()
+    public async Task<ActionResult> GetActiveTlds([FromQuery] int? pageNumber = null, [FromQuery] int? pageSize = null)
     {
         try
         {
+            // If pagination parameters are provided, return paginated result
+            if (pageNumber.HasValue || pageSize.HasValue)
+            {
+                var paginationParams = new PaginationParameters
+                {
+                    PageNumber = pageNumber ?? 1,
+                    PageSize = pageSize ?? 10
+                };
+
+                _log.Information("API: GetActiveTlds (paginated) called with PageNumber: {PageNumber}, PageSize: {PageSize} by user {User}", 
+                    paginationParams.PageNumber, paginationParams.PageSize, User.Identity?.Name);
+
+                var pagedResult = await _tldService.GetActiveTldsPagedAsync(paginationParams);
+                return Ok(pagedResult);
+            }
+
+            // Otherwise, return all active TLDs (backward compatible)
             _log.Information("API: GetActiveTlds called by user {User}", User.Identity?.Name);
             
             var tlds = await _tldService.GetActiveTldsAsync();
@@ -107,18 +147,38 @@ public class TldsController : ControllerBase
     /// <summary>
     /// Retrieves only second-level Top-Level Domains
     /// </summary>
-    /// <returns>List of second-level TLDs</returns>
-    /// <response code="200">Returns the list of second-level TLDs</response>
+    /// <param name="pageNumber">Optional: Page number for pagination (default: returns all)</param>
+    /// <param name="pageSize">Optional: Number of items per page (default: 10, max: 100)</param>
+    /// <returns>List of second-level TLDs or paginated result if pagination parameters provided</returns>
+    /// <response code="200">Returns the list of second-level TLDs or paginated result</response>
     /// <response code="401">If user is not authenticated</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("secondlevel")]
     [ProducesResponseType(typeof(IEnumerable<TldDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PagedResult<TldDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<IEnumerable<TldDto>>> GetSecondLevelTlds()
+    public async Task<ActionResult> GetSecondLevelTlds([FromQuery] int? pageNumber = null, [FromQuery] int? pageSize = null)
     {
         try
         {
+            // If pagination parameters are provided, return paginated result
+            if (pageNumber.HasValue || pageSize.HasValue)
+            {
+                var paginationParams = new PaginationParameters
+                {
+                    PageNumber = pageNumber ?? 1,
+                    PageSize = pageSize ?? 10
+                };
+
+                _log.Information("API: GetSecondLevelTlds (paginated) called with PageNumber: {PageNumber}, PageSize: {PageSize} by user {User}", 
+                    paginationParams.PageNumber, paginationParams.PageSize, User.Identity?.Name);
+
+                var pagedResult = await _tldService.GetSecondLevelTldsPagedAsync(paginationParams);
+                return Ok(pagedResult);
+            }
+
+            // Otherwise, return all second-level TLDs (backward compatible)
             _log.Information("API: GetSecondLevelTlds called by user {User}", User.Identity?.Name);
             
             var tlds = await _tldService.GetAllTldsAsync(isSecondLevel: true);
@@ -134,18 +194,38 @@ public class TldsController : ControllerBase
     /// <summary>
     /// Retrieves only top-level (non-second-level) Top-Level Domains
     /// </summary>
-    /// <returns>List of top-level TLDs</returns>
-    /// <response code="200">Returns the list of top-level TLDs</response>
+    /// <param name="pageNumber">Optional: Page number for pagination (default: returns all)</param>
+    /// <param name="pageSize">Optional: Number of items per page (default: 10, max: 100)</param>
+    /// <returns>List of top-level TLDs or paginated result if pagination parameters provided</returns>
+    /// <response code="200">Returns the list of top-level TLDs or paginated result</response>
     /// <response code="401">If user is not authenticated</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("toplevel")]
     [ProducesResponseType(typeof(IEnumerable<TldDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PagedResult<TldDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<IEnumerable<TldDto>>> GetTopLevelTlds()
+    public async Task<ActionResult> GetTopLevelTlds([FromQuery] int? pageNumber = null, [FromQuery] int? pageSize = null)
     {
         try
         {
+            // If pagination parameters are provided, return paginated result
+            if (pageNumber.HasValue || pageSize.HasValue)
+            {
+                var paginationParams = new PaginationParameters
+                {
+                    PageNumber = pageNumber ?? 1,
+                    PageSize = pageSize ?? 10
+                };
+
+                _log.Information("API: GetTopLevelTlds (paginated) called with PageNumber: {PageNumber}, PageSize: {PageSize} by user {User}", 
+                    paginationParams.PageNumber, paginationParams.PageSize, User.Identity?.Name);
+
+                var pagedResult = await _tldService.GetTopLevelTldsPagedAsync(paginationParams);
+                return Ok(pagedResult);
+            }
+
+            // Otherwise, return all top-level TLDs (backward compatible)
             _log.Information("API: GetTopLevelTlds called by user {User}", User.Identity?.Name);
             
             var tlds = await _tldService.GetAllTldsAsync(isSecondLevel: false);
@@ -153,8 +233,8 @@ public class TldsController : ControllerBase
         }
         catch (Exception ex)
         {
-            _log.Error(ex, "API: Error in GetActiveTlds");
-            return StatusCode(500, "An error occurred while retrieving active TLDs");
+            _log.Error(ex, "API: Error in GetTopLevelTlds");
+            return StatusCode(500, "An error occurred while retrieving top-level TLDs");
         }
     }
 
