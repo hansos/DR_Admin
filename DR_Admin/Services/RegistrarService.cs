@@ -695,7 +695,6 @@ public class RegistrarService : IRegistrarService
         }
     }
 
-
     public async Task<int> DownloadTldsForRegistrarAsync(int registrarId, List<string> tlds)
     {
         try
