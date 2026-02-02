@@ -73,5 +73,11 @@ namespace DomainRegistrationLib.Interfaces
         /// Gets all supported top-level domains for this registrar
         /// </summary>
         Task<List<TldInfo>> GetSupportedTldsAsync();
+
+        Task<List<TldInfo>> GetSupportedTldsAsync(string tld);
+
+        Task<List<TldInfo>> GetSupportedTldsAsync(List<string> requestTlds);
+
+
     }
 }

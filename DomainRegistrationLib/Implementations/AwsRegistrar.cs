@@ -591,25 +591,67 @@ namespace DomainRegistrationLib.Implementations
             }
         }
 
+        public override async Task<List<TldInfo>> GetSupportedTldsAsync(List<string> requestTlds)
+        {
+            var tlds = new List<TldInfo>();
+
+            foreach(string tld in requestTlds)
+            {
+                var d = await GetSupportedTldsAsync(tld);
+                tlds.AddRange(d);
+                await Task.Delay(20);
+            }
+
+            return tlds;
+        }
 
         public override async Task<List<TldInfo>> GetSupportedTldsAsync()
+        {
+            _logger.Information("Getting supported TLDs from AWS Route 53 (all)");
+            try
+            {
+                throw new NotImplementedException("AWS GetSupportedTld's needs one or several tld's");
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error getting supported TLDs from AWS Route 53");
+                throw;
+            }
+        }
+
+
+        public override async Task<List<TldInfo>> GetSupportedTldsAsync(string tld)
         {
             _logger.Information("Getting supported TLDs from AWS Route 53");
             try
             {
                 var request = new ListPricesRequest();
+                request.Tld=tld.TrimStart('.'); 
                 var response = await _route53DomainsClient.ListPricesAsync(request);
 
                 var tlds = new List<TldInfo>();
                 foreach (var price in response.Prices)
                 {
+                    decimal? registration = null;
+                    decimal? renewal = null;
+                    decimal? transfer = null;
+
+                    if (price.RegistrationPrice?.Price.HasValue ?? false)
+                        registration = Convert.ToDecimal(price.RegistrationPrice.Price.Value);
+
+                    if (price.RenewalPrice?.Price.HasValue ?? false)
+                        renewal = Convert.ToDecimal(price.RenewalPrice.Price.Value);
+
+                    if (price.TransferPrice?.Price.HasValue ?? false)
+                        transfer = Convert.ToDecimal(price.TransferPrice.Price.Value);
+
                     var tldInfo = new TldInfo
                     {
                         Name = price.Name,
                         Currency = "USD",
-                        RegistrationPrice = (decimal?)(price.RegistrationPrice?.Price ?? 0),
-                        RenewalPrice = (decimal?)(price.RenewalPrice?.Price ?? 0),
-                        TransferPrice = (decimal?)(price.TransferPrice?.Price ?? 0)
+                        RegistrationPrice = (decimal?)(registration ?? 0),
+                        RenewalPrice = (decimal?)(renewal ?? 0),
+                        TransferPrice = (decimal?)(transfer ?? 0)
                     };
 
                     tlds.Add(tldInfo);

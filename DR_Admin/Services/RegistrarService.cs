@@ -1,11 +1,12 @@
+using DomainRegistrationLib.Factories;
+using DomainRegistrationLib.Implementations;
+using DomainRegistrationLib.Interfaces;
+using DomainRegistrationLib.Models;
 using ISPAdmin.Data;
 using ISPAdmin.Data.Entities;
 using ISPAdmin.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
-using DomainRegistrationLib.Interfaces;
-using DomainRegistrationLib.Implementations;
-using DomainRegistrationLib.Factories;
 
 namespace ISPAdmin.Services;
 
@@ -583,6 +584,229 @@ public class RegistrarService : IRegistrarService
         }
     }
 
+    public async Task<int> DownloadTldsForRegistrarAsync(int registrarId, string tld)
+    {
+        try
+        {
+            _log.Information("Downloading TLDs for registrar {RegistrarId} (filter: {Tld})", registrarId, tld);
+
+            // Get registrar details
+            var registrar = await _context.Registrars
+                .AsNoTracking()
+                .FirstOrDefaultAsync(r => r.Id == registrarId);
+
+            if (registrar == null)
+            {
+                _log.Warning("Registrar with ID {RegistrarId} not found", registrarId);
+                throw new InvalidOperationException($"Registrar with ID {registrarId} not found");
+            }
+
+            // Create registrar client instance
+            var registrarClient = _registrarFactory.CreateRegistrar(registrar.Code);
+
+            // Download supported TLDs from the registrar API (filtered)
+            List<TldInfo> supportedTlds = await registrarClient.GetSupportedTldsAsync(tld);
+            _log.Information("Retrieved {Count} TLDs from registrar {RegistrarCode} (filter: {Tld})", supportedTlds.Count, registrar.Code, tld);
+
+            int updatedCount = 0;
+
+            foreach (var tldInfo in supportedTlds)
+            {
+                var extension = tldInfo.Name.TrimStart('.');
+
+                var tldEntity = await _context.Tlds.FirstOrDefaultAsync(t => t.Extension == extension);
+                if (tldEntity == null)
+                {
+                    _log.Information("Creating new TLD: {Extension}", extension);
+                    tldEntity = new Tld
+                    {
+                        Extension = extension,
+                        Description = $"{extension.ToUpper()} domain",
+                        IsActive = true,
+                        DefaultRegistrationYears = 1,
+                        MaxRegistrationYears = tldInfo.MaxRegistrationYears ?? 10,
+                        RequiresPrivacy = tldInfo.SupportsPrivacy ?? false,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    };
+                    _context.Tlds.Add(tldEntity);
+                    await _context.SaveChangesAsync();
+                }
+
+                var registrarTld = await _context.RegistrarTlds
+                    .FirstOrDefaultAsync(rt => rt.RegistrarId == registrarId && rt.TldId == tldEntity.Id);
+
+                if (registrarTld == null)
+                {
+                    _log.Information("Creating new RegistrarTld for registrar {RegistrarId} and TLD {TldExtension}", 
+                        registrarId, extension);
+
+                    registrarTld = new RegistrarTld
+                    {
+                        RegistrarId = registrarId,
+                        TldId = tldEntity.Id,
+                        RegistrationCost = tldInfo.RegistrationPrice ?? 0,
+                        RegistrationPrice = tldInfo.RegistrationPrice ?? 0,
+                        RenewalCost = tldInfo.RenewalPrice ?? 0,
+                        RenewalPrice = tldInfo.RenewalPrice ?? 0,
+                        TransferCost = tldInfo.TransferPrice ?? 0,
+                        TransferPrice = tldInfo.TransferPrice ?? 0,
+                        Currency = tldInfo.Currency ?? "USD",
+                        IsAvailable = true,
+                        AutoRenew = false,
+                        MinRegistrationYears = tldInfo.MinRegistrationYears,
+                        MaxRegistrationYears = tldInfo.MaxRegistrationYears,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    };
+                    _context.RegistrarTlds.Add(registrarTld);
+                }
+                else
+                {
+                    _log.Information("Updating existing RegistrarTld for registrar {RegistrarId} and TLD {TldExtension}", 
+                        registrarId, extension);
+
+                    registrarTld.RegistrationCost = tldInfo.RegistrationPrice ?? registrarTld.RegistrationCost;
+                    registrarTld.RegistrationPrice = tldInfo.RegistrationPrice ?? registrarTld.RegistrationPrice;
+                    registrarTld.RenewalCost = tldInfo.RenewalPrice ?? registrarTld.RenewalCost;
+                    registrarTld.RenewalPrice = tldInfo.RenewalPrice ?? registrarTld.RenewalPrice;
+                    registrarTld.TransferCost = tldInfo.TransferPrice ?? registrarTld.TransferCost;
+                    registrarTld.TransferPrice = tldInfo.TransferPrice ?? registrarTld.TransferPrice;
+                    registrarTld.Currency = tldInfo.Currency ?? registrarTld.Currency;
+                    registrarTld.MinRegistrationYears = tldInfo.MinRegistrationYears ?? registrarTld.MinRegistrationYears;
+                    registrarTld.MaxRegistrationYears = tldInfo.MaxRegistrationYears ?? registrarTld.MaxRegistrationYears;
+                    registrarTld.IsAvailable = true;
+                    registrarTld.UpdatedAt = DateTime.UtcNow;
+                }
+
+                updatedCount++;
+            }
+
+            await _context.SaveChangesAsync();
+            _log.Information("Successfully downloaded and updated {Count} TLDs for registrar {RegistrarId}", 
+                updatedCount, registrarId);
+
+            return updatedCount;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while downloading TLDs for registrar {RegistrarId} (filter: {Tld})", registrarId, tld);
+            throw;
+        }
+    }
+
+
+    public async Task<int> DownloadTldsForRegistrarAsync(int registrarId, List<string> tlds)
+    {
+        try
+        {
+            _log.Information("Downloading TLDs for registrar {RegistrarId} (filter list count: {Count})", registrarId, tlds?.Count ?? 0);
+
+            // Get registrar details
+            var registrar = await _context.Registrars
+                .AsNoTracking()
+                .FirstOrDefaultAsync(r => r.Id == registrarId);
+
+            if (registrar == null)
+            {
+                _log.Warning("Registrar with ID {RegistrarId} not found", registrarId);
+                throw new InvalidOperationException($"Registrar with ID {registrarId} not found");
+            }
+
+            // Create registrar client instance
+            var registrarClient = _registrarFactory.CreateRegistrar(registrar.Code);
+
+            // Download supported TLDs from the registrar API (filtered list)
+            List<TldInfo> supportedTlds = await registrarClient.GetSupportedTldsAsync(tlds);
+            _log.Information("Retrieved {Count} TLDs from registrar {RegistrarCode}", supportedTlds.Count, registrar.Code);
+
+            int updatedCount = 0;
+
+            foreach (var tldInfo in supportedTlds)
+            {
+                var extension = tldInfo.Name.TrimStart('.');
+
+                var tldEntity = await _context.Tlds.FirstOrDefaultAsync(t => t.Extension == extension);
+                if (tldEntity == null)
+                {
+                    _log.Information("Creating new TLD: {Extension}", extension);
+                    tldEntity = new Tld
+                    {
+                        Extension = extension,
+                        Description = $"{extension.ToUpper()} domain",
+                        IsActive = true,
+                        DefaultRegistrationYears = 1,
+                        MaxRegistrationYears = tldInfo.MaxRegistrationYears ?? 10,
+                        RequiresPrivacy = tldInfo.SupportsPrivacy ?? false,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    };
+                    _context.Tlds.Add(tldEntity);
+                    await _context.SaveChangesAsync();
+                }
+
+                var registrarTld = await _context.RegistrarTlds
+                    .FirstOrDefaultAsync(rt => rt.RegistrarId == registrarId && rt.TldId == tldEntity.Id);
+
+                if (registrarTld == null)
+                {
+                    _log.Information("Creating new RegistrarTld for registrar {RegistrarId} and TLD {TldExtension}", 
+                        registrarId, extension);
+
+                    registrarTld = new RegistrarTld
+                    {
+                        RegistrarId = registrarId,
+                        TldId = tldEntity.Id,
+                        RegistrationCost = tldInfo.RegistrationPrice ?? 0,
+                        RegistrationPrice = tldInfo.RegistrationPrice ?? 0,
+                        RenewalCost = tldInfo.RenewalPrice ?? 0,
+                        RenewalPrice = tldInfo.RenewalPrice ?? 0,
+                        TransferCost = tldInfo.TransferPrice ?? 0,
+                        TransferPrice = tldInfo.TransferPrice ?? 0,
+                        Currency = tldInfo.Currency ?? "USD",
+                        IsAvailable = true,
+                        AutoRenew = false,
+                        MinRegistrationYears = tldInfo.MinRegistrationYears,
+                        MaxRegistrationYears = tldInfo.MaxRegistrationYears,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    };
+                    _context.RegistrarTlds.Add(registrarTld);
+                }
+                else
+                {
+                    _log.Information("Updating existing RegistrarTld for registrar {RegistrarId} and TLD {TldExtension}", 
+                        registrarId, extension);
+
+                    registrarTld.RegistrationCost = tldInfo.RegistrationPrice ?? registrarTld.RegistrationCost;
+                    registrarTld.RegistrationPrice = tldInfo.RegistrationPrice ?? registrarTld.RegistrationPrice;
+                    registrarTld.RenewalCost = tldInfo.RenewalPrice ?? registrarTld.RenewalCost;
+                    registrarTld.RenewalPrice = tldInfo.RenewalPrice ?? registrarTld.RenewalPrice;
+                    registrarTld.TransferCost = tldInfo.TransferPrice ?? registrarTld.TransferCost;
+                    registrarTld.TransferPrice = tldInfo.TransferPrice ?? registrarTld.TransferPrice;
+                    registrarTld.Currency = tldInfo.Currency ?? registrarTld.Currency;
+                    registrarTld.MinRegistrationYears = tldInfo.MinRegistrationYears ?? registrarTld.MinRegistrationYears;
+                    registrarTld.MaxRegistrationYears = tldInfo.MaxRegistrationYears ?? registrarTld.MaxRegistrationYears;
+                    registrarTld.IsAvailable = true;
+                    registrarTld.UpdatedAt = DateTime.UtcNow;
+                }
+
+                updatedCount++;
+            }
+
+            await _context.SaveChangesAsync();
+            _log.Information("Successfully downloaded and updated {Count} TLDs for registrar {RegistrarId}", 
+                updatedCount, registrarId);
+
+            return updatedCount;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while downloading TLDs for registrar {RegistrarId} (filter list)", registrarId);
+            throw;
+        }
+    }
+
     public async Task<int> DownloadTldsForRegistrarAsync(int registrarId)
     {
         try
@@ -604,7 +828,7 @@ public class RegistrarService : IRegistrarService
             var registrarClient = _registrarFactory.CreateRegistrar(registrar.Code);
 
             // Download supported TLDs from the registrar API
-            var supportedTlds = await registrarClient.GetSupportedTldsAsync();
+            List<TldInfo> supportedTlds = await registrarClient.GetSupportedTldsAsync();
             _log.Information("Retrieved {Count} TLDs from registrar {RegistrarCode}", supportedTlds.Count, registrar.Code);
 
             int updatedCount = 0;

@@ -1,5 +1,6 @@
 using DomainRegistrationLib.Models;
 using ISPAdmin.DTOs;
+using System.Collections.Generic;
 
 namespace ISPAdmin.Services;
 
@@ -17,5 +18,17 @@ public interface IRegistrarService
     Task<RegistrarTldDto> AssignTldToRegistrarAsync(int registrarId, TldDto tldDto);
     Task<IEnumerable<TldDto>> GetTldsByRegistrarAsync(int registrarId);
     Task<int> DownloadTldsForRegistrarAsync(int registrarId);
+    // Default implementations delegate to the main download method. Implementing classes may override.
+    Task<int> DownloadTldsForRegistrarAsync(int registrarId, string tld)
+    {
+        // Default: ignore filter and download all TLDs for the registrar
+        return DownloadTldsForRegistrarAsync(registrarId);
+    }
+
+    Task<int> DownloadTldsForRegistrarAsync(int registrarId, List<string> tlds)
+    {
+        // Default: ignore provided list and download all TLDs for the registrar
+        return DownloadTldsForRegistrarAsync(registrarId);
+    }
     Task<DomainAvailabilityResult> CheckDomainAvailabilityAsync(int registrarId, string domainName);
 }

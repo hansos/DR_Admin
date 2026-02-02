@@ -51,6 +51,94 @@ public class RegistrarsController : ControllerBase
     }
 
     /// <summary>
+    /// Downloads TLDs for the registrar filtered by a single TLD string and updates the database
+    /// </summary>
+    [HttpPost("{registrarId}/tlds/download/{tld}")]
+    [Authorize(Policy = "Registrar.Write")]
+    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult> DownloadTldsForRegistrarFiltered(int registrarId, string tld)
+    {
+        try
+        {
+            _log.Information("API: DownloadTldsForRegistrar (filtered) called for registrar {RegistrarId} filter {Tld} by user {User}",
+                registrarId, tld, User.Identity?.Name);
+
+            var count = await _registrarService.DownloadTldsForRegistrarAsync(registrarId, tld);
+
+            _log.Information("API: Successfully downloaded {Count} TLDs for registrar {RegistrarId} (filter: {Tld})",
+                count, registrarId, tld);
+
+            return Ok(new
+            {
+                message = $"Successfully downloaded and updated {count} TLDs for the registrar (filter: {tld})",
+                count = count,
+                registrarId = registrarId
+            });
+        }
+        catch (InvalidOperationException ex)
+        {
+            _log.Warning(ex, "API: Invalid operation in DownloadTldsForRegistrar (filtered) for registrar {RegistrarId}", registrarId);
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in DownloadTldsForRegistrar (filtered) for registrar {RegistrarId}", registrarId);
+            return StatusCode(500, "An error occurred while downloading TLDs for the registrar");
+        }
+    }
+
+    /// <summary>
+    /// Downloads TLDs for the registrar filtered by a list of TLD strings (provided in request body) and updates the database
+    /// </summary>
+    [HttpPost("{registrarId}/tlds/download/list")]
+    [Authorize(Policy = "Registrar.Write")]
+    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult> DownloadTldsForRegistrarFilteredList(int registrarId, [FromBody] List<string> tlds)
+    {
+        try
+        {
+            _log.Information("API: DownloadTldsForRegistrar (filtered list) called for registrar {RegistrarId} filterCount {Count} by user {User}",
+                registrarId, tlds?.Count ?? 0, User.Identity?.Name);
+
+            if (tlds == null || tlds.Count == 0)
+            {
+                _log.Warning("API: No TLDs supplied for DownloadTldsForRegistrar (filtered list)");
+                return BadRequest("A non-empty list of TLDs must be provided in the request body");
+            }
+
+            var count = await _registrarService.DownloadTldsForRegistrarAsync(registrarId, tlds);
+
+            _log.Information("API: Successfully downloaded {Count} TLDs for registrar {RegistrarId} (filtered list)",
+                count, registrarId);
+
+            return Ok(new
+            {
+                message = $"Successfully downloaded and updated {count} TLDs for the registrar (filtered list)",
+                count = count,
+                registrarId = registrarId
+            });
+        }
+        catch (InvalidOperationException ex)
+        {
+            _log.Warning(ex, "API: Invalid operation in DownloadTldsForRegistrar (filtered list) for registrar {RegistrarId}", registrarId);
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in DownloadTldsForRegistrar (filtered list) for registrar {RegistrarId}", registrarId);
+            return StatusCode(500, "An error occurred while downloading TLDs for the registrar");
+        }
+    }
+
+    /// <summary>
     /// Downloads all TLDs supported by the registrar from their API and updates the database
     /// </summary>
     /// <param name="registrarId">The unique identifier of the registrar</param>

@@ -32,6 +32,31 @@ namespace DomainRegistrationLib.Implementations
         public abstract Task<DomainUpdateResult> SetAutoRenewAsync(string domainName, bool enable);
         public abstract Task<List<TldInfo>> GetSupportedTldsAsync();
 
+        /// <summary>
+        /// Default implementation: call the parameterless GetSupportedTldsAsync and filter by the provided list
+        /// Implementations may override for optimized behavior.
+        /// </summary>
+        public virtual async Task<List<TldInfo>> GetSupportedTldsAsync(List<string> requestTlds)
+        {
+            if (requestTlds == null || requestTlds.Count == 0)
+                return await GetSupportedTldsAsync();
+
+            var all = await GetSupportedTldsAsync();
+            var set = new HashSet<string>(requestTlds.Select(r => r.TrimStart('.')), StringComparer.OrdinalIgnoreCase);
+            return all.Where(t => set.Contains(t.Name.TrimStart('.'))).ToList();
+        }
+
+        /// <summary>
+        /// Default implementation: delegate to the list overload.
+        /// </summary>
+        public virtual Task<List<TldInfo>> GetSupportedTldsAsync(string tld)
+        {
+            if (string.IsNullOrWhiteSpace(tld))
+                return GetSupportedTldsAsync();
+
+            return GetSupportedTldsAsync(new List<string> { tld });
+        }
+
         protected virtual DomainRegistrationResult CreateErrorResult(string message, string? errorCode = null)
         {
             return new DomainRegistrationResult
