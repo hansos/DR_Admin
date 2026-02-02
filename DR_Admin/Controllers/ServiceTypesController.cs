@@ -93,6 +93,46 @@ public class ServiceTypesController : ControllerBase
     }
 
     /// <summary>
+    /// Retrieves a specific service type by its name
+    /// </summary>
+    /// <param name="name">The name of the service type</param>
+    /// <returns>The service type information</returns>
+    /// <response code="200">Returns the service type data</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have required role</response>
+    /// <response code="404">If service type is not found</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpGet("by-name/{name}")]
+    [Authorize(Policy = "ServiceType.Read")]
+    [ProducesResponseType(typeof(ServiceTypeDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ServiceTypeDto>> GetServiceTypeByName(string name)
+    {
+        try
+        {
+            _log.Information("API: GetServiceTypeByName called for name {ServiceTypeName} by user {User}", name, User.Identity?.Name);
+            
+            var serviceType = await _serviceTypeService.GetServiceTypeByNameAsync(name);
+
+            if (serviceType == null)
+            {
+                _log.Information("API: Service type with name {ServiceTypeName} not found", name);
+                return NotFound($"Service type with name {name} not found");
+            }
+
+            return Ok(serviceType);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in GetServiceTypeByName for name {ServiceTypeName}", name);
+            return StatusCode(500, "An error occurred while retrieving the service type");
+        }
+    }
+
+    /// <summary>
     /// Creates a new service type in the system
     /// </summary>
     /// <param name="createDto">Service type information for creation</param>

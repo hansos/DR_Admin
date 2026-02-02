@@ -15,6 +15,12 @@ public class ResellerCompany : EntityBase
     public string? TaxId { get; set; }
     public string? VatNumber { get; set; }
     public bool IsActive { get; set; } = true;
+    
+    /// <summary>
+    /// Indicates if this is the default reseller company. Only one reseller can be default at a time.
+    /// </summary>
+    public bool IsDefault { get; set; } = false;
+    
     public string? Notes { get; set; }
     
     /// <summary>

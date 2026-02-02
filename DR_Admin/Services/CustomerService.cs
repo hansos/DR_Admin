@@ -102,6 +102,32 @@ public class CustomerService : ICustomerService
         }
     }
 
+    public async Task<CustomerDto?> GetCustomerByEmailAsync(string email)
+    {
+        try
+        {
+            _log.Information("Fetching customer with email: {Email}", email);
+            
+            var customer = await _context.Customers
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.Email == email || c.BillingEmail == email);
+
+            if (customer == null)
+            {
+                _log.Warning("Customer with email {Email} not found", email);
+                return null;
+            }
+
+            _log.Information("Successfully fetched customer with email: {Email}", email);
+            return MapToDto(customer);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while fetching customer with email: {Email}", email);
+            throw;
+        }
+    }
+
     public async Task<CustomerDto> CreateCustomerAsync(CreateCustomerDto createDto)
     {
         try

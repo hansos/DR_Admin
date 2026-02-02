@@ -739,6 +739,26 @@ namespace DomainRegistrationLib.Implementations
                             .Select(ns => ns.Name)
                             .ToList() ?? new List<string>();
 
+                        var contacts = new List<DomainContactInfo>();
+                        
+                        // Map registrant contact
+                        if (details.RegistrantContact != null)
+                        {
+                            contacts.Add(MapFromAwsContact(details.RegistrantContact, "Registrant"));
+                        }
+                        
+                        // Map admin contact
+                        if (details.AdminContact != null)
+                        {
+                            contacts.Add(MapFromAwsContact(details.AdminContact, "Admin"));
+                        }
+                        
+                        // Map tech contact
+                        if (details.TechContact != null)
+                        {
+                            contacts.Add(MapFromAwsContact(details.TechContact, "Technical"));
+                        }
+
                         var domainInfo = new RegisteredDomainInfo
                         {
                             DomainName = domain.DomainName,
@@ -748,7 +768,8 @@ namespace DomainRegistrationLib.Implementations
                             AutoRenew = details.AutoRenew ?? domain.AutoRenew ?? false,
                             Locked = domain.TransferLock ?? false,
                             PrivacyProtection = details.AdminPrivacy ?? false,
-                            Nameservers = nameservers
+                            Nameservers = nameservers,
+                            Contacts = contacts
                         };
 
                         domains.Add(domainInfo);
@@ -819,6 +840,28 @@ namespace DomainRegistrationLib.Implementations
                     "GB" => Amazon.Route53Domains.CountryCode.GB,
                     _ => Amazon.Route53Domains.CountryCode.FindValue(contact.Country)
                 }
+            };
+        }
+
+        private DomainContactInfo MapFromAwsContact(ContactDetail contact, string contactType)
+        {
+            return new DomainContactInfo
+            {
+                ContactType = contactType,
+                FirstName = contact.FirstName ?? string.Empty,
+                LastName = contact.LastName ?? string.Empty,
+                Organization = contact.OrganizationName,
+                Email = contact.Email ?? string.Empty,
+                Phone = contact.PhoneNumber ?? string.Empty,
+                Fax = contact.Fax,
+                Address1 = contact.AddressLine1 ?? string.Empty,
+                Address2 = contact.AddressLine2,
+                City = contact.City ?? string.Empty,
+                State = contact.State,
+                PostalCode = contact.ZipCode ?? string.Empty,
+                CountryCode = contact.CountryCode?.Value ?? string.Empty,
+                IsActive = true,
+                Notes = null
             };
         }
     }

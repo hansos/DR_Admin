@@ -26,5 +26,10 @@ namespace DomainRegistrationLib.Models
         public bool Locked { get; set; }
         public bool PrivacyProtection { get; set; }
         public List<string> Nameservers { get; set; } = [];
+        
+        /// <summary>
+        /// Gets or sets the list of contact persons associated with this domain
+        /// </summary>
+        public List<DomainContactInfo> Contacts { get; set; } = [];
     }
 }

@@ -14,12 +14,18 @@ public class RegistrarService : IRegistrarService
 {
     private readonly ApplicationDbContext _context;
     private readonly DomainRegistrarFactory _registrarFactory;
+    private readonly ICustomerService _customerService;
+    private readonly IServiceTypeService _serviceTypeService;
+    private readonly IServiceService _serviceService;
     private static readonly Serilog.ILogger _log = Log.ForContext<RegistrarService>();
 
-    public RegistrarService(ApplicationDbContext context, DomainRegistrarFactory registrarFactory)
+    public RegistrarService(ApplicationDbContext context, DomainRegistrarFactory registrarFactory, ICustomerService customerService, IServiceTypeService serviceTypeService, IServiceService serviceService)
     {
         _context = context;
         _registrarFactory = registrarFactory;
+        _customerService = customerService;
+        _serviceTypeService = serviceTypeService;
+        _serviceService = serviceService;
     }
 
     public async Task<RegistrarTldDto> AssignTldToRegistrarAsync(int registrarId, TldDto tldDto)
@@ -931,7 +937,7 @@ public class RegistrarService : IRegistrarService
         }
     }
 
-    public async Task<DomainRegistrationLib.Models.DomainAvailabilityResult> CheckDomainAvailabilityAsync(int registrarId, string domainName)
+    public async Task<DomainAvailabilityResult> CheckDomainAvailabilityAsync(int registrarId, string domainName)
     {
         try
         {
@@ -973,14 +979,14 @@ public class RegistrarService : IRegistrarService
         }
     }
 
-    public async Task<int> DownloadDomainsForRegistrarAsync(int registrarId, bool save = true)
+    public async Task<int> DownloadDomainsForRegistrarAsync(int registrarId)
     {
         try
         {
-            _log.Information("Downloading domains for registrar {RegistrarId} (save={Save})", registrarId, save);
+            _log.Information("Downloading domains for registrar {RegistrarId}", registrarId);
 
-            // Get registered domains from the registrar
-            var result = await GetRegisteredDomainsAsync(registrarId, save);
+            // Get registered domains from the registrar (with save option)
+            var result = await GetRegisteredDomainsAsync(registrarId);
             
             if (!result.Success)
             {
@@ -988,6 +994,13 @@ public class RegistrarService : IRegistrarService
                     registrarId, result.Message);
                 throw new InvalidOperationException($"Failed to retrieve domains: {result.Message}");
             }
+
+            // If save is true, merge to database
+            if (result.Domains != null && result.Domains.Any())
+            {
+                await MergeRegisteredDomainsToDatabase(registrarId, result.Domains);
+            }
+
 
             // Return count of domains processed
             return result.TotalCount;
@@ -999,11 +1012,11 @@ public class RegistrarService : IRegistrarService
         }
     }
 
-    public async Task<RegisteredDomainsResult> GetRegisteredDomainsAsync(int registrarId, bool save = false)
+    public async Task<RegisteredDomainsResult> GetRegisteredDomainsAsync(int registrarId)
     {
         try
         {
-            _log.Information("Getting registered domains for registrar {RegistrarId} (save={Save})", registrarId, save);
+            _log.Information("Getting registered domains for registrar {RegistrarId}", registrarId);
 
             // Get registrar details
             var registrar = await _context.Registrars
@@ -1031,15 +1044,6 @@ public class RegistrarService : IRegistrarService
             _log.Information("Retrieved {Count} domains from registrar {RegistrarCode}: Success={Success}", 
                 result.Domains?.Count ?? 0, registrar.Code, result.Success);
 
-            // If save flag is set, merge TLDs and domains to database
-            if (save && result.Success && result.Domains != null && result.Domains.Count > 0)
-            {
-                _log.Information("Saving {Count} domains and TLDs to database for registrar {RegistrarId}", 
-                    result.Domains.Count, registrarId);
-                
-                await MergeRegisteredDomainsToDatabase(registrarId, result.Domains);
-            }
-
             return result;
         }
         catch (Exception ex)
@@ -1050,7 +1054,7 @@ public class RegistrarService : IRegistrarService
     }
 
     /// <summary>
-    /// Helper method to merge registered domains and their TLDs to the database
+    /// Helper method to merge registered domains, their TLDs, and contact persons to the database
     /// </summary>
     private async Task MergeRegisteredDomainsToDatabase(int registrarId, List<RegisteredDomainInfo> domains)
     {
@@ -1059,6 +1063,8 @@ public class RegistrarService : IRegistrarService
             int domainsUpdated = 0;
             int tldsCreated = 0;
             int registrarTldsCreated = 0;
+            int contactsCreated = 0;
+            int contactsUpdated = 0;
 
             foreach (var domainInfo in domains)
             {
@@ -1123,9 +1129,9 @@ public class RegistrarService : IRegistrarService
                     registrarTldsCreated++;
                 }
 
-                // Find existing domain or create new one
+                // Find existing domain
                 var domain = await _context.Domains
-                    .FirstOrDefaultAsync(d => d.NormalizedName == normalizedName && d.RegistrarId == registrarId);
+                    .FirstOrDefaultAsync(d => d.NormalizedName == normalizedName);
 
                 if (domain != null)
                 {
@@ -1138,23 +1144,185 @@ public class RegistrarService : IRegistrarService
                     domain.RegistrarTldId = registrarTld.Id;
                     domain.UpdatedAt = DateTime.UtcNow;
                     domainsUpdated++;
+
+                    // Merge contact information if available
+                    if (domainInfo.Contacts != null && domainInfo.Contacts.Any())
+                    {
+                        var contactStats = await MergeDomainContactsAsync(domain.Id, domainInfo.Contacts);
+                        contactsCreated += contactStats.Created;
+                        contactsUpdated += contactStats.Updated;
+                    }
                 }
                 else
                 {
-                    // Note: We don't create new domains here as they require CustomerId and ServiceId
-                    // which are not provided by the registrar API
-                    _log.Debug("Domain {DomainName} not found in database for registrar {RegistrarId}, skipping creation", 
-                        domainInfo.DomainName, registrarId);
+                    // Try to find customer based on registrant email
+                    int? customerId = null;
+                    
+                    if (domainInfo.Contacts != null && domainInfo.Contacts.Any())
+                    {
+                        // Look for registrant contact first, then admin contact
+                        var registrantContact = domainInfo.Contacts
+                            .FirstOrDefault(c => c.ContactType.Equals("Registrant", StringComparison.OrdinalIgnoreCase));
+                        
+                        var ownerContact = registrantContact ?? 
+                            domainInfo.Contacts.FirstOrDefault(c => c.ContactType.Equals("Admin", StringComparison.OrdinalIgnoreCase)) ??
+                            domainInfo.Contacts.FirstOrDefault();
+
+                        if (ownerContact != null && !string.IsNullOrWhiteSpace(ownerContact.Email))
+                        {
+                            var customer = await _customerService.GetCustomerByEmailAsync(ownerContact.Email);
+                            if (customer != null)
+                            {
+                                customerId = customer.Id;
+                                _log.Information("Found customer {CustomerId} for domain {DomainName} using email {Email}", 
+                                    customerId, domainInfo.DomainName, ownerContact.Email);
+                            }
+                            else
+                            {
+                                _log.Warning("No customer found with email {Email} for domain {DomainName}", 
+                                    ownerContact.Email, domainInfo.DomainName);
+                            }
+                        }
+                    }
+
+                    if (!customerId.HasValue)
+                    {
+                        _log.Debug("Domain {DomainName} not found in database and no customer could be identified for registrar {RegistrarId}, skipping creation", 
+                            domainInfo.DomainName, registrarId);
+                    }
+                    else
+                    {
+                        _log.Information("Creating new domain {DomainName} for customer {CustomerId}", 
+                            domainInfo.DomainName, customerId);
+
+                        var serviceType = await _serviceTypeService.GetServiceTypeByNameAsync("DOMAIN") ?? throw new NullReferenceException("Service type not found");
+
+                        var createServiceDto = new CreateServiceDto
+                        {
+                            ServiceTypeId = serviceType.Id,
+                            Name = domainInfo.DomainName + " Domain registration",
+                        };
+
+                        var createDomainDto = new CreateDomainDto
+                        {
+                            ServiceId = serviceType.Id,
+                            CustomerId = (int) customerId,
+                            ExpirationDate = (DateTime) domainInfo.ExpirationDate!,
+                            RegistrationDate = (DateTime) domainInfo.RegistrationDate!,
+                            ProviderId = registrarId,
+                            Name = domainInfo.DomainName + " Domain registration",
+                            Status = "Imported",
+                        };
+                        //await _serviceService.CreateServiceAsync(createDto);
+                        _log.Warning("Cannot create domain {DomainName}: ServiceId is required but not available from registrar data. Manual creation required.", 
+                            domainInfo.DomainName);
+                    }
                 }
             }
 
             await _context.SaveChangesAsync();
-            _log.Information("Database merge completed: {DomainsUpdated} domains updated, {TldsCreated} TLDs created, {RegistrarTldsCreated} RegistrarTlds created", 
-                domainsUpdated, tldsCreated, registrarTldsCreated);
+            _log.Information("Database merge completed: {DomainsUpdated} domains updated, {TldsCreated} TLDs created, {RegistrarTldsCreated} RegistrarTlds created, {ContactsCreated} contacts created, {ContactsUpdated} contacts updated", 
+                domainsUpdated, tldsCreated, registrarTldsCreated, contactsCreated, contactsUpdated);
         }
         catch (Exception ex)
         {
             _log.Error(ex, "Error merging registered domains to database for registrar {RegistrarId}", registrarId);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Merges domain contact information from registrar into the DomainContacts table
+    /// </summary>
+    /// <param name="domainId">The domain ID to associate contacts with</param>
+    /// <param name="contacts">List of contact information from the registrar</param>
+    /// <returns>Statistics about created and updated contacts</returns>
+    private async Task<(int Created, int Updated)> MergeDomainContactsAsync(int domainId, List<DomainRegistrationLib.Models.DomainContactInfo> contacts)
+    {
+        try
+        {
+            int created = 0;
+            int updated = 0;
+
+            _log.Debug("Merging {Count} contacts for domain ID {DomainId}", contacts.Count, domainId);
+
+            foreach (var contactInfo in contacts)
+            {
+                // Validate required fields
+                if (string.IsNullOrWhiteSpace(contactInfo.Email) || 
+                    string.IsNullOrWhiteSpace(contactInfo.FirstName) || 
+                    string.IsNullOrWhiteSpace(contactInfo.LastName))
+                {
+                    _log.Warning("Skipping contact for domain {DomainId} due to missing required fields (Email, FirstName, or LastName)", domainId);
+                    continue;
+                }
+
+                // Try to find existing contact by type and email
+                var existingContact = await _context.DomainContacts
+                    .FirstOrDefaultAsync(dc => 
+                        dc.DomainId == domainId && 
+                        dc.ContactType == contactInfo.ContactType &&
+                        dc.Email == contactInfo.Email);
+
+                if (existingContact != null)
+                {
+                    // Update existing contact
+                    _log.Debug("Updating existing {ContactType} contact for domain {DomainId}", contactInfo.ContactType, domainId);
+                    
+                    existingContact.FirstName = contactInfo.FirstName;
+                    existingContact.LastName = contactInfo.LastName;
+                    existingContact.Organization = contactInfo.Organization;
+                    existingContact.Phone = contactInfo.Phone ?? existingContact.Phone;
+                    existingContact.Fax = contactInfo.Fax;
+                    existingContact.Address1 = contactInfo.Address1 ?? existingContact.Address1;
+                    existingContact.Address2 = contactInfo.Address2;
+                    existingContact.City = contactInfo.City ?? existingContact.City;
+                    existingContact.State = contactInfo.State;
+                    existingContact.PostalCode = contactInfo.PostalCode ?? existingContact.PostalCode;
+                    existingContact.CountryCode = contactInfo.CountryCode ?? existingContact.CountryCode;
+                    existingContact.IsActive = contactInfo.IsActive;
+                    existingContact.Notes = contactInfo.Notes;
+                    existingContact.UpdatedAt = DateTime.UtcNow;
+                    
+                    updated++;
+                }
+                else
+                {
+                    // Create new contact
+                    _log.Debug("Creating new {ContactType} contact for domain {DomainId}", contactInfo.ContactType, domainId);
+                    
+                    var newContact = new DomainContact
+                    {
+                        DomainId = domainId,
+                        ContactType = contactInfo.ContactType,
+                        FirstName = contactInfo.FirstName,
+                        LastName = contactInfo.LastName,
+                        Organization = contactInfo.Organization,
+                        Email = contactInfo.Email,
+                        Phone = contactInfo.Phone ?? string.Empty,
+                        Fax = contactInfo.Fax,
+                        Address1 = contactInfo.Address1 ?? string.Empty,
+                        Address2 = contactInfo.Address2,
+                        City = contactInfo.City ?? string.Empty,
+                        State = contactInfo.State,
+                        PostalCode = contactInfo.PostalCode ?? string.Empty,
+                        CountryCode = contactInfo.CountryCode ?? string.Empty,
+                        IsActive = contactInfo.IsActive,
+                        Notes = contactInfo.Notes,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    };
+                    
+                    _context.DomainContacts.Add(newContact);
+                    created++;
+                }
+            }
+
+            return (created, updated);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error merging domain contacts for domain ID {DomainId}", domainId);
             throw;
         }
     }

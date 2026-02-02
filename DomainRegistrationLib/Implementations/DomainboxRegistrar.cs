@@ -590,6 +590,8 @@ namespace DomainRegistrationLib.Implementations
             {
                 _logger.Information("Getting registered domains from DomainBox");
 
+                // Note: DomainBox's domain list API doesn't include contact information
+                // Individual API calls per domain would be required to fetch contact details
                 var response = await MakeAuthenticatedRequestAsync(HttpMethod.Get, "/domains", null);
                 var content = await response.Content.ReadAsStringAsync();
                 var result = JsonSerializer.Deserialize<JsonElement>(content);
@@ -612,7 +614,8 @@ namespace DomainRegistrationLib.Implementations
                                 : null,
                             AutoRenew = domain.TryGetProperty("auto_renew", out var autoRenew) && autoRenew.GetBoolean(),
                             Locked = domain.TryGetProperty("locked", out var locked) && locked.GetBoolean(),
-                            PrivacyProtection = domain.TryGetProperty("privacy", out var privacy) && privacy.GetBoolean()
+                            PrivacyProtection = domain.TryGetProperty("privacy", out var privacy) && privacy.GetBoolean(),
+                            Contacts = [] // DomainBox list API doesn't include contacts
                         };
 
                         if (domain.TryGetProperty("nameservers", out var nameservers) && nameservers.ValueKind == JsonValueKind.Array)

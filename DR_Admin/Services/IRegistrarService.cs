@@ -36,15 +36,13 @@ public interface IRegistrarService
     /// Downloads all domains registered with the specified registrar and syncs them to the database
     /// </summary>
     /// <param name="registrarId">The registrar ID</param>
-    /// <param name="save">If true, saves domains to the database</param>
     /// <returns>Number of domains downloaded/updated</returns>
-    Task<int> DownloadDomainsForRegistrarAsync(int registrarId, bool save = true);
+    Task<int> DownloadDomainsForRegistrarAsync(int registrarId);
 
     /// <summary>
     /// Gets all domains registered with the specified registrar
     /// </summary>
     /// <param name="registrarId">The registrar ID</param>
-    /// <param name="save">If true, saves TLDs and domains to the database</param>
     /// <returns>Registered domains result from the registrar</returns>
-    Task<RegisteredDomainsResult> GetRegisteredDomainsAsync(int registrarId, bool save = false);
+    Task<RegisteredDomainsResult> GetRegisteredDomainsAsync(int registrarId);
 }

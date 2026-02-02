@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
@@ -35,20 +35,104 @@
         <div class="test-section">
             <h2 class="section-title">&#10133; Create Reseller Company</h2>
             <form id="createForm">
-                <div class="mb-3">
-                    <label for="createName" class="form-label">Name *</label>
-                    <input type="text" id="createName" class="form-control" required>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="createName" class="form-label">Name *</label>
+                        <input type="text" id="createName" class="form-control" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="createContactPerson" class="form-label">Contact Person</label>
+                        <input type="text" id="createContactPerson" class="form-control">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="createEmail" class="form-label">Email</label>
+                        <input type="email" id="createEmail" class="form-control">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="createPhone" class="form-label">Phone</label>
+                        <input type="tel" id="createPhone" class="form-control">
+                    </div>
                 </div>
                 <div class="mb-3">
-                    <label for="createCode" class="form-label">Code *</label>
-                    <input type="text" id="createCode" class="form-control" required>
+                    <label for="createAddress" class="form-label">Address</label>
+                    <input type="text" id="createAddress" class="form-control">
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="createCity" class="form-label">City</label>
+                        <input type="text" id="createCity" class="form-control">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="createState" class="form-label">State/Province</label>
+                        <input type="text" id="createState" class="form-control">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="createPostalCode" class="form-label">Postal Code</label>
+                        <input type="text" id="createPostalCode" class="form-control">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="createCountryCode" class="form-label">Country Code</label>
+                        <input type="text" id="createCountryCode" class="form-control" placeholder="e.g., US, GB, DE" maxlength="2">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="createCompanyRegistrationNumber" class="form-label">Company Reg. Number</label>
+                        <input type="text" id="createCompanyRegistrationNumber" class="form-control">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="createTaxId" class="form-label">Tax ID</label>
+                        <input type="text" id="createTaxId" class="form-control">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="createVatNumber" class="form-label">VAT Number</label>
+                        <input type="text" id="createVatNumber" class="form-control">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="createIsActive" class="form-label">Is Active</label>
+                        <select id="createIsActive" class="form-control">
+                            <option value="true" selected>Active</option>
+                            <option value="false">Inactive</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="createIsDefault" class="form-label">Is Default</label>
+                        <select id="createIsDefault" class="form-control">
+                            <option value="false" selected>No</option>
+                            <option value="true">Yes</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="createDefaultCurrency" class="form-label">Default Currency</label>
+                        <input type="text" id="createDefaultCurrency" class="form-control" placeholder="EUR" value="EUR" maxlength="3">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="createSupportedCurrencies" class="form-label">Supported Currencies</label>
+                        <input type="text" id="createSupportedCurrencies" class="form-control" placeholder="EUR,USD,GBP">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="createApplyCurrencyMarkup" class="form-label">Apply Currency Markup</label>
+                        <select id="createApplyCurrencyMarkup" class="form-control">
+                            <option value="false" selected>No</option>
+                            <option value="true">Yes</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="createDefaultCurrencyMarkup" class="form-label">Default Currency Markup (%)</label>
+                        <input type="number" id="createDefaultCurrencyMarkup" class="form-control" step="0.01" value="0">
+                    </div>
                 </div>
                 <div class="mb-3">
-                    <label for="createIsActive" class="form-label">Is Active</label>
-                    <select id="createIsActive" class="form-control">
-                        <option value="true">Active</option>
-                        <option value="false">Inactive</option>
-                    </select>
+                    <label for="createNotes" class="form-label">Notes</label>
+                    <textarea id="createNotes" class="form-control" rows="3"></textarea>
                 </div>
                 <button class="btn btn-primary" type="submit">Create Reseller Company</button>
             </form>
@@ -93,7 +177,7 @@
     </div>
 
     <div class="modal fade" id="editModal" tabindex="-1">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">&#9998; Edit Reseller Company</h5>
@@ -102,17 +186,106 @@
                 <div class="modal-body">
                     <form id="editForm">
                         <input type="hidden" id="editId">
-                        <div class="mb-3">
-                            <label for="editName" class="form-label">Name *</label>
-                            <input type="text" id="editName" class="form-control" required>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editName" class="form-label">Name *</label>
+                                <input type="text" id="editName" class="form-control" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editContactPerson" class="form-label">Contact Person</label>
+                                <input type="text" id="editContactPerson" class="form-control">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editEmail" class="form-label">Email</label>
+                                <input type="email" id="editEmail" class="form-control">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editPhone" class="form-label">Phone</label>
+                                <input type="tel" id="editPhone" class="form-control">
+                            </div>
                         </div>
                         <div class="mb-3">
-                            <label for="editCode" class="form-label">Code *</label>
-                            <input type="text" id="editCode" class="form-control" required>
+                            <label for="editAddress" class="form-label">Address</label>
+                            <input type="text" id="editAddress" class="form-control">
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="editCity" class="form-label">City</label>
+                                <input type="text" id="editCity" class="form-control">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="editState" class="form-label">State/Province</label>
+                                <input type="text" id="editState" class="form-control">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="editPostalCode" class="form-label">Postal Code</label>
+                                <input type="text" id="editPostalCode" class="form-control">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="editCountryCode" class="form-label">Country Code</label>
+                                <input type="text" id="editCountryCode" class="form-control" placeholder="e.g., US, GB, DE" maxlength="2">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="editCompanyRegistrationNumber" class="form-label">Company Reg. Number</label>
+                                <input type="text" id="editCompanyRegistrationNumber" class="form-control">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="editTaxId" class="form-label">Tax ID</label>
+                                <input type="text" id="editTaxId" class="form-control">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editVatNumber" class="form-label">VAT Number</label>
+                                <input type="text" id="editVatNumber" class="form-control">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editIsActive" class="form-label">Is Active</label>
+                                <select id="editIsActive" class="form-control">
+                                    <option value="true">Active</option>
+                                    <option value="false">Inactive</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editIsDefault" class="form-label">Is Default</label>
+                                <select id="editIsDefault" class="form-control">
+                                    <option value="false">No</option>
+                                    <option value="true">Yes</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="editDefaultCurrency" class="form-label">Default Currency</label>
+                                <input type="text" id="editDefaultCurrency" class="form-control" placeholder="EUR" maxlength="3">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="editSupportedCurrencies" class="form-label">Supported Currencies</label>
+                                <input type="text" id="editSupportedCurrencies" class="form-control" placeholder="EUR,USD,GBP">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="editApplyCurrencyMarkup" class="form-label">Apply Currency Markup</label>
+                                <select id="editApplyCurrencyMarkup" class="form-control">
+                                    <option value="false">No</option>
+                                    <option value="true">Yes</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editDefaultCurrencyMarkup" class="form-label">Default Currency Markup (%)</label>
+                                <input type="number" id="editDefaultCurrencyMarkup" class="form-control" step="0.01">
+                            </div>
                         </div>
                         <div class="mb-3">
-                            <label for="editIsActive" class="form-label">Is Active</label>
-                            <select id="editIsActive" class="form-control"><option value="true">Active</option><option value="false">Inactive</option></select>
+                            <label for="editNotes" class="form-label">Notes</label>
+                            <textarea id="editNotes" class="form-control" rows="3"></textarea>
                         </div>
                     </form>
                 </div>
@@ -127,6 +300,7 @@
     <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/assets/js/authClient.js"></script>
     <script>
+        // API_BASE_URL is already defined in authClient.js
         let currentResellers = [];
         let editModal;
 
@@ -145,13 +319,69 @@
 
         async function handleCreate(e) {
             e.preventDefault();
-            const data = { name: document.getElementById('createName').value.trim(), code: document.getElementById('createCode').value.trim(), isActive: document.getElementById('createIsActive').value === 'true' };
+            console.log('Create form submitted');
+            
+            const data = { 
+                name: document.getElementById('createName').value.trim(), 
+                contactPerson: document.getElementById('createContactPerson').value.trim() || null,
+                email: document.getElementById('createEmail').value.trim() || null,
+                phone: document.getElementById('createPhone').value.trim() || null,
+                address: document.getElementById('createAddress').value.trim() || null,
+                city: document.getElementById('createCity').value.trim() || null,
+                state: document.getElementById('createState').value.trim() || null,
+                postalCode: document.getElementById('createPostalCode').value.trim() || null,
+                countryCode: document.getElementById('createCountryCode').value.trim() || null,
+                companyRegistrationNumber: document.getElementById('createCompanyRegistrationNumber').value.trim() || null,
+                taxId: document.getElementById('createTaxId').value.trim() || null,
+                vatNumber: document.getElementById('createVatNumber').value.trim() || null,
+                isActive: document.getElementById('createIsActive').value === 'true',
+                isDefault: document.getElementById('createIsDefault').value === 'true',
+                notes: document.getElementById('createNotes').value.trim() || null,
+                defaultCurrency: document.getElementById('createDefaultCurrency').value.trim() || 'EUR',
+                supportedCurrencies: document.getElementById('createSupportedCurrencies').value.trim() || null,
+                applyCurrencyMarkup: document.getElementById('createApplyCurrencyMarkup').value === 'true',
+                defaultCurrencyMarkup: parseFloat(document.getElementById('createDefaultCurrencyMarkup').value) || 0
+            };
+            
+            console.log('Request data:', data);
+            console.log('API URL:', `${API_BASE_URL}/api/v1/ResellerCompanies`);
+            
             try {
-                const res = await fetch(`${API_BASE_URL}/api/v1/ResellerCompanies`, { method:'POST', headers: getAuthHeaders(), body: JSON.stringify(data) });
-                let result; const ct = res.headers.get('content-type'); if (ct && ct.includes('application/json')) result = await res.json(); else { const text = await res.text(); result = { error: text, statusCode: res.status }; }
+                const headers = getAuthHeaders();
+                console.log('Headers:', headers);
+                
+                const res = await fetch(`${API_BASE_URL}/api/v1/ResellerCompanies`, { 
+                    method:'POST', 
+                    headers: headers, 
+                    body: JSON.stringify(data) 
+                });
+                
+                console.log('Response status:', res.status);
+                
+                let result; 
+                const ct = res.headers.get('content-type'); 
+                if (ct && ct.includes('application/json')) {
+                    result = await res.json();
+                } else { 
+                    const text = await res.text(); 
+                    result = { error: text, statusCode: res.status }; 
+                }
+                
+                console.log('Response data:', result);
                 updateResponseBox(result);
-                if (res.ok) { showAlert('Reseller company created','success'); document.getElementById('createForm').reset(); getAllResellerCompanies(); } else showAlert(`Error: ${result.message||result.error||'Failed to create'}`,'danger');
-            } catch (err) { showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); }
+                
+                if (res.ok) { 
+                    showAlert('Reseller company created','success'); 
+                    document.getElementById('createForm').reset(); 
+                    getAllResellerCompanies(); 
+                } else {
+                    showAlert(`Error: ${result.message||result.error||result.title||'Failed to create'}`,'danger');
+                }
+            } catch (err) { 
+                console.error('Fetch error:', err);
+                showAlert(`Error: ${err.message}`,'danger'); 
+                updateResponseBox({ error: err.message, stack: err.stack }); 
+            }
         }
 
         async function getAllResellerCompanies() {
@@ -169,9 +399,9 @@
             const html = `
                 <div class="table-responsive">
                     <table class="table">
-                        <thead><tr><th>ID</th><th>Name</th><th>Code</th><th>Status</th><th>Actions</th></tr></thead>
+                        <thead><tr><th>ID</th><th>Name</th><th>Contact</th><th>Email</th><th>Phone</th><th>Currency</th><th>Status</th><th>Default</th><th>Actions</th></tr></thead>
                         <tbody>
-                            ${items.map(i=>`<tr><td>${i.id}</td><td><strong>${i.name}</strong></td><td><code>${i.code}</code></td><td><span class="badge ${i.isActive?'badge-success':'badge-secondary'}">${i.isActive?'Active':'Inactive'}</span></td><td><div class="action-buttons"><button class="btn btn-sm btn-warning" onclick="openEditModal(${i.id})">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteReseller(${i.id}, '${(i.name||'').replace(/'/g, "\\'" )}')">Delete</button></div></td></tr>`).join('')}
+                            ${items.map(i=>`<tr><td>${i.id}</td><td><strong>${i.name}</strong></td><td>${i.contactPerson||'-'}</td><td>${i.email||'-'}</td><td>${i.phone||'-'}</td><td><code>${i.defaultCurrency||'EUR'}</code></td><td><span class="badge ${i.isActive?'badge-success':'badge-secondary'}">${i.isActive?'Active':'Inactive'}</span></td><td>${i.isDefault?'<span class="badge badge-success">âœ“ Default</span>':''}</td><td><div class="action-buttons"><button class="btn btn-sm btn-warning" onclick="openEditModal(${i.id})">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteReseller(${i.id}, '${(i.name||'').replace(/'/g, "\\'" )}')">Delete</button></div></td></tr>`).join('')}
                         </tbody>
                     </table>
                 </div>
@@ -186,7 +416,46 @@
                 const res = await fetch(`${API_BASE_URL}/api/v1/ResellerCompanies/${id}`, { method:'GET', headers: getAuthHeaders() });
                 let data; const ct = res.headers.get('content-type'); if (ct && ct.includes('application/json')) data = await res.json(); else { const text = await res.text(); data = { error: text, statusCode: res.status }; }
                 updateResponseBox(data);
-                if (res.ok) { result.innerHTML = `<div class="alert alert-success"><h5>Reseller Company:</h5><p><strong>ID:</strong> ${data.id}</p><p><strong>Name:</strong> ${data.name}</p><p><strong>Code:</strong> ${data.code}</p><p><strong>Status:</strong> ${data.isActive? 'Active':'Inactive'}</p></div>`; } else showAlert(`Error: ${data.message||data.error||'Not found'}`,'danger');
+                if (res.ok) { 
+                    result.innerHTML = `
+                        <div class="alert alert-success">
+                            <h5>Reseller Company Details:</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>ID:</strong> ${data.id}</p>
+                                    <p><strong>Name:</strong> ${data.name}</p>
+                                    <p><strong>Contact Person:</strong> ${data.contactPerson || 'N/A'}</p>
+                                    <p><strong>Email:</strong> ${data.email || 'N/A'}</p>
+                                    <p><strong>Phone:</strong> ${data.phone || 'N/A'}</p>
+                                    <p><strong>Status:</strong> ${data.isActive? 'Active':'Inactive'}</p>
+                                    <p><strong>Is Default:</strong> ${data.isDefault ? '<span class="badge badge-success">Yes</span>' : 'No'}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Address:</strong> ${data.address || 'N/A'}</p>
+                                    <p><strong>City:</strong> ${data.city || 'N/A'}</p>
+                                    <p><strong>State:</strong> ${data.state || 'N/A'}</p>
+                                    <p><strong>Postal Code:</strong> ${data.postalCode || 'N/A'}</p>
+                                    <p><strong>Country Code:</strong> ${data.countryCode || 'N/A'}</p>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Company Reg. Number:</strong> ${data.companyRegistrationNumber || 'N/A'}</p>
+                                    <p><strong>Tax ID:</strong> ${data.taxId || 'N/A'}</p>
+                                    <p><strong>VAT Number:</strong> ${data.vatNumber || 'N/A'}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Default Currency:</strong> ${data.defaultCurrency || 'EUR'}</p>
+                                    <p><strong>Supported Currencies:</strong> ${data.supportedCurrencies || 'N/A'}</p>
+                                    <p><strong>Apply Currency Markup:</strong> ${data.applyCurrencyMarkup ? 'Yes' : 'No'}</p>
+                                    <p><strong>Default Currency Markup:</strong> ${data.defaultCurrencyMarkup}%</p>
+                                </div>
+                            </div>
+                            ${data.notes ? `<p><strong>Notes:</strong> ${data.notes}</p>` : ''}
+                            <p class="mb-0"><small><strong>Created:</strong> ${new Date(data.createdAt).toLocaleString()} | <strong>Updated:</strong> ${new Date(data.updatedAt).toLocaleString()}</small></p>
+                        </div>
+                    `; 
+                } else showAlert(`Error: ${data.message||data.error||'Not found'}`,'danger');
             } catch (err) { showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } finally { loading.style.display='none'; }
         }
 
@@ -200,10 +469,54 @@
             } catch (err) { showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } finally { loading.style.display='none'; }
         }
 
-        function openEditModal(id) { const item = currentResellers.find(x=>x.id===id); if (!item) { showAlert('Reseller not found','danger'); return; } document.getElementById('editId').value = item.id; document.getElementById('editName').value = item.name || ''; document.getElementById('editCode').value = item.code || ''; document.getElementById('editIsActive').value = item.isActive ? 'true' : 'false'; editModal.show(); }
+        function openEditModal(id) { 
+            const item = currentResellers.find(x=>x.id===id); 
+            if (!item) { showAlert('Reseller not found','danger'); return; } 
+            document.getElementById('editId').value = item.id; 
+            document.getElementById('editName').value = item.name || ''; 
+            document.getElementById('editContactPerson').value = item.contactPerson || ''; 
+            document.getElementById('editEmail').value = item.email || ''; 
+            document.getElementById('editPhone').value = item.phone || ''; 
+            document.getElementById('editAddress').value = item.address || ''; 
+            document.getElementById('editCity').value = item.city || ''; 
+            document.getElementById('editState').value = item.state || ''; 
+            document.getElementById('editPostalCode').value = item.postalCode || ''; 
+            document.getElementById('editCountryCode').value = item.countryCode || ''; 
+            document.getElementById('editCompanyRegistrationNumber').value = item.companyRegistrationNumber || ''; 
+            document.getElementById('editTaxId').value = item.taxId || ''; 
+            document.getElementById('editVatNumber').value = item.vatNumber || ''; 
+            document.getElementById('editIsDefault').value = item.isDefault ? 'true' : 'false'; 
+            document.getElementById('editNotes').value = item.notes || ''; 
+            document.getElementById('editDefaultCurrency').value = item.defaultCurrency || 'EUR'; 
+            document.getElementById('editSupportedCurrencies').value = item.supportedCurrencies || ''; 
+            document.getElementById('editApplyCurrencyMarkup').value = item.applyCurrencyMarkup ? 'true' : 'false'; 
+            document.getElementById('editDefaultCurrencyMarkup').value = item.defaultCurrencyMarkup || 0; 
+            editModal.show(); 
+        }
 
         async function updateReseller() {
-            const id = document.getElementById('editId').value; const data = { name: document.getElementById('editName').value.trim(), code: document.getElementById('editCode').value.trim(), isActive: document.getElementById('editIsActive').value === 'true' };
+            const id = document.getElementById('editId').value; 
+            const data = { 
+                name: document.getElementById('editName').value.trim(), 
+                contactPerson: document.getElementById('editContactPerson').value.trim() || null,
+                email: document.getElementById('editEmail').value.trim() || null,
+                phone: document.getElementById('editPhone').value.trim() || null,
+                address: document.getElementById('editAddress').value.trim() || null,
+                city: document.getElementById('editCity').value.trim() || null,
+                state: document.getElementById('editState').value.trim() || null,
+                postalCode: document.getElementById('editPostalCode').value.trim() || null,
+                countryCode: document.getElementById('editCountryCode').value.trim() || null,
+                companyRegistrationNumber: document.getElementById('editCompanyRegistrationNumber').value.trim() || null,
+                taxId: document.getElementById('editTaxId').value.trim() || null,
+                vatNumber: document.getElementById('editVatNumber').value.trim() || null,
+                isActive: document.getElementById('editIsActive').value === 'true',
+                isDefault: document.getElementById('editIsDefault').value === 'true',
+                notes: document.getElementById('editNotes').value.trim() || null,
+                defaultCurrency: document.getElementById('editDefaultCurrency').value.trim() || 'EUR',
+                supportedCurrencies: document.getElementById('editSupportedCurrencies').value.trim() || null,
+                applyCurrencyMarkup: document.getElementById('editApplyCurrencyMarkup').value === 'true',
+                defaultCurrencyMarkup: parseFloat(document.getElementById('editDefaultCurrencyMarkup').value) || 0
+            };
             try {
                 const res = await fetch(`${API_BASE_URL}/api/v1/ResellerCompanies/${id}`, { method:'PUT', headers: getAuthHeaders(), body: JSON.stringify(data) });
                 let result; const ct = res.headers.get('content-type'); if (ct && ct.includes('application/json')) result = await res.json(); else { const text = await res.text(); result = { error: text, statusCode: res.status }; }
@@ -212,7 +525,32 @@
             } catch (err) { showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); }
         }
 
-        async function deleteReseller(id, name) { if (!confirm(`Delete "${name}"?`)) return; try { const res = await fetch(`${API_BASE_URL}/api/v1/ResellerCompanies/${id}`, { method:'DELETE', headers: getAuthHeaders() }); if (res.ok) { showAlert('Reseller deleted','success'); getAllResellerCompanies(); const ct = res.headers.get('content-type'); if (ct && ct.includes('application/json')) updateResponseBox(await res.json()); else updateResponseBox({ message: 'Deleted' }); } else { let result; const ct = res.headers.get('content-type'); if (ct && ct.includes('application/json')) result = await res.json(); else { const text = await res.text(); result = { error: text, statusCode: res.status }; } updateResponseBox(result); showAlert(`Error: ${result.message||result.error||'Failed to delete'}`,'danger'); } } catch (err) { showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); }
+        async function deleteReseller(id, name) { 
+            if (!confirm(`Delete "${name}"?`)) return; 
+            try { 
+                const res = await fetch(`${API_BASE_URL}/api/v1/ResellerCompanies/${id}`, { method:'DELETE', headers: getAuthHeaders() }); 
+                if (res.ok) { 
+                    showAlert('Reseller deleted','success'); 
+                    getAllResellerCompanies(); 
+                    const ct = res.headers.get('content-type'); 
+                    if (ct && ct.includes('application/json')) updateResponseBox(await res.json()); 
+                    else updateResponseBox({ message: 'Deleted' }); 
+                } else { 
+                    let result; 
+                    const ct = res.headers.get('content-type'); 
+                    if (ct && ct.includes('application/json')) result = await res.json(); 
+                    else { 
+                        const text = await res.text(); 
+                        result = { error: text, statusCode: res.status }; 
+                    } 
+                    updateResponseBox(result); 
+                    showAlert(`Error: ${result.message||result.error||'Failed to delete'}`,'danger'); 
+                } 
+            } catch (err) { 
+                showAlert(`Error: ${err.message}`,'danger'); 
+                updateResponseBox({ error: err.message }); 
+            }
+        }
     </script>
 </body>
 </html>

@@ -501,6 +501,8 @@ namespace DomainRegistrationLib.Implementations
             {
                 _logger.Information("Getting registered domains from OpenSRS");
 
+                // Note: OpenSRS domain list API doesn't include contact information
+                // Individual API calls per domain would be required to fetch contact details
                 var attributes = new Dictionary<string, object>
                 {
                     { "limit", 1000 },
@@ -526,7 +528,8 @@ namespace DomainRegistrationLib.Implementations
                         var domainInfo = new RegisteredDomainInfo
                         {
                             DomainName = name,
-                            ExpirationDate = DateTime.TryParse(domain.Value, out var expires) ? expires : null
+                            ExpirationDate = DateTime.TryParse(domain.Value, out var expires) ? expires : null,
+                            Contacts = [] // OpenSRS list API doesn't include contacts
                         };
 
                         domains.Add(domainInfo);

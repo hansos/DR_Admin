@@ -484,6 +484,8 @@ namespace DomainRegistrationLib.Implementations
             {
                 _logger.Information("Getting registered domains from GoDaddy");
 
+                // Note: GoDaddy's domain list API doesn't include contact information
+                // Individual API calls per domain would be required to fetch contact details
                 var response = await _httpClient.GetAsync("/v1/domains");
                 response.EnsureSuccessStatusCode();
 
@@ -508,7 +510,8 @@ namespace DomainRegistrationLib.Implementations
                                 : null,
                             AutoRenew = domain.TryGetProperty("renewAuto", out var autoRenew) && autoRenew.GetBoolean(),
                             Locked = domain.TryGetProperty("locked", out var locked) && locked.GetBoolean(),
-                            PrivacyProtection = domain.TryGetProperty("privacy", out var privacy) && privacy.GetBoolean()
+                            PrivacyProtection = domain.TryGetProperty("privacy", out var privacy) && privacy.GetBoolean(),
+                            Contacts = [] // GoDaddy list API doesn't include contacts
                         };
 
                         if (domain.TryGetProperty("nameServers", out var nameServers) && nameServers.ValueKind == JsonValueKind.Array)

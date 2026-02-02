@@ -549,23 +549,23 @@ public class RegistrarsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult> DownloadDomainsForRegistrar(int registrarId, [FromQuery] bool save = true)
+    public async Task<ActionResult> DownloadDomainsForRegistrar(int registrarId)
     {
         try
         {
-            _log.Information("API: DownloadDomainsForRegistrar called for registrar {RegistrarId} by user {User} (save={Save})", 
-                registrarId, User.Identity?.Name, save);
+            _log.Information("API: DownloadDomainsForRegistrar called for registrar {RegistrarId} by user {User}", 
+                registrarId, User.Identity?.Name);
 
-            var count = await _registrarService.DownloadDomainsForRegistrarAsync(registrarId, save);
+            var count = await _registrarService.DownloadDomainsForRegistrarAsync(registrarId);
             
             _log.Information("API: Successfully downloaded {Count} domains for registrar {RegistrarId}", 
                 count, registrarId);
             
             return Ok(new { 
-                message = $"Successfully downloaded and {(save ? "saved" : "retrieved")} {count} domains for the registrar",
+                message = $"Successfully downloaded and saved {count} domains for the registrar",
                 count = count,
                 registrarId = registrarId,
-                saved = save
+                saved = true
             });
         }
         catch (InvalidOperationException ex)
@@ -596,18 +596,16 @@ public class RegistrarsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<RegisteredDomainsResult>> GetRegisteredDomains(int registrarId, [FromQuery] bool save = false)
+    public async Task<ActionResult<RegisteredDomainsResult>> GetRegisteredDomains(int registrarId)
     {
         try
         {
-            _log.Information("API: GetRegisteredDomains called for registrar {RegistrarId} by user {User} (save={Save})", 
-                registrarId, User.Identity?.Name, save);
 
-            var result = await _registrarService.GetRegisteredDomainsAsync(registrarId, save);
+            var result = await _registrarService.GetRegisteredDomainsAsync(registrarId);
             
-            _log.Information("API: Successfully retrieved {Count} domains for registrar {RegistrarId} (saved={Saved})", 
-                result.Domains?.Count ?? 0, registrarId, save);
-            
+            _log.Information("API: Successfully retrieved {Count} domains for registrar {RegistrarId}", 
+                result.Domains?.Count ?? 0, registrarId);
+
             return Ok(result);
         }
         catch (InvalidOperationException ex)

@@ -116,6 +116,58 @@ public class InitializationController : ControllerBase
     }
 
     /// <summary>
+    /// Checks and updates code tables (Roles, CustomerStatuses, DnsRecordTypes, ServiceTypes)
+    /// </summary>
+    /// <returns>Result with statistics about code tables</returns>
+    /// <response code="200">Returns the code tables update result with statistics</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="500">If an internal server error occurs</response>
+    /// <remarks>
+    /// Ensures all standard code tables have their default values.
+    /// This includes:
+    /// - Roles (ADMIN, SUPPORT, SALES, FINANCE, CUSTOMER)
+    /// - Customer Statuses (ACTIVE, PENDING, SUSPENDED, INACTIVE)
+    /// - DNS Record Types (A, AAAA, CNAME, MX, NS, TXT, SRV, PTR, SOA, CAA)
+    /// - Service Types (DOMAIN, HOSTING)
+    /// 
+    /// Only adds missing entries; existing entries are preserved.
+    /// </remarks>
+    [HttpPost("check-code-tables")]
+    //[Authorize]
+    [ProducesResponseType(typeof(CodeTablesResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<CodeTablesResponseDto>> CheckCodeTables()
+    {
+        try
+        {
+            _log.Information("Code tables check initiated by user: {User}", User.Identity?.Name);
+
+            var result = await _initializationService.CheckAndUpdateCodeTablesAsync();
+
+            if (result.Success)
+            {
+                _log.Information("Code tables check completed successfully");
+                return Ok(result);
+            }
+            else
+            {
+                _log.Warning("Code tables check completed with errors: {Message}", result.Message);
+                return StatusCode(500, result);
+            }
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Unexpected error during code tables check");
+            return StatusCode(500, new CodeTablesResponseDto
+            {
+                Success = false,
+                Message = "An unexpected error occurred during code tables check"
+            });
+        }
+    }
+
+    /// <summary>
     /// Synchronizes second-level domains from the Public Suffix List into the database
     /// </summary>
     /// <returns>Synchronization result with statistics</returns>

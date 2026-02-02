@@ -421,6 +421,8 @@ namespace DomainRegistrationLib.Implementations
             {
                 _logger.Information("Getting registered domains from Namecheap");
 
+                // Note: Namecheap's domain list API doesn't include contact information
+                // Individual API calls per domain would be required to fetch contact details
                 var parameters = BuildBaseParameters("namecheap.domains.getList");
                 parameters.Add("PageSize", "100");
 
@@ -445,7 +447,8 @@ namespace DomainRegistrationLib.Implementations
                             : null,
                         AutoRenew = domain.Attribute("AutoRenew")?.Value == "true",
                         Locked = domain.Attribute("IsLocked")?.Value == "true",
-                        PrivacyProtection = domain.Attribute("WhoisGuard")?.Value == "ENABLED"
+                        PrivacyProtection = domain.Attribute("WhoisGuard")?.Value == "ENABLED",
+                        Contacts = [] // Namecheap list API doesn't include contacts
                     };
 
                     domains.Add(domainInfo);

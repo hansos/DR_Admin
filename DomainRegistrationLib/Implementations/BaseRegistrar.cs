@@ -132,6 +132,8 @@ namespace DomainRegistrationLib.Implementations
         /// <summary>
         /// Gets all domains registered with this registrar.
         /// Default implementation returns not supported. Registrars should override this.
+        /// Note: Contact information may not be included by all registrars in the list response.
+        /// Some registrars require individual API calls per domain to retrieve contact details.
         /// </summary>
         /// <returns>A task that represents the asynchronous operation. The task result contains the list of registered domains</returns>
         public virtual Task<RegisteredDomainsResult> GetRegisteredDomainsAsync()

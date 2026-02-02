@@ -18,6 +18,127 @@ public class InitializationService : IInitializationService
         _context = context;
     }
 
+    public async Task<CodeTablesResponseDto> CheckAndUpdateCodeTablesAsync()
+    {
+        var response = new CodeTablesResponseDto { Success = true, Message = "Code tables checked and updated successfully" };
+
+        try
+        {
+            var now = DateTime.UtcNow;
+
+            // Ensure all standard roles exist
+            var rolesAdded = 0;
+            var standardRoles = new[] { ADMIN, SUPPORT, SALES, FINANCE, CUSTOMER };
+            foreach (var roleName in standardRoles)
+            {
+                var existing = await _context.Roles.FirstOrDefaultAsync(r => r.Name == roleName);
+                if (existing == null)
+                {
+                    var description = roleName == ADMIN ? "Administrator with full system access" : roleName + " role";
+                    _context.Roles.Add(new Role
+                    {
+                        Name = roleName,
+                        Description = description
+                    });
+                    rolesAdded++;
+                    _log.Information("Created role: {Role}", roleName);
+                }
+            }
+            await _context.SaveChangesAsync();
+            response.RolesAdded = rolesAdded;
+            response.TotalRoles = await _context.Roles.CountAsync();
+
+            // Ensure customer statuses exist
+            var statusesAdded = 0;
+            var statuses = new[]
+            {
+                new CustomerStatus { Code = "ACTIVE", Name = "Active", Color = "#28a745", IsActive = true, IsDefault = false, SortOrder = 20, NormalizedCode = "ACTIVE", NormalizedName = "ACTIVE", CreatedAt = now, UpdatedAt = now },
+                new CustomerStatus { Code = "SUSPENDED", Name = "Suspended", Color = "#a82955", IsActive = true, IsDefault = false, SortOrder = 40, NormalizedCode = "SUSPENDED", NormalizedName = "SUSPENDED", CreatedAt = now, UpdatedAt = now },
+                new CustomerStatus { Code = "PENDING", Name = "Pending", Color = "#dfcf26", IsActive = true, IsDefault = true, SortOrder = 10, NormalizedCode = "PENDING", NormalizedName = "PENDING", CreatedAt = now, UpdatedAt = now },
+                new CustomerStatus { Code = "INACTIVE", Name = "Inactive", Color = "#000000", IsActive = true, IsDefault = false, SortOrder = 30, NormalizedCode = "INACTIVE", NormalizedName = "INACTIVE", CreatedAt = now, UpdatedAt = now }
+            };
+
+            foreach (var cs in statuses)
+            {
+                var exists = await _context.CustomerStatuses.FirstOrDefaultAsync(x => x.Code == cs.Code);
+                if (exists == null)
+                {
+                    _context.CustomerStatuses.Add(cs);
+                    statusesAdded++;
+                    _log.Information("Created customer status: {Code}", cs.Code);
+                }
+            }
+            await _context.SaveChangesAsync();
+            response.CustomerStatusesAdded = statusesAdded;
+            response.TotalCustomerStatuses = await _context.CustomerStatuses.CountAsync();
+
+            // Ensure common DNS record types exist
+            var dnsTypesAdded = 0;
+            var dnsTypes = new[]
+            {
+                new DnsRecordType { Type = "A", Description = "IPv4 address record", HasPriority = false, HasWeight = false, HasPort = false, IsEditableByUser = true, IsActive = true, DefaultTTL = 3600, CreatedAt = now, UpdatedAt = now },
+                new DnsRecordType { Type = "AAAA", Description = "IPv6 address record", HasPriority = false, HasWeight = false, HasPort = false, IsEditableByUser = true, IsActive = true, DefaultTTL = 3600, CreatedAt = now, UpdatedAt = now },
+                new DnsRecordType { Type = "CNAME", Description = "Canonical name (alias) record", HasPriority = false, HasWeight = false, HasPort = false, IsEditableByUser = true, IsActive = true, DefaultTTL = 3600, CreatedAt = now, UpdatedAt = now },
+                new DnsRecordType { Type = "MX", Description = "Mail exchange record", HasPriority = true, HasWeight = false, HasPort = false, IsEditableByUser = true, IsActive = true, DefaultTTL = 3600, CreatedAt = now, UpdatedAt = now },
+                new DnsRecordType { Type = "NS", Description = "Name server record", HasPriority = false, HasWeight = false, HasPort = false, IsEditableByUser = true, IsActive = true, DefaultTTL = 3600, CreatedAt = now, UpdatedAt = now },
+                new DnsRecordType { Type = "TXT", Description = "Text record (SPF, DKIM, etc.)", HasPriority = false, HasWeight = false, HasPort = false, IsEditableByUser = true, IsActive = true, DefaultTTL = 3600, CreatedAt = now, UpdatedAt = now },
+                new DnsRecordType { Type = "SRV", Description = "Service locator record", HasPriority = true, HasWeight = true, HasPort = true, IsEditableByUser = true, IsActive = true, DefaultTTL = 3600, CreatedAt = now, UpdatedAt = now },
+                new DnsRecordType { Type = "PTR", Description = "Pointer record (reverse DNS)", HasPriority = false, HasWeight = false, HasPort = false, IsEditableByUser = true, IsActive = true, DefaultTTL = 3600, CreatedAt = now, UpdatedAt = now },
+                new DnsRecordType { Type = "SOA", Description = "Start of authority record", HasPriority = false, HasWeight = false, HasPort = false, IsEditableByUser = false, IsActive = true, DefaultTTL = 3600, CreatedAt = now, UpdatedAt = now },
+                new DnsRecordType { Type = "CAA", Description = "Certification Authority Authorization", HasPriority = false, HasWeight = false, HasPort = false, IsEditableByUser = true, IsActive = true, DefaultTTL = 3600, CreatedAt = now, UpdatedAt = now }
+            };
+
+            foreach (var dt in dnsTypes)
+            {
+                var exists = await _context.DnsRecordTypes.FirstOrDefaultAsync(x => x.Type.ToUpper() == dt.Type.ToUpper());
+                if (exists == null)
+                {
+                    _context.DnsRecordTypes.Add(dt);
+                    dnsTypesAdded++;
+                    _log.Information("Created DNS record type: {Type}", dt.Type);
+                }
+            }
+            await _context.SaveChangesAsync();
+            response.DnsRecordTypesAdded = dnsTypesAdded;
+            response.TotalDnsRecordTypes = await _context.DnsRecordTypes.CountAsync();
+
+            // Ensure common service types exist
+            var serviceTypesAdded = 0;
+            var serviceTypes = new[]
+            {
+                new ServiceType { Name = "DOMAIN", Description = "Domain registration and management services", CreatedAt = now, UpdatedAt = now },
+                new ServiceType { Name = "HOSTING", Description = "Web hosting and server services", CreatedAt = now, UpdatedAt = now }
+            };
+
+            foreach (var st in serviceTypes)
+            {
+                var exists = await _context.ServiceTypes.FirstOrDefaultAsync(x => x.Name == st.Name);
+                if (exists == null)
+                {
+                    _context.ServiceTypes.Add(st);
+                    serviceTypesAdded++;
+                    _log.Information("Created service type: {Name}", st.Name);
+                }
+            }
+            await _context.SaveChangesAsync();
+            response.ServiceTypesAdded = serviceTypesAdded;
+            response.TotalServiceTypes = await _context.ServiceTypes.CountAsync();
+
+            _log.Information("Code tables updated - Roles: {RolesAdded}/{TotalRoles}, Statuses: {StatusesAdded}/{TotalStatuses}, DNS Types: {DnsAdded}/{TotalDns}, Service Types: {ServiceAdded}/{TotalService}",
+                rolesAdded, response.TotalRoles, statusesAdded, response.TotalCustomerStatuses, 
+                dnsTypesAdded, response.TotalDnsRecordTypes, serviceTypesAdded, response.TotalServiceTypes);
+
+            return response;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error checking and updating code tables");
+            response.Success = false;
+            response.Message = $"Error updating code tables: {ex.Message}";
+            return response;
+        }
+    }
+
     public async Task<InitializationResponseDto?> InitializeAsync(InitializationRequestDto request)
     {
         try
@@ -40,85 +161,21 @@ public class InitializationService : IInitializationService
                 return null;
             }
 
+            // Check and update code tables (Roles, CustomerStatuses, DnsRecordTypes, ServiceTypes)
+            var codeTablesResult = await CheckAndUpdateCodeTablesAsync();
+            if (!codeTablesResult.Success)
+            {
+                _log.Error("Failed to initialize code tables: {Message}", codeTablesResult.Message);
+                return null;
+            }
 
-            // Find or create Admin role
+            // Get Admin role (should exist after code tables update)
             var adminRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == ADMIN);
-            
             if (adminRole == null)
             {
-                adminRole = new Role
-                {
-                    Name = ADMIN,
-                    Description = "Administrator with full system access"
-                };
-                _context.Roles.Add(adminRole);
-                await _context.SaveChangesAsync();
-                _log.Information("Admin role created");
+                _log.Error("Admin role not found after code tables update");
+                return null;
             }
-
-            // Ensure other standard roles exist
-            var otherRoles = new[] { SUPPORT, SALES, FINANCE, CUSTOMER };
-            foreach (var roleName in otherRoles)
-            {
-                var existing = await _context.Roles.FirstOrDefaultAsync(r => r.Name == roleName);
-                if (existing == null)
-                {
-                    _context.Roles.Add(new Role
-                    {
-                        Name = roleName,
-                        Description = roleName + " role"
-                    });
-                    _log.Information("Created role: {Role}", roleName);
-                }
-            }
-            await _context.SaveChangesAsync();
-
-            // Ensure customer statuses exist
-            var now = DateTime.UtcNow;
-            var statuses = new[]
-            {
-                new CustomerStatus { Code = "ACTIVE", Name = "Active", Color = "#28a745", IsActive = true, IsDefault = false, SortOrder = 20, NormalizedCode = "ACTIVE", NormalizedName = "ACTIVE", CreatedAt = now, UpdatedAt = now },
-                new CustomerStatus { Code = "SUSPENDED", Name = "Suspended", Color = "#a82955", IsActive = true, IsDefault = false, SortOrder = 40, NormalizedCode = "SUSPENDED", NormalizedName = "SUSPENDED", CreatedAt = now, UpdatedAt = now },
-                new CustomerStatus { Code = "PENDING", Name = "Pending", Color = "#dfcf26", IsActive = true, IsDefault = true, SortOrder = 10, NormalizedCode = "PENDING", NormalizedName = "PENDING", CreatedAt = now, UpdatedAt = now },
-                new CustomerStatus { Code = "INACTIVE", Name = "Inactive", Color = "#000000", IsActive = true, IsDefault = false, SortOrder = 30, NormalizedCode = "INACTIVE", NormalizedName = "INACTIVE", CreatedAt = now, UpdatedAt = now }
-            };
-
-            foreach (var cs in statuses)
-            {
-                var exists = await _context.CustomerStatuses.FirstOrDefaultAsync(x => x.Code == cs.Code);
-                if (exists == null)
-                {
-                    _context.CustomerStatuses.Add(cs);
-                    _log.Information("Created customer status: {Code}", cs.Code);
-                }
-            }
-            await _context.SaveChangesAsync();
-
-            // Ensure common DNS record types exist
-            var dnsTypes = new[]
-            {
-                new DnsRecordType { Type = "A", Description = "IPv4 address record", HasPriority = false, HasWeight = false, HasPort = false, IsEditableByUser = true, IsActive = true, DefaultTTL = 3600, CreatedAt = now, UpdatedAt = now },
-                new DnsRecordType { Type = "AAAA", Description = "IPv6 address record", HasPriority = false, HasWeight = false, HasPort = false, IsEditableByUser = true, IsActive = true, DefaultTTL = 3600, CreatedAt = now, UpdatedAt = now },
-                new DnsRecordType { Type = "CNAME", Description = "Canonical name (alias) record", HasPriority = false, HasWeight = false, HasPort = false, IsEditableByUser = true, IsActive = true, DefaultTTL = 3600, CreatedAt = now, UpdatedAt = now },
-                new DnsRecordType { Type = "MX", Description = "Mail exchange record", HasPriority = true, HasWeight = false, HasPort = false, IsEditableByUser = true, IsActive = true, DefaultTTL = 3600, CreatedAt = now, UpdatedAt = now },
-                new DnsRecordType { Type = "NS", Description = "Name server record", HasPriority = false, HasWeight = false, HasPort = false, IsEditableByUser = true, IsActive = true, DefaultTTL = 3600, CreatedAt = now, UpdatedAt = now },
-                new DnsRecordType { Type = "TXT", Description = "Text record (SPF, DKIM, etc.)", HasPriority = false, HasWeight = false, HasPort = false, IsEditableByUser = true, IsActive = true, DefaultTTL = 3600, CreatedAt = now, UpdatedAt = now },
-                new DnsRecordType { Type = "SRV", Description = "Service locator record", HasPriority = true, HasWeight = true, HasPort = true, IsEditableByUser = true, IsActive = true, DefaultTTL = 3600, CreatedAt = now, UpdatedAt = now },
-                new DnsRecordType { Type = "PTR", Description = "Pointer record (reverse DNS)", HasPriority = false, HasWeight = false, HasPort = false, IsEditableByUser = true, IsActive = true, DefaultTTL = 3600, CreatedAt = now, UpdatedAt = now },
-                new DnsRecordType { Type = "SOA", Description = "Start of authority record", HasPriority = false, HasWeight = false, HasPort = false, IsEditableByUser = false, IsActive = true, DefaultTTL = 3600, CreatedAt = now, UpdatedAt = now },
-                new DnsRecordType { Type = "CAA", Description = "Certification Authority Authorization", HasPriority = false, HasWeight = false, HasPort = false, IsEditableByUser = true, IsActive = true, DefaultTTL = 3600, CreatedAt = now, UpdatedAt = now }
-            };
-
-            foreach (var dt in dnsTypes)
-            {
-                var exists = await _context.DnsRecordTypes.FirstOrDefaultAsync(x => x.Type.ToUpper() == dt.Type.ToUpper());
-                if (exists == null)
-                {
-                    _context.DnsRecordTypes.Add(dt);
-                    _log.Information("Created DNS record type: {Type}", dt.Type);
-                }
-            }
-            await _context.SaveChangesAsync();
 
             // Create the first admin user
             // Note: In production, use proper password hashing (e.g., BCrypt, PBKDF2)

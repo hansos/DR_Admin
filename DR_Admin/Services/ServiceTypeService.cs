@@ -64,6 +64,32 @@ public class ServiceTypeService : IServiceTypeService
         }
     }
 
+    public async Task<ServiceTypeDto?> GetServiceTypeByNameAsync(string name)
+    {
+        var normalizedName = StringNormalizationExtensions.Normalize(name);
+        try
+        {
+            _log.Information("Fetching service type with name: {ServiceTypeName}", name);
+            var serviceType = await _context.ServiceTypes
+                .AsNoTracking()
+                .FirstOrDefaultAsync(st => st.Name == normalizedName);
+
+            if (serviceType == null)
+            {
+                _log.Warning("Service type with name {ServiceTypeName} not found", normalizedName);
+                return null;
+            }
+
+            _log.Information("Successfully fetched service type with name: {ServiceTypeName}", normalizedName);
+            return MapToDto(serviceType);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while fetching service type with name: {ServiceTypeName}", normalizedName);
+            throw;
+        }
+    }
+
     public async Task<ServiceTypeDto> CreateServiceTypeAsync(CreateServiceTypeDto createDto)
     {
         try
@@ -72,7 +98,7 @@ public class ServiceTypeService : IServiceTypeService
 
             var serviceType = new ServiceType
             {
-                Name = createDto.Name,
+                Name = StringNormalizationExtensions.Normalize(createDto.Name),
                 Description = createDto.Description,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
@@ -105,7 +131,7 @@ public class ServiceTypeService : IServiceTypeService
                 return null;
             }
 
-            serviceType.Name = updateDto.Name;
+            serviceType.Name = StringNormalizationExtensions.Normalize(updateDto.Name);
             serviceType.Description = updateDto.Description;
             serviceType.UpdatedAt = DateTime.UtcNow;
 

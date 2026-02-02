@@ -76,6 +76,11 @@ public class ResellerCompanyDto
     public bool IsActive { get; set; } = true;
     
     /// <summary>
+    /// Gets or sets whether this is the default reseller company
+    /// </summary>
+    public bool IsDefault { get; set; } = false;
+    
+    /// <summary>
     /// Gets or sets additional notes about the reseller company
     /// </summary>
     public string? Notes { get; set; }
@@ -182,6 +187,11 @@ public class CreateResellerCompanyDto
     public bool IsActive { get; set; } = true;
     
     /// <summary>
+    /// Gets or sets whether this is the default reseller company
+    /// </summary>
+    public bool IsDefault { get; set; } = false;
+    
+    /// <summary>
     /// Gets or sets additional notes about the reseller company
     /// </summary>
     public string? Notes { get; set; }
@@ -276,6 +286,11 @@ public class UpdateResellerCompanyDto
     /// Gets or sets whether the reseller company is active
     /// </summary>
     public bool IsActive { get; set; }
+    
+    /// <summary>
+    /// Gets or sets whether this is the default reseller company
+    /// </summary>
+    public bool IsDefault { get; set; } = false;
     
     /// <summary>
     /// Gets or sets additional notes about the reseller company

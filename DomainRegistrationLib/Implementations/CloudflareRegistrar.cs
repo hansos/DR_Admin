@@ -513,6 +513,8 @@ namespace DomainRegistrationLib.Implementations
             {
                 _logger.Information("Getting registered domains from Cloudflare");
 
+                // Note: Cloudflare's domain list API doesn't include contact information
+                // Individual API calls per domain would be required to fetch contact details
                 // Cloudflare uses account-level domain listing
                 var response = await _httpClient.GetAsync($"/client/v4/accounts/{_accountId}/registrar/domains");
                 response.EnsureSuccessStatusCode();
@@ -538,7 +540,8 @@ namespace DomainRegistrationLib.Implementations
                                 : null,
                             AutoRenew = domain.TryGetProperty("auto_renew", out var autoRenew) && autoRenew.GetBoolean(),
                             Locked = domain.TryGetProperty("locked", out var locked) && locked.GetBoolean(),
-                            PrivacyProtection = domain.TryGetProperty("privacy", out var privacy) && privacy.GetBoolean()
+                            PrivacyProtection = domain.TryGetProperty("privacy", out var privacy) && privacy.GetBoolean(),
+                            Contacts = [] // Cloudflare list API doesn't include contacts
                         };
 
                         domains.Add(domainInfo);

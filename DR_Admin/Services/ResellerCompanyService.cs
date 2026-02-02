@@ -116,6 +116,12 @@ public class ResellerCompanyService : IResellerCompanyService
         {
             _log.Information("Creating new reseller company with name: {CompanyName}", dto.Name);
 
+            // If this reseller is being set as default, unset any existing default
+            if (dto.IsDefault)
+            {
+                await UnsetCurrentDefaultResellerAsync();
+            }
+
             var company = new ResellerCompany
             {
                 Name = dto.Name,
@@ -131,6 +137,7 @@ public class ResellerCompanyService : IResellerCompanyService
                 TaxId = dto.TaxId,
                 VatNumber = dto.VatNumber,
                 IsActive = dto.IsActive,
+                IsDefault = dto.IsDefault,
                 Notes = dto.Notes,
                 DefaultCurrency = dto.DefaultCurrency,
                 SupportedCurrencies = dto.SupportedCurrencies,
@@ -171,6 +178,12 @@ public class ResellerCompanyService : IResellerCompanyService
                 return null;
             }
 
+            // If this reseller is being set as default, unset any existing default
+            if (dto.IsDefault && !company.IsDefault)
+            {
+                await UnsetCurrentDefaultResellerAsync();
+            }
+
             company.Name = dto.Name;
             company.ContactPerson = dto.ContactPerson;
             company.Email = dto.Email;
@@ -184,6 +197,7 @@ public class ResellerCompanyService : IResellerCompanyService
             company.TaxId = dto.TaxId;
             company.VatNumber = dto.VatNumber;
             company.IsActive = dto.IsActive;
+            company.IsDefault = dto.IsDefault;
             company.Notes = dto.Notes;
             company.DefaultCurrency = dto.DefaultCurrency;
             company.SupportedCurrencies = dto.SupportedCurrencies;
@@ -234,6 +248,22 @@ public class ResellerCompanyService : IResellerCompanyService
         }
     }
 
+    /// <summary>
+    /// Unsets the IsDefault flag for any currently default reseller company
+    /// </summary>
+    private async Task UnsetCurrentDefaultResellerAsync()
+    {
+        var currentDefault = await _context.ResellerCompanies
+            .Where(r => r.IsDefault)
+            .FirstOrDefaultAsync();
+
+        if (currentDefault != null)
+        {
+            _log.Information("Unsetting default flag from reseller company ID: {ResellerCompanyId}", currentDefault.Id);
+            currentDefault.IsDefault = false;
+        }
+    }
+
     private static ResellerCompanyDto MapToDto(ResellerCompany company)
     {
         return new ResellerCompanyDto
@@ -252,6 +282,7 @@ public class ResellerCompanyService : IResellerCompanyService
             TaxId = company.TaxId,
             VatNumber = company.VatNumber,
             IsActive = company.IsActive,
+            IsDefault = company.IsDefault,
             Notes = company.Notes,
             DefaultCurrency = company.DefaultCurrency,
             SupportedCurrencies = company.SupportedCurrencies,
