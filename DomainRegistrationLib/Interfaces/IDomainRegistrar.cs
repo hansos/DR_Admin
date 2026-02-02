@@ -78,6 +78,9 @@ namespace DomainRegistrationLib.Interfaces
 
         Task<List<TldInfo>> GetSupportedTldsAsync(List<string> requestTlds);
 
-
+        /// <summary>
+        /// Gets all domains registered with this registrar
+        /// </summary>
+        Task<RegisteredDomainsResult> GetRegisteredDomainsAsync();
     }
 }

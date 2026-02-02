@@ -414,5 +414,64 @@ namespace DomainRegistrationLib.Implementations
                 return [];
             }
         }
+
+        public override async Task<RegisteredDomainsResult> GetRegisteredDomainsAsync()
+        {
+            try
+            {
+                _logger.Information("Getting registered domains from Namecheap");
+
+                var parameters = BuildBaseParameters("namecheap.domains.getList");
+                parameters.Add("PageSize", "100");
+
+                var response = await MakeApiCallAsync(parameters);
+                var xml = XDocument.Parse(response);
+                var ns = xml.Root?.GetDefaultNamespace() ?? XNamespace.None;
+
+                var domains = new List<RegisteredDomainInfo>();
+
+                var domainElements = xml.Descendants(ns + "Domain");
+                foreach (var domain in domainElements)
+                {
+                    var domainInfo = new RegisteredDomainInfo
+                    {
+                        DomainName = domain.Attribute("Name")?.Value ?? "",
+                        Status = domain.Attribute("Status")?.Value,
+                        ExpirationDate = DateTime.TryParse(domain.Attribute("Expires")?.Value, out var expires) 
+                            ? expires 
+                            : null,
+                        RegistrationDate = DateTime.TryParse(domain.Attribute("Created")?.Value, out var created) 
+                            ? created 
+                            : null,
+                        AutoRenew = domain.Attribute("AutoRenew")?.Value == "true",
+                        Locked = domain.Attribute("IsLocked")?.Value == "true",
+                        PrivacyProtection = domain.Attribute("WhoisGuard")?.Value == "ENABLED"
+                    };
+
+                    domains.Add(domainInfo);
+                }
+
+                _logger.Information("Successfully retrieved {Count} domains from Namecheap", domains.Count);
+
+                return new RegisteredDomainsResult
+                {
+                    Success = true,
+                    Message = $"Successfully retrieved {domains.Count} domains",
+                    Domains = domains,
+                    TotalCount = domains.Count
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error getting registered domains from Namecheap");
+                return new RegisteredDomainsResult
+                {
+                    Success = false,
+                    Message = $"Error retrieving domains: {ex.Message}",
+                    ErrorCode = "API_ERROR",
+                    Errors = new List<string> { ex.Message }
+                };
+            }
+        }
     }
 }

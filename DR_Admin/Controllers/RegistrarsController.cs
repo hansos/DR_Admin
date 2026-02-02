@@ -1,3 +1,4 @@
+using DomainRegistrationLib.Models;
 using ISPAdmin.DTOs;
 using ISPAdmin.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -527,6 +528,94 @@ public class RegistrarsController : ControllerBase
             _log.Error(ex, "API: Error in CheckDomainAvailability for domain {DomainName} using registrar {RegistrarId}", 
                 domainName, registrarId);
             return StatusCode(500, "An error occurred while checking domain availability");
+        }
+    }
+
+    /// <summary>
+    /// Downloads all domains registered with a specific registrar and syncs them to the database
+    /// </summary>
+    /// <param name="registrarId">The unique identifier of the registrar</param>
+    /// <returns>Number of domains downloaded and updated</returns>
+    /// <response code="200">Returns the count of domains downloaded</response>
+    /// <response code="400">If the registrar is not found or not active</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have required permissions</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpPost("{registrarId}/domains/download")]
+    [Authorize(Policy = "Registrar.Write")]
+    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult> DownloadDomainsForRegistrar(int registrarId)
+    {
+        try
+        {
+            _log.Information("API: DownloadDomainsForRegistrar called for registrar {RegistrarId} by user {User}", 
+                registrarId, User.Identity?.Name);
+
+            var count = await _registrarService.DownloadDomainsForRegistrarAsync(registrarId);
+            
+            _log.Information("API: Successfully downloaded {Count} domains for registrar {RegistrarId}", 
+                count, registrarId);
+            
+            return Ok(new { 
+                message = $"Successfully downloaded and updated {count} domains for the registrar",
+                count = count,
+                registrarId = registrarId
+            });
+        }
+        catch (InvalidOperationException ex)
+        {
+            _log.Warning(ex, "API: Invalid operation in DownloadDomainsForRegistrar for registrar {RegistrarId}", registrarId);
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in DownloadDomainsForRegistrar for registrar {RegistrarId}", registrarId);
+            return StatusCode(500, "An error occurred while downloading domains for the registrar");
+        }
+    }
+
+    /// <summary>
+    /// Gets all domains registered with a specific registrar
+    /// </summary>
+    /// <param name="registrarId">The unique identifier of the registrar</param>
+    /// <returns>List of registered domains from the registrar</returns>
+    /// <response code="200">Returns the list of registered domains</response>
+    /// <response code="400">If the registrar is not found or not active</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpGet("{registrarId}/domains")]
+    [Authorize(Policy = "Registrar.Read")]
+    [ProducesResponseType(typeof(RegisteredDomainsResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<RegisteredDomainsResult>> GetRegisteredDomains(int registrarId)
+    {
+        try
+        {
+            _log.Information("API: GetRegisteredDomains called for registrar {RegistrarId} by user {User}", 
+                registrarId, User.Identity?.Name);
+
+            var result = await _registrarService.GetRegisteredDomainsAsync(registrarId);
+            
+            _log.Information("API: Successfully retrieved {Count} domains for registrar {RegistrarId}", 
+                result.Domains?.Count ?? 0, registrarId);
+            
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _log.Warning(ex, "API: Invalid operation in GetRegisteredDomains for registrar {RegistrarId}", registrarId);
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in GetRegisteredDomains for registrar {RegistrarId}", registrarId);
+            return StatusCode(500, "An error occurred while retrieving domains for the registrar");
         }
     }
 }

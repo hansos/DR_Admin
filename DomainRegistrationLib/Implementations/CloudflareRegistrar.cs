@@ -506,5 +506,66 @@ namespace DomainRegistrationLib.Implementations
                 return [];
             }
         }
+
+        public override async Task<RegisteredDomainsResult> GetRegisteredDomainsAsync()
+        {
+            try
+            {
+                _logger.Information("Getting registered domains from Cloudflare");
+
+                // Cloudflare uses account-level domain listing
+                var response = await _httpClient.GetAsync($"/client/v4/accounts/{_accountId}/registrar/domains");
+                response.EnsureSuccessStatusCode();
+
+                var content = await response.Content.ReadAsStringAsync();
+                var result = JsonSerializer.Deserialize<JsonElement>(content);
+
+                var domains = new List<RegisteredDomainInfo>();
+
+                if (result.TryGetProperty("result", out var resultProp) && resultProp.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var domain in resultProp.EnumerateArray())
+                    {
+                        var domainInfo = new RegisteredDomainInfo
+                        {
+                            DomainName = domain.GetProperty("name").GetString() ?? "",
+                            Status = domain.TryGetProperty("status", out var status) ? status.GetString() : null,
+                            ExpirationDate = domain.TryGetProperty("expires_at", out var expires) 
+                                ? DateTime.Parse(expires.GetString() ?? "") 
+                                : null,
+                            RegistrationDate = domain.TryGetProperty("created_at", out var created) 
+                                ? DateTime.Parse(created.GetString() ?? "") 
+                                : null,
+                            AutoRenew = domain.TryGetProperty("auto_renew", out var autoRenew) && autoRenew.GetBoolean(),
+                            Locked = domain.TryGetProperty("locked", out var locked) && locked.GetBoolean(),
+                            PrivacyProtection = domain.TryGetProperty("privacy", out var privacy) && privacy.GetBoolean()
+                        };
+
+                        domains.Add(domainInfo);
+                    }
+                }
+
+                _logger.Information("Successfully retrieved {Count} domains from Cloudflare", domains.Count);
+
+                return new RegisteredDomainsResult
+                {
+                    Success = true,
+                    Message = $"Successfully retrieved {domains.Count} domains",
+                    Domains = domains,
+                    TotalCount = domains.Count
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error getting registered domains from Cloudflare");
+                return new RegisteredDomainsResult
+                {
+                    Success = false,
+                    Message = $"Error retrieving domains: {ex.Message}",
+                    ErrorCode = "API_ERROR",
+                    Errors = new List<string> { ex.Message }
+                };
+            }
+        }
     }
 }

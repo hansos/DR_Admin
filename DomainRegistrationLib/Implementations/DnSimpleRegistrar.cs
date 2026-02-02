@@ -504,5 +504,64 @@ namespace DomainRegistrationLib.Implementations
                 return [];
             }
         }
+
+        public override async Task<RegisteredDomainsResult> GetRegisteredDomainsAsync()
+        {
+            try
+            {
+                _logger.Information("Getting registered domains from DNSimple");
+
+                var response = await _httpClient.GetAsync($"/v2/{_accountId}/domains");
+                response.EnsureSuccessStatusCode();
+
+                var content = await response.Content.ReadAsStringAsync();
+                var result = JsonSerializer.Deserialize<JsonElement>(content);
+
+                var domains = new List<RegisteredDomainInfo>();
+
+                if (result.TryGetProperty("data", out var dataProp) && dataProp.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var domain in dataProp.EnumerateArray())
+                    {
+                        var domainInfo = new RegisteredDomainInfo
+                        {
+                            DomainName = domain.GetProperty("name").GetString() ?? "",
+                            Status = domain.TryGetProperty("state", out var state) ? state.GetString() : null,
+                            ExpirationDate = domain.TryGetProperty("expires_on", out var expires) 
+                                ? DateTime.Parse(expires.GetString() ?? "") 
+                                : null,
+                            RegistrationDate = domain.TryGetProperty("created_at", out var created) 
+                                ? DateTime.Parse(created.GetString() ?? "") 
+                                : null,
+                            AutoRenew = domain.TryGetProperty("auto_renew", out var autoRenew) && autoRenew.GetBoolean(),
+                            PrivacyProtection = domain.TryGetProperty("private_whois", out var privacy) && privacy.GetBoolean()
+                        };
+
+                        domains.Add(domainInfo);
+                    }
+                }
+
+                _logger.Information("Successfully retrieved {Count} domains from DNSimple", domains.Count);
+
+                return new RegisteredDomainsResult
+                {
+                    Success = true,
+                    Message = $"Successfully retrieved {domains.Count} domains",
+                    Domains = domains,
+                    TotalCount = domains.Count
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error getting registered domains from DNSimple");
+                return new RegisteredDomainsResult
+                {
+                    Success = false,
+                    Message = $"Error retrieving domains: {ex.Message}",
+                    ErrorCode = "API_ERROR",
+                    Errors = new List<string> { ex.Message }
+                };
+            }
+        }
     }
 }

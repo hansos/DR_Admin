@@ -583,5 +583,71 @@ namespace DomainRegistrationLib.Implementations
                 return [];
             }
         }
+
+        public override async Task<RegisteredDomainsResult> GetRegisteredDomainsAsync()
+        {
+            try
+            {
+                _logger.Information("Getting registered domains from DomainBox");
+
+                var response = await MakeAuthenticatedRequestAsync(HttpMethod.Get, "/domains", null);
+                var content = await response.Content.ReadAsStringAsync();
+                var result = JsonSerializer.Deserialize<JsonElement>(content);
+
+                var domains = new List<RegisteredDomainInfo>();
+
+                if (result.TryGetProperty("domains", out var domainsProp) && domainsProp.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var domain in domainsProp.EnumerateArray())
+                    {
+                        var domainInfo = new RegisteredDomainInfo
+                        {
+                            DomainName = domain.GetProperty("domain_name").GetString() ?? "",
+                            Status = domain.TryGetProperty("status", out var status) ? status.GetString() : null,
+                            ExpirationDate = domain.TryGetProperty("expiration_date", out var expires) 
+                                ? DateTime.Parse(expires.GetString() ?? "") 
+                                : null,
+                            RegistrationDate = domain.TryGetProperty("registration_date", out var created) 
+                                ? DateTime.Parse(created.GetString() ?? "") 
+                                : null,
+                            AutoRenew = domain.TryGetProperty("auto_renew", out var autoRenew) && autoRenew.GetBoolean(),
+                            Locked = domain.TryGetProperty("locked", out var locked) && locked.GetBoolean(),
+                            PrivacyProtection = domain.TryGetProperty("privacy", out var privacy) && privacy.GetBoolean()
+                        };
+
+                        if (domain.TryGetProperty("nameservers", out var nameservers) && nameservers.ValueKind == JsonValueKind.Array)
+                        {
+                            domainInfo.Nameservers = nameservers.EnumerateArray()
+                                .Select(ns => ns.GetString() ?? "")
+                                .Where(ns => !string.IsNullOrEmpty(ns))
+                                .ToList();
+                        }
+
+                        domains.Add(domainInfo);
+                    }
+                }
+
+                _logger.Information("Successfully retrieved {Count} domains from DomainBox", domains.Count);
+
+                return new RegisteredDomainsResult
+                {
+                    Success = true,
+                    Message = $"Successfully retrieved {domains.Count} domains",
+                    Domains = domains,
+                    TotalCount = domains.Count
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error getting registered domains from DomainBox");
+                return new RegisteredDomainsResult
+                {
+                    Success = false,
+                    Message = $"Error retrieving domains: {ex.Message}",
+                    ErrorCode = "API_ERROR",
+                    Errors = new List<string> { ex.Message }
+                };
+            }
+        }
     }
 }

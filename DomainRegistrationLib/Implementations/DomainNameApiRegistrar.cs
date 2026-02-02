@@ -783,5 +783,69 @@ namespace DomainRegistrationLib.Implementations
                 return [];
             }
         }
+
+        public override async Task<RegisteredDomainsResult> GetRegisteredDomainsAsync()
+        {
+            try
+            {
+                _logger.Information("Getting registered domains from DomainNameApi");
+
+                var requestXml = BuildSoapRequest("GetList", new XElement("Empty"));
+                var response = await MakeApiCallAsync(requestXml);
+
+                var domains = new List<RegisteredDomainInfo>();
+
+                var domainElements = response.Descendants("Domain");
+                foreach (var domain in domainElements)
+                {
+                    var domainInfo = new RegisteredDomainInfo
+                    {
+                        DomainName = domain.Element("Name")?.Value ?? "",
+                        Status = domain.Element("Status")?.Value,
+                        ExpirationDate = DateTime.TryParse(domain.Element("ExpirationDate")?.Value, out var expires) 
+                            ? expires 
+                            : null,
+                        RegistrationDate = DateTime.TryParse(domain.Element("RegistrationDate")?.Value, out var created) 
+                            ? created 
+                            : null,
+                        AutoRenew = domain.Element("RenewalMode")?.Value == "AutoRenew",
+                        Locked = domain.Element("LockStatus")?.Value == "true",
+                        PrivacyProtection = domain.Element("PrivacyProtectionStatus")?.Value == "enabled"
+                    };
+
+                    var nsElements = domain.Descendants("Nameserver");
+                    if (nsElements.Any())
+                    {
+                        domainInfo.Nameservers = nsElements
+                            .Select(ns => ns.Value)
+                            .Where(ns => !string.IsNullOrEmpty(ns))
+                            .ToList();
+                    }
+
+                    domains.Add(domainInfo);
+                }
+
+                _logger.Information("Successfully retrieved {Count} domains from DomainNameApi", domains.Count);
+
+                return new RegisteredDomainsResult
+                {
+                    Success = true,
+                    Message = $"Successfully retrieved {domains.Count} domains",
+                    Domains = domains,
+                    TotalCount = domains.Count
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error getting registered domains from DomainNameApi");
+                return new RegisteredDomainsResult
+                {
+                    Success = false,
+                    Message = $"Error retrieving domains: {ex.Message}",
+                    ErrorCode = "API_ERROR",
+                    Errors = new List<string> { ex.Message }
+                };
+            }
+        }
     }
 }

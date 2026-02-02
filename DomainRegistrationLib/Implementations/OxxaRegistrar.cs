@@ -708,5 +708,68 @@ namespace DomainRegistrationLib.Implementations
                 return [];
             }
         }
+
+        public override async Task<RegisteredDomainsResult> GetRegisteredDomainsAsync()
+        {
+            try
+            {
+                _logger.Information("Getting registered domains from Oxxa");
+
+                var requestXml = BuildCommand("list-domains", new XElement("empty"));
+                var response = await MakeApiCallAsync(requestXml);
+
+                var domains = new List<RegisteredDomainInfo>();
+
+                var domainElements = response.Descendants("domain");
+                foreach (var domain in domainElements)
+                {
+                    var domainInfo = new RegisteredDomainInfo
+                    {
+                        DomainName = domain.Element("name")?.Value ?? "",
+                        Status = domain.Element("status")?.Value,
+                        ExpirationDate = DateTime.TryParse(domain.Element("expire-date")?.Value, out var expires) 
+                            ? expires 
+                            : null,
+                        RegistrationDate = DateTime.TryParse(domain.Element("create-date")?.Value, out var created) 
+                            ? created 
+                            : null,
+                        AutoRenew = domain.Element("auto-renew")?.Value == "1",
+                        Locked = domain.Element("lock-status")?.Value == "1"
+                    };
+
+                    var nsElements = domain.Descendants("nameserver");
+                    if (nsElements.Any())
+                    {
+                        domainInfo.Nameservers = nsElements
+                            .Select(ns => ns.Value)
+                            .Where(ns => !string.IsNullOrEmpty(ns))
+                            .ToList();
+                    }
+
+                    domains.Add(domainInfo);
+                }
+
+                _logger.Information("Successfully retrieved {Count} domains from Oxxa", domains.Count);
+
+                return new RegisteredDomainsResult
+                {
+                    Success = true,
+                    Message = $"Successfully retrieved {domains.Count} domains",
+                    Domains = domains,
+                    TotalCount = domains.Count
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error getting registered domains from Oxxa");
+                return new RegisteredDomainsResult
+                {
+                    Success = false,
+                    Message = $"Error retrieving domains: {ex.Message}",
+                    ErrorCode = "API_ERROR",
+                    Errors = new List<string> { ex.Message }
+                };
+            }
+        }
     }
 }

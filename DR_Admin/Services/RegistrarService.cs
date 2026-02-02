@@ -972,4 +972,124 @@ public class RegistrarService : IRegistrarService
             throw;
         }
     }
+
+    public async Task<int> DownloadDomainsForRegistrarAsync(int registrarId)
+    {
+        try
+        {
+            _log.Information("Downloading domains for registrar {RegistrarId}", registrarId);
+
+            // Get registrar details
+            var registrar = await _context.Registrars
+                .AsNoTracking()
+                .FirstOrDefaultAsync(r => r.Id == registrarId);
+
+            if (registrar == null)
+            {
+                _log.Warning("Registrar with ID {RegistrarId} not found", registrarId);
+                throw new InvalidOperationException($"Registrar with ID {registrarId} not found");
+            }
+
+            if (!registrar.IsActive)
+            {
+                _log.Warning("Registrar with ID {RegistrarId} is not active", registrarId);
+                throw new InvalidOperationException($"Registrar with ID {registrarId} is not active");
+            }
+
+            // Create registrar client instance
+            var registrarClient = _registrarFactory.CreateRegistrar(registrar.Code);
+
+            // Download registered domains from the registrar API
+            var result = await registrarClient.GetRegisteredDomainsAsync();
+            
+            if (!result.Success)
+            {
+                _log.Warning("Failed to retrieve domains from registrar {RegistrarCode}: {Message}", 
+                    registrar.Code, result.Message);
+                throw new InvalidOperationException($"Failed to retrieve domains: {result.Message}");
+            }
+
+            _log.Information("Retrieved {Count} domains from registrar {RegistrarCode}", 
+                result.Domains.Count, registrar.Code);
+
+            int updatedCount = 0;
+
+            foreach (var domainInfo in result.Domains)
+            {
+                var normalizedName = domainInfo.DomainName.ToLowerInvariant();
+
+                // Find existing domain or skip if not in our database
+                var domain = await _context.Domains
+                    .FirstOrDefaultAsync(d => d.NormalizedName == normalizedName && d.RegistrarId == registrarId);
+
+                if (domain == null)
+                {
+                    _log.Debug("Domain {DomainName} not found in database for registrar {RegistrarId}, skipping", 
+                        domainInfo.DomainName, registrarId);
+                    continue;
+                }
+
+                // Update domain information from registrar
+                domain.Status = domainInfo.Status ?? domain.Status;
+                domain.ExpirationDate = domainInfo.ExpirationDate ?? domain.ExpirationDate;
+                domain.AutoRenew = domainInfo.AutoRenew;
+                domain.PrivacyProtection = domainInfo.PrivacyProtection;
+                domain.UpdatedAt = DateTime.UtcNow;
+
+                updatedCount++;
+            }
+
+            await _context.SaveChangesAsync();
+            _log.Information("Successfully downloaded and updated {Count} domains for registrar {RegistrarId}", 
+                updatedCount, registrarId);
+
+            return updatedCount;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while downloading domains for registrar {RegistrarId}", registrarId);
+            throw;
+        }
+    }
+
+    public async Task<RegisteredDomainsResult> GetRegisteredDomainsAsync(int registrarId)
+    {
+        try
+        {
+            _log.Information("Getting registered domains for registrar {RegistrarId}", registrarId);
+
+            // Get registrar details
+            var registrar = await _context.Registrars
+                .AsNoTracking()
+                .FirstOrDefaultAsync(r => r.Id == registrarId);
+
+            if (registrar == null)
+            {
+                _log.Warning("Registrar with ID {RegistrarId} not found", registrarId);
+                throw new InvalidOperationException($"Registrar with ID {registrarId} not found");
+            }
+
+            if (!registrar.IsActive)
+            {
+                _log.Warning("Registrar with ID {RegistrarId} is not active", registrarId);
+                throw new InvalidOperationException($"Registrar with ID {registrarId} is not active");
+            }
+
+            // Create registrar client instance
+            var registrarClient = _registrarFactory.CreateRegistrar(registrar.Code);
+
+            // Get registered domains from the registrar API
+            var result = await registrarClient.GetRegisteredDomainsAsync();
+            
+            _log.Information("Retrieved {Count} domains from registrar {RegistrarCode}: Success={Success}", 
+                result.Domains?.Count ?? 0, registrar.Code, result.Success);
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while getting registered domains for registrar {RegistrarId}", registrarId);
+            throw;
+        }
+    }
 }

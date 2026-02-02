@@ -494,5 +494,66 @@ namespace DomainRegistrationLib.Implementations
                 return [];
             }
         }
+
+        public override async Task<RegisteredDomainsResult> GetRegisteredDomainsAsync()
+        {
+            try
+            {
+                _logger.Information("Getting registered domains from OpenSRS");
+
+                var attributes = new Dictionary<string, object>
+                {
+                    { "limit", 1000 },
+                    { "exp_from", DateTime.UtcNow.AddYears(-10).ToString("yyyy-MM-dd") },
+                    { "exp_to", DateTime.UtcNow.AddYears(10).ToString("yyyy-MM-dd") }
+                };
+
+                var xml = BuildXmlRequest("get_domains_by_expiredate", attributes);
+                var response = await MakeXmlApiCallAsync(xml);
+                
+                var parsedXml = XDocument.Parse(response);
+                var domains = new List<RegisteredDomainInfo>();
+
+                var domainElements = parsedXml.Descendants("item").Where(e => e.Attribute("key")?.Value == "exp_date");
+                foreach (var domain in domainElements)
+                {
+                    var parent = domain.Parent;
+                    var name = parent?.Elements("item")
+                        .FirstOrDefault(e => e.Attribute("key")?.Value == "name")?.Value;
+
+                    if (!string.IsNullOrEmpty(name))
+                    {
+                        var domainInfo = new RegisteredDomainInfo
+                        {
+                            DomainName = name,
+                            ExpirationDate = DateTime.TryParse(domain.Value, out var expires) ? expires : null
+                        };
+
+                        domains.Add(domainInfo);
+                    }
+                }
+
+                _logger.Information("Successfully retrieved {Count} domains from OpenSRS", domains.Count);
+
+                return new RegisteredDomainsResult
+                {
+                    Success = true,
+                    Message = $"Successfully retrieved {domains.Count} domains",
+                    Domains = domains,
+                    TotalCount = domains.Count
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error getting registered domains from OpenSRS");
+                return new RegisteredDomainsResult
+                {
+                    Success = false,
+                    Message = $"Error retrieving domains: {ex.Message}",
+                    ErrorCode = "API_ERROR",
+                    Errors = new List<string> { ex.Message }
+                };
+            }
+        }
     }
 }

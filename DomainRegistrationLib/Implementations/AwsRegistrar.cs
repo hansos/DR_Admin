@@ -706,6 +706,53 @@ namespace DomainRegistrationLib.Implementations
             }
         }
 
+        public override async Task<RegisteredDomainsResult> GetRegisteredDomainsAsync()
+        {
+            try
+            {
+                _logger.Information("Getting registered domains from AWS Route53");
+
+                var request = new ListDomainsRequest();
+                var response = await _route53DomainsClient.ListDomainsAsync(request);
+
+                var domains = new List<RegisteredDomainInfo>();
+
+                foreach (var domain in response.Domains)
+                {
+                    var domainInfo = new RegisteredDomainInfo
+                    {
+                        DomainName = domain.DomainName,
+                        ExpirationDate = domain.Expiry,
+                        AutoRenew = domain.AutoRenew ?? false,
+                        Locked = domain.TransferLock ?? false
+                    };
+
+                    domains.Add(domainInfo);
+                }
+
+                _logger.Information("Successfully retrieved {Count} domains from AWS Route53", domains.Count);
+
+                return new RegisteredDomainsResult
+                {
+                    Success = true,
+                    Message = $"Successfully retrieved {domains.Count} domains",
+                    Domains = domains,
+                    TotalCount = domains.Count
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Error getting registered domains from AWS Route53");
+                return new RegisteredDomainsResult
+                {
+                    Success = false,
+                    Message = $"Error retrieving domains: {ex.Message}",
+                    ErrorCode = "API_ERROR",
+                    Errors = new List<string> { ex.Message }
+                };
+            }
+        }
+
         private ContactDetail MapToAwsContact(ContactInformation contact)
         {
             return new ContactDetail
