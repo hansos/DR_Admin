@@ -702,6 +702,16 @@ public class RegistrarService : IRegistrarService
         {
             _log.Information("Downloading TLDs for registrar {RegistrarId} (filter list count: {Count})", registrarId, tlds?.Count ?? 0);
 
+            if(tlds == null)
+            {
+                throw new ArgumentNullException("TldList cannot be null.");
+            }
+
+            if (tlds.Count == 0)
+            {
+                throw new ArgumentNullException("TldList cannot be empty.");
+            }
+
             // Get registrar details
             var registrar = await _context.Registrars
                 .AsNoTracking()
