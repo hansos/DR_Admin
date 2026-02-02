@@ -535,6 +535,7 @@ public class RegistrarsController : ControllerBase
     /// Downloads all domains registered with a specific registrar and syncs them to the database
     /// </summary>
     /// <param name="registrarId">The unique identifier of the registrar</param>
+    /// <param name="save">If true, saves domains and TLDs to the database (default: true)</param>
     /// <returns>Number of domains downloaded and updated</returns>
     /// <response code="200">Returns the count of domains downloaded</response>
     /// <response code="400">If the registrar is not found or not active</response>
@@ -548,22 +549,23 @@ public class RegistrarsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult> DownloadDomainsForRegistrar(int registrarId)
+    public async Task<ActionResult> DownloadDomainsForRegistrar(int registrarId, [FromQuery] bool save = true)
     {
         try
         {
-            _log.Information("API: DownloadDomainsForRegistrar called for registrar {RegistrarId} by user {User}", 
-                registrarId, User.Identity?.Name);
+            _log.Information("API: DownloadDomainsForRegistrar called for registrar {RegistrarId} by user {User} (save={Save})", 
+                registrarId, User.Identity?.Name, save);
 
-            var count = await _registrarService.DownloadDomainsForRegistrarAsync(registrarId);
+            var count = await _registrarService.DownloadDomainsForRegistrarAsync(registrarId, save);
             
             _log.Information("API: Successfully downloaded {Count} domains for registrar {RegistrarId}", 
                 count, registrarId);
             
             return Ok(new { 
-                message = $"Successfully downloaded and updated {count} domains for the registrar",
+                message = $"Successfully downloaded and {(save ? "saved" : "retrieved")} {count} domains for the registrar",
                 count = count,
-                registrarId = registrarId
+                registrarId = registrarId,
+                saved = save
             });
         }
         catch (InvalidOperationException ex)
@@ -582,6 +584,7 @@ public class RegistrarsController : ControllerBase
     /// Gets all domains registered with a specific registrar
     /// </summary>
     /// <param name="registrarId">The unique identifier of the registrar</param>
+    /// <param name="save">If true, saves TLDs and domains to the database (default: false)</param>
     /// <returns>List of registered domains from the registrar</returns>
     /// <response code="200">Returns the list of registered domains</response>
     /// <response code="400">If the registrar is not found or not active</response>
@@ -593,17 +596,17 @@ public class RegistrarsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<RegisteredDomainsResult>> GetRegisteredDomains(int registrarId)
+    public async Task<ActionResult<RegisteredDomainsResult>> GetRegisteredDomains(int registrarId, [FromQuery] bool save = false)
     {
         try
         {
-            _log.Information("API: GetRegisteredDomains called for registrar {RegistrarId} by user {User}", 
-                registrarId, User.Identity?.Name);
+            _log.Information("API: GetRegisteredDomains called for registrar {RegistrarId} by user {User} (save={Save})", 
+                registrarId, User.Identity?.Name, save);
 
-            var result = await _registrarService.GetRegisteredDomainsAsync(registrarId);
+            var result = await _registrarService.GetRegisteredDomainsAsync(registrarId, save);
             
-            _log.Information("API: Successfully retrieved {Count} domains for registrar {RegistrarId}", 
-                result.Domains?.Count ?? 0, registrarId);
+            _log.Information("API: Successfully retrieved {Count} domains for registrar {RegistrarId} (saved={Saved})", 
+                result.Domains?.Count ?? 0, registrarId, save);
             
             return Ok(result);
         }

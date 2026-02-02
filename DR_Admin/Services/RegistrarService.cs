@@ -973,77 +973,24 @@ public class RegistrarService : IRegistrarService
         }
     }
 
-    public async Task<int> DownloadDomainsForRegistrarAsync(int registrarId)
+    public async Task<int> DownloadDomainsForRegistrarAsync(int registrarId, bool save = true)
     {
         try
         {
-            _log.Information("Downloading domains for registrar {RegistrarId}", registrarId);
+            _log.Information("Downloading domains for registrar {RegistrarId} (save={Save})", registrarId, save);
 
-            // Get registrar details
-            var registrar = await _context.Registrars
-                .AsNoTracking()
-                .FirstOrDefaultAsync(r => r.Id == registrarId);
-
-            if (registrar == null)
-            {
-                _log.Warning("Registrar with ID {RegistrarId} not found", registrarId);
-                throw new InvalidOperationException($"Registrar with ID {registrarId} not found");
-            }
-
-            if (!registrar.IsActive)
-            {
-                _log.Warning("Registrar with ID {RegistrarId} is not active", registrarId);
-                throw new InvalidOperationException($"Registrar with ID {registrarId} is not active");
-            }
-
-            // Create registrar client instance
-            var registrarClient = _registrarFactory.CreateRegistrar(registrar.Code);
-
-            // Download registered domains from the registrar API
-            var result = await registrarClient.GetRegisteredDomainsAsync();
+            // Get registered domains from the registrar
+            var result = await GetRegisteredDomainsAsync(registrarId, save);
             
             if (!result.Success)
             {
-                _log.Warning("Failed to retrieve domains from registrar {RegistrarCode}: {Message}", 
-                    registrar.Code, result.Message);
+                _log.Warning("Failed to retrieve domains from registrar {RegistrarId}: {Message}", 
+                    registrarId, result.Message);
                 throw new InvalidOperationException($"Failed to retrieve domains: {result.Message}");
             }
 
-            _log.Information("Retrieved {Count} domains from registrar {RegistrarCode}", 
-                result.Domains.Count, registrar.Code);
-
-            int updatedCount = 0;
-
-            foreach (var domainInfo in result.Domains)
-            {
-                var normalizedName = domainInfo.DomainName.ToLowerInvariant();
-
-                // Find existing domain or skip if not in our database
-                var domain = await _context.Domains
-                    .FirstOrDefaultAsync(d => d.NormalizedName == normalizedName && d.RegistrarId == registrarId);
-
-                if (domain == null)
-                {
-                    _log.Debug("Domain {DomainName} not found in database for registrar {RegistrarId}, skipping", 
-                        domainInfo.DomainName, registrarId);
-                    continue;
-                }
-
-                // Update domain information from registrar
-                domain.Status = domainInfo.Status ?? domain.Status;
-                domain.ExpirationDate = domainInfo.ExpirationDate ?? domain.ExpirationDate;
-                domain.AutoRenew = domainInfo.AutoRenew;
-                domain.PrivacyProtection = domainInfo.PrivacyProtection;
-                domain.UpdatedAt = DateTime.UtcNow;
-
-                updatedCount++;
-            }
-
-            await _context.SaveChangesAsync();
-            _log.Information("Successfully downloaded and updated {Count} domains for registrar {RegistrarId}", 
-                updatedCount, registrarId);
-
-            return updatedCount;
+            // Return count of domains processed
+            return result.TotalCount;
         }
         catch (Exception ex)
         {
@@ -1052,11 +999,11 @@ public class RegistrarService : IRegistrarService
         }
     }
 
-    public async Task<RegisteredDomainsResult> GetRegisteredDomainsAsync(int registrarId)
+    public async Task<RegisteredDomainsResult> GetRegisteredDomainsAsync(int registrarId, bool save = false)
     {
         try
         {
-            _log.Information("Getting registered domains for registrar {RegistrarId}", registrarId);
+            _log.Information("Getting registered domains for registrar {RegistrarId} (save={Save})", registrarId, save);
 
             // Get registrar details
             var registrar = await _context.Registrars
@@ -1084,6 +1031,15 @@ public class RegistrarService : IRegistrarService
             _log.Information("Retrieved {Count} domains from registrar {RegistrarCode}: Success={Success}", 
                 result.Domains?.Count ?? 0, registrar.Code, result.Success);
 
+            // If save flag is set, merge TLDs and domains to database
+            if (save && result.Success && result.Domains != null && result.Domains.Count > 0)
+            {
+                _log.Information("Saving {Count} domains and TLDs to database for registrar {RegistrarId}", 
+                    result.Domains.Count, registrarId);
+                
+                await MergeRegisteredDomainsToDatabase(registrarId, result.Domains);
+            }
+
             return result;
         }
         catch (Exception ex)
@@ -1091,5 +1047,132 @@ public class RegistrarService : IRegistrarService
             _log.Error(ex, "Error occurred while getting registered domains for registrar {RegistrarId}", registrarId);
             throw;
         }
+    }
+
+    /// <summary>
+    /// Helper method to merge registered domains and their TLDs to the database
+    /// </summary>
+    private async Task MergeRegisteredDomainsToDatabase(int registrarId, List<RegisteredDomainInfo> domains)
+    {
+        try
+        {
+            int domainsUpdated = 0;
+            int tldsCreated = 0;
+            int registrarTldsCreated = 0;
+
+            foreach (var domainInfo in domains)
+            {
+                var normalizedName = domainInfo.DomainName.ToLowerInvariant();
+                
+                // Extract TLD from domain name
+                var tldExtension = ExtractTldFromDomain(domainInfo.DomainName);
+                if (string.IsNullOrEmpty(tldExtension))
+                {
+                    _log.Warning("Could not extract TLD from domain {DomainName}, skipping", domainInfo.DomainName);
+                    continue;
+                }
+
+                // Find or create TLD
+                var tld = await _context.Tlds.FirstOrDefaultAsync(t => t.Extension == tldExtension);
+                if (tld == null)
+                {
+                    _log.Information("Creating new TLD: {Extension}", tldExtension);
+                    tld = new Tld
+                    {
+                        Extension = tldExtension,
+                        Description = $"{tldExtension.ToUpper()} domain",
+                        IsActive = true,
+                        DefaultRegistrationYears = 1,
+                        MaxRegistrationYears = 10,
+                        RequiresPrivacy = false,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    };
+                    _context.Tlds.Add(tld);
+                    await _context.SaveChangesAsync();
+                    tldsCreated++;
+                }
+
+                // Find or create RegistrarTld relationship
+                var registrarTld = await _context.RegistrarTlds
+                    .FirstOrDefaultAsync(rt => rt.RegistrarId == registrarId && rt.TldId == tld.Id);
+
+                if (registrarTld == null)
+                {
+                    _log.Information("Creating new RegistrarTld for registrar {RegistrarId} and TLD {TldExtension}", 
+                        registrarId, tldExtension);
+                    
+                    registrarTld = new RegistrarTld
+                    {
+                        RegistrarId = registrarId,
+                        TldId = tld.Id,
+                        RegistrationCost = 0,
+                        RegistrationPrice = 0,
+                        RenewalCost = 0,
+                        RenewalPrice = 0,
+                        TransferCost = 0,
+                        TransferPrice = 0,
+                        Currency = "USD",
+                        IsAvailable = true,
+                        AutoRenew = false,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    };
+                    _context.RegistrarTlds.Add(registrarTld);
+                    await _context.SaveChangesAsync();
+                    registrarTldsCreated++;
+                }
+
+                // Find existing domain or create new one
+                var domain = await _context.Domains
+                    .FirstOrDefaultAsync(d => d.NormalizedName == normalizedName && d.RegistrarId == registrarId);
+
+                if (domain != null)
+                {
+                    // Update existing domain
+                    _log.Debug("Updating existing domain {DomainName}", domainInfo.DomainName);
+                    domain.Status = domainInfo.Status ?? domain.Status;
+                    domain.ExpirationDate = domainInfo.ExpirationDate ?? domain.ExpirationDate;
+                    domain.AutoRenew = domainInfo.AutoRenew;
+                    domain.PrivacyProtection = domainInfo.PrivacyProtection;
+                    domain.RegistrarTldId = registrarTld.Id;
+                    domain.UpdatedAt = DateTime.UtcNow;
+                    domainsUpdated++;
+                }
+                else
+                {
+                    // Note: We don't create new domains here as they require CustomerId and ServiceId
+                    // which are not provided by the registrar API
+                    _log.Debug("Domain {DomainName} not found in database for registrar {RegistrarId}, skipping creation", 
+                        domainInfo.DomainName, registrarId);
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            _log.Information("Database merge completed: {DomainsUpdated} domains updated, {TldsCreated} TLDs created, {RegistrarTldsCreated} RegistrarTlds created", 
+                domainsUpdated, tldsCreated, registrarTldsCreated);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error merging registered domains to database for registrar {RegistrarId}", registrarId);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Extracts TLD extension from a domain name
+    /// </summary>
+    private string ExtractTldFromDomain(string domainName)
+    {
+        if (string.IsNullOrEmpty(domainName))
+            return string.Empty;
+
+        var normalized = domainName.TrimEnd('.').ToLowerInvariant();
+        var lastDotIndex = normalized.LastIndexOf('.');
+        
+        if (lastDotIndex <= 0 || lastDotIndex >= normalized.Length - 1)
+            return string.Empty;
+
+        return normalized.Substring(lastDotIndex + 1);
     }
 }

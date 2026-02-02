@@ -114,6 +114,12 @@ public class ApplicationDbContext : DbContext
                 customerStatus.NormalizedCode = NormalizationHelper.Normalize(customerStatus.Code) ?? string.Empty;
                 customerStatus.NormalizedName = NormalizationHelper.Normalize(customerStatus.Name) ?? string.Empty;
                 break;
+
+            case DomainContact domainContact:
+                domainContact.NormalizedFirstName = NormalizationHelper.Normalize(domainContact.FirstName) ?? string.Empty;
+                domainContact.NormalizedLastName = NormalizationHelper.Normalize(domainContact.LastName) ?? string.Empty;
+                domainContact.NormalizedEmail = NormalizationHelper.Normalize(domainContact.Email) ?? string.Empty;
+                break;
         }
     }
 
@@ -134,6 +140,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<PaymentTransaction> PaymentTransactions { get; set; }
     public DbSet<PaymentGateway> PaymentGateways { get; set; }
     public DbSet<Entities.Domain> Domains { get; set; }
+    public DbSet<DomainContact> DomainContacts { get; set; }
     public DbSet<Tld> Tlds { get; set; }
     public DbSet<Registrar> Registrars { get; set; }
     public DbSet<RegistrarTld> RegistrarTlds { get; set; }

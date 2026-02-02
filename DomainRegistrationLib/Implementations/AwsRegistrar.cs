@@ -716,28 +716,73 @@ namespace DomainRegistrationLib.Implementations
                 var response = await _route53DomainsClient.ListDomainsAsync(request);
 
                 var domains = new List<RegisteredDomainInfo>();
+                var errors = new List<string>();
+
+                _logger.Information("Found {Count} domains, retrieving details for each...", response.Domains.Count);
 
                 foreach (var domain in response.Domains)
                 {
-                    var domainInfo = new RegisteredDomainInfo
+                    try
                     {
-                        DomainName = domain.DomainName,
-                        ExpirationDate = domain.Expiry,
-                        AutoRenew = domain.AutoRenew ?? false,
-                        Locked = domain.TransferLock ?? false
-                    };
+                        _logger.Debug("Retrieving details for domain: {DomainName}", domain.DomainName);
 
-                    domains.Add(domainInfo);
+                        var details = await _route53DomainsClient.GetDomainDetailAsync(new GetDomainDetailRequest
+                        {
+                            DomainName = domain.DomainName
+                        });
+
+                        var status = details.StatusList?.Count > 0 
+                            ? string.Join(", ", details.StatusList) 
+                            : "active";
+
+                        var nameservers = details.Nameservers?
+                            .Select(ns => ns.Name)
+                            .ToList() ?? new List<string>();
+
+                        var domainInfo = new RegisteredDomainInfo
+                        {
+                            DomainName = domain.DomainName,
+                            Status = status,
+                            RegistrationDate = details.CreationDate,
+                            ExpirationDate = details.ExpirationDate ?? domain.Expiry,
+                            AutoRenew = details.AutoRenew ?? domain.AutoRenew ?? false,
+                            Locked = domain.TransferLock ?? false,
+                            PrivacyProtection = details.AdminPrivacy ?? false,
+                            Nameservers = nameservers
+                        };
+
+                        domains.Add(domainInfo);
+
+                        // Small delay to avoid API rate limiting
+                        await Task.Delay(100);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Warning(ex, "Error getting details for domain {DomainName}, using basic info", domain.DomainName);
+                        
+                        // Add domain with basic info if detail retrieval fails
+                        var domainInfo = new RegisteredDomainInfo
+                        {
+                            DomainName = domain.DomainName,
+                            ExpirationDate = domain.Expiry,
+                            AutoRenew = domain.AutoRenew ?? false,
+                            Locked = domain.TransferLock ?? false
+                        };
+
+                        domains.Add(domainInfo);
+                        errors.Add($"Could not retrieve full details for {domain.DomainName}: {ex.Message}");
+                    }
                 }
 
-                _logger.Information("Successfully retrieved {Count} domains from AWS Route53", domains.Count);
+                _logger.Information("Successfully retrieved details for {Count} domains from AWS Route53", domains.Count);
 
                 return new RegisteredDomainsResult
                 {
                     Success = true,
                     Message = $"Successfully retrieved {domains.Count} domains",
                     Domains = domains,
-                    TotalCount = domains.Count
+                    TotalCount = domains.Count,
+                    Errors = errors
                 };
             }
             catch (Exception ex)
