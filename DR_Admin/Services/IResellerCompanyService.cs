@@ -20,6 +20,12 @@ public interface IResellerCompanyService
     Task<IEnumerable<ResellerCompanyDto>> GetActiveResellerCompaniesAsync();
     
     /// <summary>
+    /// Retrieves the default reseller company
+    /// </summary>
+    /// <returns>The default reseller company DTO, or null if not found</returns>
+    Task<ResellerCompanyDto?> GetDefaultResellerCompanyAsync();
+    
+    /// <summary>
     /// Retrieves a reseller company by its ID
     /// </summary>
     /// <param name="id">The ID of the reseller company</param>

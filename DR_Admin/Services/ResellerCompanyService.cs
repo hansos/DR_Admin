@@ -75,6 +75,36 @@ public class ResellerCompanyService : IResellerCompanyService
     }
 
     /// <summary>
+    /// Retrieves the default reseller company
+    /// </summary>
+    /// <returns>The default reseller company DTO, or null if not found</returns>
+    public async Task<ResellerCompanyDto?> GetDefaultResellerCompanyAsync()
+    {
+        try
+        {
+            _log.Information("Fetching default reseller company");
+            
+            var company = await _context.ResellerCompanies
+                .AsNoTracking()
+                .FirstOrDefaultAsync(r => r.IsDefault);
+
+            if (company == null)
+            {
+                _log.Warning("No default reseller company found");
+                return null;
+            }
+
+            _log.Information("Successfully fetched default reseller company with ID: {ResellerCompanyId}", company.Id);
+            return MapToDto(company);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while fetching default reseller company");
+            throw;
+        }
+    }
+
+    /// <summary>
     /// Retrieves a reseller company by its ID
     /// </summary>
     /// <param name="id">The ID of the reseller company</param>

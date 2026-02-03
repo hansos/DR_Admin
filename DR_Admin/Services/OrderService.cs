@@ -89,8 +89,8 @@ public class OrderService : IOrderService
                 StartDate = createDto.StartDate,
                 EndDate = createDto.EndDate,
                 NextBillingDate = createDto.NextBillingDate,
-                SetupFee = createDto.SetupFee ?? service.SetupFee,
-                RecurringAmount = createDto.RecurringAmount ?? service.Price,
+                SetupFee = createDto.SetupFee ?? 0,
+                RecurringAmount = createDto.RecurringAmount ?? 0,
                 AutoRenew = createDto.AutoRenew,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow

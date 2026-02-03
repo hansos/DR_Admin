@@ -41,6 +41,10 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.ConfigureDatabase(
         appSettings.DefaultConnection,
         appSettings.DbSettings.DatabaseType);
+    
+    // Temporarily suppress pending model changes warning during development
+    options.ConfigureWarnings(warnings => 
+        warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
 });
 
 // Register Email Queue Channel as singleton
@@ -136,6 +140,7 @@ builder.Services.AddTransient<IDocumentTemplateService, DocumentTemplateService>
 builder.Services.AddTransient<ICurrencyService, CurrencyService>();
 builder.Services.AddTransient<IExchangeRateDownloadLogService, ExchangeRateDownloadLogService>();
 builder.Services.AddTransient<ISystemService, SystemService>();
+builder.Services.AddTransient<IDomainService, DomainService>();
 
 // Sales and Payment Flow services
 builder.Services.AddTransient<ICouponService, CouponService>();

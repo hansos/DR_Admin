@@ -17,15 +17,21 @@ public class RegistrarService : IRegistrarService
     private readonly ICustomerService _customerService;
     private readonly IServiceTypeService _serviceTypeService;
     private readonly IServiceService _serviceService;
+    private readonly IResellerCompanyService _resellerCompanyService;
+    private readonly IDomainService _domainService;
     private static readonly Serilog.ILogger _log = Log.ForContext<RegistrarService>();
 
-    public RegistrarService(ApplicationDbContext context, DomainRegistrarFactory registrarFactory, ICustomerService customerService, IServiceTypeService serviceTypeService, IServiceService serviceService)
+    public RegistrarService(ApplicationDbContext context, DomainRegistrarFactory registrarFactory, 
+        ICustomerService customerService, IServiceTypeService serviceTypeService, IServiceService serviceService, 
+        IResellerCompanyService resellerCompanyService, IDomainService domainService)
     {
         _context = context;
         _registrarFactory = registrarFactory;
         _customerService = customerService;
         _serviceTypeService = serviceTypeService;
         _serviceService = serviceService;
+        _resellerCompanyService = resellerCompanyService;
+        _domainService = domainService;
     }
 
     public async Task<RegistrarTldDto> AssignTldToRegistrarAsync(int registrarId, TldDto tldDto)
@@ -1060,29 +1066,44 @@ public class RegistrarService : IRegistrarService
     {
         try
         {
+            _log.Debug("Starting merge of {DomainCount} domains for registrar {RegistrarId}", domains.Count, registrarId);
+            
             int domainsUpdated = 0;
+            int domainsCreated = 0;
+            int domainsSkipped = 0;
             int tldsCreated = 0;
             int registrarTldsCreated = 0;
             int contactsCreated = 0;
             int contactsUpdated = 0;
+            
+            int processedCount = 0;
 
             foreach (var domainInfo in domains)
             {
+                processedCount++;
+                _log.Debug("Processing domain {CurrentDomain}/{TotalDomains}: {DomainName}", 
+                    processedCount, domains.Count, domainInfo.DomainName);
+                
                 var normalizedName = domainInfo.DomainName.ToLowerInvariant();
+                _log.Debug("Domain {DomainName} normalized to {NormalizedName}", domainInfo.DomainName, normalizedName);
                 
                 // Extract TLD from domain name
                 var tldExtension = ExtractTldFromDomain(domainInfo.DomainName);
                 if (string.IsNullOrEmpty(tldExtension))
                 {
                     _log.Warning("Could not extract TLD from domain {DomainName}, skipping", domainInfo.DomainName);
+                    domainsSkipped++;
                     continue;
                 }
+                
+                _log.Debug("Extracted TLD extension: {TldExtension} from domain {DomainName}", tldExtension, domainInfo.DomainName);
 
                 // Find or create TLD
+                _log.Debug("Checking if TLD {TldExtension} exists in database", tldExtension);
                 var tld = await _context.Tlds.FirstOrDefaultAsync(t => t.Extension == tldExtension);
                 if (tld == null)
                 {
-                    _log.Information("Creating new TLD: {Extension}", tldExtension);
+                    _log.Information("TLD {Extension} not found, creating new TLD record", tldExtension);
                     tld = new Tld
                     {
                         Extension = tldExtension,
@@ -1096,16 +1117,22 @@ public class RegistrarService : IRegistrarService
                     };
                     _context.Tlds.Add(tld);
                     await _context.SaveChangesAsync();
+                    _log.Debug("Created TLD {Extension} with ID {TldId}", tldExtension, tld.Id);
                     tldsCreated++;
+                }
+                else
+                {
+                    _log.Debug("TLD {Extension} already exists with ID {TldId}", tldExtension, tld.Id);
                 }
 
                 // Find or create RegistrarTld relationship
+                _log.Debug("Checking if RegistrarTld exists for registrar {RegistrarId} and TLD {TldId}", registrarId, tld.Id);
                 var registrarTld = await _context.RegistrarTlds
                     .FirstOrDefaultAsync(rt => rt.RegistrarId == registrarId && rt.TldId == tld.Id);
 
                 if (registrarTld == null)
                 {
-                    _log.Information("Creating new RegistrarTld for registrar {RegistrarId} and TLD {TldExtension}", 
+                    _log.Information("RegistrarTld not found, creating new relationship for registrar {RegistrarId} and TLD {TldExtension}", 
                         registrarId, tldExtension);
                     
                     registrarTld = new RegistrarTld
@@ -1126,17 +1153,28 @@ public class RegistrarService : IRegistrarService
                     };
                     _context.RegistrarTlds.Add(registrarTld);
                     await _context.SaveChangesAsync();
+                    _log.Debug("Created RegistrarTld with ID {RegistrarTldId}", registrarTld.Id);
                     registrarTldsCreated++;
+                }
+                else
+                {
+                    _log.Debug("RegistrarTld already exists with ID {RegistrarTldId}", registrarTld.Id);
                 }
 
                 // Find existing domain
+                _log.Debug("Checking if domain {DomainName} exists in database (normalized: {NormalizedName})", 
+                    domainInfo.DomainName, normalizedName);
                 var domain = await _context.Domains
                     .FirstOrDefaultAsync(d => d.NormalizedName == normalizedName);
 
                 if (domain != null)
                 {
                     // Update existing domain
-                    _log.Debug("Updating existing domain {DomainName}", domainInfo.DomainName);
+                    _log.Debug("Domain {DomainName} found with ID {DomainId}, updating existing record", 
+                        domainInfo.DomainName, domain.Id);
+                    _log.Debug("Updating domain: Status={Status}, ExpirationDate={ExpirationDate}, AutoRenew={AutoRenew}, PrivacyProtection={PrivacyProtection}",
+                        domainInfo.Status, domainInfo.ExpirationDate, domainInfo.AutoRenew, domainInfo.PrivacyProtection);
+                    
                     domain.Status = domainInfo.Status ?? domain.Status;
                     domain.ExpirationDate = domainInfo.ExpirationDate ?? domain.ExpirationDate;
                     domain.AutoRenew = domainInfo.AutoRenew;
@@ -1148,18 +1186,31 @@ public class RegistrarService : IRegistrarService
                     // Merge contact information if available
                     if (domainInfo.Contacts != null && domainInfo.Contacts.Any())
                     {
+                        _log.Debug("Merging {ContactCount} contacts for existing domain {DomainId}", 
+                            domainInfo.Contacts.Count, domain.Id);
                         var contactStats = await MergeDomainContactsAsync(domain.Id, domainInfo.Contacts);
                         contactsCreated += contactStats.Created;
                         contactsUpdated += contactStats.Updated;
+                        _log.Debug("Contact merge complete: {Created} created, {Updated} updated", 
+                            contactStats.Created, contactStats.Updated);
+                    }
+                    else
+                    {
+                        _log.Debug("No contacts to merge for domain {DomainId}", domain.Id);
                     }
                 }
                 else
                 {
+                    _log.Debug("Domain {DomainName} not found in database, attempting to create new record", domainInfo.DomainName);
+                    
                     // Try to find customer based on registrant email
                     int? customerId = null;
                     
                     if (domainInfo.Contacts != null && domainInfo.Contacts.Any())
                     {
+                        _log.Debug("Processing {ContactCount} contacts to identify domain owner for {DomainName}", 
+                            domainInfo.Contacts.Count, domainInfo.DomainName);
+                        
                         // Look for registrant contact first, then admin contact
                         var registrantContact = domainInfo.Contacts
                             .FirstOrDefault(c => c.ContactType.Equals("Registrant", StringComparison.OrdinalIgnoreCase));
@@ -1168,14 +1219,21 @@ public class RegistrarService : IRegistrarService
                             domainInfo.Contacts.FirstOrDefault(c => c.ContactType.Equals("Admin", StringComparison.OrdinalIgnoreCase)) ??
                             domainInfo.Contacts.FirstOrDefault();
 
+                        if (ownerContact != null)
+                        {
+                            _log.Debug("Selected {ContactType} contact as owner: {Email}", 
+                                ownerContact.ContactType, ownerContact.Email);
+                        }
+
                         if (ownerContact != null && !string.IsNullOrWhiteSpace(ownerContact.Email))
                         {
+                            _log.Debug("Looking up customer by email: {Email}", ownerContact.Email);
                             var customer = await _customerService.GetCustomerByEmailAsync(ownerContact.Email);
                             if (customer != null)
                             {
                                 customerId = customer.Id;
-                                _log.Information("Found customer {CustomerId} for domain {DomainName} using email {Email}", 
-                                    customerId, domainInfo.DomainName, ownerContact.Email);
+                                _log.Information("Found customer {CustomerId} ({CustomerName}) for domain {DomainName} using email {Email}", 
+                                    customerId, customer.Name, domainInfo.DomainName, ownerContact.Email);
                             }
                             else
                             {
@@ -1183,46 +1241,91 @@ public class RegistrarService : IRegistrarService
                                     ownerContact.Email, domainInfo.DomainName);
                             }
                         }
+                        else
+                        {
+                            _log.Debug("No valid owner contact email found for domain {DomainName}", domainInfo.DomainName);
+                        }
+                    }
+                    else
+                    {
+                        _log.Debug("No contacts available for domain {DomainName}, cannot identify customer", domainInfo.DomainName);
                     }
 
                     if (!customerId.HasValue)
                     {
-                        _log.Debug("Domain {DomainName} not found in database and no customer could be identified for registrar {RegistrarId}, skipping creation", 
+                        _log.Debug("Domain {DomainName} skipped: no customer could be identified (registrar {RegistrarId})", 
                             domainInfo.DomainName, registrarId);
+                        domainsSkipped++;
                     }
                     else
                     {
                         _log.Information("Creating new domain {DomainName} for customer {CustomerId}", 
                             domainInfo.DomainName, customerId);
 
-                        var serviceType = await _serviceTypeService.GetServiceTypeByNameAsync("DOMAIN") ?? throw new NullReferenceException("Service type not found");
-
+                        _log.Debug("Looking up DOMAIN service type");
+                        var serviceType = await _serviceTypeService.GetServiceTypeByNameAsync("DOMAIN") 
+                            ?? throw new NullReferenceException("Service type 'DOMAIN' not found");
+                        _log.Debug("Found service type ID: {ServiceTypeId}", serviceType.Id);
+                        
+                        _log.Debug("Getting default reseller company");
+                        var resellerCompany = await _resellerCompanyService.GetDefaultResellerCompanyAsync();
+                        _log.Debug("Default reseller company ID: {ResellerCompanyId}", resellerCompany?.Id ?? 0);
+                        
                         var createServiceDto = new CreateServiceDto
                         {
                             ServiceTypeId = serviceType.Id,
                             Name = domainInfo.DomainName + " Domain registration",
+                            ResellerCompanyId = resellerCompany?.Id,
                         };
+
+                        _log.Debug("Creating service for domain {DomainName}", domainInfo.DomainName);
+                        var service = await _serviceService.CreateServiceAsync(createServiceDto);
+                        _log.Debug("Created service with ID {ServiceId}", service.Id);
 
                         var createDomainDto = new CreateDomainDto
                         {
-                            ServiceId = serviceType.Id,
+                            ServiceId = service.Id,
                             CustomerId = (int) customerId,
                             ExpirationDate = (DateTime) domainInfo.ExpirationDate!,
                             RegistrationDate = (DateTime) domainInfo.RegistrationDate!,
                             ProviderId = registrarId,
-                            Name = domainInfo.DomainName + " Domain registration",
+                            Name = domainInfo.DomainName,
                             Status = "Imported",
                         };
-                        //await _serviceService.CreateServiceAsync(createDto);
-                        _log.Warning("Cannot create domain {DomainName}: ServiceId is required but not available from registrar data. Manual creation required.", 
-                            domainInfo.DomainName);
+                        
+                        _log.Debug("Creating domain record: ServiceId={ServiceId}, CustomerId={CustomerId}, RegDate={RegistrationDate}, ExpDate={ExpirationDate}",
+                            service.Id, customerId, domainInfo.RegistrationDate, domainInfo.ExpirationDate);
+                        var createdDomain = await _domainService.CreateDomainAsync(createDomainDto);
+                        
+                        _log.Information("Successfully created domain {DomainName} with ID {DomainId}", 
+                            domainInfo.DomainName, createdDomain.Id);
+                        domainsCreated++;
+
+                        // Merge contact information if available
+                        if (domainInfo.Contacts != null && domainInfo.Contacts.Any())
+                        {
+                            _log.Debug("Merging {ContactCount} contacts for newly created domain {DomainId}", 
+                                domainInfo.Contacts.Count, createdDomain.Id);
+                            var contactStats = await MergeDomainContactsAsync(createdDomain.Id, domainInfo.Contacts);
+                            contactsCreated += contactStats.Created;
+                            contactsUpdated += contactStats.Updated;
+                            _log.Debug("Contact merge complete: {Created} created, {Updated} updated", 
+                                contactStats.Created, contactStats.Updated);
+                        }
                     }
                 }
             }
 
             await _context.SaveChangesAsync();
-            _log.Information("Database merge completed: {DomainsUpdated} domains updated, {TldsCreated} TLDs created, {RegistrarTldsCreated} RegistrarTlds created, {ContactsCreated} contacts created, {ContactsUpdated} contacts updated", 
-                domainsUpdated, tldsCreated, registrarTldsCreated, contactsCreated, contactsUpdated);
+            _log.Information("Database merge completed for registrar {RegistrarId}:", registrarId);
+            _log.Information("  - Domains processed: {Processed}", processedCount);
+            _log.Information("  - Domains created: {Created}", domainsCreated);
+            _log.Information("  - Domains updated: {Updated}", domainsUpdated);
+            _log.Information("  - Domains skipped: {Skipped}", domainsSkipped);
+            _log.Information("  - TLDs created: {TldsCreated}", tldsCreated);
+            _log.Information("  - RegistrarTlds created: {RegistrarTldsCreated}", registrarTldsCreated);
+            _log.Information("  - Contacts created: {ContactsCreated}", contactsCreated);
+            _log.Information("  - Contacts updated: {ContactsUpdated}", contactsUpdated);
         }
         catch (Exception ex)
         {
@@ -1344,3 +1447,4 @@ public class RegistrarService : IRegistrarService
         return normalized.Substring(lastDotIndex + 1);
     }
 }
+

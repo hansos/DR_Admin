@@ -28,12 +28,12 @@ public class ServiceDto
     /// <summary>
     /// Gets or sets the ID of the billing cycle
     /// </summary>
-    public int BillingCycleId { get; set; }
+    public int? BillingCycleId { get; set; }
     
     /// <summary>
     /// Gets or sets the service price
     /// </summary>
-    public decimal Price { get; set; }
+    public decimal? Price { get; set; }
     
     /// <summary>
     /// Gets or sets the reseller company ID (null if sold directly)
@@ -80,12 +80,12 @@ public class CreateServiceDto
     /// <summary>
     /// Gets or sets the ID of the billing cycle
     /// </summary>
-    public int BillingCycleId { get; set; }
+    public int? BillingCycleId { get; set; }
     
     /// <summary>
     /// Gets or sets the service price
     /// </summary>
-    public decimal Price { get; set; }
+    public decimal? Price { get; set; }
     
     /// <summary>
     /// Gets or sets the reseller company ID (null if sold directly)
@@ -122,12 +122,12 @@ public class UpdateServiceDto
     /// <summary>
     /// Gets or sets the ID of the billing cycle
     /// </summary>
-    public int BillingCycleId { get; set; }
+    public int? BillingCycleId { get; set; }
     
     /// <summary>
     /// Gets or sets the service price
     /// </summary>
-    public decimal Price { get; set; }
+    public decimal? Price { get; set; }
     
     /// <summary>
     /// Gets or sets the reseller company ID (null if sold directly)

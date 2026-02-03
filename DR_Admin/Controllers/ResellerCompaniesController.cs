@@ -83,6 +83,44 @@ public class ResellerCompaniesController : ControllerBase
     }
 
     /// <summary>
+    /// Retrieves the default reseller company
+    /// </summary>
+    /// <returns>The default reseller company details</returns>
+    /// <response code="200">Returns the default reseller company</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have required role</response>
+    /// <response code="404">If no default reseller company is found</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpGet("default")]
+    [Authorize(Policy = "ResellerCompany.Read")]
+    [ProducesResponseType(typeof(ResellerCompanyDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ResellerCompanyDto>> GetDefaultResellerCompany()
+    {
+        try
+        {
+            _log.Information("API: GetDefaultResellerCompany called by user {User}", User.Identity?.Name);
+            
+            var company = await _resellerCompanyService.GetDefaultResellerCompanyAsync();
+            
+            if (company == null)
+            {
+                return NotFound("No default reseller company found");
+            }
+            
+            return Ok(company);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in GetDefaultResellerCompany");
+            return StatusCode(500, "An error occurred while retrieving the default reseller company");
+        }
+    }
+
+    /// <summary>
     /// Retrieves a specific reseller company by ID
     /// </summary>
     /// <param name="id">The reseller company ID</param>

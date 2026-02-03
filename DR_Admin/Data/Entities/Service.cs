@@ -23,22 +23,22 @@ public class Service : EntityBase
     /// <summary>
     /// Foreign key to the billing cycle
     /// </summary>
-    public int BillingCycleId { get; set; }
+    public int? BillingCycleId { get; set; }
 
     /// <summary>
     /// Recurring price per billing cycle
     /// </summary>
-    public decimal Price { get; set; }
+    public decimal? Price { get; set; }
 
     /// <summary>
     /// One-time setup fee
     /// </summary>
-    public decimal SetupFee { get; set; }
+    public decimal? SetupFee { get; set; }
 
     /// <summary>
     /// Number of days for trial period (0 = no trial)
     /// </summary>
-    public int TrialDays { get; set; }
+    public int? TrialDays { get; set; }
 
     /// <summary>
     /// Whether this service is currently active and available for purchase
@@ -78,7 +78,7 @@ public class Service : EntityBase
     /// <summary>
     /// Sort order for display
     /// </summary>
-    public int SortOrder { get; set; }
+    public int SortOrder { get; set; } = 1;
 
     /// <summary>
     /// Service specifications in JSON format

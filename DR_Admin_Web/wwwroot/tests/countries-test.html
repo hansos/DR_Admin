@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -25,7 +25,7 @@
                         <span class="user-info" id="userInfo"></span>
                     </li>
                     <li class="nav-item">
-                        <a href="/choose-test.html" class="btn btn-back">← Back to Tests</a>
+                        <a href="/choose-test.html" class="btn btn-back">&#8592; Back to Tests</a>
                     </li>
                 </ul>
             </div>
@@ -35,7 +35,7 @@
     <!-- Main Content -->
     <div class="container-main">
         <div class="header-card">
-            <h1>🌍 Countries API Test</h1>
+            <h1>&#127758; Countries API Test</h1>
             <p>Test CRUD operations for Countries API endpoint</p>
         </div>
 
@@ -44,7 +44,7 @@
 
         <!-- Create Country Section -->
         <div class="test-section">
-            <h2 class="section-title">➕ Create Country</h2>
+            <h2 class="section-title">&#10133; Create Country</h2>
             <form id="createForm">
                 <div class="row">
                     <div class="col-md-6 mb-3">
@@ -92,7 +92,7 @@
 
         <!-- Get All Countries Section -->
         <div class="test-section">
-            <h2 class="section-title">📋 Get All Countries</h2>
+            <h2 class="section-title">&#128203; Get All Countries</h2>
             <div class="row mb-3">
                 <div class="col-md-3">
                     <label for="pageSize" class="form-label">Page Size</label>
@@ -124,7 +124,7 @@
 
         <!-- Get Country by ID Section -->
         <div class="test-section">
-            <h2 class="section-title">🔍 Get Country by ID</h2>
+            <h2 class="section-title">&#128269; Get Country by ID</h2>
             <div class="row">
                 <div class="col-md-4 mb-3">
                     <label for="getCountryId" class="form-label">Country ID</label>
@@ -144,7 +144,7 @@
 
         <!-- Get Active Countries Section -->
         <div class="test-section">
-            <h2 class="section-title">✅ Get Active Countries</h2>
+            <h2 class="section-title">&#10004; Get Active Countries</h2>
             <button class="btn btn-primary mb-3" onclick="getActiveCountries()">Load Active Countries</button>
             <div class="loading" id="loadingActive">
                 <div class="spinner-border" role="status">
@@ -156,7 +156,7 @@
 
         <!-- Get Country by Code Section -->
         <div class="test-section">
-            <h2 class="section-title">🔎 Get Country by Code</h2>
+            <h2 class="section-title">&#128187; Get Country by Code</h2>
             <div class="row">
                 <div class="col-md-4 mb-3">
                     <label for="getCountryCode" class="form-label">Country Code</label>
@@ -177,7 +177,7 @@
 
         <!-- API Response Section -->
         <div class="test-section">
-            <h2 class="section-title">📡 Last API Response</h2>
+            <h2 class="section-title">&#128276; Last API Response</h2>
             <div class="response-box" id="responseBox">No API calls made yet...</div>
         </div>
     </div>
@@ -187,7 +187,7 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">✏️ Edit Country</h5>
+                    <h5 class="modal-title">&#9998; Edit Country</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
@@ -240,6 +240,7 @@
     
     <!-- Auth Client -->
     <script src="/assets/js/authClient.js"></script>
+  <script src="/assets/js/authGuard.js"></script>
     
     <script>
         // API_BASE_URL is already defined in authClient.js

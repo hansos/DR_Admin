@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
@@ -299,6 +299,7 @@
 
     <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/assets/js/authClient.js"></script>
+  <script src="/assets/js/authGuard.js"></script>
     <script>
         // API_BASE_URL is already defined in authClient.js
         let currentResellers = [];
@@ -401,7 +402,7 @@
                     <table class="table">
                         <thead><tr><th>ID</th><th>Name</th><th>Contact</th><th>Email</th><th>Phone</th><th>Currency</th><th>Status</th><th>Default</th><th>Actions</th></tr></thead>
                         <tbody>
-                            ${items.map(i=>`<tr><td>${i.id}</td><td><strong>${i.name}</strong></td><td>${i.contactPerson||'-'}</td><td>${i.email||'-'}</td><td>${i.phone||'-'}</td><td><code>${i.defaultCurrency||'EUR'}</code></td><td><span class="badge ${i.isActive?'badge-success':'badge-secondary'}">${i.isActive?'Active':'Inactive'}</span></td><td>${i.isDefault?'<span class="badge badge-success">âœ“ Default</span>':''}</td><td><div class="action-buttons"><button class="btn btn-sm btn-warning" onclick="openEditModal(${i.id})">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteReseller(${i.id}, '${(i.name||'').replace(/'/g, "\\'" )}')">Delete</button></div></td></tr>`).join('')}
+                            ${items.map(i=>`<tr><td>${i.id}</td><td><strong>${i.name}</strong></td><td>${i.contactPerson||'-'}</td><td>${i.email||'-'}</td><td>${i.phone||'-'}</td><td><code>${i.defaultCurrency||'EUR'}</code></td><td><span class="badge ${i.isActive?'badge-success':'badge-secondary'}">${i.isActive?'Active':'Inactive'}</span></td><td>${i.isDefault?'<span class="badge badge-success">✓ Default</span>':''}</td><td><div class="action-buttons"><button class="btn btn-sm btn-warning" onclick="openEditModal(${i.id})">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteReseller(${i.id}, '${(i.name||'').replace(/'/g, "\\'" )}')">Delete</button></div></td></tr>`).join('')}
                         </tbody>
                     </table>
                 </div>

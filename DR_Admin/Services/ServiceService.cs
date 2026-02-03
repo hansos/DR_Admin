@@ -1,4 +1,5 @@
 using ISPAdmin.Data;
+using ISPAdmin.Data.Entities;
 using ISPAdmin.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -70,13 +71,13 @@ public class ServiceService : IServiceService
         {
             _log.Information("Creating new service with name: {ServiceName}", createDto.Name);
 
-            var service = new ServiceEntity
+            var service = new Service
             {
                 Name = createDto.Name,
                 Description = createDto.Description,
                 ServiceTypeId = createDto.ServiceTypeId,
-                BillingCycleId = createDto.BillingCycleId,
-                Price = createDto.Price,
+                BillingCycleId = createDto.BillingCycleId ?? null,
+                Price = createDto.Price ?? 0,
                 ResellerCompanyId = createDto.ResellerCompanyId,
                 SalesAgentId = createDto.SalesAgentId,
                 CreatedAt = DateTime.UtcNow,
@@ -113,8 +114,8 @@ public class ServiceService : IServiceService
             service.Name = updateDto.Name;
             service.Description = updateDto.Description;
             service.ServiceTypeId = updateDto.ServiceTypeId;
-            service.BillingCycleId = updateDto.BillingCycleId;
-            service.Price = updateDto.Price;
+            service.BillingCycleId = updateDto.BillingCycleId ?? 0;
+            service.Price = updateDto.Price ?? 0;
             service.ResellerCompanyId = updateDto.ResellerCompanyId;
             service.SalesAgentId = updateDto.SalesAgentId;
             service.UpdatedAt = DateTime.UtcNow;

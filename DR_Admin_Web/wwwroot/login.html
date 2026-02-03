@@ -178,7 +178,7 @@
                                 required
                                 autocomplete="current-password">
                             <span class="input-group-text password-toggle" onclick="togglePassword()">
-                                <i id="toggleIcon">???</i>
+                                <i id="toggleIcon">&#128065;</i>
                             </span>
                         </div>
                     </div>
@@ -204,7 +204,7 @@
         </div>
         
         <div class="text-center mt-3">
-            <small class="text-white">© 2024 DR Admin. All rights reserved.</small>
+            <small class="text-white">&#169; 2024 DR Admin. All rights reserved.</small>
         </div>
     </div>
 
@@ -222,10 +222,10 @@
             
             if (passwordInput.type === 'password') {
                 passwordInput.type = 'text';
-                toggleIcon.textContent = '??';
+                toggleIcon.textContent = '\ud83d\udc41\ufe0f';
             } else {
                 passwordInput.type = 'password';
-                toggleIcon.textContent = '???';
+                toggleIcon.textContent = '\ud83d\udc41';
             }
         }
 
@@ -301,10 +301,19 @@
                     // Log token info (for debugging)
                     console.log('Login successful:', result.data);
                     
-                    // Redirect to choose test page after 1 second
-                    setTimeout(() => {
-                        window.location.href = '/choose-test.html';
-                    }, 1000);
+                    // Check if there's a redirect URL stored (from authGuard)
+                    const redirectUrl = sessionStorage.getItem('redirectAfterLogin');
+                    if (redirectUrl) {
+                        sessionStorage.removeItem('redirectAfterLogin');
+                        setTimeout(() => {
+                            window.location.href = redirectUrl;
+                        }, 1000);
+                    } else {
+                        // Default redirect to choose test page after 1 second
+                        setTimeout(() => {
+                            window.location.href = '/choose-test.html';
+                        }, 1000);
+                    }
                 } else {
                     showAlert(result.error || 'Login failed. Please check your credentials.', 'danger');
                     setLoading(false);

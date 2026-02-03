@@ -55,6 +55,7 @@
 
   <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
   <script src="/assets/js/authClient.js"></script>
+  <script src="/assets/js/authGuard.js"></script>
   <script>
     function showAlert(message,type='info'){ const c=document.getElementById('alertContainer'); c.innerHTML=`<div class="alert alert-${type} alert-dismissible fade show" role="alert">${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`; setTimeout(()=>{ const a=c.querySelector('.alert'); if(a) bootstrap.Alert.getOrCreateInstance(a).close(); },5000); }
     function updateResponseBox(d){ document.getElementById('responseBox').textContent = JSON.stringify(d,null,2); }
