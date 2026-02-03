@@ -158,6 +158,26 @@ public static class AuthorizationPoliciesConfiguration
         options.AddPolicy("DnsZonePackageRecord.Write", policy =>
             policy.RequireRole(ADMIN));
 
+        // Domain policies
+        options.AddPolicy("Domain.Delete", policy =>
+            policy.RequireRole(ADMIN));
+
+        options.AddPolicy("Domain.Read", policy =>
+            policy.RequireRole(ADMIN, SUPPORT, SALES));
+
+        options.AddPolicy("Domain.Write", policy =>
+            policy.RequireRole(ADMIN, SALES));
+
+        // DomainContact policies
+        options.AddPolicy("DomainContact.Delete", policy =>
+            policy.RequireRole(ADMIN, SUPPORT));
+
+        options.AddPolicy("DomainContact.Read", policy =>
+            policy.RequireRole(ADMIN, SUPPORT, SALES));
+
+        options.AddPolicy("DomainContact.Write", policy =>
+            policy.RequireRole(ADMIN, SUPPORT));
+
         // DocumentTemplate policies
         options.AddPolicy("DocumentTemplate.Delete", policy =>
             policy.RequireRole(ADMIN));

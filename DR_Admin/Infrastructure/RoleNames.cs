@@ -7,5 +7,6 @@ namespace ISPAdmin.Infrastructure
         public const string SALES = "Sales";
         public const string FINANCE = "Finance";
         public const string CUSTOMER = "Customer";
+        public const string DOMAIN = "Domain";
     }
 }

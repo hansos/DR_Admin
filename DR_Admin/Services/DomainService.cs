@@ -1,6 +1,7 @@
 using ISPAdmin.Data;
 using ISPAdmin.Data.Entities;
 using ISPAdmin.DTOs;
+using ISPAdmin.Utilities;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using DomainEntity = ISPAdmin.Data.Entities.Domain;
@@ -170,7 +171,7 @@ public class DomainService : IDomainService
         {
             _log.Information("Fetching domain with name: {DomainName}", name);
             
-            var normalizedName = name.ToLowerInvariant();
+            var normalizedName = NormalizationHelper.Normalize(name);
             
             var domain = await _context.Domains
                 .AsNoTracking()

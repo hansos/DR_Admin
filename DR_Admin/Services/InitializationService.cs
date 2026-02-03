@@ -28,7 +28,7 @@ public class InitializationService : IInitializationService
 
             // Ensure all standard roles exist
             var rolesAdded = 0;
-            var standardRoles = new[] { ADMIN, SUPPORT, SALES, FINANCE, CUSTOMER };
+            var standardRoles = new[] { ADMIN, SUPPORT, SALES, FINANCE, CUSTOMER, DOMAIN };
             foreach (var roleName in standardRoles)
             {
                 var existing = await _context.Roles.FirstOrDefaultAsync(r => r.Name == roleName);
