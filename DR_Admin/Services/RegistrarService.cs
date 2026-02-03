@@ -1040,9 +1040,15 @@ public class RegistrarService : IRegistrarService
                 if (!mergeResult.IsSuccessful)
                 {
                     var errorMessage = $"Failed to save any domains to database. {mergeResult.GetSummary()}";
+                    
                     if (mergeResult.Errors.Any())
                     {
-                        errorMessage += $" First errors: {string.Join("; ", mergeResult.Errors.Take(5))}";
+                        errorMessage += $" Errors: {string.Join("; ", mergeResult.Errors.Take(5))}";
+                    }
+                    
+                    if (mergeResult.Warnings.Any())
+                    {
+                        errorMessage += $" Warnings: {string.Join("; ", mergeResult.Warnings.Take(10))}";
                     }
                     
                     _log.Error("Domain merge failed for registrar {RegistrarId}: {ErrorMessage}", registrarId, errorMessage);
