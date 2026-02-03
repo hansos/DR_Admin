@@ -24,6 +24,8 @@ public class DomainMergeResult
     public int RegistrarTldsCreated { get; set; }
     public int ContactsCreated { get; set; }
     public int ContactsUpdated { get; set; }
+    public int NameServersCreated { get; set; }
+    public int NameServersUpdated { get; set; }
     public List<string> Errors { get; set; } = new();
     public List<string> Warnings { get; set; } = new();
     

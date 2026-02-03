@@ -223,6 +223,21 @@ public class DomainMergeHelper
         {
             _log.Debug("No contacts to merge for domain {DomainId}", domain.Id);
         }
+
+        if (domainInfo.Nameservers != null && domainInfo.Nameservers.Any())
+        {
+            _log.Debug("Merging {NameServerCount} name servers for existing domain {DomainId}", 
+                domainInfo.Nameservers.Count, domain.Id);
+            var nameServerStats = await MergeNameServersAsync(domain.Id, domainInfo.Nameservers);
+            result.NameServersCreated += nameServerStats.Created;
+            result.NameServersUpdated += nameServerStats.Updated;
+            _log.Debug("Name server merge complete: {Created} created, {Updated} updated", 
+                nameServerStats.Created, nameServerStats.Updated);
+        }
+        else
+        {
+            _log.Debug("No name servers to merge for domain {DomainId}", domain.Id);
+        }
         
         await _context.SaveChangesAsync();
         result.DomainsUpdated++;
@@ -389,6 +404,15 @@ public class DomainMergeHelper
                 result.ContactsCreated += contactStats.Created;
                 result.ContactsUpdated += contactStats.Updated;
             }
+
+            if (domainInfo.Nameservers != null && domainInfo.Nameservers.Any())
+            {
+                _log.Debug("Merging {NameServerCount} name servers for existing domain {DomainId}", 
+                    domainInfo.Nameservers.Count, existingDomain.Id);
+                var nameServerStats = await MergeNameServersAsync(existingDomain.Id, domainInfo.Nameservers);
+                result.NameServersCreated += nameServerStats.Created;
+                result.NameServersUpdated += nameServerStats.Updated;
+            }
             
             await _context.SaveChangesAsync();
             result.DomainsUpdated++;
@@ -473,6 +497,17 @@ public class DomainMergeHelper
             _log.Debug("Contact merge complete: {Created} created, {Updated} updated", 
                 contactStats.Created, contactStats.Updated);
         }
+
+        if (domainInfo.Nameservers != null && domainInfo.Nameservers.Any())
+        {
+            _log.Debug("Merging {NameServerCount} name servers for domain {DomainId}", 
+                domainInfo.Nameservers.Count, domainId);
+            var nameServerStats = await MergeNameServersAsync(domainId, domainInfo.Nameservers);
+            result.NameServersCreated += nameServerStats.Created;
+            result.NameServersUpdated += nameServerStats.Updated;
+            _log.Debug("Name server merge complete: {Created} created, {Updated} updated", 
+                nameServerStats.Created, nameServerStats.Updated);
+        }
     }
 
     /// <summary>
@@ -489,6 +524,8 @@ public class DomainMergeHelper
         _log.Information("  - RegistrarTlds created: {RegistrarTldsCreated}", result.RegistrarTldsCreated);
         _log.Information("  - Contacts created: {ContactsCreated}", result.ContactsCreated);
         _log.Information("  - Contacts updated: {ContactsUpdated}", result.ContactsUpdated);
+        _log.Information("  - NameServers created: {NameServersCreated}", result.NameServersCreated);
+        _log.Information("  - NameServers updated: {NameServersUpdated}", result.NameServersUpdated);
         
         if (result.Errors.Any())
         {
@@ -592,6 +629,100 @@ public class DomainMergeHelper
         catch (Exception ex)
         {
             _log.Error(ex, "Error merging domain contacts for domain ID {DomainId}", domainId);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Merges name server information from registrar into the NameServers table
+    /// </summary>
+    /// <param name="domainId">The domain ID to associate name servers with</param>
+    /// <param name="nameservers">List of name server hostnames from the registrar</param>
+    /// <returns>Statistics about created and updated name servers</returns>
+    public async Task<(int Created, int Updated)> MergeNameServersAsync(int domainId, List<string> nameservers)
+    {
+        try
+        {
+            int created = 0;
+            int updated = 0;
+
+            _log.Debug("Merging {Count} name servers for domain ID {DomainId}", nameservers.Count, domainId);
+
+            // Get existing name servers for this domain
+            var existingNameServers = await _context.NameServers
+                .Where(ns => ns.DomainId == domainId)
+                .ToListAsync();
+
+            // Process each nameserver from the registrar
+            for (int i = 0; i < nameservers.Count; i++)
+            {
+                var hostname = nameservers[i];
+
+                // Validate required fields
+                if (string.IsNullOrWhiteSpace(hostname))
+                {
+                    _log.Warning("Skipping empty nameserver hostname for domain {DomainId}", domainId);
+                    continue;
+                }
+
+                // Normalize hostname
+                hostname = hostname.Trim().ToLowerInvariant();
+
+                // Try to find existing nameserver by hostname
+                var existingNameServer = existingNameServers
+                    .FirstOrDefault(ns => ns.Hostname.Equals(hostname, StringComparison.OrdinalIgnoreCase));
+
+                if (existingNameServer != null)
+                {
+                    // Update existing nameserver
+                    _log.Debug("Updating existing nameserver {Hostname} for domain {DomainId}", hostname, domainId);
+                    
+                    // Update sort order and mark as primary if first in list
+                    existingNameServer.SortOrder = i;
+                    existingNameServer.IsPrimary = (i == 0);
+                    existingNameServer.UpdatedAt = DateTime.UtcNow;
+                    
+                    updated++;
+                }
+                else
+                {
+                    // Create new nameserver
+                    _log.Debug("Creating new nameserver {Hostname} for domain {DomainId}", hostname, domainId);
+                    
+                    var newNameServer = new NameServer
+                    {
+                        DomainId = domainId,
+                        Hostname = hostname,
+                        IpAddress = null, // IP address not provided by registrar list
+                        IsPrimary = (i == 0), // First nameserver is primary
+                        SortOrder = i,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    };
+                    
+                    _context.NameServers.Add(newNameServer);
+                    created++;
+                }
+            }
+
+            // Remove nameservers that are no longer in the registrar list
+            var nameserverHostnames = nameservers.Select(ns => ns.Trim().ToLowerInvariant()).ToList();
+            var nameserversToRemove = existingNameServers
+                .Where(ns => !nameserverHostnames.Contains(ns.Hostname.ToLowerInvariant()))
+                .ToList();
+
+            if (nameserversToRemove.Any())
+            {
+                _log.Debug("Removing {Count} obsolete nameservers for domain {DomainId}", 
+                    nameserversToRemove.Count, domainId);
+                _context.NameServers.RemoveRange(nameserversToRemove);
+            }
+
+            return (created, updated);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error merging nameservers for domain ID {DomainId}", domainId);
             throw;
         }
     }
