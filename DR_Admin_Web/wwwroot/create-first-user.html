@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create First User - DR Admin</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .setup-container {
+            max-width: 500px;
+            width: 100%;
+            padding: 20px;
+        }
+
+        .setup-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .setup-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .setup-header h2 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 28px;
+        }
+
+        .setup-header p {
+            margin: 10px 0 0;
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .setup-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .setup-body {
+            padding: 40px;
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .form-control {
+            border-radius: 8px;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            transition: all 0.3s;
+        }
+
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+
+        .btn-setup {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 10px;
+        }
+
+        .btn-setup:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-setup:active {
+            transform: translateY(0);
+        }
+
+        .btn-setup:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-back-to-login {
+            width: 100%;
+            padding: 12px;
+            background: #6c757d;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.2s;
+            margin-top: 10px;
+            text-decoration: none;
+            display: block;
+            text-align: center;
+        }
+
+        .btn-back-to-login:hover {
+            background: #5a6268;
+            color: white;
+            text-decoration: none;
+        }
+
+        .alert {
+            border-radius: 8px;
+            border: none;
+        }
+
+        .spinner-border-sm {
+            width: 1rem;
+            height: 1rem;
+            border-width: 0.15em;
+        }
+
+        .info-box {
+            background-color: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .info-box-title {
+            font-weight: 600;
+            color: #1976D2;
+            margin-bottom: 8px;
+        }
+
+        .info-box-text {
+            color: #555;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .password-requirements {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .input-group-text {
+            background-color: #f8f9fa;
+            border-radius: 8px 0 0 8px;
+        }
+
+        .password-toggle {
+            cursor: pointer;
+            background-color: #f8f9fa;
+            border-radius: 0 8px 8px 0;
+            border-left: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="setup-container">
+        <div class="setup-card">
+            <div class="setup-header">
+                <div class="setup-icon">&#128640;</div>
+                <h2>System Initialization</h2>
+                <p>Create the first administrator account</p>
+            </div>
+            
+            <div class="setup-body">
+                <div class="info-box">
+                    <div class="info-box-title">&#9881; First Time Setup</div>
+                    <p class="info-box-text">
+                        This setup is only available when no users exist in the system. 
+                        The first user will be created with full administrator privileges.
+                    </p>
+                </div>
+
+                <div id="alertContainer"></div>
+                
+                <form id="setupForm">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">&#128100; Username <span class="text-danger">*</span></label>
+                        <input 
+                            type="text" 
+                            class="form-control" 
+                            id="username" 
+                            name="username"
+                            placeholder="Enter administrator username"
+                            required
+                            autocomplete="username">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="email" class="form-label">&#128231; Email Address <span class="text-danger">*</span></label>
+                        <input 
+                            type="email" 
+                            class="form-control" 
+                            id="email" 
+                            name="email"
+                            placeholder="admin@example.com"
+                            required
+                            autocomplete="email">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="password" class="form-label">&#128274; Password <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input 
+                                type="password" 
+                                class="form-control" 
+                                id="password" 
+                                name="password"
+                                placeholder="Enter a strong password"
+                                required
+                                autocomplete="new-password">
+                            <span class="input-group-text password-toggle" onclick="togglePassword()">
+                                <i id="toggleIcon">&#128065;</i>
+                            </span>
+                        </div>
+                        <div class="password-requirements">
+                            &#128161; Use a strong password with at least 8 characters
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="confirmSetup" required>
+                            <label class="form-check-label" for="confirmSetup">
+                                &#10003; I understand this will initialize the system with my account as the first administrator <span class="text-danger">*</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-setup" id="setupBtn">
+                        <span id="btnText">&#128640; Initialize System</span>
+                        <span id="btnSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                    </button>
+                    
+                    <a href="/login.html" class="btn-back-to-login">
+                        &#8592; Back to Login
+                    </a>
+                </form>
+            </div>
+        </div>
+        
+        <div class="text-center mt-3">
+            <small class="text-white">&#169; 2024 DR Admin. All rights reserved.</small>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // API Base URL - Update this to match your API server
+        // Default: https://localhost:7201 (DR_Admin API)
+        // Web Client runs on: https://localhost:7102
+        const API_BASE_URL = 'https://localhost:7201';
+
+        // Toggle password visibility
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const toggleIcon = document.getElementById('toggleIcon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.innerHTML = '&#128065;&#65039;';
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.innerHTML = '&#128065;';
+            }
+        }
+
+        // Show alert message
+        function showAlert(message, type = 'danger') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type} alert-dismissible fade show`;
+            alert.setAttribute('role', 'alert');
+            
+            const iconMap = {
+                'success': '&#9989;',
+                'danger': '&#10060;',
+                'warning': '&#9888;',
+                'info': '&#8505;'
+            };
+            
+            const icon = iconMap[type] || '';
+            
+            alert.innerHTML = `
+                ${icon} ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+            alertContainer.innerHTML = '';
+            alertContainer.appendChild(alert);
+            
+            // Auto-dismiss after 5 seconds for non-success messages
+            if (type !== 'success') {
+                setTimeout(() => {
+                    alert.classList.remove('show');
+                    setTimeout(() => alert.remove(), 150);
+                }, 5000);
+            }
+        }
+
+        // Set loading state
+        function setLoading(isLoading) {
+            const setupBtn = document.getElementById('setupBtn');
+            const btnText = document.getElementById('btnText');
+            const btnSpinner = document.getElementById('btnSpinner');
+            const form = document.getElementById('setupForm');
+            
+            if (isLoading) {
+                setupBtn.disabled = true;
+                btnText.classList.add('d-none');
+                btnSpinner.classList.remove('d-none');
+                form.classList.add('was-validated');
+            } else {
+                setupBtn.disabled = false;
+                btnText.classList.remove('d-none');
+                btnSpinner.classList.add('d-none');
+            }
+        }
+
+        // Handle form submission
+        document.getElementById('setupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmSetup = document.getElementById('confirmSetup').checked;
+            
+            // Validate required fields
+            if (!username || !email || !password) {
+                showAlert('&#128221; Please fill in all required fields.', 'warning');
+                return;
+            }
+            
+            if (!confirmSetup) {
+                showAlert('&#9745; Please confirm that you understand this will initialize the system.', 'warning');
+                return;
+            }
+            
+            // Basic email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showAlert('&#128231; Please enter a valid email address.', 'warning');
+                return;
+            }
+            
+            setLoading(true);
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Initialization/initialize`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        email: email,
+                        password: password
+                    })
+                });
+                
+                // Handle 405 Method Not Allowed (CORS issue)
+                if (response.status === 405) {
+                    console.error('405 Method Not Allowed - CORS issue detected');
+                    showAlert('&#9888; Server configuration error (CORS). Please check that the API allows requests from this origin.', 'danger');
+                    setLoading(false);
+                    return;
+                }
+                
+                // Try to parse JSON response
+                let data = null;
+                try {
+                    data = await response.json();
+                } catch (jsonError) {
+                    console.error('Failed to parse JSON response:', jsonError);
+                    if (!response.ok) {
+                        showAlert(`&#10060; Server error (${response.status}): ${response.statusText}`, 'danger');
+                        setLoading(false);
+                        return;
+                    }
+                }
+                
+                if (response.ok) {
+                    showAlert('&#127881; System initialized successfully! Redirecting to login page...', 'success');
+                    
+                    console.log('Initialization successful:', data);
+                    
+                    // Redirect to login page after 2 seconds
+                    setTimeout(() => {
+                        window.location.href = '/login.html';
+                    }, 2000);
+                } else {
+                    // Handle error response
+                    const errorMessage = data?.message || data?.title || 'Initialization failed. Please try again.';
+                    showAlert(errorMessage, 'danger');
+                    setLoading(false);
+                }
+            } catch (error) {
+                console.error('Initialization error:', error);
+                showAlert('&#128268; An unexpected error occurred. Please check your connection and try again.', 'danger');
+                setLoading(false);
+            }
+        });
+
+        // Check if system is already initialized on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            // You can optionally check if users already exist
+            // For now, we'll let the API handle this validation
+            console.log('Create First User page loaded');
+        });
+    </script>
+</body>
+</html>

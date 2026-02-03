@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ISPAdmin.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260202142655_AddIsDefaultToResellerCompany")]
-    partial class AddIsDefaultToResellerCompany
+    [Migration("20260203065410_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -3189,7 +3189,7 @@ namespace ISPAdmin.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("BillingCycleId")
+                    b.Property<int?>("BillingCycleId")
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("CreatedAt")
@@ -3220,7 +3220,7 @@ namespace ISPAdmin.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
-                    b.Property<decimal>("Price")
+                    b.Property<decimal?>("Price")
                         .HasPrecision(18, 2)
                         .HasColumnType("TEXT");
 
@@ -3233,7 +3233,7 @@ namespace ISPAdmin.Migrations
                     b.Property<int>("ServiceTypeId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<decimal>("SetupFee")
+                    b.Property<decimal?>("SetupFee")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Sku")
@@ -3247,7 +3247,7 @@ namespace ISPAdmin.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("TrialDays")
+                    b.Property<int?>("TrialDays")
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("UpdatedAt")
@@ -4350,8 +4350,7 @@ namespace ISPAdmin.Migrations
                     b.HasOne("ISPAdmin.Data.Entities.BillingCycle", "BillingCycle")
                         .WithMany("Services")
                         .HasForeignKey("BillingCycleId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("ISPAdmin.Data.Entities.HostingPackage", null)
                         .WithMany("Services")

@@ -218,6 +218,49 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        .footer-actions {
+            max-width: 1200px;
+            margin: 30px auto 40px;
+            padding: 0 20px;
+            text-align: center;
+        }
+
+        .btn-copy-token {
+            background: #343a40;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-copy-token:hover {
+            background: #23272b;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-copy-token:active {
+            transform: translateY(0);
+        }
+
+        .copy-success {
+            display: inline-block;
+            margin-left: 10px;
+            color: #28a745;
+            font-weight: 600;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .copy-success.show {
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
@@ -262,6 +305,14 @@
                 <p>API test pages will be added here</p>
             </div>
         </div>
+    </div>
+
+    <!-- Footer Actions -->
+    <div class="footer-actions">
+        <button class="btn-copy-token" onclick="copyAccessToken()">
+            &#128203; Copy Access Token
+        </button>
+        <span class="copy-success" id="copySuccess">&#10004; Copied to clipboard!</span>
     </div>
 
     <!-- Bootstrap JS -->
@@ -337,6 +388,8 @@
                 { title: 'Registrar TLDs API', description: 'Test registrar TLD CRUD operations and lookups', url: '/tests/registrartlds-test.html' },
                 { title: 'Reseller Companies API', description: 'Test reseller company CRUD operations and active lookup', url: '/tests/resellercompanies-test.html' },
                 { title: 'Registrars API', description: 'Test registrar CRUD operations, TLD management and lookups', url: '/tests/registrars-test.html' },
+                { title: 'Domains by Registrar', description: 'View all domains registered by a specific registrar', url: '/tests/registrar-domains-test.html' },
+                { title: 'Download Domains from Registrar', description: 'Download and sync domains from registrar to database', url: '/tests/registrar-domains-download-test.html' },
                 { title: 'TLDs API', description: 'Test TLD CRUD operations and lookups', url: '/tests/tlds-test.html' }
             ],
             'Subscriptions': [
@@ -441,6 +494,59 @@
 
             await authClient.logout();
             window.location.href = '/login.html';
+        }
+
+        // Copy access token to clipboard
+        async function copyAccessToken() {
+            const token = authClient.getToken();
+            
+            if (!token) {
+                alert('No access token found. Please login first.');
+                return;
+            }
+
+            try {
+                // Use the Clipboard API
+                await navigator.clipboard.writeText(token);
+                
+                // Show success message
+                const successMsg = document.getElementById('copySuccess');
+                successMsg.classList.add('show');
+                
+                // Hide success message after 2 seconds
+                setTimeout(() => {
+                    successMsg.classList.remove('show');
+                }, 2000);
+                
+                console.log('Access token copied to clipboard');
+            } catch (error) {
+                console.error('Failed to copy token:', error);
+                
+                // Fallback for older browsers
+                try {
+                    const textArea = document.createElement('textarea');
+                    textArea.value = token;
+                    textArea.style.position = 'fixed';
+                    textArea.style.left = '-999999px';
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    
+                    // Show success message
+                    const successMsg = document.getElementById('copySuccess');
+                    successMsg.classList.add('show');
+                    
+                    setTimeout(() => {
+                        successMsg.classList.remove('show');
+                    }, 2000);
+                    
+                    console.log('Access token copied to clipboard (fallback method)');
+                } catch (fallbackError) {
+                    console.error('Fallback copy failed:', fallbackError);
+                    alert('Failed to copy token to clipboard. Token: ' + token);
+                }
+            }
         }
     </script>
 </body>

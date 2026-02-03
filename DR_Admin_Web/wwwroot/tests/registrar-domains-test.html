@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Domains by Registrar - DR Admin</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Test Page Styles -->
+    <link href="/assets/css/test-page.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/choose-test.html">DR Admin - Domains by Registrar</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <span class="user-info" id="userInfo"></span>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/choose-test.html" class="btn btn-back">&#8592; Back to Tests</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-main">
+        <div class="header-card">
+            <h1>&#127760; Domains by Registrar</h1>
+            <p>View all domains registered by a specific registrar</p>
+        </div>
+
+        <!-- Alert Messages -->
+        <div id="alertContainer"></div>
+
+        <!-- Select Registrar Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128270; Select Registrar</h2>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="registrarSelect" class="form-label">Registrar</label>
+                    <select class="form-select" id="registrarSelect" onchange="loadDomainsForRegistrar()">
+                        <option value="">-- Select a Registrar --</option>
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3 d-flex align-items-end">
+                    <button class="btn btn-primary" onclick="loadDomainsForRegistrar()">Load Domains</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingRegistrars">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading registrars...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Domains Table Section -->
+        <div class="test-section" id="domainsSection" style="display: none;">
+            <h2 class="section-title">&#128196; Domains</h2>
+            <div class="loading" id="loadingDomains">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading domains...</span>
+                </div>
+            </div>
+            <div id="domainsTableContainer"></div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Auth Client -->
+    <script src="/assets/js/authClient.js"></script>
+    
+    <!-- Auth Guard -->
+    <script src="/assets/js/authGuard.js"></script>
+
+    <script>
+        // Helper functions
+        function getAuthHeaders() {
+            const token = authClient.getToken();
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            };
+        }
+
+        // Load registrars on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            const token = authClient.getToken();
+            
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            const result = await authClient.verifyToken();
+            
+            if (result.authenticated) {
+                if (result.data && result.data.username) {
+                    document.getElementById('userInfo').textContent = `Hello, ${result.data.username}!`;
+                } else {
+                    document.getElementById('userInfo').textContent = 'Hello, User!';
+                }
+            } else {
+                console.warn('Token verification failed, but token exists locally');
+                document.getElementById('userInfo').textContent = 'Hello, User!';
+            }
+
+            await loadRegistrars();
+        });
+
+        // Load all registrars
+        async function loadRegistrars() {
+            const loadingEl = document.getElementById('loadingRegistrars');
+            const selectEl = document.getElementById('registrarSelect');
+            
+            loadingEl.style.display = 'flex';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Registrars`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+                
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                
+                if (response.ok) {
+                    // Clear existing options except the first one
+                    selectEl.innerHTML = '<option value="">-- Select a Registrar --</option>';
+                    
+                    // Add registrars to dropdown
+                    data.forEach(registrar => {
+                        const option = document.createElement('option');
+                        option.value = registrar.id;
+                        option.textContent = `${registrar.name} (${registrar.code || 'N/A'})`;
+                        selectEl.appendChild(option);
+                    });
+                    
+                    showAlert(`Loaded ${data.length} registrar(s)`, 'success');
+                } else {
+                    showAlert(`Failed to load registrars: ${data.error || data.message || 'Unknown error'}`, 'danger');
+                }
+            } catch (error) {
+                console.error('Error loading registrars:', error);
+                showAlert(`Error loading registrars: ${error.message}`, 'danger');
+            } finally {
+                loadingEl.style.display = 'none';
+            }
+        }
+
+        // Load domains for selected registrar
+        async function loadDomainsForRegistrar() {
+            const registrarId = document.getElementById('registrarSelect').value;
+            
+            if (!registrarId) {
+                showAlert('Please select a registrar first', 'warning');
+                return;
+            }
+
+            const loadingEl = document.getElementById('loadingDomains');
+            const domainsSection = document.getElementById('domainsSection');
+            const tableContainer = document.getElementById('domainsTableContainer');
+            
+            domainsSection.style.display = 'block';
+            loadingEl.style.display = 'flex';
+            tableContainer.innerHTML = '';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Registrars/${registrarId}/domains`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+                
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                
+                if (response.ok) {
+                    // API returns RegisteredDomainsResult object with Domains property
+                    const domains = data.domains || data.Domains || [];
+                    
+                    if (domains && domains.length > 0) {
+                        tableContainer.innerHTML = createDomainsTable(domains);
+                        showAlert(`Found ${domains.length} domain(s)`, 'success');
+                    } else {
+                        const message = data.message || data.Message || 'No domains found for this registrar';
+                        tableContainer.innerHTML = `<div class="alert alert-info">${message}</div>`;
+                        showAlert(message, 'info');
+                    }
+                } else {
+                    showAlert(`Failed to load domains: ${data.error || data.message || 'Unknown error'}`, 'danger');
+                    tableContainer.innerHTML = '<div class="alert alert-danger">Failed to load domains</div>';
+                }
+            } catch (error) {
+                console.error('Error loading domains:', error);
+                showAlert(`Error loading domains: ${error.message}`, 'danger');
+                tableContainer.innerHTML = '<div class="alert alert-danger">Error loading domains</div>';
+            } finally {
+                loadingEl.style.display = 'none';
+            }
+        }
+
+        // Create domains table
+        function createDomainsTable(domains) {
+            let html = `
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Domain Name</th>
+                                <th>Status</th>
+                                <th>Registration Date</th>
+                                <th>Expiration Date</th>
+                                <th>Auto Renew</th>
+                                <th>Locked</th>
+                                <th>Privacy</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            domains.forEach(domain => {
+                html += `
+                    <tr>
+                        <td><strong>${domain.domainName || domain.DomainName || 'N/A'}</strong></td>
+                        <td><span class="badge bg-${getStatusBadgeClass(domain.status || domain.Status)}">${domain.status || domain.Status || 'N/A'}</span></td>
+                        <td>${formatDate(domain.registrationDate || domain.RegistrationDate)}</td>
+                        <td>${formatDate(domain.expirationDate || domain.ExpirationDate)}</td>
+                        <td>${(domain.autoRenew ?? domain.AutoRenew) ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-secondary">No</span>'}</td>
+                        <td>${(domain.locked ?? domain.Locked) ? '<span class="badge bg-warning">Yes</span>' : '<span class="badge bg-secondary">No</span>'}</td>
+                        <td>${(domain.privacyProtection ?? domain.PrivacyProtection) ? '<span class="badge bg-info">Yes</span>' : '<span class="badge bg-secondary">No</span>'}</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            return html;
+        }
+
+        // Get status badge class
+        function getStatusBadgeClass(status) {
+            if (!status) return 'secondary';
+            
+            const statusLower = status.toLowerCase();
+            if (statusLower.includes('active') || statusLower.includes('registered')) return 'success';
+            if (statusLower.includes('pending')) return 'warning';
+            if (statusLower.includes('expired') || statusLower.includes('suspended')) return 'danger';
+            if (statusLower.includes('cancelled') || statusLower.includes('deleted')) return 'dark';
+            return 'info';
+        }
+
+        // Format date
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'short', 
+                    day: 'numeric' 
+                });
+            } catch (error) {
+                return dateString;
+            }
+        }
+
+        // Show alert message
+        function showAlert(message, type = 'info') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertId = 'alert-' + Date.now();
+            
+            const alertHtml = `
+                <div id="${alertId}" class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `;
+            
+            alertContainer.innerHTML = alertHtml;
+            
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                const alertEl = document.getElementById(alertId);
+                if (alertEl) {
+                    const bsAlert = bootstrap.Alert.getOrCreateInstance(alertEl);
+                    bsAlert.close();
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
