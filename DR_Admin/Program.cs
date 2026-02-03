@@ -124,6 +124,7 @@ builder.Services.AddTransient<IRegistrarTldService, RegistrarTldService>();
 builder.Services.AddTransient<IDomainContactService, DomainContactService>();
 builder.Services.AddTransient<IDnsRecordTypeService, DnsRecordTypeService>();
 builder.Services.AddTransient<IDnsRecordService, DnsRecordService>();
+builder.Services.AddTransient<INameServerService, NameServerService>();
 builder.Services.AddTransient<IDnsZonePackageService, DnsZonePackageService>();
 builder.Services.AddTransient<IDnsZonePackageRecordService, DnsZonePackageRecordService>();
 builder.Services.AddTransient<IServerService, ServerService>();

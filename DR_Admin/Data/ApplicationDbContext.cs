@@ -146,6 +146,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<RegistrarTld> RegistrarTlds { get; set; }
     public DbSet<DnsRecordType> DnsRecordTypes { get; set; }
     public DbSet<DnsRecord> DnsRecords { get; set; }
+    public DbSet<NameServer> NameServers { get; set; }
     public DbSet<DnsZonePackage> DnsZonePackages { get; set; }
     public DbSet<DnsZonePackageRecord> DnsZonePackageRecords { get; set; }
     public DbSet<HostingAccount> HostingAccounts { get; set; }
@@ -534,6 +535,22 @@ public class ApplicationDbContext : DbContext
                 .WithMany(t => t.DnsRecords)
                 .HasForeignKey(e => e.DnsRecordTypeId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // NameServer configuration
+        modelBuilder.Entity<NameServer>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Hostname).IsRequired().HasMaxLength(255);
+            entity.Property(e => e.IpAddress).HasMaxLength(45); // To support IPv6
+            
+            entity.HasIndex(e => e.DomainId);
+            entity.HasIndex(e => new { e.DomainId, e.SortOrder });
+            
+            entity.HasOne(e => e.Domain)
+                .WithMany(d => d.NameServers)
+                .HasForeignKey(e => e.DomainId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         // DnsZonePackage configuration

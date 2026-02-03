@@ -27,4 +27,5 @@ public class Domain : EntityBase
     public RegistrarTld? RegistrarTld { get; set; }
     public ICollection<DnsRecord> DnsRecords { get; set; } = new List<DnsRecord>();
     public ICollection<DomainContact> DomainContacts { get; set; } = new List<DomainContact>();
+    public ICollection<NameServer> NameServers { get; set; } = new List<NameServer>();
 }

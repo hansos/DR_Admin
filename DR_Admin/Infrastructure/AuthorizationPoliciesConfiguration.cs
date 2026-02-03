@@ -209,6 +209,22 @@ public static class AuthorizationPoliciesConfiguration
         options.AddPolicy("InvoiceLine.Write", policy =>
             policy.RequireRole(ADMIN, SALES));
 
+        // NameServer policies
+        options.AddPolicy("NameServer.Delete", policy =>
+            policy.RequireRole(ADMIN, SUPPORT));
+
+        options.AddPolicy("NameServer.Read", policy =>
+            policy.RequireRole(ADMIN, SUPPORT));
+
+        options.AddPolicy("NameServer.ReadOwn", policy =>
+            policy.RequireRole(ADMIN, SUPPORT, CUSTOMER));
+
+        options.AddPolicy("NameServer.Write", policy =>
+            policy.RequireRole(ADMIN, SUPPORT));
+
+        options.AddPolicy("NameServer.WriteOwn", policy =>
+            policy.RequireRole(ADMIN, SUPPORT, CUSTOMER));
+
         // Order policies
         options.AddPolicy("Order.Delete", policy =>
             policy.RequireRole(ADMIN));
