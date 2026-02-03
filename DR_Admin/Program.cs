@@ -161,6 +161,9 @@ builder.Services.AddSingleton(registrarSettings);
 // Domain Registration Library - Registrar Factory
 builder.Services.AddSingleton<DomainRegistrationLib.Factories.DomainRegistrarFactory>();
 
+// Register Domain Merge Helper
+builder.Services.AddScoped<ISPAdmin.Services.Helpers.DomainMergeHelper>();
+
 // Exchange Rate Library - Settings and Factory
 var exchangeRateSettings = builder.Configuration.GetSection("ExchangeRate").Get<ExchangeRateLib.Infrastructure.Settings.ExchangeRateSettings>()
     ?? new ExchangeRateLib.Infrastructure.Settings.ExchangeRateSettings();

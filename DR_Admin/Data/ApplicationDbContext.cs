@@ -474,10 +474,10 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Notes).HasMaxLength(1000);
             entity.Property(e => e.NormalizedName).IsRequired().HasMaxLength(255);
             
-            entity.HasIndex(e => e.Name);
+            entity.HasIndex(e => e.Name).IsUnique();
             entity.HasIndex(e => e.Status);
             entity.HasIndex(e => e.ExpirationDate);
-            entity.HasIndex(e => e.NormalizedName);
+            entity.HasIndex(e => e.NormalizedName).IsUnique();
             
             entity.HasOne(e => e.Customer)
                 .WithMany(c => c.Domains)
