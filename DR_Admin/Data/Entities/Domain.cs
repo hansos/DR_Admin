@@ -4,7 +4,7 @@ public class Domain : EntityBase
 {
     public int CustomerId { get; set; }
     public int ServiceId { get; set; }
-    public string Name { get; set; } = string.Empty;
+    public required string Name { get; set; }
     public int RegistrarId { get; set; }
     public int? RegistrarTldId { get; set; }
     public string Status { get; set; } = string.Empty;
