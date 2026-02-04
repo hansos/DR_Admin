@@ -164,6 +164,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<SalesAgent> SalesAgents { get; set; }
     public DbSet<SentEmail> SentEmails { get; set; }
     public DbSet<DocumentTemplate> DocumentTemplates { get; set; }
+    public DbSet<ReportTemplate> ReportTemplates { get; set; }
     
     // Sales and Payment Flow entities
     public DbSet<Quote> Quotes { get; set; }

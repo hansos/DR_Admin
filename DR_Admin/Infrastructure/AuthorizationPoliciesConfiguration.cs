@@ -188,6 +188,19 @@ public static class AuthorizationPoliciesConfiguration
         options.AddPolicy("DocumentTemplate.Write", policy =>
             policy.RequireRole(ADMIN));
 
+        // ReportTemplate policies
+        options.AddPolicy("ReportTemplate.Create", policy =>
+            policy.RequireRole(ADMIN));
+
+        options.AddPolicy("ReportTemplate.Delete", policy =>
+            policy.RequireRole(ADMIN));
+
+        options.AddPolicy("ReportTemplate.Read", policy =>
+            policy.RequireRole(ADMIN, SUPPORT));
+
+        options.AddPolicy("ReportTemplate.Update", policy =>
+            policy.RequireRole(ADMIN));
+
         // EmailQueue policies
         options.AddPolicy("EmailQueue.Read", policy =>
             policy.RequireRole(ADMIN, SUPPORT, SALES));

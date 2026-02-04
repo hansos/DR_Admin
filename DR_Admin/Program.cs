@@ -138,6 +138,7 @@ builder.Services.AddTransient<ISentEmailService, SentEmailService>();
 builder.Services.AddTransient<IPaymentGatewayService, PaymentGatewayService>();
 builder.Services.AddTransient<IEmailQueueService, EmailQueueService>();
 builder.Services.AddTransient<IDocumentTemplateService, DocumentTemplateService>();
+builder.Services.AddTransient<IReportTemplateService, ReportTemplateService>();
 builder.Services.AddTransient<ICurrencyService, CurrencyService>();
 builder.Services.AddTransient<IExchangeRateDownloadLogService, ExchangeRateDownloadLogService>();
 builder.Services.AddTransient<ISystemService, SystemService>();
