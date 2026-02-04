@@ -321,11 +321,12 @@ public class DomainRegistrationWorkflow : IDomainRegistrationWorkflow
                 LastName = customer?.Name.Split(' ').LastOrDefault() ?? "Last",
                 Email = customer?.Email ?? "customer@example.com",
                 Phone = customer?.Phone ?? "+1.0000000000",
-                Address1 = customer?.Address ?? "123 Main St",
-                City = customer?.City ?? "City",
-                State = customer?.State ?? "State",
-                PostalCode = customer?.PostalCode ?? "00000",
-                Country = customer?.CountryCode ?? "US"
+                // Address components should be taken from CustomerAddress/PostalCode records
+                Address1 = "123 Main St",
+                City = "City",
+                State = "State",
+                PostalCode = "00000",
+                Country = "US"
             }
         };
     }

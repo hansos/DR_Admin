@@ -671,7 +671,8 @@ public class SubscriptionService : ISubscriptionService
                 TotalAmount = subscription.Amount * subscription.Quantity,
                 CurrencyCode = subscription.CurrencyCode,
                 CustomerName = subscription.Customer?.Name ?? string.Empty,
-                CustomerAddress = subscription.Customer?.Address ?? string.Empty,
+                // CustomerAddress should be derived from CustomerAddress entities; using empty string here
+                CustomerAddress = string.Empty,
                 Notes = $"Subscription billing for {subscription.Service?.Name ?? "Service"}",
                 InternalComment = $"Auto-generated from subscription ID: {subscription.Id}"
             };

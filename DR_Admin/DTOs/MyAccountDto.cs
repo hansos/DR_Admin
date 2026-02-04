@@ -21,7 +21,8 @@ public class CustomerAccountDto
     public string Name { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string Phone { get; set; } = string.Empty;
-    public string Address { get; set; } = string.Empty;
+        // Address moved to CustomerAddress; not included here
+        public string Address { get; set; } = string.Empty;
 }
 
 /// <summary>

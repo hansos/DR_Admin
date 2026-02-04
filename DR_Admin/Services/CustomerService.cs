@@ -191,15 +191,10 @@ public class CustomerService : ICustomerService
                 Name = createDto.Name,
                 Email = createDto.Email,
                 Phone = createDto.Phone,
-                Address = createDto.Address,
-                City = createDto.City,
-                State = createDto.State,
-                PostalCode = createDto.PostalCode,
-                CountryCode = createDto.CountryCode,
+                // Address data moved to CustomerAddress - not stored on Customer entity
                 CustomerName = createDto.CustomerName,
                 TaxId = createDto.TaxId,
                 VatNumber = createDto.VatNumber,
-                ContactPerson = createDto.ContactPerson,
                 IsCompany = createDto.IsCompany,
                 IsActive = createDto.IsActive,
                 Status = createDto.Status,
@@ -250,15 +245,10 @@ public class CustomerService : ICustomerService
             customer.Name = updateDto.Name;
             customer.Email = updateDto.Email;
             customer.Phone = updateDto.Phone;
-            customer.Address = updateDto.Address;
-            customer.City = updateDto.City;
-            customer.State = updateDto.State;
-            customer.PostalCode = updateDto.PostalCode;
-            customer.CountryCode = updateDto.CountryCode;
+            // Address fields removed: managed via CustomerAddress entities
             customer.CustomerName = updateDto.CustomerName;
             customer.TaxId = updateDto.TaxId;
             customer.VatNumber = updateDto.VatNumber;
-            customer.ContactPerson = updateDto.ContactPerson;
             customer.IsCompany = updateDto.IsCompany;
             customer.IsActive = updateDto.IsActive;
             customer.Status = updateDto.Status;
@@ -316,33 +306,29 @@ public class CustomerService : ICustomerService
 
     private static CustomerDto MapToDto(Customer customer)
     {
-        return new CustomerDto
-        {
-            Id = customer.Id,
-            Name = customer.Name,
-            Email = customer.Email,
-            Phone = customer.Phone,
-            Address = customer.Address,
-            City = customer.City,
-            State = customer.State,
-            PostalCode = customer.PostalCode,
-            CountryCode = customer.CountryCode,
-            CustomerName = customer.CustomerName,
-            TaxId = customer.TaxId,
-            VatNumber = customer.VatNumber,
-            ContactPerson = customer.ContactPerson,
-            IsCompany = customer.IsCompany,
-            IsActive = customer.IsActive,
-            Status = customer.Status,
-            Balance = customer.Balance,
-            CreditLimit = customer.CreditLimit,
-            Notes = customer.Notes,
-            BillingEmail = customer.BillingEmail,
-            PreferredPaymentMethod = customer.PreferredPaymentMethod,
-            PreferredCurrency = customer.PreferredCurrency,
-            AllowCurrencyOverride = customer.AllowCurrencyOverride,
-            CreatedAt = customer.CreatedAt,
-            UpdatedAt = customer.UpdatedAt
-        };
+            return new CustomerDto
+            {
+                Id = customer.Id,
+                Name = customer.Name,
+                Email = customer.Email,
+                Phone = customer.Phone,
+                // Address fields moved to CustomerAddress; not present on DTO
+                CustomerName = customer.CustomerName,
+                TaxId = customer.TaxId,
+                VatNumber = customer.VatNumber,
+                // ContactPerson removed; use ContactPerson entities instead
+                IsCompany = customer.IsCompany,
+                IsActive = customer.IsActive,
+                Status = customer.Status,
+                Balance = customer.Balance,
+                CreditLimit = customer.CreditLimit,
+                Notes = customer.Notes,
+                BillingEmail = customer.BillingEmail,
+                PreferredPaymentMethod = customer.PreferredPaymentMethod,
+                PreferredCurrency = customer.PreferredCurrency,
+                AllowCurrencyOverride = customer.AllowCurrencyOverride,
+                CreatedAt = customer.CreatedAt,
+                UpdatedAt = customer.UpdatedAt
+            };
     }
 }

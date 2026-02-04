@@ -147,7 +147,6 @@ public class SystemService : ISystemService
         {
             customer.NormalizedName = NormalizationHelper.Normalize(customer.Name) ?? string.Empty;
             customer.NormalizedCustomerName = NormalizationHelper.Normalize(customer.CustomerName);
-            customer.NormalizedContactPerson = NormalizationHelper.Normalize(customer.ContactPerson);
         }
 
         await _context.SaveChangesAsync();

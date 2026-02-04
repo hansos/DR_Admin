@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ISPAdmin.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260204113643_Initial")]
+    [Migration("20260204124148_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -656,11 +656,6 @@ namespace ISPAdmin.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Address")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT");
-
                     b.Property<bool>("AllowCurrencyOverride")
                         .HasColumnType("INTEGER");
 
@@ -672,18 +667,8 @@ namespace ISPAdmin.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("City")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ContactPerson")
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("CountryCode")
-                        .HasMaxLength(2)
-                        .HasColumnType("TEXT");
+                    b.Property<int?>("CountryId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
@@ -715,10 +700,6 @@ namespace ISPAdmin.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("NormalizedContactPerson")
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("NormalizedCustomerName")
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
@@ -737,22 +718,12 @@ namespace ISPAdmin.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("PostalCode")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("PreferredCurrency")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("PreferredPaymentMethod")
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("State")
-                        .IsRequired()
-                        .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Status")
@@ -773,7 +744,7 @@ namespace ISPAdmin.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CountryCode");
+                    b.HasIndex("CountryId");
 
                     b.HasIndex("CustomerStatusId");
 
@@ -2759,6 +2730,45 @@ namespace ISPAdmin.Migrations
                     b.ToTable("Registrars");
                 });
 
+            modelBuilder.Entity("ISPAdmin.Data.Entities.RegistrarMailAddress", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("MailAddress")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("IsDefault");
+
+                    b.HasIndex("MailAddress");
+
+                    b.ToTable("RegistrarMailAddresses");
+                });
+
             modelBuilder.Entity("ISPAdmin.Data.Entities.RegistrarTld", b =>
                 {
                     b.Property<int>("Id")
@@ -4116,18 +4126,14 @@ namespace ISPAdmin.Migrations
 
             modelBuilder.Entity("ISPAdmin.Data.Entities.Customer", b =>
                 {
-                    b.HasOne("ISPAdmin.Data.Entities.Country", "Country")
+                    b.HasOne("ISPAdmin.Data.Entities.Country", null)
                         .WithMany("Customers")
-                        .HasForeignKey("CountryCode")
-                        .HasPrincipalKey("Code")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .HasForeignKey("CountryId");
 
                     b.HasOne("ISPAdmin.Data.Entities.CustomerStatus", "CustomerStatus")
                         .WithMany()
                         .HasForeignKey("CustomerStatusId")
                         .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("Country");
 
                     b.Navigation("CustomerStatus");
                 });
@@ -4543,6 +4549,17 @@ namespace ISPAdmin.Migrations
                     b.Navigation("Invoice");
 
                     b.Navigation("PaymentTransaction");
+                });
+
+            modelBuilder.Entity("ISPAdmin.Data.Entities.RegistrarMailAddress", b =>
+                {
+                    b.HasOne("ISPAdmin.Data.Entities.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
                 });
 
             modelBuilder.Entity("ISPAdmin.Data.Entities.RegistrarTld", b =>

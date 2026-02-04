@@ -594,7 +594,10 @@ public class CountryService : ICountryService
                 return false;
             }
 
-            var hasCustomers = await _context.Customers.AnyAsync(c => c.CountryCode == country.Code);
+            // Customers no longer reference CountryCode directly; check via postal codes and customer addresses if needed
+            var hasCustomers = await _context.CustomerAddresses
+                .Include(ca => ca.PostalCode)
+                .AnyAsync(ca => ca.PostalCode.CountryCode == country.Code);
             if (hasCustomers)
             {
                 _log.Warning("Cannot delete country {CountryId}: has associated customers", id);

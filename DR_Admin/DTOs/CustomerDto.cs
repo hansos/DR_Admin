@@ -25,30 +25,7 @@ public class CustomerDto
     /// </summary>
     public string Phone { get; set; } = string.Empty;
     
-    /// <summary>
-    /// Gets or sets the customer's street address
-    /// </summary>
-    public string Address { get; set; } = string.Empty;
-    
-    /// <summary>
-    /// Gets or sets the customer's city
-    /// </summary>
-    public string City { get; set; } = string.Empty;
-    
-    /// <summary>
-    /// Gets or sets the customer's state/province
-    /// </summary>
-    public string State { get; set; } = string.Empty;
-    
-    /// <summary>
-    /// Gets or sets the customer's postal code
-    /// </summary>
-    public string PostalCode { get; set; } = string.Empty;
-    
-    /// <summary>
-    /// Gets or sets the customer's country code
-    /// </summary>
-    public string? CountryCode { get; set; }
+    // Address fields removed; use CustomerAddress records for address data
     
     /// <summary>
     /// Gets or sets the customer name (company or individual name)
@@ -68,7 +45,7 @@ public class CustomerDto
     /// <summary>
     /// Gets or sets the primary contact person's name
     /// </summary>
-    public string? ContactPerson { get; set; }
+    // ContactPerson removed; use ContactPerson entities instead
     
     /// <summary>
     /// Gets or sets a value indicating whether the customer is a company
@@ -152,30 +129,7 @@ public class CreateCustomerDto
     /// </summary>
     public string Phone { get; set; } = string.Empty;
     
-    /// <summary>
-    /// Customer's street address
-    /// </summary>
-    public string Address { get; set; } = string.Empty;
-    
-    /// <summary>
-    /// Customer's city
-    /// </summary>
-    public string City { get; set; } = string.Empty;
-    
-    /// <summary>
-    /// Customer's state/province
-    /// </summary>
-    public string State { get; set; } = string.Empty;
-    
-    /// <summary>
-    /// Customer's postal code
-    /// </summary>
-    public string PostalCode { get; set; } = string.Empty;
-    
-    /// <summary>
-    /// Customer's country code
-    /// </summary>
-    public string? CountryCode { get; set; }
+    // Address fields removed from create DTO
     
     /// <summary>
     /// Customer name (company or individual name)
@@ -195,7 +149,7 @@ public class CreateCustomerDto
     /// <summary>
     /// Primary contact person's name
     /// </summary>
-    public string? ContactPerson { get; set; }
+    // ContactPerson removed; use ContactPerson entities instead
     
     /// <summary>
     /// Whether the customer is a company
@@ -280,30 +234,7 @@ public class UpdateCustomerDto
     /// </summary>
     public string Phone { get; set; } = string.Empty;
     
-    /// <summary>
-    /// Customer's street address
-    /// </summary>
-    public string Address { get; set; } = string.Empty;
-    
-    /// <summary>
-    /// Customer's city
-    /// </summary>
-    public string City { get; set; } = string.Empty;
-    
-    /// <summary>
-    /// Customer's state/province
-    /// </summary>
-    public string State { get; set; } = string.Empty;
-    
-    /// <summary>
-    /// Customer's postal code
-    /// </summary>
-    public string PostalCode { get; set; } = string.Empty;
-    
-    /// <summary>
-    /// Customer's country code
-    /// </summary>
-    public string? CountryCode { get; set; }
+    // Address fields removed from update DTO
     
     /// <summary>
     /// Customer name (company or individual name)
@@ -323,7 +254,7 @@ public class UpdateCustomerDto
     /// <summary>
     /// Primary contact person's name
     /// </summary>
-    public string? ContactPerson { get; set; }
+    // ContactPerson removed; use ContactPerson entities instead
     
     /// <summary>
     /// Whether the customer is a company

@@ -139,8 +139,8 @@ public class CustomersController : ControllerBase
                 return BadRequest(ModelState);
             }
 
-            var customer = await _customerService.CreateCustomerAsync(createDto);
-            
+                var customer = await _customerService.CreateCustomerAsync(createDto);
+
             return CreatedAtAction(
                 nameof(GetCustomerById),
                 new { id = customer.Id },

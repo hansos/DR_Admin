@@ -627,22 +627,15 @@ namespace ISPAdmin.Migrations
                     Name = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
                     Email = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
                     Phone = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
-                    Address = table.Column<string>(type: "TEXT", maxLength: 500, nullable: false),
-                    City = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-                    State = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-                    PostalCode = table.Column<string>(type: "TEXT", maxLength: 20, nullable: false),
-                    CountryCode = table.Column<string>(type: "TEXT", maxLength: 2, nullable: true),
                     CustomerName = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
                     TaxId = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
                     VatNumber = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
-                    ContactPerson = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
                     IsCompany = table.Column<bool>(type: "INTEGER", nullable: false),
                     IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
                     Status = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
                     CustomerStatusId = table.Column<int>(type: "INTEGER", nullable: true),
                     NormalizedName = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
                     NormalizedCustomerName = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
-                    NormalizedContactPerson = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
                     Balance = table.Column<decimal>(type: "TEXT", precision: 18, scale: 2, nullable: false),
                     CreditLimit = table.Column<decimal>(type: "TEXT", precision: 18, scale: 2, nullable: false),
                     Notes = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: true),
@@ -650,6 +643,7 @@ namespace ISPAdmin.Migrations
                     PreferredPaymentMethod = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
                     PreferredCurrency = table.Column<string>(type: "TEXT", nullable: false),
                     AllowCurrencyOverride = table.Column<bool>(type: "INTEGER", nullable: false),
+                    CountryId = table.Column<int>(type: "INTEGER", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
@@ -657,11 +651,10 @@ namespace ISPAdmin.Migrations
                 {
                     table.PrimaryKey("PK_Customers", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Customers_Countries_CountryCode",
-                        column: x => x.CountryCode,
+                        name: "FK_Customers_Countries_CountryId",
+                        column: x => x.CountryId,
                         principalTable: "Countries",
-                        principalColumn: "Code",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Customers_CustomerStatuses_CustomerStatusId",
                         column: x => x.CustomerStatusId,
@@ -944,6 +937,30 @@ namespace ISPAdmin.Migrations
                         name: "FK_CustomerPaymentMethods_PaymentGateways_PaymentGatewayId",
                         column: x => x.PaymentGatewayId,
                         principalTable: "PaymentGateways",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "RegistrarMailAddresses",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    CustomerId = table.Column<int>(type: "INTEGER", nullable: false),
+                    MailAddress = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                    IsDefault = table.Column<bool>(type: "INTEGER", nullable: false),
+                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RegistrarMailAddresses", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_RegistrarMailAddresses_Customers_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -2246,9 +2263,9 @@ namespace ISPAdmin.Migrations
                 column: "PaymentGatewayId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Customers_CountryCode",
+                name: "IX_Customers_CountryId",
                 table: "Customers",
-                column: "CountryCode");
+                column: "CountryId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Customers_CustomerStatusId",
@@ -2652,6 +2669,26 @@ namespace ISPAdmin.Migrations
                 column: "PaymentTransactionId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_RegistrarMailAddresses_CustomerId",
+                table: "RegistrarMailAddresses",
+                column: "CustomerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RegistrarMailAddresses_IsActive",
+                table: "RegistrarMailAddresses",
+                column: "IsActive");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RegistrarMailAddresses_IsDefault",
+                table: "RegistrarMailAddresses",
+                column: "IsDefault");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RegistrarMailAddresses_MailAddress",
+                table: "RegistrarMailAddresses",
+                column: "MailAddress");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Registrars_Code",
                 table: "Registrars",
                 column: "Code",
@@ -2996,6 +3033,9 @@ namespace ISPAdmin.Migrations
 
             migrationBuilder.DropTable(
                 name: "Refunds");
+
+            migrationBuilder.DropTable(
+                name: "RegistrarMailAddresses");
 
             migrationBuilder.DropTable(
                 name: "ReportTemplates");

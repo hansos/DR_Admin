@@ -53,7 +53,6 @@ public class MyAccountService : IMyAccountService
                 Name = request.CustomerName,
                 Email = request.CustomerEmail,
                 Phone = request.CustomerPhone,
-                Address = request.CustomerAddress,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -298,11 +297,7 @@ public class MyAccountService : IMyAccountService
                 hasChanges = true;
             }
 
-            if (request.Address != null)
-            {
-                customer.Address = request.Address;
-                hasChanges = true;
-            }
+            // Address updates should go through CustomerAddress API; ignore inline address
 
             if (hasChanges)
             {
@@ -317,7 +312,7 @@ public class MyAccountService : IMyAccountService
                 Name = customer.Name,
                 Email = customer.Email,
                 Phone = customer.Phone,
-                Address = customer.Address
+                Address = string.Empty
             };
         }
         catch (Exception ex)
@@ -353,7 +348,8 @@ public class MyAccountService : IMyAccountService
                     Name = user.Customer.Name,
                     Email = user.Customer.Email,
                     Phone = user.Customer.Phone,
-                    Address = user.Customer.Address
+                    // Address moved to CustomerAddress; not available on Customer entity
+                    Address = string.Empty
                 } : null
             };
         }

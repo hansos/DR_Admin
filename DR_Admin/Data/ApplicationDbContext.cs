@@ -57,10 +57,9 @@ public class ApplicationDbContext : DbContext
                 break;
 
             case Customer customer:
-                customer.CountryCode = NormalizationHelper.Normalize(customer.CountryCode) ?? string.Empty;
+                // CountryCode/property removed; only normalize names
                 customer.NormalizedName = NormalizationHelper.Normalize(customer.Name) ?? string.Empty;
                 customer.NormalizedCustomerName = NormalizationHelper.Normalize(customer.CustomerName);
-                customer.NormalizedContactPerson = NormalizationHelper.Normalize(customer.ContactPerson);
                 break;
 
             case Entities.Domain domain:
@@ -133,6 +132,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<CustomerAddress> CustomerAddresses { get; set; }
     public DbSet<AddressType> AddressTypes { get; set; }
     public DbSet<ContactPerson> ContactPersons { get; set; }
+    public DbSet<RegistrarMailAddress> RegistrarMailAddresses { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<Role> Roles { get; set; }
     public DbSet<UserRole> UserRoles { get; set; }
@@ -207,15 +207,10 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
             entity.Property(e => e.Email).IsRequired().HasMaxLength(200);
             entity.Property(e => e.Phone).HasMaxLength(50);
-            entity.Property(e => e.Address).HasMaxLength(500);
-            entity.Property(e => e.City).HasMaxLength(100);
-            entity.Property(e => e.State).HasMaxLength(100);
-            entity.Property(e => e.PostalCode).HasMaxLength(20);
-            entity.Property(e => e.CountryCode).HasMaxLength(2);
+            // Address fields removed from Customer entity
             entity.Property(e => e.CustomerName).HasMaxLength(200);
             entity.Property(e => e.TaxId).HasMaxLength(50);
             entity.Property(e => e.VatNumber).HasMaxLength(50);
-            entity.Property(e => e.ContactPerson).HasMaxLength(200);
             entity.Property(e => e.Status).IsRequired().HasMaxLength(50);
             entity.Property(e => e.Balance).HasPrecision(18, 2);
             entity.Property(e => e.CreditLimit).HasPrecision(18, 2);
@@ -224,7 +219,7 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.PreferredPaymentMethod).HasMaxLength(50);
             entity.Property(e => e.NormalizedName).IsRequired().HasMaxLength(200);
             entity.Property(e => e.NormalizedCustomerName).HasMaxLength(200);
-            entity.Property(e => e.NormalizedContactPerson).HasMaxLength(200);
+            // ContactPerson removed; contact persons are stored in ContactPersons table
             
             entity.HasIndex(e => e.Email);
             entity.HasIndex(e => e.Status);
@@ -234,11 +229,7 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => e.NormalizedName);
             entity.HasIndex(e => e.NormalizedCustomerName);
             
-            entity.HasOne(e => e.Country)
-                .WithMany(c => c.Customers)
-                .HasForeignKey(e => e.CountryCode)
-                .HasPrincipalKey(c => c.Code)
-                .OnDelete(DeleteBehavior.Restrict);
+            // Country relationship removed from Customer - addresses are managed via CustomerAddress -> PostalCode -> Country
             
             entity.HasOne(e => e.CustomerStatus)
                 .WithMany()
@@ -332,6 +323,23 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => e.IsPrimary);
             entity.HasIndex(e => e.IsActive);
             entity.HasIndex(e => new { e.NormalizedFirstName, e.NormalizedLastName });
+            
+            entity.HasOne(e => e.Customer)
+                .WithMany()
+                .HasForeignKey(e => e.CustomerId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // RegistrarMailAddress configuration
+        modelBuilder.Entity<RegistrarMailAddress>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.MailAddress).IsRequired().HasMaxLength(200);
+            
+            entity.HasIndex(e => e.CustomerId);
+            entity.HasIndex(e => e.IsDefault);
+            entity.HasIndex(e => e.IsActive);
+            entity.HasIndex(e => e.MailAddress);
             
             entity.HasOne(e => e.Customer)
                 .WithMany()
