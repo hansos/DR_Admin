@@ -339,7 +339,7 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => e.CustomerId);
             entity.HasIndex(e => e.IsDefault);
             entity.HasIndex(e => e.IsActive);
-            entity.HasIndex(e => e.MailAddress);
+            entity.HasIndex(e => e.MailAddress).IsUnique();
             
             entity.HasOne(e => e.Customer)
                 .WithMany()
