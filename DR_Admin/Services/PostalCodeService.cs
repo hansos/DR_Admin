@@ -193,13 +193,20 @@ public class PostalCodeService : IPostalCodeService
         {
             _log.Information("Creating new postal code: {Code} for country: {CountryCode}", createDto.Code, createDto.CountryCode);
 
-            var countryExists = await _context.Countries
-                .AnyAsync(c => c.Code == createDto.CountryCode);
+            var country = await _context.Countries
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.Code == createDto.CountryCode);
 
-            if (!countryExists)
+            if (country == null)
             {
                 _log.Warning("Country with code {CountryCode} does not exist", createDto.CountryCode);
                 throw new InvalidOperationException($"Country with code {createDto.CountryCode} does not exist");
+            }
+
+            if (!country.IsActive)
+            {
+                _log.Warning("Country with code {CountryCode} is not active", createDto.CountryCode);
+                throw new InvalidOperationException($"Country with code {createDto.CountryCode} is not active");
             }
 
             var existingPostalCode = await _context.PostalCodes

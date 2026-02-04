@@ -369,6 +369,46 @@
                 </div>
                 <div class="card-body">
                     <form id="addAddressForm">
+                        <!-- Step 1 & 2: Country Code and Postal Code Lookup -->
+                        <div class="alert alert-info" style="border-left: 3px solid #17a2b8;">
+                            <strong>Step 1:</strong> Select country and enter postal code. The system will auto-fill city and state if found.
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="caCountryCode" class="form-label">Country Code *</label>
+                                <input type="text" class="form-control" id="caCountryCode" placeholder="e.g., US" maxlength="2" required>
+                                <small class="text-muted">2-letter ISO country code</small>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="caPostalCode" class="form-label">Postal Code *</label>
+                                <input type="text" class="form-control" id="caPostalCode" placeholder="e.g., 10001" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">&nbsp;</label>
+                                <button type="button" class="btn btn-primary w-100" onclick="lookupPostalCode()">
+                                    🔍 Lookup Postal Code
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Lookup Status Message -->
+                        <div id="postalCodeLookupStatus" class="mb-3" style="display: none;"></div>
+
+                        <!-- City and State fields (populated after lookup or manual entry if not found) -->
+                        <div class="row" id="cityStateFields" style="display: none;">
+                            <div class="col-md-6 mb-3">
+                                <label for="caCity" class="form-label">City *</label>
+                                <input type="text" class="form-control" id="caCity" placeholder="e.g., New York" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="caState" class="form-label">State/Province</label>
+                                <input type="text" class="form-control" id="caState" placeholder="e.g., NY">
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Address Lines -->
                         <div class="row">
                             <div class="col-md-12 mb-3">
                                 <label for="caAddressLine1" class="form-label">Address Line 1 *</label>
@@ -385,26 +425,9 @@
                                 <input type="text" class="form-control" id="caAddressLine3">
                             </div>
                         </div>
+
+                        <!-- Address Type -->
                         <div class="row">
-                            <div class="col-md-4 mb-3">
-                                <label for="caCity" class="form-label">City *</label>
-                                <input type="text" class="form-control" id="caCity" placeholder="e.g., New York" required>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label for="caState" class="form-label">State/Province</label>
-                                <input type="text" class="form-control" id="caState" placeholder="e.g., NY">
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label for="caPostalCode" class="form-label">Postal Code *</label>
-                                <input type="text" class="form-control" id="caPostalCode" placeholder="e.g., 10001" required>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="caCountryCode" class="form-label">Country Code *</label>
-                                <input type="text" class="form-control" id="caCountryCode" placeholder="e.g., US" maxlength="2" required>
-                                <small class="text-muted">2-letter ISO country code</small>
-                            </div>
                             <div class="col-md-6 mb-3">
                                 <label for="caAddressType" class="form-label">Address Type</label>
                                 <select class="form-control" id="caAddressType">
@@ -1639,6 +1662,94 @@
             container.innerHTML = listHtml;
         }
 
+        // Postal Code Lookup Function
+        let currentPostalCodeId = null;
+        let postalCodeFound = false;
+
+        async function lookupPostalCode() {
+            const postalCodeValue = document.getElementById('caPostalCode').value.trim();
+            const countryCodeValue = document.getElementById('caCountryCode').value.trim().toUpperCase();
+            const statusDiv = document.getElementById('postalCodeLookupStatus');
+            const cityStateFields = document.getElementById('cityStateFields');
+
+            if (!countryCodeValue) {
+                showAlert('Please enter a country code first', 'warning');
+                return;
+            }
+
+            if (!postalCodeValue) {
+                showAlert('Please enter a postal code', 'warning');
+                return;
+            }
+
+            try {
+                // Call the new lookup endpoint
+                const response = await fetch(
+                    `${API_BASE_URL}/api/v1/PostalCodes/lookup?countryCode=${encodeURIComponent(countryCodeValue)}&postalCode=${encodeURIComponent(postalCodeValue)}`,
+                    {
+                        method: 'GET',
+                        headers: getAuthHeaders()
+                    }
+                );
+
+                if (response.ok) {
+                    // Postal code found - populate fields
+                    const postalCodeData = await response.json();
+                    currentPostalCodeId = postalCodeData.id;
+                    postalCodeFound = true;
+
+                    // Populate city and state
+                    document.getElementById('caCity').value = postalCodeData.city || '';
+                    document.getElementById('caState').value = postalCodeData.state || '';
+
+                    // Show city/state fields as read-only
+                    cityStateFields.style.display = '';
+                    document.getElementById('caCity').readOnly = true;
+                    document.getElementById('caState').readOnly = true;
+
+                    // Show success message
+                    statusDiv.style.display = '';
+                    statusDiv.className = 'alert alert-success';
+                    statusDiv.innerHTML = `
+                        <strong>✓ Postal Code Found!</strong><br>
+                        City: ${postalCodeData.city || 'N/A'}, State: ${postalCodeData.state || 'N/A'}
+                    `;
+
+                    updateResponseBox(postalCodeData);
+                } else if (response.status === 404) {
+                    // Postal code not found - prompt user to enter info
+                    currentPostalCodeId = null;
+                    postalCodeFound = false;
+
+                    // Clear and enable city/state fields for manual entry
+                    document.getElementById('caCity').value = '';
+                    document.getElementById('caState').value = '';
+                    document.getElementById('caCity').readOnly = false;
+                    document.getElementById('caState').readOnly = false;
+
+                    // Show city/state fields for manual entry
+                    cityStateFields.style.display = '';
+
+                    // Show info message
+                    statusDiv.style.display = '';
+                    statusDiv.className = 'alert alert-warning';
+                    statusDiv.innerHTML = `
+                        <strong>⚠ Postal Code Not Found</strong><br>
+                        Please enter the city and state information below. A new postal code record will be created.
+                    `;
+
+                    updateResponseBox({ message: 'Postal code not found', statusCode: 404 });
+                } else {
+                    const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+                    showAlert(`Error: ${errorData.message || errorData.error || 'Failed to lookup postal code'}`, 'danger');
+                    updateResponseBox(errorData);
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+
         // Handle Add Address
         async function handleAddAddress(e) {
             e.preventDefault();
@@ -1649,55 +1760,54 @@
                 return;
             }
 
-            // First, ensure postal code exists or create it
+            // Ensure postal code lookup was performed
+            const cityStateFields = document.getElementById('cityStateFields');
+            if (cityStateFields.style.display === 'none') {
+                showAlert('Please lookup the postal code first', 'warning');
+                return;
+            }
+
             const postalCodeValue = document.getElementById('caPostalCode').value.trim();
             const countryCodeValue = document.getElementById('caCountryCode').value.trim().toUpperCase();
-            let postalCodeId = null;
+            const cityValue = document.getElementById('caCity').value.trim();
+            const stateValue = document.getElementById('caState').value.trim();
+            let postalCodeId = currentPostalCodeId;
 
-            if (postalCodeValue && countryCodeValue) {
-                // Try to find existing postal code
-                try {
-                    const resp = await fetch(`${API_BASE_URL}/api/v1/PostalCodes/${encodeURIComponent(postalCodeValue)}/country/${encodeURIComponent(countryCodeValue)}`, {
-                        method: 'GET',
-                        headers: getAuthHeaders()
-                    });
-
-                    if (resp.ok) {
-                        const pc = await resp.json();
-                        postalCodeId = pc.id;
-                    }
-                } catch (err) {
-                    console.warn('Postal code not found, will create new one');
+            // If postal code was not found, create a new one
+            if (!postalCodeFound && !postalCodeId) {
+                if (!cityValue) {
+                    showAlert('City is required when creating a new postal code', 'warning');
+                    return;
                 }
 
-                // Create postal code if not found
-                if (!postalCodeId) {
-                    try {
-                        const createPc = {
-                            code: postalCodeValue,
-                            countryCode: countryCodeValue,
-                            city: document.getElementById('caCity').value.trim() || '',
-                            state: document.getElementById('caState').value.trim() || null,
-                            isActive: true
-                        };
+                try {
+                    const createPc = {
+                        code: postalCodeValue,
+                        countryCode: countryCodeValue,
+                        city: cityValue,
+                        state: stateValue || null,
+                        isActive: true
+                    };
 
-                        const pcResp = await fetch(`${API_BASE_URL}/api/v1/PostalCodes`, {
-                            method: 'POST',
-                            headers: getAuthHeaders(),
-                            body: JSON.stringify(createPc)
-                        });
+                    const pcResp = await fetch(`${API_BASE_URL}/api/v1/PostalCodes`, {
+                        method: 'POST',
+                        headers: getAuthHeaders(),
+                        body: JSON.stringify(createPc)
+                    });
 
-                        if (pcResp.ok) {
-                            const createdPc = await pcResp.json();
-                            postalCodeId = createdPc.id;
-                        } else {
-                            showAlert('Failed to create postal code', 'danger');
-                            return;
-                        }
-                    } catch (err) {
-                        showAlert('Error creating postal code', 'danger');
+                    if (pcResp.ok) {
+                        const createdPc = await pcResp.json();
+                        postalCodeId = createdPc.id;
+                        currentPostalCodeId = postalCodeId;
+                        showAlert('New postal code created successfully!', 'success');
+                    } else {
+                        const errorData = await pcResp.json().catch(() => ({ error: 'Failed to create postal code' }));
+                        showAlert(`Error creating postal code: ${errorData.message || errorData.error}`, 'danger');
                         return;
                     }
+                } catch (err) {
+                    showAlert(`Error creating postal code: ${err.message}`, 'danger');
+                    return;
                 }
             }
 
@@ -1733,8 +1843,7 @@
 
                 if (response.ok) {
                     showAlert('Address added successfully!', 'success');
-                    document.getElementById('addAddressForm').reset();
-                    document.getElementById('caIsActive').checked = true;
+                    resetAddressForm();
                     loadCustomerAddresses();
                 } else {
                     showAlert(`Error: ${result.message || result.error || 'Failed to add address'}`, 'danger');
@@ -1743,6 +1852,20 @@
                 showAlert(`Error: ${error.message}`, 'danger');
                 updateResponseBox({ error: error.message });
             }
+        }
+
+        // Reset Address Form
+        function resetAddressForm() {
+            document.getElementById('addAddressForm').reset();
+            document.getElementById('caIsActive').checked = true;
+            
+            // Reset postal code lookup state
+            currentPostalCodeId = null;
+            postalCodeFound = false;
+            document.getElementById('postalCodeLookupStatus').style.display = 'none';
+            document.getElementById('cityStateFields').style.display = 'none';
+            document.getElementById('caCity').readOnly = false;
+            document.getElementById('caState').readOnly = false;
         }
 
         // Delete Customer Address

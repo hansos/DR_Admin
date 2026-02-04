@@ -15,11 +15,13 @@ namespace ISPAdmin.Controllers;
 public class PostalCodesController : ControllerBase
 {
     private readonly IPostalCodeService _postalCodeService;
+    private readonly ICountryService _countryService;
     private static readonly Serilog.ILogger _log = Log.ForContext<PostalCodesController>();
 
-    public PostalCodesController(IPostalCodeService postalCodeService)
+    public PostalCodesController(IPostalCodeService postalCodeService, ICountryService countryService)
     {
         _postalCodeService = postalCodeService;
+        _countryService = countryService;
     }
 
     /// <summary>
@@ -33,7 +35,7 @@ public class PostalCodesController : ControllerBase
     /// <response code="403">If user doesn't have required role</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet]
-    [Authorize(Policy = "GeographicalRead")]
+    [Authorize(Policy = "Geographical.Read")]
     [ProducesResponseType(typeof(IEnumerable<PostalCodeDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(PagedResult<PostalCodeDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -67,6 +69,64 @@ public class PostalCodesController : ControllerBase
         {
             _log.Error(ex, "API: Error in GetAllPostalCodes");
             return StatusCode(500, "An error occurred while retrieving postal codes");
+        }
+    }
+
+    /// <summary>
+    /// Lookup a postal code by country code and postal code combination
+    /// </summary>
+    /// <param name="countryCode">The country code (e.g., "US", "GB")</param>
+    /// <param name="postalCode">The postal code to lookup</param>
+    /// <returns>The postal code information if found</returns>
+    /// <response code="200">Returns the postal code data</response>
+    /// <response code="400">If the country code is invalid or country is not active</response>
+    /// <response code="404">If postal code is not found for the given country</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpGet("lookup")]
+    [ProducesResponseType(typeof(PostalCodeDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<PostalCodeDto>> LookupPostalCode([FromQuery] string countryCode, [FromQuery] string postalCode)
+    {
+        try
+        {
+            _log.Information("API: LookupPostalCode called for country {CountryCode} and postal code {PostalCode} by user {User}", 
+                countryCode, postalCode, User.Identity?.Name);
+
+            // Validate country exists and is active
+            var country = await _countryService.GetCountryByCodeAsync(countryCode);
+            
+            if (country == null)
+            {
+                _log.Warning("API: Country with code {CountryCode} does not exist", countryCode);
+                return BadRequest($"Country with code {countryCode} does not exist");
+            }
+
+            if (!country.IsActive)
+            {
+                _log.Warning("API: Country with code {CountryCode} is not active", countryCode);
+                return BadRequest($"Country with code {countryCode} is not active");
+            }
+
+            // Lookup postal code
+            var result = await _postalCodeService.GetPostalCodeByCodeAndCountryAsync(postalCode, countryCode);
+
+            if (result == null)
+            {
+                _log.Information("API: Postal code {PostalCode} for country {CountryCode} not found", postalCode, countryCode);
+                return NotFound($"Postal code {postalCode} for country {countryCode} not found");
+            }
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in LookupPostalCode for country {CountryCode} and postal code {PostalCode}", 
+                countryCode, postalCode);
+            return StatusCode(500, "An error occurred while looking up the postal code");
         }
     }
 
@@ -209,8 +269,17 @@ public class PostalCodesController : ControllerBase
     /// <summary>
     /// Create a new postal code
     /// </summary>
+    /// <param name="createDto">Postal code information for creation</param>
+    /// <returns>The newly created postal code</returns>
+    /// <response code="201">Returns the newly created postal code</response>
+    /// <response code="400">If the postal code data is invalid or country doesn't exist/is inactive</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpPost]
-    [Authorize(Policy = "GeographicalWrite")]
+    [ProducesResponseType(typeof(PostalCodeDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<PostalCodeDto>> CreatePostalCode([FromBody] CreatePostalCodeDto createDto)
     {
         try

@@ -9,4 +9,5 @@
   <Project Path="PaymentGatewayLib/PaymentGatewayLib.csproj" Id="643cbbc6-669f-43e2-8679-1fa9bd020d40" />
   <Project Path="ReportGeneratorLib/ReportGeneratorLib.csproj" Id="9a7fe4b1-1a5a-4485-9a39-744f14cbf5b3" />
   <Project Path="SMSSenderLib/SMSSenderLib.csproj" />
+  <Project Path="Tool_PostalCodeNormalizer/Tool_PostalCodeNormalizer.csproj" Id="cdc1d636-ed90-48b1-921b-46624a890137" />
 </Solution>
