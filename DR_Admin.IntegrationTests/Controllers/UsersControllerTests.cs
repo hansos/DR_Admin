@@ -145,7 +145,6 @@ public class UsersControllerTests : IClassFixture<TestWebApplicationFactory>
             Name = "Test Customer",
             Email = $"testuser{DateTime.UtcNow.Ticks}@example.com",
             Phone = "555-USER",
-            Address = "123 User St",
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -206,7 +205,6 @@ public class UsersControllerTests : IClassFixture<TestWebApplicationFactory>
             Name = $"{roleName} Test Customer {timestamp}",
             Email = $"{roleName.ToLower()}{timestamp}@example.com",
             Phone = "555-0100",
-            Address = "123 Test St",
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };

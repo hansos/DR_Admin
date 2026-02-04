@@ -123,7 +123,6 @@ public class RegistrarTldsControllerTests : IClassFixture<TestWebApplicationFact
             Name = $"Test Customer {timestamp}",
             Email = $"test{timestamp}@example.com",
             Phone = "555-0100",
-            Address = "123 Test St",
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
