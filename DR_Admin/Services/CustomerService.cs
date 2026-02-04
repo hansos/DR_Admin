@@ -6,6 +6,9 @@ using Serilog;
 
 namespace ISPAdmin.Services;
 
+/// <summary>
+/// Service for managing customer operations
+/// </summary>
 public class CustomerService : ICustomerService
 {
     private readonly ApplicationDbContext _context;
@@ -16,6 +19,10 @@ public class CustomerService : ICustomerService
         _context = context;
     }
 
+    /// <summary>
+    /// Retrieves all customers from the database
+    /// </summary>
+    /// <returns>A collection of all customers</returns>
     public async Task<IEnumerable<CustomerDto>> GetAllCustomersAsync()
     {
         try
@@ -38,6 +45,11 @@ public class CustomerService : ICustomerService
         }
     }
 
+    /// <summary>
+    /// Retrieves a paginated list of customers
+    /// </summary>
+    /// <param name="parameters">Pagination parameters including page number and page size</param>
+    /// <returns>A paged result containing customers and pagination metadata</returns>
     public async Task<PagedResult<CustomerDto>> GetAllCustomersPagedAsync(PaginationParameters parameters)
     {
         try
@@ -76,6 +88,11 @@ public class CustomerService : ICustomerService
         }
     }
 
+    /// <summary>
+    /// Retrieves a customer by their unique identifier
+    /// </summary>
+    /// <param name="id">The customer's unique identifier</param>
+    /// <returns>The customer if found; otherwise, null</returns>
     public async Task<CustomerDto?> GetCustomerByIdAsync(int id)
     {
         try
@@ -102,6 +119,11 @@ public class CustomerService : ICustomerService
         }
     }
 
+    /// <summary>
+    /// Retrieves a customer by their email address
+    /// </summary>
+    /// <param name="email">The email address to search for</param>
+    /// <returns>The customer if found; otherwise, null</returns>
     public async Task<CustomerDto?> GetCustomerByEmailAsync(string email)
     {
         try
@@ -128,6 +150,36 @@ public class CustomerService : ICustomerService
         }
     }
 
+    /// <summary>
+    /// Checks if an email address exists in the customer database
+    /// </summary>
+    /// <param name="email">The email address to check</param>
+    /// <returns>True if the email exists; otherwise, false</returns>
+    public async Task<bool> CheckEmailExistsAsync(string email)
+    {
+        try
+        {
+            _log.Information("Checking if email exists: {Email}", email);
+            
+            var exists = await _context.Customers
+                .AsNoTracking()
+                .AnyAsync(c => c.Email == email || c.BillingEmail == email);
+
+            _log.Information("Email {Email} exists: {Exists}", email, exists);
+            return exists;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while checking if email exists: {Email}", email);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Creates a new customer
+    /// </summary>
+    /// <param name="createDto">The customer data for creation</param>
+    /// <returns>The newly created customer</returns>
     public async Task<CustomerDto> CreateCustomerAsync(CreateCustomerDto createDto)
     {
         try
@@ -175,6 +227,12 @@ public class CustomerService : ICustomerService
         }
     }
 
+    /// <summary>
+    /// Updates an existing customer
+    /// </summary>
+    /// <param name="id">The customer's unique identifier</param>
+    /// <param name="updateDto">The updated customer data</param>
+    /// <returns>The updated customer if found; otherwise, null</returns>
     public async Task<CustomerDto?> UpdateCustomerAsync(int id, UpdateCustomerDto updateDto)
     {
         try
@@ -224,6 +282,11 @@ public class CustomerService : ICustomerService
         }
     }
 
+    /// <summary>
+    /// Deletes a customer from the database
+    /// </summary>
+    /// <param name="id">The customer's unique identifier</param>
+    /// <returns>True if the customer was deleted; otherwise, false</returns>
     public async Task<bool> DeleteCustomerAsync(int id)
     {
         try

@@ -27,12 +27,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Index.md",
+                "file": "Features/Roadmap.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Index"
+              "title": "Roadmap"
             }
           }
         ],
@@ -109,7 +109,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Index.md",
+                "file": "Features/Roadmap.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -119,7 +119,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for Index"
+              "title": "Backlinks for Roadmap"
             }
           },
           {
@@ -128,12 +128,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Index.md",
+                "file": "Features/Roadmap.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from Index"
+              "title": "Outgoing links from Roadmap"
             }
           },
           {
@@ -171,13 +171,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Index.md",
+                "file": "Features/Roadmap.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of Index"
+              "title": "Outline of Roadmap"
             }
           }
         ]
@@ -200,10 +200,12 @@
   },
   "active": "446880d5348007bd",
   "lastOpenFiles": [
+    "Features/Overview.md",
+    "Features/Roadmap.md",
+    "Index.md",
     "Features/Workflows/index.md",
     "Features/Workflows/Customer-registration.md",
     "Features/Domain-registration.md",
-    "Index.md",
     "PaginationImplementation.md",
     "Features/CustomerManagement/Customers.md",
     "Installation/Build.md",
@@ -233,8 +235,6 @@
     "Features/BillngAndSales",
     "Features/BillngAndSale/Untitled.md",
     "Features/BillngAndSale",
-    "API/BillingAndSales/TaxRulesController.md",
-    "API/BillingAndSales/SubscriptionsController.md",
-    "API/BillingAndSales/SubscriptionBillingHistoriesController.md"
+    "API/BillingAndSales/TaxRulesController.md"
   ]
 }

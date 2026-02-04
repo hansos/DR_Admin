@@ -243,6 +243,22 @@ public class CreateCustomerDto
     public bool AllowCurrencyOverride { get; set; } = true;
 }
 
+/// <summary>
+/// Data transfer object for email existence check response
+/// </summary>
+public class EmailExistsDto
+{
+    /// <summary>
+    /// Gets or sets the email address that was checked
+    /// </summary>
+    public string Email { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Gets or sets a value indicating whether the email exists in the database
+    /// </summary>
+    public bool Exists { get; set; }
+}
+
 
 /// <summary>
 /// Data transfer object for updating an existing customer

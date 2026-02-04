@@ -241,4 +241,50 @@ public class CustomersController : ControllerBase
             return StatusCode(500, "An error occurred while deleting the customer");
         }
     }
+
+    /// <summary>
+    /// Checks if an email address exists in the customer database
+    /// </summary>
+    /// <param name="email">The email address to check</param>
+    /// <returns>Information about whether the email exists</returns>
+    /// <response code="200">Returns the email existence information</response>
+    /// <response code="400">If the email parameter is empty or invalid</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have required role (Admin, Support, or Sales)</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpGet("check-email")]
+    [Authorize(Policy = "Customer.Read")]
+    [ProducesResponseType(typeof(EmailExistsDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<EmailExistsDto>> CheckEmailExists([FromQuery] string email)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                _log.Warning("API: CheckEmailExists called with empty email");
+                return BadRequest("Email parameter is required");
+            }
+
+            _log.Information("API: CheckEmailExists called for email {Email} by user {User}", email, User.Identity?.Name);
+
+            var exists = await _customerService.CheckEmailExistsAsync(email);
+
+            var result = new EmailExistsDto
+            {
+                Email = email,
+                Exists = exists
+            };
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in CheckEmailExists for email {Email}", email);
+            return StatusCode(500, "An error occurred while checking email existence");
+        }
+    }
 }
