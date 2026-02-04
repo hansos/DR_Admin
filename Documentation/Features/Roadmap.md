@@ -120,7 +120,47 @@ It provides programmatic access to domain registration, hosting management, and 
 
 ---
 
-## 5. Reporting & Automation
+## 5. Customer Management
+
+### Features
+- **Customer Lifecycle & Profiles**
+  - Create, read, update, and delete customer accounts.
+  - Store billing address, contact information, VAT/tax IDs, and custom metadata.
+- **Onboarding & Verification**
+  - Email verification, required fields validation, and initial provisioning workflows.
+- **Contact Persons & Roles**
+  - Multiple contact persons per customer (billing, technical, administrative).
+  - Assign contact roles and permissions.
+- **Billing Preferences & Payment Methods**
+  - Store and manage customer payment methods (cards, direct debit, stored gateway tokens).
+  - Set billing cycles, default payment method, and invoice delivery preferences.
+- **Credits, Discounts & Coupons**
+  - Apply credits to customer accounts and manage coupon redemptions.
+- **Subscriptions & Services**
+  - Link hosting, domains, and other services to customer accounts.
+  - Manage subscription lifecycle (start, pause, cancel, renew).
+- **Account Status & Operations**
+  - Suspend/reactivate/terminate customers and cascade actions to linked services.
+- **Support & Tickets**
+  - Associate support tickets and communication history with customer records.
+- **Search, Filtering & Bulk Operations**
+  - Full-text and attribute filters (by email, company, VAT, status), bulk import/export.
+- **Audit & Compliance**
+  - Change history, GDPR support (data export, anonymization), and consent tracking.
+
+### Workflows
+1. **Onboard new customer**
+   - Collect required info → Verify email/identity → Provision initial services → Generate welcome invoice
+2. **Update billing information**
+   - Customer updates payment method → Validate payment method → Update default and retry failed payments
+3. **Suspend a customer**
+   - Apply suspension → Notify customer → Suspend linked services (hosting, domains) per policy
+4. **Close account**
+   - Export customer data → Revoke access → Optionally anonymize data per GDPR
+
+---
+
+## 6. Reporting & Automation
 
 ### Features
 - **Activity Logs**
