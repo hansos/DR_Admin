@@ -83,14 +83,15 @@
                     </div>
                 </div>
 
-                <!-- Address Information -->
-                <h5 class="mb-3 mt-4" style="color: #667eea; font-weight: 600;">Address Information</h5>
-                <div class="row">
-                    <div class="col-md-12 mb-3">
-                        <label for="createAddress" class="form-label">Address</label>
-                        <textarea class="form-control" id="createAddress" rows="2" placeholder="Enter street address..."></textarea>
-                    </div>
+            <div class="mb-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="createAsAddress" checked>
+                    <label class="form-check-label" for="createAsAddress">
+                        Also create a CustomerAddress record (uses Postal Code / PostalCodeId relation)
+                    </label>
+                    <small class="text-muted d-block">When checked the test page will attempt to create a linked CustomerAddress and PostalCode as needed.</small>
                 </div>
+            </div>
                 <div class="row">
                     <div class="col-md-4 mb-3">
                         <label for="createCity" class="form-label">City</label>
@@ -307,35 +308,7 @@
                             </div>
                         </div>
 
-                        <!-- Address Information -->
-                        <h5 class="mb-3 mt-4" style="color: #667eea; font-weight: 600;">Address Information</h5>
-                        <div class="row">
-                            <div class="col-md-12 mb-3">
-                                <label for="editAddress" class="form-label">Address</label>
-                                <textarea class="form-control" id="editAddress" rows="2"></textarea>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-4 mb-3">
-                                <label for="editCity" class="form-label">City</label>
-                                <input type="text" class="form-control" id="editCity">
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label for="editState" class="form-label">State/Province</label>
-                                <input type="text" class="form-control" id="editState">
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label for="editPostalCode" class="form-label">Postal Code</label>
-                                <input type="text" class="form-control" id="editPostalCode">
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="editCountryCode" class="form-label">Country Code</label>
-                                <input type="text" class="form-control" id="editCountryCode" maxlength="2">
-                                <small class="text-muted">2-letter ISO country code</small>
-                            </div>
-                        </div>
+                        <!-- Address editing removed: address updates are handled via CustomerAddress records -->
 
                         <!-- Tax and Company Information -->
                         <h5 class="mb-3 mt-4" style="color: #667eea; font-weight: 600;">Tax & Company Information</h5>
@@ -465,8 +438,9 @@
             // Setup create form
             document.getElementById('createForm').addEventListener('submit', handleCreate);
 
-            // Load customer statuses
+            // Load customer statuses and address types
             await loadCustomerStatuses();
+            await loadAddressTypes();
 
             // Load all customers on init
             getAllCustomers();
@@ -489,6 +463,30 @@
                 if (alert) {
                     bootstrap.Alert.getOrCreateInstance(alert).close();
                 }
+
+        // Load Address Types (used when creating CustomerAddress records)
+        let addressTypes = [];
+        let defaultAddressTypeId = null;
+        async function loadAddressTypes() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/AddressTypes`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                if (response.ok) {
+                    addressTypes = await response.json();
+                    if (Array.isArray(addressTypes) && addressTypes.length > 0) {
+                        const def = addressTypes.find(a => a.isDefault) || addressTypes[0];
+                        defaultAddressTypeId = def?.id || null;
+                    }
+                } else {
+                    console.warn('Failed to load address types');
+                }
+            } catch (err) {
+                console.error('Error loading address types', err);
+            }
+        }
             }, 5000);
         }
 
@@ -650,6 +648,19 @@
 
                 if (response.ok) {
                     showAlert('Customer created successfully!', 'success');
+                    // If API returned created customer object use it
+                    const createdCustomer = result;
+
+                    // Optionally create a CustomerAddress record linked to this customer
+                    try {
+                        if (document.getElementById('createAsAddress')?.checked) {
+                            await createCustomerAddressForCustomer(createdCustomer.id);
+                        }
+                    } catch (err) {
+                        console.error('Failed to create customer address:', err);
+                        showAlert('Customer created but failed to create address record', 'warning');
+                    }
+
                     document.getElementById('createForm').reset();
                     document.getElementById('createIsActive').checked = true;
                     document.getElementById('createCreditLimit').value = 0;
@@ -661,6 +672,91 @@
             } catch (error) {
                 showAlert(`Error: ${error.message}`, 'danger');
                 updateResponseBox({ error: error.message });
+            }
+        }
+
+        // Attempt to create a CustomerAddress for a given customer using values from create form
+        async function createCustomerAddressForCustomer(customerId) {
+            // Need an address type and a postal code id
+            if (!defaultAddressTypeId) {
+                console.warn('No address type available, skipping address creation');
+                return;
+            }
+
+            const postalCodeValue = document.getElementById('createPostalCode').value.trim();
+            const countryCodeValue = document.getElementById('createCountryCode').value.trim().toUpperCase();
+            let postalCodeId = null;
+
+            if (postalCodeValue && countryCodeValue) {
+                // Try to find existing postal code
+                try {
+                    const resp = await fetch(`${API_BASE_URL}/api/v1/PostalCodes/${encodeURIComponent(postalCodeValue)}/country/${encodeURIComponent(countryCodeValue)}`, {
+                        method: 'GET',
+                        headers: getAuthHeaders()
+                    });
+
+                    if (resp.ok) {
+                        const pc = await resp.json();
+                        postalCodeId = pc.id;
+                    }
+                } catch (err) {
+                    console.warn('Error finding postal code', err);
+                }
+            }
+
+            // If not found and we have enough info, create a postal code record
+            if (!postalCodeId && postalCodeValue && countryCodeValue) {
+                try {
+                    const createPc = {
+                        code: postalCodeValue,
+                        countryCode: countryCodeValue,
+                        city: document.getElementById('createCity').value.trim() || '',
+                        state: document.getElementById('createState').value.trim() || null,
+                        district: null,
+                        region: null,
+                        latitude: null,
+                        longitude: null,
+                        isActive: true
+                    };
+
+                    const pcResp = await fetch(`${API_BASE_URL}/api/v1/PostalCodes`, {
+                        method: 'POST',
+                        headers: getAuthHeaders(),
+                        body: JSON.stringify(createPc)
+                    });
+
+                    if (pcResp.ok) {
+                        const createdPc = await pcResp.json();
+                        postalCodeId = createdPc.id;
+                    }
+                } catch (err) {
+                    console.warn('Error creating postal code', err);
+                }
+            }
+
+            // Build create address DTO
+            const createAddr = {
+                addressTypeId: parseInt(defaultAddressTypeId) || 0,
+                postalCodeId: postalCodeId || 0,
+                addressLine1: document.getElementById('createAddress').value.trim() || '',
+                addressLine2: null,
+                addressLine3: null,
+                addressLine4: null,
+                isPrimary: true,
+                isActive: true,
+                notes: null
+            };
+
+            // If we don't have a postalCodeId, the API may reject; attempt anyway to let server validate
+            const resp = await fetch(`${API_BASE_URL}/api/v1/customers/${customerId}/addresses`, {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify(createAddr)
+            });
+
+            if (!resp.ok) {
+                const text = await resp.text();
+                throw new Error(text || 'Failed to create customer address');
             }
         }
 
@@ -936,11 +1032,7 @@
             document.getElementById('editBillingEmail').value = customer.billingEmail || '';
             document.getElementById('editPhone').value = customer.phone || '';
             document.getElementById('editContactPerson').value = customer.contactPerson || '';
-            document.getElementById('editAddress').value = customer.address || '';
-            document.getElementById('editCity').value = customer.city || '';
-            document.getElementById('editState').value = customer.state || '';
-            document.getElementById('editPostalCode').value = customer.postalCode || '';
-            document.getElementById('editCountryCode').value = customer.countryCode || '';
+            // Address fields removed from edit modal. Address data is managed via CustomerAddress records.
             document.getElementById('editIsCompany').value = customer.isCompany ? 'true' : 'false';
             document.getElementById('editTaxId').value = customer.taxId || '';
             document.getElementById('editVatNumber').value = customer.vatNumber || '';
@@ -962,11 +1054,7 @@
                 name: document.getElementById('editName').value.trim(),
                 email: document.getElementById('editEmail').value.trim(),
                 phone: document.getElementById('editPhone').value.trim() || null,
-                address: document.getElementById('editAddress').value.trim() || null,
-                city: document.getElementById('editCity').value.trim() || null,
-                state: document.getElementById('editState').value.trim() || null,
-                postalCode: document.getElementById('editPostalCode').value.trim() || null,
-                countryCode: document.getElementById('editCountryCode').value.trim() || null,
+                // Address fields removed: not sent in customer update payload
                 customerName: document.getElementById('editCustomerName').value.trim() || null,
                 taxId: document.getElementById('editTaxId').value.trim() || null,
                 vatNumber: document.getElementById('editVatNumber').value.trim() || null,

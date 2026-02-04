@@ -124,6 +124,27 @@ public class InitializationService : IInitializationService
             response.ServiceTypesAdded = serviceTypesAdded;
             response.TotalServiceTypes = await _context.ServiceTypes.CountAsync();
 
+            // Ensure address types exist
+            var addressTypesAdded = 0;
+            var addressTypes = new[]
+            {
+                new AddressType { Code = "OFFICE", Name = "Office Address", Description = "Office or business address", IsActive = true, IsDefault = false, SortOrder = 10, NormalizedCode = "OFFICE", NormalizedName = "OFFICE", CreatedAt = now, UpdatedAt = now },
+                new AddressType { Code = "POSTAL", Name = "Postal Address", Description = "Postal or mailing address", IsActive = true, IsDefault = false, SortOrder = 20, NormalizedCode = "POSTAL", NormalizedName = "POSTAL", CreatedAt = now, UpdatedAt = now }
+            };
+
+            foreach (var at in addressTypes)
+            {
+                var exists = await _context.AddressTypes.FirstOrDefaultAsync(x => x.Code == at.Code);
+                if (exists == null)
+                {
+                    _context.AddressTypes.Add(at);
+                    addressTypesAdded++;
+                    _log.Information("Created address type: {Code}", at.Code);
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
             _log.Information("Code tables updated - Roles: {RolesAdded}/{TotalRoles}, Statuses: {StatusesAdded}/{TotalStatuses}, DNS Types: {DnsAdded}/{TotalDns}, Service Types: {ServiceAdded}/{TotalService}",
                 rolesAdded, response.TotalRoles, statusesAdded, response.TotalCustomerStatuses, 
                 dnsTypesAdded, response.TotalDnsRecordTypes, serviceTypesAdded, response.TotalServiceTypes);
