@@ -52,3 +52,48 @@ public class UpdatePostalCodeDto
     public decimal? Longitude { get; set; }
     public bool IsActive { get; set; }
 }
+
+/// <summary>
+/// Data transfer object for a postal code import item
+/// </summary>
+public class ImportPostalCodeItemDto
+{
+    public string Code { get; set; } = string.Empty;
+    public string City { get; set; } = string.Empty;
+    public string? State { get; set; }
+    public string? Region { get; set; }
+    public string? District { get; set; }
+    public decimal? Latitude { get; set; }
+    public decimal? Longitude { get; set; }
+    public bool IsActive { get; set; } = true;
+}
+
+/// <summary>
+/// Data transfer object for importing postal codes
+/// </summary>
+public class ImportPostalCodesDto
+{
+    public string CountryCode { get; set; } = string.Empty;
+    public List<ImportPostalCodeItemDto> PostalCodes { get; set; } = new();
+}
+
+/// <summary>
+/// Data transfer object for uploading postal codes CSV file
+/// </summary>
+public class UploadPostalCodesCsvDto
+{
+    public string CountryCode { get; set; } = string.Empty;
+    public IFormFile? File { get; set; }
+}
+
+/// <summary>
+/// Result of postal codes import operation
+/// </summary>
+public class ImportPostalCodesResultDto
+{
+    public int TotalProcessed { get; set; }
+    public int Created { get; set; }
+    public int Updated { get; set; }
+    public int Skipped { get; set; }
+    public List<string> Errors { get; set; } = new();
+}

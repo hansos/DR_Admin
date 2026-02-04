@@ -7,7 +7,7 @@ if (args.Length == 0 || args.Contains("--help") || args.Contains("-h"))
 }
 
 string? inputFile = null;
-string? regionFile = null;
+string? stateFile = null;
 string? outputFile = null;
 bool isNorwegian = false;
 
@@ -22,9 +22,9 @@ for (int i = 0; i < args.Length; i++)
             if (i + 1 < args.Length)
                 inputFile = args[++i];
             break;
-        case "--region":
+        case "--state":
             if (i + 1 < args.Length)
-                regionFile = args[++i];
+                stateFile = args[++i];
             break;
         case "--output":
             if (i + 1 < args.Length)
@@ -53,9 +53,9 @@ if (!File.Exists(inputFile))
     return;
 }
 
-if (isNorwegian && !string.IsNullOrEmpty(regionFile) && !File.Exists(regionFile))
+if (isNorwegian && !string.IsNullOrEmpty(stateFile) && !File.Exists(stateFile))
 {
-    Console.Error.WriteLine($"Error: Region file not found: {regionFile}");
+    Console.Error.WriteLine($"Error: State file not found: {stateFile}");
     return;
 }
 
@@ -64,7 +64,7 @@ try
     if (isNorwegian)
     {
         var processor = new Tool_PostalCodeNormalizer.NorwegianPostalCodeProcessor();
-        processor.Process(inputFile, regionFile, outputFile);
+        processor.Process(inputFile, stateFile, outputFile);
     }
     else
     {
@@ -85,50 +85,50 @@ void ShowHelp()
     Console.WriteLine("Postal Code Normalizer Tool");
     Console.WriteLine();
     Console.WriteLine("Usage:");
-    Console.WriteLine("  Tool_PostalCodeNormalizer --input <file> --output <file> [--no] [--region <file>]");
+    Console.WriteLine("  Tool_PostalCodeNormalizer --input <file> --output <file> [--no] [--state <file>]");
     Console.WriteLine();
     Console.WriteLine("Options:");
     Console.WriteLine("  --input <file>   Input postal code file path");
     Console.WriteLine("  --output <file>  Output normalized file path");
     Console.WriteLine("  --no             Process Norwegian postal code format");
-    Console.WriteLine("  --region <file>  Region file path (used with --no for Norway)");
+    Console.WriteLine("  --state <file>  State file path (used with --no for Norway)");
     Console.WriteLine("  --help, -h       Show this help message");
     Console.WriteLine();
-    Console.WriteLine("Output format: CSV with columns PostalCode,City,Region");
+    Console.WriteLine("Output format: CSV with columns PostalCode,City,State");
 }
 
-void ProcessNorwegianPostalCodes(string inputFile, string? regionFile, string outputFile)
+void ProcessNorwegianPostalCodes(string inputFile, string? stateFile, string outputFile)
 {
     Console.WriteLine("Processing Norwegian postal codes...");
     
-    var postalCodes = new Dictionary<string, (string City, string? Region)>();
-    var regions = new Dictionary<string, string>();
+    var postalCodes = new Dictionary<string, (string City, string? State)>();
+    var states = new Dictionary<string, string>();
 
-    // Read region file if provided
-    if (!string.IsNullOrEmpty(regionFile))
+    // Read state file if provided
+    if (!string.IsNullOrEmpty(stateFile))
     {
-        Console.WriteLine($"Reading region file: {regionFile}");
-        var regionLines = File.ReadAllLines(regionFile, Encoding.UTF8);
+        Console.WriteLine($"Reading state file: {stateFile}");
+        var stateLines = File.ReadAllLines(stateFile, Encoding.UTF8);
         
-        var firstRegionLine = regionLines.Skip(1).FirstOrDefault(l => !string.IsNullOrWhiteSpace(l));
-        char regionDelimiter = DetectDelimiter(firstRegionLine ?? "");
-        Console.WriteLine($"Region file delimiter: {(regionDelimiter == '\t' ? "TAB" : regionDelimiter.ToString())}");
+        var firstStateLine = stateLines.Skip(1).FirstOrDefault(l => !string.IsNullOrWhiteSpace(l));
+        char stateDelimiter = DetectDelimiter(firstStateLine ?? "");
+        Console.WriteLine($"State file delimiter: {(stateDelimiter == '\t' ? "TAB" : stateDelimiter.ToString())}");
         
-        foreach (var line in regionLines.Skip(1)) // Skip header
+        foreach (var line in stateLines.Skip(1)) // Skip header
         {
             if (string.IsNullOrWhiteSpace(line)) continue;
             
-            var parts = ParseCsvLine(line, regionDelimiter);
+            var parts = ParseCsvLine(line, stateDelimiter);
             if (parts.Length >= 2)
             {
-                var regionCode = parts[0].Trim().Trim('"');
-                var regionName = parts[1].Trim().Trim('"');
-                regions[regionCode] = regionName;
+                var stateCode = parts[0].Trim().Trim('"');
+                var stateName = parts[1].Trim().Trim('"');
+                states[stateCode] = stateName;
             }
         }
-        Console.WriteLine($"Loaded {regions.Count} region mappings");
-        Console.WriteLine("DEBUG: Region codes loaded:");
-        foreach (var kvp in regions.OrderBy(x => x.Key))
+        Console.WriteLine($"Loaded {states.Count} state mappings");
+        Console.WriteLine("DEBUG: State codes loaded:");
+        foreach (var kvp in states.OrderBy(x => x.Key))
         {
             Console.WriteLine($"  {kvp.Key} -> {kvp.Value}");
         }
@@ -143,7 +143,7 @@ void ProcessNorwegianPostalCodes(string inputFile, string? regionFile, string ou
     char delimiter = DetectDelimiter(firstDataLine ?? "");
     Console.WriteLine($"Detected delimiter: {(delimiter == '\t' ? "TAB" : delimiter.ToString())}");
     
-    int matchedRegions = 0;
+    int matchedStates = 0;
     int lineNumber = 1;
     foreach (var line in inputLines.Skip(1)) // Skip header
     {
@@ -157,24 +157,24 @@ void ProcessNorwegianPostalCodes(string inputFile, string? regionFile, string ou
             var city = parts[1].Trim().Trim('"');
             var kommuneNumber = parts.Length >= 3 ? parts[2].Trim().Trim('"') : "";
             
-            // Get region from region file if available
-            // Region code is the first 2 digits of Kommunenummer
+            // Get state from state file if available
+            // State code is the first 2 digits of Kommunenummer
             // Kommunenummer should be 4 digits, pad with leading zeros if needed
-            string? region = null;
+            string? state = null;
             if (!string.IsNullOrEmpty(kommuneNumber))
             {
                 // Pad to 4 digits (e.g., 301 -> 0301)
                 var paddedKommune = kommuneNumber.PadLeft(4, '0');
-                var regionCode = paddedKommune.Substring(0, 2);
+                var stateCode = paddedKommune.Substring(0, 2);
                 
-                if (regions.TryGetValue(regionCode, out var regionValue))
+                if (states.TryGetValue(stateCode, out var stateValue))
                 {
-                    region = regionValue;
-                    matchedRegions++;
+                    state = stateValue;
+                    matchedStates++;
                 }
                 else if (lineNumber <= 10)
                 {
-                    Console.WriteLine($"DEBUG: Line {lineNumber} - PostalCode: {postalCode}, Kommune: {kommuneNumber} -> {paddedKommune}, RegionCode: {regionCode} - NO MATCH");
+                    Console.WriteLine($"DEBUG: Line {lineNumber} - PostalCode: {postalCode}, Kommune: {kommuneNumber} -> {paddedKommune}, StateCode: {stateCode} - NO MATCH");
                 }
             }
             else if (lineNumber <= 10)
@@ -182,37 +182,37 @@ void ProcessNorwegianPostalCodes(string inputFile, string? regionFile, string ou
                 Console.WriteLine($"DEBUG: Line {lineNumber} - PostalCode: {postalCode}, No kommune number in column 3");
             }
             
-            postalCodes[postalCode] = (city, region);
+            postalCodes[postalCode] = (city, state);
         }
     }
 
     Console.WriteLine($"Processed {postalCodes.Count} postal codes");
-    if (regions.Count > 0)
+    if (states.Count > 0)
     {
-        Console.WriteLine($"Matched {matchedRegions} postal codes with regions ({(double)matchedRegions / postalCodes.Count * 100:F1}%)");
+        Console.WriteLine($"Matched {matchedStates} postal codes with states ({(double)matchedStates / postalCodes.Count * 100:F1}%)");
     }
 
     // Write normalized output
     using var writer = new StreamWriter(outputFile, false, Encoding.UTF8);
-    writer.WriteLine("PostalCode,City,Region");
+    writer.WriteLine("PostalCode,City,State");
     
     foreach (var kvp in postalCodes.OrderBy(x => x.Key))
     {
         var postalCode = EscapeCsvField(kvp.Key);
         var city = EscapeCsvField(kvp.Value.City);
-        var region = EscapeCsvField(kvp.Value.Region ?? "");
+        var state = EscapeCsvField(kvp.Value.State ?? "");
         
-        writer.WriteLine($"{postalCode},{city},{region}");
+        writer.WriteLine($"{postalCode},{city},{state}");
     }
 
-    Console.WriteLine($"Matched {postalCodes.Count} postal codes with regions (100.0%)");
+    Console.WriteLine($"Matched {postalCodes.Count} postal codes with states (100.0%)");
 }
 
 void ProcessGenericPostalCodes(string inputFile, string outputFile)
 {
     Console.WriteLine("Processing postal codes...");
     
-    var postalCodes = new List<(string Code, string City, string Region)>();
+    var postalCodes = new List<(string Code, string City, string State)>();
 
     var inputLines = File.ReadAllLines(inputFile, Encoding.UTF8);
     
@@ -231,9 +231,9 @@ void ProcessGenericPostalCodes(string inputFile, string outputFile)
         {
             var postalCode = parts[0].Trim().Trim('"');
             var city = parts[1].Trim().Trim('"');
-            var region = parts.Length >= 3 ? parts[2].Trim().Trim('"') : "";
+            var state = parts.Length >= 3 ? parts[2].Trim().Trim('"') : "";
             
-            postalCodes.Add((postalCode, city, region));
+            postalCodes.Add((postalCode, city, state));
         }
     }
 
@@ -241,15 +241,15 @@ void ProcessGenericPostalCodes(string inputFile, string outputFile)
 
     // Write normalized output
     using var writer = new StreamWriter(outputFile, false, Encoding.UTF8);
-    writer.WriteLine("PostalCode,City,Region");
+    writer.WriteLine("PostalCode,City,State");
     
     foreach (var pc in postalCodes.OrderBy(x => x.Code))
     {
         var postalCode = EscapeCsvField(pc.Code);
         var city = EscapeCsvField(pc.City);
-        var region = EscapeCsvField(pc.Region);
+        var state = EscapeCsvField(pc.State);
         
-        writer.WriteLine($"{postalCode},{city},{region}");
+        writer.WriteLine($"{postalCode},{city},{state}");
     }
 }
 

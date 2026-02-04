@@ -13,4 +13,6 @@ public interface IPostalCodeService
     Task<PostalCodeDto> CreatePostalCodeAsync(CreatePostalCodeDto createDto);
     Task<PostalCodeDto?> UpdatePostalCodeAsync(int id, UpdatePostalCodeDto updateDto);
     Task<bool> DeletePostalCodeAsync(int id);
+    Task<ImportPostalCodesResultDto> ImportPostalCodesAsync(ImportPostalCodesDto importDto);
+    Task<ImportPostalCodesResultDto> ImportPostalCodesFromCsvAsync(Stream csvStream, string countryCode);
 }

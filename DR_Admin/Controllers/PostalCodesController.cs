@@ -379,4 +379,68 @@ public class PostalCodesController : ControllerBase
             return StatusCode(500, "An error occurred while deleting the postal code");
         }
     }
+
+    /// <summary>
+    /// Upload a CSV file with postal codes to merge into the PostalCodes table for a specific country.
+    /// Expected CSV format: PostalCode,City,State,Region,District,Latitude,Longitude,IsActive (minimum: PostalCode,City)
+    /// </summary>
+    /// <param name="dto">Upload data containing country code and CSV file</param>
+    /// <returns>Import result with statistics</returns>
+    /// <response code="200">Returns the import result with statistics</response>
+    /// <response code="400">If the file or country code is invalid or country doesn't exist/is inactive</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have required role</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpPost("upload-csv")]
+    [Consumes("multipart/form-data")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ImportPostalCodesResultDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ImportPostalCodesResultDto>> UploadPostalCodesCsv([FromForm] UploadPostalCodesCsvDto dto)
+    {
+        try
+        {
+            _log.Information("API: UploadPostalCodesCsv called for country {CountryCode} by user {User}", 
+                dto.CountryCode, User.Identity?.Name);
+
+            if (string.IsNullOrWhiteSpace(dto.CountryCode))
+            {
+                return BadRequest("Country code is required");
+            }
+
+            var file = dto.File;
+
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest("File is required");
+            }
+
+            using var stream = file.OpenReadStream();
+            var result = await _postalCodeService.ImportPostalCodesFromCsvAsync(stream, dto.CountryCode);
+
+            if (result.Errors.Any() && result.Created == 0 && result.Updated == 0)
+            {
+                _log.Warning("API: Import failed for country {CountryCode}", dto.CountryCode);
+                return BadRequest(result);
+            }
+
+            _log.Information("API: Import completed for country {CountryCode}: {Created} created, {Updated} updated, {Skipped} skipped", 
+                dto.CountryCode, result.Created, result.Updated, result.Skipped);
+
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _log.Warning(ex, "API: Invalid operation in UploadPostalCodesCsv");
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in UploadPostalCodesCsv for country {CountryCode}", dto?.CountryCode);
+            return StatusCode(500, "An error occurred while importing postal codes from CSV");
+        }
+    }
 }

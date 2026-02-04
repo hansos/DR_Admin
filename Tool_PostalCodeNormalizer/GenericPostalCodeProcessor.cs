@@ -8,7 +8,7 @@ internal class GenericPostalCodeProcessor
     {
         Console.WriteLine("Processing postal codes...");
 
-        var postalCodes = new List<(string Code, string City, string Region)>();
+        var postalCodes = new List<(string Code, string City, string State)>();
 
         var inputLines = File.ReadAllLines(inputFile, Encoding.UTF8);
 
@@ -27,9 +27,9 @@ internal class GenericPostalCodeProcessor
             {
                 var postalCode = parts[0].Trim().Trim('"');
                 var city = parts[1].Trim().Trim('"');
-                var region = parts.Length >= 3 ? parts[2].Trim().Trim('"') : "";
+                var state = parts.Length >= 3 ? parts[2].Trim().Trim('"') : "";
 
-                postalCodes.Add((postalCode, city, region));
+                postalCodes.Add((postalCode, city, state));
             }
         }
 
@@ -37,15 +37,15 @@ internal class GenericPostalCodeProcessor
 
         // Write normalized output
         using var writer = new StreamWriter(outputFile, false, Encoding.UTF8);
-        writer.WriteLine("PostalCode,City,Region");
+        writer.WriteLine("PostalCode,City,State");
 
         foreach (var pc in postalCodes.OrderBy(x => x.Code))
         {
             var postalCode = CsvHelper.EscapeCsvField(pc.Code);
             var city = CsvHelper.EscapeCsvField(pc.City);
-            var region = CsvHelper.EscapeCsvField(pc.Region);
+            var state = CsvHelper.EscapeCsvField(pc.State);
 
-            writer.WriteLine($"{postalCode},{city},{region}");
+            writer.WriteLine($"{postalCode},{city},{state}");
         }
     }
 }
