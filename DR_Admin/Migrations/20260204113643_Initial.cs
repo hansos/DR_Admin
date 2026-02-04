@@ -12,6 +12,28 @@ namespace ISPAdmin.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
+                name: "AddressTypes",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    Code = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    Description = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
+                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
+                    IsDefault = table.Column<bool>(type: "INTEGER", nullable: false),
+                    SortOrder = table.Column<int>(type: "INTEGER", nullable: false),
+                    NormalizedCode = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    NormalizedName = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AddressTypes", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "BackupSchedules",
                 columns: table => new
                 {
@@ -352,6 +374,35 @@ namespace ISPAdmin.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Registrars", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ReportTemplates",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    Name = table.Column<string>(type: "TEXT", nullable: false),
+                    Description = table.Column<string>(type: "TEXT", nullable: false),
+                    TemplateType = table.Column<int>(type: "INTEGER", nullable: false),
+                    ReportEngine = table.Column<string>(type: "TEXT", nullable: false),
+                    FileContent = table.Column<byte[]>(type: "BLOB", nullable: false),
+                    FileName = table.Column<string>(type: "TEXT", nullable: false),
+                    FileSize = table.Column<long>(type: "INTEGER", nullable: false),
+                    MimeType = table.Column<string>(type: "TEXT", nullable: false),
+                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
+                    IsDefault = table.Column<bool>(type: "INTEGER", nullable: false),
+                    DataSourceInfo = table.Column<string>(type: "TEXT", nullable: false),
+                    Version = table.Column<string>(type: "TEXT", nullable: false),
+                    Tags = table.Column<string>(type: "TEXT", nullable: false),
+                    DefaultExportFormat = table.Column<string>(type: "TEXT", nullable: false),
+                    DeletedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ReportTemplates", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -789,6 +840,48 @@ namespace ISPAdmin.Migrations
                         principalTable: "Customers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "CustomerAddresses",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    CustomerId = table.Column<int>(type: "INTEGER", nullable: false),
+                    AddressTypeId = table.Column<int>(type: "INTEGER", nullable: false),
+                    PostalCodeId = table.Column<int>(type: "INTEGER", nullable: false),
+                    AddressLine1 = table.Column<string>(type: "TEXT", maxLength: 500, nullable: false),
+                    AddressLine2 = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
+                    AddressLine3 = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
+                    AddressLine4 = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
+                    IsPrimary = table.Column<bool>(type: "INTEGER", nullable: false),
+                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
+                    Notes = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CustomerAddresses", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CustomerAddresses_AddressTypes_AddressTypeId",
+                        column: x => x.AddressTypeId,
+                        principalTable: "AddressTypes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_CustomerAddresses_Customers_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_CustomerAddresses_PostalCodes_PostalCodeId",
+                        column: x => x.PostalCodeId,
+                        principalTable: "PostalCodes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -1540,6 +1633,31 @@ namespace ISPAdmin.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "NameServers",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    DomainId = table.Column<int>(type: "INTEGER", nullable: false),
+                    Hostname = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false),
+                    IpAddress = table.Column<string>(type: "TEXT", maxLength: 45, nullable: true),
+                    IsPrimary = table.Column<bool>(type: "INTEGER", nullable: false),
+                    SortOrder = table.Column<int>(type: "INTEGER", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_NameServers", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_NameServers_Domains_DomainId",
+                        column: x => x.DomainId,
+                        principalTable: "Domains",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "CouponUsages",
                 columns: table => new
                 {
@@ -1923,6 +2041,33 @@ namespace ISPAdmin.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_AddressTypes_Code",
+                table: "AddressTypes",
+                column: "Code",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AddressTypes_IsActive",
+                table: "AddressTypes",
+                column: "IsActive");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AddressTypes_IsDefault",
+                table: "AddressTypes",
+                column: "IsDefault");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AddressTypes_NormalizedCode",
+                table: "AddressTypes",
+                column: "NormalizedCode",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AddressTypes_SortOrder",
+                table: "AddressTypes",
+                column: "SortOrder");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_AuditLogs_UserId",
                 table: "AuditLogs",
                 column: "UserId");
@@ -2059,6 +2204,31 @@ namespace ISPAdmin.Migrations
                 name: "IX_CurrencyExchangeRates_IsActive",
                 table: "CurrencyExchangeRates",
                 column: "IsActive");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CustomerAddresses_AddressTypeId",
+                table: "CustomerAddresses",
+                column: "AddressTypeId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CustomerAddresses_CustomerId",
+                table: "CustomerAddresses",
+                column: "CustomerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CustomerAddresses_IsActive",
+                table: "CustomerAddresses",
+                column: "IsActive");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CustomerAddresses_IsPrimary",
+                table: "CustomerAddresses",
+                column: "IsPrimary");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CustomerAddresses_PostalCodeId",
+                table: "CustomerAddresses",
+                column: "PostalCodeId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_CustomerCredits_CustomerId",
@@ -2231,12 +2401,14 @@ namespace ISPAdmin.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Domains_Name",
                 table: "Domains",
-                column: "Name");
+                column: "Name",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Domains_NormalizedName",
                 table: "Domains",
-                column: "NormalizedName");
+                column: "NormalizedName",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Domains_RegistrarId",
@@ -2323,6 +2495,16 @@ namespace ISPAdmin.Migrations
                 name: "IX_Invoices_OrderId",
                 table: "Invoices",
                 column: "OrderId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_NameServers_DomainId",
+                table: "NameServers",
+                column: "DomainId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_NameServers_DomainId_SortOrder",
+                table: "NameServers",
+                columns: new[] { "DomainId", "SortOrder" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Orders_CouponId",
@@ -2780,6 +2962,9 @@ namespace ISPAdmin.Migrations
                 name: "CurrencyExchangeRates");
 
             migrationBuilder.DropTable(
+                name: "CustomerAddresses");
+
+            migrationBuilder.DropTable(
                 name: "DnsRecords");
 
             migrationBuilder.DropTable(
@@ -2801,16 +2986,19 @@ namespace ISPAdmin.Migrations
                 name: "InvoiceLines");
 
             migrationBuilder.DropTable(
-                name: "OutboxEvents");
+                name: "NameServers");
 
             migrationBuilder.DropTable(
-                name: "PostalCodes");
+                name: "OutboxEvents");
 
             migrationBuilder.DropTable(
                 name: "QuoteLines");
 
             migrationBuilder.DropTable(
                 name: "Refunds");
+
+            migrationBuilder.DropTable(
+                name: "ReportTemplates");
 
             migrationBuilder.DropTable(
                 name: "SentEmails");
@@ -2837,19 +3025,25 @@ namespace ISPAdmin.Migrations
                 name: "CustomerCredits");
 
             migrationBuilder.DropTable(
+                name: "AddressTypes");
+
+            migrationBuilder.DropTable(
+                name: "PostalCodes");
+
+            migrationBuilder.DropTable(
                 name: "DnsRecordTypes");
 
             migrationBuilder.DropTable(
                 name: "DnsZonePackages");
 
             migrationBuilder.DropTable(
-                name: "Domains");
-
-            migrationBuilder.DropTable(
                 name: "ServerControlPanels");
 
             migrationBuilder.DropTable(
                 name: "Units");
+
+            migrationBuilder.DropTable(
+                name: "Domains");
 
             migrationBuilder.DropTable(
                 name: "PaymentTransactions");
@@ -2861,13 +3055,13 @@ namespace ISPAdmin.Migrations
                 name: "Roles");
 
             migrationBuilder.DropTable(
-                name: "RegistrarTlds");
-
-            migrationBuilder.DropTable(
                 name: "ControlPanelTypes");
 
             migrationBuilder.DropTable(
                 name: "Servers");
+
+            migrationBuilder.DropTable(
+                name: "RegistrarTlds");
 
             migrationBuilder.DropTable(
                 name: "PaymentIntents");

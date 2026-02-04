@@ -27,12 +27,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Features/Roadmap.md",
+                "file": "Features/CustomerManagement/CustomerAddress.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Roadmap"
+              "title": "CustomerAddress"
             }
           }
         ],
@@ -109,7 +109,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Features/Roadmap.md",
+                "file": "Features/CustomerManagement/CustomerAddress.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -119,7 +119,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for Roadmap"
+              "title": "Backlinks for CustomerAddress"
             }
           },
           {
@@ -128,12 +128,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Features/Roadmap.md",
+                "file": "Features/CustomerManagement/CustomerAddress.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from Roadmap"
+              "title": "Outgoing links from CustomerAddress"
             }
           },
           {
@@ -171,13 +171,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Features/Roadmap.md",
+                "file": "Features/CustomerManagement/CustomerAddress.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of Roadmap"
+              "title": "Outline of CustomerAddress"
             }
           }
         ]
@@ -200,14 +200,15 @@
   },
   "active": "446880d5348007bd",
   "lastOpenFiles": [
-    "Index.md",
+    "Features/CustomerManagement/Customers.md",
+    "Features/CustomerManagement/CustomerAddress.md",
     "Features/Roadmap.md",
+    "Index.md",
     "Features/Overview.md",
     "Features/Workflows/index.md",
     "Features/Workflows/Customer-registration.md",
     "Features/Domain-registration.md",
     "PaginationImplementation.md",
-    "Features/CustomerManagement/Customers.md",
     "Installation/Build.md",
     "Installation/Configuration.md",
     "Installation/Installation.md",
@@ -234,7 +235,6 @@
     "API/BillingAndSales/OrderToInvoiceFlow.md",
     "Features/BillngAndSales",
     "Features/BillngAndSale/Untitled.md",
-    "Features/BillngAndSale",
-    "API/BillingAndSales/TaxRulesController.md"
+    "Features/BillngAndSale"
   ]
 }

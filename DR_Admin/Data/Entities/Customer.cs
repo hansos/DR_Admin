@@ -60,4 +60,5 @@ public class Customer : EntityBase
     public ICollection<Order> Orders { get; set; } = new List<Order>();
     public ICollection<Domain> Domains { get; set; } = new List<Domain>();
     public ICollection<HostingAccount> HostingAccounts { get; set; } = new List<HostingAccount>();
+    public ICollection<CustomerAddress> CustomerAddresses { get; set; } = new List<CustomerAddress>();
 }

@@ -115,6 +115,11 @@ public class ApplicationDbContext : DbContext
                 customerStatus.NormalizedName = NormalizationHelper.Normalize(customerStatus.Name) ?? string.Empty;
                 break;
 
+            case AddressType addressType:
+                addressType.NormalizedCode = NormalizationHelper.Normalize(addressType.Code) ?? string.Empty;
+                addressType.NormalizedName = NormalizationHelper.Normalize(addressType.Name) ?? string.Empty;
+                break;
+
             case DomainContact domainContact:
                 domainContact.NormalizedFirstName = NormalizationHelper.Normalize(domainContact.FirstName) ?? string.Empty;
                 domainContact.NormalizedLastName = NormalizationHelper.Normalize(domainContact.LastName) ?? string.Empty;
@@ -125,6 +130,8 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<Customer> Customers { get; set; }
     public DbSet<CustomerStatus> CustomerStatuses { get; set; }
+    public DbSet<CustomerAddress> CustomerAddresses { get; set; }
+    public DbSet<AddressType> AddressTypes { get; set; }
     public DbSet<ContactPerson> ContactPersons { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<Role> Roles { get; set; }
@@ -255,6 +262,55 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => e.IsActive);
             entity.HasIndex(e => e.IsDefault);
             entity.HasIndex(e => e.SortOrder);
+        });
+
+        // AddressType configuration
+        modelBuilder.Entity<AddressType>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Code).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.NormalizedCode).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.NormalizedName).IsRequired().HasMaxLength(100);
+            
+            entity.HasIndex(e => e.Code).IsUnique();
+            entity.HasIndex(e => e.NormalizedCode).IsUnique();
+            entity.HasIndex(e => e.IsActive);
+            entity.HasIndex(e => e.IsDefault);
+            entity.HasIndex(e => e.SortOrder);
+        });
+
+        // CustomerAddress configuration
+        modelBuilder.Entity<CustomerAddress>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.AddressLine1).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.AddressLine2).HasMaxLength(500);
+            entity.Property(e => e.AddressLine3).HasMaxLength(500);
+            entity.Property(e => e.AddressLine4).HasMaxLength(500);
+            entity.Property(e => e.Notes).HasMaxLength(2000);
+            
+            entity.HasIndex(e => e.CustomerId);
+            entity.HasIndex(e => e.AddressTypeId);
+            entity.HasIndex(e => e.PostalCodeId);
+            entity.HasIndex(e => e.IsPrimary);
+            entity.HasIndex(e => e.IsActive);
+            
+            entity.HasOne(e => e.Customer)
+                .WithMany(c => c.CustomerAddresses)
+                .HasForeignKey(e => e.CustomerId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasOne(e => e.AddressType)
+                .WithMany(at => at.CustomerAddresses)
+                .HasForeignKey(e => e.AddressTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
+            
+            entity.HasOne(e => e.PostalCode)
+                .WithMany()
+                .HasForeignKey(e => e.PostalCodeId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         // ContactPerson configuration

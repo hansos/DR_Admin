@@ -105,6 +105,8 @@ builder.Services.AddTransient<IInitializationService, InitializationService>();
 builder.Services.AddTransient<IMyAccountService, MyAccountService>();
 builder.Services.AddTransient<ICustomerService, CustomerService>();
 builder.Services.AddTransient<ICustomerStatusService, CustomerStatusService>();
+builder.Services.AddTransient<ICustomerAddressService, CustomerAddressService>();
+builder.Services.AddTransient<IAddressTypeService, AddressTypeService>();
 builder.Services.AddTransient<IContactPersonService, ContactPersonService>();
 builder.Services.AddTransient<IUserService, UserService>();
 builder.Services.AddTransient<IRoleService, RoleService>();
