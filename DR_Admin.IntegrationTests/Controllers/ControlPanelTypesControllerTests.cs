@@ -801,7 +801,6 @@ public class ControlPanelTypesControllerTests : IClassFixture<TestWebApplication
             Name = $"{roleName} Test Customer {timestamp}",
             Email = $"{roleName.ToLower()}{timestamp}@example.com",
             Phone = "555-0100",
-            Address = "123 Test St",
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
