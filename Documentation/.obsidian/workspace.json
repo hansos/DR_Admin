@@ -27,12 +27,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Features/Workflows/Customer-registration.md",
+                "file": "Index.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Customer-registration"
+              "title": "Index"
             }
           }
         ],
@@ -109,7 +109,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Features/Workflows/Customer-registration.md",
+                "file": "Index.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -119,7 +119,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for Customer-registration"
+              "title": "Backlinks for Index"
             }
           },
           {
@@ -128,12 +128,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Features/Workflows/Customer-registration.md",
+                "file": "Index.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from Customer-registration"
+              "title": "Outgoing links from Index"
             }
           },
           {
@@ -171,13 +171,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Features/Workflows/Customer-registration.md",
+                "file": "Index.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of Customer-registration"
+              "title": "Outline of Index"
             }
           }
         ]
@@ -201,8 +201,8 @@
   "active": "446880d5348007bd",
   "lastOpenFiles": [
     "Features/Workflows/index.md",
-    "Features/Domain-registration.md",
     "Features/Workflows/Customer-registration.md",
+    "Features/Domain-registration.md",
     "Index.md",
     "PaginationImplementation.md",
     "Features/CustomerManagement/Customers.md",
