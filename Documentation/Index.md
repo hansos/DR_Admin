@@ -10,6 +10,7 @@ Being a REST API, **DR_Admin can be accessed programmatically by any client writ
 ## API Documentation
 
 - For installation hints , see the [Installation section](Installation/Installation.md).
+- For workflows, see the [Workflow Documentation](Features/WorkFlows/index.md).
 - For detailed API reference documentation, see the [API Documentation](API/index.md).
 
 ---

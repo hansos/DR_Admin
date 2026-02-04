@@ -200,8 +200,12 @@
   },
   "active": "446880d5348007bd",
   "lastOpenFiles": [
-    "Features/CustomerManagement/Customers.md",
+    "Features/Workflows/index.md",
+    "Features/Domain-registration.md",
     "Features/Workflows/Customer-registration.md",
+    "Index.md",
+    "PaginationImplementation.md",
+    "Features/CustomerManagement/Customers.md",
     "Installation/Build.md",
     "Installation/Configuration.md",
     "Installation/Installation.md",
@@ -209,9 +213,7 @@
     "API/DomainRegistration/DownloadAndMerge.md",
     "API/Reporting",
     "API/DomainRegistration/index.md",
-    "Index.md",
     "shtlxybr.baj~",
-    "PaginationImplementation.md",
     "API/index.md",
     "Installation",
     "API/CustomerManagement/index.md",
@@ -233,8 +235,6 @@
     "Features/BillngAndSale",
     "API/BillingAndSales/TaxRulesController.md",
     "API/BillingAndSales/SubscriptionsController.md",
-    "API/BillingAndSales/SubscriptionBillingHistoriesController.md",
-    "API/BillingAndSales/PaymentIntentsController.md",
-    "API/BillingAndSales/PaymentGatewaysController.md"
+    "API/BillingAndSales/SubscriptionBillingHistoriesController.md"
   ]
 }
