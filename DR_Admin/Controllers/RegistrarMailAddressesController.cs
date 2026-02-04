@@ -32,7 +32,7 @@ public class RegistrarMailAddressesController : ControllerBase
     /// <response code="403">If user doesn't have required permissions</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet]
-    [Authorize(Policy = "RegistrarMailAddress.Read")]
+    [Authorize(Policy = "Customer.Read")]
     [ProducesResponseType(typeof(IEnumerable<RegistrarMailAddressDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -64,7 +64,7 @@ public class RegistrarMailAddressesController : ControllerBase
     /// <response code="404">If default mail address is not found</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("default")]
-    [Authorize(Policy = "RegistrarMailAddress.Read")]
+    [Authorize(Policy = "Customer.Read")]
     [ProducesResponseType(typeof(RegistrarMailAddressDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -105,7 +105,7 @@ public class RegistrarMailAddressesController : ControllerBase
     /// <response code="404">If registrar mail address is not found</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("{id}")]
-    [Authorize(Policy = "RegistrarMailAddress.Read")]
+    [Authorize(Policy = "Customer.Read")]
     [ProducesResponseType(typeof(RegistrarMailAddressDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -147,7 +147,7 @@ public class RegistrarMailAddressesController : ControllerBase
     /// <response code="403">If user doesn't have required permissions</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpPost]
-    [Authorize(Policy = "RegistrarMailAddress.Write")]
+    [Authorize(Policy = "Customer.Write")]
     [ProducesResponseType(typeof(RegistrarMailAddressDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -193,7 +193,7 @@ public class RegistrarMailAddressesController : ControllerBase
     /// <response code="404">If registrar mail address is not found</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpPut("{id}")]
-    [Authorize(Policy = "RegistrarMailAddress.Write")]
+    [Authorize(Policy = "Customer.Write")]
     [ProducesResponseType(typeof(RegistrarMailAddressDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -242,7 +242,7 @@ public class RegistrarMailAddressesController : ControllerBase
     /// <response code="404">If registrar mail address is not found</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpDelete("{id}")]
-    [Authorize(Policy = "RegistrarMailAddress.Delete")]
+    [Authorize(Policy = "Customer.Delete")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -292,7 +292,7 @@ public class RegistrarMailAddressesController : ControllerBase
     /// <response code="404">If registrar mail address is not found</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpPut("{id}/set-default")]
-    [Authorize(Policy = "RegistrarMailAddress.Write")]
+    [Authorize(Policy = "Customer.Write")]
     [ProducesResponseType(typeof(RegistrarMailAddressDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]

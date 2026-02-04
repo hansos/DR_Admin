@@ -33,7 +33,7 @@ public class AddressTypesController : ControllerBase
     /// <response code="403">If user doesn't have required permissions</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet]
-    [Authorize(Policy = "AddressType.Read")]
+    [Authorize(Policy = "Customer.Read")]
     [ProducesResponseType(typeof(IEnumerable<AddressTypeDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(PagedResult<AddressTypeDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -81,7 +81,7 @@ public class AddressTypesController : ControllerBase
     /// <response code="404">If address type is not found</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("{id}")]
-    [Authorize(Policy = "AddressType.Read")]
+    [Authorize(Policy = "Customer.Read")]
     [ProducesResponseType(typeof(AddressTypeDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -121,7 +121,7 @@ public class AddressTypesController : ControllerBase
     /// <response code="403">If user doesn't have required permissions</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpPost]
-    [Authorize(Policy = "AddressType.Write")]
+    [Authorize(Policy = "Customer.Write")]
     [ProducesResponseType(typeof(AddressTypeDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -166,7 +166,7 @@ public class AddressTypesController : ControllerBase
     /// <response code="404">If address type is not found</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpPut("{id}")]
-    [Authorize(Policy = "AddressType.Write")]
+    [Authorize(Policy = "Customer.Write")]
     [ProducesResponseType(typeof(AddressTypeDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -213,7 +213,7 @@ public class AddressTypesController : ControllerBase
     /// <response code="404">If address type is not found</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpDelete("{id}")]
-    [Authorize(Policy = "AddressType.Delete")]
+    [Authorize(Policy = "Customer.Delete")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]

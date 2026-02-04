@@ -42,14 +42,14 @@ public static class AuthorizationPoliciesConfiguration
         options.AddPolicy("ControlPanelType.Write", policy =>
             policy.RequireRole(ADMIN));
 
-        // Country policies
-        options.AddPolicy("Country.Delete", policy =>
+        // Country Geographical policies
+        options.AddPolicy("Geographical.Delete", policy =>
             policy.RequireRole(ADMIN));
 
-        options.AddPolicy("Country.Read", policy =>
+        options.AddPolicy("Geographical.Read", policy =>
             policy.RequireRole(ADMIN, SUPPORT, SALES));
 
-        options.AddPolicy("Country.Write", policy =>
+        options.AddPolicy("Geographical.Write", policy =>
             policy.RequireRole(ADMIN));
 
         // Coupon policies
@@ -288,15 +288,6 @@ public static class AuthorizationPoliciesConfiguration
         options.AddPolicy("PaymentIntent.Write", policy =>
             policy.RequireRole(ADMIN, SUPPORT, CUSTOMER));
 
-        // PostalCode policies
-        options.AddPolicy("PostalCode.Delete", policy =>
-            policy.RequireRole(ADMIN));
-
-        options.AddPolicy("PostalCode.Read", policy =>
-            policy.RequireRole(ADMIN, SUPPORT, CUSTOMER));
-
-        options.AddPolicy("PostalCode.Write", policy =>
-            policy.RequireRole(ADMIN));
 
         // Quote policies
         options.AddPolicy("Quote.Delete", policy =>

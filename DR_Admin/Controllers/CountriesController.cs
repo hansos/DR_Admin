@@ -27,7 +27,7 @@ public class CountriesController : ControllerBase
     /// Set active flag for all countries
     /// </summary>
     [HttpPost("set-all-active/{isActive}")]
-    [Authorize(Policy = "Country.Write")]
+    [Authorize(Policy = "Geographical.Write")]
     public async Task<ActionResult> SetAllCountriesActive(bool isActive)
     {
         try
@@ -47,7 +47,7 @@ public class CountriesController : ControllerBase
     /// Set active flag for a selection of countries by codes (comma separated or JSON array)
     /// </summary>
     [HttpPost("set-active-by-codes")]
-    [Authorize(Policy = "Country.Write")]
+    [Authorize(Policy = "Geographical.Write")]
     public async Task<ActionResult> SetCountriesActiveByCodes([FromQuery] string? codes, [FromQuery] bool isActive = false, [FromBody] IEnumerable<string>? bodyCodes = null)
     {
         try
@@ -83,7 +83,7 @@ public class CountriesController : ControllerBase
     /// </summary>
     [HttpPost("upload-localized-names-csv")]
     [Consumes("multipart/form-data")]
-    [Authorize(Policy = "Country.Write")]
+    [Authorize(Policy = "Geographical.Write")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -123,7 +123,7 @@ public class CountriesController : ControllerBase
     /// </summary>
     [HttpPost("upload-csv")]
     [Consumes("multipart/form-data")]
-    [Authorize(Policy = "Country.Write")]
+    [Authorize(Policy = "Geographical.Write")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -333,7 +333,7 @@ public class CountriesController : ControllerBase
     /// <response code="403">If user doesn't have Admin role</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpPost]
-    [Authorize(Policy = "Country.Write")]
+    [Authorize(Policy = "Geographical.Write")]
     [ProducesResponseType(typeof(CountryDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -374,7 +374,7 @@ public class CountriesController : ControllerBase
     /// Update an existing country
     /// </summary>
     [HttpPut("{id}")]
-    [Authorize(Policy = "Country.Write")]
+    [Authorize(Policy = "Geographical.Write")]
     public async Task<ActionResult<CountryDto>> UpdateCountry(int id, [FromBody] UpdateCountryDto updateDto)
     {
         try
@@ -413,7 +413,7 @@ public class CountriesController : ControllerBase
     /// Delete a country
     /// </summary>
     [HttpDelete("{id}")]
-    [Authorize(Policy = "Country.Delete")]
+    [Authorize(Policy = "Geographical.Delete")]
     public async Task<ActionResult> DeleteCountry(int id)
     {
         try

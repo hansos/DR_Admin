@@ -76,42 +76,6 @@
                         <label for="createPhone" class="form-label">Phone</label>
                         <input type="tel" class="form-control" id="createPhone" placeholder="e.g., +1 234 567 8900">
                     </div>
-                    <div class="col-md-6 mb-3">
-                        <label for="createContactPerson" class="form-label">Contact Person</label>
-                        <input type="text" class="form-control" id="createContactPerson" placeholder="e.g., Jane Smith">
-                        <small class="text-muted">Primary contact person</small>
-                    </div>
-                </div>
-
-            <div class="mb-3">
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="createAsAddress" checked>
-                    <label class="form-check-label" for="createAsAddress">
-                        Also create a CustomerAddress record (uses Postal Code / PostalCodeId relation)
-                    </label>
-                    <small class="text-muted d-block">When checked the test page will attempt to create a linked CustomerAddress and PostalCode as needed.</small>
-                </div>
-            </div>
-                <div class="row">
-                    <div class="col-md-4 mb-3">
-                        <label for="createCity" class="form-label">City</label>
-                        <input type="text" class="form-control" id="createCity" placeholder="e.g., New York">
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <label for="createState" class="form-label">State/Province *</label>
-                        <input type="text" class="form-control" id="createState" placeholder="e.g., NY">
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <label for="createPostalCode" class="form-label">Postal Code</label>
-                        <input type="text" class="form-control" id="createPostalCode" placeholder="e.g., 10001">
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="createCountryCode" class="form-label">Country Code *</label>
-                        <input type="text" class="form-control" id="createCountryCode" placeholder="e.g., US" maxlength="2">
-                        <small class="text-muted">2-letter ISO country code</small>
-                    </div>
                 </div>
 
                 <!-- Tax and Company Information -->
@@ -252,6 +216,231 @@
             <div id="customerByIdResult"></div>
         </div>
 
+        <!-- Contact Persons Management Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128101; Contact Persons Management</h2>
+            
+            <!-- Select Customer -->
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label for="cpCustomerId" class="form-label">Customer ID *</label>
+                    <input type="number" class="form-control" id="cpCustomerId" placeholder="Enter Customer ID">
+                </div>
+                <div class="col-md-8 d-flex align-items-end">
+                    <button class="btn btn-primary" onclick="loadContactPersons()">Load Contact Persons</button>
+                </div>
+            </div>
+
+            <!-- Add New Contact Person Form -->
+            <div class="card mb-3" style="border-left: 3px solid #667eea;">
+                <div class="card-header" style="background-color: #f8f9fa;">
+                    <h5 class="mb-0">Add New Contact Person</h5>
+                </div>
+                <div class="card-body">
+                    <form id="addContactPersonForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="cpFirstName" class="form-label">First Name *</label>
+                                <input type="text" class="form-control" id="cpFirstName" placeholder="e.g., John" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="cpLastName" class="form-label">Last Name *</label>
+                                <input type="text" class="form-control" id="cpLastName" placeholder="e.g., Doe" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="cpEmail" class="form-label">Email *</label>
+                                <input type="email" class="form-control" id="cpEmail" placeholder="e.g., john.doe@example.com" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="cpPhone" class="form-label">Phone</label>
+                                <input type="tel" class="form-control" id="cpPhone" placeholder="e.g., +1 234 567 8900">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="cpPosition" class="form-label">Position</label>
+                                <input type="text" class="form-control" id="cpPosition" placeholder="e.g., Manager">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="cpDepartment" class="form-label">Department</label>
+                                <input type="text" class="form-control" id="cpDepartment" placeholder="e.g., Sales">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="cpNotes" class="form-label">Notes</label>
+                                <textarea class="form-control" id="cpNotes" rows="2" placeholder="Additional notes..."></textarea>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="cpIsPrimary">
+                                    <label class="form-check-label" for="cpIsPrimary">Is Primary</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="cpIsActive" checked>
+                                    <label class="form-check-label" for="cpIsActive">Is Active</label>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-2">Add Contact Person</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Contact Persons List -->
+            <div id="contactPersonsList"></div>
+        </div>
+
+        <!-- Registrar Mail Addresses Management Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#128231; Registrar Mail Addresses Management</h2>
+            
+            <!-- Select Customer -->
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label for="rmaCustomerId" class="form-label">Customer ID *</label>
+                    <input type="number" class="form-control" id="rmaCustomerId" placeholder="Enter Customer ID">
+                </div>
+                <div class="col-md-8 d-flex align-items-end">
+                    <button class="btn btn-primary" onclick="loadRegistrarMailAddresses()">Load Mail Addresses</button>
+                </div>
+            </div>
+
+            <!-- Add New Mail Address Form -->
+            <div class="card mb-3" style="border-left: 3px solid #764ba2;">
+                <div class="card-header" style="background-color: #f8f9fa;">
+                    <h5 class="mb-0">Add New Mail Address</h5>
+                </div>
+                <div class="card-body">
+                    <form id="addMailAddressForm">
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label for="rmaEmail" class="form-label">Mail Address *</label>
+                                <input type="email" class="form-control" id="rmaEmail" placeholder="e.g., registrar@example.com" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">&nbsp;</label>
+                                <div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="rmaIsDefault">
+                                        <label class="form-check-label" for="rmaIsDefault">Is Default</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="rmaIsActive" checked>
+                                        <label class="form-check-label" for="rmaIsActive">Is Active</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Mail Address</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Mail Addresses List -->
+            <div id="mailAddressesList"></div>
+        </div>
+
+        <!-- Customer Addresses Management Section -->
+        <div class="test-section">
+            <h2 class="section-title">&#127968; Customer Addresses Management</h2>
+            
+            <!-- Select Customer -->
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label for="caCustomerId" class="form-label">Customer ID *</label>
+                    <input type="number" class="form-control" id="caCustomerId" placeholder="Enter Customer ID">
+                </div>
+                <div class="col-md-8 d-flex align-items-end">
+                    <button class="btn btn-primary" onclick="loadCustomerAddresses()">Load Addresses</button>
+                </div>
+            </div>
+
+            <!-- Add New Address Form -->
+            <div class="card mb-3" style="border-left: 3px solid #f093fb;">
+                <div class="card-header" style="background-color: #f8f9fa;">
+                    <h5 class="mb-0">Add New Address</h5>
+                </div>
+                <div class="card-body">
+                    <form id="addAddressForm">
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="caAddressLine1" class="form-label">Address Line 1 *</label>
+                                <input type="text" class="form-control" id="caAddressLine1" placeholder="e.g., 123 Main St" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="caAddressLine2" class="form-label">Address Line 2</label>
+                                <input type="text" class="form-control" id="caAddressLine2" placeholder="e.g., Apt 4B">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="caAddressLine3" class="form-label">Address Line 3</label>
+                                <input type="text" class="form-control" id="caAddressLine3">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="caCity" class="form-label">City *</label>
+                                <input type="text" class="form-control" id="caCity" placeholder="e.g., New York" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="caState" class="form-label">State/Province</label>
+                                <input type="text" class="form-control" id="caState" placeholder="e.g., NY">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="caPostalCode" class="form-label">Postal Code *</label>
+                                <input type="text" class="form-control" id="caPostalCode" placeholder="e.g., 10001" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="caCountryCode" class="form-label">Country Code *</label>
+                                <input type="text" class="form-control" id="caCountryCode" placeholder="e.g., US" maxlength="2" required>
+                                <small class="text-muted">2-letter ISO country code</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="caAddressType" class="form-label">Address Type</label>
+                                <select class="form-control" id="caAddressType">
+                                    <option value="">Select Address Type...</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label for="caAddressNotes" class="form-label">Notes</label>
+                                <textarea class="form-control" id="caAddressNotes" rows="2" placeholder="Additional notes..."></textarea>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="caIsPrimary">
+                                    <label class="form-check-label" for="caIsPrimary">Is Primary</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="caIsActive" checked>
+                                    <label class="form-check-label" for="caIsActive">Is Active</label>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary mt-2">Add Address</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Addresses List -->
+            <div id="customerAddressesList"></div>
+        </div>
+
         <!-- API Response Section -->
         <div class="test-section">
             <h2 class="section-title">&#128225; Last API Response</h2>
@@ -300,11 +489,6 @@
                             <div class="col-md-6 mb-3">
                                 <label for="editPhone" class="form-label">Phone</label>
                                 <input type="tel" class="form-control" id="editPhone">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="editContactPerson" class="form-label">Contact Person</label>
-                                <input type="text" class="form-control" id="editContactPerson">
-                                <small class="text-muted">Primary contact person</small>
                             </div>
                         </div>
 
@@ -435,10 +619,13 @@
             // Initialize edit modal
             editModal = new bootstrap.Modal(document.getElementById('editModal'));
 
-            // Setup create form
+            // Setup forms
             document.getElementById('createForm').addEventListener('submit', handleCreate);
+            document.getElementById('addContactPersonForm').addEventListener('submit', handleAddContactPerson);
+            document.getElementById('addMailAddressForm').addEventListener('submit', handleAddMailAddress);
+            document.getElementById('addAddressForm').addEventListener('submit', handleAddAddress);
 
-            // Load customer statuses and address types
+            // Load reference data
             await loadCustomerStatuses();
             await loadAddressTypes();
 
@@ -463,31 +650,64 @@
                 if (alert) {
                     bootstrap.Alert.getOrCreateInstance(alert).close();
                 }
+            }, 5000);
+        }
 
         // Load Address Types (used when creating CustomerAddress records)
         let addressTypes = [];
         let defaultAddressTypeId = null;
         async function loadAddressTypes() {
             try {
+                console.log('Loading address types...');
                 const response = await fetch(`${API_BASE_URL}/api/v1/AddressTypes`, {
                     method: 'GET',
                     headers: getAuthHeaders()
                 });
 
+                console.log('AddressTypes response status:', response.status);
+
                 if (response.ok) {
-                    addressTypes = await response.json();
-                    if (Array.isArray(addressTypes) && addressTypes.length > 0) {
+                    const data = await response.json();
+                    console.log('AddressTypes data received:', data);
+                    
+                    // Handle both plain array and paginated response
+                    addressTypes = Array.isArray(data) ? data : (data.data || []);
+                    
+                    if (addressTypes.length > 0) {
                         const def = addressTypes.find(a => a.isDefault) || addressTypes[0];
                         defaultAddressTypeId = def?.id || null;
+                        
+                        // Populate address type dropdown
+                        const select = document.getElementById('caAddressType');
+                        if (select) {
+                            // Clear existing options except the placeholder
+                            select.innerHTML = '<option value="">Select Address Type...</option>';
+                            
+                            addressTypes.forEach(type => {
+                                const option = document.createElement('option');
+                                option.value = type.id;
+                                option.textContent = type.name;
+                                if (type.isDefault) {
+                                    option.selected = true;
+                                }
+                                select.appendChild(option);
+                            });
+                            console.log(`Populated ${addressTypes.length} address types`);
+                        } else {
+                            console.error('Address type dropdown not found');
+                        }
+                    } else {
+                        console.warn('No address types returned from API');
                     }
                 } else {
-                    console.warn('Failed to load address types');
+                    const errorText = await response.text();
+                    console.error('Failed to load address types:', response.status, errorText);
+                    showAlert('Failed to load address types. Please check permissions.', 'warning');
                 }
             } catch (err) {
-                console.error('Error loading address types', err);
+                console.error('Error loading address types:', err);
+                showAlert('Error loading address types: ' + err.message, 'danger');
             }
-        }
-            }, 5000);
         }
 
         // Update response box
@@ -609,15 +829,9 @@
                 name: document.getElementById('createName').value.trim(),
                 email: document.getElementById('createEmail').value.trim(),
                 phone: document.getElementById('createPhone').value.trim() || null,
-                address: document.getElementById('createAddress').value.trim() || null,
-                city: document.getElementById('createCity').value.trim() || null,
-                state: document.getElementById('createState').value.trim() || null,
-                postalCode: document.getElementById('createPostalCode').value.trim() || null,
-                countryCode: document.getElementById('createCountryCode').value.trim() || null,
                 customerName: document.getElementById('createCustomerName').value.trim() || null,
                 taxId: document.getElementById('createTaxId').value.trim() || null,
                 vatNumber: document.getElementById('createVatNumber').value.trim() || null,
-                contactPerson: document.getElementById('createContactPerson').value.trim() || null,
                 isCompany: document.getElementById('createIsCompany').value === 'true',
                 isActive: document.getElementById('createIsActive').checked,
                 status: document.getElementById('createStatus').value || null,
@@ -647,116 +861,18 @@
                 updateResponseBox(result);
 
                 if (response.ok) {
-                    showAlert('Customer created successfully!', 'success');
-                    // If API returned created customer object use it
-                    const createdCustomer = result;
-
-                    // Optionally create a CustomerAddress record linked to this customer
-                    try {
-                        if (document.getElementById('createAsAddress')?.checked) {
-                            await createCustomerAddressForCustomer(createdCustomer.id);
-                        }
-                    } catch (err) {
-                        console.error('Failed to create customer address:', err);
-                        showAlert('Customer created but failed to create address record', 'warning');
-                    }
-
+                    showAlert(`Customer created successfully! ID: ${result.id}`, 'success');
                     document.getElementById('createForm').reset();
                     document.getElementById('createIsActive').checked = true;
                     document.getElementById('createCreditLimit').value = 0;
                     document.getElementById('createIsCompany').value = 'false';
-                    getAllCustomers(); // Refresh list
+                    getAllCustomers();
                 } else {
                     showAlert(`Error: ${result.message || result.error || 'Failed to create customer'}`, 'danger');
                 }
             } catch (error) {
                 showAlert(`Error: ${error.message}`, 'danger');
                 updateResponseBox({ error: error.message });
-            }
-        }
-
-        // Attempt to create a CustomerAddress for a given customer using values from create form
-        async function createCustomerAddressForCustomer(customerId) {
-            // Need an address type and a postal code id
-            if (!defaultAddressTypeId) {
-                console.warn('No address type available, skipping address creation');
-                return;
-            }
-
-            const postalCodeValue = document.getElementById('createPostalCode').value.trim();
-            const countryCodeValue = document.getElementById('createCountryCode').value.trim().toUpperCase();
-            let postalCodeId = null;
-
-            if (postalCodeValue && countryCodeValue) {
-                // Try to find existing postal code
-                try {
-                    const resp = await fetch(`${API_BASE_URL}/api/v1/PostalCodes/${encodeURIComponent(postalCodeValue)}/country/${encodeURIComponent(countryCodeValue)}`, {
-                        method: 'GET',
-                        headers: getAuthHeaders()
-                    });
-
-                    if (resp.ok) {
-                        const pc = await resp.json();
-                        postalCodeId = pc.id;
-                    }
-                } catch (err) {
-                    console.warn('Error finding postal code', err);
-                }
-            }
-
-            // If not found and we have enough info, create a postal code record
-            if (!postalCodeId && postalCodeValue && countryCodeValue) {
-                try {
-                    const createPc = {
-                        code: postalCodeValue,
-                        countryCode: countryCodeValue,
-                        city: document.getElementById('createCity').value.trim() || '',
-                        state: document.getElementById('createState').value.trim() || null,
-                        district: null,
-                        region: null,
-                        latitude: null,
-                        longitude: null,
-                        isActive: true
-                    };
-
-                    const pcResp = await fetch(`${API_BASE_URL}/api/v1/PostalCodes`, {
-                        method: 'POST',
-                        headers: getAuthHeaders(),
-                        body: JSON.stringify(createPc)
-                    });
-
-                    if (pcResp.ok) {
-                        const createdPc = await pcResp.json();
-                        postalCodeId = createdPc.id;
-                    }
-                } catch (err) {
-                    console.warn('Error creating postal code', err);
-                }
-            }
-
-            // Build create address DTO
-            const createAddr = {
-                addressTypeId: parseInt(defaultAddressTypeId) || 0,
-                postalCodeId: postalCodeId || 0,
-                addressLine1: document.getElementById('createAddress').value.trim() || '',
-                addressLine2: null,
-                addressLine3: null,
-                addressLine4: null,
-                isPrimary: true,
-                isActive: true,
-                notes: null
-            };
-
-            // If we don't have a postalCodeId, the API may reject; attempt anyway to let server validate
-            const resp = await fetch(`${API_BASE_URL}/api/v1/customers/${customerId}/addresses`, {
-                method: 'POST',
-                headers: getAuthHeaders(),
-                body: JSON.stringify(createAddr)
-            });
-
-            if (!resp.ok) {
-                const text = await resp.text();
-                throw new Error(text || 'Failed to create customer address');
             }
         }
 
@@ -1031,8 +1147,8 @@
             document.getElementById('editEmail').value = customer.email || '';
             document.getElementById('editBillingEmail').value = customer.billingEmail || '';
             document.getElementById('editPhone').value = customer.phone || '';
-            document.getElementById('editContactPerson').value = customer.contactPerson || '';
             // Address fields removed from edit modal. Address data is managed via CustomerAddress records.
+            // Contact person field removed from edit modal. Contact persons are managed via ContactPersons records.
             document.getElementById('editIsCompany').value = customer.isCompany ? 'true' : 'false';
             document.getElementById('editTaxId').value = customer.taxId || '';
             document.getElementById('editVatNumber').value = customer.vatNumber || '';
@@ -1055,10 +1171,10 @@
                 email: document.getElementById('editEmail').value.trim(),
                 phone: document.getElementById('editPhone').value.trim() || null,
                 // Address fields removed: not sent in customer update payload
+                // Contact person field removed: not sent in customer update payload
                 customerName: document.getElementById('editCustomerName').value.trim() || null,
                 taxId: document.getElementById('editTaxId').value.trim() || null,
                 vatNumber: document.getElementById('editVatNumber').value.trim() || null,
-                contactPerson: document.getElementById('editContactPerson').value.trim() || null,
                 isCompany: document.getElementById('editIsCompany').value === 'true',
                 isActive: document.getElementById('editIsActive').checked,
                 status: document.getElementById('editStatus').value || null,
@@ -1138,6 +1254,525 @@
                     }
                     updateResponseBox(result);
                     showAlert(`Error: ${result.message || result.error || 'Failed to delete customer'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+
+        // ========== CONTACT PERSONS MANAGEMENT ==========
+
+        // Load Contact Persons
+        async function loadContactPersons() {
+            const customerId = document.getElementById('cpCustomerId').value;
+            if (!customerId) {
+                showAlert('Please enter a Customer ID', 'warning');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/ContactPersons/customer/${customerId}`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    renderContactPersonsList(Array.isArray(data) ? data : []);
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Failed to load contact persons'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+
+        // Render Contact Persons List
+        function renderContactPersonsList(contactPersons) {
+            const container = document.getElementById('contactPersonsList');
+            
+            if (!contactPersons || contactPersons.length === 0) {
+                container.innerHTML = '<div class="empty-state">No contact persons found</div>';
+                return;
+            }
+
+            const listHtml = contactPersons.map(cp => `
+                <div class="card mb-2" style="border-left: 3px solid #667eea;">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">${cp.firstName} ${cp.lastName} ${cp.isPrimary ? '<span class="badge badge-info">Primary</span>' : ''}</h6>
+                                <p class="mb-1"><strong>Email:</strong> ${cp.email || 'N/A'}</p>
+                                <p class="mb-1"><strong>Phone:</strong> ${cp.phone || 'N/A'}</p>
+                                ${cp.position ? `<p class="mb-1"><strong>Position:</strong> ${cp.position}</p>` : ''}
+                                ${cp.department ? `<p class="mb-1"><strong>Department:</strong> ${cp.department}</p>` : ''}
+                                ${cp.notes ? `<p class="mb-1"><strong>Notes:</strong> ${cp.notes}</p>` : ''}
+                                <p class="mb-0"><span class="badge ${cp.isActive ? 'badge-success' : 'badge-secondary'}">${cp.isActive ? 'Active' : 'Inactive'}</span></p>
+                            </div>
+                            <div class="action-buttons">
+                                <button class="btn btn-sm btn-danger" onclick="deleteContactPerson(${cp.id}, '${cp.firstName} ${cp.lastName}')">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = listHtml;
+        }
+
+        // Handle Add Contact Person
+        async function handleAddContactPerson(e) {
+            e.preventDefault();
+            
+            const customerId = document.getElementById('cpCustomerId').value;
+            if (!customerId) {
+                showAlert('Please enter a Customer ID first', 'warning');
+                return;
+            }
+
+            const data = {
+                customerId: parseInt(customerId),
+                firstName: document.getElementById('cpFirstName').value.trim(),
+                lastName: document.getElementById('cpLastName').value.trim(),
+                email: document.getElementById('cpEmail').value.trim(),
+                phone: document.getElementById('cpPhone').value.trim() || null,
+                position: document.getElementById('cpPosition').value.trim() || null,
+                department: document.getElementById('cpDepartment').value.trim() || null,
+                notes: document.getElementById('cpNotes').value.trim() || null,
+                isPrimary: document.getElementById('cpIsPrimary').checked,
+                isActive: document.getElementById('cpIsActive').checked
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/ContactPersons`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(data)
+                });
+
+                let result;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    result = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(result);
+
+                if (response.ok) {
+                    showAlert('Contact person added successfully!', 'success');
+                    document.getElementById('addContactPersonForm').reset();
+                    document.getElementById('cpIsActive').checked = true;
+                    loadContactPersons();
+                } else {
+                    showAlert(`Error: ${result.message || result.error || 'Failed to add contact person'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+
+        // Delete Contact Person
+        async function deleteContactPerson(id, name) {
+            if (!confirm(`Are you sure you want to delete contact person "${name}"?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/ContactPersons/${id}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+
+                if (response.ok || response.status === 204) {
+                    showAlert('Contact person deleted successfully!', 'success');
+                    loadContactPersons();
+                } else {
+                    let result;
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        result = await response.json();
+                    } else {
+                        const text = await response.text();
+                        result = { error: text, statusCode: response.status };
+                    }
+                    updateResponseBox(result);
+                    showAlert(`Error: ${result.message || result.error || 'Failed to delete contact person'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+
+        // ========== REGISTRAR MAIL ADDRESSES MANAGEMENT ==========
+
+        // Load Registrar Mail Addresses
+        async function loadRegistrarMailAddresses() {
+            const customerId = document.getElementById('rmaCustomerId').value;
+            if (!customerId) {
+                showAlert('Please enter a Customer ID', 'warning');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Customers/${customerId}/registrar-mail-addresses`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    renderMailAddressesList(Array.isArray(data) ? data : []);
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Failed to load mail addresses'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+
+        // Render Mail Addresses List
+        function renderMailAddressesList(mailAddresses) {
+            const container = document.getElementById('mailAddressesList');
+            
+            if (!mailAddresses || mailAddresses.length === 0) {
+                container.innerHTML = '<div class="empty-state">No registrar mail addresses found</div>';
+                return;
+            }
+
+            const listHtml = mailAddresses.map(ma => `
+                <div class="card mb-2" style="border-left: 3px solid #764ba2;">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">${ma.mailAddress} ${ma.isDefault ? '<span class="badge badge-primary">Default</span>' : ''}</h6>
+                                <p class="mb-0"><span class="badge ${ma.isActive ? 'badge-success' : 'badge-secondary'}">${ma.isActive ? 'Active' : 'Inactive'}</span></p>
+                            </div>
+                            <div class="action-buttons">
+                                <button class="btn btn-sm btn-danger" onclick="deleteMailAddress(${ma.id}, '${ma.mailAddress}')">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = listHtml;
+        }
+
+        // Handle Add Mail Address
+        async function handleAddMailAddress(e) {
+            e.preventDefault();
+            
+            const customerId = document.getElementById('rmaCustomerId').value;
+            if (!customerId) {
+                showAlert('Please enter a Customer ID first', 'warning');
+                return;
+            }
+
+            const data = {
+                customerId: parseInt(customerId),
+                mailAddress: document.getElementById('rmaEmail').value.trim(),
+                isDefault: document.getElementById('rmaIsDefault').checked,
+                isActive: document.getElementById('rmaIsActive').checked
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Customers/${customerId}/registrar-mail-addresses`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(data)
+                });
+
+                let result;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    result = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(result);
+
+                if (response.ok) {
+                    showAlert('Mail address added successfully!', 'success');
+                    document.getElementById('addMailAddressForm').reset();
+                    document.getElementById('rmaIsActive').checked = true;
+                    loadRegistrarMailAddresses();
+                } else {
+                    showAlert(`Error: ${result.message || result.error || 'Failed to add mail address'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+
+        // Delete Mail Address
+        async function deleteMailAddress(id, address) {
+            if (!confirm(`Are you sure you want to delete mail address "${address}"?`)) {
+                return;
+            }
+
+            const customerId = document.getElementById('rmaCustomerId').value;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/Customers/${customerId}/registrar-mail-addresses/${id}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+
+                if (response.ok || response.status === 204) {
+                    showAlert('Mail address deleted successfully!', 'success');
+                    loadRegistrarMailAddresses();
+                } else {
+                    let result;
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        result = await response.json();
+                    } else {
+                        const text = await response.text();
+                        result = { error: text, statusCode: response.status };
+                    }
+                    updateResponseBox(result);
+                    showAlert(`Error: ${result.message || result.error || 'Failed to delete mail address'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+
+        // ========== CUSTOMER ADDRESSES MANAGEMENT ==========
+
+        // Load Customer Addresses
+        async function loadCustomerAddresses() {
+            const customerId = document.getElementById('caCustomerId').value;
+            if (!customerId) {
+                showAlert('Please enter a Customer ID', 'warning');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/customers/${customerId}/addresses`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
+                });
+
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(data);
+
+                if (response.ok) {
+                    renderCustomerAddressesList(Array.isArray(data) ? data : []);
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Failed to load addresses'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+
+        // Render Customer Addresses List
+        function renderCustomerAddressesList(addresses) {
+            const container = document.getElementById('customerAddressesList');
+            
+            if (!addresses || addresses.length === 0) {
+                container.innerHTML = '<div class="empty-state">No addresses found</div>';
+                return;
+            }
+
+            const listHtml = addresses.map(addr => {
+                const addressLines = [addr.addressLine1, addr.addressLine2, addr.addressLine3].filter(x => x).join(', ');
+                const postalInfo = addr.postalCode ? `${addr.postalCode.city || ''}, ${addr.postalCode.state || ''} ${addr.postalCode.code || ''}, ${addr.postalCode.countryCode || ''}` : 'N/A';
+                
+                return `
+                    <div class="card mb-2" style="border-left: 3px solid #f093fb;">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">${addr.addressType?.name || 'Address'} ${addr.isPrimary ? '<span class="badge badge-info">Primary</span>' : ''}</h6>
+                                    <p class="mb-1"><strong>Address:</strong> ${addressLines || 'N/A'}</p>
+                                    <p class="mb-1"><strong>Location:</strong> ${postalInfo}</p>
+                                    ${addr.notes ? `<p class="mb-1"><strong>Notes:</strong> ${addr.notes}</p>` : ''}
+                                    <p class="mb-0"><span class="badge ${addr.isActive ? 'badge-success' : 'badge-secondary'}">${addr.isActive ? 'Active' : 'Inactive'}</span></p>
+                                </div>
+                                <div class="action-buttons">
+                                    <button class="btn btn-sm btn-danger" onclick="deleteCustomerAddress(${addr.id}, '${(addressLines || 'Address').replace(/'/g, "\\'")}')">Delete</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = listHtml;
+        }
+
+        // Handle Add Address
+        async function handleAddAddress(e) {
+            e.preventDefault();
+            
+            const customerId = document.getElementById('caCustomerId').value;
+            if (!customerId) {
+                showAlert('Please enter a Customer ID first', 'warning');
+                return;
+            }
+
+            // First, ensure postal code exists or create it
+            const postalCodeValue = document.getElementById('caPostalCode').value.trim();
+            const countryCodeValue = document.getElementById('caCountryCode').value.trim().toUpperCase();
+            let postalCodeId = null;
+
+            if (postalCodeValue && countryCodeValue) {
+                // Try to find existing postal code
+                try {
+                    const resp = await fetch(`${API_BASE_URL}/api/v1/PostalCodes/${encodeURIComponent(postalCodeValue)}/country/${encodeURIComponent(countryCodeValue)}`, {
+                        method: 'GET',
+                        headers: getAuthHeaders()
+                    });
+
+                    if (resp.ok) {
+                        const pc = await resp.json();
+                        postalCodeId = pc.id;
+                    }
+                } catch (err) {
+                    console.warn('Postal code not found, will create new one');
+                }
+
+                // Create postal code if not found
+                if (!postalCodeId) {
+                    try {
+                        const createPc = {
+                            code: postalCodeValue,
+                            countryCode: countryCodeValue,
+                            city: document.getElementById('caCity').value.trim() || '',
+                            state: document.getElementById('caState').value.trim() || null,
+                            isActive: true
+                        };
+
+                        const pcResp = await fetch(`${API_BASE_URL}/api/v1/PostalCodes`, {
+                            method: 'POST',
+                            headers: getAuthHeaders(),
+                            body: JSON.stringify(createPc)
+                        });
+
+                        if (pcResp.ok) {
+                            const createdPc = await pcResp.json();
+                            postalCodeId = createdPc.id;
+                        } else {
+                            showAlert('Failed to create postal code', 'danger');
+                            return;
+                        }
+                    } catch (err) {
+                        showAlert('Error creating postal code', 'danger');
+                        return;
+                    }
+                }
+            }
+
+            const addressTypeId = document.getElementById('caAddressType').value || defaultAddressTypeId;
+            
+            const data = {
+                addressTypeId: parseInt(addressTypeId),
+                postalCodeId: postalCodeId,
+                addressLine1: document.getElementById('caAddressLine1').value.trim(),
+                addressLine2: document.getElementById('caAddressLine2').value.trim() || null,
+                addressLine3: document.getElementById('caAddressLine3').value.trim() || null,
+                notes: document.getElementById('caAddressNotes').value.trim() || null,
+                isPrimary: document.getElementById('caIsPrimary').checked,
+                isActive: document.getElementById('caIsActive').checked
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/customers/${customerId}/addresses`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(data)
+                });
+
+                let result;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    result = { error: text, statusCode: response.status };
+                }
+                updateResponseBox(result);
+
+                if (response.ok) {
+                    showAlert('Address added successfully!', 'success');
+                    document.getElementById('addAddressForm').reset();
+                    document.getElementById('caIsActive').checked = true;
+                    loadCustomerAddresses();
+                } else {
+                    showAlert(`Error: ${result.message || result.error || 'Failed to add address'}`, 'danger');
+                }
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+            }
+        }
+
+        // Delete Customer Address
+        async function deleteCustomerAddress(id, addressDesc) {
+            if (!confirm(`Are you sure you want to delete address "${addressDesc}"?`)) {
+                return;
+            }
+
+            const customerId = document.getElementById('caCustomerId').value;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/customers/${customerId}/addresses/${id}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+
+                if (response.ok || response.status === 204) {
+                    showAlert('Address deleted successfully!', 'success');
+                    loadCustomerAddresses();
+                } else {
+                    let result;
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        result = await response.json();
+                    } else {
+                        const text = await response.text();
+                        result = { error: text, statusCode: response.status };
+                    }
+                    updateResponseBox(result);
+                    showAlert(`Error: ${result.message || result.error || 'Failed to delete address'}`, 'danger');
                 }
             } catch (error) {
                 showAlert(`Error: ${error.message}`, 'danger');
