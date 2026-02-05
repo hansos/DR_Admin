@@ -11,6 +11,6 @@ public class DnsRecord : EntityBase
     public int? Weight { get; set; } // For SRV records
     public int? Port { get; set; } // For SRV records
 
-    public Domain Domain { get; set; } = null!;
+    public RegisteredDomain Domain { get; set; } = null!;
     public DnsRecordType DnsRecordType { get; set; } = null!;
 }

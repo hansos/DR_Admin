@@ -165,7 +165,7 @@ public class DnsRecordService : IDnsRecordService
             _log.Information("Creating new DNS record of type ID {DnsRecordTypeId} for domain ID: {DomainId}", createDto.DnsRecordTypeId, createDto.DomainId);
 
             // Validate that the domain exists
-            var domainExists = await _context.Domains.AnyAsync(d => d.Id == createDto.DomainId);
+            var domainExists = await _context.RegisteredDomains.AnyAsync(d => d.Id == createDto.DomainId);
             if (!domainExists)
             {
                 throw new InvalidOperationException($"Domain with ID {createDto.DomainId} not found");
@@ -254,7 +254,7 @@ public class DnsRecordService : IDnsRecordService
             // Validate that the domain exists if domain ID is being changed
             if (dnsRecord.DomainId != updateDto.DomainId)
             {
-                var domainExists = await _context.Domains.AnyAsync(d => d.Id == updateDto.DomainId);
+                var domainExists = await _context.RegisteredDomains.AnyAsync(d => d.Id == updateDto.DomainId);
                 if (!domainExists)
                 {
                     throw new InvalidOperationException($"Domain with ID {updateDto.DomainId} not found");

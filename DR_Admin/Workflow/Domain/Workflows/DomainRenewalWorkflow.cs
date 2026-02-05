@@ -1,13 +1,13 @@
 using ISPAdmin.Data;
 using ISPAdmin.Data.Entities;
 using ISPAdmin.Data.Enums;
-using ISPAdmin.Domain.Events.DomainEvents;
+using ISPAdmin.Workflow.Domain.Events.DomainEvents;
 using ISPAdmin.DTOs;
 using ISPAdmin.Services;
 using Microsoft.EntityFrameworkCore;
 using DomainRegistrationLib.Factories;
 using DomainRegistrationLib.Models;
-using DomainEntity = ISPAdmin.Data.Entities.Domain;
+using RegisteredDomainEntity = ISPAdmin.Data.Entities.RegisteredDomain;
 using ISPAdmin.Workflow.Domain.Services;
 
 namespace ISPAdmin.Workflow.Domain.Workflows;
@@ -44,7 +44,7 @@ public class DomainRenewalWorkflow : IDomainRenewalWorkflow
         {
             _log.Information("Starting domain renewal workflow for domain ID: {DomainId}", domainId);
 
-            var domain = await _context.Domains
+            var domain = await _context.RegisteredDomains
                 .Include(d => d.Service)
                 .Include(d => d.Customer)
                 .Include(d => d.Registrar)
@@ -95,7 +95,7 @@ public class DomainRenewalWorkflow : IDomainRenewalWorkflow
         {
             _log.Information("Processing auto-renewal for domain ID: {DomainId}", domainId);
 
-            var domain = await _context.Domains
+            var domain = await _context.RegisteredDomains
                 .Include(d => d.Registrar)
                 .Include(d => d.Customer)
                 .FirstOrDefaultAsync(d => d.Id == domainId);
@@ -196,7 +196,7 @@ public class DomainRenewalWorkflow : IDomainRenewalWorkflow
             .AnyAsync(pm => pm.CustomerId == customerId && pm.IsDefault);
     }
 
-    private async Task<InvoiceDto> GenerateRenewalInvoiceAsync(DomainEntity domain)
+    private async Task<InvoiceDto> GenerateRenewalInvoiceAsync(RegisteredDomainEntity domain)
     {
         var invoiceNumber = await GenerateInvoiceNumberAsync();
 
@@ -254,7 +254,7 @@ public class DomainRenewalWorkflow : IDomainRenewalWorkflow
         };
     }
 
-    private async Task SendRenewalReminderEmailAsync(DomainEntity domain, InvoiceDto? invoice)
+    private async Task SendRenewalReminderEmailAsync(RegisteredDomainEntity domain, InvoiceDto? invoice)
     {
         await _emailService.QueueEmailAsync(new QueueEmailDto
         {

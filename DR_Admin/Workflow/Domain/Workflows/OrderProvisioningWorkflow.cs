@@ -1,6 +1,6 @@
 using ISPAdmin.Data;
 using ISPAdmin.Data.Enums;
-using ISPAdmin.Domain.Events.OrderEvents;
+using ISPAdmin.Workflow.Domain.Events.OrderEvents;
 using ISPAdmin.Workflow.Domain.Services;
 using ISPAdmin.Workflow.Domain.StateMachines;
 using Microsoft.EntityFrameworkCore;

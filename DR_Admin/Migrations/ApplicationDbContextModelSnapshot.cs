@@ -1260,92 +1260,6 @@ namespace ISPAdmin.Migrations
                     b.ToTable("DocumentTemplates");
                 });
 
-            modelBuilder.Entity("ISPAdmin.Data.Entities.Domain", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("AutoRenew")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("CustomerId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("ExpirationDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("NormalizedName")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Notes")
-                        .HasMaxLength(1000)
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("PrivacyProtection")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("RegistrarId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int?>("RegistrarTldId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("RegistrationDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal?>("RegistrationPrice")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal?>("RenewalPrice")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("ServiceId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CustomerId");
-
-                    b.HasIndex("ExpirationDate");
-
-                    b.HasIndex("Name")
-                        .IsUnique();
-
-                    b.HasIndex("NormalizedName")
-                        .IsUnique();
-
-                    b.HasIndex("RegistrarId");
-
-                    b.HasIndex("RegistrarTldId");
-
-                    b.HasIndex("ServiceId");
-
-                    b.HasIndex("Status");
-
-                    b.ToTable("Domains");
-                });
-
             modelBuilder.Entity("ISPAdmin.Data.Entities.DomainContact", b =>
                 {
                     b.Property<int>("Id")
@@ -2667,6 +2581,92 @@ namespace ISPAdmin.Migrations
                     b.ToTable("Refunds");
                 });
 
+            modelBuilder.Entity("ISPAdmin.Data.Entities.RegisteredDomain", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("AutoRenew")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("ExpirationDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NormalizedName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("PrivacyProtection")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("RegistrarId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("RegistrarTldId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("RegistrationDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("RegistrationPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("RenewalPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ServiceId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("ExpirationDate");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.HasIndex("NormalizedName")
+                        .IsUnique();
+
+                    b.HasIndex("RegistrarId");
+
+                    b.HasIndex("RegistrarTldId");
+
+                    b.HasIndex("ServiceId");
+
+                    b.HasIndex("Status");
+
+                    b.ToTable("RegisteredDomains");
+                });
+
             modelBuilder.Entity("ISPAdmin.Data.Entities.Registrar", b =>
                 {
                     b.Property<int>("Id")
@@ -2690,6 +2690,9 @@ namespace ISPAdmin.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsDefault")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Name")
@@ -2719,6 +2722,8 @@ namespace ISPAdmin.Migrations
                         .IsUnique();
 
                     b.HasIndex("IsActive");
+
+                    b.HasIndex("IsDefault");
 
                     b.HasIndex("Name");
 
@@ -4201,7 +4206,7 @@ namespace ISPAdmin.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("ISPAdmin.Data.Entities.Domain", "Domain")
+                    b.HasOne("ISPAdmin.Data.Entities.RegisteredDomain", "Domain")
                         .WithMany("DnsRecords")
                         .HasForeignKey("DomainId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -4248,43 +4253,9 @@ namespace ISPAdmin.Migrations
                     b.Navigation("DnsZonePackage");
                 });
 
-            modelBuilder.Entity("ISPAdmin.Data.Entities.Domain", b =>
-                {
-                    b.HasOne("ISPAdmin.Data.Entities.Customer", "Customer")
-                        .WithMany("Domains")
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("ISPAdmin.Data.Entities.Registrar", "Registrar")
-                        .WithMany("Domains")
-                        .HasForeignKey("RegistrarId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("ISPAdmin.Data.Entities.RegistrarTld", "RegistrarTld")
-                        .WithMany("Domains")
-                        .HasForeignKey("RegistrarTldId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("ISPAdmin.Data.Entities.Service", "Service")
-                        .WithMany()
-                        .HasForeignKey("ServiceId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Customer");
-
-                    b.Navigation("Registrar");
-
-                    b.Navigation("RegistrarTld");
-
-                    b.Navigation("Service");
-                });
-
             modelBuilder.Entity("ISPAdmin.Data.Entities.DomainContact", b =>
                 {
-                    b.HasOne("ISPAdmin.Data.Entities.Domain", "Domain")
+                    b.HasOne("ISPAdmin.Data.Entities.RegisteredDomain", "Domain")
                         .WithMany("DomainContacts")
                         .HasForeignKey("DomainId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -4368,7 +4339,7 @@ namespace ISPAdmin.Migrations
 
             modelBuilder.Entity("ISPAdmin.Data.Entities.NameServer", b =>
                 {
-                    b.HasOne("ISPAdmin.Data.Entities.Domain", "Domain")
+                    b.HasOne("ISPAdmin.Data.Entities.RegisteredDomain", "Domain")
                         .WithMany("NameServers")
                         .HasForeignKey("DomainId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -4547,6 +4518,40 @@ namespace ISPAdmin.Migrations
                     b.Navigation("Invoice");
 
                     b.Navigation("PaymentTransaction");
+                });
+
+            modelBuilder.Entity("ISPAdmin.Data.Entities.RegisteredDomain", b =>
+                {
+                    b.HasOne("ISPAdmin.Data.Entities.Customer", "Customer")
+                        .WithMany("RegisteredDomains")
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ISPAdmin.Data.Entities.Registrar", "Registrar")
+                        .WithMany("RegisteredDomains")
+                        .HasForeignKey("RegistrarId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ISPAdmin.Data.Entities.RegistrarTld", "RegistrarTld")
+                        .WithMany("RegisteredDomains")
+                        .HasForeignKey("RegistrarTldId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("ISPAdmin.Data.Entities.Service", "Service")
+                        .WithMany()
+                        .HasForeignKey("ServiceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("Registrar");
+
+                    b.Navigation("RegistrarTld");
+
+                    b.Navigation("Service");
                 });
 
             modelBuilder.Entity("ISPAdmin.Data.Entities.RegistrarMailAddress", b =>
@@ -4807,13 +4812,13 @@ namespace ISPAdmin.Migrations
                 {
                     b.Navigation("CustomerAddresses");
 
-                    b.Navigation("Domains");
-
                     b.Navigation("HostingAccounts");
 
                     b.Navigation("Invoices");
 
                     b.Navigation("Orders");
+
+                    b.Navigation("RegisteredDomains");
 
                     b.Navigation("Users");
                 });
@@ -4831,15 +4836,6 @@ namespace ISPAdmin.Migrations
             modelBuilder.Entity("ISPAdmin.Data.Entities.DnsZonePackage", b =>
                 {
                     b.Navigation("Records");
-                });
-
-            modelBuilder.Entity("ISPAdmin.Data.Entities.Domain", b =>
-                {
-                    b.Navigation("DnsRecords");
-
-                    b.Navigation("DomainContacts");
-
-                    b.Navigation("NameServers");
                 });
 
             modelBuilder.Entity("ISPAdmin.Data.Entities.HostingPackage", b =>
@@ -4887,16 +4883,25 @@ namespace ISPAdmin.Migrations
                     b.Navigation("QuoteLines");
                 });
 
+            modelBuilder.Entity("ISPAdmin.Data.Entities.RegisteredDomain", b =>
+                {
+                    b.Navigation("DnsRecords");
+
+                    b.Navigation("DomainContacts");
+
+                    b.Navigation("NameServers");
+                });
+
             modelBuilder.Entity("ISPAdmin.Data.Entities.Registrar", b =>
                 {
-                    b.Navigation("Domains");
+                    b.Navigation("RegisteredDomains");
 
                     b.Navigation("RegistrarTlds");
                 });
 
             modelBuilder.Entity("ISPAdmin.Data.Entities.RegistrarTld", b =>
                 {
-                    b.Navigation("Domains");
+                    b.Navigation("RegisteredDomains");
                 });
 
             modelBuilder.Entity("ISPAdmin.Data.Entities.ResellerCompany", b =>

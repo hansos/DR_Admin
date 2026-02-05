@@ -1,6 +1,6 @@
 using ISPAdmin.Data;
 using ISPAdmin.Data.Enums;
-using ISPAdmin.Domain.Events.DomainEvents;
+using ISPAdmin.Workflow.Domain.Events.DomainEvents;
 using ISPAdmin.Workflow.Domain.Services;
 using ISPAdmin.Workflow.Domain.Workflows;
 using Microsoft.EntityFrameworkCore;
@@ -59,7 +59,7 @@ public class DomainExpirationMonitorService : BackgroundService
         var renewalWorkflow = scope.ServiceProvider.GetRequiredService<IDomainRenewalWorkflow>();
 
         // Find domains expiring within 30 days
-        var expiringDomains = await context.Domains
+        var expiringDomains = await context.RegisteredDomains
             .Where(d => d.Status == DomainStatus.Active.ToString() &&
                        d.ExpirationDate <= DateTime.UtcNow.AddDays(30) &&
                        d.ExpirationDate > DateTime.UtcNow)
@@ -96,7 +96,7 @@ public class DomainExpirationMonitorService : BackgroundService
         var eventPublisher = scope.ServiceProvider.GetRequiredService<IDomainEventPublisher>();
 
         // Find domains that have expired but status hasn't been updated
-        var expiredDomains = await context.Domains
+        var expiredDomains = await context.RegisteredDomains
             .Where(d => d.Status == DomainStatus.Active.ToString() &&
                        d.ExpirationDate < DateTime.UtcNow)
             .ToListAsync(cancellationToken);

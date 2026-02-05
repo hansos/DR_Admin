@@ -89,7 +89,7 @@ public class DomainMergeHelper
                 // Find existing domain
                 _log.Debug("Checking if domain {DomainName} exists in database (normalized: {NormalizedName})", 
                     domainInfo.DomainName, normalizedName);
-                var domain = await _context.Domains
+                var domain = await _context.RegisteredDomains
                     .FirstOrDefaultAsync(d => d.NormalizedName == normalizedName);
 
                 if (domain != null)
@@ -98,7 +98,7 @@ public class DomainMergeHelper
                 }
                 else
                 {
-                    await CreateNewDomainAsync(domainInfo, registrarId, registrarTld.Id, normalizedName, result);
+                    await CreateNewDomainAsync(domainInfo, registrarId, registrarTld.Id, normalizedName!, result);
                 }
             }
 
@@ -194,7 +194,7 @@ public class DomainMergeHelper
     /// <summary>
     /// Updates an existing domain with information from the registrar
     /// </summary>
-    private async Task UpdateExistingDomainAsync(ISPAdmin.Data.Entities.Domain domain, RegisteredDomainInfo domainInfo, int registrarId, int registrarTldId, DomainMergeResult result)
+    private async Task UpdateExistingDomainAsync(ISPAdmin.Data.Entities.RegisteredDomain domain, RegisteredDomainInfo domainInfo, int registrarId, int registrarTldId, DomainMergeResult result)
     {
         _log.Debug("Domain {DomainName} found with ID {DomainId}, updating existing record", 
             domainInfo.DomainName, domain.Id);
@@ -273,7 +273,7 @@ public class DomainMergeHelper
                 domainInfo.DomainName, customerId);
 
             // Double-check domain doesn't exist
-            var doubleCheckDomain = await _context.Domains
+            var doubleCheckDomain = await _context.RegisteredDomains
                 .AsNoTracking()
                 .FirstOrDefaultAsync(d => d.NormalizedName == normalizedName);
             
@@ -384,7 +384,7 @@ public class DomainMergeHelper
     {
         _log.Warning("Domain {DomainName} found during double-check, updating instead of creating", domainInfo.DomainName);
         
-        var existingDomain = await _context.Domains.FirstOrDefaultAsync(d => d.Id == domainId);
+        var existingDomain = await _context.RegisteredDomains.FirstOrDefaultAsync(d => d.Id == domainId);
         
         if (existingDomain != null)
         {

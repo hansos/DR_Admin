@@ -45,4 +45,11 @@ public interface IRegistrarService
     /// <param name="registrarId">The registrar ID</param>
     /// <returns>Registered domains result from the registrar</returns>
     Task<RegisteredDomainsResult> GetRegisteredDomainsAsync(int registrarId);
+
+    /// <summary>
+    /// Sets a registrar as the default registrar
+    /// </summary>
+    /// <param name="id">The registrar ID</param>
+    /// <returns>True if successful, false if registrar not found</returns>
+    Task<bool> SetDefaultRegistrarAsync(int id);
 }

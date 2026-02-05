@@ -338,7 +338,7 @@ public class RegistrarTldService : IRegistrarTldService
                 return false;
             }
 
-            var hasDomains = await _context.Domains.AnyAsync(d => d.RegistrarTldId == id);
+            var hasDomains = await _context.RegisteredDomains.AnyAsync(d => d.RegistrarTldId == id);
             if (hasDomains)
             {
                 _log.Warning("Cannot delete registrar TLD {RegistrarTldId}: has associated domains", id);

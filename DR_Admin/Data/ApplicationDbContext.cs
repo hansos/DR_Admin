@@ -62,7 +62,7 @@ public class ApplicationDbContext : DbContext
                 customer.NormalizedCustomerName = NormalizationHelper.Normalize(customer.CustomerName);
                 break;
 
-            case Entities.Domain domain:
+            case Entities.RegisteredDomain domain:
                 domain.NormalizedName = NormalizationHelper.Normalize(domain.Name) ?? string.Empty;
                 break;
 
@@ -146,7 +146,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<InvoiceLine> InvoiceLines { get; set; }
     public DbSet<PaymentTransaction> PaymentTransactions { get; set; }
     public DbSet<PaymentGateway> PaymentGateways { get; set; }
-    public DbSet<Entities.Domain> Domains { get; set; }
+    public DbSet<RegisteredDomain> RegisteredDomains { get; set; }
     public DbSet<DomainContact> DomainContacts { get; set; }
     public DbSet<Tld> Tlds { get; set; }
     public DbSet<Registrar> Registrars { get; set; }
@@ -530,7 +530,7 @@ public class ApplicationDbContext : DbContext
         });
 
         // Domain configuration
-        modelBuilder.Entity<Entities.Domain>(entity =>
+        modelBuilder.Entity<RegisteredDomain>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Name).IsRequired().HasMaxLength(255);
@@ -546,7 +546,7 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => e.NormalizedName).IsUnique();
             
             entity.HasOne(e => e.Customer)
-                .WithMany(c => c.Domains)
+                .WithMany(c => c.RegisteredDomains)
                 .HasForeignKey(e => e.CustomerId)
                 .OnDelete(DeleteBehavior.Restrict);
             
@@ -556,12 +556,12 @@ public class ApplicationDbContext : DbContext
                 .OnDelete(DeleteBehavior.Restrict);
             
             entity.HasOne(e => e.Registrar)
-                .WithMany(r => r.Domains)
+                .WithMany(r => r.RegisteredDomains)
                 .HasForeignKey(e => e.RegistrarId)
                 .OnDelete(DeleteBehavior.Restrict);
             
             entity.HasOne(e => e.RegistrarTld)
-                .WithMany(rt => rt.Domains)
+                .WithMany(rt => rt.RegisteredDomains)
                 .HasForeignKey(e => e.RegistrarTldId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
@@ -868,6 +868,7 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => e.Code).IsUnique();
             entity.HasIndex(e => e.Name);
             entity.HasIndex(e => e.IsActive);
+            entity.HasIndex(e => e.IsDefault);
             entity.HasIndex(e => e.NormalizedName);
         });
 

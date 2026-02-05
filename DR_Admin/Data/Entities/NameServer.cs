@@ -8,5 +8,5 @@ public class NameServer : EntityBase
     public bool IsPrimary { get; set; } = false;
     public int SortOrder { get; set; } = 0;
 
-    public Domain Domain { get; set; } = null!;
+    public RegisteredDomain Domain { get; set; } = null!;
 }

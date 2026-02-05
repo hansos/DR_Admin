@@ -4,7 +4,7 @@ using ISPAdmin.DTOs;
 using ISPAdmin.Utilities;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
-using DomainEntity = ISPAdmin.Data.Entities.Domain;
+using RegisteredDomainEntity = ISPAdmin.Data.Entities.RegisteredDomain;
 
 namespace ISPAdmin.Services;
 
@@ -24,7 +24,7 @@ public class DomainService : IDomainService
         {
             _log.Information("Fetching all domains");
             
-            var domains = await _context.Domains
+            var domains = await _context.RegisteredDomains
                 .AsNoTracking()
                 .OrderBy(d => d.Name)
                 .ToListAsync();
@@ -47,7 +47,7 @@ public class DomainService : IDomainService
         {
             _log.Information("Fetching domains for customer {CustomerId}", customerId);
             
-            var domains = await _context.Domains
+            var domains = await _context.RegisteredDomains
                 .AsNoTracking()
                 .Where(d => d.CustomerId == customerId)
                 .OrderBy(d => d.Name)
@@ -71,7 +71,7 @@ public class DomainService : IDomainService
         {
             _log.Information("Fetching domains for registrar {RegistrarId}", registrarId);
             
-            var domains = await _context.Domains
+            var domains = await _context.RegisteredDomains
                 .AsNoTracking()
                 .Where(d => d.RegistrarId == registrarId)
                 .OrderBy(d => d.Name)
@@ -95,7 +95,7 @@ public class DomainService : IDomainService
         {
             _log.Information("Fetching domains with status {Status}", status);
             
-            var domains = await _context.Domains
+            var domains = await _context.RegisteredDomains
                 .AsNoTracking()
                 .Where(d => d.Status == status)
                 .OrderBy(d => d.Name)
@@ -120,8 +120,8 @@ public class DomainService : IDomainService
             _log.Information("Fetching domains expiring in {Days} days", days);
             
             var targetDate = DateTime.UtcNow.AddDays(days);
-            
-            var domains = await _context.Domains
+
+            var domains = await _context.RegisteredDomains
                 .AsNoTracking()
                 .Where(d => d.ExpirationDate <= targetDate && d.ExpirationDate >= DateTime.UtcNow)
                 .OrderBy(d => d.ExpirationDate)
@@ -144,8 +144,8 @@ public class DomainService : IDomainService
         try
         {
             _log.Information("Fetching domain with ID: {DomainId}", id);
-            
-            var domain = await _context.Domains
+
+            var domain = await _context.RegisteredDomains
                 .AsNoTracking()
                 .FirstOrDefaultAsync(d => d.Id == id);
 
@@ -173,7 +173,7 @@ public class DomainService : IDomainService
             
             var normalizedName = NormalizationHelper.Normalize(name);
             
-            var domain = await _context.Domains
+            var domain = await _context.RegisteredDomains
                 .AsNoTracking()
                 .FirstOrDefaultAsync(d => d.NormalizedName == normalizedName);
 
@@ -200,7 +200,7 @@ public class DomainService : IDomainService
             _log.Information("Creating new domain: {DomainName}", createDto.Name);
 
             var normalizedName = createDto.Name.ToLowerInvariant();
-            var existingDomain = await _context.Domains
+            var existingDomain = await _context.RegisteredDomains
                 .FirstOrDefaultAsync(d => d.NormalizedName == normalizedName);
 
             if (existingDomain != null)
@@ -230,7 +230,7 @@ public class DomainService : IDomainService
                 throw new InvalidOperationException($"Registrar with ID {createDto.ProviderId} does not exist");
             }
 
-            var domain = new DomainEntity
+            var domain = new RegisteredDomainEntity
             {
                 CustomerId = createDto.CustomerId,
                 ServiceId = createDto.ServiceId,
@@ -246,7 +246,7 @@ public class DomainService : IDomainService
                 UpdatedAt = DateTime.UtcNow
             };
 
-            _context.Domains.Add(domain);
+            _context.RegisteredDomains.Add(domain);
             await _context.SaveChangesAsync();
 
             _log.Information("Successfully created domain with ID: {DomainId} and name: {DomainName}", 
@@ -266,7 +266,7 @@ public class DomainService : IDomainService
         {
             _log.Information("Updating domain with ID: {DomainId}", id);
 
-            var domain = await _context.Domains.FindAsync(id);
+            var domain = await _context.RegisteredDomains.FindAsync(id);
 
             if (domain == null)
             {
@@ -275,7 +275,7 @@ public class DomainService : IDomainService
             }
 
             var normalizedName = updateDto.Name.ToLowerInvariant();
-            var duplicateName = await _context.Domains
+            var duplicateName = await _context.RegisteredDomains
                 .AnyAsync(d => d.NormalizedName == normalizedName && d.Id != id);
 
             if (duplicateName)
@@ -334,7 +334,7 @@ public class DomainService : IDomainService
         {
             _log.Information("Deleting domain with ID: {DomainId}", id);
 
-            var domain = await _context.Domains.FindAsync(id);
+            var domain = await _context.RegisteredDomains.FindAsync(id);
 
             if (domain == null)
             {
@@ -356,7 +356,7 @@ public class DomainService : IDomainService
                 throw new InvalidOperationException("Cannot delete domain with associated domain contacts");
             }
 
-            _context.Domains.Remove(domain);
+            _context.RegisteredDomains.Remove(domain);
             await _context.SaveChangesAsync();
 
             _log.Information("Successfully deleted domain with ID: {DomainId}", id);
@@ -369,7 +369,7 @@ public class DomainService : IDomainService
         }
     }
 
-    private static DomainDto MapToDto(DomainEntity domain)
+    private static DomainDto MapToDto(RegisteredDomainEntity domain)
     {
         return new DomainDto
         {

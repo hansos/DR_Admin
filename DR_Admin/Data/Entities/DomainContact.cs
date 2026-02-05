@@ -104,5 +104,5 @@ public class DomainContact : EntityBase
     /// <summary>
     /// Gets or sets the domain associated with this contact
     /// </summary>
-    public Domain Domain { get; set; } = null!;
+    public RegisteredDomain Domain { get; set; } = null!;
 }

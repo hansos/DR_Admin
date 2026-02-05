@@ -452,6 +452,12 @@ public class RegistrarService : IRegistrarService
                 throw new InvalidOperationException($"Registrar with code {createDto.Code} already exists");
             }
 
+            // If this registrar is being set as default, unset other defaults
+            if (createDto.IsDefault)
+            {
+                await UnsetAllDefaultRegistrarsAsync();
+            }
+
             var registrar = new Registrar
             {
                 Name = createDto.Name,
@@ -461,6 +467,7 @@ public class RegistrarService : IRegistrarService
                 ContactPhone = createDto.ContactPhone,
                 Website = createDto.Website,
                 Notes = createDto.Notes,
+                IsDefault = createDto.IsDefault,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -503,6 +510,12 @@ public class RegistrarService : IRegistrarService
                 throw new InvalidOperationException($"Registrar with code {updateDto.Code} already exists");
             }
 
+            // If this registrar is being set as default, unset other defaults
+            if (updateDto.IsDefault && !registrar.IsDefault)
+            {
+                await UnsetAllDefaultRegistrarsAsync();
+            }
+
             registrar.Name = updateDto.Name;
             registrar.Code = updateDto.Code.ToUpper();
             registrar.IsActive = updateDto.IsActive;
@@ -510,6 +523,7 @@ public class RegistrarService : IRegistrarService
             registrar.ContactPhone = updateDto.ContactPhone;
             registrar.Website = updateDto.Website;
             registrar.Notes = updateDto.Notes;
+            registrar.IsDefault = updateDto.IsDefault;
             registrar.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
@@ -538,7 +552,7 @@ public class RegistrarService : IRegistrarService
                 return false;
             }
 
-            var hasDomains = await _context.Domains.AnyAsync(d => d.RegistrarId == id);
+            var hasDomains = await _context.RegisteredDomains.AnyAsync(d => d.RegistrarId == id);
             if (hasDomains)
             {
                 _log.Warning("Cannot delete registrar {RegistrarId}: has associated domains", id);
@@ -577,6 +591,7 @@ public class RegistrarService : IRegistrarService
             ContactPhone = registrar.ContactPhone,
             Website = registrar.Website,
             Notes = registrar.Notes,
+            IsDefault = registrar.IsDefault,
             CreatedAt = registrar.CreatedAt,
             UpdatedAt = registrar.UpdatedAt
         };
@@ -1118,5 +1133,61 @@ public class RegistrarService : IRegistrarService
             throw;
         }
     }
+
+    /// <summary>
+    /// Sets a registrar as the default registrar
+    /// </summary>
+    /// <param name="id">The unique identifier of the registrar to set as default</param>
+    /// <returns>True if successful, false if registrar not found</returns>
+    public async Task<bool> SetDefaultRegistrarAsync(int id)
+    {
+        try
+        {
+            _log.Information("Setting registrar {RegistrarId} as default", id);
+
+            var registrar = await _context.Registrars.FindAsync(id);
+
+            if (registrar == null)
+            {
+                _log.Warning("Registrar with ID {RegistrarId} not found", id);
+                return false;
+            }
+
+            // Unset all other defaults
+            await UnsetAllDefaultRegistrarsAsync();
+
+            registrar.IsDefault = true;
+            await _context.SaveChangesAsync();
+
+            _log.Information("Successfully set registrar {RegistrarId} as default", id);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while setting registrar {RegistrarId} as default", id);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Unsets the default flag on all registrars
+    /// </summary>
+    private async Task UnsetAllDefaultRegistrarsAsync()
+    {
+        var defaultRegistrars = await _context.Registrars
+            .Where(r => r.IsDefault)
+            .ToListAsync();
+
+        foreach (var registrar in defaultRegistrars)
+        {
+            registrar.IsDefault = false;
+        }
+
+        if (defaultRegistrars.Any())
+        {
+            await _context.SaveChangesAsync();
+        }
+    }
 }
+
 

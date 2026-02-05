@@ -1,17 +1,17 @@
 using ISPAdmin.Data;
 using ISPAdmin.Data.Entities;
 using ISPAdmin.Data.Enums;
-using ISPAdmin.Domain.Events;
-using ISPAdmin.Domain.Events.DomainEvents;
-using ISPAdmin.Domain.Events.OrderEvents;
-using ISPAdmin.Domain.StateMachines;
+using ISPAdmin.Workflow.Domain.Events;
+using ISPAdmin.Workflow.Domain.Events.DomainEvents;
+using ISPAdmin.Workflow.Domain.Events.OrderEvents;
+using ISPAdmin.Workflow.Domain.StateMachines;
 using ISPAdmin.DTOs;
 using ISPAdmin.Services;
 using Microsoft.EntityFrameworkCore;
 using DomainRegistrationLib.Interfaces;
 using DomainRegistrationLib.Models;
 using DomainRegistrationLib.Factories;
-using DomainEntity = ISPAdmin.Data.Entities.Domain;
+using RegisteredDomainEntity = ISPAdmin.Data.Entities.RegisteredDomain;
 using ISPAdmin.Workflow.Domain.Services;
 
 namespace ISPAdmin.Workflow.Domain.Workflows;
@@ -176,7 +176,7 @@ public class DomainRegistrationWorkflow : IDomainRegistrationWorkflow
             var simulatedExpirationDate = DateTime.UtcNow.AddYears(1);
 
             // Step 2: Create domain entity
-            var domain = new DomainEntity
+            var domain = new RegisteredDomainEntity
             {
                 Name = order.Service.Name,
                 CustomerId = order.CustomerId,
@@ -193,7 +193,7 @@ public class DomainRegistrationWorkflow : IDomainRegistrationWorkflow
                 UpdatedAt = DateTime.UtcNow
             };
 
-            _context.Domains.Add(domain);
+            _context.RegisteredDomains.Add(domain);
 
             // Step 3: Update order status
             order.Status = OrderStatus.Active;

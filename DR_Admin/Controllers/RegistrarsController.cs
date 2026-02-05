@@ -535,7 +535,6 @@ public class RegistrarsController : ControllerBase
     /// Downloads all domains registered with a specific registrar and syncs them to the database
     /// </summary>
     /// <param name="registrarId">The unique identifier of the registrar</param>
-    /// <param name="save">If true, saves domains and TLDs to the database (default: true)</param>
     /// <returns>Number of domains downloaded and updated</returns>
     /// <response code="200">Returns the count of domains downloaded</response>
     /// <response code="400">If the registrar is not found or not active</response>
@@ -584,7 +583,6 @@ public class RegistrarsController : ControllerBase
     /// Gets all domains registered with a specific registrar
     /// </summary>
     /// <param name="registrarId">The unique identifier of the registrar</param>
-    /// <param name="save">If true, saves TLDs and domains to the database (default: false)</param>
     /// <returns>List of registered domains from the registrar</returns>
     /// <response code="200">Returns the list of registered domains</response>
     /// <response code="400">If the registrar is not found or not active</response>
@@ -619,4 +617,46 @@ public class RegistrarsController : ControllerBase
             return StatusCode(500, "An error occurred while retrieving domains for the registrar");
         }
     }
+
+    /// <summary>
+    /// Sets a registrar as the default registrar
+    /// </summary>
+    /// <param name="id">The unique identifier of the registrar</param>
+    /// <returns>Success response</returns>
+    /// <response code="200">If the registrar was successfully set as default</response>
+    /// <response code="404">If the registrar is not found</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have Admin role</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpPost("{id}/set-default")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult> SetDefaultRegistrar(int id)
+    {
+        try
+        {
+            _log.Information("API: SetDefaultRegistrar called for ID {RegistrarId} by user {User}", 
+                id, User.Identity?.Name);
+
+            var result = await _registrarService.SetDefaultRegistrarAsync(id);
+
+            if (!result)
+            {
+                _log.Information("API: Registrar with ID {RegistrarId} not found", id);
+                return NotFound($"Registrar with ID {id} not found");
+            }
+
+            return Ok(new { message = $"Registrar {id} has been set as default" });
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in SetDefaultRegistrar for ID {RegistrarId}", id);
+            return StatusCode(500, "An error occurred while setting the default registrar");
+        }
+    }
 }
+

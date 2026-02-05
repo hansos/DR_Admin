@@ -367,6 +367,7 @@ namespace ISPAdmin.Migrations
                     ContactPhone = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
                     Website = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
                     Notes = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true),
+                    IsDefault = table.Column<bool>(type: "INTEGER", nullable: false),
                     NormalizedName = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
@@ -1300,58 +1301,6 @@ namespace ISPAdmin.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Domains",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    CustomerId = table.Column<int>(type: "INTEGER", nullable: false),
-                    ServiceId = table.Column<int>(type: "INTEGER", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false),
-                    RegistrarId = table.Column<int>(type: "INTEGER", nullable: false),
-                    RegistrarTldId = table.Column<int>(type: "INTEGER", nullable: true),
-                    Status = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
-                    RegistrationDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    ExpirationDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    AutoRenew = table.Column<bool>(type: "INTEGER", nullable: false),
-                    PrivacyProtection = table.Column<bool>(type: "INTEGER", nullable: false),
-                    RegistrationPrice = table.Column<decimal>(type: "TEXT", precision: 18, scale: 2, nullable: true),
-                    RenewalPrice = table.Column<decimal>(type: "TEXT", precision: 18, scale: 2, nullable: true),
-                    Notes = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true),
-                    NormalizedName = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Domains", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Domains_Customers_CustomerId",
-                        column: x => x.CustomerId,
-                        principalTable: "Customers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Domains_RegistrarTlds_RegistrarTldId",
-                        column: x => x.RegistrarTldId,
-                        principalTable: "RegistrarTlds",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Domains_Registrars_RegistrarId",
-                        column: x => x.RegistrarId,
-                        principalTable: "Registrars",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Domains_Services_ServiceId",
-                        column: x => x.ServiceId,
-                        principalTable: "Services",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "HostingAccounts",
                 columns: table => new
                 {
@@ -1392,6 +1341,58 @@ namespace ISPAdmin.Migrations
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_HostingAccounts_Services_ServiceId",
+                        column: x => x.ServiceId,
+                        principalTable: "Services",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "RegisteredDomains",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    CustomerId = table.Column<int>(type: "INTEGER", nullable: false),
+                    ServiceId = table.Column<int>(type: "INTEGER", nullable: false),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false),
+                    RegistrarId = table.Column<int>(type: "INTEGER", nullable: false),
+                    RegistrarTldId = table.Column<int>(type: "INTEGER", nullable: true),
+                    Status = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    RegistrationDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    ExpirationDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    AutoRenew = table.Column<bool>(type: "INTEGER", nullable: false),
+                    PrivacyProtection = table.Column<bool>(type: "INTEGER", nullable: false),
+                    RegistrationPrice = table.Column<decimal>(type: "TEXT", precision: 18, scale: 2, nullable: true),
+                    RenewalPrice = table.Column<decimal>(type: "TEXT", precision: 18, scale: 2, nullable: true),
+                    Notes = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true),
+                    NormalizedName = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RegisteredDomains", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_RegisteredDomains_Customers_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_RegisteredDomains_RegistrarTlds_RegistrarTldId",
+                        column: x => x.RegistrarTldId,
+                        principalTable: "RegistrarTlds",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_RegisteredDomains_Registrars_RegistrarId",
+                        column: x => x.RegistrarId,
+                        principalTable: "Registrars",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_RegisteredDomains_Services_ServiceId",
                         column: x => x.ServiceId,
                         principalTable: "Services",
                         principalColumn: "Id",
@@ -1603,9 +1604,9 @@ namespace ISPAdmin.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_DnsRecords_Domains_DomainId",
+                        name: "FK_DnsRecords_RegisteredDomains_DomainId",
                         column: x => x.DomainId,
-                        principalTable: "Domains",
+                        principalTable: "RegisteredDomains",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -1642,9 +1643,9 @@ namespace ISPAdmin.Migrations
                 {
                     table.PrimaryKey("PK_DomainContacts", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_DomainContacts_Domains_DomainId",
+                        name: "FK_DomainContacts_RegisteredDomains_DomainId",
                         column: x => x.DomainId,
-                        principalTable: "Domains",
+                        principalTable: "RegisteredDomains",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -1667,9 +1668,9 @@ namespace ISPAdmin.Migrations
                 {
                     table.PrimaryKey("PK_NameServers", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_NameServers_Domains_DomainId",
+                        name: "FK_NameServers_RegisteredDomains_DomainId",
                         column: x => x.DomainId,
-                        principalTable: "Domains",
+                        principalTable: "RegisteredDomains",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -2406,48 +2407,6 @@ namespace ISPAdmin.Migrations
                 column: "DomainId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Domains_CustomerId",
-                table: "Domains",
-                column: "CustomerId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Domains_ExpirationDate",
-                table: "Domains",
-                column: "ExpirationDate");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Domains_Name",
-                table: "Domains",
-                column: "Name",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Domains_NormalizedName",
-                table: "Domains",
-                column: "NormalizedName",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Domains_RegistrarId",
-                table: "Domains",
-                column: "RegistrarId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Domains_RegistrarTldId",
-                table: "Domains",
-                column: "RegistrarTldId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Domains_ServiceId",
-                table: "Domains",
-                column: "ServiceId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Domains_Status",
-                table: "Domains",
-                column: "Status");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_HostingAccounts_CustomerId",
                 table: "HostingAccounts",
                 column: "CustomerId");
@@ -2669,6 +2628,48 @@ namespace ISPAdmin.Migrations
                 column: "PaymentTransactionId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_RegisteredDomains_CustomerId",
+                table: "RegisteredDomains",
+                column: "CustomerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RegisteredDomains_ExpirationDate",
+                table: "RegisteredDomains",
+                column: "ExpirationDate");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RegisteredDomains_Name",
+                table: "RegisteredDomains",
+                column: "Name",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RegisteredDomains_NormalizedName",
+                table: "RegisteredDomains",
+                column: "NormalizedName",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RegisteredDomains_RegistrarId",
+                table: "RegisteredDomains",
+                column: "RegistrarId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RegisteredDomains_RegistrarTldId",
+                table: "RegisteredDomains",
+                column: "RegistrarTldId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RegisteredDomains_ServiceId",
+                table: "RegisteredDomains",
+                column: "ServiceId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RegisteredDomains_Status",
+                table: "RegisteredDomains",
+                column: "Status");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_RegistrarMailAddresses_CustomerId",
                 table: "RegistrarMailAddresses",
                 column: "CustomerId");
@@ -2686,7 +2687,8 @@ namespace ISPAdmin.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_RegistrarMailAddresses_MailAddress",
                 table: "RegistrarMailAddresses",
-                column: "MailAddress");
+                column: "MailAddress",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Registrars_Code",
@@ -2698,6 +2700,11 @@ namespace ISPAdmin.Migrations
                 name: "IX_Registrars_IsActive",
                 table: "Registrars",
                 column: "IsActive");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Registrars_IsDefault",
+                table: "Registrars",
+                column: "IsDefault");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Registrars_Name",
@@ -3083,7 +3090,7 @@ namespace ISPAdmin.Migrations
                 name: "Units");
 
             migrationBuilder.DropTable(
-                name: "Domains");
+                name: "RegisteredDomains");
 
             migrationBuilder.DropTable(
                 name: "PaymentTransactions");

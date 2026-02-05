@@ -167,7 +167,7 @@ public class NameServerService : INameServerService
             _log.Information("Creating new name server for domain ID: {DomainId}", createDto.DomainId);
 
             // Validate that the domain exists
-            var domainExists = await _context.Domains.AnyAsync(d => d.Id == createDto.DomainId);
+            var domainExists = await _context.RegisteredDomains.AnyAsync(d => d.Id == createDto.DomainId);
             if (!domainExists)
             {
                 throw new InvalidOperationException($"Domain with ID {createDto.DomainId} not found");
@@ -235,7 +235,7 @@ public class NameServerService : INameServerService
             // Validate that the domain exists if domain ID is being changed
             if (nameServer.DomainId != updateDto.DomainId)
             {
-                var domainExists = await _context.Domains.AnyAsync(d => d.Id == updateDto.DomainId);
+                var domainExists = await _context.RegisteredDomains.AnyAsync(d => d.Id == updateDto.DomainId);
                 if (!domainExists)
                 {
                     throw new InvalidOperationException($"Domain with ID {updateDto.DomainId} not found");

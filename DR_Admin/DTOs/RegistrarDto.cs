@@ -13,6 +13,7 @@ public class RegistrarDto
     public string? ContactPhone { get; set; }
     public string? Website { get; set; }
     public string? Notes { get; set; }
+    public bool IsDefault { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }
@@ -30,6 +31,7 @@ public class CreateRegistrarDto
     public string? ContactPhone { get; set; }
     public string? Website { get; set; }
     public string? Notes { get; set; }
+    public bool IsDefault { get; set; } = false;
 }
 
 
@@ -45,4 +47,5 @@ public class UpdateRegistrarDto
     public string? ContactPhone { get; set; }
     public string? Website { get; set; }
     public string? Notes { get; set; }
+    public bool IsDefault { get; set; }
 }

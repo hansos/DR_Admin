@@ -341,7 +341,7 @@ public class DnsZonePackageService : IDnsZonePackageService
                 return false;
             }
 
-            var domain = await _context.Domains.FindAsync(domainId);
+            var domain = await _context.RegisteredDomains.FindAsync(domainId);
             if (domain == null)
             {
                 _log.Warning("Domain with ID {DomainId} not found", domainId);

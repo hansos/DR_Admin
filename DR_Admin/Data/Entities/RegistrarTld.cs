@@ -21,5 +21,5 @@ public class RegistrarTld : EntityBase
 
     public Registrar Registrar { get; set; } = null!;
     public Tld Tld { get; set; } = null!;
-    public ICollection<Domain> Domains { get; set; } = new List<Domain>();
+    public ICollection<RegisteredDomain> RegisteredDomains { get; set; } = new List<RegisteredDomain>();
 }

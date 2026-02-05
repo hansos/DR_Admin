@@ -155,7 +155,7 @@ public class SystemService : ISystemService
 
     private async Task<int> NormalizeDomainsAsync()
     {
-        var domains = await _context.Domains.ToListAsync();
+        var domains = await _context.RegisteredDomains.ToListAsync();
         
         foreach (var domain in domains)
         {

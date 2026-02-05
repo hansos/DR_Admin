@@ -1,6 +1,6 @@
 namespace ISPAdmin.Data.Entities;
 
-public class Domain : EntityBase
+public class RegisteredDomain : EntityBase
 {
     public int CustomerId { get; set; }
     public int ServiceId { get; set; }
