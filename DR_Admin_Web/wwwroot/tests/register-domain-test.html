@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register Domain - DR Admin</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding-bottom: 50px;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.95) !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            color: #667eea !important;
+            font-size: 24px;
+        }
+
+        .btn-logout {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-logout:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .container-main {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        .registration-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .card-header h2 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 28px;
+        }
+
+        .card-header p {
+            margin: 10px 0 0;
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .header-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .card-body {
+            padding: 40px;
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .form-control, .form-select {
+            border-radius: 8px;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            transition: all 0.3s;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+
+        .form-check-input:checked {
+            background-color: #667eea;
+            border-color: #667eea;
+        }
+
+        .btn-check-availability {
+            background: linear-gradient(135deg, #2196F3 0%, #21CBF3 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-check-availability:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(33, 150, 243, 0.4);
+        }
+
+        .btn-register {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 30px;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .btn-register:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+        }
+
+        .btn-register:disabled, .btn-check-availability:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-back {
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 30px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .btn-back:hover {
+            background: #5a6268;
+            color: white;
+            text-decoration: none;
+        }
+
+        .alert {
+            border-radius: 8px;
+            border: none;
+        }
+
+        .availability-result {
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .availability-available {
+            background-color: #d4edda;
+            border-left: 4px solid #28a745;
+        }
+
+        .availability-unavailable {
+            background-color: #f8d7da;
+            border-left: 4px solid #dc3545;
+        }
+
+        .pricing-info {
+            background-color: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .pricing-label {
+            font-weight: 600;
+            color: #1976D2;
+            margin-bottom: 8px;
+        }
+
+        .pricing-amount {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1976D2;
+        }
+
+        .spinner-border-sm {
+            width: 1rem;
+            height: 1rem;
+            border-width: 0.15em;
+        }
+
+        .domain-input-group {
+            position: relative;
+        }
+
+        .domain-example {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .tld-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            background-color: #f8f9fa;
+        }
+
+        .tld-item {
+            padding: 10px;
+            margin-bottom: 10px;
+            background: white;
+            border-radius: 5px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .tld-name {
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .tld-price {
+            color: #28a745;
+            font-weight: 600;
+        }
+
+        .info-box {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .info-box-text {
+            color: #856404;
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            color: #666;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .step.active .step-number {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .step.completed .step-number {
+            background: #28a745;
+            color: white;
+        }
+
+        .step-label {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .step.active .step-label {
+            color: #667eea;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/index.html">?? DR Admin</a>
+            <div class="ms-auto">
+                <span id="userInfo" class="me-3 text-muted"></span>
+                <button class="btn btn-logout" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-main">
+        <!-- Page Header -->
+        <div class="registration-card">
+            <div class="card-header">
+                <div class="header-icon">??</div>
+                <h2>Register New Domain</h2>
+                <p>Find and register your perfect domain name</p>
+            </div>
+            
+            <div class="card-body">
+                <!-- Step Indicator -->
+                <div class="step-indicator">
+                    <div class="step active" id="step1">
+                        <div class="step-number">1</div>
+                        <div class="step-label">Search Domain</div>
+                    </div>
+                    <div class="step" id="step2">
+                        <div class="step-number">2</div>
+                        <div class="step-label">Configure</div>
+                    </div>
+                    <div class="step" id="step3">
+                        <div class="step-number">3</div>
+                        <div class="step-label">Confirm</div>
+                    </div>
+                </div>
+
+                <div id="alertContainer"></div>
+
+                <!-- Domain Search Section -->
+                <div id="searchSection">
+                    <div class="mb-4">
+                        <label for="domainName" class="form-label">Domain Name</label>
+                        <div class="domain-input-group">
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="domainName" 
+                                   placeholder="example.com"
+                                   required>
+                        </div>
+                        <div class="domain-example">Enter the full domain name including extension (e.g., example.com, mybusiness.net)</div>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+                        <button type="button" 
+                                class="btn btn-check-availability" 
+                                id="checkAvailabilityBtn"
+                                onclick="checkAvailability()">
+                            <span id="checkBtnText">Check Availability</span>
+                            <span id="checkBtnSpinner" class="spinner-border spinner-border-sm ms-2" style="display: none;"></span>
+                        </button>
+                        <button type="button" 
+                                class="btn btn-outline-secondary" 
+                                onclick="showAvailableTlds()">
+                            View Available TLDs
+                        </button>
+                    </div>
+
+                    <!-- Availability Result -->
+                    <div id="availabilityResult" style="display: none;"></div>
+
+                    <!-- Available TLDs Modal Section -->
+                    <div id="tldsSection" style="display: none; margin-top: 20px;">
+                        <h5 class="mb-3">Available Top-Level Domains</h5>
+                        <div id="tldsList" class="tld-list"></div>
+                        <button type="button" class="btn btn-secondary mt-3" onclick="hideAvailableTlds()">Close</button>
+                    </div>
+                </div>
+
+                <!-- Registration Form Section -->
+                <div id="registrationForm" style="display: none;">
+                    <form id="domainRegistrationForm">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="years" class="form-label">Registration Period</label>
+                                <select class="form-select" id="years" required>
+                                    <option value="1" selected>1 Year</option>
+                                    <option value="2">2 Years</option>
+                                    <option value="3">3 Years</option>
+                                    <option value="5">5 Years</option>
+                                    <option value="10">10 Years</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Options</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="autoRenew" checked>
+                                    <label class="form-check-label" for="autoRenew">
+                                        Enable Auto-Renewal
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="privacyProtection">
+                                    <label class="form-check-label" for="privacyProtection">
+                                        Privacy Protection (+$10/year)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Notes (Optional)</label>
+                            <textarea class="form-control" 
+                                      id="notes" 
+                                      rows="3" 
+                                      placeholder="Add any notes or special instructions..."
+                                      maxlength="1000"></textarea>
+                            <small class="text-muted">Maximum 1000 characters</small>
+                        </div>
+
+                        <!-- Pricing Summary -->
+                        <div id="pricingSummary" class="pricing-info">
+                            <div class="pricing-label">Estimated Total</div>
+                            <div class="pricing-amount" id="totalAmount">-</div>
+                            <small class="text-muted">Final price will be confirmed on checkout</small>
+                        </div>
+
+                        <div class="info-box mt-3">
+                            <p class="info-box-text">
+                                ? After registration, an invoice will be created. Complete payment to activate the domain.
+                            </p>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-between mt-4">
+                            <button type="button" class="btn btn-back" onclick="backToSearch()">
+                                ? Back to Search
+                            </button>
+                            <button type="submit" 
+                                    class="btn btn-register" 
+                                    id="registerBtn">
+                                <span id="registerBtnText">Register Domain</span>
+                                <span id="registerBtnSpinner" class="spinner-border spinner-border-sm ms-2" style="display: none;"></span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Success Section -->
+                <div id="successSection" style="display: none;">
+                    <div class="alert alert-success">
+                        <h4 class="alert-heading">? Domain Registration Successful!</h4>
+                        <p id="successMessage"></p>
+                        <hr>
+                        <p class="mb-0">
+                            <strong>Order Number:</strong> <span id="orderNumber"></span><br>
+                            <strong>Total Amount:</strong> <span id="invoiceAmount"></span><br>
+                            <span id="approvalMessage" style="display: none;">
+                                <strong>Status:</strong> <span id="approvalStatus"></span>
+                            </span>
+                        </p>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-between mt-4">
+                        <a href="/index.html" class="btn btn-back">? Back to Dashboard</a>
+                        <button type="button" class="btn btn-register" onclick="registerAnother()">
+                            Register Another Domain
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Auth Guard -->
+    <script src="/assets/js/authGuard.js"></script>
+    
+    <!-- Domain Registration Client -->
+    <script src="/assets/js/domainRegistrationClient.js"></script>
+    
+    <script>
+        let currentDomain = '';
+        let currentPricing = null;
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check authentication
+            if (typeof checkAuth === 'function') {
+                checkAuth();
+            }
+            
+            // Display user info
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            const userInfoEl = document.getElementById('userInfo');
+            if (userInfoEl && user.username) {
+                userInfoEl.textContent = `Welcome, ${user.username}`;
+            }
+
+            // Form submit handler
+            const form = document.getElementById('domainRegistrationForm');
+            if (form) {
+                form.addEventListener('submit', handleRegistration);
+            }
+
+            // Years change handler for pricing update
+            const yearsSelect = document.getElementById('years');
+            if (yearsSelect) {
+                yearsSelect.addEventListener('change', updatePricing);
+            }
+
+            // Domain name input - allow Enter key to check availability
+            const domainInput = document.getElementById('domainName');
+            if (domainInput) {
+                domainInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        checkAvailability();
+                    }
+                });
+            }
+        });
+
+        // Check domain availability
+        async function checkAvailability() {
+            const domainInput = document.getElementById('domainName');
+            const domain = domainInput.value.trim();
+
+            if (!domain) {
+                showAlert('Please enter a domain name', 'warning');
+                return;
+            }
+
+            // Basic domain validation
+            if (!isValidDomain(domain)) {
+                showAlert('Please enter a valid domain name (e.g., example.com)', 'danger');
+                return;
+            }
+
+            const checkBtn = document.getElementById('checkAvailabilityBtn');
+            const btnText = document.getElementById('checkBtnText');
+            const btnSpinner = document.getElementById('checkBtnSpinner');
+
+            try {
+                // Show loading state
+                checkBtn.disabled = true;
+                btnText.textContent = 'Checking...';
+                btnSpinner.style.display = 'inline-block';
+
+                const client = new DomainRegistrationClient();
+                const result = await client.checkAvailability(domain);
+
+                currentDomain = domain;
+                showAvailabilityResult(result);
+
+                // If available, also fetch pricing
+                if (result.isAvailable) {
+                    await fetchPricing(domain);
+                }
+            } catch (error) {
+                console.error('Availability check failed:', error);
+                showAlert('Failed to check domain availability. Please try again.', 'danger');
+            } finally {
+                checkBtn.disabled = false;
+                btnText.textContent = 'Check Availability';
+                btnSpinner.style.display = 'none';
+            }
+        }
+
+        // Show availability result
+        function showAvailabilityResult(result) {
+            const resultDiv = document.getElementById('availabilityResult');
+            
+            if (result.isAvailable) {
+                resultDiv.className = 'availability-result availability-available';
+                resultDiv.innerHTML = `
+                    <h5>? ${result.domainName} is available!</h5>
+                    <p>${result.message}</p>
+                    <button type="button" class="btn btn-register mt-2" onclick="proceedToRegistration()">
+                        Proceed to Registration ?
+                    </button>
+                `;
+            } else {
+                resultDiv.className = 'availability-result availability-unavailable';
+                let html = `
+                    <h5>? ${result.domainName} is not available</h5>
+                    <p>${result.message}</p>
+                `;
+                
+                if (result.suggestedAlternatives && result.suggestedAlternatives.length > 0) {
+                    html += '<p><strong>Suggested alternatives:</strong></p><ul>';
+                    result.suggestedAlternatives.forEach(alt => {
+                        html += `<li>${alt}</li>`;
+                    });
+                    html += '</ul>';
+                }
+                
+                resultDiv.innerHTML = html;
+            }
+            
+            resultDiv.style.display = 'block';
+        }
+
+        // Fetch pricing for domain
+        async function fetchPricing(domain) {
+            const tld = domain.split('.').pop();
+            
+            try {
+                const client = new DomainRegistrationClient();
+                const pricing = await client.getPricing(tld);
+                currentPricing = pricing;
+                updatePricing();
+            } catch (error) {
+                console.error('Failed to fetch pricing:', error);
+            }
+        }
+
+        // Update pricing display
+        function updatePricing() {
+            if (!currentPricing) return;
+
+            const years = parseInt(document.getElementById('years').value);
+            const totalAmountEl = document.getElementById('totalAmount');
+            
+            // Calculate total based on years
+            let total = currentPricing.registrationPrice * years;
+            
+            // Add privacy protection if selected
+            const privacyProtection = document.getElementById('privacyProtection');
+            if (privacyProtection && privacyProtection.checked) {
+                total += 10 * years;
+            }
+            
+            totalAmountEl.textContent = `$${total.toFixed(2)} ${currentPricing.currency}`;
+        }
+
+        // Proceed to registration form
+        function proceedToRegistration() {
+            document.getElementById('searchSection').style.display = 'none';
+            document.getElementById('registrationForm').style.display = 'block';
+            
+            // Update step indicator
+            document.getElementById('step1').classList.remove('active');
+            document.getElementById('step1').classList.add('completed');
+            document.getElementById('step2').classList.add('active');
+
+            updatePricing();
+        }
+
+        // Back to search
+        function backToSearch() {
+            document.getElementById('registrationForm').style.display = 'none';
+            document.getElementById('searchSection').style.display = 'block';
+            
+            // Update step indicator
+            document.getElementById('step1').classList.add('active');
+            document.getElementById('step1').classList.remove('completed');
+            document.getElementById('step2').classList.remove('active');
+        }
+
+        // Handle domain registration
+        async function handleRegistration(event) {
+            event.preventDefault();
+
+            const registerBtn = document.getElementById('registerBtn');
+            const btnText = document.getElementById('registerBtnText');
+            const btnSpinner = document.getElementById('registerBtnSpinner');
+
+            try {
+                // Show loading state
+                registerBtn.disabled = true;
+                btnText.textContent = 'Registering...';
+                btnSpinner.style.display = 'inline-block';
+
+                const data = {
+                    domainName: currentDomain,
+                    years: parseInt(document.getElementById('years').value),
+                    autoRenew: document.getElementById('autoRenew').checked,
+                    privacyProtection: document.getElementById('privacyProtection').checked,
+                    notes: document.getElementById('notes').value || null
+                };
+
+                const client = new DomainRegistrationClient();
+                const result = await client.registerDomain(data);
+
+                if (result.success) {
+                    showSuccess(result);
+                } else {
+                    showAlert(result.message || 'Registration failed', 'danger');
+                    registerBtn.disabled = false;
+                }
+            } catch (error) {
+                console.error('Registration failed:', error);
+                showAlert('Failed to register domain. Please try again.', 'danger');
+                registerBtn.disabled = false;
+            } finally {
+                btnText.textContent = 'Register Domain';
+                btnSpinner.style.display = 'none';
+            }
+        }
+
+        // Show success message
+        function showSuccess(result) {
+            document.getElementById('registrationForm').style.display = 'none';
+            document.getElementById('successSection').style.display = 'block';
+            
+            // Update step indicator
+            document.getElementById('step2').classList.remove('active');
+            document.getElementById('step2').classList.add('completed');
+            document.getElementById('step3').classList.add('completed');
+
+            document.getElementById('successMessage').textContent = result.message;
+            document.getElementById('orderNumber').textContent = result.orderNumber || 'N/A';
+            document.getElementById('invoiceAmount').textContent = result.totalAmount 
+                ? `$${result.totalAmount.toFixed(2)}`
+                : 'N/A';
+
+            if (result.requiresApproval) {
+                document.getElementById('approvalMessage').style.display = 'inline';
+                document.getElementById('approvalStatus').textContent = result.approvalStatus || 'Pending Approval';
+            }
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Register another domain
+        function registerAnother() {
+            // Reset form
+            document.getElementById('domainName').value = '';
+            document.getElementById('years').value = '1';
+            document.getElementById('autoRenew').checked = true;
+            document.getElementById('privacyProtection').checked = false;
+            document.getElementById('notes').value = '';
+            
+            // Reset sections
+            document.getElementById('successSection').style.display = 'none';
+            document.getElementById('searchSection').style.display = 'block';
+            document.getElementById('availabilityResult').style.display = 'none';
+            
+            // Reset steps
+            document.getElementById('step1').classList.add('active');
+            document.getElementById('step1').classList.remove('completed');
+            document.getElementById('step2').classList.remove('active', 'completed');
+            document.getElementById('step3').classList.remove('completed');
+            
+            // Clear data
+            currentDomain = '';
+            currentPricing = null;
+            
+            // Clear alerts
+            document.getElementById('alertContainer').innerHTML = '';
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Show available TLDs
+        async function showAvailableTlds() {
+            const tldsSection = document.getElementById('tldsSection');
+            const tldsList = document.getElementById('tldsList');
+
+            try {
+                tldsList.innerHTML = '<div class="text-center"><div class="spinner-border" role="status"></div><p>Loading TLDs...</p></div>';
+                tldsSection.style.display = 'block';
+
+                const client = new DomainRegistrationClient();
+                const tlds = await client.getAvailableTlds();
+
+                if (tlds && tlds.length > 0) {
+                    let html = '';
+                    tlds.forEach(tld => {
+                        html += `
+                            <div class="tld-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <span class="tld-name">.${tld.tld}</span>
+                                        <small class="text-muted ms-2">(${tld.registrarName})</small>
+                                    </div>
+                                    <div>
+                                        <span class="tld-price">$${tld.registrationPrice.toFixed(2)}</span>
+                                        <small class="text-muted">/${tld.currency}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    tldsList.innerHTML = html;
+                } else {
+                    tldsList.innerHTML = '<p class="text-muted">No TLDs available at the moment.</p>';
+                }
+            } catch (error) {
+                console.error('Failed to load TLDs:', error);
+                tldsList.innerHTML = '<p class="text-danger">Failed to load TLDs. Please try again.</p>';
+            }
+        }
+
+        // Hide available TLDs
+        function hideAvailableTlds() {
+            document.getElementById('tldsSection').style.display = 'none';
+        }
+
+        // Validate domain name
+        function isValidDomain(domain) {
+            const domainRegex = /^[a-zA-Z0-9][a-zA-Z0-9-]{0,61}[a-zA-Z0-9]?\.[a-zA-Z]{2,}$/;
+            return domainRegex.test(domain);
+        }
+
+        // Show alert
+        function showAlert(message, type = 'info') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type} alert-dismissible fade show`;
+            alert.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            alertContainer.innerHTML = '';
+            alertContainer.appendChild(alert);
+
+            // Auto-dismiss after 5 seconds
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
+        }
+
+        // Logout function
+        function logout() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('user');
+            window.location.href = '/login.html';
+        }
+    </script>
+</body>
+</html>

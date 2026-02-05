@@ -200,6 +200,11 @@
   },
   "active": "446880d5348007bd",
   "lastOpenFiles": [
+    "cgq4nohh.xam~",
+    "REGISTER_DOMAIN_QUICKSTART.md",
+    "1raba555.yrq~",
+    "REGISTER_DOMAIN_FLOW_DIAGRAM.md",
+    "REGISTER_DOMAIN_PAGE_SUMMARY.md",
     "DOMAIN_REGISTRATION_IMPLEMENTATION.md",
     "Features/CustomerManagement/Customers.md",
     "Features/CustomerManagement/CustomerAddress.md",
@@ -229,12 +234,7 @@
     "API/Authentication/AuthController.md",
     "Features/Authentication/InitializeDatabaseWithFirstUser.md",
     "Features/CustomerManagement",
-    "Features/Authentication/Customers.md",
-    "Features/BillngAndSales/OrderToInvoiceFlow.md",
     "Features/Authentication",
-    "Features/BillngAndSales/Untitled.md",
-    "API/BillingAndSales/OrderToInvoiceFlow.md",
-    "Features/BillngAndSales",
-    "Features/BillngAndSale"
+    "Features/BillngAndSales"
   ]
 }
