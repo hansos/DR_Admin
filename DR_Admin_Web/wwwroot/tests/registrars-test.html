@@ -71,6 +71,12 @@
                         <label class="form-check-label" for="createIsActive">Is Active</label>
                     </div>
                 </div>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="createIsDefault">
+                        <label class="form-check-label" for="createIsDefault">Is Default</label>
+                    </div>
+                </div>
                 <button type="submit" class="btn btn-primary">Create Registrar</button>
             </form>
         </div>
@@ -191,6 +197,12 @@
                                 <label class="form-check-label" for="editIsActive">Is Active</label>
                             </div>
                         </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="editIsDefault">
+                                <label class="form-check-label" for="editIsDefault">Is Default</label>
+                            </div>
+                        </div>
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -240,7 +252,8 @@
                 code: document.getElementById('createCode').value.trim().toUpperCase(),
                 apiUrl: document.getElementById('createApiUrl').value.trim() || null,
                 description: document.getElementById('createDescription').value.trim() || null,
-                isActive: document.getElementById('createIsActive').checked
+                isActive: document.getElementById('createIsActive').checked,
+                isDefault: document.getElementById('createIsDefault').checked
             };
 
             try {
@@ -274,6 +287,7 @@
                                 <th>Code</th>
                                 <th>API URL</th>
                                 <th>Status</th>
+                                <th>Is Default</th>
                                 <th>Created At</th>
                                 <th>Actions</th>
                             </tr>
@@ -286,6 +300,7 @@
                                     <td><code>${r.code || '-'}</code></td>
                                     <td>${r.apiUrl || '-'}</td>
                                     <td><span class="badge ${r.isActive ? 'badge-success' : 'badge-secondary'}">${r.isActive ? 'Active' : 'Inactive'}</span></td>
+                                    <td><span class="badge ${r.isDefault ? 'badge-primary' : 'badge-secondary'}">${r.isDefault ? 'Yes' : 'No'}</span></td>
                                     <td>${r.createdAt ? new Date(r.createdAt).toLocaleString() : '-'}</td>
                                     <td>
                                         <div class="action-buttons">
@@ -381,10 +396,10 @@
         function openTldsFor(id) { document.getElementById('tldRegistrarId').value = id; getRegistrarTlds(); }
 
         // Update Registrar
-        function openEditModal(id) { const r = currentRegistrars.find(x=>x.id===id); if (!r) { showAlert('Registrar not found','danger'); return; } document.getElementById('editId').value=r.id; document.getElementById('editName').value=r.name||''; document.getElementById('editCode').value=r.code||''; document.getElementById('editApiUrl').value=r.apiUrl||''; document.getElementById('editDescription').value=r.description||''; document.getElementById('editIsActive').checked = !!r.isActive; editModal.show(); }
+        function openEditModal(id) { const r = currentRegistrars.find(x=>x.id===id); if (!r) { showAlert('Registrar not found','danger'); return; } document.getElementById('editId').value=r.id; document.getElementById('editName').value=r.name||''; document.getElementById('editCode').value=r.code||''; document.getElementById('editApiUrl').value=r.apiUrl||''; document.getElementById('editDescription').value=r.description||''; document.getElementById('editIsActive').checked = !!r.isActive; document.getElementById('editIsDefault').checked = !!r.isDefault; editModal.show(); }
 
         async function updateRegistrar() {
-            const id = document.getElementById('editId').value; const data = { name: document.getElementById('editName').value.trim(), code: document.getElementById('editCode').value.trim().toUpperCase(), apiUrl: document.getElementById('editApiUrl').value.trim() || null, description: document.getElementById('editDescription').value.trim() || null, isActive: document.getElementById('editIsActive').checked };
+            const id = document.getElementById('editId').value; const data = { name: document.getElementById('editName').value.trim(), code: document.getElementById('editCode').value.trim().toUpperCase(), apiUrl: document.getElementById('editApiUrl').value.trim() || null, description: document.getElementById('editDescription').value.trim() || null, isActive: document.getElementById('editIsActive').checked, isDefault: document.getElementById('editIsDefault').checked };
             try {
                 const response = await fetch(`${API_BASE_URL}/api/v1/Registrars/${id}`, { method:'PUT', headers: getAuthHeaders(), body: JSON.stringify(data) });
                 let result; const contentType = response.headers.get('content-type'); if (contentType && contentType.includes('application/json')) result = await response.json(); else { const text = await response.text(); result = { error: text, statusCode: response.status }; }
