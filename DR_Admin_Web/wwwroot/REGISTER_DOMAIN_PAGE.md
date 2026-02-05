@@ -1,17 +1,17 @@
 # Domain Registration Page
 
 ## Overview
-The `register-domain.html` page provides a complete customer-facing interface for domain name registration, implementing the flow described in `DOMAIN_REGISTRATION_IMPLEMENTATION.md`.
+The register-domain.html page provides a complete customer-facing interface for domain name registration, implementing the flow described in DOMAIN_REGISTRATION_IMPLEMENTATION.md.
 
 ## Files Created
 
-### 1. `register-domain.html`
+### 1. register-domain.html
 Main registration page with:
 - **Step 1: Domain Search** - Check domain availability
 - **Step 2: Configure Registration** - Set registration options
 - **Step 3: Confirmation** - View registration results
 
-### 2. `domainRegistrationClient.js`
+### 2. domainRegistrationClient.js
 JavaScript API client providing methods for:
 - Domain registration (customer self-service)
 - Domain registration for customers (admin/sales)
@@ -21,32 +21,32 @@ JavaScript API client providing methods for:
 
 ## Features
 
-### ?? Domain Availability Check
+### Domain Availability Check
 - Real-time domain availability verification
 - Displays availability status with visual feedback
 - Shows suggested alternatives for unavailable domains
 - Automatic pricing fetch for available domains
 
-### ?? Registration Configuration
+### Registration Configuration
 - Select registration period (1-10 years)
 - Enable/disable auto-renewal
 - Add privacy protection (+$10/year)
 - Add custom notes
 - Real-time price calculation
 
-### ?? Pricing Display
+### Pricing Display
 - Dynamic total calculation based on:
   - Registration period
   - Privacy protection option
   - Base TLD pricing
 - Currency display
 
-### ?? Available TLDs Browser
+### Available TLDs Browser
 - View all available top-level domains
 - See pricing for each TLD
 - Identify registrar for each TLD
 
-### ? Registration Confirmation
+### Registration Confirmation
 - Order number display
 - Invoice amount
 - Approval status (if applicable)
@@ -58,12 +58,12 @@ JavaScript API client providing methods for:
 
 ### Customer Self-Service Flow
 
-1. **Login** ? User authenticates with JWT token containing `CustomerId` claim
-2. **Search Domain** ? Enter domain name and check availability
-3. **Configure** ? Set registration period, auto-renewal, privacy options
-4. **Review Pricing** ? See calculated total cost
-5. **Register** ? Submit registration request
-6. **Confirmation** ? View order details and payment instructions
+1. Login -> User authenticates with JWT token containing CustomerId claim
+2. Search Domain -> Enter domain name and check availability
+3. Configure -> Set registration period, auto-renewal, privacy options
+4. Review Pricing -> See calculated total cost
+5. Register -> Submit registration request
+6. Confirmation -> View order details and payment instructions
 
 ### API Integration
 
@@ -80,28 +80,28 @@ GET  /api/v1/RegisteredDomains/available-tlds
 
 ### Required Authentication
 - All API calls require JWT authentication
-- Token must be stored in `localStorage.authToken` or `localStorage.accessToken`
+- Token must be stored in localStorage.authToken or localStorage.accessToken
 
 ### Authorization Policies
 - **Domain.Register** - Allows CUSTOMER, SALES, ADMIN to register domains
-- Automatically extracts `CustomerId` from JWT claims for customer users
+- Automatically extracts CustomerId from JWT claims for customer users
 
 ## Usage Examples
 
 ### Customer Registration
-1. Navigate to `/register-domain.html`
-2. Enter domain name (e.g., `example.com`)
+1. Navigate to /register-domain.html
+2. Enter domain name (e.g., example.com)
 3. Click "Check Availability"
 4. If available, click "Proceed to Registration"
 5. Configure options and click "Register Domain"
 
 ### Accessing from Dashboard
-The domain registration page is linked from the main dashboard (`index.html`) via the "Register Domain" card.
+The domain registration page is linked from the main dashboard (index.html) via the "Register Domain" card.
 
 ## Configuration
 
 ### API Base URL
-Configure in `domainRegistrationClient.js`:
+Configure in domainRegistrationClient.js:
 ```javascript
 const API_BASE_URL = 'https://localhost:7201';
 ```
@@ -132,9 +132,9 @@ total += 10 * years; // $10/year for privacy protection
 ```
 
 ### Database Requirements
-1. **Default Registrar** - Ensure registrar with ID specified in `DefaultRegistrarId` exists and is active
-2. **TLD Pricing** - Populate `RegistrarTld` table with pricing for available TLDs
-3. **Customer** - User must exist in `Customers` table with matching `CustomerId` in JWT
+1. **Default Registrar** - Ensure registrar with ID specified in DefaultRegistrarId exists and is active
+2. **TLD Pricing** - Populate RegistrarTld table with pricing for available TLDs
+3. **Customer** - User must exist in Customers table with matching CustomerId in JWT
 
 ## Styling & Design
 
@@ -196,21 +196,21 @@ total += 10 * years; // $10/year for privacy protection
 ## Troubleshooting
 
 ### "Customer domain registration is currently disabled"
-**Solution**: Set `AllowCustomerRegistration = true` in appsettings.json
+**Solution**: Set AllowCustomerRegistration = true in appsettings.json
 
 ### "Customer ID not found in authentication token"
-**Solution**: Ensure JWT contains `CustomerId` claim for customer users
+**Solution**: Ensure JWT contains CustomerId claim for customer users
 
 ### "Pricing not found for TLD"
-**Solution**: Add `RegistrarTld` record with pricing for the requested TLD
+**Solution**: Add RegistrarTld record with pricing for the requested TLD
 
 ### "Registrar with ID X not found or inactive"
-**Solution**: Check `DefaultRegistrarId` in settings and ensure registrar exists
+**Solution**: Check DefaultRegistrarId in settings and ensure registrar exists
 
 ### Domain availability always shows "not available"
 **Solution**: 
-- Check if domain already exists in your `RegisteredDomains` table
-- Review `EnableAvailabilityCheck` setting
+- Check if domain already exists in your RegisteredDomains table
+- Review EnableAvailabilityCheck setting
 - Ensure external registrar integration is configured (if needed)
 
 ## Future Enhancements
@@ -249,23 +249,23 @@ total += 10 * years; // $10/year for privacy protection
 ### Frontend
 - Bootstrap 5.x (CSS framework)
 - Bootstrap JavaScript Bundle
-- `authGuard.js` (authentication check)
-- `domainRegistrationClient.js` (API client)
+- authGuard.js (authentication check)
+- domainRegistrationClient.js (API client)
 
 ### Backend
-- DR_Admin API (running on `https://localhost:7201`)
+- DR_Admin API (running on https://localhost:7201)
 - Entity Framework Core
 - Domain Registration Workflow
 - Authorization Policies
 
 ## Related Documentation
-- `DOMAIN_REGISTRATION_IMPLEMENTATION.md` - Backend implementation details
-- `DomainLifecycleWorkflows.md` - Workflow documentation
-- API documentation at `/swagger` endpoint
+- DOMAIN_REGISTRATION_IMPLEMENTATION.md - Backend implementation details
+- DomainLifecycleWorkflows.md - Workflow documentation
+- API documentation at /swagger endpoint
 
 ## Support
 For issues or questions about domain registration:
-1. Check backend logs in `DR_Admin` API project
+1. Check backend logs in DR_Admin API project
 2. Verify database configuration
-3. Review `appsettings.json` settings
+3. Review appsettings.json settings
 4. Test API endpoints directly via Swagger/Postman
