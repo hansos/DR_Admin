@@ -419,7 +419,7 @@ public class PostalCodesController : ControllerBase
             }
 
             using var stream = file.OpenReadStream();
-            var result = await _postalCodeService.ImportPostalCodesFromCsvAsync(stream, dto.CountryCode);
+            var result = await _postalCodeService.ImportPostalCodesFromCsvAsync(stream, dto.CountryCode.ToUpper());
 
             if (result.Errors.Any() && result.Created == 0 && result.Updated == 0)
             {
