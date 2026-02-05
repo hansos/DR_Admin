@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Domains API Test - DR Admin</title>
+    <title>Registered Domains API Test - DR Admin</title>
     
     <!-- Bootstrap CSS -->
     <link href="/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -15,7 +15,7 @@
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-light">
         <div class="container-fluid">
-            <a class="navbar-brand" href="/choose-test.html">DR Admin - Domains API</a>
+            <a class="navbar-brand" href="/choose-test.html">DR Admin - Registered Domains API</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -35,8 +35,8 @@
     <!-- Main Content -->
     <div class="container-main">
         <div class="header-card">
-            <h1>&#127760; Domains API Test</h1>
-            <p>Test CRUD operations for Domains API endpoint</p>
+            <h1>&#127760; Registered Domains API Test</h1>
+            <p>Test CRUD operations for Registered Domains API endpoint</p>
         </div>
 
         <!-- Alert Messages -->
@@ -453,7 +453,7 @@
             };
 
             try {
-                const response = await fetch(`${API_BASE_URL}/api/v1/Domains`, {
+                const response = await fetch(`${API_BASE_URL}/api/v1/RegisteredDomains`, {
                     method: 'POST',
                     headers: getAuthHeaders(),
                     body: JSON.stringify(data)
@@ -497,7 +497,7 @@
             container.innerHTML = '';
 
             try {
-                const response = await fetch(`${API_BASE_URL}/api/v1/Domains`, {
+                const response = await fetch(`${API_BASE_URL}/api/v1/RegisteredDomains`, {
                     method: 'GET',
                     headers: getAuthHeaders()
                 });
@@ -613,7 +613,7 @@
             container.innerHTML = '';
 
             try {
-                const response = await fetch(`${API_BASE_URL}/api/v1/Domains/${id}`, {
+                const response = await fetch(`${API_BASE_URL}/api/v1/RegisteredDomains/${id}`, {
                     method: 'GET',
                     headers: getAuthHeaders()
                 });
@@ -658,7 +658,7 @@
 
             try {
                 // Get domain by name
-                const response = await fetch(`${API_BASE_URL}/api/v1/Domains/name/${encodeURIComponent(name)}`, {
+                const response = await fetch(`${API_BASE_URL}/api/v1/RegisteredDomains/name/${encodeURIComponent(name)}`, {
                     method: 'GET',
                     headers: getAuthHeaders()
                 });
@@ -881,7 +881,7 @@
             container.innerHTML = '';
 
             try {
-                const response = await fetch(`${API_BASE_URL}/api/v1/Domains/customer/${customerId}`, {
+                const response = await fetch(`${API_BASE_URL}/api/v1/RegisteredDomains/customer/${customerId}`, {
                     method: 'GET',
                     headers: getAuthHeaders()
                 });
@@ -924,7 +924,7 @@
             container.innerHTML = '';
 
             try {
-                const response = await fetch(`${API_BASE_URL}/api/v1/Domains/registrar/${registrarId}`, {
+                const response = await fetch(`${API_BASE_URL}/api/v1/RegisteredDomains/registrar/${registrarId}`, {
                     method: 'GET',
                     headers: getAuthHeaders()
                 });
@@ -967,7 +967,7 @@
             container.innerHTML = '';
 
             try {
-                const response = await fetch(`${API_BASE_URL}/api/v1/Domains/status/${encodeURIComponent(status)}`, {
+                const response = await fetch(`${API_BASE_URL}/api/v1/RegisteredDomains/status/${encodeURIComponent(status)}`, {
                     method: 'GET',
                     headers: getAuthHeaders()
                 });
@@ -1010,7 +1010,7 @@
             container.innerHTML = '';
 
             try {
-                const response = await fetch(`${API_BASE_URL}/api/v1/Domains/expiring/${days}`, {
+                const response = await fetch(`${API_BASE_URL}/api/v1/RegisteredDomains/expiring/${days}`, {
                     method: 'GET',
                     headers: getAuthHeaders()
                 });
@@ -1079,7 +1079,7 @@
             };
 
             try {
-                const response = await fetch(`${API_BASE_URL}/api/v1/Domains/${id}`, {
+                const response = await fetch(`${API_BASE_URL}/api/v1/RegisteredDomains/${id}`, {
                     method: 'PUT',
                     headers: getAuthHeaders(),
                     body: JSON.stringify(data)
@@ -1115,7 +1115,7 @@
             }
 
             try {
-                const response = await fetch(`${API_BASE_URL}/api/v1/Domains/${id}`, {
+                const response = await fetch(`${API_BASE_URL}/api/v1/RegisteredDomains/${id}`, {
                     method: 'DELETE',
                     headers: getAuthHeaders()
                 });
