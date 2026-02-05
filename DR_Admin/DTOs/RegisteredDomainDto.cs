@@ -1,6 +1,6 @@
 namespace ISPAdmin.DTOs;
 
-public class DomainDto
+public class RegisteredDomainDto
 {
     public int Id { get; set; }
     public int CustomerId { get; set; }
@@ -14,7 +14,7 @@ public class DomainDto
     public DateTime UpdatedAt { get; set; }
 }
 
-public class CreateDomainDto
+public class CreateRegisteredDomainDto
 {
     public int CustomerId { get; set; }
     public int ServiceId { get; set; }
@@ -25,7 +25,7 @@ public class CreateDomainDto
     public DateTime ExpirationDate { get; set; }
 }
 
-public class UpdateDomainDto
+public class UpdateRegisteredDomainDto
 {
     public int CustomerId { get; set; }
     public int ServiceId { get; set; }

@@ -18,7 +18,7 @@ public class DomainMergeHelper
     private readonly IServiceTypeService _serviceTypeService;
     private readonly IServiceService _serviceService;
     private readonly IResellerCompanyService _resellerCompanyService;
-    private readonly IDomainService _domainService;
+    private readonly IRegisteredDomainService _domainService;
     private static readonly Serilog.ILogger _log = Log.ForContext<DomainMergeHelper>();
 
     public DomainMergeHelper(
@@ -27,7 +27,7 @@ public class DomainMergeHelper
         IServiceTypeService serviceTypeService,
         IServiceService serviceService,
         IResellerCompanyService resellerCompanyService,
-        IDomainService domainService)
+        IRegisteredDomainService domainService)
     {
         _context = context;
         _customerService = customerService;
@@ -290,10 +290,10 @@ public class DomainMergeHelper
                 return;
             }
 
-            var domainDto = await CreateDomainRecordAsync(domainInfo, customerId.Value, registrarId, service.Id, result);
-            if (domainDto != null)
+            var RegisteredDomainDto = await CreateDomainRecordAsync(domainInfo, customerId.Value, registrarId, service.Id, result);
+            if (RegisteredDomainDto != null)
             {
-                await MergeContactsForNewDomainAsync(domainDto.Id, domainInfo, result);
+                await MergeContactsForNewDomainAsync(RegisteredDomainDto.Id, domainInfo, result);
                 await _context.SaveChangesAsync();
             }
         }
@@ -458,9 +458,9 @@ public class DomainMergeHelper
     /// <summary>
     /// Creates a domain record in the database
     /// </summary>
-    private async Task<DomainDto?> CreateDomainRecordAsync(RegisteredDomainInfo domainInfo, int customerId, int registrarId, int serviceId, DomainMergeResult result)
+    private async Task<RegisteredDomainDto?> CreateDomainRecordAsync(RegisteredDomainInfo domainInfo, int customerId, int registrarId, int serviceId, DomainMergeResult result)
     {
-        var createDomainDto = new CreateDomainDto
+        var createDomainDto = new CreateRegisteredDomainDto
         {
             ServiceId = serviceId,
             CustomerId = customerId,
@@ -474,12 +474,12 @@ public class DomainMergeHelper
         _log.Debug("Creating domain record: ServiceId={ServiceId}, CustomerId={CustomerId}, RegDate={RegistrationDate}, ExpDate={ExpirationDate}",
             serviceId, customerId, domainInfo.RegistrationDate, domainInfo.ExpirationDate);
         
-        var domainDto = await _domainService.CreateDomainAsync(createDomainDto);
+        var RegisteredDomainDto = await _domainService.CreateDomainAsync(createDomainDto);
         _log.Information("Successfully created domain {DomainName} with ID {DomainId}", 
-            domainInfo.DomainName, domainDto.Id);
+            domainInfo.DomainName, RegisteredDomainDto.Id);
         result.DomainsCreated++;
         
-        return domainDto;
+        return RegisteredDomainDto;
     }
 
     /// <summary>

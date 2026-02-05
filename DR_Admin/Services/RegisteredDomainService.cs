@@ -12,14 +12,14 @@ using RegisteredDomainEntity = ISPAdmin.Data.Entities.RegisteredDomain;
 
 namespace ISPAdmin.Services;
 
-public class DomainService : IDomainService
+public class DomainRegistrationService : IRegisteredDomainService
 {
     private readonly ApplicationDbContext _context;
     private readonly IDomainRegistrationWorkflow _domainRegistrationWorkflow;
     private readonly DomainRegistrationSettings _domainRegistrationSettings;
-    private static readonly Serilog.ILogger _log = Log.ForContext<DomainService>();
+    private static readonly Serilog.ILogger _log = Log.ForContext<DomainRegistrationService>();
 
-    public DomainService(
+    public DomainRegistrationService(
         ApplicationDbContext context,
         IDomainRegistrationWorkflow domainRegistrationWorkflow,
         IOptions<DomainRegistrationSettings> domainRegistrationSettings)
@@ -29,7 +29,7 @@ public class DomainService : IDomainService
         _domainRegistrationSettings = domainRegistrationSettings.Value;
     }
 
-    public async Task<IEnumerable<DomainDto>> GetAllDomainsAsync()
+    public async Task<IEnumerable<RegisteredDomainDto>> GetAllDomainsAsync()
     {
         try
         {
@@ -52,7 +52,7 @@ public class DomainService : IDomainService
         }
     }
 
-    public async Task<IEnumerable<DomainDto>> GetDomainsByCustomerIdAsync(int customerId)
+    public async Task<IEnumerable<RegisteredDomainDto>> GetDomainsByCustomerIdAsync(int customerId)
     {
         try
         {
@@ -76,7 +76,7 @@ public class DomainService : IDomainService
         }
     }
 
-    public async Task<IEnumerable<DomainDto>> GetDomainsByRegistrarIdAsync(int registrarId)
+    public async Task<IEnumerable<RegisteredDomainDto>> GetDomainsByRegistrarIdAsync(int registrarId)
     {
         try
         {
@@ -100,7 +100,7 @@ public class DomainService : IDomainService
         }
     }
 
-    public async Task<IEnumerable<DomainDto>> GetDomainsByStatusAsync(string status)
+    public async Task<IEnumerable<RegisteredDomainDto>> GetDomainsByStatusAsync(string status)
     {
         try
         {
@@ -124,7 +124,7 @@ public class DomainService : IDomainService
         }
     }
 
-    public async Task<IEnumerable<DomainDto>> GetDomainsExpiringInDaysAsync(int days)
+    public async Task<IEnumerable<RegisteredDomainDto>> GetDomainsExpiringInDaysAsync(int days)
     {
         try
         {
@@ -150,7 +150,7 @@ public class DomainService : IDomainService
         }
     }
 
-    public async Task<DomainDto?> GetDomainByIdAsync(int id)
+    public async Task<RegisteredDomainDto?> GetDomainByIdAsync(int id)
     {
         try
         {
@@ -176,7 +176,7 @@ public class DomainService : IDomainService
         }
     }
 
-    public async Task<DomainDto?> GetDomainByNameAsync(string name)
+    public async Task<RegisteredDomainDto?> GetDomainByNameAsync(string name)
     {
         try
         {
@@ -204,7 +204,7 @@ public class DomainService : IDomainService
         }
     }
 
-    public async Task<DomainDto> CreateDomainAsync(CreateDomainDto createDto)
+    public async Task<RegisteredDomainDto> CreateDomainAsync(CreateRegisteredDomainDto createDto)
     {
         try
         {
@@ -271,7 +271,7 @@ public class DomainService : IDomainService
         }
     }
 
-    public async Task<DomainDto?> UpdateDomainAsync(int id, UpdateDomainDto updateDto)
+    public async Task<RegisteredDomainDto?> UpdateDomainAsync(int id, UpdateRegisteredDomainDto updateDto)
     {
         try
         {
@@ -380,9 +380,9 @@ public class DomainService : IDomainService
         }
     }
 
-    private static DomainDto MapToDto(RegisteredDomainEntity domain)
+    private static RegisteredDomainDto MapToDto(RegisteredDomainEntity domain)
     {
-        return new DomainDto
+        return new RegisteredDomainDto
         {
             Id = domain.Id,
             CustomerId = domain.CustomerId,

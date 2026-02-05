@@ -13,12 +13,12 @@ namespace ISPAdmin.Controllers;
 [ApiController]
 [Route("api/v1/[controller]")]
 [Authorize]
-public class DomainsController : ControllerBase
+public class RegisteredDomainsController : ControllerBase
 {
-    private readonly IDomainService _domainService;
-    private static readonly Serilog.ILogger _log = Log.ForContext<DomainsController>();
+    private readonly IRegisteredDomainService _domainService;
+    private static readonly Serilog.ILogger _log = Log.ForContext<RegisteredDomainsController>();
 
-    public DomainsController(IDomainService domainService)
+    public RegisteredDomainsController(IRegisteredDomainService domainService)
     {
         _domainService = domainService;
     }
@@ -33,11 +33,11 @@ public class DomainsController : ControllerBase
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet]
     [Authorize(Policy = "Admin.Only")]
-    [ProducesResponseType(typeof(IEnumerable<DomainDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(IEnumerable<RegisteredDomainDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<IEnumerable<DomainDto>>> GetAllDomains()
+    public async Task<ActionResult<IEnumerable<RegisteredDomainDto>>> GetAllDomains()
     {
         try
         {
@@ -64,11 +64,11 @@ public class DomainsController : ControllerBase
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("customer/{customerId}")]
     [Authorize(Policy = "Domain.Read")]
-    [ProducesResponseType(typeof(IEnumerable<DomainDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(IEnumerable<RegisteredDomainDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<IEnumerable<DomainDto>>> GetDomainsByCustomerId(int customerId)
+    public async Task<ActionResult<IEnumerable<RegisteredDomainDto>>> GetDomainsByCustomerId(int customerId)
     {
         try
         {
@@ -96,11 +96,11 @@ public class DomainsController : ControllerBase
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("registrar/{registrarId}")]
     [Authorize(Policy = "Domain.Read")]
-    [ProducesResponseType(typeof(IEnumerable<DomainDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(IEnumerable<RegisteredDomainDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<IEnumerable<DomainDto>>> GetDomainsByRegistrarId(int registrarId)
+    public async Task<ActionResult<IEnumerable<RegisteredDomainDto>>> GetDomainsByRegistrarId(int registrarId)
     {
         try
         {
@@ -128,11 +128,11 @@ public class DomainsController : ControllerBase
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("status/{status}")]
     [Authorize(Policy = "Domain.Read")]
-    [ProducesResponseType(typeof(IEnumerable<DomainDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(IEnumerable<RegisteredDomainDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<IEnumerable<DomainDto>>> GetDomainsByStatus(string status)
+    public async Task<ActionResult<IEnumerable<RegisteredDomainDto>>> GetDomainsByStatus(string status)
     {
         try
         {
@@ -160,11 +160,11 @@ public class DomainsController : ControllerBase
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("expiring/{days}")]
     [Authorize(Policy = "Domain.Read")]
-    [ProducesResponseType(typeof(IEnumerable<DomainDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(IEnumerable<RegisteredDomainDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<IEnumerable<DomainDto>>> GetDomainsExpiringInDays(int days)
+    public async Task<ActionResult<IEnumerable<RegisteredDomainDto>>> GetDomainsExpiringInDays(int days)
     {
         try
         {
@@ -193,12 +193,12 @@ public class DomainsController : ControllerBase
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("{id}")]
     [Authorize(Policy = "Domain.Read")]
-    [ProducesResponseType(typeof(DomainDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(RegisteredDomainDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<DomainDto>> GetDomainById(int id)
+    public async Task<ActionResult<RegisteredDomainDto>> GetDomainById(int id)
     {
         try
         {
@@ -233,12 +233,12 @@ public class DomainsController : ControllerBase
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("name/{name}")]
     [Authorize(Policy = "Domain.Read")]
-    [ProducesResponseType(typeof(DomainDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(RegisteredDomainDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<DomainDto>> GetDomainByName(string name)
+    public async Task<ActionResult<RegisteredDomainDto>> GetDomainByName(string name)
     {
         try
         {
@@ -273,12 +273,12 @@ public class DomainsController : ControllerBase
     /// <response code="500">If an internal server error occurs</response>
     [HttpPost]
     [Authorize(Policy = "Domain.Write")]
-    [ProducesResponseType(typeof(DomainDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(RegisteredDomainDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<DomainDto>> CreateDomain([FromBody] CreateDomainDto createDto)
+    public async Task<ActionResult<RegisteredDomainDto>> CreateDomain([FromBody] CreateRegisteredDomainDto createDto)
     {
         try
         {
@@ -322,13 +322,13 @@ public class DomainsController : ControllerBase
     /// <response code="500">If an internal server error occurs</response>
     [HttpPut("{id}")]
     [Authorize(Policy = "Domain.Write")]
-    [ProducesResponseType(typeof(DomainDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(RegisteredDomainDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<DomainDto>> UpdateDomain(int id, [FromBody] UpdateDomainDto updateDto)
+    public async Task<ActionResult<RegisteredDomainDto>> UpdateDomain(int id, [FromBody] UpdateRegisteredDomainDto updateDto)
     {
         try
         {
