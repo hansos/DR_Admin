@@ -16,27 +16,12 @@ public class DomainRegistrationSettings
     public bool RequireApprovalForSales { get; set; }
     
     /// <summary>
-    /// Default registrar ID to use for customer registrations
-    /// </summary>
-    public int DefaultRegistrarId { get; set; }
-    
-    /// <summary>
     /// Whether customers are allowed to register domains themselves
     /// </summary>
     public bool AllowCustomerRegistration { get; set; } = true;
     
     /// <summary>
-    /// Maximum number of years a domain can be registered for
-    /// </summary>
-    public int MaxRegistrationYears { get; set; } = 10;
-    
-    /// <summary>
-    /// Minimum number of years a domain can be registered for
-    /// </summary>
-    public int MinRegistrationYears { get; set; } = 1;
-    
-    /// <summary>
-    /// Default registration period in years
+    /// Default registration period in years (used as initial value in UI)
     /// </summary>
     public int DefaultRegistrationYears { get; set; } = 1;
     

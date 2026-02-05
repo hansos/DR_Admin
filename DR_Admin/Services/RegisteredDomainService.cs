@@ -418,22 +418,40 @@ public class DomainRegistrationService : IRegisteredDomainService
                 throw new InvalidOperationException($"Customer with ID {customerId} does not exist");
             }
 
-            // Validate years
-            if (dto.Years < _domainRegistrationSettings.MinRegistrationYears || 
-                dto.Years > _domainRegistrationSettings.MaxRegistrationYears)
+            // Get default registrar from database
+            var registrar = await _context.Registrars
+                .FirstOrDefaultAsync(r => r.IsDefault && r.IsActive);
+                
+            if (registrar == null)
             {
-                throw new InvalidOperationException(
-                    $"Registration period must be between {_domainRegistrationSettings.MinRegistrationYears} " +
-                    $"and {_domainRegistrationSettings.MaxRegistrationYears} years");
+                _log.Error("No default registrar found or default registrar is inactive");
+                throw new InvalidOperationException("Domain registration service is currently unavailable. No default registrar configured.");
             }
 
-            // Use default registrar for customer registrations
-            var registrarId = _domainRegistrationSettings.DefaultRegistrarId;
-            var registrar = await _context.Registrars.FindAsync(registrarId);
-            if (registrar == null || !registrar.IsActive)
+            // Extract TLD from domain name
+            var tld = ExtractTld(dto.DomainName);
+            
+            // Get registrar TLD configuration to validate years
+            var registrarTld = await _context.RegistrarTlds
+                .Include(rt => rt.Tld)
+                .FirstOrDefaultAsync(rt => rt.RegistrarId == registrar.Id && 
+                                          rt.Tld.Extension.ToLower() == tld.ToLower() &&
+                                          rt.IsAvailable);
+
+            if (registrarTld == null)
             {
-                _log.Error("Default registrar {RegistrarId} not found or inactive", registrarId);
-                throw new InvalidOperationException("Domain registration service is currently unavailable");
+                _log.Warning("TLD {Tld} is not available with default registrar {RegistrarId}", tld, registrar.Id);
+                throw new InvalidOperationException($"The TLD '.{tld}' is not available for registration");
+            }
+
+            // Validate registration years against registrar's limits
+            var minYears = registrarTld.MinRegistrationYears ?? 1;
+            var maxYears = registrarTld.MaxRegistrationYears ?? 10;
+            
+            if (dto.Years < minYears || dto.Years > maxYears)
+            {
+                throw new InvalidOperationException(
+                    $"Registration period for .{tld} domains must be between {minYears} and {maxYears} years");
             }
 
             // Create workflow input
@@ -441,7 +459,7 @@ public class DomainRegistrationService : IRegisteredDomainService
             {
                 CustomerId = customerId,
                 DomainName = dto.DomainName.ToLowerInvariant().Trim(),
-                RegistrarId = registrarId,
+                RegistrarId = registrar.Id,
                 Years = dto.Years,
                 AutoRenew = dto.AutoRenew,
                 PrivacyProtection = dto.PrivacyProtection,
@@ -512,13 +530,30 @@ public class DomainRegistrationService : IRegisteredDomainService
                 throw new InvalidOperationException($"Registrar with ID {dto.RegistrarId} is not available");
             }
 
-            // Validate years
-            if (dto.Years < _domainRegistrationSettings.MinRegistrationYears || 
-                dto.Years > _domainRegistrationSettings.MaxRegistrationYears)
+            // Extract TLD from domain name
+            var tld = ExtractTld(dto.DomainName);
+            
+            // Get registrar TLD configuration to validate years
+            var registrarTld = await _context.RegistrarTlds
+                .Include(rt => rt.Tld)
+                .FirstOrDefaultAsync(rt => rt.RegistrarId == dto.RegistrarId && 
+                                          rt.Tld.Extension.ToLower() == tld.ToLower() &&
+                                          rt.IsAvailable);
+
+            if (registrarTld == null)
+            {
+                _log.Warning("TLD {Tld} is not available with registrar {RegistrarId}", tld, dto.RegistrarId);
+                throw new InvalidOperationException($"The TLD '.{tld}' is not available with the selected registrar");
+            }
+
+            // Validate registration years against registrar's limits
+            var minYears = registrarTld.MinRegistrationYears ?? 1;
+            var maxYears = registrarTld.MaxRegistrationYears ?? 10;
+            
+            if (dto.Years < minYears || dto.Years > maxYears)
             {
                 throw new InvalidOperationException(
-                    $"Registration period must be between {_domainRegistrationSettings.MinRegistrationYears} " +
-                    $"and {_domainRegistrationSettings.MaxRegistrationYears} years");
+                    $"Registration period for .{tld} domains with this registrar must be between {minYears} and {maxYears} years");
             }
 
             // Create workflow input
@@ -643,8 +678,8 @@ public class DomainRegistrationService : IRegisteredDomainService
             }
             else
             {
-                // Use default registrar
-                query = query.Where(rt => rt.RegistrarId == _domainRegistrationSettings.DefaultRegistrarId);
+                // Use default registrar from database
+                query = query.Where(rt => rt.Registrar.IsDefault);
             }
 
             var registrarTld = await query.FirstOrDefaultAsync();
@@ -667,8 +702,9 @@ public class DomainRegistrationService : IRegisteredDomainService
                 PriceByYears = new Dictionary<int, decimal>()
             };
 
-            // Calculate multi-year pricing
-            for (int years = 1; years <= _domainRegistrationSettings.MaxRegistrationYears; years++)
+            // Calculate multi-year pricing using registrar's max years
+            var maxYears = registrarTld.MaxRegistrationYears ?? 10;
+            for (int years = 1; years <= maxYears; years++)
             {
                 pricingDto.PriceByYears[years] = registrarTld.RegistrationPrice * years;
             }
@@ -716,5 +752,22 @@ public class DomainRegistrationService : IRegisteredDomainService
             _log.Error(ex, "Error fetching available TLDs");
             throw;
         }
+    }
+
+    /// <summary>
+    /// Extracts the TLD from a domain name
+    /// </summary>
+    /// <param name="domainName">The full domain name (e.g., "example.com")</param>
+    /// <returns>The TLD without the dot (e.g., "com")</returns>
+    private static string ExtractTld(string domainName)
+    {
+        var parts = domainName.Split('.');
+        if (parts.Length < 2)
+        {
+            throw new ArgumentException($"Invalid domain name format: {domainName}");
+        }
+        
+        // Return the last part as the TLD
+        return parts[^1].ToLowerInvariant();
     }
 }
