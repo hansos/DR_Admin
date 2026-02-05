@@ -12,6 +12,12 @@ using System.Collections.Generic;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Channels;
+using ISPAdmin.Workflow.Domain.EventHandlers;
+using ISPAdmin.Workflow.Domain.Services;
+using ISPAdmin.Workflow.Domain.Workflows;
+using ISPAdmin.Workflow.Domain.Events.DomainEvents;
+using ISPAdmin.Workflow.Domain.Events.InvoiceEvents;
+using ISPAdmin.Workflow.Domain.Events.OrderEvents;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -181,19 +187,19 @@ var databaseBackupSettings = builder.Configuration.GetSection("DatabaseBackup").
 builder.Services.AddSingleton(databaseBackupSettings);
 
 // Domain Lifecycle Workflows - Domain Services
-builder.Services.AddTransient<ISPAdmin.Domain.Services.IDomainEventPublisher, ISPAdmin.Domain.Services.DomainEventPublisher>();
+builder.Services.AddTransient<IDomainEventPublisher, DomainEventPublisher>();
 
 // Domain Lifecycle Workflows - Event Handlers
-builder.Services.AddTransient<ISPAdmin.Domain.Services.IDomainEventHandler<ISPAdmin.Domain.Events.DomainEvents.DomainRegisteredEvent>, ISPAdmin.Domain.EventHandlers.DomainRegisteredEventHandler>();
-builder.Services.AddTransient<ISPAdmin.Domain.Services.IDomainEventHandler<ISPAdmin.Domain.Events.DomainEvents.DomainExpiredEvent>, ISPAdmin.Domain.EventHandlers.DomainExpiredEventHandler>();
-builder.Services.AddTransient<ISPAdmin.Domain.Services.IDomainEventHandler<ISPAdmin.Domain.Events.OrderEvents.OrderActivatedEvent>, ISPAdmin.Domain.EventHandlers.OrderActivatedEventHandler>();
-builder.Services.AddTransient<ISPAdmin.Domain.Services.IDomainEventHandler<ISPAdmin.Domain.Events.InvoiceEvents.InvoicePaidEvent>, ISPAdmin.Domain.EventHandlers.InvoicePaidEventHandler>();
+builder.Services.AddTransient<IDomainEventHandler<DomainRegisteredEvent>, DomainRegisteredEventHandler>();
+builder.Services.AddTransient<IDomainEventHandler<DomainExpiredEvent>, DomainExpiredEventHandler>();
+builder.Services.AddTransient<IDomainEventHandler<OrderActivatedEvent>, OrderActivatedEventHandler>();
+builder.Services.AddTransient<IDomainEventHandler<InvoicePaidEvent>, InvoicePaidEventHandler>();
 
 
 // Domain Lifecycle Workflows - Workflow Orchestrators
-builder.Services.AddTransient<ISPAdmin.Domain.Workflows.IDomainRegistrationWorkflow, ISPAdmin.Domain.Workflows.DomainRegistrationWorkflow>();
-builder.Services.AddTransient<ISPAdmin.Domain.Workflows.IDomainRenewalWorkflow, ISPAdmin.Domain.Workflows.DomainRenewalWorkflow>();
-builder.Services.AddTransient<ISPAdmin.Domain.Workflows.IOrderProvisioningWorkflow, ISPAdmin.Domain.Workflows.OrderProvisioningWorkflow>();
+builder.Services.AddTransient<IDomainRegistrationWorkflow, DomainRegistrationWorkflow>();
+builder.Services.AddTransient<IDomainRenewalWorkflow, DomainRenewalWorkflow>();
+builder.Services.AddTransient<IOrderProvisioningWorkflow, OrderProvisioningWorkflow>();
 
 // Register Background Services
 builder.Services.AddHostedService<EmailQueueBackgroundService>();

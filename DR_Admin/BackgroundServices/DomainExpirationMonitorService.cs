@@ -1,8 +1,8 @@
 using ISPAdmin.Data;
 using ISPAdmin.Data.Enums;
 using ISPAdmin.Domain.Events.DomainEvents;
-using ISPAdmin.Domain.Services;
-using ISPAdmin.Domain.Workflows;
+using ISPAdmin.Workflow.Domain.Services;
+using ISPAdmin.Workflow.Domain.Workflows;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
