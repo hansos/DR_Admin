@@ -1,8 +1,12 @@
 using ISPAdmin.Data;
 using ISPAdmin.Data.Entities;
+using ISPAdmin.Data.Enums;
 using ISPAdmin.DTOs;
 using ISPAdmin.Utilities;
+using ISPAdmin.Workflow.Domain.Workflows;
+using ISPAdmin.Infrastructure.Settings;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Serilog;
 using RegisteredDomainEntity = ISPAdmin.Data.Entities.RegisteredDomain;
 
@@ -11,11 +15,18 @@ namespace ISPAdmin.Services;
 public class DomainService : IDomainService
 {
     private readonly ApplicationDbContext _context;
+    private readonly IDomainRegistrationWorkflow _domainRegistrationWorkflow;
+    private readonly DomainRegistrationSettings _domainRegistrationSettings;
     private static readonly Serilog.ILogger _log = Log.ForContext<DomainService>();
 
-    public DomainService(ApplicationDbContext context)
+    public DomainService(
+        ApplicationDbContext context,
+        IDomainRegistrationWorkflow domainRegistrationWorkflow,
+        IOptions<DomainRegistrationSettings> domainRegistrationSettings)
     {
         _context = context;
+        _domainRegistrationWorkflow = domainRegistrationWorkflow;
+        _domainRegistrationSettings = domainRegistrationSettings.Value;
     }
 
     public async Task<IEnumerable<DomainDto>> GetAllDomainsAsync()
@@ -384,5 +395,326 @@ public class DomainService : IDomainService
             CreatedAt = domain.CreatedAt,
             UpdatedAt = domain.UpdatedAt
         };
+    }
+
+    public async Task<DomainRegistrationResponseDto> RegisterDomainAsync(RegisterDomainDto dto, int customerId)
+    {
+        try
+        {
+            _log.Information("Customer {CustomerId} initiating domain registration for {DomainName}", 
+                customerId, dto.DomainName);
+
+            if (!_domainRegistrationSettings.AllowCustomerRegistration)
+            {
+                _log.Warning("Customer domain registration is disabled");
+                throw new InvalidOperationException("Customer domain registration is currently disabled");
+            }
+
+            // Validate customer exists
+            var customerExists = await _context.Customers.AnyAsync(c => c.Id == customerId);
+            if (!customerExists)
+            {
+                _log.Warning("Customer with ID {CustomerId} does not exist", customerId);
+                throw new InvalidOperationException($"Customer with ID {customerId} does not exist");
+            }
+
+            // Validate years
+            if (dto.Years < _domainRegistrationSettings.MinRegistrationYears || 
+                dto.Years > _domainRegistrationSettings.MaxRegistrationYears)
+            {
+                throw new InvalidOperationException(
+                    $"Registration period must be between {_domainRegistrationSettings.MinRegistrationYears} " +
+                    $"and {_domainRegistrationSettings.MaxRegistrationYears} years");
+            }
+
+            // Use default registrar for customer registrations
+            var registrarId = _domainRegistrationSettings.DefaultRegistrarId;
+            var registrar = await _context.Registrars.FindAsync(registrarId);
+            if (registrar == null || !registrar.IsActive)
+            {
+                _log.Error("Default registrar {RegistrarId} not found or inactive", registrarId);
+                throw new InvalidOperationException("Domain registration service is currently unavailable");
+            }
+
+            // Create workflow input
+            var workflowInput = new DomainRegistrationWorkflowInput
+            {
+                CustomerId = customerId,
+                DomainName = dto.DomainName.ToLowerInvariant().Trim(),
+                RegistrarId = registrarId,
+                Years = dto.Years,
+                AutoRenew = dto.AutoRenew,
+                PrivacyProtection = dto.PrivacyProtection,
+                OrderType = OrderType.New,
+                Notes = dto.Notes
+            };
+
+            // Execute workflow
+            var workflowResult = await _domainRegistrationWorkflow.ExecuteAsync(workflowInput);
+
+            var response = new DomainRegistrationResponseDto
+            {
+                Success = workflowResult.IsSuccess,
+                Message = workflowResult.IsSuccess ? workflowResult.Message! : workflowResult.ErrorMessage!,
+                OrderId = workflowResult.AggregateId,
+                CorrelationId = workflowResult.CorrelationId,
+                RequiresApproval = _domainRegistrationSettings.RequireApprovalForCustomers,
+                ApprovalStatus = _domainRegistrationSettings.RequireApprovalForCustomers ? "Pending" : "Auto-Approved"
+            };
+
+            // Get order details if successful
+            if (workflowResult.IsSuccess && workflowResult.AggregateId.HasValue)
+            {
+                var order = await _context.Orders
+                    .Include(o => o.Invoices)
+                    .FirstOrDefaultAsync(o => o.Id == workflowResult.AggregateId.Value);
+
+                if (order != null)
+                {
+                    response.OrderNumber = order.OrderNumber;
+                    response.InvoiceId = order.Invoices.FirstOrDefault()?.Id;
+                    response.TotalAmount = order.RecurringAmount;
+                }
+            }
+
+            _log.Information("Domain registration {Status} for {DomainName} - Order: {OrderId}", 
+                response.Success ? "successful" : "failed", dto.DomainName, response.OrderId);
+
+            return response;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error during domain registration for {DomainName}", dto.DomainName);
+            throw;
+        }
+    }
+
+    public async Task<DomainRegistrationResponseDto> RegisterDomainForCustomerAsync(RegisterDomainForCustomerDto dto)
+    {
+        try
+        {
+            _log.Information("Admin/Sales initiating domain registration for customer {CustomerId}, domain {DomainName}", 
+                dto.CustomerId, dto.DomainName);
+
+            // Validate customer exists
+            var customerExists = await _context.Customers.AnyAsync(c => c.Id == dto.CustomerId);
+            if (!customerExists)
+            {
+                _log.Warning("Customer with ID {CustomerId} does not exist", dto.CustomerId);
+                throw new InvalidOperationException($"Customer with ID {dto.CustomerId} does not exist");
+            }
+
+            // Validate registrar
+            var registrar = await _context.Registrars.FindAsync(dto.RegistrarId);
+            if (registrar == null || !registrar.IsActive)
+            {
+                _log.Warning("Registrar with ID {RegistrarId} not found or inactive", dto.RegistrarId);
+                throw new InvalidOperationException($"Registrar with ID {dto.RegistrarId} is not available");
+            }
+
+            // Validate years
+            if (dto.Years < _domainRegistrationSettings.MinRegistrationYears || 
+                dto.Years > _domainRegistrationSettings.MaxRegistrationYears)
+            {
+                throw new InvalidOperationException(
+                    $"Registration period must be between {_domainRegistrationSettings.MinRegistrationYears} " +
+                    $"and {_domainRegistrationSettings.MaxRegistrationYears} years");
+            }
+
+            // Create workflow input
+            var workflowInput = new DomainRegistrationWorkflowInput
+            {
+                CustomerId = dto.CustomerId,
+                DomainName = dto.DomainName.ToLowerInvariant().Trim(),
+                RegistrarId = dto.RegistrarId,
+                Years = dto.Years,
+                AutoRenew = dto.AutoRenew,
+                PrivacyProtection = dto.PrivacyProtection,
+                OrderType = OrderType.New,
+                Notes = dto.Notes
+            };
+
+            // Execute workflow
+            var workflowResult = await _domainRegistrationWorkflow.ExecuteAsync(workflowInput);
+
+            var response = new DomainRegistrationResponseDto
+            {
+                Success = workflowResult.IsSuccess,
+                Message = workflowResult.IsSuccess ? workflowResult.Message! : workflowResult.ErrorMessage!,
+                OrderId = workflowResult.AggregateId,
+                CorrelationId = workflowResult.CorrelationId,
+                RequiresApproval = _domainRegistrationSettings.RequireApprovalForSales,
+                ApprovalStatus = _domainRegistrationSettings.RequireApprovalForSales ? "Pending" : "Auto-Approved"
+            };
+
+            // Get order details if successful
+            if (workflowResult.IsSuccess && workflowResult.AggregateId.HasValue)
+            {
+                var order = await _context.Orders
+                    .Include(o => o.Invoices)
+                    .FirstOrDefaultAsync(o => o.Id == workflowResult.AggregateId.Value);
+
+                if (order != null)
+                {
+                    response.OrderNumber = order.OrderNumber;
+                    response.InvoiceId = order.Invoices.FirstOrDefault()?.Id;
+                    response.TotalAmount = order.RecurringAmount;
+                }
+            }
+
+            _log.Information("Domain registration {Status} for customer {CustomerId}, domain {DomainName} - Order: {OrderId}", 
+                response.Success ? "successful" : "failed", dto.CustomerId, dto.DomainName, response.OrderId);
+
+            return response;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error during domain registration for customer {CustomerId}, domain {DomainName}", 
+                dto.CustomerId, dto.DomainName);
+            throw;
+        }
+    }
+
+    public async Task<DomainAvailabilityResponseDto> CheckDomainAvailabilityAsync(string domainName)
+    {
+        try
+        {
+            _log.Information("Checking availability for domain: {DomainName}", domainName);
+
+            var normalizedName = NormalizationHelper.Normalize(domainName);
+
+            // Check if domain already exists in our system
+            var existingDomain = await _context.RegisteredDomains
+                .AsNoTracking()
+                .FirstOrDefaultAsync(d => d.NormalizedName == normalizedName);
+
+            if (existingDomain != null)
+            {
+                return new DomainAvailabilityResponseDto
+                {
+                    DomainName = domainName,
+                    IsAvailable = false,
+                    Message = "This domain is already registered in our system",
+                    IsPremium = false
+                };
+            }
+
+            // TODO: When registrar is configured, check with external registrar
+            // For now, assume available if not in our system
+            if (_domainRegistrationSettings.EnableAvailabilityCheck)
+            {
+                _log.Information("External availability check is enabled but not yet implemented");
+            }
+
+            return new DomainAvailabilityResponseDto
+            {
+                DomainName = domainName,
+                IsAvailable = true,
+                Message = "Domain appears to be available",
+                IsPremium = false
+            };
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error checking availability for domain: {DomainName}", domainName);
+            throw;
+        }
+    }
+
+    public async Task<DomainPricingDto?> GetDomainPricingAsync(string tld, int? registrarId = null)
+    {
+        try
+        {
+            _log.Information("Getting pricing for TLD: {Tld}, Registrar: {RegistrarId}", tld, registrarId);
+
+            // Normalize TLD (remove leading dot if present)
+            var normalizedTld = tld.TrimStart('.').ToLowerInvariant();
+
+            // Build query
+            var query = _context.RegistrarTlds
+                .Include(rt => rt.Registrar)
+                .Include(rt => rt.Tld)
+                .Where(rt => rt.Tld.Extension.ToLower() == normalizedTld && rt.IsAvailable && rt.Tld.IsActive);
+
+            // Filter by registrar if specified
+            if (registrarId.HasValue)
+            {
+                query = query.Where(rt => rt.RegistrarId == registrarId.Value);
+            }
+            else
+            {
+                // Use default registrar
+                query = query.Where(rt => rt.RegistrarId == _domainRegistrationSettings.DefaultRegistrarId);
+            }
+
+            var registrarTld = await query.FirstOrDefaultAsync();
+
+            if (registrarTld == null)
+            {
+                _log.Warning("No pricing found for TLD: {Tld}", tld);
+                return null;
+            }
+
+            var pricingDto = new DomainPricingDto
+            {
+                Tld = registrarTld.Tld.Extension,
+                RegistrarId = registrarTld.RegistrarId,
+                RegistrarName = registrarTld.Registrar.Name,
+                RegistrationPrice = registrarTld.RegistrationPrice,
+                RenewalPrice = registrarTld.RenewalPrice,
+                TransferPrice = registrarTld.TransferPrice,
+                Currency = registrarTld.Currency ?? "USD",
+                PriceByYears = new Dictionary<int, decimal>()
+            };
+
+            // Calculate multi-year pricing
+            for (int years = 1; years <= _domainRegistrationSettings.MaxRegistrationYears; years++)
+            {
+                pricingDto.PriceByYears[years] = registrarTld.RegistrationPrice * years;
+            }
+
+            _log.Information("Successfully retrieved pricing for TLD: {Tld}", tld);
+            return pricingDto;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error getting pricing for TLD: {Tld}", tld);
+            throw;
+        }
+    }
+
+    public async Task<IEnumerable<AvailableTldDto>> GetAvailableTldsAsync()
+    {
+        try
+        {
+            _log.Information("Fetching all available TLDs");
+
+            var tlds = await _context.RegistrarTlds
+                .Include(rt => rt.Registrar)
+                .Include(rt => rt.Tld)
+                .Where(rt => rt.IsAvailable && rt.Registrar.IsActive && rt.Tld.IsActive)
+                .OrderBy(rt => rt.Tld.Extension)
+                .ToListAsync();
+
+            var tldDtos = tlds.Select(rt => new AvailableTldDto
+            {
+                Id = rt.Id,
+                Tld = rt.Tld.Extension,
+                RegistrarId = rt.RegistrarId,
+                RegistrarName = rt.Registrar.Name,
+                RegistrationPrice = rt.RegistrationPrice,
+                RenewalPrice = rt.RenewalPrice,
+                Currency = rt.Currency ?? "USD",
+                IsActive = rt.IsAvailable
+            });
+
+            _log.Information("Successfully fetched {Count} available TLDs", tlds.Count);
+            return tldDtos;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error fetching available TLDs");
+            throw;
+        }
     }
 }

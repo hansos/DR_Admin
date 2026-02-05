@@ -76,4 +76,40 @@ public interface IDomainService
     /// <param name="id">The ID of the domain to delete</param>
     /// <returns>True if deleted successfully, false if not found</returns>
     Task<bool> DeleteDomainAsync(int id);
+
+    /// <summary>
+    /// Registers a new domain for a customer (customer self-service)
+    /// </summary>
+    /// <param name="dto">Domain registration details</param>
+    /// <param name="customerId">The customer ID registering the domain</param>
+    /// <returns>Registration response with order and invoice details</returns>
+    Task<DomainRegistrationResponseDto> RegisterDomainAsync(RegisterDomainDto dto, int customerId);
+
+    /// <summary>
+    /// Registers a new domain for a specific customer (sales/admin)
+    /// </summary>
+    /// <param name="dto">Domain registration details including customer ID</param>
+    /// <returns>Registration response with order and invoice details</returns>
+    Task<DomainRegistrationResponseDto> RegisterDomainForCustomerAsync(RegisterDomainForCustomerDto dto);
+
+    /// <summary>
+    /// Checks if a domain is available for registration
+    /// </summary>
+    /// <param name="domainName">The domain name to check</param>
+    /// <returns>Availability information</returns>
+    Task<DomainAvailabilityResponseDto> CheckDomainAvailabilityAsync(string domainName);
+
+    /// <summary>
+    /// Gets pricing for a specific TLD
+    /// </summary>
+    /// <param name="tld">The top-level domain (e.g., "com", "net")</param>
+    /// <param name="registrarId">Optional: specific registrar ID</param>
+    /// <returns>Pricing information</returns>
+    Task<DomainPricingDto?> GetDomainPricingAsync(string tld, int? registrarId = null);
+
+    /// <summary>
+    /// Gets all available TLDs with pricing
+    /// </summary>
+    /// <returns>List of available TLDs</returns>
+    Task<IEnumerable<AvailableTldDto>> GetAvailableTldsAsync();
 }

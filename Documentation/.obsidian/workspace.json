@@ -200,6 +200,7 @@
   },
   "active": "446880d5348007bd",
   "lastOpenFiles": [
+    "DOMAIN_REGISTRATION_IMPLEMENTATION.md",
     "Features/CustomerManagement/Customers.md",
     "Features/CustomerManagement/CustomerAddress.md",
     "Features/Roadmap.md",
@@ -234,7 +235,6 @@
     "Features/BillngAndSales/Untitled.md",
     "API/BillingAndSales/OrderToInvoiceFlow.md",
     "Features/BillngAndSales",
-    "Features/BillngAndSale/Untitled.md",
     "Features/BillngAndSale"
   ]
 }

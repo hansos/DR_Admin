@@ -2,6 +2,7 @@ using ISPAdmin.DTOs;
 using ISPAdmin.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using Serilog;
 
 namespace ISPAdmin.Controllers;
@@ -402,6 +403,220 @@ public class DomainsController : ControllerBase
         {
             _log.Error(ex, "API: Error in DeleteDomain for ID {DomainId}", id);
             return StatusCode(500, "An error occurred while deleting the domain");
+        }
+    }
+
+    /// <summary>
+    /// Registers a new domain for the authenticated customer
+    /// </summary>
+    /// <param name="dto">Domain registration details</param>
+    /// <returns>Registration result with order and invoice information</returns>
+    /// <response code="200">Returns the registration result</response>
+    /// <response code="400">If the request data is invalid or registration failed</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have required role or customer registration is disabled</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpPost("register")]
+    [Authorize(Policy = "Domain.Register")]
+    [ProducesResponseType(typeof(DomainRegistrationResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<DomainRegistrationResponseDto>> RegisterDomain([FromBody] RegisterDomainDto dto)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            // Get customer ID from claims
+            var customerIdClaim = User.FindFirst("CustomerId");
+            if (customerIdClaim == null || !int.TryParse(customerIdClaim.Value, out var customerId))
+            {
+                _log.Warning("API: RegisterDomain called without valid CustomerId claim by user {User}", 
+                    User.Identity?.Name);
+                return BadRequest("Customer ID not found in authentication token");
+            }
+
+            _log.Information("API: RegisterDomain called for domain {DomainName} by customer {CustomerId}", 
+                dto.DomainName, customerId);
+
+            var result = await _domainService.RegisterDomainAsync(dto, customerId);
+
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _log.Warning(ex, "API: Invalid operation in RegisterDomain for domain {DomainName}", dto.DomainName);
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in RegisterDomain for domain {DomainName}", dto.DomainName);
+            return StatusCode(500, "An error occurred while registering the domain");
+        }
+    }
+
+    /// <summary>
+    /// Registers a new domain for a specific customer (Admin/Sales only)
+    /// </summary>
+    /// <param name="dto">Domain registration details including customer ID</param>
+    /// <returns>Registration result with order and invoice information</returns>
+    /// <response code="200">Returns the registration result</response>
+    /// <response code="400">If the request data is invalid or registration failed</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have required role</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpPost("register-for-customer")]
+    [Authorize(Policy = "Domain.RegisterForCustomer")]
+    [ProducesResponseType(typeof(DomainRegistrationResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<DomainRegistrationResponseDto>> RegisterDomainForCustomer([FromBody] RegisterDomainForCustomerDto dto)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            _log.Information("API: RegisterDomainForCustomer called for domain {DomainName}, customer {CustomerId} by user {User}", 
+                dto.DomainName, dto.CustomerId, User.Identity?.Name);
+
+            var result = await _domainService.RegisterDomainForCustomerAsync(dto);
+
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _log.Warning(ex, "API: Invalid operation in RegisterDomainForCustomer for domain {DomainName}", 
+                dto.DomainName);
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in RegisterDomainForCustomer for domain {DomainName}", dto.DomainName);
+            return StatusCode(500, "An error occurred while registering the domain");
+        }
+    }
+
+    /// <summary>
+    /// Checks if a domain is available for registration
+    /// </summary>
+    /// <param name="dto">Domain availability check request</param>
+    /// <returns>Availability information</returns>
+    /// <response code="200">Returns the availability information</response>
+    /// <response code="400">If the request data is invalid</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpPost("check-availability")]
+    [Authorize(Policy = "Domain.CheckAvailability")]
+    [ProducesResponseType(typeof(DomainAvailabilityResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<DomainAvailabilityResponseDto>> CheckDomainAvailability([FromBody] CheckDomainAvailabilityDto dto)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            _log.Information("API: CheckDomainAvailability called for domain {DomainName} by user {User}", 
+                dto.DomainName, User.Identity?.Name);
+
+            var result = await _domainService.CheckDomainAvailabilityAsync(dto.DomainName);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in CheckDomainAvailability for domain {DomainName}", dto.DomainName);
+            return StatusCode(500, "An error occurred while checking domain availability");
+        }
+    }
+
+    /// <summary>
+    /// Gets pricing information for a specific TLD
+    /// </summary>
+    /// <param name="tld">The top-level domain (e.g., "com", "net")</param>
+    /// <param name="registrarId">Optional: specific registrar ID</param>
+    /// <returns>Pricing information</returns>
+    /// <response code="200">Returns the pricing information</response>
+    /// <response code="404">If pricing not found for the TLD</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpGet("pricing/{tld}")]
+    [Authorize]
+    [ProducesResponseType(typeof(DomainPricingDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<DomainPricingDto>> GetDomainPricing(string tld, [FromQuery] int? registrarId = null)
+    {
+        try
+        {
+            _log.Information("API: GetDomainPricing called for TLD {Tld}, registrar {RegistrarId} by user {User}", 
+                tld, registrarId, User.Identity?.Name);
+
+            var pricing = await _domainService.GetDomainPricingAsync(tld, registrarId);
+
+            if (pricing == null)
+            {
+                return NotFound($"Pricing not found for TLD: {tld}");
+            }
+
+            return Ok(pricing);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in GetDomainPricing for TLD {Tld}", tld);
+            return StatusCode(500, "An error occurred while retrieving domain pricing");
+        }
+    }
+
+    /// <summary>
+    /// Gets all available TLDs with pricing
+    /// </summary>
+    /// <returns>List of available TLDs</returns>
+    /// <response code="200">Returns the list of available TLDs</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpGet("available-tlds")]
+    [Authorize]
+    [ProducesResponseType(typeof(IEnumerable<AvailableTldDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<IEnumerable<AvailableTldDto>>> GetAvailableTlds()
+    {
+        try
+        {
+            _log.Information("API: GetAvailableTlds called by user {User}", User.Identity?.Name);
+
+            var tlds = await _domainService.GetAvailableTldsAsync();
+            return Ok(tlds);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in GetAvailableTlds");
+            return StatusCode(500, "An error occurred while retrieving available TLDs");
         }
     }
 }

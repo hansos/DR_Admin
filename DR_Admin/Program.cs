@@ -186,6 +186,10 @@ var databaseBackupSettings = builder.Configuration.GetSection("DatabaseBackup").
     ?? new ISPAdmin.Infrastructure.Settings.DatabaseBackupSettings();
 builder.Services.AddSingleton(databaseBackupSettings);
 
+// Domain Registration Settings
+builder.Services.Configure<ISPAdmin.Infrastructure.Settings.DomainRegistrationSettings>(
+    builder.Configuration.GetSection("DomainRegistration"));
+
 // Domain Lifecycle Workflows - Domain Services
 builder.Services.AddTransient<IDomainEventPublisher, DomainEventPublisher>();
 

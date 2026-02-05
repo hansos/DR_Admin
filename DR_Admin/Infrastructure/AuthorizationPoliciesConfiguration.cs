@@ -168,6 +168,15 @@ public static class AuthorizationPoliciesConfiguration
         options.AddPolicy("Domain.Write", policy =>
             policy.RequireRole(ADMIN, SALES));
 
+        options.AddPolicy("Domain.Register", policy =>
+            policy.RequireRole(ADMIN, SALES, CUSTOMER));
+
+        options.AddPolicy("Domain.RegisterForCustomer", policy =>
+            policy.RequireRole(ADMIN, SALES));
+
+        options.AddPolicy("Domain.CheckAvailability", policy =>
+            policy.RequireRole(ADMIN, SALES, CUSTOMER));
+
         // DomainContact policies
         options.AddPolicy("DomainContact.Delete", policy =>
             policy.RequireRole(ADMIN, SUPPORT));
