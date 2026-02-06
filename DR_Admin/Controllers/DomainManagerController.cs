@@ -196,4 +196,59 @@ public class DomainManagerController : ControllerBase
             return StatusCode(500, "An error occurred while checking domain availability");
         }
     }
+
+
+    /// <summary>
+    /// Checks if a domain is available for registration based on domain name
+    /// </summary>
+    /// <param name="registrarCode">The code of the registrar to use for checking availability</param>
+    /// <param name="domainName">The domain name to check availability for</param>
+    /// <returns>Domain availability result</returns>
+    /// <response code="200">Returns the domain availability result</response>
+    /// <response code="400">If the request is invalid</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have required permissions</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpGet("registrar/default/domain/{domainName}/is-available")]
+    [Authorize(Policy = "Domain.Read")]
+    [ProducesResponseType(typeof(DomainAvailabilityResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<DomainAvailabilityResult>> CheckDomainAvailabilityByName(string domainName)
+    {
+        try
+        {
+            var registrarCode = "aws";
+            _log.Information("API: CheckDomainAvailabilityByName called for registrar {RegistrarCode} and domain {DomainName} by user {User}",
+                registrarCode, domainName, User.Identity?.Name);
+
+            if (string.IsNullOrWhiteSpace(registrarCode))
+            {
+                _log.Warning("API: CheckDomainAvailabilityByName called with empty registrar code");
+                return BadRequest("Registrar code is required");
+            }
+
+            if (string.IsNullOrWhiteSpace(domainName))
+            {
+                _log.Warning("API: CheckDomainAvailabilityByName called with empty domain name");
+                return BadRequest("Domain name is required");
+            }
+
+            var result = await _domainManagerService.CheckDomainAvailabilityByNameAsync(registrarCode, domainName);
+
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _log.Warning(ex, "API: Invalid operation in CheckDomainAvailabilityByName for domain {DomainName}", domainName);
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in CheckDomainAvailabilityByName for domain {DomainName}", domainName);
+            return StatusCode(500, "An error occurred while checking domain availability");
+        }
+    }
 }

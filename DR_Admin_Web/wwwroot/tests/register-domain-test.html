@@ -290,10 +290,9 @@
             resultDiv.innerHTML = '';
 
             try {
-                const response = await fetch(`${API_BASE_URL}/api/v1/RegisteredDomains/check-availability`, {
-                    method: 'POST',
-                    headers: getAuthHeaders(),
-                    body: JSON.stringify({ domainName })
+                const response = await fetch(`${API_BASE_URL}/api/v1/DomainManager/registrar/default/domain/${domainName}/is-available`, {
+                    method: 'GET',
+                    headers: getAuthHeaders()
                 });
 
                 let data;
