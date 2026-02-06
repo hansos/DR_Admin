@@ -733,7 +733,7 @@ public class TldService : ITldService
                     continue;
 
                 // Skip comments and empty lines
-                if (string.IsNullOrWhiteSpace(trimmedLine) || trimmedLine.StartsWith("//"))
+                if (string.IsNullOrWhiteSpace(trimmedLine) || trimmedLine.StartsWith("//") || trimmedLine.StartsWith("!") || trimmedLine.StartsWith("*"))
                     continue;
 
                 var entry = trimmedLine.ToLowerInvariant();
