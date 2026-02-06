@@ -176,9 +176,20 @@ public class RegistrarTldsController : ControllerBase
     }
 
     /// <summary>
-    /// Get registrar TLD offering by registrar and TLD combination
+    /// Retrieves a specific registrar-TLD offering by registrar and TLD combination
     /// </summary>
+    /// <param name="registrarId">The unique identifier of the registrar</param>
+    /// <param name="tldId">The unique identifier of the TLD</param>
+    /// <returns>The registrar-TLD offering information</returns>
+    /// <response code="200">Returns the registrar-TLD offering data</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="404">If registrar-TLD offering is not found</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpGet("registrar/{registrarId}/tld/{tldId}")]
+    [ProducesResponseType(typeof(RegistrarTldDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<RegistrarTldDto>> GetRegistrarTldByRegistrarAndTld(int registrarId, int tldId)
     {
         try
@@ -206,10 +217,22 @@ public class RegistrarTldsController : ControllerBase
     }
 
     /// <summary>
-    /// Create a new registrar TLD offering
+    /// Creates a new registrar-TLD offering with pricing information
     /// </summary>
+    /// <param name="createDto">The creation data containing registrar, TLD, and pricing information</param>
+    /// <returns>The created registrar-TLD offering</returns>
+    /// <response code="201">Returns the newly created registrar-TLD offering</response>
+    /// <response code="400">If the request data is invalid or relationship already exists</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have admin role</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpPost]
     [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(RegistrarTldDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<RegistrarTldDto>> CreateRegistrarTld([FromBody] CreateRegistrarTldDto createDto)
     {
         try
@@ -242,10 +265,25 @@ public class RegistrarTldsController : ControllerBase
     }
 
     /// <summary>
-    /// Update an existing registrar TLD offering
+    /// Updates an existing registrar-TLD offering with new pricing information
     /// </summary>
+    /// <param name="id">The unique identifier of the registrar-TLD relationship to update</param>
+    /// <param name="updateDto">The update data containing new pricing and configuration</param>
+    /// <returns>The updated registrar-TLD offering</returns>
+    /// <response code="200">Returns the updated registrar-TLD offering</response>
+    /// <response code="400">If the request data is invalid or new combination already exists</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have admin role</response>
+    /// <response code="404">If registrar-TLD is not found</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpPut("{id}")]
     [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(RegistrarTldDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<RegistrarTldDto>> UpdateRegistrarTld(int id, [FromBody] UpdateRegistrarTldDto updateDto)
     {
         try
@@ -284,8 +322,22 @@ public class RegistrarTldsController : ControllerBase
     /// <summary>
     /// Delete a registrar TLD offering
     /// </summary>
+    /// <param name="id">The unique identifier of the registrar-TLD relationship to delete</param>
+    /// <returns>No content if successful</returns>
+    /// <response code="204">If deletion was successful</response>
+    /// <response code="400">If the registrar-TLD has associated domains</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have admin role</response>
+    /// <response code="404">If registrar-TLD is not found</response>
+    /// <response code="500">If an internal server error occurs</response>
     [HttpDelete("{id}")]
     [Authorize(Roles = "Admin")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult> DeleteRegistrarTld(int id)
     {
         try
@@ -314,4 +366,149 @@ public class RegistrarTldsController : ControllerBase
             return StatusCode(500, "An error occurred while deleting the registrar TLD");
         }
     }
+
+    /// <summary>
+    /// Imports TLDs for a specific registrar from CSV format form data
+    /// </summary>
+    /// <param name="registrarId">The unique identifier of the registrar</param>
+    /// <param name="importDto">The import data containing TLD extensions and pricing information in CSV format (Tld, Description)</param>
+    /// <returns>Import result with statistics</returns>
+    /// <remarks>
+    /// Expected CSV format:
+    /// Tld, Description
+    /// ac,
+    /// academy,
+    /// airforce, US Airforce only
+    /// apartments,
+    /// </remarks>
+    /// <response code="200">Returns the import result with statistics</response>
+    /// <response code="400">If the request data is invalid or registrar is not found/inactive</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have admin role</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpPost("registrar/{registrarId}/import")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ImportRegistrarTldsResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ImportRegistrarTldsResponseDto>> ImportRegistrarTlds(
+        int registrarId,
+        [FromForm] ImportRegistrarTldsDto importDto)
+    {
+        try
+        {
+            _log.Information("API: ImportRegistrarTlds called for registrar {RegistrarId} by user {User}", 
+                registrarId, User.Identity?.Name);
+
+            if (!ModelState.IsValid)
+            {
+                _log.Warning("API: Invalid model state for ImportRegistrarTlds");
+                return BadRequest(ModelState);
+            }
+
+            if (string.IsNullOrWhiteSpace(importDto.Content))
+            {
+                _log.Warning("API: ImportRegistrarTlds called with empty content");
+                return BadRequest("Content is required");
+            }
+
+            var result = await _registrarTldService.ImportRegistrarTldsAsync(registrarId, importDto);
+
+            if (!result.Success)
+            {
+                _log.Warning("API: ImportRegistrarTlds failed for registrar {RegistrarId}. Message: {Message}", 
+                    registrarId, result.Message);
+                return BadRequest(result);
+            }
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in ImportRegistrarTlds for registrar {RegistrarId}", registrarId);
+            return StatusCode(500, "An error occurred while importing TLDs");
+        }
+    }
+
+    /// <summary>
+    /// Uploads a CSV file with TLDs to merge into the Tlds table and add references in RegistrarTlds table
+    /// </summary>
+    /// <param name="registrarId">The unique identifier of the registrar</param>
+    /// <param name="uploadDto">The upload data containing the CSV file and pricing defaults</param>
+    /// <returns>Import result with statistics</returns>
+    /// <remarks>
+    /// Expected CSV format:
+    /// Tld, Description
+    /// ac,
+    /// academy,
+    /// airforce, US Airforce only
+    /// apartments,
+    /// </remarks>
+    /// <response code="200">Returns the import result with statistics</response>
+    /// <response code="400">If the file is invalid or registrar is not found/inactive</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have admin role</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpPost("registrar/{registrarId}/upload-csv")]
+    [Consumes("multipart/form-data")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ImportRegistrarTldsResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ImportRegistrarTldsResponseDto>> UploadRegistrarTldsCsv(
+        int registrarId,
+        [FromForm] UploadRegistrarTldsCsvDto uploadDto)
+    {
+        try
+        {
+            _log.Information("API: UploadRegistrarTldsCsv called for registrar {RegistrarId} by user {User}", 
+                registrarId, User.Identity?.Name);
+
+            var file = uploadDto?.File;
+
+            if (file == null || file.Length == 0)
+            {
+                _log.Warning("API: UploadRegistrarTldsCsv called with no file");
+                return BadRequest("File is required");
+            }
+
+            using var stream = file.OpenReadStream();
+            var result = await _registrarTldService.ImportRegistrarTldsFromCsvAsync(
+                registrarId,
+                stream,
+                uploadDto.DefaultRegistrationCost,
+                uploadDto.DefaultRegistrationPrice,
+                uploadDto.DefaultRenewalCost,
+                uploadDto.DefaultRenewalPrice,
+                uploadDto.DefaultTransferCost,
+                uploadDto.DefaultTransferPrice,
+                uploadDto.IsAvailable,
+                uploadDto.ActivateNewTlds,
+                uploadDto.Currency);
+
+            if (!result.Success)
+            {
+                _log.Warning("API: UploadRegistrarTldsCsv failed for registrar {RegistrarId}. Message: {Message}", 
+                    registrarId, result.Message);
+                return BadRequest(result);
+            }
+
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _log.Warning(ex, "API: Invalid operation in UploadRegistrarTldsCsv");
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in UploadRegistrarTldsCsv for registrar {RegistrarId}", registrarId);
+            return StatusCode(500, "An error occurred while processing the CSV file");
+        }
+    }
 }
+
