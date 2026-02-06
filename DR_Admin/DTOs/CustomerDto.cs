@@ -45,7 +45,6 @@ public class CustomerDto
     /// <summary>
     /// Gets or sets the primary contact person's name
     /// </summary>
-    // ContactPerson removed; use ContactPerson entities instead
     
     /// <summary>
     /// Gets or sets a value indicating whether the customer is a company
@@ -149,7 +148,6 @@ public class CreateCustomerDto
     /// <summary>
     /// Primary contact person's name
     /// </summary>
-    // ContactPerson removed; use ContactPerson entities instead
     
     /// <summary>
     /// Whether the customer is a company
@@ -254,7 +252,6 @@ public class UpdateCustomerDto
     /// <summary>
     /// Primary contact person's name
     /// </summary>
-    // ContactPerson removed; use ContactPerson entities instead
     
     /// <summary>
     /// Whether the customer is a company

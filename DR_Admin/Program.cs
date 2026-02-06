@@ -152,6 +152,7 @@ builder.Services.AddTransient<ICurrencyService, CurrencyService>();
 builder.Services.AddTransient<IExchangeRateDownloadLogService, ExchangeRateDownloadLogService>();
 builder.Services.AddTransient<ISystemService, SystemService>();
 builder.Services.AddTransient<IRegisteredDomainService, DomainRegistrationService>();
+builder.Services.AddTransient<IDomainManagerService, DomainManagerService>();
 
 // Sales and Payment Flow services
 builder.Services.AddTransient<ICouponService, CouponService>();
