@@ -806,7 +806,7 @@ public class DnsRecordsControllerTests : IClassFixture<TestWebApplicationFactory
         }
 
         var timestamp = DateTime.UtcNow.Ticks;
-        var domain = new Domain
+        var domain = new RegisteredDomain
         {
             CustomerId = customer.Id,
             RegistrarId = registrar.Id,
@@ -820,7 +820,7 @@ public class DnsRecordsControllerTests : IClassFixture<TestWebApplicationFactory
             UpdatedAt = DateTime.UtcNow
         };
 
-        context.Domains.Add(domain);
+        context.RegisteredDomains.Add(domain);
         await context.SaveChangesAsync();
 
         return (domain.Id, aRecordType.Id);

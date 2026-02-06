@@ -2789,7 +2789,7 @@ namespace ISPAdmin.Migrations
                         .HasMaxLength(3)
                         .HasColumnType("TEXT");
 
-                    b.Property<bool>("IsAvailable")
+                    b.Property<bool>("IsActive")
                         .HasColumnType("INTEGER");
 
                     b.Property<int?>("MaxRegistrationYears")
@@ -2845,7 +2845,7 @@ namespace ISPAdmin.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("IsAvailable");
+                    b.HasIndex("IsActive");
 
                     b.HasIndex("TldId");
 

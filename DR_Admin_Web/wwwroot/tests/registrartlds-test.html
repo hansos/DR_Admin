@@ -91,8 +91,8 @@
                         <input type="text" class="form-control" id="createCurrency" placeholder="USD" value="USD">
                     </div>
                     <div class="col-md-4 mb-3">
-                        <label for="createIsAvailable" class="form-label">Available</label>
-                        <select class="form-control" id="createIsAvailable">
+                        <label for="createIsActive" class="form-label">Active</label>
+                        <select class="form-control" id="createIsActive">
                             <option value="true" selected>Yes</option>
                             <option value="false">No</option>
                         </select>
@@ -265,8 +265,8 @@
                                 <input type="text" class="form-control" id="editCurrency" required>
                             </div>
                             <div class="col-md-4 mb-3">
-                                <label for="editIsAvailable" class="form-label">Available</label>
-                                <select class="form-control" id="editIsAvailable">
+                                <label for="editIsActive" class="form-label">Active</label>
+                                <select class="form-control" id="editIsActive">
                                     <option value="true">Yes</option>
                                     <option value="false">No</option>
                                 </select>
@@ -337,7 +337,7 @@
                 privacyCost: document.getElementById('createPrivacyCost').value ? parseFloat(document.getElementById('createPrivacyCost').value) : null,
                 privacyPrice: document.getElementById('createPrivacyPrice').value ? parseFloat(document.getElementById('createPrivacyPrice').value) : null,
                 currency: document.getElementById('createCurrency').value.trim() || 'USD',
-                isAvailable: document.getElementById('createIsAvailable').value === 'true',
+                isActive: document.getElementById('createIsActive').value === 'true',
                 autoRenew: document.getElementById('createAutoRenew').value === 'true',
                 minRegistrationYears: document.getElementById('createMinYears').value ? parseInt(document.getElementById('createMinYears').value) : 1,
                 maxRegistrationYears: document.getElementById('createMaxYears').value ? parseInt(document.getElementById('createMaxYears').value) : 10,
@@ -366,8 +366,8 @@
             const tableHtml = `
                 <div class="table-responsive">
                     <table class="table">
-                        <thead><tr><th>ID</th><th>Registrar</th><th>TLD</th><th>Available</th><th>Registration Price</th><th>Renewal Price</th><th>Actions</th></tr></thead>
-                        <tbody>${items.map(i=>`<tr><td>${i.id}</td><td>${i.registrarName||i.registrarId}</td><td><code>${i.tldExtension||'-'}</code></td><td><span class="badge ${i.isAvailable?'badge-success':'badge-secondary'}">${i.isAvailable?'Available':'Unavailable'}</span></td><td>${i.registrationPrice||'-'}</td><td>${i.renewalPrice||'-'}</td><td><div class="action-buttons"><button class="btn btn-sm btn-warning" onclick="openEditModal(${i.id})">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteRegistrarTld(${i.id}, '${(i.tldExtension||'').replace(/'/g, "\\'" )}')">Delete</button></div></td></tr>`).join('')}</tbody>
+                        <thead><tr><th>ID</th><th>Registrar</th><th>TLD</th><th>Active</th><th>Registration Price</th><th>Renewal Price</th><th>Actions</th></tr></thead>
+                        <tbody>${items.map(i=>`<tr><td>${i.id}</td><td>${i.registrarName||i.registrarId}</td><td><code>${i.tldExtension||'-'}</code></td><td><span class="badge ${i.isActive?'badge-success':'badge-secondary'}">${i.isActive?'Active':'Inactive'}</span></td><td>${i.registrationPrice||'-'}</td><td>${i.renewalPrice||'-'}</td><td><div class="action-buttons"><button class="btn btn-sm btn-warning" onclick="openEditModal(${i.id})">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteRegistrarTld(${i.id}, '${(i.tldExtension||'').replace(/'/g, "\\'" )}')">Delete</button></div></td></tr>`).join('')}</tbody>
                     </table>
                 </div>`;
             container.innerHTML = tableHtml;
@@ -381,7 +381,7 @@
                 const res = await fetch(`${API_BASE_URL}/api/v1/RegistrarTlds/${id}`, { method:'GET', headers: getAuthHeaders() });
                 let data; const ct = res.headers.get('content-type'); if (ct && ct.includes('application/json')) data = await res.json(); else { const text = await res.text(); data = { error: text, statusCode: res.status }; }
                 updateResponseBox(data);
-                if (res.ok) { result.innerHTML = `<div class="alert alert-success"><h5>Registrar TLD Found:</h5><p><strong>ID:</strong> ${data.id}</p><p><strong>Registrar:</strong> ${data.registrarName||data.registrarId}</p><p><strong>TLD:</strong> <code>${data.tldExtension}</code></p><p><strong>Available:</strong> ${data.isAvailable? 'Yes':'No'}</p><p><strong>Registration Price:</strong> ${data.registrationPrice||'N/A'}</p><p><strong>Renewal Price:</strong> ${data.renewalPrice||'N/A'}</p><p><strong>Notes:</strong> ${data.notes||'N/A'}</p></div>`; } else showAlert(`Error: ${data.message||data.error||'Not found'}`,'danger');
+                if (res.ok) { result.innerHTML = `<div class="alert alert-success"><h5>Registrar TLD Found:</h5><p><strong>ID:</strong> ${data.id}</p><p><strong>Registrar:</strong> ${data.registrarName||data.registrarId}</p><p><strong>TLD:</strong> <code>${data.tldExtension}</code></p><p><strong>Active:</strong> ${data.isActive? 'Yes':'No'}</p><p><strong>Registration Price:</strong> ${data.registrationPrice||'N/A'}</p><p><strong>Renewal Price:</strong> ${data.renewalPrice||'N/A'}</p><p><strong>Notes:</strong> ${data.notes||'N/A'}</p></div>`; } else showAlert(`Error: ${data.message||data.error||'Not found'}`,'danger');
             } catch (err) { showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } finally { loading.style.display='none'; }
         }
 
@@ -402,7 +402,7 @@
                 const res = await fetch(`${API_BASE_URL}/api/v1/RegistrarTlds/registrar/${registrarId}`, { method:'GET', headers: getAuthHeaders() });
                 let data; const ct = res.headers.get('content-type'); if (ct && ct.includes('application/json')) data = await res.json(); else { const text = await res.text(); data = { error: text, statusCode: res.status }; }
                 updateResponseBox(data);
-                if (res.ok) { if (!data || data.length===0) container.innerHTML = '<div class="empty-state">No TLDs for this registrar</div>'; else container.innerHTML = `<div class="alert alert-success"><h5>TLDs for Registrar ${registrarId} (${data.length}):</h5><ul>${data.map(t=>`<li><code>${t.tldExtension}</code> - ID: ${t.id} - ${t.isAvailable? 'Available':'Unavailable'} - Price: ${t.registrationPrice||'N/A'}</li>`).join('')}</ul></div>`; } else showAlert(`Error: ${data.message||data.error||'Failed to fetch'}`,'danger');
+                if (res.ok) { if (!data || data.length===0) container.innerHTML = '<div class="empty-state">No TLDs for this registrar</div>'; else container.innerHTML = `<div class="alert alert-success"><h5>TLDs for Registrar ${registrarId} (${data.length}):</h5><ul>${data.map(t=>`<li><code>${t.tldExtension}</code> - ID: ${t.id} - ${t.isActive? 'Active':'Inactive'} - Price: ${t.registrationPrice||'N/A'}</li>`).join('')}</ul></div>`; } else showAlert(`Error: ${data.message||data.error||'Failed to fetch'}`,'danger');
             } catch (err) { showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } finally { loading.style.display='none'; }
         }
 
@@ -413,7 +413,7 @@
                 const res = await fetch(`${API_BASE_URL}/api/v1/RegistrarTlds/registrar/${registrarId}/tld/${tldId}`, { method:'GET', headers: getAuthHeaders() });
                 let data; const ct = res.headers.get('content-type'); if (ct && ct.includes('application/json')) data = await res.json(); else { const text = await res.text(); data = { error: text, statusCode: res.status }; }
                 updateResponseBox(data);
-                if (res.ok) { result.innerHTML = `<div class="alert alert-success"><p><strong>Registrar TLD:</strong> ID ${data.id} - <code>${data.tldExtension}</code> - ${data.isAvailable? 'Available':'Unavailable'}</p></div>`; } else showAlert(`Error: ${data.message||data.error||'Not found'}`,'danger');
+                if (res.ok) { result.innerHTML = `<div class="alert alert-success"><p><strong>Registrar TLD:</strong> ID ${data.id} - <code>${data.tldExtension}</code> - ${data.isActive? 'Active':'Inactive'}</p></div>`; } else showAlert(`Error: ${data.message||data.error||'Not found'}`,'danger');
             } catch (err) { showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } finally { loading.style.display='none'; }
         }
 
@@ -434,7 +434,7 @@
             document.getElementById('editPrivacyCost').value=item.privacyCost||''; 
             document.getElementById('editPrivacyPrice').value=item.privacyPrice||''; 
             document.getElementById('editCurrency').value=item.currency||'USD'; 
-            document.getElementById('editIsAvailable').value = item.isAvailable? 'true':'false'; 
+            document.getElementById('editIsActive').value = item.isActive? 'true':'false'; 
             document.getElementById('editAutoRenew').value = item.autoRenew? 'true':'false'; 
             document.getElementById('editMinYears').value = item.minRegistrationYears||''; 
             document.getElementById('editMaxYears').value = item.maxRegistrationYears||''; 
@@ -456,7 +456,7 @@
                 privacyCost: document.getElementById('editPrivacyCost').value ? parseFloat(document.getElementById('editPrivacyCost').value) : null, 
                 privacyPrice: document.getElementById('editPrivacyPrice').value ? parseFloat(document.getElementById('editPrivacyPrice').value) : null, 
                 currency: document.getElementById('editCurrency').value.trim(), 
-                isAvailable: document.getElementById('editIsAvailable').value === 'true', 
+                isActive: document.getElementById('editIsActive').value === 'true', 
                 autoRenew: document.getElementById('editAutoRenew').value === 'true', 
                 minRegistrationYears: document.getElementById('editMinYears').value ? parseInt(document.getElementById('editMinYears').value) : null, 
                 maxRegistrationYears: document.getElementById('editMaxYears').value ? parseInt(document.getElementById('editMaxYears').value) : null, 

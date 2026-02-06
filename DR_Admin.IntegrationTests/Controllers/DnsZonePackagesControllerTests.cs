@@ -513,7 +513,7 @@ public class DnsZonePackagesControllerTests : IClassFixture<TestWebApplicationFa
             await context.SaveChangesAsync();
         }
 
-        var domain = new Domain
+        var domain = new RegisteredDomain
         {
             CustomerId = customer.Id,
             RegistrarId = registrar.Id,
@@ -527,7 +527,7 @@ public class DnsZonePackagesControllerTests : IClassFixture<TestWebApplicationFa
             UpdatedAt = DateTime.UtcNow
         };
 
-        context.Domains.Add(domain);
+        context.RegisteredDomains.Add(domain);
         await context.SaveChangesAsync();
 
         return (packageId, domain.Id);

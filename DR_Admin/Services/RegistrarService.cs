@@ -122,7 +122,7 @@ public class RegistrarService : IRegistrarService
                 TransferCost = 0,
                 TransferPrice = 0,
                 Currency = "USD",
-                IsAvailable = true,
+                IsActive = true,
                 AutoRenew = false,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
@@ -151,7 +151,7 @@ public class RegistrarService : IRegistrarService
                 PrivacyCost = registrarTld.PrivacyCost,
                 PrivacyPrice = registrarTld.PrivacyPrice,
                 Currency = registrarTld.Currency,
-                IsAvailable = registrarTld.IsAvailable,
+                IsActive = registrarTld.IsActive,
                 AutoRenew = registrarTld.AutoRenew,
                 MinRegistrationYears = registrarTld.MinRegistrationYears,
                 MaxRegistrationYears = registrarTld.MaxRegistrationYears,
@@ -205,7 +205,7 @@ public class RegistrarService : IRegistrarService
                 TransferCost = 0,
                 TransferPrice = 0,
                 Currency = "USD",
-                IsAvailable = true,
+                IsActive = true,
                 AutoRenew = false,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
@@ -234,7 +234,7 @@ public class RegistrarService : IRegistrarService
                 PrivacyCost = registrarTld.PrivacyCost,
                 PrivacyPrice = registrarTld.PrivacyPrice,
                 Currency = registrarTld.Currency,
-                IsAvailable = registrarTld.IsAvailable,
+                IsActive = registrarTld.IsActive,
                 AutoRenew = registrarTld.AutoRenew,
                 MinRegistrationYears = registrarTld.MinRegistrationYears,
                 MaxRegistrationYears = registrarTld.MaxRegistrationYears,
@@ -290,7 +290,7 @@ public class RegistrarService : IRegistrarService
                 PrivacyCost = createDto.PrivacyCost,
                 PrivacyPrice = createDto.PrivacyPrice,
                 Currency = createDto.Currency,
-                IsAvailable = createDto.IsAvailable,
+                IsActive = createDto.IsActive,
                 AutoRenew = createDto.AutoRenew,
                 MinRegistrationYears = createDto.MinRegistrationYears,
                 MaxRegistrationYears = createDto.MaxRegistrationYears,
@@ -322,7 +322,7 @@ public class RegistrarService : IRegistrarService
                 PrivacyCost = registrarTld.PrivacyCost,
                 PrivacyPrice = registrarTld.PrivacyPrice,
                 Currency = registrarTld.Currency,
-                IsAvailable = registrarTld.IsAvailable,
+                IsActive = registrarTld.IsActive,
                 AutoRenew = registrarTld.AutoRenew,
                 MinRegistrationYears = registrarTld.MinRegistrationYears,
                 MaxRegistrationYears = registrarTld.MaxRegistrationYears,
@@ -703,7 +703,7 @@ public class RegistrarService : IRegistrarService
                         TransferCost = tldInfo.TransferPrice ?? 0,
                         TransferPrice = tldInfo.TransferPrice ?? 0,
                         Currency = tldInfo.Currency ?? "USD",
-                        IsAvailable = true,
+                        IsActive = true,
                         AutoRenew = false,
                         MinRegistrationYears = tldInfo.MinRegistrationYears,
                         MaxRegistrationYears = tldInfo.MaxRegistrationYears,
@@ -726,7 +726,7 @@ public class RegistrarService : IRegistrarService
                     registrarTld.Currency = tldInfo.Currency ?? registrarTld.Currency;
                     registrarTld.MinRegistrationYears = tldInfo.MinRegistrationYears ?? registrarTld.MinRegistrationYears;
                     registrarTld.MaxRegistrationYears = tldInfo.MaxRegistrationYears ?? registrarTld.MaxRegistrationYears;
-                    registrarTld.IsAvailable = true;
+                    registrarTld.IsActive = true;
                     registrarTld.UpdatedAt = DateTime.UtcNow;
                 }
 
@@ -824,7 +824,7 @@ public class RegistrarService : IRegistrarService
                         TransferCost = tldInfo.TransferPrice ?? 0,
                         TransferPrice = tldInfo.TransferPrice ?? 0,
                         Currency = tldInfo.Currency ?? "USD",
-                        IsAvailable = true,
+                        IsActive = true,
                         AutoRenew = false,
                         MinRegistrationYears = tldInfo.MinRegistrationYears,
                         MaxRegistrationYears = tldInfo.MaxRegistrationYears,
@@ -847,7 +847,7 @@ public class RegistrarService : IRegistrarService
                     registrarTld.Currency = tldInfo.Currency ?? registrarTld.Currency;
                     registrarTld.MinRegistrationYears = tldInfo.MinRegistrationYears ?? registrarTld.MinRegistrationYears;
                     registrarTld.MaxRegistrationYears = tldInfo.MaxRegistrationYears ?? registrarTld.MaxRegistrationYears;
-                    registrarTld.IsAvailable = true;
+                    registrarTld.IsActive = true;
                     registrarTld.UpdatedAt = DateTime.UtcNow;
                 }
 
@@ -938,7 +938,7 @@ public class RegistrarService : IRegistrarService
                         TransferCost = tldInfo.TransferPrice ?? 0,
                         TransferPrice = tldInfo.TransferPrice ?? 0,
                         Currency = tldInfo.Currency ?? "USD",
-                        IsAvailable = true,
+                        IsActive = true,
                         AutoRenew = false,
                         MinRegistrationYears = tldInfo.MinRegistrationYears,
                         MaxRegistrationYears = tldInfo.MaxRegistrationYears,
@@ -962,7 +962,7 @@ public class RegistrarService : IRegistrarService
                     registrarTld.Currency = tldInfo.Currency ?? registrarTld.Currency;
                     registrarTld.MinRegistrationYears = tldInfo.MinRegistrationYears ?? registrarTld.MinRegistrationYears;
                     registrarTld.MaxRegistrationYears = tldInfo.MaxRegistrationYears ?? registrarTld.MaxRegistrationYears;
-                    registrarTld.IsAvailable = true;
+                    registrarTld.IsActive = true;
                     registrarTld.UpdatedAt = DateTime.UtcNow;
                 }
 

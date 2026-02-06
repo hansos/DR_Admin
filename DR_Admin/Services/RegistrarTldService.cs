@@ -52,7 +52,7 @@ public class RegistrarTldService : IRegistrarTldService
                 .AsNoTracking()
                 .Include(rt => rt.Registrar)
                 .Include(rt => rt.Tld)
-                .Where(rt => rt.IsAvailable && rt.Registrar.IsActive && rt.Tld.IsActive)
+                .Where(rt => rt.IsActive && rt.Registrar.IsActive && rt.Tld.IsActive)
                 .OrderBy(rt => rt.Registrar.Name)
                 .ThenBy(rt => rt.Tld.Extension)
                 .ToListAsync();
@@ -227,7 +227,7 @@ public class RegistrarTldService : IRegistrarTldService
                 PrivacyCost = createDto.PrivacyCost,
                 PrivacyPrice = createDto.PrivacyPrice,
                 Currency = createDto.Currency,
-                IsAvailable = createDto.IsAvailable,
+                IsActive = createDto.IsActive,
                 AutoRenew = createDto.AutoRenew,
                 MinRegistrationYears = createDto.MinRegistrationYears,
                 MaxRegistrationYears = createDto.MaxRegistrationYears,
@@ -305,7 +305,7 @@ public class RegistrarTldService : IRegistrarTldService
             registrarTld.PrivacyCost = updateDto.PrivacyCost;
             registrarTld.PrivacyPrice = updateDto.PrivacyPrice;
             registrarTld.Currency = updateDto.Currency;
-            registrarTld.IsAvailable = updateDto.IsAvailable;
+            registrarTld.IsActive = updateDto.IsActive;
             registrarTld.AutoRenew = updateDto.AutoRenew;
             registrarTld.MinRegistrationYears = updateDto.MinRegistrationYears;
             registrarTld.MaxRegistrationYears = updateDto.MaxRegistrationYears;
@@ -376,7 +376,7 @@ public class RegistrarTldService : IRegistrarTldService
             PrivacyCost = registrarTld.PrivacyCost,
             PrivacyPrice = registrarTld.PrivacyPrice,
             Currency = registrarTld.Currency,
-            IsAvailable = registrarTld.IsAvailable,
+            IsActive = registrarTld.IsActive,
             AutoRenew = registrarTld.AutoRenew,
             MinRegistrationYears = registrarTld.MinRegistrationYears,
             MaxRegistrationYears = registrarTld.MaxRegistrationYears,
@@ -531,7 +531,7 @@ public class RegistrarTldService : IRegistrarTldService
                         PrivacyCost = null,
                         PrivacyPrice = null,
                         Currency = importDto.Currency,
-                        IsAvailable = importDto.IsAvailable,
+                        IsActive = importDto.IsAvailable,
                         AutoRenew = false,
                         MinRegistrationYears = 1,
                         MaxRegistrationYears = 10,

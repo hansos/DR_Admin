@@ -779,7 +779,7 @@ namespace ISPAdmin.Migrations
                     PrivacyCost = table.Column<decimal>(type: "TEXT", precision: 18, scale: 2, nullable: true),
                     PrivacyPrice = table.Column<decimal>(type: "TEXT", precision: 18, scale: 2, nullable: true),
                     Currency = table.Column<string>(type: "TEXT", maxLength: 3, nullable: false),
-                    IsAvailable = table.Column<bool>(type: "INTEGER", nullable: false),
+                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
                     AutoRenew = table.Column<bool>(type: "INTEGER", nullable: false),
                     MinRegistrationYears = table.Column<int>(type: "INTEGER", nullable: true),
                     MaxRegistrationYears = table.Column<int>(type: "INTEGER", nullable: true),
@@ -2717,9 +2717,9 @@ namespace ISPAdmin.Migrations
                 column: "NormalizedName");
 
             migrationBuilder.CreateIndex(
-                name: "IX_RegistrarTlds_IsAvailable",
+                name: "IX_RegistrarTlds_IsActive",
                 table: "RegistrarTlds",
-                column: "IsAvailable");
+                column: "IsActive");
 
             migrationBuilder.CreateIndex(
                 name: "IX_RegistrarTlds_RegistrarId_TldId",

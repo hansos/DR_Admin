@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ISPAdmin.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260205123606_Initial")]
+    [Migration("20260206130204_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -2792,7 +2792,7 @@ namespace ISPAdmin.Migrations
                         .HasMaxLength(3)
                         .HasColumnType("TEXT");
 
-                    b.Property<bool>("IsAvailable")
+                    b.Property<bool>("IsActive")
                         .HasColumnType("INTEGER");
 
                     b.Property<int?>("MaxRegistrationYears")
@@ -2848,7 +2848,7 @@ namespace ISPAdmin.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("IsAvailable");
+                    b.HasIndex("IsActive");
 
                     b.HasIndex("TldId");
 

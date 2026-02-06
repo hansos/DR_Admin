@@ -76,9 +76,9 @@ public class RegistrarTldDto
     public string Currency { get; set; } = "USD";
 
     /// <summary>
-    /// Gets or sets whether this TLD is available for purchase
+    /// Gets or sets whether this TLD is active and available for purchase
     /// </summary>
-    public bool IsAvailable { get; set; }
+    public bool IsActive { get; set; }
 
     /// <summary>
     /// Gets or sets whether domains should be set to auto-renew by default
@@ -174,9 +174,9 @@ public class CreateRegistrarTldDto
     public string Currency { get; set; } = "USD";
 
     /// <summary>
-    /// Gets or sets whether this TLD should be available for purchase
+    /// Gets or sets whether this TLD should be active and available for purchase
     /// </summary>
-    public bool IsAvailable { get; set; } = true;
+    public bool IsActive { get; set; } = true;
 
     /// <summary>
     /// Gets or sets whether domains should be set to auto-renew by default
@@ -262,9 +262,9 @@ public class UpdateRegistrarTldDto
     public string Currency { get; set; } = "USD";
 
     /// <summary>
-    /// Gets or sets whether this TLD should be available for purchase
+    /// Gets or sets whether this TLD should be active and available for purchase
     /// </summary>
-    public bool IsAvailable { get; set; }
+    public bool IsActive { get; set; }
 
     /// <summary>
     /// Gets or sets whether domains should be set to auto-renew by default

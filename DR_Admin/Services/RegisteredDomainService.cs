@@ -436,7 +436,7 @@ public class DomainRegistrationService : IRegisteredDomainService
                 .Include(rt => rt.Tld)
                 .FirstOrDefaultAsync(rt => rt.RegistrarId == registrar.Id && 
                                           rt.Tld.Extension.ToLower() == tld.ToLower() &&
-                                          rt.IsAvailable);
+                                          rt.IsActive);
 
             if (registrarTld == null)
             {
@@ -538,7 +538,7 @@ public class DomainRegistrationService : IRegisteredDomainService
                 .Include(rt => rt.Tld)
                 .FirstOrDefaultAsync(rt => rt.RegistrarId == dto.RegistrarId && 
                                           rt.Tld.Extension.ToLower() == tld.ToLower() &&
-                                          rt.IsAvailable);
+                                          rt.IsActive);
 
             if (registrarTld == null)
             {
@@ -669,7 +669,7 @@ public class DomainRegistrationService : IRegisteredDomainService
             var query = _context.RegistrarTlds
                 .Include(rt => rt.Registrar)
                 .Include(rt => rt.Tld)
-                .Where(rt => rt.Tld.Extension.ToLower() == normalizedTld && rt.IsAvailable && rt.Tld.IsActive);
+                .Where(rt => rt.Tld.Extension.ToLower() == normalizedTld && rt.IsActive && rt.Tld.IsActive);
 
             // Filter by registrar if specified
             if (registrarId.HasValue)
@@ -728,7 +728,7 @@ public class DomainRegistrationService : IRegisteredDomainService
             var tlds = await _context.RegistrarTlds
                 .Include(rt => rt.Registrar)
                 .Include(rt => rt.Tld)
-                .Where(rt => rt.IsAvailable && rt.Registrar.IsActive && rt.Tld.IsActive)
+                .Where(rt => rt.IsActive && rt.Registrar.IsActive && rt.Tld.IsActive)
                 .OrderBy(rt => rt.Tld.Extension)
                 .ToListAsync();
 
@@ -741,7 +741,7 @@ public class DomainRegistrationService : IRegisteredDomainService
                 RegistrationPrice = rt.RegistrationPrice,
                 RenewalPrice = rt.RenewalPrice,
                 Currency = rt.Currency ?? "USD",
-                IsActive = rt.IsAvailable
+                IsActive = rt.IsActive
             });
 
             _log.Information("Successfully fetched {Count} available TLDs", tlds.Count);

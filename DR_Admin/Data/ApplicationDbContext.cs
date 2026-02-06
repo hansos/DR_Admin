@@ -888,7 +888,7 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Notes).HasMaxLength(1000);
             
             entity.HasIndex(e => new { e.RegistrarId, e.TldId }).IsUnique();
-            entity.HasIndex(e => e.IsAvailable);
+            entity.HasIndex(e => e.IsActive);
             
             entity.HasOne(e => e.Registrar)
                 .WithMany(r => r.RegistrarTlds)

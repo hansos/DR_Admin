@@ -13,7 +13,7 @@ public class RegistrarTld : EntityBase
     public decimal? PrivacyCost { get; set; }
     public decimal? PrivacyPrice { get; set; }
     public string Currency { get; set; } = "USD";
-    public bool IsAvailable { get; set; }
+    public bool IsActive { get; set; }
     public bool AutoRenew { get; set; }
     public int? MinRegistrationYears { get; set; }
     public int? MaxRegistrationYears { get; set; }

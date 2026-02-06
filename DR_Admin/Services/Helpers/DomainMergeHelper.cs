@@ -173,7 +173,7 @@ public class DomainMergeHelper
                 TransferCost = 0,
                 TransferPrice = 0,
                 Currency = "USD",
-                IsAvailable = true,
+                IsActive = true,
                 AutoRenew = false,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
