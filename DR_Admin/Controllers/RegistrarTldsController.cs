@@ -510,5 +510,105 @@ public class RegistrarTldsController : ControllerBase
             return StatusCode(500, "An error occurred while processing the CSV file");
         }
     }
+
+    /// <summary>
+    /// Updates the active status of all registrar-TLD offerings in the system
+    /// </summary>
+    /// <param name="statusDto">The DTO containing the optional registrar ID and desired active status</param>
+    /// <returns>Result containing the number of updated records</returns>
+    /// <remarks>
+    /// If RegistrarId is provided, only updates offerings for that registrar. Otherwise updates all registrars.
+    /// </remarks>
+    /// <response code="200">Returns the update result with count of affected records</response>
+    /// <response code="400">If the request data is invalid</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have admin role</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpPut("bulk-update-status")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(BulkUpdateResultDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<BulkUpdateResultDto>> BulkUpdateAllRegistrarTldStatus(
+        [FromBody] BulkUpdateRegistrarTldStatusDto statusDto)
+    {
+        try
+        {
+            _log.Information("API: BulkUpdateAllRegistrarTldStatus called for registrar {RegistrarId} to set IsActive={IsActive} by user {User}", 
+                statusDto.RegistrarId?.ToString() ?? "ALL", statusDto.IsActive, User.Identity?.Name);
+
+            if (!ModelState.IsValid)
+            {
+                _log.Warning("API: Invalid model state for BulkUpdateAllRegistrarTldStatus");
+                return BadRequest(ModelState);
+            }
+
+            var result = await _registrarTldService.BulkUpdateAllRegistrarTldStatusAsync(statusDto.RegistrarId, statusDto.IsActive);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in BulkUpdateAllRegistrarTldStatus");
+            return StatusCode(500, "An error occurred while updating registrar TLD statuses");
+        }
+    }
+
+    /// <summary>
+    /// Updates the active status of registrar-TLD offerings for specific TLD extensions
+    /// </summary>
+    /// <param name="statusDto">The DTO containing the comma-separated TLD extensions and desired active status</param>
+    /// <returns>Result containing the number of updated records</returns>
+    /// <remarks>
+    /// Example TLD extensions: "com,net,org" or "com, net, org"
+    /// </remarks>
+    /// <response code="200">Returns the update result with count of affected records</response>
+    /// <response code="400">If the request data is invalid or no valid extensions found</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have admin role</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpPut("bulk-update-status-by-tld")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(BulkUpdateResultDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<BulkUpdateResultDto>> BulkUpdateRegistrarTldStatusByTld(
+        [FromBody] BulkUpdateRegistrarTldStatusByTldDto statusDto)
+    {
+        try
+        {
+            _log.Information("API: BulkUpdateRegistrarTldStatusByTld called for extensions '{TldExtensions}' to set IsActive={IsActive} by user {User}", 
+                statusDto.TldExtensions, statusDto.IsActive, User.Identity?.Name);
+
+            if (!ModelState.IsValid)
+            {
+                _log.Warning("API: Invalid model state for BulkUpdateRegistrarTldStatusByTld");
+                return BadRequest(ModelState);
+            }
+
+            if (string.IsNullOrWhiteSpace(statusDto.TldExtensions))
+            {
+                _log.Warning("API: BulkUpdateRegistrarTldStatusByTld called with empty TLD extensions");
+                return BadRequest("TLD extensions are required");
+            }
+
+            var result = await _registrarTldService.BulkUpdateRegistrarTldStatusByTldAsync(
+                statusDto.RegistrarId,
+                statusDto.TldExtensions, 
+                statusDto.IsActive);
+            
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in BulkUpdateRegistrarTldStatusByTld");
+            return StatusCode(500, "An error occurred while updating registrar TLD statuses");
+        }
+    }
 }
+
+
 

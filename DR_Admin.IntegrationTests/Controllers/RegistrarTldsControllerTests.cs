@@ -88,7 +88,7 @@ public class RegistrarTldsControllerTests : IClassFixture<TestWebApplicationFact
             RenewalPrice = 10.00m,
             TransferCost = 8.00m,
             TransferPrice = 10.00m,
-            IsAvailable = true,
+            IsActive = true,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };

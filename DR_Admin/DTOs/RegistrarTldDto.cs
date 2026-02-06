@@ -287,3 +287,57 @@ public class UpdateRegistrarTldDto
     public string? Notes { get; set; }
 }
 
+/// <summary>
+/// Data transfer object for bulk updating the active status of all registrar-TLD offerings
+/// </summary>
+public class BulkUpdateRegistrarTldStatusDto
+{
+    /// <summary>
+    /// Gets or sets the optional registrar ID to filter by (null updates all registrars)
+    /// </summary>
+    public int? RegistrarId { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether the registrar-TLD offerings should be set to active or inactive
+    /// </summary>
+    public bool IsActive { get; set; }
+}
+
+/// <summary>
+/// Data transfer object for bulk updating the active status of specific registrar-TLD offerings by TLD extensions
+/// </summary>
+public class BulkUpdateRegistrarTldStatusByTldDto
+{
+    /// <summary>
+    /// Gets or sets the optional registrar ID to filter by (null updates all registrars)
+    /// </summary>
+    public int? RegistrarId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the comma-separated list of TLD extensions (e.g., "com,net,org")
+    /// </summary>
+    public string TldExtensions { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets whether the registrar-TLD offerings should be set to active or inactive
+    /// </summary>
+    public bool IsActive { get; set; }
+}
+
+/// <summary>
+/// Data transfer object representing the result of a bulk update operation
+/// </summary>
+public class BulkUpdateResultDto
+{
+    /// <summary>
+    /// Gets or sets the number of records updated
+    /// </summary>
+    public int UpdatedCount { get; set; }
+
+    /// <summary>
+    /// Gets or sets the message describing the update result
+    /// </summary>
+    public string Message { get; set; } = string.Empty;
+}
+
+

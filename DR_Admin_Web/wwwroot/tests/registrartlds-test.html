@@ -191,11 +191,67 @@
             <div id="checkResult"></div>
         </div>
 
+        <!-- Bulk Update All Registrar TLDs Status -->
+        <div class="test-section">
+            <h2 class="section-title">&#128260; Bulk Update All Registrar TLDs Status</h2>
+            <p>Set all registrar-TLD offerings to active or inactive (optionally filtered by registrar)</p>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="bulkUpdateAllRegistrarId" class="form-label">Registrar ID (optional)</label>
+                    <input type="number" class="form-control" id="bulkUpdateAllRegistrarId" placeholder="Leave empty for all registrars">
+                    <small class="form-text text-muted">Leave empty to update all registrars</small>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="bulkUpdateAllStatus" class="form-label">Set Status</label>
+                    <select class="form-control" id="bulkUpdateAllStatus">
+                        <option value="true">Active</option>
+                        <option value="false">Inactive</option>
+                    </select>
+                </div>
+                <div class="col-md-4 mb-3 d-flex align-items-end">
+                    <button class="btn btn-warning" onclick="bulkUpdateAllStatus()">Update Registrar TLDs</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingBulkUpdateAll"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>
+            <div id="bulkUpdateAllResult"></div>
+        </div>
+
+        <!-- Bulk Update Registrar TLDs by TLD Extensions -->
+        <div class="test-section">
+            <h2 class="section-title">&#128260; Bulk Update Registrar TLDs by TLD Extensions</h2>
+            <p>Set registrar-TLD offerings for specific TLD extensions to active or inactive (optionally filtered by registrar)</p>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label for="bulkUpdateByTldRegistrarId" class="form-label">Registrar ID (optional)</label>
+                    <input type="number" class="form-control" id="bulkUpdateByTldRegistrarId" placeholder="Leave empty for all registrars">
+                    <small class="form-text text-muted">Leave empty to update all registrars</small>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label for="bulkUpdateTldExtensions" class="form-label">TLD Extensions (comma-separated)</label>
+                    <input type="text" class="form-control" id="bulkUpdateTldExtensions" placeholder="e.g., com,net,org">
+                    <small class="form-text text-muted">Enter TLD extensions separated by commas</small>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <label for="bulkUpdateByTldStatus" class="form-label">Set Status</label>
+                    <select class="form-control" id="bulkUpdateByTldStatus">
+                        <option value="true">Active</option>
+                        <option value="false">Inactive</option>
+                    </select>
+                </div>
+                <div class="col-md-2 mb-3 d-flex align-items-end">
+                    <button class="btn btn-warning" onclick="bulkUpdateStatusByTld()">Update by TLD</button>
+                </div>
+            </div>
+            <div class="loading" id="loadingBulkUpdateByTld"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>
+            <div id="bulkUpdateByTldResult"></div>
+        </div>
+
         <!-- API Response -->
         <div class="test-section">
             <h2 class="section-title">&#128225; Last API Response</h2>
             <div class="response-box" id="responseBox">No API calls made yet...</div>
         </div>
+
     </div>
 
     <!-- Edit Modal -->
@@ -466,6 +522,115 @@
         }
 
         async function deleteRegistrarTld(id, name) { if (!confirm(`Delete TLD "${name}"?`)) return; try { const res = await fetch(`${API_BASE_URL}/api/v1/RegistrarTlds/${id}`, { method:'DELETE', headers: getAuthHeaders() }); if (res.ok) { showAlert('Registrar TLD deleted','success'); getAllRegistrarTlds(); const ct = res.headers.get('content-type'); if (ct && ct.includes('application/json')) updateResponseBox(await res.json()); else updateResponseBox({ message: 'Deleted' }); } else { let result; const ct = res.headers.get('content-type'); if (ct && ct.includes('application/json')) result = await res.json(); else { const text = await res.text(); result = { error: text, statusCode: res.status }; } updateResponseBox(result); showAlert(`Error: ${result.message||result.error||'Failed to delete'}`,'danger'); } } catch (err) { showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } }
+
+        async function bulkUpdateAllStatus() {
+            const registrarIdInput = document.getElementById('bulkUpdateAllRegistrarId').value.trim();
+            const isActive = document.getElementById('bulkUpdateAllStatus').value === 'true';
+            const loading = document.getElementById('loadingBulkUpdateAll');
+            const result = document.getElementById('bulkUpdateAllResult');
+            loading.style.display = 'block';
+            result.innerHTML = '';
+
+            const requestBody = {
+                isActive: isActive
+            };
+
+            // Add registrarId only if provided
+            if (registrarIdInput) {
+                requestBody.registrarId = parseInt(registrarIdInput);
+            }
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/v1/RegistrarTlds/bulk-update-status`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(requestBody)
+                });
+
+                let data;
+                const ct = res.headers.get('content-type');
+                if (ct && ct.includes('application/json')) {
+                    data = await res.json();
+                } else {
+                    const text = await res.text();
+                    data = { error: text, statusCode: res.status };
+                }
+
+                updateResponseBox(data);
+
+                if (res.ok) {
+                    result.innerHTML = `<div class="alert alert-success"><strong>Success!</strong><br/>${data.message}<br/>Records updated: ${data.updatedCount}</div>`;
+                    showAlert(data.message, 'success');
+                    getAllRegistrarTlds();
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Failed to update'}`, 'danger');
+                }
+            } catch (err) {
+                showAlert(`Error: ${err.message}`, 'danger');
+                updateResponseBox({ error: err.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        async function bulkUpdateStatusByTld() {
+            const registrarIdInput = document.getElementById('bulkUpdateByTldRegistrarId').value.trim();
+            const tldExtensions = document.getElementById('bulkUpdateTldExtensions').value.trim();
+            const isActive = document.getElementById('bulkUpdateByTldStatus').value === 'true';
+            const loading = document.getElementById('loadingBulkUpdateByTld');
+            const result = document.getElementById('bulkUpdateByTldResult');
+
+            if (!tldExtensions) {
+                showAlert('Please enter TLD extensions', 'warning');
+                return;
+            }
+
+            loading.style.display = 'block';
+            result.innerHTML = '';
+
+            const requestBody = {
+                tldExtensions: tldExtensions,
+                isActive: isActive
+            };
+
+            // Add registrarId only if provided
+            if (registrarIdInput) {
+                requestBody.registrarId = parseInt(registrarIdInput);
+            }
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/v1/RegistrarTlds/bulk-update-status-by-tld`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(requestBody)
+                });
+
+                let data;
+                const ct = res.headers.get('content-type');
+                if (ct && ct.includes('application/json')) {
+                    data = await res.json();
+                } else {
+                    const text = await res.text();
+                    data = { error: text, statusCode: res.status };
+                }
+
+                updateResponseBox(data);
+
+                if (res.ok) {
+                    result.innerHTML = `<div class="alert alert-success"><strong>Success!</strong><br/>${data.message}<br/>Records updated: ${data.updatedCount}</div>`;
+                    showAlert(data.message, 'success');
+                    getAllRegistrarTlds();
+                } else {
+                    showAlert(`Error: ${data.message || data.error || 'Failed to update'}`, 'danger');
+                }
+            } catch (err) {
+                showAlert(`Error: ${err.message}`, 'danger');
+                updateResponseBox({ error: err.message });
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
     </script>
 </body>
 </html>
+

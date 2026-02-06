@@ -673,5 +673,165 @@ public class RegistrarTldService : IRegistrarTldService
             };
         }
     }
+
+    /// <summary>
+    /// Updates the active status of all registrar-TLD offerings
+    /// </summary>
+    /// <param name="registrarId">Optional registrar ID to filter by (null updates all registrars)</param>
+    /// <param name="isActive">Whether to set all offerings to active or inactive</param>
+    /// <returns>Result containing the number of updated records</returns>
+    public async Task<BulkUpdateResultDto> BulkUpdateAllRegistrarTldStatusAsync(int? registrarId, bool isActive)
+    {
+        try
+        {
+            _log.Information("Bulk updating registrar TLDs for registrar {RegistrarId} to IsActive={IsActive}", 
+                registrarId?.ToString() ?? "ALL", isActive);
+
+            var query = _context.RegistrarTlds.AsQueryable();
+            
+            if (registrarId.HasValue)
+            {
+                query = query.Where(rt => rt.RegistrarId == registrarId.Value);
+            }
+
+            var registrarTlds = await query.ToListAsync();
+            var updatedCount = 0;
+
+            foreach (var registrarTld in registrarTlds)
+            {
+                if (registrarTld.IsActive != isActive)
+                {
+                    registrarTld.IsActive = isActive;
+                    registrarTld.UpdatedAt = DateTime.UtcNow;
+                    updatedCount++;
+                }
+            }
+
+            if (updatedCount > 0)
+            {
+                await _context.SaveChangesAsync();
+            }
+
+            var registrarInfo = registrarId.HasValue ? $" for registrar {registrarId.Value}" : "";
+            var message = $"Successfully updated {updatedCount} registrar-TLD offering(s){registrarInfo} to {(isActive ? "active" : "inactive")}";
+            _log.Information(message);
+
+            return new BulkUpdateResultDto
+            {
+                UpdatedCount = updatedCount,
+                Message = message
+            };
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while bulk updating registrar TLD statuses for registrar {RegistrarId}", 
+                registrarId?.ToString() ?? "ALL");
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Updates the active status of registrar-TLD offerings for specific TLD extensions
+    /// </summary>
+    /// <param name="registrarId">Optional registrar ID to filter by (null updates all registrars)</param>
+    /// <param name="tldExtensions">Comma-separated list of TLD extensions</param>
+    /// <param name="isActive">Whether to set the offerings to active or inactive</param>
+    /// <returns>Result containing the number of updated records</returns>
+    public async Task<BulkUpdateResultDto> BulkUpdateRegistrarTldStatusByTldAsync(int? registrarId, string tldExtensions, bool isActive)
+    {
+        try
+        {
+            _log.Information("Bulk updating registrar TLDs for registrar {RegistrarId} and extensions '{TldExtensions}' to IsActive={IsActive}", 
+                registrarId?.ToString() ?? "ALL", tldExtensions, isActive);
+
+            if (string.IsNullOrWhiteSpace(tldExtensions))
+            {
+                _log.Warning("TLD extensions list is empty");
+                return new BulkUpdateResultDto
+                {
+                    UpdatedCount = 0,
+                    Message = "No TLD extensions provided"
+                };
+            }
+
+            // Parse and normalize the TLD extensions
+            var extensions = tldExtensions
+                .Split(new[] { ',', ';', ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(ext => ext.Trim().TrimStart('.').ToLowerInvariant())
+                .Where(ext => !string.IsNullOrEmpty(ext))
+                .Distinct()
+                .ToList();
+
+            if (!extensions.Any())
+            {
+                _log.Warning("No valid TLD extensions found after parsing");
+                return new BulkUpdateResultDto
+                {
+                    UpdatedCount = 0,
+                    Message = "No valid TLD extensions found"
+                };
+            }
+
+            // Get all TLD IDs for the specified extensions
+            var tldIds = await _context.Tlds
+                .Where(t => extensions.Contains(t.Extension))
+                .Select(t => t.Id)
+                .ToListAsync();
+
+            if (!tldIds.Any())
+            {
+                _log.Warning("No TLDs found matching the provided extensions");
+                return new BulkUpdateResultDto
+                {
+                    UpdatedCount = 0,
+                    Message = "No TLDs found matching the provided extensions"
+                };
+            }
+
+            // Build query with optional registrar filter
+            var query = _context.RegistrarTlds.Where(rt => tldIds.Contains(rt.TldId));
+            
+            if (registrarId.HasValue)
+            {
+                query = query.Where(rt => rt.RegistrarId == registrarId.Value);
+            }
+
+            var registrarTlds = await query.ToListAsync();
+            var updatedCount = 0;
+
+            foreach (var registrarTld in registrarTlds)
+            {
+                if (registrarTld.IsActive != isActive)
+                {
+                    registrarTld.IsActive = isActive;
+                    registrarTld.UpdatedAt = DateTime.UtcNow;
+                    updatedCount++;
+                }
+            }
+
+            if (updatedCount > 0)
+            {
+                await _context.SaveChangesAsync();
+            }
+
+            var registrarInfo = registrarId.HasValue ? $" for registrar {registrarId.Value}" : "";
+            var message = $"Successfully updated {updatedCount} registrar-TLD offering(s){registrarInfo} for {extensions.Count} TLD extension(s) to {(isActive ? "active" : "inactive")}";
+            _log.Information(message);
+
+            return new BulkUpdateResultDto
+            {
+                UpdatedCount = updatedCount,
+                Message = message
+            };
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while bulk updating registrar TLD statuses for registrar {RegistrarId} and extensions '{TldExtensions}'", 
+                registrarId?.ToString() ?? "ALL", tldExtensions);
+            throw;
+        }
+    }
 }
+
+
 

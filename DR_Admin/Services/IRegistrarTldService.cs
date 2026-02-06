@@ -105,4 +105,22 @@ public interface IRegistrarTldService
         bool isAvailable,
         bool activateNewTlds,
         string currency);
+
+    /// <summary>
+    /// Updates the active status of all registrar-TLD offerings
+    /// </summary>
+    /// <param name="registrarId">Optional registrar ID to filter by (null updates all registrars)</param>
+    /// <param name="isActive">Whether to set all offerings to active or inactive</param>
+    /// <returns>Result containing the number of updated records</returns>
+    Task<BulkUpdateResultDto> BulkUpdateAllRegistrarTldStatusAsync(int? registrarId, bool isActive);
+
+    /// <summary>
+    /// Updates the active status of registrar-TLD offerings for specific TLD extensions
+    /// </summary>
+    /// <param name="registrarId">Optional registrar ID to filter by (null updates all registrars)</param>
+    /// <param name="tldExtensions">Comma-separated list of TLD extensions</param>
+    /// <param name="isActive">Whether to set the offerings to active or inactive</param>
+    /// <returns>Result containing the number of updated records</returns>
+    Task<BulkUpdateResultDto> BulkUpdateRegistrarTldStatusByTldAsync(int? registrarId, string tldExtensions, bool isActive);
 }
+

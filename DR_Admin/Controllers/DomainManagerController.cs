@@ -201,7 +201,6 @@ public class DomainManagerController : ControllerBase
     /// <summary>
     /// Checks if a domain is available for registration based on domain name
     /// </summary>
-    /// <param name="registrarCode">The code of the registrar to use for checking availability</param>
     /// <param name="domainName">The domain name to check availability for</param>
     /// <returns>Domain availability result</returns>
     /// <response code="200">Returns the domain availability result</response>
