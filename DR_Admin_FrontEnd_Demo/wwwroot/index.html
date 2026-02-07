@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DR Admin Demo - Home</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/site.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-globe"></i> DR Admin Demo
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/">
+                            <i class="bi bi-house"></i> Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/domains.html">
+                            <i class="bi bi-globe2"></i> Domains
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/hosting.html">
+                            <i class="bi bi-server"></i> Hosting
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/customers.html">
+                            <i class="bi bi-people"></i> Customers
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/orders.html">
+                            <i class="bi bi-cart"></i> Orders
+                        </a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item" id="accountMenu">
+                        <!-- Will be populated by JavaScript -->
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="jumbotron bg-white p-5 rounded shadow-sm">
+                    <h1 class="display-4">Welcome to DR Admin Demo</h1>
+                    <p class="lead">A production-like demo frontend for domain registration and hosting management.</p>
+                    <hr class="my-4">
+                    <p>This demo showcases how a real-world reseller or end-user frontend could be structured for managing domains and hosting services.</p>
+                    <p class="text-muted">
+                        <i class="bi bi-info-circle"></i> This is a demonstration implementation - not a production product. 
+                        It shows typical layout, navigation patterns, and user workflows.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-4 mb-3">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="bi bi-globe2 text-primary"></i> Domain Management
+                        </h5>
+                        <p class="card-text">Search, register, and manage domain names. View your domain portfolio and configure DNS settings.</p>
+                        <a href="/domains.html" class="btn btn-outline-primary">Go to Domains</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="bi bi-server text-success"></i> Hosting Services
+                        </h5>
+                        <p class="card-text">Browse hosting plans, manage your hosting accounts, and monitor resource usage.</p>
+                        <a href="/hosting.html" class="btn btn-outline-success">Go to Hosting</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="bi bi-cart text-info"></i> Orders
+                        </h5>
+                        <p class="card-text">View order history, track pending orders, and manage billing information.</p>
+                        <a href="/orders.html" class="btn btn-outline-info">Go to Orders</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="userStatusMessage" class="row mt-4">
+            <!-- Populated by JavaScript -->
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card border-warning">
+                    <div class="card-header bg-warning text-dark">
+                        <i class="bi bi-exclamation-triangle"></i> Development Note
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">
+                            This frontend uses simulated API responses. To connect to the real DR_Admin backend:
+                        </p>
+                        <ul class="mb-0">
+                            <li>Update the API endpoints in <code>Controllers/*Controller.cs</code></li>
+                            <li>Configure the backend URL in <code>appsettings.json</code></li>
+                            <li>Implement actual HTTP calls in the TypeScript <code>api-client.ts</code> module</li>
+                            <li>Add authentication tokens and proper session management</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer mt-auto py-3 bg-light">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <span class="text-muted">&copy; 2025 DR Admin Demo - Production-like Example Implementation</span>
+                </div>
+                <div class="col-md-6 text-end">
+                    <span class="text-muted">
+                        <a href="https://github.com/hansos/DR_Admin" class="text-decoration-none" target="_blank">
+                            <i class="bi bi-github"></i> GitHub
+                        </a>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- TypeScript compiled JavaScript -->
+    <script src="/js/api-client.js"></script>
+    <script src="/js/auth-state.js"></script>
+</body>
+</html>

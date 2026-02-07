@@ -2,6 +2,7 @@
   <Project Path="DomainRegistrationLib/DomainRegistrationLib.csproj" />
   <Project Path="DR_Admin.IntegrationTests/DR_Admin.IntegrationTests.csproj" />
   <Project Path="DR_Admin/DR_Admin.csproj" />
+  <Project Path="DR_Admin_FrontEnd_Demo/DR_Admin_FrontEnd_Demo.csproj" Id="3a0860b6-cb58-4b4f-ae77-83d352177449" />
   <Project Path="DR_Admin_Web/DR_Admin_Web.csproj" />
   <Project Path="EmailSenderLib/EmailSenderLib.csproj" Id="70cada2c-63e7-4433-b4d9-3003b17354f3" />
   <Project Path="ExchangeRateLib/ExchangeRateLib.csproj" Id="af2e6ab9-5586-4008-9371-f7446947a59b" />
