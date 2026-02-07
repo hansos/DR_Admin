@@ -159,20 +159,14 @@ public class DomainMergeHelper
 
         if (registrarTld == null)
         {
-            _log.Information("RegistrarTld not found, creating new relationship for registrar {RegistrarId} and TLD {TldExtension}", 
+            _log.Information("RegistrarTld not found, creating new relationship for registrar {RegistrarId} and TLD {TldExtension}. " +
+                "Pricing should be created separately using RegistrarTldCostPricing and TldSalesPricing endpoints.", 
                 registrarId, tldExtension);
             
             registrarTld = new RegistrarTld
             {
                 RegistrarId = registrarId,
                 TldId = tldId,
-                RegistrationCost = 0,
-                RegistrationPrice = 0,
-                RenewalCost = 0,
-                RenewalPrice = 0,
-                TransferCost = 0,
-                TransferPrice = 0,
-                Currency = "USD",
                 IsActive = true,
                 AutoRenew = false,
                 CreatedAt = DateTime.UtcNow,

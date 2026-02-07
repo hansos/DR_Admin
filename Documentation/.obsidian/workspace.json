@@ -200,6 +200,9 @@
   },
   "active": "446880d5348007bd",
   "lastOpenFiles": [
+    "Features/DomainRegistration/TLD-Pricing-Refactoring-Final-Summary.md",
+    "Features/DomainRegistration/TLD-Pricing-Refactoring-Complete.md",
+    "Features/DomainRegistration/TLD-Pricing-Migration-Status.md",
     "Features/DomainRegistration/TLD-Pricing-Final.md",
     "Features/DomainRegistration/TLD-Pricing-API-Reference.md",
     "Features/DomainRegistration/TLD-Pricing-Implementation-Complete.md",
@@ -232,9 +235,6 @@
     "REGISTER_DOMAIN_QUICKSTART.md",
     "REGISTER_DOMAIN_FLOW_DIAGRAM.md",
     "REGISTER_DOMAIN_PAGE_SUMMARY.md",
-    "DOMAIN_REGISTRATION_IMPLEMENTATION.md",
-    "Features/CustomerManagement/Customers.md",
-    "Features/Roadmap.md",
-    "Index.md"
+    "DOMAIN_REGISTRATION_IMPLEMENTATION.md"
   ]
 }

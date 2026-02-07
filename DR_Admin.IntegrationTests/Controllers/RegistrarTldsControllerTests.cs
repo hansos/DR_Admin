@@ -82,13 +82,10 @@ public class RegistrarTldsControllerTests : IClassFixture<TestWebApplicationFact
         {
             RegistrarId = registrar.Id,
             TldId = tld.Id,
-            RegistrationCost = 8.00m,
-            RegistrationPrice = 10.00m,
-            RenewalCost = 8.00m,
-            RenewalPrice = 10.00m,
-            TransferCost = 8.00m,
-            TransferPrice = 10.00m,
             IsActive = true,
+            AutoRenew = false,
+            MinRegistrationYears = 1,
+            MaxRegistrationYears = 10,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };

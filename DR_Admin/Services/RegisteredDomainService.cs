@@ -690,15 +690,18 @@ public class DomainRegistrationService : IRegisteredDomainService
                 return null;
             }
 
+            // NOTE: Pricing has been moved to temporal pricing tables
+            // This method should be updated to use ITldPricingService.CalculatePricingAsync()
+            // For now, return a basic structure with placeholder values
             var pricingDto = new DomainPricingDto
             {
                 Tld = registrarTld.Tld.Extension,
                 RegistrarId = registrarTld.RegistrarId,
                 RegistrarName = registrarTld.Registrar.Name,
-                RegistrationPrice = registrarTld.RegistrationPrice,
-                RenewalPrice = registrarTld.RenewalPrice,
-                TransferPrice = registrarTld.TransferPrice,
-                Currency = registrarTld.Currency ?? "USD",
+                RegistrationPrice = 0, // TODO: Get from TldSalesPricing
+                RenewalPrice = 0, // TODO: Get from TldSalesPricing
+                TransferPrice = 0, // TODO: Get from TldSalesPricing
+                Currency = "USD", // TODO: Get from TldSalesPricing
                 PriceByYears = new Dictionary<int, decimal>()
             };
 
@@ -706,10 +709,10 @@ public class DomainRegistrationService : IRegisteredDomainService
             var maxYears = registrarTld.MaxRegistrationYears ?? 10;
             for (int years = 1; years <= maxYears; years++)
             {
-                pricingDto.PriceByYears[years] = registrarTld.RegistrationPrice * years;
+                pricingDto.PriceByYears[years] = 0; // TODO: Calculate using TldSalesPricing
             }
 
-            _log.Information("Successfully retrieved pricing for TLD: {Tld}", tld);
+            _log.Warning("GetPricingForTld is using placeholder pricing. Update to use ITldPricingService.");
             return pricingDto;
         }
         catch (Exception ex)
@@ -732,18 +735,21 @@ public class DomainRegistrationService : IRegisteredDomainService
                 .OrderBy(rt => rt.Tld.Extension)
                 .ToListAsync();
 
+            // NOTE: Pricing has been moved to temporal pricing tables
+            // This method should be updated to use ITldPricingService
             var tldDtos = tlds.Select(rt => new AvailableTldDto
             {
                 Id = rt.Id,
                 Tld = rt.Tld.Extension,
                 RegistrarId = rt.RegistrarId,
                 RegistrarName = rt.Registrar.Name,
-                RegistrationPrice = rt.RegistrationPrice,
-                RenewalPrice = rt.RenewalPrice,
-                Currency = rt.Currency ?? "USD",
+                RegistrationPrice = 0, // TODO: Get from TldSalesPricing
+                RenewalPrice = 0, // TODO: Get from TldSalesPricing
+                Currency = "USD", // TODO: Get from TldSalesPricing
                 IsActive = rt.IsActive
             });
 
+            _log.Warning("GetAvailableTldsAsync is using placeholder pricing. Update to use ITldPricingService.");
             _log.Information("Successfully fetched {Count} available TLDs", tlds.Count);
             return tldDtos;
         }

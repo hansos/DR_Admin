@@ -319,15 +319,6 @@ public class RegistrarTldService : IRegistrarTldService
             {
                 RegistrarId = createDto.RegistrarId,
                 TldId = createDto.TldId,
-                RegistrationCost = createDto.RegistrationCost,
-                RegistrationPrice = createDto.RegistrationPrice,
-                RenewalCost = createDto.RenewalCost,
-                RenewalPrice = createDto.RenewalPrice,
-                TransferCost = createDto.TransferCost,
-                TransferPrice = createDto.TransferPrice,
-                PrivacyCost = createDto.PrivacyCost,
-                PrivacyPrice = createDto.PrivacyPrice,
-                Currency = createDto.Currency,
                 IsActive = createDto.IsActive,
                 AutoRenew = createDto.AutoRenew,
                 MinRegistrationYears = createDto.MinRegistrationYears,
@@ -344,7 +335,9 @@ public class RegistrarTldService : IRegistrarTldService
             await _context.Entry(registrarTld).Reference(rt => rt.Registrar).LoadAsync();
             await _context.Entry(registrarTld).Reference(rt => rt.Tld).LoadAsync();
 
-            _log.Information("Successfully created registrar TLD with ID: {RegistrarTldId}", registrarTld.Id);
+            _log.Information("Successfully created registrar TLD with ID: {RegistrarTldId}. " +
+                "Pricing should be created separately using RegistrarTldCostPricing and TldSalesPricing endpoints.", 
+                registrarTld.Id);
             return MapToDto(registrarTld);
         }
         catch (Exception ex)
@@ -372,40 +365,6 @@ public class RegistrarTldService : IRegistrarTldService
                 return null;
             }
 
-            var registrarExists = await _context.Registrars.AnyAsync(r => r.Id == updateDto.RegistrarId);
-            if (!registrarExists)
-            {
-                _log.Warning("Registrar with ID {RegistrarId} does not exist", updateDto.RegistrarId);
-                throw new InvalidOperationException($"Registrar with ID {updateDto.RegistrarId} does not exist");
-            }
-
-            var tldExists = await _context.Tlds.AnyAsync(t => t.Id == updateDto.TldId);
-            if (!tldExists)
-            {
-                _log.Warning("TLD with ID {TldId} does not exist", updateDto.TldId);
-                throw new InvalidOperationException($"TLD with ID {updateDto.TldId} does not exist");
-            }
-
-            var duplicateCombination = await _context.RegistrarTlds
-                .AnyAsync(rt => rt.RegistrarId == updateDto.RegistrarId && rt.TldId == updateDto.TldId && rt.Id != id);
-
-            if (duplicateCombination)
-            {
-                _log.Warning("Cannot update registrar TLD {RegistrarTldId}: combination already exists", id);
-                throw new InvalidOperationException("This registrar-TLD combination already exists");
-            }
-
-            registrarTld.RegistrarId = updateDto.RegistrarId;
-            registrarTld.TldId = updateDto.TldId;
-            registrarTld.RegistrationCost = updateDto.RegistrationCost;
-            registrarTld.RegistrationPrice = updateDto.RegistrationPrice;
-            registrarTld.RenewalCost = updateDto.RenewalCost;
-            registrarTld.RenewalPrice = updateDto.RenewalPrice;
-            registrarTld.TransferCost = updateDto.TransferCost;
-            registrarTld.TransferPrice = updateDto.TransferPrice;
-            registrarTld.PrivacyCost = updateDto.PrivacyCost;
-            registrarTld.PrivacyPrice = updateDto.PrivacyPrice;
-            registrarTld.Currency = updateDto.Currency;
             registrarTld.IsActive = updateDto.IsActive;
             registrarTld.AutoRenew = updateDto.AutoRenew;
             registrarTld.MinRegistrationYears = updateDto.MinRegistrationYears;
@@ -415,7 +374,8 @@ public class RegistrarTldService : IRegistrarTldService
 
             await _context.SaveChangesAsync();
 
-            _log.Information("Successfully updated registrar TLD with ID: {RegistrarTldId}", id);
+            _log.Information("Successfully updated registrar TLD with ID: {RegistrarTldId}. " +
+                "Pricing should be updated separately using RegistrarTldCostPricing and TldSalesPricing endpoints.", id);
             return MapToDto(registrarTld);
         }
         catch (Exception ex)
@@ -468,15 +428,6 @@ public class RegistrarTldService : IRegistrarTldService
             RegistrarName = registrarTld.Registrar?.Name,
             TldId = registrarTld.TldId,
             TldExtension = registrarTld.Tld?.Extension,
-            RegistrationCost = registrarTld.RegistrationCost,
-            RegistrationPrice = registrarTld.RegistrationPrice,
-            RenewalCost = registrarTld.RenewalCost,
-            RenewalPrice = registrarTld.RenewalPrice,
-            TransferCost = registrarTld.TransferCost,
-            TransferPrice = registrarTld.TransferPrice,
-            PrivacyCost = registrarTld.PrivacyCost,
-            PrivacyPrice = registrarTld.PrivacyPrice,
-            Currency = registrarTld.Currency,
             IsActive = registrarTld.IsActive,
             AutoRenew = registrarTld.AutoRenew,
             MinRegistrationYears = registrarTld.MinRegistrationYears,
@@ -484,6 +435,7 @@ public class RegistrarTldService : IRegistrarTldService
             Notes = registrarTld.Notes,
             CreatedAt = registrarTld.CreatedAt,
             UpdatedAt = registrarTld.UpdatedAt
+            // Note: CurrentCostPricing and CurrentSalesPricing can be loaded separately if needed
         };
     }
 
@@ -618,25 +570,17 @@ public class RegistrarTldService : IRegistrarTldService
 
                 if (registrarTld == null)
                 {
-                    // Create new RegistrarTld relationship
+                    // Create new RegistrarTld relationship (without pricing - that goes in separate tables now)
                     registrarTld = new RegistrarTld
                     {
                         RegistrarId = registrarId,
                         TldId = tld.Id,
-                        RegistrationCost = importDto.DefaultRegistrationCost ?? 0,
-                        RegistrationPrice = importDto.DefaultRegistrationPrice ?? 0,
-                        RenewalCost = importDto.DefaultRenewalCost ?? 0,
-                        RenewalPrice = importDto.DefaultRenewalPrice ?? 0,
-                        TransferCost = importDto.DefaultTransferCost ?? 0,
-                        TransferPrice = importDto.DefaultTransferPrice ?? 0,
-                        PrivacyCost = null,
-                        PrivacyPrice = null,
-                        Currency = importDto.Currency,
                         IsActive = importDto.IsAvailable,
                         AutoRenew = false,
                         MinRegistrationYears = 1,
                         MaxRegistrationYears = 10,
-                        Notes = $"Imported on {importTimestamp:yyyy-MM-dd HH:mm:ss} UTC",
+                        Notes = $"Imported on {importTimestamp:yyyy-MM-dd HH:mm:ss} UTC. " +
+                                "Pricing should be set via RegistrarTldCostPricing and TldSalesPricing endpoints.",
                         CreatedAt = importTimestamp,
                         UpdatedAt = importTimestamp
                     };

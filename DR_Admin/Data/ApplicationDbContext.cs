@@ -882,15 +882,6 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<RegistrarTld>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.RegistrationCost).HasPrecision(18, 2);
-            entity.Property(e => e.RegistrationPrice).HasPrecision(18, 2);
-            entity.Property(e => e.RenewalCost).HasPrecision(18, 2);
-            entity.Property(e => e.RenewalPrice).HasPrecision(18, 2);
-            entity.Property(e => e.TransferCost).HasPrecision(18, 2);
-            entity.Property(e => e.TransferPrice).HasPrecision(18, 2);
-            entity.Property(e => e.PrivacyCost).HasPrecision(18, 2);
-            entity.Property(e => e.PrivacyPrice).HasPrecision(18, 2);
-            entity.Property(e => e.Currency).IsRequired().HasMaxLength(3);
             entity.Property(e => e.Notes).HasMaxLength(1000);
             
             entity.HasIndex(e => new { e.RegistrarId, e.TldId }).IsUnique();

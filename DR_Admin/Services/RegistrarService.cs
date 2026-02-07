@@ -115,13 +115,6 @@ public class RegistrarService : IRegistrarService
             {
                 RegistrarId = registrarId,
                 TldId = tld.Id,
-                RegistrationCost = 0,
-                RegistrationPrice = 0,
-                RenewalCost = 0,
-                RenewalPrice = 0,
-                TransferCost = 0,
-                TransferPrice = 0,
-                Currency = "USD",
                 IsActive = true,
                 AutoRenew = false,
                 CreatedAt = DateTime.UtcNow,
@@ -134,7 +127,9 @@ public class RegistrarService : IRegistrarService
             await _context.Entry(registrarTld).Reference(rt => rt.Registrar).LoadAsync();
             await _context.Entry(registrarTld).Reference(rt => rt.Tld).LoadAsync();
 
-            _log.Information("Successfully created registrar TLD with ID: {RegistrarTldId}", registrarTld.Id);
+            _log.Information("Successfully created registrar TLD with ID: {RegistrarTldId}. " +
+                "Pricing should be created separately using RegistrarTldCostPricing and TldSalesPricing endpoints.",
+                registrarTld.Id);
             return new RegistrarTldDto
             {
                 Id = registrarTld.Id,
@@ -142,15 +137,6 @@ public class RegistrarService : IRegistrarService
                 RegistrarName = registrarTld.Registrar?.Name,
                 TldId = registrarTld.TldId,
                 TldExtension = registrarTld.Tld?.Extension,
-                RegistrationCost = registrarTld.RegistrationCost,
-                RegistrationPrice = registrarTld.RegistrationPrice,
-                RenewalCost = registrarTld.RenewalCost,
-                RenewalPrice = registrarTld.RenewalPrice,
-                TransferCost = registrarTld.TransferCost,
-                TransferPrice = registrarTld.TransferPrice,
-                PrivacyCost = registrarTld.PrivacyCost,
-                PrivacyPrice = registrarTld.PrivacyPrice,
-                Currency = registrarTld.Currency,
                 IsActive = registrarTld.IsActive,
                 AutoRenew = registrarTld.AutoRenew,
                 MinRegistrationYears = registrarTld.MinRegistrationYears,
@@ -198,13 +184,6 @@ public class RegistrarService : IRegistrarService
             {
                 RegistrarId = registrarId,
                 TldId = tldId,
-                RegistrationCost = 0,
-                RegistrationPrice = 0,
-                RenewalCost = 0,
-                RenewalPrice = 0,
-                TransferCost = 0,
-                TransferPrice = 0,
-                Currency = "USD",
                 IsActive = true,
                 AutoRenew = false,
                 CreatedAt = DateTime.UtcNow,
@@ -217,7 +196,9 @@ public class RegistrarService : IRegistrarService
             await _context.Entry(registrarTld).Reference(rt => rt.Registrar).LoadAsync();
             await _context.Entry(registrarTld).Reference(rt => rt.Tld).LoadAsync();
 
-            _log.Information("Successfully assigned TLD {TldId} to registrar {RegistrarId}", tldId, registrarId);
+            _log.Information("Successfully assigned TLD {TldId} to registrar {RegistrarId}. " +
+                "Pricing should be created separately using RegistrarTldCostPricing and TldSalesPricing endpoints.",
+                tldId, registrarId);
             return new RegistrarTldDto
             {
                 Id = registrarTld.Id,
@@ -225,15 +206,6 @@ public class RegistrarService : IRegistrarService
                 RegistrarName = registrarTld.Registrar?.Name,
                 TldId = registrarTld.TldId,
                 TldExtension = registrarTld.Tld?.Extension,
-                RegistrationCost = registrarTld.RegistrationCost,
-                RegistrationPrice = registrarTld.RegistrationPrice,
-                RenewalCost = registrarTld.RenewalCost,
-                RenewalPrice = registrarTld.RenewalPrice,
-                TransferCost = registrarTld.TransferCost,
-                TransferPrice = registrarTld.TransferPrice,
-                PrivacyCost = registrarTld.PrivacyCost,
-                PrivacyPrice = registrarTld.PrivacyPrice,
-                Currency = registrarTld.Currency,
                 IsActive = registrarTld.IsActive,
                 AutoRenew = registrarTld.AutoRenew,
                 MinRegistrationYears = registrarTld.MinRegistrationYears,
@@ -281,15 +253,6 @@ public class RegistrarService : IRegistrarService
             {
                 RegistrarId = createDto.RegistrarId,
                 TldId = createDto.TldId,
-                RegistrationCost = createDto.RegistrationCost,
-                RegistrationPrice = createDto.RegistrationPrice,
-                RenewalCost = createDto.RenewalCost,
-                RenewalPrice = createDto.RenewalPrice,
-                TransferCost = createDto.TransferCost,
-                TransferPrice = createDto.TransferPrice,
-                PrivacyCost = createDto.PrivacyCost,
-                PrivacyPrice = createDto.PrivacyPrice,
-                Currency = createDto.Currency,
                 IsActive = createDto.IsActive,
                 AutoRenew = createDto.AutoRenew,
                 MinRegistrationYears = createDto.MinRegistrationYears,
@@ -305,7 +268,9 @@ public class RegistrarService : IRegistrarService
             await _context.Entry(registrarTld).Reference(rt => rt.Registrar).LoadAsync();
             await _context.Entry(registrarTld).Reference(rt => rt.Tld).LoadAsync();
 
-            _log.Information("Successfully created registrar TLD with ID: {RegistrarTldId}", registrarTld.Id);
+            _log.Information("Successfully created registrar TLD with ID: {RegistrarTldId}. " +
+                "Pricing should be created separately using RegistrarTldCostPricing and TldSalesPricing endpoints.",
+                registrarTld.Id);
             return new RegistrarTldDto
             {
                 Id = registrarTld.Id,
@@ -313,15 +278,6 @@ public class RegistrarService : IRegistrarService
                 RegistrarName = registrarTld.Registrar?.Name,
                 TldId = registrarTld.TldId,
                 TldExtension = registrarTld.Tld?.Extension,
-                RegistrationCost = registrarTld.RegistrationCost,
-                RegistrationPrice = registrarTld.RegistrationPrice,
-                RenewalCost = registrarTld.RenewalCost,
-                RenewalPrice = registrarTld.RenewalPrice,
-                TransferCost = registrarTld.TransferCost,
-                TransferPrice = registrarTld.TransferPrice,
-                PrivacyCost = registrarTld.PrivacyCost,
-                PrivacyPrice = registrarTld.PrivacyPrice,
-                Currency = registrarTld.Currency,
                 IsActive = registrarTld.IsActive,
                 AutoRenew = registrarTld.AutoRenew,
                 MinRegistrationYears = registrarTld.MinRegistrationYears,
@@ -689,20 +645,14 @@ public class RegistrarService : IRegistrarService
 
                 if (registrarTld == null)
                 {
-                    _log.Information("Creating new RegistrarTld for registrar {RegistrarId} and TLD {TldExtension}", 
+                    _log.Information("Creating new RegistrarTld for registrar {RegistrarId} and TLD {TldExtension}. " +
+                        "Pricing should be created separately using RegistrarTldCostPricing and TldSalesPricing endpoints.",
                         registrarId, extension);
 
                     registrarTld = new RegistrarTld
                     {
                         RegistrarId = registrarId,
                         TldId = tldEntity.Id,
-                        RegistrationCost = tldInfo.RegistrationPrice ?? 0,
-                        RegistrationPrice = tldInfo.RegistrationPrice ?? 0,
-                        RenewalCost = tldInfo.RenewalPrice ?? 0,
-                        RenewalPrice = tldInfo.RenewalPrice ?? 0,
-                        TransferCost = tldInfo.TransferPrice ?? 0,
-                        TransferPrice = tldInfo.TransferPrice ?? 0,
-                        Currency = tldInfo.Currency ?? "USD",
                         IsActive = true,
                         AutoRenew = false,
                         MinRegistrationYears = tldInfo.MinRegistrationYears,
@@ -714,16 +664,11 @@ public class RegistrarService : IRegistrarService
                 }
                 else
                 {
-                    _log.Information("Updating existing RegistrarTld for registrar {RegistrarId} and TLD {TldExtension}", 
+                    _log.Information("Updating existing RegistrarTld for registrar {RegistrarId} and TLD {TldExtension}. " +
+                        "Pricing updates should be done via RegistrarTldCostPricing and TldSalesPricing endpoints.",
                         registrarId, extension);
 
-                    registrarTld.RegistrationCost = tldInfo.RegistrationPrice ?? registrarTld.RegistrationCost;
-                    registrarTld.RegistrationPrice = tldInfo.RegistrationPrice ?? registrarTld.RegistrationPrice;
-                    registrarTld.RenewalCost = tldInfo.RenewalPrice ?? registrarTld.RenewalCost;
-                    registrarTld.RenewalPrice = tldInfo.RenewalPrice ?? registrarTld.RenewalPrice;
-                    registrarTld.TransferCost = tldInfo.TransferPrice ?? registrarTld.TransferCost;
-                    registrarTld.TransferPrice = tldInfo.TransferPrice ?? registrarTld.TransferPrice;
-                    registrarTld.Currency = tldInfo.Currency ?? registrarTld.Currency;
+                    // Only update non-pricing fields
                     registrarTld.MinRegistrationYears = tldInfo.MinRegistrationYears ?? registrarTld.MinRegistrationYears;
                     registrarTld.MaxRegistrationYears = tldInfo.MaxRegistrationYears ?? registrarTld.MaxRegistrationYears;
                     registrarTld.IsActive = true;
@@ -810,20 +755,14 @@ public class RegistrarService : IRegistrarService
 
                 if (registrarTld == null)
                 {
-                    _log.Information("Creating new RegistrarTld for registrar {RegistrarId} and TLD {TldExtension}", 
+                    _log.Information("Creating new RegistrarTld for registrar {RegistrarId} and TLD {TldExtension}. " +
+                        "Pricing should be created separately using RegistrarTldCostPricing and TldSalesPricing endpoints.",
                         registrarId, extension);
 
                     registrarTld = new RegistrarTld
                     {
                         RegistrarId = registrarId,
                         TldId = tldEntity.Id,
-                        RegistrationCost = tldInfo.RegistrationPrice ?? 0,
-                        RegistrationPrice = tldInfo.RegistrationPrice ?? 0,
-                        RenewalCost = tldInfo.RenewalPrice ?? 0,
-                        RenewalPrice = tldInfo.RenewalPrice ?? 0,
-                        TransferCost = tldInfo.TransferPrice ?? 0,
-                        TransferPrice = tldInfo.TransferPrice ?? 0,
-                        Currency = tldInfo.Currency ?? "USD",
                         IsActive = true,
                         AutoRenew = false,
                         MinRegistrationYears = tldInfo.MinRegistrationYears,
@@ -835,16 +774,11 @@ public class RegistrarService : IRegistrarService
                 }
                 else
                 {
-                    _log.Information("Updating existing RegistrarTld for registrar {RegistrarId} and TLD {TldExtension}", 
+                    _log.Information("Updating existing RegistrarTld for registrar {RegistrarId} and TLD {TldExtension}. " +
+                        "Pricing updates should be done via RegistrarTldCostPricing and TldSalesPricing endpoints.",
                         registrarId, extension);
 
-                    registrarTld.RegistrationCost = tldInfo.RegistrationPrice ?? registrarTld.RegistrationCost;
-                    registrarTld.RegistrationPrice = tldInfo.RegistrationPrice ?? registrarTld.RegistrationPrice;
-                    registrarTld.RenewalCost = tldInfo.RenewalPrice ?? registrarTld.RenewalCost;
-                    registrarTld.RenewalPrice = tldInfo.RenewalPrice ?? registrarTld.RenewalPrice;
-                    registrarTld.TransferCost = tldInfo.TransferPrice ?? registrarTld.TransferCost;
-                    registrarTld.TransferPrice = tldInfo.TransferPrice ?? registrarTld.TransferPrice;
-                    registrarTld.Currency = tldInfo.Currency ?? registrarTld.Currency;
+                    // Only update non-pricing fields
                     registrarTld.MinRegistrationYears = tldInfo.MinRegistrationYears ?? registrarTld.MinRegistrationYears;
                     registrarTld.MaxRegistrationYears = tldInfo.MaxRegistrationYears ?? registrarTld.MaxRegistrationYears;
                     registrarTld.IsActive = true;
@@ -924,20 +858,14 @@ public class RegistrarService : IRegistrarService
 
                 if (registrarTld == null)
                 {
-                    _log.Information("Creating new RegistrarTld for registrar {RegistrarId} and TLD {TldExtension}", 
+                    _log.Information("Creating new RegistrarTld for registrar {RegistrarId} and TLD {TldExtension}. " +
+                        "Pricing should be created separately using RegistrarTldCostPricing and TldSalesPricing endpoints.",
                         registrarId, extension);
                     
                     registrarTld = new RegistrarTld
                     {
                         RegistrarId = registrarId,
                         TldId = tld.Id,
-                        RegistrationCost = tldInfo.RegistrationPrice ?? 0,
-                        RegistrationPrice = tldInfo.RegistrationPrice ?? 0,
-                        RenewalCost = tldInfo.RenewalPrice ?? 0,
-                        RenewalPrice = tldInfo.RenewalPrice ?? 0,
-                        TransferCost = tldInfo.TransferPrice ?? 0,
-                        TransferPrice = tldInfo.TransferPrice ?? 0,
-                        Currency = tldInfo.Currency ?? "USD",
                         IsActive = true,
                         AutoRenew = false,
                         MinRegistrationYears = tldInfo.MinRegistrationYears,
@@ -949,17 +877,11 @@ public class RegistrarService : IRegistrarService
                 }
                 else
                 {
-                    _log.Information("Updating existing RegistrarTld for registrar {RegistrarId} and TLD {TldExtension}", 
+                    _log.Information("Updating existing RegistrarTld for registrar {RegistrarId} and TLD {TldExtension}. " +
+                        "Pricing updates should be done via RegistrarTldCostPricing and TldSalesPricing endpoints.",
                         registrarId, extension);
                     
-                    // Update pricing information
-                    registrarTld.RegistrationCost = tldInfo.RegistrationPrice ?? registrarTld.RegistrationCost;
-                    registrarTld.RegistrationPrice = tldInfo.RegistrationPrice ?? registrarTld.RegistrationPrice;
-                    registrarTld.RenewalCost = tldInfo.RenewalPrice ?? registrarTld.RenewalCost;
-                    registrarTld.RenewalPrice = tldInfo.RenewalPrice ?? registrarTld.RenewalPrice;
-                    registrarTld.TransferCost = tldInfo.TransferPrice ?? registrarTld.TransferCost;
-                    registrarTld.TransferPrice = tldInfo.TransferPrice ?? registrarTld.TransferPrice;
-                    registrarTld.Currency = tldInfo.Currency ?? registrarTld.Currency;
+                    // Only update non-pricing fields
                     registrarTld.MinRegistrationYears = tldInfo.MinRegistrationYears ?? registrarTld.MinRegistrationYears;
                     registrarTld.MaxRegistrationYears = tldInfo.MaxRegistrationYears ?? registrarTld.MaxRegistrationYears;
                     registrarTld.IsActive = true;
