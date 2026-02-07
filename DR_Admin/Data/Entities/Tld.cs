@@ -13,4 +13,6 @@ public class Tld : EntityBase
     public string? Notes { get; set; }
 
     public ICollection<RegistrarTld> RegistrarTlds { get; set; } = new List<RegistrarTld>();
+    public ICollection<TldSalesPricing> SalesPricingHistory { get; set; } = new List<TldSalesPricing>();
+    public ICollection<ResellerTldDiscount> ResellerDiscounts { get; set; } = new List<ResellerTldDiscount>();
 }

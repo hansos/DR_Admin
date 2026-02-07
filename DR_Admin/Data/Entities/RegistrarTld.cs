@@ -22,4 +22,5 @@ public class RegistrarTld : EntityBase
     public Registrar Registrar { get; set; } = null!;
     public Tld Tld { get; set; } = null!;
     public ICollection<RegisteredDomain> RegisteredDomains { get; set; } = new List<RegisteredDomain>();
+    public ICollection<RegistrarTldCostPricing> CostPricingHistory { get; set; } = new List<RegistrarTldCostPricing>();
 }

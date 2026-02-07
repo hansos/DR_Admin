@@ -191,6 +191,13 @@ builder.Services.AddSingleton(databaseBackupSettings);
 builder.Services.Configure<ISPAdmin.Infrastructure.Settings.DomainRegistrationSettings>(
     builder.Configuration.GetSection("DomainRegistration"));
 
+// TLD Pricing Settings and Services
+builder.Services.Configure<ISPAdmin.Infrastructure.Settings.TldPricingSettings>(
+    builder.Configuration.GetSection(ISPAdmin.Infrastructure.Settings.TldPricingSettings.SectionName));
+builder.Services.AddScoped<ISPAdmin.Services.Helpers.MarginValidator>();
+builder.Services.AddScoped<ISPAdmin.Services.Helpers.FuturePricingManager>();
+builder.Services.AddTransient<ITldPricingService, TldPricingService>();
+
 // Domain Lifecycle Workflows - Domain Services
 builder.Services.AddTransient<IDomainEventPublisher, DomainEventPublisher>();
 

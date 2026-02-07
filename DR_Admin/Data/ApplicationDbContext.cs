@@ -193,6 +193,12 @@ public class ApplicationDbContext : DbContext
     public DbSet<CurrencyExchangeRate> CurrencyExchangeRates { get; set; }
     public DbSet<ExchangeRateDownloadLog> ExchangeRateDownloadLogs { get; set; }
     
+    // TLD Pricing entities
+    public DbSet<RegistrarTldCostPricing> RegistrarTldCostPricing { get; set; }
+    public DbSet<TldSalesPricing> TldSalesPricing { get; set; }
+    public DbSet<ResellerTldDiscount> ResellerTldDiscounts { get; set; }
+    public DbSet<RegistrarSelectionPreference> RegistrarSelectionPreferences { get; set; }
+    
     // Domain Lifecycle Workflow entities
     public DbSet<OutboxEvent> OutboxEvents { get; set; }
 

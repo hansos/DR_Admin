@@ -46,4 +46,5 @@ public class ResellerCompany : EntityBase
     public ICollection<SalesAgent> SalesAgents { get; set; } = new List<SalesAgent>();
     public ICollection<DnsZonePackage> DnsZonePackages { get; set; } = new List<DnsZonePackage>();
     public ICollection<Service> Services { get; set; } = new List<Service>();
+    public ICollection<ResellerTldDiscount> TldDiscounts { get; set; } = new List<ResellerTldDiscount>();
 }

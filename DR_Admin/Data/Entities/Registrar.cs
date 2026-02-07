@@ -23,5 +23,6 @@ public class Registrar : EntityBase
 
     public ICollection<RegistrarTld> RegistrarTlds { get; set; } = new List<RegistrarTld>();
     public ICollection<RegisteredDomain> RegisteredDomains { get; set; } = new List<RegisteredDomain>();
+    public ICollection<RegistrarSelectionPreference> SelectionPreferences { get; set; } = new List<RegistrarSelectionPreference>();
 }
 
