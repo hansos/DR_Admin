@@ -126,9 +126,37 @@
         <!-- Get All RegistrarTlds Section -->
         <div class="test-section">
             <h2 class="section-title">&#128203; Get All Registrar TLDs</h2>
-            <button class="btn btn-primary mb-3" onclick="getAllRegistrarTlds()">Load All Registrar TLDs</button>
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <label for="pageSize" class="form-label">Page Size</label>
+                    <select id="pageSize" class="form-control" onchange="getAllRegistrarTlds()">
+                        <option value="5" selected>5</option>
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="pageNumber" class="form-label">Page Number</label>
+                    <input id="pageNumber" type="number" class="form-control" value="1" min="1" onchange="getAllRegistrarTlds()">
+                </div>
+                <div class="col-md-6 d-flex align-items-end">
+                    <button class="btn btn-primary" onclick="getAllRegistrarTlds()">Load All Registrar TLDs</button>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Filter by Status:</label>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-primary active" id="filterAll" onclick="setFilter('all')">All</button>
+                    <button type="button" class="btn btn-outline-success" id="filterActive" onclick="setFilter('active')">Active</button>
+                    <button type="button" class="btn btn-outline-secondary" id="filterInactive" onclick="setFilter('inactive')">Inactive</button>
+                </div>
+            </div>
+            <div id="pagingInfo" class="mb-2"></div>
             <div class="loading" id="loadingAll"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>
             <div id="registrarTldsTableContainer"></div>
+            <div id="pagingControls" class="mt-3"></div>
         </div>
 
         <!-- Get RegistrarTld by ID Section -->
@@ -158,17 +186,41 @@
         <!-- Get TLDs for Registrar -->
         <div class="test-section">
             <h2 class="section-title">&#128101; Get TLDs for Registrar</h2>
-            <div class="row">
-                <div class="col-md-4 mb-3">
+            <div class="row mb-3">
+                <div class="col-md-3">
                     <label for="getForRegistrarId" class="form-label">Registrar ID</label>
                     <input type="number" class="form-control" id="getForRegistrarId">
                 </div>
-                <div class="col-md-8 mb-3 d-flex align-items-end">
+                <div class="col-md-2">
+                    <label for="registrarPageSize" class="form-label">Page Size</label>
+                    <select id="registrarPageSize" class="form-control">
+                        <option value="5" selected>5</option>
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="registrarPageNumber" class="form-label">Page Number</label>
+                    <input id="registrarPageNumber" type="number" class="form-control" value="1" min="1">
+                </div>
+                <div class="col-md-5 d-flex align-items-end">
                     <button class="btn btn-primary" onclick="getTldsForRegistrar()">Get TLDs</button>
                 </div>
             </div>
+            <div class="mb-3">
+                <label class="form-label">Filter by Status:</label>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-primary active" id="registrarFilterAll" onclick="setRegistrarFilter('all')">All</button>
+                    <button type="button" class="btn btn-outline-success" id="registrarFilterActive" onclick="setRegistrarFilter('active')">Active</button>
+                    <button type="button" class="btn btn-outline-secondary" id="registrarFilterInactive" onclick="setRegistrarFilter('inactive')">Inactive</button>
+                </div>
+            </div>
+            <div id="registrarPagingInfo" class="mb-2"></div>
             <div class="loading" id="loadingForRegistrar"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>
             <div id="tldsForRegistrarContainer"></div>
+            <div id="registrarPagingControls" class="mt-3"></div>
         </div>
 
         <!-- Check specific Registrar TLD -->
@@ -364,6 +416,8 @@
   <script src="/assets/js/authGuard.js"></script>
     <script>
         let currentRegistrarTlds = [];
+        let currentFilter = 'all';
+        let currentRegistrarFilter = 'all';
         let editModal;
 
         window.addEventListener('DOMContentLoaded', async () => {
@@ -408,13 +462,69 @@
         }
 
         async function getAllRegistrarTlds() {
-            const loading = document.getElementById('loadingAll'); const container = document.getElementById('registrarTldsTableContainer'); loading.style.display='block'; container.innerHTML='';
+            const pageSize = parseInt(document.getElementById('pageSize').value);
+            const pageNumber = parseInt(document.getElementById('pageNumber').value);
+            
+            const loading = document.getElementById('loadingAll');
+            const container = document.getElementById('registrarTldsTableContainer');
+            const pagingInfo = document.getElementById('pagingInfo');
+            const pagingControls = document.getElementById('pagingControls');
+            
+            loading.style.display='block';
+            container.innerHTML='';
+            pagingInfo.innerHTML='';
+            pagingControls.innerHTML='';
+            
             try {
-                const res = await fetch(`${API_BASE_URL}/api/v1/RegistrarTlds`, { method:'GET', headers: getAuthHeaders() });
-                let data; const ct = res.headers.get('content-type'); if (ct && ct.includes('application/json')) data = await res.json(); else { const text = await res.text(); data = { error: text, statusCode: res.status }; }
+                // Build URL with filter parameter
+                let url = `${API_BASE_URL}/api/v1/RegistrarTlds?pageNumber=${pageNumber}&pageSize=${pageSize}`;
+                if (currentFilter === 'active') {
+                    url += '&isActive=true';
+                } else if (currentFilter === 'inactive') {
+                    url += '&isActive=false';
+                }
+                
+                const res = await fetch(url, {
+                    method:'GET',
+                    headers: getAuthHeaders()
+                });
+                let data;
+                const ct = res.headers.get('content-type');
+                if (ct && ct.includes('application/json')) {
+                    data = await res.json();
+                } else {
+                    const text = await res.text();
+                    data = { error: text, statusCode: res.status };
+                }
                 updateResponseBox(data);
-                if (res.ok) { currentRegistrarTlds = data; renderRegistrarTldsTable(data); } else showAlert(`Error: ${data.message||data.error||'Failed to fetch'}`,'danger');
-            } catch (err) { showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } finally { loading.style.display='none'; }
+                
+                if (res.ok) {
+                    // Check if paginated result
+                    if (data && data.data && Array.isArray(data.data) && data.totalCount !== undefined) {
+                        // Paginated response - no client-side filtering needed
+                        currentRegistrarTlds = data.data;
+                        renderRegistrarTldsTable(data.data);
+                        renderPagingInfo(data);
+                        renderPagingControls(data);
+                    } else if (Array.isArray(data)) {
+                        // Non-paginated array response
+                        currentRegistrarTlds = data;
+                        renderRegistrarTldsTable(data);
+                    } else {
+                        console.error('Unexpected data structure:', data);
+                        showAlert('Unexpected data structure received from API', 'warning');
+                        container.innerHTML = '<div class="empty-state">Error: Unexpected data format. Check console for details.</div>';
+                    }
+                } else {
+                    showAlert(`Error: ${data.message||data.error||'Failed to fetch'}`,'danger');
+                }
+            } catch (err) {
+                console.error('Error in getAllRegistrarTlds:', err);
+                showAlert(`Error: ${err.message}`,'danger');
+                updateResponseBox({ error: err.message });
+            } finally {
+                loading.style.display='none';
+            }
         }
 
         function renderRegistrarTldsTable(items) {
@@ -452,14 +562,86 @@
         }
 
         async function getTldsForRegistrar() {
-            const registrarId = document.getElementById('getForRegistrarId').value; if (!registrarId) { showAlert('Please enter registrar ID','warning'); return; }
-            const loading = document.getElementById('loadingForRegistrar'); const container = document.getElementById('tldsForRegistrarContainer'); loading.style.display='block'; container.innerHTML='';
+            const registrarId = document.getElementById('getForRegistrarId').value;
+            if (!registrarId) {
+                showAlert('Please enter registrar ID','warning');
+                return;
+            }
+            
+            const pageSize = parseInt(document.getElementById('registrarPageSize').value);
+            const pageNumber = parseInt(document.getElementById('registrarPageNumber').value);
+            
+            const loading = document.getElementById('loadingForRegistrar');
+            const container = document.getElementById('tldsForRegistrarContainer');
+            const pagingInfo = document.getElementById('registrarPagingInfo');
+            const pagingControls = document.getElementById('registrarPagingControls');
+            
+            loading.style.display='block';
+            container.innerHTML='';
+            pagingInfo.innerHTML='';
+            pagingControls.innerHTML='';
+            
             try {
-                const res = await fetch(`${API_BASE_URL}/api/v1/RegistrarTlds/registrar/${registrarId}`, { method:'GET', headers: getAuthHeaders() });
-                let data; const ct = res.headers.get('content-type'); if (ct && ct.includes('application/json')) data = await res.json(); else { const text = await res.text(); data = { error: text, statusCode: res.status }; }
+                // Build URL with filter parameter
+                let url = `${API_BASE_URL}/api/v1/RegistrarTlds/registrar/${registrarId}?pageNumber=${pageNumber}&pageSize=${pageSize}`;
+                if (currentRegistrarFilter === 'active') {
+                    url += '&isActive=true';
+                } else if (currentRegistrarFilter === 'inactive') {
+                    url += '&isActive=false';
+                }
+                
+                const res = await fetch(url, {
+                    method:'GET',
+                    headers: getAuthHeaders()
+                });
+                let data;
+                const ct = res.headers.get('content-type');
+                if (ct && ct.includes('application/json')) {
+                    data = await res.json();
+                } else {
+                    const text = await res.text();
+                    data = { error: text, statusCode: res.status };
+                }
                 updateResponseBox(data);
-                if (res.ok) { if (!data || data.length===0) container.innerHTML = '<div class="empty-state">No TLDs for this registrar</div>'; else container.innerHTML = `<div class="alert alert-success"><h5>TLDs for Registrar ${registrarId} (${data.length}):</h5><ul>${data.map(t=>`<li><code>${t.tldExtension}</code> - ID: ${t.id} - ${t.isActive? 'Active':'Inactive'} - Price: ${t.registrationPrice||'N/A'}</li>`).join('')}</ul></div>`; } else showAlert(`Error: ${data.message||data.error||'Failed to fetch'}`,'danger');
-            } catch (err) { showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } finally { loading.style.display='none'; }
+                
+                if (res.ok) {
+                    // Check if paginated result
+                    if (data && data.data && Array.isArray(data.data) && data.totalCount !== undefined) {
+                        // Paginated response - no client-side filtering needed
+                        if (data.data.length === 0 && data.totalCount === 0) {
+                            container.innerHTML = '<div class="empty-state">No TLDs found for this registrar with selected filter</div>';
+                        } else {
+                            renderRegistrarTldsList(data.data, container);
+                            renderRegistrarPagingInfo(data);
+                            renderRegistrarPagingControls(data);
+                        }
+                    } else if (Array.isArray(data)) {
+                        // Non-paginated array response
+                        if (data.length === 0) {
+                            container.innerHTML = '<div class="empty-state">No TLDs for this registrar with selected filter</div>';
+                        } else {
+                            renderRegistrarTldsList(data, container);
+                        }
+                    } else {
+                        console.error('Unexpected data structure:', data);
+                        showAlert('Unexpected data structure received from API', 'warning');
+                        container.innerHTML = '<div class="empty-state">Error: Unexpected data format</div>';
+                    }
+                } else {
+                    showAlert(`Error: ${data.message||data.error||'Failed to fetch'}`,'danger');
+                }
+            } catch (err) {
+                console.error('Error in getTldsForRegistrar:', err);
+                showAlert(`Error: ${err.message}`,'danger');
+                updateResponseBox({ error: err.message });
+            } finally {
+                loading.style.display='none';
+            }
+        }
+        
+        function renderRegistrarTldsList(items, container) {
+            const count = items.length;
+            container.innerHTML = `<div class="alert alert-success"><h5>TLDs for Registrar (${count}):</h5><ul>${items.map(t=>`<li><code>${t.tldExtension}</code> - ID: ${t.id} - ${t.isActive? 'Active':'Inactive'} - Price: ${t.registrationPrice||'N/A'}</li>`).join('')}</ul></div>`;
         }
 
         async function checkRegistrarTld() {
@@ -629,6 +811,202 @@
             } finally {
                 loading.style.display = 'none';
             }
+        }
+
+        // Filter helper functions
+        function setFilter(filter) {
+            currentFilter = filter;
+            
+            // Update button states
+            document.getElementById('filterAll').classList.remove('active');
+            document.getElementById('filterActive').classList.remove('active');
+            document.getElementById('filterInactive').classList.remove('active');
+            
+            if (filter === 'all') {
+                document.getElementById('filterAll').classList.add('active');
+            } else if (filter === 'active') {
+                document.getElementById('filterActive').classList.add('active');
+            } else if (filter === 'inactive') {
+                document.getElementById('filterInactive').classList.add('active');
+            }
+            
+            // Reset to page 1 when filter changes
+            document.getElementById('pageNumber').value = 1;
+            
+            // Reload data with server-side filter
+            getAllRegistrarTlds();
+        }
+
+        function setRegistrarFilter(filter) {
+            currentRegistrarFilter = filter;
+            
+            // Update button states
+            document.getElementById('registrarFilterAll').classList.remove('active');
+            document.getElementById('registrarFilterActive').classList.remove('active');
+            document.getElementById('registrarFilterInactive').classList.remove('active');
+            
+            if (filter === 'all') {
+                document.getElementById('registrarFilterAll').classList.add('active');
+            } else if (filter === 'active') {
+                document.getElementById('registrarFilterActive').classList.add('active');
+            } else if (filter === 'inactive') {
+                document.getElementById('registrarFilterInactive').classList.add('active');
+            }
+            
+            // Reset to page 1 when filter changes
+            document.getElementById('registrarPageNumber').value = 1;
+            
+            // Reload data with server-side filter
+            getTldsForRegistrar();
+        }
+
+        // Pagination helper functions
+        function renderPagingInfo(pagedResult) {
+            const pagingInfo = document.getElementById('pagingInfo');
+            const startItem = ((pagedResult.currentPage - 1) * pagedResult.pageSize) + 1;
+            const endItem = Math.min(pagedResult.currentPage * pagedResult.pageSize, pagedResult.totalCount);
+            
+            const filterInfo = currentFilter !== 'all' ? ` (filtered by: ${currentFilter})` : '';
+            
+            pagingInfo.innerHTML = `
+                <div class="alert alert-info mb-0">
+                    Showing ${startItem}-${endItem} of ${pagedResult.totalCount} Registrar TLDs${filterInfo}
+                    (Page ${pagedResult.currentPage} of ${pagedResult.totalPages})
+                </div>
+            `;
+        }
+
+        function renderPagingControls(pagedResult) {
+            const pagingControls = document.getElementById('pagingControls');
+            
+            let buttonsHtml = '<nav><ul class="pagination justify-content-center">';
+            
+            // Previous button
+            buttonsHtml += `
+                <li class="page-item ${!pagedResult.hasPrevious ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="goToPage(${pagedResult.currentPage - 1}); return false;">Previous</a>
+                </li>
+            `;
+            
+            // Page numbers
+            const maxPagesToShow = 5;
+            let startPage = Math.max(1, pagedResult.currentPage - Math.floor(maxPagesToShow / 2));
+            let endPage = Math.min(pagedResult.totalPages, startPage + maxPagesToShow - 1);
+            
+            if (endPage - startPage < maxPagesToShow - 1) {
+                startPage = Math.max(1, endPage - maxPagesToShow + 1);
+            }
+            
+            if (startPage > 1) {
+                buttonsHtml += `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(1); return false;">1</a></li>`;
+                if (startPage > 2) {
+                    buttonsHtml += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+                }
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                buttonsHtml += `
+                    <li class="page-item ${i === pagedResult.currentPage ? 'active' : ''}">
+                        <a class="page-link" href="#" onclick="goToPage(${i}); return false;">${i}</a>
+                    </li>
+                `;
+            }
+            
+            if (endPage < pagedResult.totalPages) {
+                if (endPage < pagedResult.totalPages - 1) {
+                    buttonsHtml += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+                }
+                buttonsHtml += `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(${pagedResult.totalPages}); return false;">${pagedResult.totalPages}</a></li>`;
+            }
+            
+            // Next button
+            buttonsHtml += `
+                <li class="page-item ${!pagedResult.hasNext ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="goToPage(${pagedResult.currentPage + 1}); return false;">Next</a>
+                </li>
+            `;
+            
+            buttonsHtml += '</ul></nav>';
+            pagingControls.innerHTML = buttonsHtml;
+        }
+
+        function goToPage(page) {
+            document.getElementById('pageNumber').value = page;
+            getAllRegistrarTlds();
+        }
+
+        function renderRegistrarPagingInfo(pagedResult) {
+            const pagingInfo = document.getElementById('registrarPagingInfo');
+            const startItem = ((pagedResult.currentPage - 1) * pagedResult.pageSize) + 1;
+            const endItem = Math.min(pagedResult.currentPage * pagedResult.pageSize, pagedResult.totalCount);
+            
+            const filterInfo = currentRegistrarFilter !== 'all' ? ` (filtered by: ${currentRegistrarFilter})` : '';
+            
+            pagingInfo.innerHTML = `
+                <div class="alert alert-info mb-0">
+                    Showing ${startItem}-${endItem} of ${pagedResult.totalCount} TLDs${filterInfo}
+                    (Page ${pagedResult.currentPage} of ${pagedResult.totalPages})
+                </div>
+            `;
+        }
+
+        function renderRegistrarPagingControls(pagedResult) {
+            const pagingControls = document.getElementById('registrarPagingControls');
+            
+            let buttonsHtml = '<nav><ul class="pagination justify-content-center">';
+            
+            // Previous button
+            buttonsHtml += `
+                <li class="page-item ${!pagedResult.hasPrevious ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="goToRegistrarPage(${pagedResult.currentPage - 1}); return false;">Previous</a>
+                </li>
+            `;
+            
+            // Page numbers
+            const maxPagesToShow = 5;
+            let startPage = Math.max(1, pagedResult.currentPage - Math.floor(maxPagesToShow / 2));
+            let endPage = Math.min(pagedResult.totalPages, startPage + maxPagesToShow - 1);
+            
+            if (endPage - startPage < maxPagesToShow - 1) {
+                startPage = Math.max(1, endPage - maxPagesToShow + 1);
+            }
+            
+            if (startPage > 1) {
+                buttonsHtml += `<li class="page-item"><a class="page-link" href="#" onclick="goToRegistrarPage(1); return false;">1</a></li>`;
+                if (startPage > 2) {
+                    buttonsHtml += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+                }
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                buttonsHtml += `
+                    <li class="page-item ${i === pagedResult.currentPage ? 'active' : ''}">
+                        <a class="page-link" href="#" onclick="goToRegistrarPage(${i}); return false;">${i}</a>
+                    </li>
+                `;
+            }
+            
+            if (endPage < pagedResult.totalPages) {
+                if (endPage < pagedResult.totalPages - 1) {
+                    buttonsHtml += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+                }
+                buttonsHtml += `<li class="page-item"><a class="page-link" href="#" onclick="goToRegistrarPage(${pagedResult.totalPages}); return false;">${pagedResult.totalPages}</a></li>`;
+            }
+            
+            // Next button
+            buttonsHtml += `
+                <li class="page-item ${!pagedResult.hasNext ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="goToRegistrarPage(${pagedResult.currentPage + 1}); return false;">Next</a>
+                </li>
+            `;
+            
+            buttonsHtml += '</ul></nav>';
+            pagingControls.innerHTML = buttonsHtml;
+        }
+
+        function goToRegistrarPage(page) {
+            document.getElementById('registrarPageNumber').value = page;
+            getTldsForRegistrar();
         }
     </script>
 </body>

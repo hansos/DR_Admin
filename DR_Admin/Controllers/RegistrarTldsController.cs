@@ -25,21 +25,42 @@ public class RegistrarTldsController : ControllerBase
     /// <summary>
     /// Retrieves all registrar-TLD offerings in the system
     /// </summary>
-    /// <returns>List of all registrar-TLD relationships</returns>
-    /// <response code="200">Returns the list of registrar-TLD offerings</response>
+    /// <param name="pageNumber">Optional: Page number for pagination (default: returns all)</param>
+    /// <param name="pageSize">Optional: Number of items per page (default: 10, max: 100)</param>
+    /// <param name="isActive">Optional: Filter by active status (true/false)</param>
+    /// <returns>List of all registrar-TLD relationships or paginated result if pagination parameters provided</returns>
+    /// <response code="200">Returns the list of registrar-TLD offerings or paginated result</response>
     /// <response code="401">If user is not authenticated</response>
     /// <response code="403">If user doesn't have required role</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet]
     [Authorize(Policy = "RegistrarTld.Read")]
     [ProducesResponseType(typeof(IEnumerable<RegistrarTldDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PagedResult<RegistrarTldDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<IEnumerable<RegistrarTldDto>>> GetAllRegistrarTlds()
+    public async Task<ActionResult> GetAllRegistrarTlds([FromQuery] int? pageNumber = null, [FromQuery] int? pageSize = null, [FromQuery] bool? isActive = null)
     {
         try
         {
+            // If pagination parameters are provided, return paginated result
+            if (pageNumber.HasValue || pageSize.HasValue)
+            {
+                var paginationParams = new PaginationParameters
+                {
+                    PageNumber = pageNumber ?? 1,
+                    PageSize = pageSize ?? 10
+                };
+
+                _log.Information("API: GetAllRegistrarTlds (paginated) called with PageNumber: {PageNumber}, PageSize: {PageSize}, IsActive: {IsActive} by user {User}", 
+                    paginationParams.PageNumber, paginationParams.PageSize, isActive?.ToString() ?? "null", User.Identity?.Name);
+
+                var pagedResult = await _registrarTldService.GetAllRegistrarTldsPagedAsync(paginationParams, isActive);
+                return Ok(pagedResult);
+            }
+
+            // Otherwise, return all registrar TLDs (backward compatible)
             _log.Information("API: GetAllRegistrarTlds called by user {User}", User.Identity?.Name);
             
             var registrarTlds = await _registrarTldService.GetAllRegistrarTldsAsync();
@@ -83,18 +104,39 @@ public class RegistrarTldsController : ControllerBase
     /// Retrieves all TLD offerings for a specific registrar
     /// </summary>
     /// <param name="registrarId">The unique identifier of the registrar</param>
-    /// <returns>List of TLD offerings for the registrar</returns>
-    /// <response code="200">Returns the list of TLD offerings</response>
+    /// <param name="pageNumber">Optional: Page number for pagination (default: returns all)</param>
+    /// <param name="pageSize">Optional: Number of items per page (default: 10, max: 100)</param>
+    /// <param name="isActive">Optional: Filter by active status (true/false)</param>
+    /// <returns>List of TLD offerings for the registrar or paginated result if pagination parameters provided</returns>
+    /// <response code="200">Returns the list of TLD offerings or paginated result</response>
     /// <response code="401">If user is not authenticated</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("registrar/{registrarId}")]
     [ProducesResponseType(typeof(IEnumerable<RegistrarTldDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PagedResult<RegistrarTldDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<IEnumerable<RegistrarTldDto>>> GetRegistrarTldsByRegistrar(int registrarId)
+    public async Task<ActionResult> GetRegistrarTldsByRegistrar(int registrarId, [FromQuery] int? pageNumber = null, [FromQuery] int? pageSize = null, [FromQuery] bool? isActive = null)
     {
         try
         {
+            // If pagination parameters are provided, return paginated result
+            if (pageNumber.HasValue || pageSize.HasValue)
+            {
+                var paginationParams = new PaginationParameters
+                {
+                    PageNumber = pageNumber ?? 1,
+                    PageSize = pageSize ?? 10
+                };
+
+                _log.Information("API: GetRegistrarTldsByRegistrar (paginated) called for registrar {RegistrarId} with PageNumber: {PageNumber}, PageSize: {PageSize}, IsActive: {IsActive} by user {User}", 
+                    registrarId, paginationParams.PageNumber, paginationParams.PageSize, isActive?.ToString() ?? "null", User.Identity?.Name);
+
+                var pagedResult = await _registrarTldService.GetRegistrarTldsByRegistrarPagedAsync(registrarId, paginationParams, isActive);
+                return Ok(pagedResult);
+            }
+
+            // Otherwise, return all registrar TLDs for this registrar (backward compatible)
             _log.Information("API: GetRegistrarTldsByRegistrar called for registrar {RegistrarId} by user {User}", 
                 registrarId, User.Identity?.Name);
             

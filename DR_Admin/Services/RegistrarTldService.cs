@@ -42,6 +42,57 @@ public class RegistrarTldService : IRegistrarTldService
         }
     }
 
+    public async Task<PagedResult<RegistrarTldDto>> GetAllRegistrarTldsPagedAsync(PaginationParameters parameters, bool? isActive = null)
+    {
+        try
+        {
+            _log.Information("Fetching paginated registrar TLDs - Page: {PageNumber}, PageSize: {PageSize}, IsActive: {IsActive}", 
+                parameters.PageNumber, parameters.PageSize, isActive?.ToString() ?? "null");
+            
+            // Build query with optional filter
+            var query = _context.RegistrarTlds
+                .AsNoTracking()
+                .Include(rt => rt.Registrar)
+                .Include(rt => rt.Tld)
+                .AsQueryable();
+
+            // Apply filter if specified
+            if (isActive.HasValue)
+            {
+                query = query.Where(rt => rt.IsActive == isActive.Value);
+            }
+
+            // Get total count after filtering
+            var totalCount = await query.CountAsync();
+
+            // Get paginated data
+            var registrarTlds = await query
+                .OrderBy(rt => rt.Registrar.Name)
+                .ThenBy(rt => rt.Tld.Extension)
+                .Skip((parameters.PageNumber - 1) * parameters.PageSize)
+                .Take(parameters.PageSize)
+                .ToListAsync();
+
+            var registrarTldDtos = registrarTlds.Select(MapToDto).ToList();
+            
+            var result = new PagedResult<RegistrarTldDto>(
+                registrarTldDtos, 
+                totalCount, 
+                parameters.PageNumber, 
+                parameters.PageSize);
+
+            _log.Information("Successfully fetched page {PageNumber} of registrar TLDs - Returned {Count} of {TotalCount} total", 
+                parameters.PageNumber, registrarTldDtos.Count, totalCount);
+            
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while fetching paginated registrar TLDs");
+            throw;
+        }
+    }
+
     public async Task<IEnumerable<RegistrarTldDto>> GetAvailableRegistrarTldsAsync()
     {
         try
@@ -92,6 +143,56 @@ public class RegistrarTldService : IRegistrarTldService
         catch (Exception ex)
         {
             _log.Error(ex, "Error occurred while fetching registrar TLDs for registrar: {RegistrarId}", registrarId);
+            throw;
+        }
+    }
+
+    public async Task<PagedResult<RegistrarTldDto>> GetRegistrarTldsByRegistrarPagedAsync(int registrarId, PaginationParameters parameters, bool? isActive = null)
+    {
+        try
+        {
+            _log.Information("Fetching paginated registrar TLDs for registrar: {RegistrarId} - Page: {PageNumber}, PageSize: {PageSize}, IsActive: {IsActive}", 
+                registrarId, parameters.PageNumber, parameters.PageSize, isActive?.ToString() ?? "null");
+            
+            // Build query with registrar filter
+            var query = _context.RegistrarTlds
+                .AsNoTracking()
+                .Include(rt => rt.Registrar)
+                .Include(rt => rt.Tld)
+                .Where(rt => rt.RegistrarId == registrarId);
+
+            // Apply active filter if specified
+            if (isActive.HasValue)
+            {
+                query = query.Where(rt => rt.IsActive == isActive.Value);
+            }
+
+            // Get total count after filtering
+            var totalCount = await query.CountAsync();
+
+            // Get paginated data
+            var registrarTlds = await query
+                .OrderBy(rt => rt.Tld.Extension)
+                .Skip((parameters.PageNumber - 1) * parameters.PageSize)
+                .Take(parameters.PageSize)
+                .ToListAsync();
+
+            var registrarTldDtos = registrarTlds.Select(MapToDto).ToList();
+            
+            var result = new PagedResult<RegistrarTldDto>(
+                registrarTldDtos, 
+                totalCount, 
+                parameters.PageNumber, 
+                parameters.PageSize);
+
+            _log.Information("Successfully fetched page {PageNumber} of registrar TLDs for registrar {RegistrarId} - Returned {Count} of {TotalCount} total", 
+                parameters.PageNumber, registrarId, registrarTldDtos.Count, totalCount);
+            
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while fetching paginated registrar TLDs for registrar: {RegistrarId}", registrarId);
             throw;
         }
     }

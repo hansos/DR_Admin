@@ -14,6 +14,14 @@ public interface IRegistrarTldService
     Task<IEnumerable<RegistrarTldDto>> GetAllRegistrarTldsAsync();
 
     /// <summary>
+    /// Retrieves all registrar-TLD offerings with pagination
+    /// </summary>
+    /// <param name="parameters">Pagination parameters</param>
+    /// <param name="isActive">Optional filter for active status</param>
+    /// <returns>Paginated result of registrar-TLD DTOs</returns>
+    Task<PagedResult<RegistrarTldDto>> GetAllRegistrarTldsPagedAsync(PaginationParameters parameters, bool? isActive = null);
+
+    /// <summary>
     /// Retrieves only available registrar-TLD offerings
     /// </summary>
     /// <returns>Collection of available registrar-TLD DTOs</returns>
@@ -25,6 +33,15 @@ public interface IRegistrarTldService
     /// <param name="registrarId">The registrar ID</param>
     /// <returns>Collection of registrar-TLD DTOs</returns>
     Task<IEnumerable<RegistrarTldDto>> GetRegistrarTldsByRegistrarAsync(int registrarId);
+
+    /// <summary>
+    /// Retrieves all TLD offerings for a specific registrar with pagination
+    /// </summary>
+    /// <param name="registrarId">The registrar ID</param>
+    /// <param name="parameters">Pagination parameters</param>
+    /// <param name="isActive">Optional filter for active status</param>
+    /// <returns>Paginated result of registrar-TLD DTOs</returns>
+    Task<PagedResult<RegistrarTldDto>> GetRegistrarTldsByRegistrarPagedAsync(int registrarId, PaginationParameters parameters, bool? isActive = null);
 
     /// <summary>
     /// Retrieves all registrar offerings for a specific TLD
