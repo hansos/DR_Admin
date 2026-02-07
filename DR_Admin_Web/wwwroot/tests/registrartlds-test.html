@@ -26,14 +26,29 @@
     <div class="container-main">
         <div class="header-card">
             <h1>&#127760; Registrar TLDs API Test</h1>
-            <p>Test CRUD operations for RegistrarTlds and lookup endpoints</p>
+            <p>Test CRUD operations for RegistrarTlds (Pricing now managed separately via RegistrarTldCostPricing and TldSalesPricing)</p>
         </div>
 
         <div id="alertContainer"></div>
 
+        <!-- Migration Notice -->
+        <div class="alert alert-warning">
+            <h5>?? Pricing Structure Changed</h5>
+            <p><strong>RegistrarTld</strong> now only manages the relationship between Registrar and TLD.</p>
+            <p>Pricing is managed separately in:</p>
+            <ul>
+                <li><strong>RegistrarTldCostPricing</strong> - Cost pricing from registrar (temporal)</li>
+                <li><strong>TldSalesPricing</strong> - Sales pricing to customers (temporal)</li>
+            </ul>
+        </div>
+
         <!-- Create RegistrarTld Section -->
         <div class="test-section">
             <h2 class="section-title">&#10133; Create Registrar TLD</h2>
+            <div class="alert alert-info">
+                <strong>Note:</strong> This only creates the registrar-TLD relationship. 
+                Pricing should be created separately using the RegistrarTldCostPricing and TldSalesPricing endpoints.
+            </div>
             <form id="createForm">
                 <div class="row">
                     <div class="col-md-6 mb-3">
@@ -46,50 +61,6 @@
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="createRegistrationCost" class="form-label">Registration Cost *</label>
-                        <input type="number" step="0.01" class="form-control" id="createRegistrationCost" placeholder="0.00" required>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label for="createRegistrationPrice" class="form-label">Registration Price *</label>
-                        <input type="number" step="0.01" class="form-control" id="createRegistrationPrice" placeholder="0.00" required>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="createRenewalCost" class="form-label">Renewal Cost *</label>
-                        <input type="number" step="0.01" class="form-control" id="createRenewalCost" placeholder="0.00" required>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label for="createRenewalPrice" class="form-label">Renewal Price *</label>
-                        <input type="number" step="0.01" class="form-control" id="createRenewalPrice" placeholder="0.00" required>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="createTransferCost" class="form-label">Transfer Cost *</label>
-                        <input type="number" step="0.01" class="form-control" id="createTransferCost" placeholder="0.00" required>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label for="createTransferPrice" class="form-label">Transfer Price *</label>
-                        <input type="number" step="0.01" class="form-control" id="createTransferPrice" placeholder="0.00" required>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label for="createPrivacyCost" class="form-label">Privacy Cost</label>
-                        <input type="number" step="0.01" class="form-control" id="createPrivacyCost" placeholder="0.00">
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label for="createPrivacyPrice" class="form-label">Privacy Price</label>
-                        <input type="number" step="0.01" class="form-control" id="createPrivacyPrice" placeholder="0.00">
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-4 mb-3">
-                        <label for="createCurrency" class="form-label">Currency</label>
-                        <input type="text" class="form-control" id="createCurrency" placeholder="USD" value="USD">
-                    </div>
                     <div class="col-md-4 mb-3">
                         <label for="createIsActive" class="form-label">Active</label>
                         <select class="form-control" id="createIsActive">
@@ -178,6 +149,10 @@
         <!-- Available TLDs -->
         <div class="test-section">
             <h2 class="section-title">&#127760; Get Available TLDs</h2>
+            <div class="alert alert-warning">
+                <strong>Note:</strong> Pricing values shown are placeholders (0.00). 
+                Use TldPricing endpoints to get actual current pricing.
+            </div>
             <button class="btn btn-primary mb-3" onclick="getAvailableTlds()">Load Available TLDs</button>
             <div class="loading" id="loadingAvailable"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>
             <div id="availableTldsContainer"></div>
@@ -315,71 +290,28 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
+                    <div class="alert alert-info">
+                        <strong>Note:</strong> Pricing should be updated separately via RegistrarTldCostPricing and TldSalesPricing endpoints.
+                    </div>
                     <form id="editForm">
                         <input type="hidden" id="editId">
-                        <input type="hidden" id="editTldId">
                         <div class="mb-3">
                             <label for="editRegistrarName" class="form-label">Registrar</label>
                             <input type="text" class="form-control" id="editRegistrarName" readonly>
                         </div>
-                        <input type="hidden" id="editRegistrarId">
                         <div class="mb-3">
                             <label for="editTldExtension" class="form-label">TLD</label>
                             <input type="text" class="form-control" id="editTldExtension" readonly>
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="editRegistrationCost" class="form-label">Registration Cost *</label>
-                                <input type="number" step="0.01" class="form-control" id="editRegistrationCost" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="editRegistrationPrice" class="form-label">Registration Price *</label>
-                                <input type="number" step="0.01" class="form-control" id="editRegistrationPrice" required>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="editRenewalCost" class="form-label">Renewal Cost *</label>
-                                <input type="number" step="0.01" class="form-control" id="editRenewalCost" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="editRenewalPrice" class="form-label">Renewal Price *</label>
-                                <input type="number" step="0.01" class="form-control" id="editRenewalPrice" required>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="editTransferCost" class="form-label">Transfer Cost *</label>
-                                <input type="number" step="0.01" class="form-control" id="editTransferCost" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="editTransferPrice" class="form-label">Transfer Price *</label>
-                                <input type="number" step="0.01" class="form-control" id="editTransferPrice" required>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="editPrivacyCost" class="form-label">Privacy Cost</label>
-                                <input type="number" step="0.01" class="form-control" id="editPrivacyCost">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="editPrivacyPrice" class="form-label">Privacy Price</label>
-                                <input type="number" step="0.01" class="form-control" id="editPrivacyPrice">
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-4 mb-3">
-                                <label for="editCurrency" class="form-label">Currency *</label>
-                                <input type="text" class="form-control" id="editCurrency" required>
-                            </div>
-                            <div class="col-md-4 mb-3">
                                 <label for="editIsActive" class="form-label">Active</label>
                                 <select class="form-control" id="editIsActive">
                                     <option value="true">Yes</option>
                                     <option value="false">No</option>
                                 </select>
                             </div>
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-6 mb-3">
                                 <label for="editAutoRenew" class="form-label">Auto Renew</label>
                                 <select class="form-control" id="editAutoRenew">
                                     <option value="true">Yes</option>
@@ -413,7 +345,7 @@
 
     <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/assets/js/authClient.js"></script>
-  <script src="/assets/js/authGuard.js"></script>
+    <script src="/assets/js/authGuard.js"></script>
     <script>
         let currentRegistrarTlds = [];
         let currentFilter = 'all';
@@ -421,44 +353,88 @@
         let editModal;
 
         window.addEventListener('DOMContentLoaded', async () => {
-            const token = authClient.getToken(); if (!token) { window.location.href = '/login.html'; return; }
-            const result = await authClient.verifyToken(); if (result.authenticated && result.data?.username) document.getElementById('userInfo').textContent = `Hello, ${result.data.username}!`; else document.getElementById('userInfo').textContent = 'Hello, User!';
+            const token = authClient.getToken(); 
+            if (!token) { window.location.href = '/login.html'; return; }
+            const result = await authClient.verifyToken(); 
+            if (result.authenticated && result.data?.username) 
+                document.getElementById('userInfo').textContent = `Hello, ${result.data.username}!`; 
+            else 
+                document.getElementById('userInfo').textContent = 'Hello, User!';
 
             editModal = new bootstrap.Modal(document.getElementById('editModal'));
             document.getElementById('createForm').addEventListener('submit', handleCreate);
             getAllRegistrarTlds();
         });
 
-        function showAlert(message, type='info') { const alertContainer = document.getElementById('alertContainer'); const alertHtml = `\n                <div class="alert alert-${type} alert-dismissible fade show" role="alert">${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`; alertContainer.innerHTML = alertHtml; setTimeout(()=>{ const a = alertContainer.querySelector('.alert'); if (a) bootstrap.Alert.getOrCreateInstance(a).close(); },5000); }
-        function updateResponseBox(data) { document.getElementById('responseBox').textContent = JSON.stringify(data, null, 2); }
-        function getAuthHeaders() { const token = authClient.getToken(); return { 'Content-Type':'application/json', 'Authorization': `Bearer ${token}` }; }
+        function showAlert(message, type='info') { 
+            const alertContainer = document.getElementById('alertContainer'); 
+            const alertHtml = `
+                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>`; 
+            alertContainer.innerHTML = alertHtml; 
+            setTimeout(()=>{ 
+                const a = alertContainer.querySelector('.alert'); 
+                if (a) bootstrap.Alert.getOrCreateInstance(a).close(); 
+            },5000); 
+        }
+        
+        function updateResponseBox(data) { 
+            document.getElementById('responseBox').textContent = JSON.stringify(data, null, 2); 
+        }
+        
+        function getAuthHeaders() { 
+            const token = authClient.getToken(); 
+            return { 
+                'Content-Type':'application/json', 
+                'Authorization': `Bearer ${token}` 
+            }; 
+        }
 
         async function handleCreate(e) {
             e.preventDefault();
             const data = {
                 registrarId: parseInt(document.getElementById('createRegistrarId').value),
                 tldId: parseInt(document.getElementById('createTldId').value),
-                registrationCost: parseFloat(document.getElementById('createRegistrationCost').value),
-                registrationPrice: parseFloat(document.getElementById('createRegistrationPrice').value),
-                renewalCost: parseFloat(document.getElementById('createRenewalCost').value),
-                renewalPrice: parseFloat(document.getElementById('createRenewalPrice').value),
-                transferCost: parseFloat(document.getElementById('createTransferCost').value),
-                transferPrice: parseFloat(document.getElementById('createTransferPrice').value),
-                privacyCost: document.getElementById('createPrivacyCost').value ? parseFloat(document.getElementById('createPrivacyCost').value) : null,
-                privacyPrice: document.getElementById('createPrivacyPrice').value ? parseFloat(document.getElementById('createPrivacyPrice').value) : null,
-                currency: document.getElementById('createCurrency').value.trim() || 'USD',
                 isActive: document.getElementById('createIsActive').value === 'true',
                 autoRenew: document.getElementById('createAutoRenew').value === 'true',
                 minRegistrationYears: document.getElementById('createMinYears').value ? parseInt(document.getElementById('createMinYears').value) : 1,
                 maxRegistrationYears: document.getElementById('createMaxYears').value ? parseInt(document.getElementById('createMaxYears').value) : 10,
                 notes: document.getElementById('createNotes').value.trim() || null
             };
+            
             try {
-                const res = await fetch(`${API_BASE_URL}/api/v1/RegistrarTlds`, { method:'POST', headers: getAuthHeaders(), body: JSON.stringify(data) });
-                let result; const ct = res.headers.get('content-type'); if (ct && ct.includes('application/json')) result = await res.json(); else { const text = await res.text(); result = { error: text, statusCode: res.status }; }
+                const res = await fetch(`${API_BASE_URL}/api/v1/RegistrarTlds`, { 
+                    method:'POST', 
+                    headers: getAuthHeaders(), 
+                    body: JSON.stringify(data) 
+                });
+                
+                let result; 
+                const ct = res.headers.get('content-type'); 
+                if (ct && ct.includes('application/json')) 
+                    result = await res.json(); 
+                else { 
+                    const text = await res.text(); 
+                    result = { error: text, statusCode: res.status }; 
+                }
+                
                 updateResponseBox(result);
-                if (res.ok) { showAlert('Registrar TLD created','success'); document.getElementById('createForm').reset(); document.getElementById('createCurrency').value = 'USD'; document.getElementById('createMinYears').value = 1; document.getElementById('createMaxYears').value = 10; getAllRegistrarTlds(); } else showAlert(`Error: ${result.message||result.error||'Failed to create'}`,'danger');
-            } catch (err) { showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); }
+                
+                if (res.ok) { 
+                    showAlert('Registrar TLD created. Remember to create pricing separately via RegistrarTldCostPricing and TldSalesPricing endpoints.','success'); 
+                    document.getElementById('createForm').reset(); 
+                    document.getElementById('createMinYears').value = 1; 
+                    document.getElementById('createMaxYears').value = 10; 
+                    getAllRegistrarTlds(); 
+                } else {
+                    showAlert(`Error: ${result.message||result.error||'Failed to create'}`,'danger');
+                }
+            } catch (err) { 
+                showAlert(`Error: ${err.message}`,'danger'); 
+                updateResponseBox({ error: err.message }); 
+            }
         }
 
         async function getAllRegistrarTlds() {
@@ -476,7 +452,6 @@
             pagingControls.innerHTML='';
             
             try {
-                // Build URL with filter parameter
                 let url = `${API_BASE_URL}/api/v1/RegistrarTlds?pageNumber=${pageNumber}&pageSize=${pageSize}`;
                 if (currentFilter === 'active') {
                     url += '&isActive=true';
@@ -488,6 +463,7 @@
                     method:'GET',
                     headers: getAuthHeaders()
                 });
+                
                 let data;
                 const ct = res.headers.get('content-type');
                 if (ct && ct.includes('application/json')) {
@@ -496,18 +472,16 @@
                     const text = await res.text();
                     data = { error: text, statusCode: res.status };
                 }
+                
                 updateResponseBox(data);
                 
                 if (res.ok) {
-                    // Check if paginated result
                     if (data && data.data && Array.isArray(data.data) && data.totalCount !== undefined) {
-                        // Paginated response - no client-side filtering needed
                         currentRegistrarTlds = data.data;
                         renderRegistrarTldsTable(data.data);
                         renderPagingInfo(data);
                         renderPagingControls(data);
                     } else if (Array.isArray(data)) {
-                        // Non-paginated array response
                         currentRegistrarTlds = data;
                         renderRegistrarTldsTable(data);
                     } else {
@@ -528,37 +502,154 @@
         }
 
         function renderRegistrarTldsTable(items) {
-            const container = document.getElementById('registrarTldsTableContainer'); if (!items || items.length===0) { container.innerHTML = '<div class="empty-state">No registrar TLDs found</div>'; return; }
+            const container = document.getElementById('registrarTldsTableContainer'); 
+            
+            if (!items || items.length===0) { 
+                container.innerHTML = '<div class="empty-state">No registrar TLDs found</div>'; 
+                return; 
+            }
+            
             const tableHtml = `
                 <div class="table-responsive">
                     <table class="table">
-                        <thead><tr><th>ID</th><th>Registrar</th><th>TLD</th><th>Active</th><th>Registration Price</th><th>Renewal Price</th><th>Actions</th></tr></thead>
-                        <tbody>${items.map(i=>`<tr><td>${i.id}</td><td>${i.registrarName||i.registrarId}</td><td><code>${i.tldExtension||'-'}</code></td><td><span class="badge ${i.isActive?'badge-success':'badge-secondary'}">${i.isActive?'Active':'Inactive'}</span></td><td>${i.registrationPrice||'-'}</td><td>${i.renewalPrice||'-'}</td><td><div class="action-buttons"><button class="btn btn-sm btn-warning" onclick="openEditModal(${i.id})">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteRegistrarTld(${i.id}, '${(i.tldExtension||'').replace(/'/g, "\\'" )}')">Delete</button></div></td></tr>`).join('')}</tbody>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Registrar</th>
+                                <th>TLD</th>
+                                <th>Active</th>
+                                <th>Auto Renew</th>
+                                <th>Min/Max Years</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${items.map(i=>`
+                                <tr>
+                                    <td>${i.id}</td>
+                                    <td>${i.registrarName||i.registrarId}</td>
+                                    <td><code>${i.tldExtension||'-'}</code></td>
+                                    <td><span class="badge ${i.isActive?'badge-success':'badge-secondary'}">${i.isActive?'Active':'Inactive'}</span></td>
+                                    <td>${i.autoRenew ? 'Yes' : 'No'}</td>
+                                    <td>${i.minRegistrationYears||'-'} / ${i.maxRegistrationYears||'-'}</td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="btn btn-sm btn-warning" onclick="openEditModal(${i.id})">Edit</button>
+                                            <button class="btn btn-sm btn-danger" onclick="deleteRegistrarTld(${i.id}, '${(i.tldExtension||'').replace(/'/g, "\\'")}')">Delete</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
                     </table>
                 </div>`;
             container.innerHTML = tableHtml;
         }
 
-
         async function getRegistrarTldById() {
-            const id = document.getElementById('getRegistrarTldId').value; if (!id) { showAlert('Please enter an ID','warning'); return; }
-            const loading = document.getElementById('loadingById'); const result = document.getElementById('registrarTldByIdResult'); loading.style.display='block'; result.innerHTML='';
+            const id = document.getElementById('getRegistrarTldId').value; 
+            if (!id) { 
+                showAlert('Please enter an ID','warning'); 
+                return; 
+            }
+            
+            const loading = document.getElementById('loadingById'); 
+            const result = document.getElementById('registrarTldByIdResult'); 
+            loading.style.display='block'; 
+            result.innerHTML='';
+            
             try {
-                const res = await fetch(`${API_BASE_URL}/api/v1/RegistrarTlds/${id}`, { method:'GET', headers: getAuthHeaders() });
-                let data; const ct = res.headers.get('content-type'); if (ct && ct.includes('application/json')) data = await res.json(); else { const text = await res.text(); data = { error: text, statusCode: res.status }; }
+                const res = await fetch(`${API_BASE_URL}/api/v1/RegistrarTlds/${id}`, { 
+                    method:'GET', 
+                    headers: getAuthHeaders() 
+                });
+                
+                let data; 
+                const ct = res.headers.get('content-type'); 
+                if (ct && ct.includes('application/json')) 
+                    data = await res.json(); 
+                else { 
+                    const text = await res.text(); 
+                    data = { error: text, statusCode: res.status }; 
+                }
+                
                 updateResponseBox(data);
-                if (res.ok) { result.innerHTML = `<div class="alert alert-success"><h5>Registrar TLD Found:</h5><p><strong>ID:</strong> ${data.id}</p><p><strong>Registrar:</strong> ${data.registrarName||data.registrarId}</p><p><strong>TLD:</strong> <code>${data.tldExtension}</code></p><p><strong>Active:</strong> ${data.isActive? 'Yes':'No'}</p><p><strong>Registration Price:</strong> ${data.registrationPrice||'N/A'}</p><p><strong>Renewal Price:</strong> ${data.renewalPrice||'N/A'}</p><p><strong>Notes:</strong> ${data.notes||'N/A'}</p></div>`; } else showAlert(`Error: ${data.message||data.error||'Not found'}`,'danger');
-            } catch (err) { showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } finally { loading.style.display='none'; }
+                
+                if (res.ok) { 
+                    result.innerHTML = `
+                        <div class="alert alert-success">
+                            <h5>Registrar TLD Found:</h5>
+                            <p><strong>ID:</strong> ${data.id}</p>
+                            <p><strong>Registrar:</strong> ${data.registrarName||data.registrarId}</p>
+                            <p><strong>TLD:</strong> <code>${data.tldExtension}</code></p>
+                            <p><strong>Active:</strong> ${data.isActive? 'Yes':'No'}</p>
+                            <p><strong>Auto Renew:</strong> ${data.autoRenew? 'Yes':'No'}</p>
+                            <p><strong>Min/Max Years:</strong> ${data.minRegistrationYears||'N/A'} / ${data.maxRegistrationYears||'N/A'}</p>
+                            <p><strong>Notes:</strong> ${data.notes||'N/A'}</p>
+                            <p class="mt-3"><em>Note: Pricing should be retrieved from RegistrarTldCostPricing and TldSalesPricing endpoints.</em></p>
+                        </div>`; 
+                } else {
+                    showAlert(`Error: ${data.message||data.error||'Not found'}`,'danger');
+                }
+            } catch (err) { 
+                showAlert(`Error: ${err.message}`,'danger'); 
+                updateResponseBox({ error: err.message }); 
+            } finally { 
+                loading.style.display='none'; 
+            }
         }
 
         async function getAvailableTlds() {
-            const loading = document.getElementById('loadingAvailable'); const container = document.getElementById('availableTldsContainer'); loading.style.display='block'; container.innerHTML='';
+            const loading = document.getElementById('loadingAvailable'); 
+            const container = document.getElementById('availableTldsContainer'); 
+            loading.style.display='block'; 
+            container.innerHTML='';
+            
             try {
-                const res = await fetch(`${API_BASE_URL}/api/v1/RegistrarTlds/available`, { method:'GET', headers: getAuthHeaders() });
-                let data; const ct = res.headers.get('content-type'); if (ct && ct.includes('application/json')) data = await res.json(); else { const text = await res.text(); data = { error: text, statusCode: res.status }; }
+                const res = await fetch(`${API_BASE_URL}/api/v1/RegistrarTlds/available`, { 
+                    method:'GET', 
+                    headers: getAuthHeaders() 
+                });
+                
+                let data; 
+                const ct = res.headers.get('content-type'); 
+                if (ct && ct.includes('application/json')) 
+                    data = await res.json(); 
+                else { 
+                    const text = await res.text(); 
+                    data = { error: text, statusCode: res.status }; 
+                }
+                
                 updateResponseBox(data);
-                if (res.ok) { if (!data || data.length===0) container.innerHTML = '<div class="empty-state">No available TLDs</div>'; else container.innerHTML = `<div class="alert alert-success"><h5>Available TLDs (${data.length}):</h5><ul>${data.map(t=>`<li><code>${t.tldExtension}</code> - Registrar: ${t.registrarName||t.registrarId} - Price: ${t.registrationPrice||'N/A'}</li>`).join('')}</ul></div>`; } else showAlert(`Error: ${data.message||data.error||'Failed to fetch'}`,'danger');
-            } catch (err) { showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } finally { loading.style.display='none'; }
+                
+                if (res.ok) { 
+                    if (!data || data.length===0) {
+                        container.innerHTML = '<div class="empty-state">No available TLDs</div>'; 
+                    } else {
+                        container.innerHTML = `
+                            <div class="alert alert-success">
+                                <h5>Available TLDs (${data.length}):</h5>
+                                <p><em>Note: Pricing values are placeholders. Use TldPricing endpoints for actual pricing.</em></p>
+                                <ul>
+                                    ${data.map(t=>`
+                                        <li>
+                                            <code>${t.tld||t.tldExtension}</code> - 
+                                            Registrar: ${t.registrarName||t.registrarId} - 
+                                            Price: ${t.registrationPrice !== undefined ? t.registrationPrice : 'N/A'}
+                                        </li>
+                                    `).join('')}
+                                </ul>
+                            </div>`; 
+                    }
+                } else {
+                    showAlert(`Error: ${data.message||data.error||'Failed to fetch'}`,'danger');
+                }
+            } catch (err) { 
+                showAlert(`Error: ${err.message}`,'danger'); 
+                updateResponseBox({ error: err.message }); 
+            } finally { 
+                loading.style.display='none'; 
+            }
         }
 
         async function getTldsForRegistrar() {
@@ -582,7 +673,6 @@
             pagingControls.innerHTML='';
             
             try {
-                // Build URL with filter parameter
                 let url = `${API_BASE_URL}/api/v1/RegistrarTlds/registrar/${registrarId}?pageNumber=${pageNumber}&pageSize=${pageSize}`;
                 if (currentRegistrarFilter === 'active') {
                     url += '&isActive=true';
@@ -594,6 +684,7 @@
                     method:'GET',
                     headers: getAuthHeaders()
                 });
+                
                 let data;
                 const ct = res.headers.get('content-type');
                 if (ct && ct.includes('application/json')) {
@@ -602,12 +693,11 @@
                     const text = await res.text();
                     data = { error: text, statusCode: res.status };
                 }
+                
                 updateResponseBox(data);
                 
                 if (res.ok) {
-                    // Check if paginated result
                     if (data && data.data && Array.isArray(data.data) && data.totalCount !== undefined) {
-                        // Paginated response - no client-side filtering needed
                         if (data.data.length === 0 && data.totalCount === 0) {
                             container.innerHTML = '<div class="empty-state">No TLDs found for this registrar with selected filter</div>';
                         } else {
@@ -616,7 +706,6 @@
                             renderRegistrarPagingControls(data);
                         }
                     } else if (Array.isArray(data)) {
-                        // Non-paginated array response
                         if (data.length === 0) {
                             container.innerHTML = '<div class="empty-state">No TLDs for this registrar with selected filter</div>';
                         } else {
@@ -641,69 +730,163 @@
         
         function renderRegistrarTldsList(items, container) {
             const count = items.length;
-            container.innerHTML = `<div class="alert alert-success"><h5>TLDs for Registrar (${count}):</h5><ul>${items.map(t=>`<li><code>${t.tldExtension}</code> - ID: ${t.id} - ${t.isActive? 'Active':'Inactive'} - Price: ${t.registrationPrice||'N/A'}</li>`).join('')}</ul></div>`;
+            container.innerHTML = `
+                <div class="alert alert-success">
+                    <h5>TLDs for Registrar (${count}):</h5>
+                    <ul>
+                        ${items.map(t=>`
+                            <li>
+                                <code>${t.tldExtension}</code> - 
+                                ID: ${t.id} - 
+                                ${t.isActive? 'Active':'Inactive'}
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>`;
         }
 
         async function checkRegistrarTld() {
-            const registrarId = document.getElementById('checkRegistrarId').value; const tldId = document.getElementById('checkTldId').value; if (!registrarId || !tldId) { showAlert('Provide registrar ID and TLD ID','warning'); return; }
-            const loading = document.getElementById('loadingCheck'); const result = document.getElementById('checkResult'); loading.style.display='block'; result.innerHTML='';
+            const registrarId = document.getElementById('checkRegistrarId').value; 
+            const tldId = document.getElementById('checkTldId').value; 
+            
+            if (!registrarId || !tldId) { 
+                showAlert('Provide registrar ID and TLD ID','warning'); 
+                return; 
+            }
+            
+            const loading = document.getElementById('loadingCheck'); 
+            const result = document.getElementById('checkResult'); 
+            loading.style.display='block'; 
+            result.innerHTML='';
+            
             try {
-                const res = await fetch(`${API_BASE_URL}/api/v1/RegistrarTlds/registrar/${registrarId}/tld/${tldId}`, { method:'GET', headers: getAuthHeaders() });
-                let data; const ct = res.headers.get('content-type'); if (ct && ct.includes('application/json')) data = await res.json(); else { const text = await res.text(); data = { error: text, statusCode: res.status }; }
+                const res = await fetch(`${API_BASE_URL}/api/v1/RegistrarTlds/registrar/${registrarId}/tld/${tldId}`, { 
+                    method:'GET', 
+                    headers: getAuthHeaders() 
+                });
+                
+                let data; 
+                const ct = res.headers.get('content-type'); 
+                if (ct && ct.includes('application/json')) 
+                    data = await res.json(); 
+                else { 
+                    const text = await res.text(); 
+                    data = { error: text, statusCode: res.status }; 
+                }
+                
                 updateResponseBox(data);
-                if (res.ok) { result.innerHTML = `<div class="alert alert-success"><p><strong>Registrar TLD:</strong> ID ${data.id} - <code>${data.tldExtension}</code> - ${data.isActive? 'Active':'Inactive'}</p></div>`; } else showAlert(`Error: ${data.message||data.error||'Not found'}`,'danger');
-            } catch (err) { showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } finally { loading.style.display='none'; }
+                
+                if (res.ok) { 
+                    result.innerHTML = `
+                        <div class="alert alert-success">
+                            <p><strong>Registrar TLD:</strong> ID ${data.id} - <code>${data.tldExtension}</code> - ${data.isActive? 'Active':'Inactive'}</p>
+                        </div>`; 
+                } else {
+                    showAlert(`Error: ${data.message||data.error||'Not found'}`,'danger');
+                }
+            } catch (err) { 
+                showAlert(`Error: ${err.message}`,'danger'); 
+                updateResponseBox({ error: err.message }); 
+            } finally { 
+                loading.style.display='none'; 
+            }
         }
 
         function openEditModal(id) { 
             const item = currentRegistrarTlds.find(x=>x.id===id); 
-            if (!item) { showAlert('Item not found','danger'); return; } 
+            
+            if (!item) { 
+                showAlert('Item not found','danger'); 
+                return; 
+            } 
+            
             document.getElementById('editId').value=item.id; 
-            document.getElementById('editRegistrarId').value=item.registrarId||''; 
             document.getElementById('editRegistrarName').value=item.registrarName||`ID: ${item.registrarId}`; 
-            document.getElementById('editTldId').value=item.tldId||''; 
             document.getElementById('editTldExtension').value=item.tldExtension||''; 
-            document.getElementById('editRegistrationCost').value=item.registrationCost||0; 
-            document.getElementById('editRegistrationPrice').value=item.registrationPrice||0; 
-            document.getElementById('editRenewalCost').value=item.renewalCost||0; 
-            document.getElementById('editRenewalPrice').value=item.renewalPrice||0; 
-            document.getElementById('editTransferCost').value=item.transferCost||0; 
-            document.getElementById('editTransferPrice').value=item.transferPrice||0; 
-            document.getElementById('editPrivacyCost').value=item.privacyCost||''; 
-            document.getElementById('editPrivacyPrice').value=item.privacyPrice||''; 
-            document.getElementById('editCurrency').value=item.currency||'USD'; 
             document.getElementById('editIsActive').value = item.isActive? 'true':'false'; 
             document.getElementById('editAutoRenew').value = item.autoRenew? 'true':'false'; 
             document.getElementById('editMinYears').value = item.minRegistrationYears||''; 
             document.getElementById('editMaxYears').value = item.maxRegistrationYears||''; 
             document.getElementById('editNotes').value = item.notes||''; 
+            
             editModal.show(); 
         }
 
         async function updateRegistrarTld() {
             const id = document.getElementById('editId').value; 
             const data = { 
-                registrarId: parseInt(document.getElementById('editRegistrarId').value), 
-                tldId: parseInt(document.getElementById('editTldId').value), 
-                registrationCost: parseFloat(document.getElementById('editRegistrationCost').value), 
-                registrationPrice: parseFloat(document.getElementById('editRegistrationPrice').value), 
-                renewalCost: parseFloat(document.getElementById('editRenewalCost').value), 
-                renewalPrice: parseFloat(document.getElementById('editRenewalPrice').value), 
-                transferCost: parseFloat(document.getElementById('editTransferCost').value), 
-                transferPrice: parseFloat(document.getElementById('editTransferPrice').value), 
-                privacyCost: document.getElementById('editPrivacyCost').value ? parseFloat(document.getElementById('editPrivacyCost').value) : null, 
-                privacyPrice: document.getElementById('editPrivacyPrice').value ? parseFloat(document.getElementById('editPrivacyPrice').value) : null, 
-                currency: document.getElementById('editCurrency').value.trim(), 
                 isActive: document.getElementById('editIsActive').value === 'true', 
                 autoRenew: document.getElementById('editAutoRenew').value === 'true', 
                 minRegistrationYears: document.getElementById('editMinYears').value ? parseInt(document.getElementById('editMinYears').value) : null, 
                 maxRegistrationYears: document.getElementById('editMaxYears').value ? parseInt(document.getElementById('editMaxYears').value) : null, 
                 notes: document.getElementById('editNotes').value.trim() || null 
             };
-            try { const res = await fetch(`${API_BASE_URL}/api/v1/RegistrarTlds/${id}`, { method:'PUT', headers: getAuthHeaders(), body: JSON.stringify(data) }); let result; const ct = res.headers.get('content-type'); if (ct && ct.includes('application/json')) result = await res.json(); else { const text = await res.text(); result = { error: text, statusCode: res.status }; } updateResponseBox(result); if (res.ok) { showAlert('Registrar TLD updated','success'); editModal.hide(); getAllRegistrarTlds(); } else showAlert(`Error: ${result.message||result.error||'Failed to update'}`,'danger'); } catch (err) { showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); }
+            
+            try { 
+                const res = await fetch(`${API_BASE_URL}/api/v1/RegistrarTlds/${id}`, { 
+                    method:'PUT', 
+                    headers: getAuthHeaders(), 
+                    body: JSON.stringify(data) 
+                }); 
+                
+                let result; 
+                const ct = res.headers.get('content-type'); 
+                if (ct && ct.includes('application/json')) 
+                    result = await res.json(); 
+                else { 
+                    const text = await res.text(); 
+                    result = { error: text, statusCode: res.status }; 
+                } 
+                
+                updateResponseBox(result); 
+                
+                if (res.ok) { 
+                    showAlert('Registrar TLD updated','success'); 
+                    editModal.hide(); 
+                    getAllRegistrarTlds(); 
+                } else {
+                    showAlert(`Error: ${result.message||result.error||'Failed to update'}`,'danger');
+                }
+            } catch (err) { 
+                showAlert(`Error: ${err.message}`,'danger'); 
+                updateResponseBox({ error: err.message }); 
+            }
         }
 
-        async function deleteRegistrarTld(id, name) { if (!confirm(`Delete TLD "${name}"?`)) return; try { const res = await fetch(`${API_BASE_URL}/api/v1/RegistrarTlds/${id}`, { method:'DELETE', headers: getAuthHeaders() }); if (res.ok) { showAlert('Registrar TLD deleted','success'); getAllRegistrarTlds(); const ct = res.headers.get('content-type'); if (ct && ct.includes('application/json')) updateResponseBox(await res.json()); else updateResponseBox({ message: 'Deleted' }); } else { let result; const ct = res.headers.get('content-type'); if (ct && ct.includes('application/json')) result = await res.json(); else { const text = await res.text(); result = { error: text, statusCode: res.status }; } updateResponseBox(result); showAlert(`Error: ${result.message||result.error||'Failed to delete'}`,'danger'); } } catch (err) { showAlert(`Error: ${err.message}`,'danger'); updateResponseBox({ error: err.message }); } }
+        async function deleteRegistrarTld(id, name) { 
+            if (!confirm(`Delete TLD "${name}"?`)) return; 
+            
+            try { 
+                const res = await fetch(`${API_BASE_URL}/api/v1/RegistrarTlds/${id}`, { 
+                    method:'DELETE', 
+                    headers: getAuthHeaders() 
+                }); 
+                
+                if (res.ok) { 
+                    showAlert('Registrar TLD deleted','success'); 
+                    getAllRegistrarTlds(); 
+                    const ct = res.headers.get('content-type'); 
+                    if (ct && ct.includes('application/json')) 
+                        updateResponseBox(await res.json()); 
+                    else 
+                        updateResponseBox({ message: 'Deleted' }); 
+                } else { 
+                    let result; 
+                    const ct = res.headers.get('content-type'); 
+                    if (ct && ct.includes('application/json')) 
+                        result = await res.json(); 
+                    else { 
+                        const text = await res.text(); 
+                        result = { error: text, statusCode: res.status }; 
+                    } 
+                    updateResponseBox(result); 
+                    showAlert(`Error: ${result.message||result.error||'Failed to delete'}`,'danger'); 
+                } 
+            } catch (err) { 
+                showAlert(`Error: ${err.message}`,'danger'); 
+                updateResponseBox({ error: err.message }); 
+            } 
+        }
 
         async function bulkUpdateAllStatus() {
             const registrarIdInput = document.getElementById('bulkUpdateAllRegistrarId').value.trim();
@@ -717,7 +900,6 @@
                 isActive: isActive
             };
 
-            // Add registrarId only if provided
             if (registrarIdInput) {
                 requestBody.registrarId = parseInt(registrarIdInput);
             }
@@ -775,7 +957,6 @@
                 isActive: isActive
             };
 
-            // Add registrarId only if provided
             if (registrarIdInput) {
                 requestBody.registrarId = parseInt(registrarIdInput);
             }
@@ -813,11 +994,9 @@
             }
         }
 
-        // Filter helper functions
         function setFilter(filter) {
             currentFilter = filter;
             
-            // Update button states
             document.getElementById('filterAll').classList.remove('active');
             document.getElementById('filterActive').classList.remove('active');
             document.getElementById('filterInactive').classList.remove('active');
@@ -830,17 +1009,13 @@
                 document.getElementById('filterInactive').classList.add('active');
             }
             
-            // Reset to page 1 when filter changes
             document.getElementById('pageNumber').value = 1;
-            
-            // Reload data with server-side filter
             getAllRegistrarTlds();
         }
 
         function setRegistrarFilter(filter) {
             currentRegistrarFilter = filter;
             
-            // Update button states
             document.getElementById('registrarFilterAll').classList.remove('active');
             document.getElementById('registrarFilterActive').classList.remove('active');
             document.getElementById('registrarFilterInactive').classList.remove('active');
@@ -853,14 +1028,10 @@
                 document.getElementById('registrarFilterInactive').classList.add('active');
             }
             
-            // Reset to page 1 when filter changes
             document.getElementById('registrarPageNumber').value = 1;
-            
-            // Reload data with server-side filter
             getTldsForRegistrar();
         }
 
-        // Pagination helper functions
         function renderPagingInfo(pagedResult) {
             const pagingInfo = document.getElementById('pagingInfo');
             const startItem = ((pagedResult.currentPage - 1) * pagedResult.pageSize) + 1;
@@ -881,14 +1052,12 @@
             
             let buttonsHtml = '<nav><ul class="pagination justify-content-center">';
             
-            // Previous button
             buttonsHtml += `
                 <li class="page-item ${!pagedResult.hasPrevious ? 'disabled' : ''}">
                     <a class="page-link" href="#" onclick="goToPage(${pagedResult.currentPage - 1}); return false;">Previous</a>
                 </li>
             `;
             
-            // Page numbers
             const maxPagesToShow = 5;
             let startPage = Math.max(1, pagedResult.currentPage - Math.floor(maxPagesToShow / 2));
             let endPage = Math.min(pagedResult.totalPages, startPage + maxPagesToShow - 1);
@@ -919,7 +1088,6 @@
                 buttonsHtml += `<li class="page-item"><a class="page-link" href="#" onclick="goToPage(${pagedResult.totalPages}); return false;">${pagedResult.totalPages}</a></li>`;
             }
             
-            // Next button
             buttonsHtml += `
                 <li class="page-item ${!pagedResult.hasNext ? 'disabled' : ''}">
                     <a class="page-link" href="#" onclick="goToPage(${pagedResult.currentPage + 1}); return false;">Next</a>
@@ -955,14 +1123,12 @@
             
             let buttonsHtml = '<nav><ul class="pagination justify-content-center">';
             
-            // Previous button
             buttonsHtml += `
                 <li class="page-item ${!pagedResult.hasPrevious ? 'disabled' : ''}">
                     <a class="page-link" href="#" onclick="goToRegistrarPage(${pagedResult.currentPage - 1}); return false;">Previous</a>
                 </li>
             `;
             
-            // Page numbers
             const maxPagesToShow = 5;
             let startPage = Math.max(1, pagedResult.currentPage - Math.floor(maxPagesToShow / 2));
             let endPage = Math.min(pagedResult.totalPages, startPage + maxPagesToShow - 1);
@@ -993,7 +1159,6 @@
                 buttonsHtml += `<li class="page-item"><a class="page-link" href="#" onclick="goToRegistrarPage(${pagedResult.totalPages}); return false;">${pagedResult.totalPages}</a></li>`;
             }
             
-            // Next button
             buttonsHtml += `
                 <li class="page-item ${!pagedResult.hasNext ? 'disabled' : ''}">
                     <a class="page-link" href="#" onclick="goToRegistrarPage(${pagedResult.currentPage + 1}); return false;">Next</a>
@@ -1011,4 +1176,3 @@
     </script>
 </body>
 </html>
-

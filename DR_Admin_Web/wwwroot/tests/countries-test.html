@@ -175,6 +175,62 @@
             <div id="countryByCodeResult"></div>
         </div>
 
+        <!-- Upload Countries CSV File -->
+        <div class="test-section">
+            <h2 class="section-title">&#128190; Upload Countries CSV File</h2>
+            <p>Upload a CSV file containing country data</p>
+            <div class="alert alert-info">
+                <strong>CSV Format:</strong> The file should contain columns for country code, TLD, English name, and other country information.
+                <br><strong>Expected columns:</strong> Code, TLD, EnglishName, LocalName, ISO3, Numeric, IsActive
+            </div>
+            <div class="row">
+                <div class="col-md-12 mb-3">
+                    <label for="countriesCsvFileInput" class="form-label">Countries CSV File *</label>
+                    <input type="file" class="form-control" id="countriesCsvFileInput" accept=".csv" required>
+                    <small class="form-text text-muted">Select a CSV file containing country data</small>
+                </div>
+            </div>
+            <div class="mb-3">
+                <button class="btn btn-primary" onclick="uploadCountriesCsvFile()">
+                    <span id="uploadCountriesButtonText">&#8593; Upload Countries CSV</span>
+                </button>
+            </div>
+            <div class="loading" id="loadingCountriesCsvUpload">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="countriesCsvUploadResult"></div>
+        </div>
+
+        <!-- Upload Localized Names CSV File -->
+        <div class="test-section">
+            <h2 class="section-title">&#127758; Upload Localized Names CSV File</h2>
+            <p>Upload a CSV file containing localized country names</p>
+            <div class="alert alert-info">
+                <strong>CSV Format:</strong> The file should contain country codes and their localized names.
+                <br><strong>Expected columns:</strong> Code, LocalizedName (or CountryCode, LocalName)
+            </div>
+            <div class="row">
+                <div class="col-md-12 mb-3">
+                    <label for="localizedNamesCsvFileInput" class="form-label">Localized Names CSV File *</label>
+                    <input type="file" class="form-control" id="localizedNamesCsvFileInput" accept=".csv" required>
+                    <small class="form-text text-muted">Select a CSV file containing localized country names</small>
+                </div>
+            </div>
+            <div class="mb-3">
+                <button class="btn btn-primary" onclick="uploadLocalizedNamesCsvFile()">
+                    <span id="uploadLocalizedNamesButtonText">&#8593; Upload Localized Names CSV</span>
+                </button>
+            </div>
+            <div class="loading" id="loadingLocalizedNamesCsvUpload">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            <div id="localizedNamesCsvUploadResult"></div>
+        </div>
+
         <!-- API Response Section -->
         <div class="test-section">
             <h2 class="section-title">&#128276; Last API Response</h2>
@@ -781,6 +837,165 @@
                 updateResponseBox({ error: error.message });
             }
         }
+
+        // Upload Countries CSV File
+        async function uploadCountriesCsvFile() {
+            const fileInput = document.getElementById('countriesCsvFileInput');
+            const loading = document.getElementById('loadingCountriesCsvUpload');
+            const result = document.getElementById('countriesCsvUploadResult');
+            
+            if (!fileInput.files || fileInput.files.length === 0) {
+                showAlert('Please select a CSV file', 'warning');
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            
+            // Validate file extension
+            if (!file.name.toLowerCase().endsWith('.csv')) {
+                showAlert('Please select a valid CSV file', 'warning');
+                return;
+            }
+            
+            loading.style.display = 'block';
+            result.innerHTML = '';
+            
+            try {
+                // Create FormData and append the file
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                const token = authClient.getToken();
+                const response = await fetch(`${API_BASE_URL}/api/v1/Countries/upload-csv`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                        // Note: Don't set Content-Type header - browser will set it with boundary
+                    },
+                    body: formData
+                });
+                
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                
+                updateResponseBox(data);
+                
+                if (response.ok) {
+                    const successMessage = data.message || 'Countries CSV file uploaded successfully';
+                    const stats = data.importedCount !== undefined 
+                        ? `<br/>Imported: ${data.importedCount} records`
+                        : '';
+                    const updatedStats = data.updatedCount !== undefined 
+                        ? `<br/>Updated: ${data.updatedCount} records`
+                        : '';
+                    result.innerHTML = `<div class="alert alert-success"><strong>Success!</strong><br/>${successMessage}${stats}${updatedStats}</div>`;
+                    showAlert(successMessage, 'success');
+                    
+                    // Clear the file input
+                    fileInput.value = '';
+                    
+                    // Refresh the countries list
+                    getAllCountries();
+                } else {
+                    const errorMessage = data.message || data.error || 'Failed to upload countries CSV file';
+                    result.innerHTML = `<div class="alert alert-danger"><strong>Error!</strong><br/>${errorMessage}</div>`;
+                    showAlert(`Error: ${errorMessage}`, 'danger');
+                }
+            } catch (error) {
+                console.error('Error uploading countries CSV:', error);
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+                result.innerHTML = `<div class="alert alert-danger"><strong>Error!</strong><br/>${error.message}</div>`;
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Upload Localized Names CSV File
+        async function uploadLocalizedNamesCsvFile() {
+            const fileInput = document.getElementById('localizedNamesCsvFileInput');
+            const loading = document.getElementById('loadingLocalizedNamesCsvUpload');
+            const result = document.getElementById('localizedNamesCsvUploadResult');
+            
+            if (!fileInput.files || fileInput.files.length === 0) {
+                showAlert('Please select a CSV file', 'warning');
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            
+            // Validate file extension
+            if (!file.name.toLowerCase().endsWith('.csv')) {
+                showAlert('Please select a valid CSV file', 'warning');
+                return;
+            }
+            
+            loading.style.display = 'block';
+            result.innerHTML = '';
+            
+            try {
+                // Create FormData and append the file
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                const token = authClient.getToken();
+                const response = await fetch(`${API_BASE_URL}/api/v1/Countries/upload-localized-names-csv`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                        // Note: Don't set Content-Type header - browser will set it with boundary
+                    },
+                    body: formData
+                });
+                
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    const text = await response.text();
+                    data = { error: text, statusCode: response.status };
+                }
+                
+                updateResponseBox(data);
+                
+                if (response.ok) {
+                    const successMessage = data.message || 'Localized names CSV file uploaded successfully';
+                    const stats = data.updatedCount !== undefined 
+                        ? `<br/>Updated: ${data.updatedCount} records`
+                        : '';
+                    const skippedStats = data.skippedCount !== undefined 
+                        ? `<br/>Skipped: ${data.skippedCount} records`
+                        : '';
+                    result.innerHTML = `<div class="alert alert-success"><strong>Success!</strong><br/>${successMessage}${stats}${skippedStats}</div>`;
+                    showAlert(successMessage, 'success');
+                    
+                    // Clear the file input
+                    fileInput.value = '';
+                    
+                    // Refresh the countries list
+                    getAllCountries();
+                } else {
+                    const errorMessage = data.message || data.error || 'Failed to upload localized names CSV file';
+                    result.innerHTML = `<div class="alert alert-danger"><strong>Error!</strong><br/>${errorMessage}</div>`;
+                    showAlert(`Error: ${errorMessage}`, 'danger');
+                }
+            } catch (error) {
+                console.error('Error uploading localized names CSV:', error);
+                showAlert(`Error: ${error.message}`, 'danger');
+                updateResponseBox({ error: error.message });
+                result.innerHTML = `<div class="alert alert-danger"><strong>Error!</strong><br/>${error.message}</div>`;
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
     </script>
 </body>
 </html>
+
