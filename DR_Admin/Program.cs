@@ -154,6 +154,14 @@ builder.Services.AddTransient<ISystemService, SystemService>();
 builder.Services.AddTransient<IRegisteredDomainService, DomainRegistrationService>();
 builder.Services.AddTransient<IDomainManagerService, DomainManagerService>();
 
+// Hosting Management Services
+builder.Services.AddScoped<IHostingManagerService, HostingManagerService>();
+builder.Services.AddScoped<IHostingSyncService, HostingSyncService>();
+builder.Services.AddScoped<IHostingDomainService, HostingDomainService>();
+builder.Services.AddScoped<IHostingEmailService, HostingEmailService>();
+builder.Services.AddScoped<IHostingDatabaseService, HostingDatabaseService>();
+builder.Services.AddScoped<IHostingFtpService, HostingFtpService>();
+
 // Sales and Payment Flow services
 builder.Services.AddTransient<ICouponService, CouponService>();
 builder.Services.AddTransient<ITaxService, TaxService>();

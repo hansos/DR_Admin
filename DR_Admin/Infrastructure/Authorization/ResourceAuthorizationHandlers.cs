@@ -112,7 +112,10 @@ public class ResourcePermissionHandler : AuthorizationHandler<ResourcePermission
             ["Invoice.Delete"] = new[] { "Admin" },
             ["User.Read"] = new[] { "Admin", "Support" },
             ["User.Write"] = new[] { "Admin", "Support" },
-            ["User.Delete"] = new[] { "Admin" }
+            ["User.Delete"] = new[] { "Admin" },
+            ["Hosting.Read"] = new[] { "Admin", "Hosting" },
+            ["Hosting.Write"] = new[] { "Admin", "Hosting" },
+            ["Hosting.Delete"] = new[] { "Admin", "Hosting" },
         };
     }
 }

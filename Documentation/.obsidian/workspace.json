@@ -4,39 +4,24 @@
     "type": "split",
     "children": [
       {
-        "id": "3d2e8c1cad5ebfa8",
+        "id": "41091358f93c3f14",
         "type": "tabs",
         "children": [
           {
-            "id": "a1e9204f0da1f4d9",
+            "id": "74d45673dae996cd",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Features/Workflows/Customer-registration.md",
+                "file": "Features/Hosting.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Customer-registration"
-            }
-          },
-          {
-            "id": "446880d5348007bd",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Features/BillingAndSales/PaymentCollectionMechanisms.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "PaymentCollectionMechanisms"
+              "title": "Hosting"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -109,7 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Features/BillingAndSales/PaymentCollectionMechanisms.md",
+                "file": "Features/Hosting.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -119,7 +104,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for PaymentCollectionMechanisms"
+              "title": "Backlinks for Hosting"
             }
           },
           {
@@ -128,12 +113,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Features/BillingAndSales/PaymentCollectionMechanisms.md",
+                "file": "Features/Hosting.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from PaymentCollectionMechanisms"
+              "title": "Outgoing links from Hosting"
             }
           },
           {
@@ -171,13 +156,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Features/BillingAndSales/PaymentCollectionMechanisms.md",
+                "file": "Features/Hosting.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of PaymentCollectionMechanisms"
+              "title": "Outline of Hosting"
             }
           }
         ]
@@ -198,26 +183,29 @@
       "bases:Create new base": false
     }
   },
-  "active": "446880d5348007bd",
+  "active": "74d45673dae996cd",
   "lastOpenFiles": [
+    "OperationalReliability_Analysis.md",
+    "Features/Hosting/Complete_Implementation.md",
+    "Features/Hosting",
+    "Features/Hostin",
+    "Features/Ny mappe",
+    "PaginationImplementation.md",
+    "Features/Workflows/Customer-registration.md",
+    "Features/BillingAndSales/PaymentCollectionMechanisms.md",
     "l31veafr.2w5~",
     "a3f35v4l.hk4~",
     "tgwxxhkx.xia~",
     "ht11x1r3.fj3~",
     "gbjx1eps.wjh~",
-    "OperationalReliability_Analysis.md",
     "Features/BillingAndSales/i51jgcmj.sxg~",
     "Features/BillingAndSales/Payment Service Providers.md",
-    "Features/BillingAndSales/PaymentCollectionMechanisms.md",
     "Features/BillingAndSales/qep2abdw.ypd~",
     "Features/BillingAndSales/TaxAndVendor.md",
-    "Features/BillingAndSales/0wulec3l.onl~",
-    "Features/BillingAndSales/ycrxxt4x.x1s~",
     "Features/BillingAndSales/BetalingsinnkrevingOgMottak.md",
     "Features/BillingAndSales/OrderToInvoiceFlow.md",
     "Features/BillingAndSales/PaymentProcessingImplementation.md",
     "Features/DomainRegistration/Register-Domain-Flow.md",
-    "Features/BillingAndSales",
     "Features/DomainRegistration/TLD-Pricing-Refactoring-Final-Summary.md",
     "Features/DomainRegistration/TLD-Pricing-Refactoring-Complete.md",
     "Features/DomainRegistration/TLD-Pricing-Migration-Status.md",
@@ -230,11 +218,8 @@
     "Features/DomainRegistration/TLD-Pricing-Implementation-Final.md",
     "Features/DomainRegistration/TLD-Pricing-Diagrams.md",
     "Features/DomainRegistration/TLD-Pricing-Checklist.md",
-    "c1lserig.2xi~",
     "TLD-Pricing-Quick-Reference.md",
     "TLD-Pricing-Implementation-Final.md",
-    "TLD-Pricing-Checklist.md",
-    "TLD-Pricing-Diagrams.md",
-    "TLD-Pricing-Summary.md"
+    "TLD-Pricing-Checklist.md"
   ]
 }
