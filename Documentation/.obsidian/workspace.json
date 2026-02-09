@@ -200,11 +200,11 @@
   },
   "active": "446880d5348007bd",
   "lastOpenFiles": [
+    "Features/BillingAndSales/BetalingsinnkrevingOgMottak.md",
     "Features/BillingAndSales/TaxAndVendor.md",
     "Features/BillingAndSales/PaymentCollectionMechanisms.md",
     "Features/BillingAndSales/Payment Service Providers.md",
     "Features/BillingAndSales/OrderToInvoiceFlow.md",
-    "Features/BillingAndSales/BetalingsinnkrevingOgMottak.md",
     "Features/BillingAndSales/PaymentProcessingImplementation.md",
     "Features/DomainRegistration/Register-Domain-Flow.md",
     "Features/BillingAndSales",
