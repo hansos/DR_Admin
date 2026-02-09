@@ -157,6 +157,11 @@ public class ApplicationDbContext : DbContext
     public DbSet<DnsZonePackage> DnsZonePackages { get; set; }
     public DbSet<DnsZonePackageRecord> DnsZonePackageRecords { get; set; }
     public DbSet<HostingAccount> HostingAccounts { get; set; }
+    public DbSet<HostingDomain> HostingDomains { get; set; }
+    public DbSet<HostingEmailAccount> HostingEmailAccounts { get; set; }
+    public DbSet<HostingDatabase> HostingDatabases { get; set; }
+    public DbSet<HostingDatabaseUser> HostingDatabaseUsers { get; set; }
+    public DbSet<HostingFtpAccount> HostingFtpAccounts { get; set; }
     public DbSet<Server> Servers { get; set; }
     public DbSet<ServerIpAddress> ServerIpAddresses { get; set; }
     public DbSet<ControlPanelType> ControlPanelTypes { get; set; }
