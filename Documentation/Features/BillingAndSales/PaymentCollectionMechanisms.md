@@ -174,22 +174,342 @@ POST /api/v1/payments/apply-credit
 }
 ```
 
-### 2.3 Bank Transfer
+### 2.3 Manual Payment Methods
 
-**Manual process:**
+#### 2.3.1 Bank Transfer
+
+**Manual Bank Transfer Process:**
 ```
-1. Invoice sent with bank account details
-2. Customer performs bank transfer
-3. Payment received on bank account
-4. Admin verifies payment
-5. PaymentTransaction created manually
+1. Invoice created with bank account details included
+2. Customer performs bank transfer through their bank
+3. Payment received on company bank account (1-3 business days)
+4. Admin verifies payment in bank statement
+5. Admin registers payment in system
+6. PaymentTransaction created with method "BankTransfer"
+7. Invoice marked as paid
+8. Payment confirmation sent to customer
+```
+
+**Bank Account Information on Invoice:**
+```csharp
+public class Invoice
+{
+    // ... other fields ...
+    
+    // Bank account details for payment
+    public string BankAccountNumber { get; set; }
+    public string BankName { get; set; }
+    public string IBAN { get; set; }
+    public string SWIFT_BIC { get; set; }
+    public string PaymentReference { get; set; } // KID/OCR number
+}
+```
+
+**Manual Payment Registration API:**
+```http
+POST /api/v1/payments/register-manual
+Authorization: Bearer {admin-token}
+
+{
+  "invoiceId": 123,
+  "amount": 1250.00,
+  "paymentMethod": "BankTransfer",
+  "paymentDate": "2024-02-09",
+  "referenceNumber": "KID-123456789",
+  "bankTransactionId": "BANK-TXN-987654",
+  "notes": "Payment received via bank transfer from Nordea",
+  "receivedInAccount": "NO9386011117947"
+}
+```
+
+**Response:**
+```json
+{
+  "isSuccess": true,
+  "paymentTransactionId": 456,
+  "invoiceStatus": "Paid",
+  "message": "Payment registered successfully"
+}
+```
+
+**Future Automation:**
+- Bank API integration (Open Banking PSD2)
+- Automatic bank statement import
+- OCR/KID number matching and auto-reconciliation
+- Real-time payment notifications
+
+#### 2.3.2 Cash Payment
+
+**Cash Payment Process:**
+```
+1. Customer visits office/location
+2. Customer pays invoice in cash
+3. Cashier/Admin issues receipt
+4. Admin registers payment in system
+5. PaymentTransaction created with method "Cash"
 6. Invoice marked as paid
+7. Payment confirmation sent to customer (email)
+8. Cash registered in cash register/accounting system
 ```
 
-**Future automation:**
-- Bank API integration
-- Automatic reconciliation
-- OCR/KID number matching
+**Cash Payment Registration:**
+
+**API Endpoint:**
+```http
+POST /api/v1/payments/register-cash
+Authorization: Bearer {admin-token}
+
+{
+  "invoiceId": 123,
+  "amount": 1250.00,
+  "currency": "EUR",
+  "receivedBy": "John Admin",
+  "receivedAt": "2024-02-09T14:30:00Z",
+  "notes": "Cash payment at main office",
+  "receiptNumber": "CASH-2024-00123"
+}
+```
+
+**Cash Handling Entity:**
+```csharp
+public class CashTransaction : EntityBase
+{
+    public int? InvoiceId { get; set; }
+    public decimal Amount { get; set; }
+    public string CurrencyCode { get; set; }
+    public CashTransactionType Type { get; set; } // Receipt, Payout, Adjustment
+    public string ReceivedBy { get; set; } // User who handled cash
+    public DateTime ReceivedAt { get; set; }
+    public string ReceiptNumber { get; set; }
+    public string Notes { get; set; }
+    public int? PaymentTransactionId { get; set; }
+    
+    // Cash register tracking
+    public int? CashRegisterId { get; set; }
+    public string RegisterName { get; set; }
+}
+```
+
+**Cash Register Management:**
+```csharp
+public class CashRegister : EntityBase
+{
+    public string Name { get; set; }
+    public string Location { get; set; }
+    public decimal CurrentBalance { get; set; }
+    public string CurrencyCode { get; set; }
+    public string ResponsibleUser { get; set; }
+    public DateTime? LastBalancedAt { get; set; }
+    public bool IsActive { get; set; }
+}
+```
+
+#### 2.3.3 Check/Cheque Payment
+
+**Check Payment Process:**
+```
+1. Customer sends check
+2. Check received by mail/in person
+3. Admin registers check in system (status: Pending)
+4. Check deposited to bank
+5. Bank clears check (3-5 business days)
+6. Admin confirms clearance
+7. Payment status updated to Completed
+8. Invoice marked as paid
+```
+
+**Check Payment Registration:**
+```http
+POST /api/v1/payments/register-check
+Authorization: Bearer {admin-token}
+
+{
+  "invoiceId": 123,
+  "amount": 1250.00,
+  "checkNumber": "CHK-789456",
+  "bankName": "Customer Bank Name",
+  "checkDate": "2024-02-08",
+  "receivedDate": "2024-02-09",
+  "depositedDate": "2024-02-10",
+  "clearedDate": null,
+  "status": "Deposited",
+  "notes": "Check received via mail"
+}
+```
+
+#### 2.3.4 Wire Transfer (International)
+
+**Wire Transfer Process:**
+```
+1. Invoice sent with SWIFT/IBAN details
+2. Customer initiates international wire transfer
+3. Payment received (3-7 business days)
+4. Admin verifies payment (may include fees)
+5. Register net amount received
+6. Handle currency conversion if applicable
+7. Invoice marked as paid
+```
+
+**Wire Transfer Registration:**
+```http
+POST /api/v1/payments/register-wire-transfer
+Authorization: Bearer {admin-token}
+
+{
+  "invoiceId": 123,
+  "grossAmount": 1250.00,
+  "fees": 35.00,
+  "netAmount": 1215.00,
+  "currency": "USD",
+  "baseCurrency": "EUR",
+  "exchangeRate": 1.08,
+  "netAmountInBaseCurrency": 1125.00,
+  "swiftReference": "SWIFT-REF-123456",
+  "senderBank": "Bank of America",
+  "receivedDate": "2024-02-09",
+  "notes": "International wire transfer from USA"
+}
+```
+
+### 2.4 Manual Invoicing
+
+#### 2.4.1 Manual Invoice Creation
+
+**Use Cases for Manual Invoicing:**
+- Custom services not in standard catalog
+- One-time charges
+- Adjustments and corrections
+- Special pricing agreements
+- Professional services billing
+- Project-based invoicing
+
+**Manual Invoice Creation Process:**
+```
+1. Admin creates invoice manually (not from order/subscription)
+2. Add customer information
+3. Add invoice lines manually
+   - Description
+   - Quantity
+   - Unit price
+   - Tax rate
+4. Calculate totals
+5. Set payment terms and due date
+6. Review and confirm
+7. Send to customer (email/postal mail/both)
+```
+
+**API Endpoint:**
+```http
+POST /api/v1/invoices/create-manual
+Authorization: Bearer {admin-token}
+
+{
+  "customerId": 45,
+  "invoiceDate": "2024-02-09",
+  "dueDate": "2024-03-09",
+  "paymentTerms": "Net 30",
+  "currencyCode": "EUR",
+  "notes": "Custom development work - February 2024",
+  "internalComment": "Special project for VIP customer",
+  "lines": [
+    {
+      "description": "Custom software development - Phase 1",
+      "quantity": 40,
+      "unitPrice": 125.00,
+      "taxRate": 25.0
+    },
+    {
+      "description": "Server configuration",
+      "quantity": 8,
+      "unitPrice": 100.00,
+      "taxRate": 25.0
+    }
+  ],
+  "attachments": [
+    {
+      "fileName": "work_specification.pdf",
+      "fileContent": "base64_encoded_content"
+    }
+  ]
+}
+```
+
+**Response:**
+```json
+{
+  "invoiceId": 789,
+  "invoiceNumber": "INV-2024-00789",
+  "totalAmount": 7500.00,
+  "taxAmount": 1500.00,
+  "subtotal": 6000.00,
+  "status": "Draft",
+  "message": "Manual invoice created successfully"
+}
+```
+
+#### 2.4.2 Invoice Adjustments and Credits
+
+**Credit Note/Adjustment Process:**
+```
+1. Identify invoice requiring adjustment
+2. Create credit note or adjustment
+3. Link to original invoice
+4. Specify reason for adjustment
+5. Approve adjustment (if required)
+6. Issue credit note to customer
+7. Update customer balance
+```
+
+**Credit Note Creation:**
+```http
+POST /api/v1/invoices/create-credit-note
+Authorization: Bearer {admin-token}
+
+{
+  "originalInvoiceId": 123,
+  "reason": "Service downtime compensation",
+  "creditAmount": 250.00,
+  "adjustmentType": "FullCredit", // or "PartialCredit"
+  "notes": "Credit for 2 days of service interruption",
+  "applyToCustomerCredit": true
+}
+```
+
+#### 2.4.3 Proforma Invoice
+
+**Proforma Invoice Use Cases:**
+- Quote/estimate
+- Pre-payment request
+- Customs documentation
+- Budget approval
+
+**Proforma Creation:**
+```http
+POST /api/v1/invoices/create-proforma
+Authorization: Bearer {admin-token}
+
+{
+  "customerId": 45,
+  "validUntil": "2024-03-09",
+  "notes": "Proforma invoice for annual subscription renewal",
+  "lines": [
+    {
+      "description": "Annual Premium Plan Renewal",
+      "quantity": 1,
+      "unitPrice": 2400.00,
+      "taxRate": 25.0
+    }
+  ]
+}
+```
+
+**Convert Proforma to Invoice:**
+```http
+POST /api/v1/invoices/proforma/{id}/convert-to-invoice
+Authorization: Bearer {admin-token}
+```
+
+### 2.5 Partial Payments (Expanded)
 
 ### 2.4 Partial Payments
 
@@ -999,6 +1319,1084 @@ The DR_Admin ISP Administration System now has a robust and scalable infrastruct
 
 ---
 
-**Documented:** February 9, 2024  
-**Version:** 1.0  
+## 15. Complete Solution Review - Invoice Sending & Payment Collection
+
+### 15.1 Invoice Sending Implementation
+
+#### Current Status ✅
+
+The solution has all necessary components for sending invoices:
+
+**1. Email Infrastructure (EmailSenderLib)**
+- **Location:** `EmailSenderLib\`
+- **Supported Providers:**
+  - SMTP (Generic)
+  - MailKit (Enhanced SMTP with OAuth2)
+  - SendGrid (Cloud email service)
+  - Amazon SES (Amazon Simple Email Service)
+  - Mailgun (Transactional email API)
+  - Postmark (Dedicated transactional email)
+  - Microsoft Exchange (On-premise/hosted)
+  - Microsoft Graph API (Microsoft 365)
+
+**2. PDF Generation (ReportGeneratorLib)**
+- **Location:** `ReportGeneratorLib\`
+- **Provider:** FastReport
+- **Capabilities:**
+  - Professional invoice templates
+  - Multi-language support
+  - Custom branding
+  - Attachments support
+
+**3. Email Queue Management**
+- **Service:** `EmailQueueService` (`DR_Admin\Services\EmailQueueService.cs`)
+- **Entity:** `EmailQueue` table for reliable delivery
+- **Features:**
+  - Retry logic for failed sends
+  - Priority queue
+  - Scheduled sending
+  - Delivery tracking
+
+**4. Sent Email Tracking**
+- **Service:** `SentEmailService` (`DR_Admin\Services\SentEmailService.cs`)
+- **Entity:** `SentEmail` table
+- **Tracking:**
+  - Delivery status
+  - Open tracking (optional)
+  - Click tracking (optional)
+  - Bounce handling
+
+#### Invoice Email Flow
+
+```
+1. Invoice Created (InvoiceService.CreateInvoiceAsync)
+   ↓
+2. Generate PDF Invoice (ReportGeneratorLib.GenerateInvoicePdf)
+   ↓
+3. Queue Email (EmailQueueService.QueueEmailAsync)
+   - To: Customer email
+   - Subject: "Invoice #INV-2024-001"
+   - Body: Email template with invoice details
+   - Attachments: invoice.pdf
+   - TemplateType: "InvoiceCreated"
+   ↓
+4. Background Service Processes Queue
+   ↓
+5. Email Sent via Provider (EmailSenderLib)
+   ↓
+6. Delivery Tracked (SentEmailService)
+   ↓
+7. Customer Notification (PaymentNotificationService)
+```
+
+#### Implementation Code Example
+
+```csharp
+// In InvoiceService.cs - after creating invoice
+public async Task<InvoiceDto> CreateInvoiceAsync(CreateInvoiceDto createDto)
+{
+    // ... create invoice entity ...
+    
+    _context.Invoices.Add(invoice);
+    await _context.SaveChangesAsync();
+    
+    // Send invoice email
+    await SendInvoiceEmailAsync(invoice.Id);
+    
+    return MapToDto(invoice);
+}
+
+private async Task SendInvoiceEmailAsync(int invoiceId)
+{
+    var invoice = await _context.Invoices
+        .Include(i => i.Customer)
+        .Include(i => i.InvoiceLines)
+        .FirstOrDefaultAsync(i => i.Id == invoiceId);
+    
+    // Generate PDF using ReportGeneratorLib
+    var pdfBytes = await _reportGenerator.GenerateInvoicePdfAsync(invoice);
+    
+    // Queue email
+    var emailDto = new QueueEmailDto
+    {
+        ToEmail = invoice.Customer.Email,
+        ToName = invoice.Customer.Name,
+        Subject = $"Invoice {invoice.InvoiceNumber} - {invoice.CustomerName}",
+        TemplateType = "InvoiceCreated",
+        TemplateData = new Dictionary<string, object>
+        {
+            { "InvoiceNumber", invoice.InvoiceNumber },
+            { "CustomerName", invoice.CustomerName },
+            { "TotalAmount", invoice.TotalAmount },
+            { "CurrencyCode", invoice.CurrencyCode },
+            { "DueDate", invoice.DueDate },
+            { "PaymentLink", $"https://portal.isp.com/invoices/{invoice.Id}/pay" }
+        },
+        Attachments = new List<EmailAttachment>
+        {
+            new EmailAttachment
+            {
+                FileName = $"Invoice_{invoice.InvoiceNumber}.pdf",
+                Content = pdfBytes,
+                ContentType = "application/pdf"
+            }
+        }
+    };
+    
+    await _emailQueueService.QueueEmailAsync(emailDto);
+    
+    // Send notification
+    await _paymentNotificationService.SendInvoiceCreatedNotificationAsync(invoiceId);
+}
+```
+
+### 15.2 Payment Gateway Integration - Complete List
+
+#### PaymentGatewayLib - Available Implementations
+
+**Location:** `PaymentGatewayLib\Implementations\`
+
+The solution includes **25+ payment gateway integrations**:
+
+| Gateway | File | Region | Payment Types |
+|---------|------|--------|---------------|
+| **Stripe** | StripePaymentGateway.cs | Global | Cards, Wallets, Bank transfers |
+| **PayPal** | PayPalPaymentGateway.cs | Global | PayPal balance, Cards |
+| **Square** | SquarePaymentGateway.cs | US, UK, CA, AU | Cards, Mobile payments |
+| **Braintree** | BraintreePaymentGateway.cs | Global | Cards, PayPal, Venmo |
+| **Authorize.Net** | AuthorizeNetPaymentGateway.cs | US, CA, EU | Cards |
+| **Adyen** | AdyenPaymentGateway.cs | Global | 250+ payment methods |
+| **Checkout.com** | CheckoutComPaymentGateway.cs | Global | Cards, Alternative payments |
+| **Worldpay** | WorldpayPaymentGateway.cs | Global | Cards, Alternative payments |
+| **Cybersource** | CybersourcePaymentGateway.cs | Global | Cards, Digital payments |
+| **Elavon** | ElavonPaymentGateway.cs | Global | Card processing |
+| **Klarna** | KlarnaPaymentGateway.cs | EU, US | Buy now pay later |
+| **Mollie** | MolliePaymentGateway.cs | EU | 20+ EU payment methods |
+| **GoCardless** | GoCardlessPaymentGateway.cs | EU, US, AU | Direct debit |
+| **Trustly** | TrustlyPaymentGateway.cs | EU | Bank payments |
+| **Vipps** | VippsPaymentGateway.cs | Norway | Mobile wallet |
+| **Nets** | NetsPaymentGateway.cs | Nordic | Cards, Mobile pay |
+| **Paystack** | PaystackPaymentGateway.cs | Africa | Cards, Bank transfer |
+| **Flutterwave** | FlutterwavePaymentGateway.cs | Africa | Multi-payment methods |
+| **M-Pesa** | MpesaPaymentGateway.cs | Kenya, Africa | Mobile money |
+| **KopoKopo** | KopoKopoPaymentGateway.cs | Kenya | M-Pesa aggregator |
+| **JamboPay** | JamboPayPaymentGateway.cs | East Africa | Multi-payment |
+| **Pesapal** | PesapalPaymentGateway.cs | Africa | Cards, Mobile money |
+| **DPO Group** | DpoGroupPaymentGateway.cs | Africa | Cards, Mobile |
+| **Africa's Talking** | AfricasTalkingPaymentGateway.cs | Africa | Mobile money |
+| **IntaSend** | IntaSendPaymentGateway.cs | Kenya | M-Pesa, Cards |
+| **iPayAfrica** | IPayAfricaPaymentGateway.cs | Africa | Multi-payment |
+| **PayU** | PayUPaymentGateway.cs | Emerging markets | Cards, Wallets |
+| **BitPay** | BitPayPaymentGateway.cs | Global | Bitcoin, Crypto |
+| **OpenNode** | OpenNodePaymentGateway.cs | Global | Bitcoin Lightning |
+
+#### Gateway Configuration Structure
+
+Each gateway has its own settings class:
+
+**Location:** `PaymentGatewayLib\Infrastructure\Settings\`
+
+**Example - Stripe Settings:**
+```csharp
+public class StripeSettings
+{
+    public string SecretKey { get; set; }
+    public string PublishableKey { get; set; }
+    public string WebhookSecret { get; set; }
+    public bool TestMode { get; set; }
+    public string ApiVersion { get; set; }
+}
+```
+
+**Example - Vipps Settings (Norway):**
+```csharp
+public class VippsSettings
+{
+    public string ClientId { get; set; }
+    public string ClientSecret { get; set; }
+    public string MerchantSerialNumber { get; set; }
+    public string SubscriptionKey { get; set; }
+    public bool TestMode { get; set; }
+}
+```
+
+#### Gateway Factory
+
+**Location:** `PaymentGatewayLib\Factories\PaymentGatewayFactory.cs`
+
+Creates gateway instances based on configuration:
+
+```csharp
+public class PaymentGatewayFactory
+{
+    public IPaymentGateway CreateGateway(string gatewayType, PaymentGatewaySettings settings)
+    {
+        return gatewayType.ToLower() switch
+        {
+            "stripe" => new StripePaymentGateway(settings),
+            "paypal" => new PayPalPaymentGateway(settings),
+            "vipps" => new VippsPaymentGateway(settings),
+            "nets" => new NetsPaymentGateway(settings),
+            "mpesa" => new MpesaPaymentGateway(settings),
+            // ... all 25+ gateways
+            _ => throw new NotSupportedException($"Gateway {gatewayType} not supported")
+        };
+    }
+}
+```
+
+### 15.3 Payment Registration - Complete Flow
+
+#### Entities for Payment Tracking
+
+**1. Invoice (`DR_Admin\Data\Entities\Invoice.cs`)**
+```csharp
+public class Invoice : EntityBase
+{
+    public string InvoiceNumber { get; set; }
+    public int CustomerId { get; set; }
+    public InvoiceStatus Status { get; set; }
+    public decimal TotalAmount { get; set; }
+    public decimal AmountPaid { get; set; }
+    public decimal AmountDue { get; set; }
+    public DateTime? PaidAt { get; set; }
+    public int? SelectedPaymentGatewayId { get; set; }
+    
+    // Navigation
+    public ICollection<PaymentTransaction> PaymentTransactions { get; set; }
+}
+```
+
+**2. PaymentAttempt (Tracks every payment try)**
+```csharp
+public class PaymentAttempt : EntityBase
+{
+    public int InvoiceId { get; set; }
+    public int CustomerPaymentMethodId { get; set; }
+    public decimal AttemptedAmount { get; set; }
+    public PaymentAttemptStatus Status { get; set; }
+    public string GatewayTransactionId { get; set; }
+    public string ErrorMessage { get; set; }
+    public int RetryCount { get; set; }
+    
+    // Security
+    public string IpAddress { get; set; }
+    public string UserAgent { get; set; }
+    
+    // 3D Secure
+    public bool RequiresAuthentication { get; set; }
+    public string AuthenticationUrl { get; set; }
+}
+```
+
+**3. PaymentTransaction (Successful payments only)**
+```csharp
+public class PaymentTransaction : EntityBase
+{
+    public int InvoiceId { get; set; }
+    public int? PaymentGatewayId { get; set; }
+    public string TransactionId { get; set; }
+    public decimal Amount { get; set; }
+    public string CurrencyCode { get; set; }
+    public PaymentTransactionStatus Status { get; set; }
+    public DateTime? ProcessedAt { get; set; }
+    public string GatewayResponse { get; set; }
+    
+    // Multi-currency
+    public decimal? ExchangeRate { get; set; }
+    public decimal? BaseAmount { get; set; }
+    
+    // Fees
+    public decimal? GatewayFeeAmount { get; set; }
+}
+```
+
+**4. InvoicePayment (Links transaction to invoice)**
+```csharp
+public class InvoicePayment : EntityBase
+{
+    public int InvoiceId { get; set; }
+    public int PaymentTransactionId { get; set; }
+    public decimal AmountApplied { get; set; }
+    public decimal InvoiceBalance { get; set; }
+    public bool IsFullPayment { get; set; }
+}
+```
+
+**5. CustomerPaymentMethod (Saved payment methods)**
+```csharp
+public class CustomerPaymentMethod : EntityBase
+{
+    public int CustomerId { get; set; }
+    public int PaymentGatewayId { get; set; }
+    public string PaymentMethodType { get; set; } // Card, Bank, Wallet
+    public string DisplayName { get; set; } // "Visa ****1234"
+    public bool IsDefault { get; set; }
+    public DateTime? ExpiresAt { get; set; }
+}
+```
+
+**6. PaymentMethodToken (Secure token storage)**
+```csharp
+public class PaymentMethodToken : EntityBase
+{
+    public int CustomerPaymentMethodId { get; set; }
+    public string EncryptedToken { get; set; } // AES-256 encrypted
+    public string GatewayCustomerId { get; set; }
+    public string GatewayPaymentMethodId { get; set; }
+    public DateTime? ExpiresAt { get; set; }
+}
+```
+
+#### Payment Processing Service - Complete Methods
+
+**Location:** `DR_Admin\Services\PaymentProcessingService.cs`
+
+**Available Methods:**
+
+1. **ProcessInvoicePaymentAsync** - Main payment processing
+2. **ApplyCustomerCreditAsync** - Use account credit
+3. **ProcessPartialPaymentAsync** - Partial payments
+4. **RetryFailedPaymentAsync** - Retry logic
+5. **ConfirmAuthenticationAsync** - 3D Secure confirmation
+6. **HandlePaymentWebhookAsync** - Webhook processing
+
+### 15.4 Controllers and API Endpoints
+
+#### InvoicesController
+**Location:** `DR_Admin\Controllers\InvoicesController.cs`
+**Base Route:** `/api/v1/invoices`
+
+#### PaymentsController
+**Location:** `DR_Admin\Controllers\PaymentsController.cs`
+**Base Route:** `/api/v1/payments`
+
+#### PaymentIntentsController
+**Location:** `DR_Admin\Controllers\PaymentIntentsController.cs`
+**Base Route:** `/api/v1/paymentintents`
+
+### 15.5 Verification Checklist
+
+#### ✅ Invoice Sending - Complete
+- [x] Email infrastructure (EmailSenderLib with 8 providers)
+- [x] PDF generation (ReportGeneratorLib with FastReport)
+- [x] Email queue management (EmailQueueService)
+- [x] Sent email tracking (SentEmailService)
+- [x] Invoice notification service (PaymentNotificationService)
+- [x] Invoice entity with all required fields
+- [x] Invoice service with CRUD operations
+- [x] Invoice controller with REST API
+
+#### ✅ Payment Gateway Integration - Complete
+- [x] 25+ payment gateway implementations (PaymentGatewayLib)
+- [x] Unified IPaymentGateway interface
+- [x] Payment gateway factory
+- [x] Gateway-specific settings classes
+- [x] PaymentGateway entity for configuration
+- [x] PaymentGatewayService for management
+- [x] Gateway adapter interface (IPaymentGatewayAdapter)
+- [x] Support for all payment types (cards, wallets, bank transfers)
+- [x] Multi-currency support
+- [x] 3D Secure / SCA support
+- [x] Webhook handling infrastructure
+
+#### ✅ Payment Registration - Complete
+- [x] PaymentAttempt entity (tracks all attempts)
+- [x] PaymentTransaction entity (successful payments)
+- [x] InvoicePayment entity (links transactions to invoices)
+- [x] CustomerPaymentMethod entity (saved payment methods)
+- [x] PaymentMethodToken entity (secure token storage)
+- [x] PaymentProcessingService with all methods
+- [x] Invoice status updates (Pending → Paid)
+- [x] Payment confirmation emails
+- [x] Partial payment support
+- [x] Credit application
+- [x] Retry logic
+- [x] Full audit trail
+
+#### ✅ API Endpoints - Complete
+- [x] Invoice management endpoints
+- [x] Payment processing endpoints
+- [x] Payment attempt tracking endpoints
+- [x] Webhook endpoints
+- [x] Payment intent endpoints
+- [x] Customer payment method endpoints
+- [x] Role-based authorization
+- [x] Input validation
+
+#### ✅ Security - Complete
+- [x] PCI DSS compliance (token-based, no card storage)
+- [x] Token encryption (AES-256)
+- [x] Webhook signature verification
+- [x] HTTPS enforcement
+- [x] JWT authentication
+- [x] Role-based access control
+- [x] IP and User-Agent tracking
+- [x] Fraud detection infrastructure
+
+### 15.6 Summary
+
+**The DR_Admin solution is COMPLETE for:**
+
+1. **Sending Invoices**
+   - ✅ Full email infrastructure with multiple providers
+   - ✅ PDF generation with professional templates
+   - ✅ Queue-based reliable delivery
+   - ✅ Delivery tracking and monitoring
+
+2. **Payment Gateway Integration**
+   - ✅ 25+ payment gateways ready to use
+   - ✅ Global coverage (Americas, Europe, Africa, Asia)
+   - ✅ All major payment types supported
+   - ✅ Easy to add new gateways via factory pattern
+
+3. **Payment Registration**
+   - ✅ Complete payment flow from attempt to completion
+   - ✅ Full audit trail and traceability
+   - ✅ Automatic invoice status updates
+   - ✅ Partial payments and credit application
+   - ✅ Retry logic for failed payments
+   - ✅ 3D Secure authentication support
+
+**Next Steps for Implementation:**
+
+1. **Configure Email Provider**
+   - Choose provider (SMTP, SendGrid, etc.)
+   - Add credentials to configuration
+   - Test email delivery
+
+2. **Configure Payment Gateway**
+   - Choose gateway(s) for your market
+   - Add API credentials
+   - Configure webhook URLs
+   - Test with sandbox credentials
+
+3. **Create Email Templates**
+   - Invoice created
+   - Payment confirmation
+   - Payment failed
+   - Payment reminder
+
+4. **Create Invoice PDF Templates**
+   - Design invoice layout with FastReport
+   - Add company branding
+   - Multi-language support if needed
+
+5. **Test Complete Flow**
+   - Create invoice
+   - Send to customer
+   - Process payment
+   - Verify payment registration
+   - Check email notifications
+
+---
+
+---
+
+## 16. Manual Payment Registration Implementation
+
+### 16.1 Manual Payment Service
+
+**Location:** `DR_Admin\Services\ManualPaymentService.cs` (to be created)
+
+**Purpose:** Handle all manual payment registration scenarios
+
+**Key Methods:**
+
+```csharp
+public interface IManualPaymentService
+{
+    /// <summary>
+    /// Registers a manual bank transfer payment
+    /// </summary>
+    Task<PaymentResultDto> RegisterBankTransferAsync(RegisterBankTransferDto dto);
+    
+    /// <summary>
+    /// Registers a cash payment
+    /// </summary>
+    Task<PaymentResultDto> RegisterCashPaymentAsync(RegisterCashPaymentDto dto);
+    
+    /// <summary>
+    /// Registers a check payment
+    /// </summary>
+    Task<PaymentResultDto> RegisterCheckPaymentAsync(RegisterCheckPaymentDto dto);
+    
+    /// <summary>
+    /// Registers a wire transfer payment
+    /// </summary>
+    Task<PaymentResultDto> RegisterWireTransferAsync(RegisterWireTransferDto dto);
+    
+    /// <summary>
+    /// Updates check payment status when cleared
+    /// </summary>
+    Task<bool> MarkCheckAsClearedAsync(int paymentTransactionId);
+    
+    /// <summary>
+    /// Reconcile bank statement with pending bank transfers
+    /// </summary>
+    Task<BankReconciliationResultDto> ReconcileBankStatementAsync(BankStatementDto statement);
+}
+```
+
+### 16.2 Implementation Example - Bank Transfer Registration
+
+```csharp
+public class ManualPaymentService : IManualPaymentService
+{
+    private readonly ApplicationDbContext _context;
+    private readonly IPaymentNotificationService _notificationService;
+    private readonly ILogger<ManualPaymentService> _logger;
+    
+    public async Task<PaymentResultDto> RegisterBankTransferAsync(RegisterBankTransferDto dto)
+    {
+        using var transaction = await _context.Database.BeginTransactionAsync();
+        
+        try
+        {
+            // 1. Validate invoice exists and is not already paid
+            var invoice = await _context.Invoices
+                .FirstOrDefaultAsync(i => i.Id == dto.InvoiceId);
+                
+            if (invoice == null)
+            {
+                return new PaymentResultDto
+                {
+                    IsSuccess = false,
+                    ErrorMessage = "Invoice not found"
+                };
+            }
+            
+            if (invoice.Status == InvoiceStatus.Paid)
+            {
+                return new PaymentResultDto
+                {
+                    IsSuccess = false,
+                    ErrorMessage = "Invoice is already paid"
+                };
+            }
+            
+            // 2. Validate amount
+            if (dto.Amount <= 0 || dto.Amount > invoice.AmountDue)
+            {
+                return new PaymentResultDto
+                {
+                    IsSuccess = false,
+                    ErrorMessage = $"Invalid amount. Amount due: {invoice.AmountDue}"
+                };
+            }
+            
+            // 3. Create PaymentTransaction
+            var paymentTransaction = new PaymentTransaction
+            {
+                InvoiceId = invoice.Id,
+                PaymentMethod = "BankTransfer",
+                Status = PaymentTransactionStatus.Completed,
+                TransactionId = dto.BankTransactionId ?? $"BANK-{DateTime.UtcNow:yyyyMMddHHmmss}",
+                Amount = dto.Amount,
+                CurrencyCode = invoice.CurrencyCode,
+                ProcessedAt = dto.PaymentDate,
+                GatewayResponse = JsonSerializer.Serialize(new
+                {
+                    ReferenceNumber = dto.ReferenceNumber,
+                    BankAccount = dto.ReceivedInAccount,
+                    Notes = dto.Notes
+                }),
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+            
+            _context.PaymentTransactions.Add(paymentTransaction);
+            await _context.SaveChangesAsync();
+            
+            // 4. Create InvoicePayment record
+            var isFullPayment = dto.Amount >= invoice.AmountDue;
+            
+            var invoicePayment = new InvoicePayment
+            {
+                InvoiceId = invoice.Id,
+                PaymentTransactionId = paymentTransaction.Id,
+                AmountApplied = dto.Amount,
+                Currency = invoice.CurrencyCode,
+                InvoiceBalance = invoice.AmountDue - dto.Amount,
+                InvoiceTotalAmount = invoice.TotalAmount,
+                IsFullPayment = isFullPayment,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+            
+            _context.InvoicePayments.Add(invoicePayment);
+            
+            // 5. Update Invoice
+            invoice.AmountPaid += dto.Amount;
+            invoice.AmountDue -= dto.Amount;
+            
+            if (isFullPayment)
+            {
+                invoice.Status = InvoiceStatus.Paid;
+                invoice.PaidAt = dto.PaymentDate;
+            }
+            else
+            {
+                invoice.Status = InvoiceStatus.PartiallyPaid;
+            }
+            
+            invoice.UpdatedAt = DateTime.UtcNow;
+            
+            await _context.SaveChangesAsync();
+            
+            // 6. Commit transaction
+            await transaction.CommitAsync();
+            
+            // 7. Send notification
+            await _notificationService.SendPaymentReceivedConfirmationAsync(invoice.Id);
+            
+            _logger.LogInformation(
+                "Bank transfer payment registered: Invoice {InvoiceId}, Amount {Amount}, Reference {Reference}",
+                invoice.Id, dto.Amount, dto.ReferenceNumber);
+            
+            return new PaymentResultDto
+            {
+                IsSuccess = true,
+                PaymentTransactionId = paymentTransaction.Id,
+                TransactionId = paymentTransaction.TransactionId,
+                Message = "Bank transfer payment registered successfully"
+            };
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            _logger.LogError(ex, "Error registering bank transfer payment for invoice {InvoiceId}", dto.InvoiceId);
+            throw;
+        }
+    }
+    
+    public async Task<PaymentResultDto> RegisterCashPaymentAsync(RegisterCashPaymentDto dto)
+    {
+        using var transaction = await _context.Database.BeginTransactionAsync();
+        
+        try
+        {
+            var invoice = await _context.Invoices
+                .FirstOrDefaultAsync(i => i.Id == dto.InvoiceId);
+                
+            if (invoice == null)
+                return new PaymentResultDto { IsSuccess = false, ErrorMessage = "Invoice not found" };
+            
+            // Create cash transaction record
+            var cashTransaction = new CashTransaction
+            {
+                InvoiceId = invoice.Id,
+                Amount = dto.Amount,
+                CurrencyCode = dto.Currency,
+                Type = CashTransactionType.Receipt,
+                ReceivedBy = dto.ReceivedBy,
+                ReceivedAt = dto.ReceivedAt,
+                ReceiptNumber = dto.ReceiptNumber,
+                Notes = dto.Notes,
+                CashRegisterId = dto.CashRegisterId,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+            
+            _context.CashTransactions.Add(cashTransaction);
+            
+            // Create payment transaction
+            var paymentTransaction = new PaymentTransaction
+            {
+                InvoiceId = invoice.Id,
+                PaymentMethod = "Cash",
+                Status = PaymentTransactionStatus.Completed,
+                TransactionId = dto.ReceiptNumber,
+                Amount = dto.Amount,
+                CurrencyCode = dto.Currency,
+                ProcessedAt = dto.ReceivedAt,
+                GatewayResponse = JsonSerializer.Serialize(new
+                {
+                    ReceivedBy = dto.ReceivedBy,
+                    ReceiptNumber = dto.ReceiptNumber,
+                    Notes = dto.Notes
+                }),
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+            
+            _context.PaymentTransactions.Add(paymentTransaction);
+            await _context.SaveChangesAsync();
+            
+            cashTransaction.PaymentTransactionId = paymentTransaction.Id;
+            
+            // Create invoice payment
+            var isFullPayment = dto.Amount >= invoice.AmountDue;
+            
+            var invoicePayment = new InvoicePayment
+            {
+                InvoiceId = invoice.Id,
+                PaymentTransactionId = paymentTransaction.Id,
+                AmountApplied = dto.Amount,
+                Currency = dto.Currency,
+                InvoiceBalance = invoice.AmountDue - dto.Amount,
+                InvoiceTotalAmount = invoice.TotalAmount,
+                IsFullPayment = isFullPayment,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+            
+            _context.InvoicePayments.Add(invoicePayment);
+            
+            // Update invoice
+            invoice.AmountPaid += dto.Amount;
+            invoice.AmountDue -= dto.Amount;
+            invoice.Status = isFullPayment ? InvoiceStatus.Paid : InvoiceStatus.PartiallyPaid;
+            
+            if (isFullPayment)
+                invoice.PaidAt = dto.ReceivedAt;
+            
+            invoice.UpdatedAt = DateTime.UtcNow;
+            
+            // Update cash register balance
+            if (dto.CashRegisterId.HasValue)
+            {
+                var cashRegister = await _context.CashRegisters
+                    .FirstOrDefaultAsync(cr => cr.Id == dto.CashRegisterId.Value);
+                    
+                if (cashRegister != null)
+                {
+                    cashRegister.CurrentBalance += dto.Amount;
+                    cashRegister.UpdatedAt = DateTime.UtcNow;
+                }
+            }
+            
+            await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
+            
+            // Send notification
+            await _notificationService.SendPaymentReceivedConfirmationAsync(invoice.Id);
+            
+            _logger.LogInformation(
+                "Cash payment registered: Invoice {InvoiceId}, Amount {Amount}, Receipt {Receipt}",
+                invoice.Id, dto.Amount, dto.ReceiptNumber);
+            
+            return new PaymentResultDto
+            {
+                IsSuccess = true,
+                PaymentTransactionId = paymentTransaction.Id,
+                TransactionId = paymentTransaction.TransactionId,
+                Message = "Cash payment registered successfully"
+            };
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            _logger.LogError(ex, "Error registering cash payment for invoice {InvoiceId}", dto.InvoiceId);
+            throw;
+        }
+    }
+}
+```
+
+### 16.3 Manual Payment DTOs
+
+```csharp
+public class RegisterBankTransferDto
+{
+    public int InvoiceId { get; set; }
+    public decimal Amount { get; set; }
+    public DateTime PaymentDate { get; set; }
+    public string ReferenceNumber { get; set; } // KID/OCR
+    public string BankTransactionId { get; set; }
+    public string Notes { get; set; }
+    public string ReceivedInAccount { get; set; }
+}
+
+public class RegisterCashPaymentDto
+{
+    public int InvoiceId { get; set; }
+    public decimal Amount { get; set; }
+    public string Currency { get; set; }
+    public string ReceivedBy { get; set; }
+    public DateTime ReceivedAt { get; set; }
+    public string Notes { get; set; }
+    public string ReceiptNumber { get; set; }
+    public int? CashRegisterId { get; set; }
+}
+
+public class RegisterCheckPaymentDto
+{
+    public int InvoiceId { get; set; }
+    public decimal Amount { get; set; }
+    public string CheckNumber { get; set; }
+    public string BankName { get; set; }
+    public DateTime CheckDate { get; set; }
+    public DateTime ReceivedDate { get; set; }
+    public DateTime? DepositedDate { get; set; }
+    public DateTime? ClearedDate { get; set; }
+    public CheckPaymentStatus Status { get; set; }
+    public string Notes { get; set; }
+}
+
+public class RegisterWireTransferDto
+{
+    public int InvoiceId { get; set; }
+    public decimal GrossAmount { get; set; }
+    public decimal Fees { get; set; }
+    public decimal NetAmount { get; set; }
+    public string Currency { get; set; }
+    public string BaseCurrency { get; set; }
+    public decimal? ExchangeRate { get; set; }
+    public decimal? NetAmountInBaseCurrency { get; set; }
+    public string SwiftReference { get; set; }
+    public string SenderBank { get; set; }
+    public DateTime ReceivedDate { get; set; }
+    public string Notes { get; set; }
+}
+```
+
+### 16.4 Manual Payment Controller
+
+**Location:** `DR_Admin\Controllers\ManualPaymentsController.cs`
+
+```csharp
+[ApiController]
+[Route("api/v1/[controller]")]
+[Authorize(Roles = "Admin,Finance")]
+public class ManualPaymentsController : ControllerBase
+{
+    private readonly IManualPaymentService _manualPaymentService;
+    private readonly ILogger<ManualPaymentsController> _logger;
+    
+    public ManualPaymentsController(
+        IManualPaymentService manualPaymentService,
+        ILogger<ManualPaymentsController> logger)
+    {
+        _manualPaymentService = manualPaymentService;
+        _logger = logger;
+    }
+    
+    /// <summary>
+    /// Register a bank transfer payment
+    /// </summary>
+    [HttpPost("bank-transfer")]
+    [ProducesResponseType(typeof(PaymentResultDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<PaymentResultDto>> RegisterBankTransfer(
+        [FromBody] RegisterBankTransferDto dto)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+                
+            var result = await _manualPaymentService.RegisterBankTransferAsync(dto);
+            
+            if (!result.IsSuccess)
+                return BadRequest(result);
+                
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error registering bank transfer");
+            return StatusCode(500, "An error occurred while registering the payment");
+        }
+    }
+    
+    /// <summary>
+    /// Register a cash payment
+    /// </summary>
+    [HttpPost("cash")]
+    [ProducesResponseType(typeof(PaymentResultDto), StatusCodes.Status200OK)]
+    public async Task<ActionResult<PaymentResultDto>> RegisterCashPayment(
+        [FromBody] RegisterCashPaymentDto dto)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+                
+            var result = await _manualPaymentService.RegisterCashPaymentAsync(dto);
+            
+            if (!result.IsSuccess)
+                return BadRequest(result);
+                
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error registering cash payment");
+            return StatusCode(500, "An error occurred while registering the payment");
+        }
+    }
+    
+    /// <summary>
+    /// Register a check payment
+    /// </summary>
+    [HttpPost("check")]
+    [ProducesResponseType(typeof(PaymentResultDto), StatusCodes.Status200OK)]
+    public async Task<ActionResult<PaymentResultDto>> RegisterCheckPayment(
+        [FromBody] RegisterCheckPaymentDto dto)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+                
+            var result = await _manualPaymentService.RegisterCheckPaymentAsync(dto);
+            
+            if (!result.IsSuccess)
+                return BadRequest(result);
+                
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error registering check payment");
+            return StatusCode(500, "An error occurred while registering the payment");
+        }
+    }
+    
+    /// <summary>
+    /// Register a wire transfer payment
+    /// </summary>
+    [HttpPost("wire-transfer")]
+    [ProducesResponseType(typeof(PaymentResultDto), StatusCodes.Status200OK)]
+    public async Task<ActionResult<PaymentResultDto>> RegisterWireTransfer(
+        [FromBody] RegisterWireTransferDto dto)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+                
+            var result = await _manualPaymentService.RegisterWireTransferAsync(dto);
+            
+            if (!result.IsSuccess)
+                return BadRequest(result);
+                
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error registering wire transfer");
+            return StatusCode(500, "An error occurred while registering the payment");
+        }
+    }
+    
+    /// <summary>
+    /// Mark a check payment as cleared
+    /// </summary>
+    [HttpPost("check/{paymentTransactionId}/mark-cleared")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> MarkCheckAsCleared(int paymentTransactionId)
+    {
+        try
+        {
+            var success = await _manualPaymentService.MarkCheckAsClearedAsync(paymentTransactionId);
+            
+            if (!success)
+                return NotFound("Payment transaction not found");
+                
+            return Ok(new { message = "Check marked as cleared" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error marking check as cleared");
+            return StatusCode(500, "An error occurred");
+        }
+    }
+}
+```
+
+### 16.5 Bank Reconciliation
+
+**Purpose:** Automatically match bank statement entries with invoices
+
+```csharp
+public class BankReconciliationService : IBankReconciliationService
+{
+    public async Task<BankReconciliationResultDto> ReconcileBankStatementAsync(
+        BankStatementDto statement)
+    {
+        var matchedPayments = new List<MatchedPayment>();
+        var unmatchedEntries = new List<BankStatementEntry>();
+        
+        foreach (var entry in statement.Entries)
+        {
+            // Try to match by reference number (KID/OCR)
+            var invoice = await FindInvoiceByReferenceAsync(entry.Reference);
+            
+            if (invoice != null && invoice.AmountDue >= entry.Amount)
+            {
+                // Auto-register payment
+                var paymentResult = await RegisterBankTransferAsync(new RegisterBankTransferDto
+                {
+                    InvoiceId = invoice.Id,
+                    Amount = entry.Amount,
+                    PaymentDate = entry.ValueDate,
+                    ReferenceNumber = entry.Reference,
+                    BankTransactionId = entry.TransactionId,
+                    Notes = $"Auto-reconciled from bank statement {statement.StatementNumber}",
+                    ReceivedInAccount = statement.AccountNumber
+                });
+                
+                matchedPayments.Add(new MatchedPayment
+                {
+                    InvoiceId = invoice.Id,
+                    InvoiceNumber = invoice.InvoiceNumber,
+                    Amount = entry.Amount,
+                    PaymentTransactionId = paymentResult.PaymentTransactionId
+                });
+            }
+            else
+            {
+                unmatchedEntries.Add(entry);
+            }
+        }
+        
+        return new BankReconciliationResultDto
+        {
+            TotalEntries = statement.Entries.Count,
+            MatchedCount = matchedPayments.Count,
+            UnmatchedCount = unmatchedEntries.Count,
+            MatchedPayments = matchedPayments,
+            UnmatchedEntries = unmatchedEntries
+        };
+    }
+}
+```
+
+### 16.6 Manual Invoice Service
+
+**Location:** `DR_Admin\Services\ManualInvoiceService.cs`
+
+```csharp
+public interface IManualInvoiceService
+{
+    /// <summary>
+    /// Creates a manual invoice (not from order/subscription)
+    /// </summary>
+    Task<InvoiceDto> CreateManualInvoiceAsync(CreateManualInvoiceDto dto);
+    
+    /// <summary>
+    /// Creates a credit note for an existing invoice
+    /// </summary>
+    Task<InvoiceDto> CreateCreditNoteAsync(CreateCreditNoteDto dto);
+    
+    /// <summary>
+    /// Creates a proforma invoice (quote/estimate)
+    /// </summary>
+    Task<InvoiceDto> CreateProformaInvoiceAsync(CreateProformaInvoiceDto dto);
+    
+    /// <summary>
+    /// Converts a proforma invoice to a real invoice
+    /// </summary>
+    Task<InvoiceDto> ConvertProformaToInvoiceAsync(int proformaInvoiceId);
+}
+```
+
+---
+
+**Documented:** February 9, 2026  
+**Version:** 1.1  
 **Author:** DR_Admin Development Team
+
+
