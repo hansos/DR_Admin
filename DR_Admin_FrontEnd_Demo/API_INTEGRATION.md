@@ -2,7 +2,7 @@
 
 ## ? Configuration Complete!
 
-Your frontend is now configured to connect to the **DR_Admin backend API** at `https://localhost:7201`.
+Your frontend is now configured to connect to the **DR_Admin backend API** at `https://localhost:[YOUR_PORT]`.
 
 ## ?? What Was Updated
 
@@ -10,7 +10,7 @@ Your frontend is now configured to connect to the **DR_Admin backend API** at `h
 ```json
 {
   "DrAdminApi": {
-    "BaseUrl": "https://localhost:7201",
+    "BaseUrl": "https://localhost:[YOUR_PORT]",
     "Timeout": 30
   }
 }
@@ -37,8 +37,8 @@ Your frontend is now configured to connect to the **DR_Admin backend API** at `h
 Browser
   ? (calls /api/Account/login)
 Frontend (localhost:5001)
-  ? (proxies to https://localhost:7201/api/auth/login)
-DR_Admin API (localhost:7201)
+  ? (proxies to https://localhost:[YOUR_PORT]/api/auth/login)
+DR_Admin API (localhost:[YOUR_PORT])
 ```
 
 ## ?? Next Steps to Complete Integration
@@ -193,7 +193,7 @@ app.UseCors();
    cd DR_Admin
    dotnet run
    ```
-   Should run on `https://localhost:7201`
+   Should run on `https://localhost:[YOUR_PORT]`
 
 2. **Start Frontend:**
    ```bash

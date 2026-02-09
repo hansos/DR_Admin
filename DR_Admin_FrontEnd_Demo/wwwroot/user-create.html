@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create User - DR Admin Demo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/site.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/"><i class="bi bi-globe"></i> DR Admin Demo</a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/customers.html">Customers</a>
+                <a class="nav-link" href="/users.html">Users</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="/users.html">Users</a></li>
+                        <li class="breadcrumb-item active">Create New</li>
+                    </ol>
+                </nav>
+                <h2><i class="bi bi-person-plus-fill"></i> Create New User</h2>
+                <p class="text-muted"><i class="bi bi-shield-lock-fill text-warning"></i> Requires User.Write policy (Admin only)</p>
+            </div>
+        </div>
+
+        <div id="alertSuccess" class="alert alert-success d-none"></div>
+        <div id="alertError" class="alert alert-danger d-none"></div>
+
+        <div class="card">
+            <div class="card-body">
+                <form id="userForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="username" class="form-label">Username <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="username" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control" id="email" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
+                            <input type="password" class="form-control" id="password" required minlength="6">
+                            <small class="text-muted">Minimum 6 characters</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="role" class="form-label">Role</label>
+                            <select class="form-select" id="role">
+                                <option value="">No role</option>
+                                <option value="Admin">Admin</option>
+                                <option value="Sales">Sales</option>
+                                <option value="Support">Support</option>
+                                <option value="Customer">Customer</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="customerId" class="form-label">Customer ID (Optional)</label>
+                            <input type="number" class="form-control" id="customerId" placeholder="Leave empty if not linked">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="isActive" class="form-label">Status</label>
+                            <select class="form-select" id="isActive">
+                                <option value="true">Active</option>
+                                <option value="false">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Create User</button>
+                        <a href="/users.html" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/api-client.js"></script>
+    <script src="/js/utils.js"></script>
+    <script src="/js/user-create.js"></script>
+</body>
+</html>

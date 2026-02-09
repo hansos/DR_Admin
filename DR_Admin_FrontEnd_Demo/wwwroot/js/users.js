@@ -1,6 +1,5 @@
 /**
- * Customer Management - List Page
- * Handles displaying customers with pagination, sorting, and filtering
+ * User Management - List Page
  */
 
 let currentPage = 1;
@@ -9,14 +8,14 @@ let sortField = 'id';
 let sortOrder = 'asc';
 let searchTerm = '';
 let statusFilter = '';
-let typeFilter = '';
-let allCustomers = [];
-let filteredCustomers = [];
-let customerToDelete = null;
+let roleFilter = '';
+let allUsers = [];
+let filteredUsers = [];
+let userToDelete = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     initializeEventListeners();
-    loadCustomers();
+    loadUsers();
 });
 
 function initializeEventListeners() {
@@ -34,18 +33,18 @@ function initializeEventListeners() {
         applyFiltersAndRender();
     });
 
-    document.getElementById('typeFilter')?.addEventListener('change', (e) => {
-        typeFilter = e.target.value;
+    document.getElementById('roleFilter')?.addEventListener('change', (e) => {
+        roleFilter = e.target.value;
         applyFiltersAndRender();
     });
 
     document.getElementById('clearFilters')?.addEventListener('click', () => {
         document.getElementById('searchInput').value = '';
         document.getElementById('statusFilter').value = '';
-        document.getElementById('typeFilter').value = '';
+        document.getElementById('roleFilter').value = '';
         searchTerm = '';
         statusFilter = '';
-        typeFilter = '';
+        roleFilter = '';
         applyFiltersAndRender();
     });
 
@@ -64,50 +63,52 @@ function initializeEventListeners() {
     });
 
     document.getElementById('confirmDelete')?.addEventListener('click', async () => {
-        if (customerToDelete) await deleteCustomer(customerToDelete);
+        if (userToDelete) await deleteUser(userToDelete);
     });
 }
 
-async function loadCustomers() {
+async function loadUsers() {
     try {
-        const tbody = document.getElementById('customersTableBody');
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center"><div class="spinner-border text-primary"></div></td></tr>';
+        const tbody = document.getElementById('usersTableBody');
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center"><div class="spinner-border text-primary"></div></td></tr>';
 
-        const response = await window.CustomerAPI.getCustomers();
+        const response = await window.UserAPI.getUsers();
 
         if (response.success) {
-            allCustomers = Array.isArray(response.data) ? response.data : (response.data.items || []);
+            allUsers = Array.isArray(response.data) ? response.data : (response.data.items || []);
             applyFiltersAndRender();
         } else {
             // Check if it's an authentication issue
-            if (response.message && (response.message.includes('401') || response.message.includes('Unauthorized'))) {
+            if (response.statusCode === 401) {
                 showError('Authentication required. Redirecting to login...');
                 setTimeout(() => window.location.href = '/login.html', 2000);
+            } else if (response.statusCode === 403) {
+                showError('Access denied. You need Admin or Support role to view users.');
             } else {
-                showError(response.message || 'Failed to load customers. Check authentication.');
+                showError(response.message || 'Failed to load users. Check authentication.');
             }
-            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Failed to load customers</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Failed to load users</td></tr>';
         }
     } catch (error) {
         console.error('Error:', error);
-        showError('Error loading customers');
-        const tbody = document.getElementById('customersTableBody');
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Error loading data</td></tr>';
+        showError('Error loading users');
+        const tbody = document.getElementById('usersTableBody');
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Error loading data</td></tr>';
     }
 }
 
 function applyFiltersAndRender() {
-    filteredCustomers = allCustomers.filter(customer => {
+    filteredUsers = allUsers.filter(user => {
         if (searchTerm) {
-            const match = customer.name?.toLowerCase().includes(searchTerm) || customer.email?.toLowerCase().includes(searchTerm);
+            const match = user.username?.toLowerCase().includes(searchTerm) || user.email?.toLowerCase().includes(searchTerm);
             if (!match) return false;
         }
-        if (statusFilter && customer.isActive !== (statusFilter === 'active')) return false;
-        if (typeFilter && customer.isCompany !== (typeFilter === 'company')) return false;
+        if (statusFilter && user.isActive !== (statusFilter === 'active')) return false;
+        if (roleFilter && !user.roles?.includes(roleFilter)) return false;
         return true;
     });
 
-    filteredCustomers.sort((a, b) => {
+    filteredUsers.sort((a, b) => {
         let aVal = a[sortField] ?? '';
         let bVal = b[sortField] ?? '';
         if (typeof aVal === 'string') aVal = aVal.toLowerCase();
@@ -123,42 +124,46 @@ function applyFiltersAndRender() {
 }
 
 function renderTable() {
-    const tbody = document.getElementById('customersTableBody');
+    const tbody = document.getElementById('usersTableBody');
     const start = (currentPage - 1) * pageSize;
-    const pageCustomers = filteredCustomers.slice(start, start + pageSize);
+    const pageUsers = filteredUsers.slice(start, start + pageSize);
 
-    if (!pageCustomers.length) {
-        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No customers found</td></tr>';
+    if (!pageUsers.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No users found</td></tr>';
         return;
     }
 
-    tbody.innerHTML = pageCustomers.map(c => `
+    tbody.innerHTML = pageUsers.map(u => `
         <tr>
-            <td>${c.id}</td>
-            <td>${esc(c.name)}</td>
-            <td>${esc(c.email)}</td>
-            <td>${esc(c.phone || '-')}</td>
-            <td><span class="badge bg-${c.isCompany ? 'info' : 'secondary'}">${c.isCompany ? 'Company' : 'Individual'}</span></td>
-            <td><span class="badge bg-${c.isActive ? 'success' : 'danger'}">${c.isActive ? 'Active' : 'Inactive'}</span></td>
-            <td>${fmt(c.balance || 0, c.preferredCurrency || 'USD')}</td>
+            <td>${u.id}</td>
+            <td>${esc(u.username)}</td>
+            <td>${esc(u.email)}</td>
+            <td>${renderRoles(u.roles)}</td>
+            <td><span class="badge bg-${u.isActive ? 'success' : 'danger'}">${u.isActive ? 'Active' : 'Inactive'}</span></td>
+            <td>${formatDate(u.createdAt)}</td>
             <td>
                 <div class="btn-group btn-group-sm">
-                    <a href="/customer-edit.html?id=${c.id}" class="btn btn-outline-primary" title="Edit"><i class="bi bi-pencil"></i></a>
-                    <button class="btn btn-outline-danger" onclick="confirmDelete(${c.id}, '${esc(c.name)}')" title="Delete"><i class="bi bi-trash"></i></button>
+                    <a href="/user-edit.html?id=${u.id}" class="btn btn-outline-primary" title="Edit"><i class="bi bi-pencil"></i></a>
+                    <button class="btn btn-outline-danger" onclick="confirmDelete(${u.id}, '${esc(u.username)}')" title="Delete"><i class="bi bi-trash"></i></button>
                 </div>
             </td>
         </tr>
     `).join('');
 }
 
+function renderRoles(roles) {
+    if (!roles || !roles.length) return '<span class="badge bg-secondary">None</span>';
+    return roles.map(r => `<span class="badge bg-info me-1">${esc(r)}</span>`).join('');
+}
+
 function renderPagination() {
-    const total = Math.ceil(filteredCustomers.length / pageSize);
+    const total = Math.ceil(filteredUsers.length / pageSize);
     const info = document.getElementById('paginationInfo');
     const pag = document.getElementById('pagination');
 
     const start = (currentPage - 1) * pageSize + 1;
-    const end = Math.min(currentPage * pageSize, filteredCustomers.length);
-    info.textContent = `Showing ${start}-${end} of ${filteredCustomers.length}`;
+    const end = Math.min(currentPage * pageSize, filteredUsers.length);
+    info.textContent = `Showing ${start}-${end} of ${filteredUsers.length}`;
 
     if (total <= 1) { pag.innerHTML = ''; return; }
 
@@ -181,42 +186,43 @@ function renderPagination() {
 }
 
 function changePage(page) {
-    const total = Math.ceil(filteredCustomers.length / pageSize);
+    const total = Math.ceil(filteredUsers.length / pageSize);
     if (page < 1 || page > total) return;
     currentPage = page;
     renderTable();
     renderPagination();
 }
 
-function confirmDelete(id, name) {
-    customerToDelete = id;
-    document.getElementById('deleteCustomerName').textContent = name;
+function confirmDelete(id, username) {
+    userToDelete = id;
+    document.getElementById('deleteUserName').textContent = username;
     new bootstrap.Modal(document.getElementById('deleteModal')).show();
 }
 
-async function deleteCustomer(id) {
+async function deleteUser(id) {
     try {
-        const response = await window.CustomerAPI.deleteCustomer(id);
+        const response = await window.UserAPI.deleteUser(id);
         bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
 
         if (response.success) {
-            showSuccess('Customer deleted');
-            loadCustomers();
+            showSuccess('User deleted');
+            loadUsers();
         } else {
             showError(response.message || 'Delete failed');
         }
     } catch (error) {
-        showError('Error deleting customer');
+        showError('Error deleting user');
     }
-}
-
-function fmt(amount, currency) {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount);
 }
 
 function esc(text) {
     const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
     return (text || '').replace(/[&<>"']/g, m => map[m]);
+}
+
+function formatDate(dateString) {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
 function showSuccess(msg) {
