@@ -367,3 +367,5 @@ FodyWeavers.xsd
 /DR_Admin.TestClient/DR_Admin.TestClient.csproj
 /DR_Admin_Web/appsettings.Development.json
 /DR_Admin/appsettings.Development.json
+/DR_Admin/__Prompts
+/BATCH_1_ENTITIES.md
