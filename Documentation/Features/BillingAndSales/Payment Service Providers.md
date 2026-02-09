@@ -1,4 +1,4 @@
-Below is a **comprehensive English Markdown document** outlining the payment service providers you listed. For each provider, I include **name, a brief description, notable characteristics, availability by region or country (where publicly documented), and commonly accepted payment instruments or methods**. Some entries (especially smaller regional African providers) draw on general market knowledge where detailed global docs are less centralized; where specifics are not readily available in large aggregated sources (e.g., Wikipedia or major PSP reference lists), availability and instruments may be described at a high level.
+
 
 ---
 

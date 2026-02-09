@@ -3,6 +3,7 @@ using System;
 using ISPAdmin.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ISPAdmin.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260209081108_AddFinancialTrackingEntities")]
+    partial class AddFinancialTrackingEntities
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.2");
@@ -1830,49 +1833,6 @@ namespace ISPAdmin.Migrations
                     b.ToTable("InvoiceLines");
                 });
 
-            modelBuilder.Entity("ISPAdmin.Data.Entities.InvoicePayment", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<decimal>("AmountApplied")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Currency")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal>("InvoiceBalance")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("InvoiceId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<decimal>("InvoiceTotalAmount")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsFullPayment")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("PaymentTransactionId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("InvoiceId");
-
-                    b.HasIndex("PaymentTransactionId");
-
-                    b.ToTable("InvoicePayments");
-                });
-
             modelBuilder.Entity("ISPAdmin.Data.Entities.NameServer", b =>
                 {
                     b.Property<int>("Id")
@@ -2067,88 +2027,6 @@ namespace ISPAdmin.Migrations
                     b.ToTable("OutboxEvents");
                 });
 
-            modelBuilder.Entity("ISPAdmin.Data.Entities.PaymentAttempt", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<decimal>("AttemptedAmount")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("AuthenticationStatus")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("AuthenticationUrl")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Currency")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("CustomerPaymentMethodId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("ErrorCode")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ErrorMessage")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("GatewayResponse")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("GatewayTransactionId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("InvoiceId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("IpAddress")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("NextRetryAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int?>("PaymentTransactionId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("RequiresAuthentication")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("RetryCount")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("UserAgent")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CustomerPaymentMethodId");
-
-                    b.HasIndex("InvoiceId");
-
-                    b.HasIndex("PaymentTransactionId");
-
-                    b.ToTable("PaymentAttempts");
-                });
-
             modelBuilder.Entity("ISPAdmin.Data.Entities.PaymentGateway", b =>
                 {
                     b.Property<int>("Id")
@@ -2340,66 +2218,6 @@ namespace ISPAdmin.Migrations
                     b.HasIndex("PaymentGatewayId");
 
                     b.ToTable("PaymentIntents");
-                });
-
-            modelBuilder.Entity("ISPAdmin.Data.Entities.PaymentMethodToken", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("CardBrand")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("CustomerPaymentMethodId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("EncryptedToken")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("ExpiresAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int?>("ExpiryMonth")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int?>("ExpiryYear")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("GatewayCustomerId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("GatewayPaymentMethodId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsDefault")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsVerified")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Last4Digits")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("VerifiedAt")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CustomerPaymentMethodId");
-
-                    b.ToTable("PaymentMethodTokens");
                 });
 
             modelBuilder.Entity("ISPAdmin.Data.Entities.PaymentTransaction", b =>
@@ -5154,25 +4972,6 @@ namespace ISPAdmin.Migrations
                     b.Navigation("Unit");
                 });
 
-            modelBuilder.Entity("ISPAdmin.Data.Entities.InvoicePayment", b =>
-                {
-                    b.HasOne("ISPAdmin.Data.Entities.Invoice", "Invoice")
-                        .WithMany()
-                        .HasForeignKey("InvoiceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("ISPAdmin.Data.Entities.PaymentTransaction", "PaymentTransaction")
-                        .WithMany()
-                        .HasForeignKey("PaymentTransactionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Invoice");
-
-                    b.Navigation("PaymentTransaction");
-                });
-
             modelBuilder.Entity("ISPAdmin.Data.Entities.NameServer", b =>
                 {
                     b.HasOne("ISPAdmin.Data.Entities.RegisteredDomain", "Domain")
@@ -5215,31 +5014,6 @@ namespace ISPAdmin.Migrations
                     b.Navigation("Service");
                 });
 
-            modelBuilder.Entity("ISPAdmin.Data.Entities.PaymentAttempt", b =>
-                {
-                    b.HasOne("ISPAdmin.Data.Entities.CustomerPaymentMethod", "CustomerPaymentMethod")
-                        .WithMany()
-                        .HasForeignKey("CustomerPaymentMethodId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("ISPAdmin.Data.Entities.Invoice", "Invoice")
-                        .WithMany()
-                        .HasForeignKey("InvoiceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("ISPAdmin.Data.Entities.PaymentTransaction", "PaymentTransaction")
-                        .WithMany()
-                        .HasForeignKey("PaymentTransactionId");
-
-                    b.Navigation("CustomerPaymentMethod");
-
-                    b.Navigation("Invoice");
-
-                    b.Navigation("PaymentTransaction");
-                });
-
             modelBuilder.Entity("ISPAdmin.Data.Entities.PaymentIntent", b =>
                 {
                     b.HasOne("ISPAdmin.Data.Entities.Customer", "Customer")
@@ -5269,17 +5043,6 @@ namespace ISPAdmin.Migrations
                     b.Navigation("Order");
 
                     b.Navigation("PaymentGateway");
-                });
-
-            modelBuilder.Entity("ISPAdmin.Data.Entities.PaymentMethodToken", b =>
-                {
-                    b.HasOne("ISPAdmin.Data.Entities.CustomerPaymentMethod", "CustomerPaymentMethod")
-                        .WithMany()
-                        .HasForeignKey("CustomerPaymentMethodId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("CustomerPaymentMethod");
                 });
 
             modelBuilder.Entity("ISPAdmin.Data.Entities.PaymentTransaction", b =>

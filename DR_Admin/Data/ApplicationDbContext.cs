@@ -199,6 +199,18 @@ public class ApplicationDbContext : DbContext
     public DbSet<ResellerTldDiscount> ResellerTldDiscounts { get; set; }
     public DbSet<RegistrarSelectionPreference> RegistrarSelectionPreferences { get; set; }
     
+    // Financial tracking entities
+    public DbSet<CustomerTaxProfile> CustomerTaxProfiles { get; set; }
+    public DbSet<VendorCost> VendorCosts { get; set; }
+    public DbSet<RefundLossAudit> RefundLossAudits { get; set; }
+    public DbSet<VendorPayout> VendorPayouts { get; set; }
+    public DbSet<VendorTaxProfile> VendorTaxProfiles { get; set; }
+    
+    // Payment processing entities
+    public DbSet<PaymentAttempt> PaymentAttempts { get; set; }
+    public DbSet<PaymentMethodToken> PaymentMethodTokens { get; set; }
+    public DbSet<InvoicePayment> InvoicePayments { get; set; }
+    
     // Domain Lifecycle Workflow entities
     public DbSet<OutboxEvent> OutboxEvents { get; set; }
 
@@ -1084,6 +1096,141 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => e.ValidFrom);
             entity.HasIndex(e => e.ValidUntil);
             entity.HasIndex(e => e.NormalizedName);
+        });
+
+        // CustomerTaxProfile configuration
+        modelBuilder.Entity<CustomerTaxProfile>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.TaxIdNumber).HasMaxLength(100);
+            entity.Property(e => e.TaxIdValidationResponse).HasMaxLength(4000);
+            entity.Property(e => e.TaxResidenceCountry).IsRequired().HasMaxLength(2);
+            entity.Property(e => e.TaxExemptionReason).HasMaxLength(500);
+            entity.Property(e => e.TaxExemptionCertificateUrl).HasMaxLength(500);
+            
+            entity.HasIndex(e => e.CustomerId).IsUnique();
+            entity.HasIndex(e => e.TaxIdNumber);
+            entity.HasIndex(e => e.TaxResidenceCountry);
+            
+            entity.HasOne(e => e.Customer)
+                .WithMany()
+                .HasForeignKey(e => e.CustomerId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // VendorCost configuration
+        modelBuilder.Entity<VendorCost>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.VendorName).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.VendorCurrency).IsRequired().HasMaxLength(3);
+            entity.Property(e => e.VendorAmount).HasPrecision(18, 2);
+            entity.Property(e => e.BaseCurrency).IsRequired().HasMaxLength(3);
+            entity.Property(e => e.BaseAmount).HasPrecision(18, 2);
+            entity.Property(e => e.ExchangeRate).HasPrecision(18, 6);
+            entity.Property(e => e.Notes).HasMaxLength(2000);
+            
+            entity.HasIndex(e => e.InvoiceLineId);
+            entity.HasIndex(e => e.VendorPayoutId);
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.VendorType);
+            entity.HasIndex(e => e.IsRefundable);
+            
+            entity.HasOne(e => e.InvoiceLine)
+                .WithMany(i => i.VendorCosts)
+                .HasForeignKey(e => e.InvoiceLineId)
+                .OnDelete(DeleteBehavior.Restrict);
+            
+            entity.HasOne(e => e.VendorPayout)
+                .WithMany(p => p.VendorCosts)
+                .HasForeignKey(e => e.VendorPayoutId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // RefundLossAudit configuration
+        modelBuilder.Entity<RefundLossAudit>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.OriginalInvoiceAmount).HasPrecision(18, 2);
+            entity.Property(e => e.RefundedAmount).HasPrecision(18, 2);
+            entity.Property(e => e.VendorCostUnrecoverable).HasPrecision(18, 2);
+            entity.Property(e => e.NetLoss).HasPrecision(18, 2);
+            entity.Property(e => e.Currency).IsRequired().HasMaxLength(3);
+            entity.Property(e => e.Reason).IsRequired().HasMaxLength(2000);
+            entity.Property(e => e.DenialReason).HasMaxLength(2000);
+            entity.Property(e => e.InternalNotes).HasMaxLength(4000);
+            
+            entity.HasIndex(e => e.RefundId);
+            entity.HasIndex(e => e.InvoiceId);
+            entity.HasIndex(e => e.ApprovalStatus);
+            entity.HasIndex(e => e.ApprovedAt);
+            
+            entity.HasOne(e => e.Refund)
+                .WithMany()
+                .HasForeignKey(e => e.RefundId)
+                .OnDelete(DeleteBehavior.Restrict);
+            
+            entity.HasOne(e => e.Invoice)
+                .WithMany()
+                .HasForeignKey(e => e.InvoiceId)
+                .OnDelete(DeleteBehavior.Restrict);
+            
+            entity.HasOne(e => e.ApprovedByUser)
+                .WithMany()
+                .HasForeignKey(e => e.ApprovedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // VendorPayout configuration
+        modelBuilder.Entity<VendorPayout>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.VendorName).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.VendorCurrency).IsRequired().HasMaxLength(3);
+            entity.Property(e => e.VendorAmount).HasPrecision(18, 2);
+            entity.Property(e => e.BaseCurrency).IsRequired().HasMaxLength(3);
+            entity.Property(e => e.BaseAmount).HasPrecision(18, 2);
+            entity.Property(e => e.ExchangeRate).HasPrecision(18, 6);
+            entity.Property(e => e.FailureReason).HasMaxLength(2000);
+            entity.Property(e => e.TransactionReference).HasMaxLength(200);
+            entity.Property(e => e.PaymentGatewayResponse).HasMaxLength(4000);
+            entity.Property(e => e.InterventionReason).HasMaxLength(2000);
+            entity.Property(e => e.InternalNotes).HasMaxLength(4000);
+            
+            entity.HasIndex(e => e.VendorId);
+            entity.HasIndex(e => e.VendorType);
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.ScheduledDate);
+            entity.HasIndex(e => e.RequiresManualIntervention);
+            
+            entity.HasOne(e => e.InterventionResolvedByUser)
+                .WithMany()
+                .HasForeignKey(e => e.InterventionResolvedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // VendorTaxProfile configuration
+        modelBuilder.Entity<VendorTaxProfile>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.TaxIdNumber).HasMaxLength(100);
+            entity.Property(e => e.TaxResidenceCountry).IsRequired().HasMaxLength(2);
+            entity.Property(e => e.W9FileUrl).HasMaxLength(500);
+            entity.Property(e => e.WithholdingTaxRate).HasPrecision(5, 4);
+            entity.Property(e => e.TaxTreatyCountry).HasMaxLength(2);
+            entity.Property(e => e.TaxNotes).HasMaxLength(2000);
+            
+            entity.HasIndex(e => new { e.VendorId, e.VendorType }).IsUnique();
+            entity.HasIndex(e => e.Require1099);
+        });
+
+        // Invoice configuration update for SelectedPaymentGatewayId
+        modelBuilder.Entity<Invoice>(entity =>
+        {
+            entity.HasOne(e => e.SelectedPaymentGateway)
+                .WithMany()
+                .HasForeignKey(e => e.SelectedPaymentGatewayId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

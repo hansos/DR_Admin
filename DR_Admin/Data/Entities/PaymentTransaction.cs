@@ -60,6 +60,21 @@ public class PaymentTransaction : EntityBase
     public decimal? BaseAmount { get; set; }
 
     /// <summary>
+    /// Payment gateway fee charged for this transaction
+    /// </summary>
+    public decimal? GatewayFeeAmount { get; set; }
+    
+    /// <summary>
+    /// Currency code for gateway fee
+    /// </summary>
+    public string? GatewayFeeCurrency { get; set; }
+    
+    /// <summary>
+    /// Actual exchange rate used by payment gateway
+    /// </summary>
+    public decimal? ActualExchangeRate { get; set; }
+
+    /// <summary>
     /// Foreign key to the payment gateway
     /// </summary>
     public int? PaymentGatewayId { get; set; }

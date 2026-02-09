@@ -27,12 +27,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Features/DomainRegistration/Register-Domain-Flow.md",
+                "file": "Features/BillingAndSales/PaymentCollectionMechanisms.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Register-Domain-Flow"
+              "title": "PaymentCollectionMechanisms"
             }
           }
         ],
@@ -109,7 +109,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Features/DomainRegistration/Register-Domain-Flow.md",
+                "file": "Features/BillingAndSales/PaymentCollectionMechanisms.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -119,7 +119,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for Register-Domain-Flow"
+              "title": "Backlinks for PaymentCollectionMechanisms"
             }
           },
           {
@@ -128,12 +128,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Features/DomainRegistration/Register-Domain-Flow.md",
+                "file": "Features/BillingAndSales/PaymentCollectionMechanisms.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from Register-Domain-Flow"
+              "title": "Outgoing links from PaymentCollectionMechanisms"
             }
           },
           {
@@ -171,13 +171,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Features/DomainRegistration/Register-Domain-Flow.md",
+                "file": "Features/BillingAndSales/PaymentCollectionMechanisms.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of Register-Domain-Flow"
+              "title": "Outline of PaymentCollectionMechanisms"
             }
           }
         ]
@@ -200,6 +200,14 @@
   },
   "active": "446880d5348007bd",
   "lastOpenFiles": [
+    "Features/BillingAndSales/TaxAndVendor.md",
+    "Features/BillingAndSales/PaymentCollectionMechanisms.md",
+    "Features/BillingAndSales/Payment Service Providers.md",
+    "Features/BillingAndSales/OrderToInvoiceFlow.md",
+    "Features/BillingAndSales/BetalingsinnkrevingOgMottak.md",
+    "Features/BillingAndSales/PaymentProcessingImplementation.md",
+    "Features/DomainRegistration/Register-Domain-Flow.md",
+    "Features/BillingAndSales",
     "Features/DomainRegistration/TLD-Pricing-Refactoring-Final-Summary.md",
     "Features/DomainRegistration/TLD-Pricing-Refactoring-Complete.md",
     "Features/DomainRegistration/TLD-Pricing-Migration-Status.md",
@@ -226,15 +234,7 @@
     "TLD-Pricing-Diagrams.md",
     "s4u2kkvc.ehm~",
     "TLD-Pricing-Summary.md",
-    "l3svkcq4.rg3~",
     "TLD-Pricing-Migration-Guide.md",
-    "Features/DomainRegistration/Register-Domain-Sales-Flow.md",
-    "Features/DomainRegistration/Domain-registration.md",
-    "Features/DomainRegistration/Register-Domain-Flow.md",
-    "Features/CustomerManagement/CustomerAddress.md",
-    "REGISTER_DOMAIN_QUICKSTART.md",
-    "REGISTER_DOMAIN_FLOW_DIAGRAM.md",
-    "REGISTER_DOMAIN_PAGE_SUMMARY.md",
-    "DOMAIN_REGISTRATION_IMPLEMENTATION.md"
+    "Features/DomainRegistration/Register-Domain-Sales-Flow.md"
   ]
 }

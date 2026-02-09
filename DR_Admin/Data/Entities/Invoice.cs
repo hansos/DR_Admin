@@ -68,6 +68,16 @@ public class Invoice : EntityBase
     public string Notes { get; set; } = string.Empty;
     public string InternalComment { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Foreign key to the selected payment gateway (null until payment method chosen)
+    /// </summary>
+    public int? SelectedPaymentGatewayId { get; set; }
+    
+    /// <summary>
+    /// Navigation property to the selected payment gateway
+    /// </summary>
+    public PaymentGateway? SelectedPaymentGateway { get; set; }
+
     // Soft delete (rare but useful for drafts)
     public DateTime? DeletedAt { get; set; }
 

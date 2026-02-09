@@ -165,6 +165,17 @@ builder.Services.AddTransient<ICustomerPaymentMethodService, CustomerPaymentMeth
 builder.Services.AddTransient<ISubscriptionService, SubscriptionService>();
 builder.Services.AddTransient<ISubscriptionBillingHistoryService, SubscriptionBillingHistoryService>();
 
+// Financial Tracking services
+builder.Services.AddTransient<ICustomerTaxProfileService, CustomerTaxProfileService>();
+builder.Services.AddTransient<IVendorCostService, VendorCostService>();
+builder.Services.AddTransient<IVendorPayoutService, VendorPayoutService>();
+builder.Services.AddTransient<IVendorTaxProfileService, VendorTaxProfileService>();
+builder.Services.AddTransient<IRefundLossAuditService, RefundLossAuditService>();
+
+// Payment Processing services
+builder.Services.AddTransient<IPaymentProcessingService, PaymentProcessingService>();
+builder.Services.AddTransient<IPaymentNotificationService, PaymentNotificationService>();
+
 // Domain Registration Library - Registrar Settings
 var registrarSettings = builder.Configuration.GetSection("RegistrarSettings").Get<DomainRegistrationLib.Infrastructure.Settings.RegistrarSettings>()
     ?? new DomainRegistrationLib.Infrastructure.Settings.RegistrarSettings();
