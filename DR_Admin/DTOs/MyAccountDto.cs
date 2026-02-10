@@ -74,6 +74,14 @@ public class SetPasswordRequestDto
 }
 
 /// <summary>
+/// Request DTO for requesting a password reset
+/// </summary>
+public class RequestPasswordResetDto
+{
+    public string Email { get; set; } = string.Empty;
+}
+
+/// <summary>
 /// Request DTO for changing password (authenticated user)
 /// </summary>
 public class ChangePasswordRequestDto

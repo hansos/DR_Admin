@@ -38,4 +38,9 @@ public interface IMyAccountService
     /// Get current user account information
     /// </summary>
     Task<UserAccountDto?> GetMyAccountAsync(int userId);
+
+    /// <summary>
+    /// Request password reset and send email with reset token
+    /// </summary>
+    Task<bool> RequestPasswordResetAsync(string email);
 }

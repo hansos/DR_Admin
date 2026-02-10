@@ -107,6 +107,48 @@ public class MyAccountController : ControllerBase
     }
 
     /// <summary>
+    /// Requests a password reset by sending an email with a reset token
+    /// </summary>
+    /// <param name="request">Email address for the account</param>
+    /// <returns>Success status message</returns>
+    /// <response code="200">If the request was processed (email sent if account exists)</response>
+    /// <response code="400">If required fields are missing</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpPost("request-password-reset")]
+    [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult> RequestPasswordReset([FromBody] RequestPasswordResetDto request)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(request.Email))
+            {
+                _log.Warning("Password reset request with missing email");
+                return BadRequest(new { message = "Email address is required" });
+            }
+
+            var result = await _myAccountService.RequestPasswordResetAsync(request.Email);
+
+            if (!result)
+            {
+                _log.Warning("Password reset request failed for: {Email}", request.Email);
+                return StatusCode(500, new { message = "An error occurred while processing your request" });
+            }
+
+            _log.Information("Password reset requested for: {Email}", request.Email);
+            // Always return the same message to prevent email enumeration
+            return Ok(new { message = "If the email address exists in our system, a password reset link has been sent." });
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error during password reset request");
+            return StatusCode(500, new { message = "An error occurred while processing your request" });
+        }
+    }
+
+    /// <summary>
     /// Sets password for a new account or after password reset using a token
     /// </summary>
     /// <param name="request">Email, token, new password, and password confirmation</param>

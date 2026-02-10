@@ -3,8 +3,8 @@
  * Updated to connect to real DR_Admin API at https://localhost:7201
  */
 
-// API Base URL - calls go through our frontend proxy controllers
-const BASE_URL = '/api';
+// API Base URL - calls DR_Admin API directly
+const BASE_URL = 'https://localhost:7201/api/v1';
 
 /**
  * Generic API request handler
@@ -19,7 +19,7 @@ async function apiRequest<T>(
                 'Content-Type': 'application/json',
                 ...options.headers,
             },
-            credentials: 'same-origin',
+            credentials: 'include', // Changed from 'same-origin' to support CORS
             ...options,
         });
 
@@ -51,21 +51,30 @@ async function apiRequest<T>(
  */
 const AuthAPI = {
     async login(email: string, password: string) {
-        return apiRequest(`${BASE_URL}/Account/login`, {
+        return apiRequest(`${BASE_URL}/auth/login`, {
             method: 'POST',
-            body: JSON.stringify({ email, password }),
+            body: JSON.stringify({ username: email, password }),
         });
     },
 
     async register(name: string, email: string, password: string, confirmPassword: string) {
-        return apiRequest(`${BASE_URL}/Account/register`, {
+        return apiRequest(`${BASE_URL}/myaccount/register`, {
             method: 'POST',
-            body: JSON.stringify({ name, email, password, confirmPassword }),
+            body: JSON.stringify({ 
+                username: email,
+                email, 
+                password, 
+                confirmPassword,
+                customerName: name,
+                customerEmail: email,
+                customerPhone: '',
+                customerAddress: ''
+            }),
         });
     },
 
     async resetPassword(email: string) {
-        return apiRequest(`${BASE_URL}/Account/reset-password`, {
+        return apiRequest(`${BASE_URL}/myaccount/request-password-reset`, {
             method: 'POST',
             body: JSON.stringify({ email }),
         });

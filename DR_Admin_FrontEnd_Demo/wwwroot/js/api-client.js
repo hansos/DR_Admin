@@ -1,65 +1,27 @@
 /**
  * API Client Module for DR Admin Demo
- * Calls backend API directly at https://localhost:7201
+ * Updated to connect to real DR_Admin API at https://localhost:7201
  */
-// API Base URL - calls backend API directly
+// API Base URL - calls DR_Admin API directly
 const BASE_URL = 'https://localhost:7201/api/v1';
-
-/**
- * Get JWT token from session storage
- */
-function getAuthToken() {
-    return sessionStorage.getItem('authToken');
-}
-
 /**
  * Generic API request handler
  */
 async function apiRequest(endpoint, options = {}) {
     try {
-        // Get JWT token from session storage
-        const token = getAuthToken();
-        
-        // Build headers
-        const headers = {
-            'Content-Type': 'application/json',
-            ...options.headers,
-        };
-        
-        // Add Authorization header if token exists
-        if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
-        }
-        
         const response = await fetch(endpoint, {
-            headers,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers,
+            },
+            credentials: 'include', // Changed from 'same-origin' to support CORS
             ...options,
         });
-        
-        // Handle 401 Unauthorized - redirect to login
-        if (response.status === 401) {
-            return {
-                success: false,
-                message: 'Authentication required (401 Unauthorized)',
-                statusCode: 401
-            };
-        }
-        
-        // Handle 403 Forbidden
-        if (response.status === 403) {
-            return {
-                success: false,
-                message: 'Access denied. You do not have permission (403 Forbidden)',
-                statusCode: 403
-            };
-        }
-        
         const data = await response.json();
         if (!response.ok) {
             return {
                 success: false,
-                message: data.message || `Error ${response.status}: ${response.statusText}`,
-                statusCode: response.status
+                message: data.message || 'An error occurred',
             };
         }
         return {
@@ -81,67 +43,44 @@ async function apiRequest(endpoint, options = {}) {
  */
 const AuthAPI = {
     async login(email, password) {
-        const response = await apiRequest(`${BASE_URL}/auth/login`, {
+        return apiRequest(`${BASE_URL}/auth/login`, {
             method: 'POST',
-            body: JSON.stringify({ username: email, password: password }),
+            body: JSON.stringify({ username: email, password }),
         });
-        
-        // If login successful, store the token in session storage
-        if (response.success && response.data && response.data.accessToken) {
-            sessionStorage.setItem('authToken', response.data.accessToken);
-            sessionStorage.setItem('refreshToken', response.data.refreshToken);
-            sessionStorage.setItem('username', response.data.username);
-            sessionStorage.setItem('roles', JSON.stringify(response.data.roles));
-        }
-        
-        return response;
     },
     async register(name, email, password, confirmPassword) {
         return apiRequest(`${BASE_URL}/myaccount/register`, {
             method: 'POST',
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 username: email,
-                email: email, 
-                password: password, 
-                confirmPassword: confirmPassword,
+                email,
+                password,
+                confirmPassword,
                 customerName: name,
-                customerEmail: email
+                customerEmail: email,
+                customerPhone: '',
+                customerAddress: ''
             }),
         });
     },
     async resetPassword(email) {
-        return apiRequest(`${BASE_URL}/myaccount/reset-password`, {
+        return apiRequest(`${BASE_URL}/myaccount/request-password-reset`, {
             method: 'POST',
             body: JSON.stringify({ email }),
         });
     },
-    async logout() {
-        const refreshToken = sessionStorage.getItem('refreshToken');
-        if (refreshToken) {
-            await apiRequest(`${BASE_URL}/auth/logout`, {
-                method: 'POST',
-                body: JSON.stringify({ refreshToken }),
-            });
-        }
-        
-        // Clear session storage
-        sessionStorage.removeItem('authToken');
-        sessionStorage.removeItem('refreshToken');
-        sessionStorage.removeItem('username');
-        sessionStorage.removeItem('roles');
-    }
 };
 /**
  * Domain API calls
  */
 const DomainAPI = {
     async getDomains() {
-        return apiRequest(`${BASE_URL}/domains`, {
+        return apiRequest(`${BASE_URL}/Domains/list`, {
             method: 'GET',
         });
     },
     async searchDomain(domain) {
-        return apiRequest(`${BASE_URL}/domains/search?domain=${encodeURIComponent(domain)}`, {
+        return apiRequest(`${BASE_URL}/Domains/search?domain=${encodeURIComponent(domain)}`, {
             method: 'GET',
         });
     },
@@ -151,12 +90,12 @@ const DomainAPI = {
  */
 const HostingAPI = {
     async getHostingPlans() {
-        return apiRequest(`${BASE_URL}/hosting/plans`, {
+        return apiRequest(`${BASE_URL}/Hosting/plans`, {
             method: 'GET',
         });
     },
     async getMyHosting() {
-        return apiRequest(`${BASE_URL}/hosting/services`, {
+        return apiRequest(`${BASE_URL}/Hosting/services`, {
             method: 'GET',
         });
     },
@@ -165,61 +104,10 @@ const HostingAPI = {
  * Customer API calls
  */
 const CustomerAPI = {
-    async getCustomers(pageNumber, pageSize) {
-        let url = `${BASE_URL}/customers`;
-        if (pageNumber && pageSize) {
-            url += `?pageNumber=${pageNumber}&pageSize=${pageSize}`;
-        }
-        return apiRequest(url, { method: 'GET' });
-    },
-    async getCustomer(id) {
-        return apiRequest(`${BASE_URL}/customers/${id}`, { method: 'GET' });
-    },
-    async createCustomer(customerData) {
-        return apiRequest(`${BASE_URL}/customers`, {
-            method: 'POST',
-            body: JSON.stringify(customerData),
+    async getCustomers() {
+        return apiRequest(`${BASE_URL}/Customers/list`, {
+            method: 'GET',
         });
-    },
-    async updateCustomer(id, customerData) {
-        return apiRequest(`${BASE_URL}/customers/${id}`, {
-            method: 'PUT',
-            body: JSON.stringify(customerData),
-        });
-    },
-    async deleteCustomer(id) {
-        return apiRequest(`${BASE_URL}/customers/${id}`, { method: 'DELETE' });
-    },
-};
-
-/**
- * User API calls
- */
-const UserAPI = {
-    async getUsers(pageNumber, pageSize) {
-        let url = `${BASE_URL}/users`;
-        if (pageNumber && pageSize) {
-            url += `?pageNumber=${pageNumber}&pageSize=${pageSize}`;
-        }
-        return apiRequest(url, { method: 'GET' });
-    },
-    async getUser(id) {
-        return apiRequest(`${BASE_URL}/users/${id}`, { method: 'GET' });
-    },
-    async createUser(userData) {
-        return apiRequest(`${BASE_URL}/users`, {
-            method: 'POST',
-            body: JSON.stringify(userData),
-        });
-    },
-    async updateUser(id, userData) {
-        return apiRequest(`${BASE_URL}/users/${id}`, {
-            method: 'PUT',
-            body: JSON.stringify(userData),
-        });
-    },
-    async deleteUser(id) {
-        return apiRequest(`${BASE_URL}/users/${id}`, { method: 'DELETE' });
     },
 };
 /**
@@ -227,7 +115,7 @@ const UserAPI = {
  */
 const OrderAPI = {
     async getOrders() {
-        return apiRequest(`${BASE_URL}/orders`, {
+        return apiRequest(`${BASE_URL}/Orders/list`, {
             method: 'GET',
         });
     },
@@ -256,7 +144,6 @@ if (typeof window !== 'undefined') {
     window.DomainAPI = DomainAPI;
     window.HostingAPI = HostingAPI;
     window.CustomerAPI = CustomerAPI;
-    window.UserAPI = UserAPI;
     window.OrderAPI = OrderAPI;
     window.showMessage = showMessage;
     window.hideMessage = hideMessage;
