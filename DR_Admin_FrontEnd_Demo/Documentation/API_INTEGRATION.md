@@ -1,10 +1,5 @@
 # DR Admin API Integration Guide
 
-## ? Configuration Complete!
-
-Your frontend is now configured to connect to the **DR_Admin backend API** at `https://localhost:[YOUR_PORT]`.
-
-## ?? What Was Updated
 
 ### 1. **appsettings.json**
 ```json
