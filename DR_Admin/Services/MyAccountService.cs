@@ -15,12 +15,14 @@ public class MyAccountService : IMyAccountService
 {
     private readonly ApplicationDbContext _context;
     private readonly IConfiguration _configuration;
+    private readonly IEmailQueueService _emailQueueService;
     private static readonly Serilog.ILogger _log = Log.ForContext<MyAccountService>();
 
-    public MyAccountService(ApplicationDbContext context, IConfiguration configuration)
+    public MyAccountService(ApplicationDbContext context, IConfiguration configuration, IEmailQueueService emailQueueService)
     {
         _context = context;
         _configuration = configuration;
+        _emailQueueService = emailQueueService;
     }
 
     public async Task<RegisterAccountResponseDto> RegisterAsync(RegisterAccountRequestDto request)
@@ -79,6 +81,9 @@ public class MyAccountService : IMyAccountService
 
             // Generate email confirmation token
             var confirmationToken = await GenerateEmailConfirmationTokenAsync(user.Id);
+
+            // Queue email confirmation email
+            await QueueEmailConfirmationAsync(user.Email, confirmationToken, user.Id, customer.Id);
 
             _log.Information("User registered successfully: {Email}", request.Email);
 
@@ -252,6 +257,10 @@ public class MyAccountService : IMyAccountService
 
             await _context.SaveChangesAsync();
 
+            // Generate new confirmation token and queue re-confirmation email
+            var confirmationToken = await GenerateEmailConfirmationTokenAsync(user.Id);
+            await QueueEmailConfirmationAsync(newEmail, confirmationToken, user.Id, user.CustomerId);
+
             _log.Information("Email updated successfully for user: {UserId}", userId);
             return true;
         }
@@ -381,6 +390,25 @@ public class MyAccountService : IMyAccountService
         return tokenValue;
     }
 
+    private async Task<string> GeneratePasswordResetTokenAsync(int userId)
+    {
+        var tokenValue = GenerateSecureToken();
+        
+        var token = new Token
+        {
+            UserId = userId,
+            TokenType = "PasswordReset",
+            TokenValue = tokenValue,
+            Expiry = DateTime.UtcNow.AddHours(24), // Valid for 24 hours
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _context.Tokens.Add(token);
+        await _context.SaveChangesAsync();
+
+        return tokenValue;
+    }
+
     private string GenerateSecureToken()
     {
         var randomBytes = new byte[32];
@@ -391,5 +419,105 @@ public class MyAccountService : IMyAccountService
         return Convert.ToBase64String(randomBytes);
     }
 
+    private async Task QueueEmailConfirmationAsync(string email, string token, int userId, int? customerId)
+    {
+        var baseUrl = _configuration["AppSettings:BaseUrl"] ?? "https://localhost";
+        var confirmationUrl = $"{baseUrl}/confirm-email?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(email)}";
+
+        var emailBody = $@"
+            <html>
+            <body>
+                <h2>Confirm Your Email Address</h2>
+                <p>Thank you for registering! Please confirm your email address by clicking the link below:</p>
+                <p><a href=""{confirmationUrl}"">Confirm Email</a></p>
+                <p>This link will expire in 3 days.</p>
+                <p>If you did not request this, please ignore this email.</p>
+            </body>
+            </html>";
+
+        await _emailQueueService.QueueEmailAsync(new QueueEmailDto
+        {
+            To = email,
+            Subject = "Confirm Your Email Address",
+            BodyHtml = emailBody,
+            UserId = userId,
+            CustomerId = customerId,
+            RelatedEntityType = "User",
+            RelatedEntityId = userId
+        });
+
+        _log.Information("Email confirmation queued for {Email}", email);
+    }
+
+    private async Task QueuePasswordResetEmailAsync(string email, string token, int userId, int? customerId)
+    {
+        var baseUrl = _configuration["AppSettings:BaseUrl"] ?? "https://localhost";
+        var resetUrl = $"{baseUrl}/reset-password?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(email)}";
+
+        var emailBody = $@"
+            <html>
+            <body>
+                <h2>Password Reset Request</h2>
+                <p>We received a request to reset your password. Click the link below to reset it:</p>
+                <p><a href=""{resetUrl}"">Reset Password</a></p>
+                <p>This link will expire in 24 hours.</p>
+                <p>If you did not request this, please ignore this email and your password will remain unchanged.</p>
+            </body>
+            </html>";
+
+        await _emailQueueService.QueueEmailAsync(new QueueEmailDto
+        {
+            To = email,
+            Subject = "Password Reset Request",
+            BodyHtml = emailBody,
+            UserId = userId,
+            CustomerId = customerId,
+            RelatedEntityType = "User",
+            RelatedEntityId = userId
+        });
+
+        _log.Information("Password reset email queued for {Email}", email);
+    }
+
     #endregion
+
+    public async Task<bool> RequestPasswordResetAsync(string email)
+    {
+        try
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+
+            // For security reasons, always return success even if user not found
+            // This prevents email enumeration attacks
+            if (user == null)
+            {
+                _log.Warning("Password reset requested for non-existent email: {Email}", email);
+                return true; // Return true but don't send email
+            }
+
+            // Revoke any existing password reset tokens for this user
+            var existingTokens = await _context.Tokens
+                .Where(t => t.UserId == user.Id && t.TokenType == "PasswordReset" && t.RevokedAt == null)
+                .ToListAsync();
+
+            foreach (var token in existingTokens)
+            {
+                token.RevokedAt = DateTime.UtcNow;
+            }
+
+            // Generate new password reset token
+            var resetToken = await GeneratePasswordResetTokenAsync(user.Id);
+
+            // Queue password reset email
+            await QueuePasswordResetEmailAsync(email, resetToken, user.Id, user.CustomerId);
+
+            _log.Information("Password reset token generated for {Email}", email);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error during password reset request for: {Email}", email);
+            return false;
+        }
+    }
 }

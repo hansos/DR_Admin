@@ -185,6 +185,8 @@
   },
   "active": "74d45673dae996cd",
   "lastOpenFiles": [
+    "API/EmailQueue",
+    "API/Ny mappe",
     "OperationalReliability_Analysis.md",
     "Features/Hosting/Complete_Implementation.md",
     "Features/Hosting",
@@ -200,7 +202,6 @@
     "gbjx1eps.wjh~",
     "Features/BillingAndSales/i51jgcmj.sxg~",
     "Features/BillingAndSales/Payment Service Providers.md",
-    "Features/BillingAndSales/qep2abdw.ypd~",
     "Features/BillingAndSales/TaxAndVendor.md",
     "Features/BillingAndSales/BetalingsinnkrevingOgMottak.md",
     "Features/BillingAndSales/OrderToInvoiceFlow.md",
@@ -219,7 +220,6 @@
     "Features/DomainRegistration/TLD-Pricing-Diagrams.md",
     "Features/DomainRegistration/TLD-Pricing-Checklist.md",
     "TLD-Pricing-Quick-Reference.md",
-    "TLD-Pricing-Implementation-Final.md",
-    "TLD-Pricing-Checklist.md"
+    "TLD-Pricing-Implementation-Final.md"
   ]
 }
