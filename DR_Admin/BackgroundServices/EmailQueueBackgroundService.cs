@@ -153,6 +153,8 @@ public class EmailQueueBackgroundService : BackgroundService
 
         try
         {
+            _log.Information("Starting to process email {EmailId}", emailId);
+            
             // Mark as in-progress (atomic operation to prevent duplicate processing)
             var marked = await emailQueueService.MarkEmailInProgressAsync(emailId);
             if (!marked)
@@ -168,15 +170,23 @@ public class EmailQueueBackgroundService : BackgroundService
                 return;
             }
 
-            _log.Information("Processing email {EmailId} to {To}", emailId, email.To);
+            _log.Information("Processing email {EmailId} - To: {To}, Subject: {Subject}, Provider: {Provider}", 
+                emailId, email.To, email.Subject, email.Provider ?? "default");
 
             // Get email sender (can be provider-specific based on email.Provider)
+            _log.Debug("Getting email sender for provider: {Provider}", email.Provider ?? "default");
             var emailSender = GetEmailSender(scope, email.Provider);
+            _log.Debug("Email sender obtained: {SenderType}", emailSender.GetType().Name);
 
             // Parse attachments if any
             var attachments = !string.IsNullOrEmpty(email.Attachments)
                 ? email.Attachments.Split(';').ToList()
                 : new List<string>();
+
+            if (attachments.Any())
+            {
+                _log.Debug("Email has {Count} attachments: {Attachments}", attachments.Count, string.Join(", ", attachments));
+            }
 
             // Determine body and format to send
             string body;
@@ -186,11 +196,13 @@ public class EmailQueueBackgroundService : BackgroundService
             {
                 body = email.BodyHtml;
                 isHtml = true;
+                _log.Debug("Using HTML body (length: {Length} chars)", body.Length);
             }
             else if (!string.IsNullOrEmpty(email.BodyText))
             {
                 body = email.BodyText;
                 isHtml = false;
+                _log.Debug("Using text body (length: {Length} chars)", body.Length);
             }
             else
             {
@@ -198,6 +210,8 @@ public class EmailQueueBackgroundService : BackgroundService
             }
 
             // Send the email
+            _log.Information("Sending email {EmailId} via {SenderType}", emailId, emailSender.GetType().Name);
+            
             if (attachments.Any())
             {
                 await emailSender.SendEmailAsync(email.To, email.Subject, body, attachments, isHtml);
@@ -214,11 +228,18 @@ public class EmailQueueBackgroundService : BackgroundService
             // Update throttle counter
             _emailsSentThisMinute++;
 
-            _log.Information("Successfully sent email {EmailId}", emailId);
+            _log.Information("Successfully sent email {EmailId} - MessageId: {MessageId}", emailId, messageId);
         }
         catch (Exception ex)
         {
-            _log.Error(ex, "Error sending email {EmailId}", emailId);
+            _log.Error(ex, "Error sending email {EmailId} - Exception Type: {ExceptionType}, Message: {Message}", 
+                emailId, ex.GetType().Name, ex.Message);
+            
+            if (ex.InnerException != null)
+            {
+                _log.Error("Inner Exception - Type: {InnerExceptionType}, Message: {InnerMessage}",
+                    ex.InnerException.GetType().Name, ex.InnerException.Message);
+            }
 
             // Mark as failed (will schedule retry if applicable)
             await emailQueueService.MarkEmailFailedAsync(emailId, ex.Message);
@@ -261,18 +282,33 @@ public class EmailQueueBackgroundService : BackgroundService
     /// </summary>
     private IEmailSender GetEmailSender(IServiceScope scope, string? provider)
     {
-        // For now, return default email sender
-        // TODO: Implement provider-specific logic to select appropriate IEmailSender
-        // e.g., if provider == "SendGrid", return SendGridEmailSender
+        _log.Debug("Getting EmailSenderFactory from DI for provider: {Provider}", provider ?? "default");
         
-        var emailSender = scope.ServiceProvider.GetService<IEmailSender>();
+        // Get EmailSenderFactory from DI
+        var emailSenderFactory = scope.ServiceProvider.GetService<EmailSenderLib.Factories.EmailSenderFactory>();
         
-        if (emailSender == null)
+        if (emailSenderFactory == null)
         {
-            throw new InvalidOperationException("No IEmailSender implementation registered");
+            _log.Error("EmailSenderFactory is not registered in DI. Ensure EmailSettings and EmailSenderFactory are configured in Program.cs");
+            throw new InvalidOperationException("EmailSenderFactory is not registered. Ensure EmailSettings and EmailSenderFactory are configured in Program.cs");
         }
 
-        return emailSender;
+        _log.Debug("EmailSenderFactory obtained, creating email sender instance");
+        
+        try
+        {
+            // Create and return the email sender using the factory
+            // The factory will use the provider configuration from EmailSettings
+            var sender = emailSenderFactory.CreateEmailSender();
+            _log.Information("Email sender created successfully: {SenderType}", sender.GetType().Name);
+            return sender;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Failed to create email sender - Exception Type: {ExceptionType}, Message: {Message}", 
+                ex.GetType().Name, ex.Message);
+            throw;
+        }
     }
 
     public override async Task StopAsync(CancellationToken stoppingToken)

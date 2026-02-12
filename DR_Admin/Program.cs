@@ -201,6 +201,12 @@ var exchangeRateSettings = builder.Configuration.GetSection("ExchangeRate").Get<
 builder.Services.AddSingleton(exchangeRateSettings);
 builder.Services.AddSingleton<ExchangeRateLib.Factories.ExchangeRateFactory>();
 
+// Email Sender Library - Settings and Factory
+var emailSettings = builder.Configuration.GetSection("EmailSettings").Get<EmailSenderLib.Infrastructure.Settings.EmailSettings>()
+    ?? new EmailSenderLib.Infrastructure.Settings.EmailSettings();
+builder.Services.AddSingleton(emailSettings);
+builder.Services.AddSingleton<EmailSenderLib.Factories.EmailSenderFactory>();
+
 // Database Backup Settings
 var databaseBackupSettings = builder.Configuration.GetSection("DatabaseBackup").Get<ISPAdmin.Infrastructure.Settings.DatabaseBackupSettings>()
     ?? new ISPAdmin.Infrastructure.Settings.DatabaseBackupSettings();
