@@ -1,8 +1,7 @@
-using EmailSenderLib.Enums;
 using Microsoft.Extensions.Caching.Memory;
 using Serilog;
 
-namespace EmailSenderLib.Templating;
+namespace MessagingTemplateLib.Templating;
 
 /// <summary>
 /// Loads and caches message templates from the file system

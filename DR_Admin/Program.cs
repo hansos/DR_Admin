@@ -207,12 +207,14 @@ var emailSettings = builder.Configuration.GetSection("EmailSettings").Get<EmailS
 builder.Services.AddSingleton(emailSettings);
 builder.Services.AddSingleton<EmailSenderLib.Factories.EmailSenderFactory>();
 
-// Email Template System
-builder.Services.AddSingleton(sp => new EmailSenderLib.Templating.TemplateLoader(
+// Messaging Template System
+builder.Services.AddSingleton(sp => new MessagingTemplateLib.Templating.TemplateLoader(
     sp.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>(),
     "Templates" // Base path for templates
 ));
-builder.Services.AddSingleton<EmailSenderLib.Templating.MessagingService>();
+builder.Services.AddSingleton<MessagingTemplateLib.Templating.MessagingService>();
+
+
 
 
 // Database Backup Settings

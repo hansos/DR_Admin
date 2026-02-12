@@ -1,6 +1,6 @@
-using EmailSenderLib.Templating;
-using EmailSenderLib.Templating.Models;
-using EmailSenderLib.Enums;
+using MessagingTemplateLib.Templating;
+using MessagingTemplateLib.Models;
+using MessagingTemplateLib;
 using Microsoft.Extensions.Caching.Memory;
 using Xunit;
 
@@ -8,6 +8,7 @@ namespace EmailSenderLib.Tests;
 
 /// <summary>
 /// Example unit tests for the email template system
+
 /// </summary>
 public class TemplateSystemTests
 {

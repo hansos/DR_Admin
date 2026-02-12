@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 
-namespace EmailSenderLib.Templating;
+namespace MessagingTemplateLib.Templating;
 
 /// <summary>
 /// Renders templates by replacing placeholders with actual values

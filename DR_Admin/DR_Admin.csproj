@@ -39,6 +39,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\EmailSenderLib\EmailSenderLib.csproj" />
+    <ProjectReference Include="..\MessagingTemplateLib\MessagingTemplateLib.csproj" />
     <ProjectReference Include="..\DomainRegistrationLib\DomainRegistrationLib.csproj" />
     <ProjectReference Include="..\ExchangeRateLib\ExchangeRateLib.csproj" />
     <ProjectReference Include="..\HostingPanelLib\HostingPanelLib.csproj" />
@@ -46,8 +47,16 @@
     <ProjectReference Include="..\SMSSenderLib\SMSSenderLib.csproj" />
   </ItemGroup>
 
+
   <ItemGroup>
     <Folder Include="Migrations\" />
+  </ItemGroup>
+
+  <!-- Copy Templates folder to output directory -->
+  <ItemGroup>
+    <None Include="..\Templates\**\*.*" Link="Templates\%(RecursiveDir)%(Filename)%(Extension)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

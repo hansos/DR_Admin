@@ -2,9 +2,9 @@ using ISPAdmin.DTOs;
 using ISPAdmin.Services;
 using ISPAdmin.Workflow.Domain.Events.DomainEvents;
 using ISPAdmin.Workflow.Domain.Services;
-using EmailSenderLib.Templating;
-using EmailSenderLib.Templating.Models;
-using EmailSenderLib.Enums;
+using MessagingTemplateLib.Templating;
+using MessagingTemplateLib.Models;
+using MessagingTemplateLib;
 
 namespace ISPAdmin.Workflow.Domain.EventHandlers;
 
@@ -27,6 +27,7 @@ public class DomainRegisteredEventHandler : IDomainEventHandler<DomainRegistered
         _customerService = customerService;
         _messagingService = messagingService;
     }
+
 
 
     public async Task HandleAsync(DomainRegisteredEvent @event)

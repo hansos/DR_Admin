@@ -1,7 +1,6 @@
-using EmailSenderLib.Enums;
 using Serilog;
 
-namespace EmailSenderLib.Templating;
+namespace MessagingTemplateLib.Templating;
 
 /// <summary>
 /// Service for rendering messages using templates with master layouts

@@ -1,4 +1,4 @@
-namespace EmailSenderLib.Templating.Models;
+namespace MessagingTemplateLib.Models;
 
 /// <summary>
 /// Model for DomainExpired message templates
