@@ -1,0 +1,23 @@
+WELCOME! YOUR DOMAIN IS READY
+
+Hello,
+
+Great news! Your domain {{DomainName}} has been successfully registered.
+
+DOMAIN DETAILS:
+- Domain Name: {{DomainName}}
+- Registration Date: {{RegistrationDate}}
+- Expiration Date: {{ExpirationDate}}
+- Auto-Renew: {{AutoRenew}}
+
+You can manage your domain, configure DNS settings, and view detailed 
+information through your customer portal.
+
+Customer Portal: {{CustomerPortalUrl}}
+
+If you have any questions or need assistance, our support team is here to help!
+
+Thank you for choosing our services!
+
+Best regards,
+Your Domain Registration Team

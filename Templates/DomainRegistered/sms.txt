@@ -1,0 +1,1 @@
+Domain {{DomainName}} successfully registered! Expires: {{ExpirationDate}}. Manage at {{CustomerPortalUrl}}

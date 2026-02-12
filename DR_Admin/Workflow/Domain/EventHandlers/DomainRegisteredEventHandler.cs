@@ -2,6 +2,9 @@ using ISPAdmin.DTOs;
 using ISPAdmin.Services;
 using ISPAdmin.Workflow.Domain.Events.DomainEvents;
 using ISPAdmin.Workflow.Domain.Services;
+using EmailSenderLib.Templating;
+using EmailSenderLib.Templating.Models;
+using EmailSenderLib.Enums;
 
 namespace ISPAdmin.Workflow.Domain.EventHandlers;
 
@@ -12,15 +15,19 @@ public class DomainRegisteredEventHandler : IDomainEventHandler<DomainRegistered
 {
     private readonly IEmailQueueService _emailService;
     private readonly ICustomerService _customerService;
+    private readonly MessagingService _messagingService;
     private static readonly Serilog.ILogger _log = Serilog.Log.ForContext<DomainRegisteredEventHandler>();
 
     public DomainRegisteredEventHandler(
         IEmailQueueService emailService,
-        ICustomerService customerService)
+        ICustomerService customerService,
+        MessagingService messagingService)
     {
         _emailService = emailService;
         _customerService = customerService;
+        _messagingService = messagingService;
     }
+
 
     public async Task HandleAsync(DomainRegisteredEvent @event)
     {
@@ -38,12 +45,25 @@ public class DomainRegisteredEventHandler : IDomainEventHandler<DomainRegistered
                 return;
             }
 
+            // Prepare template model
+            var model = new DomainRegisteredModel
+            {
+                DomainName = @event.DomainName,
+                RegistrationDate = @event.OccurredAt.ToString("yyyy-MM-dd"),
+                ExpirationDate = @event.ExpirationDate.ToString("yyyy-MM-dd"),
+                AutoRenew = @event.AutoRenew ? "Enabled" : "Disabled",
+                CustomerPortalUrl = "https://portal.example.com/domains" // TODO: Get from configuration
+            };
+
+            // Render email from template
+            var emailBody = _messagingService.RenderMessage("DomainRegistered", MessageChannel.EmailHtml, model);
+
             // Send welcome email
             await _emailService.QueueEmailAsync(new QueueEmailDto
             {
                 To = customer.Email,
                 Subject = $"Domain Registration Successful - {@event.DomainName}",
-                BodyHtml = BuildWelcomeEmailBody(@event)
+                BodyHtml = emailBody
             });
 
             // TODO: Additional side effects
@@ -61,27 +81,5 @@ public class DomainRegisteredEventHandler : IDomainEventHandler<DomainRegistered
                 @event.DomainName);
             throw;
         }
-    }
-
-    private string BuildWelcomeEmailBody(DomainRegisteredEvent @event)
-    {
-        return $@"
-Hello,
-
-Your domain {@event.DomainName} has been successfully registered!
-
-Domain Details:
-- Domain Name: {@event.DomainName}
-- Registration Date: {@event.OccurredAt:yyyy-MM-dd}
-- Expiration Date: {@event.ExpirationDate:yyyy-MM-dd}
-- Auto-Renew: {@event.AutoRenew}
-
-You can manage your domain through your customer portal.
-
-Thank you for choosing our services!
-
-Best regards,
-Your Domain Registration Team
-";
     }
 }

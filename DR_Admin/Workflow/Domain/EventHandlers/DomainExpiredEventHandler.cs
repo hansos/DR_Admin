@@ -2,6 +2,9 @@ using ISPAdmin.DTOs;
 using ISPAdmin.Services;
 using ISPAdmin.Workflow.Domain.Events.DomainEvents;
 using ISPAdmin.Workflow.Domain.Services;
+using EmailSenderLib.Templating;
+using EmailSenderLib.Templating.Models;
+using EmailSenderLib.Enums;
 
 namespace ISPAdmin.Workflow.Domain.EventHandlers;
 
@@ -12,15 +15,19 @@ public class DomainExpiredEventHandler : IDomainEventHandler<DomainExpiredEvent>
 {
     private readonly IEmailQueueService _emailService;
     private readonly ICustomerService _customerService;
+    private readonly MessagingService _messagingService;
     private static readonly Serilog.ILogger _log = Serilog.Log.ForContext<DomainExpiredEventHandler>();
 
     public DomainExpiredEventHandler(
         IEmailQueueService emailService,
-        ICustomerService customerService)
+        ICustomerService customerService,
+        MessagingService messagingService)
     {
         _emailService = emailService;
         _customerService = customerService;
+        _messagingService = messagingService;
     }
+
 
     public async Task HandleAsync(DomainExpiredEvent @event)
     {
@@ -39,12 +46,24 @@ public class DomainExpiredEventHandler : IDomainEventHandler<DomainExpiredEvent>
                 return;
             }
 
+            // Prepare template model
+            var model = new DomainExpiredModel
+            {
+                DomainName = @event.DomainName,
+                ExpiredAt = @event.ExpiredAt.ToString("yyyy-MM-dd"),
+                AutoRenewEnabled = @event.AutoRenewEnabled ? "Enabled" : "Disabled",
+                RenewUrl = $"https://portal.example.com/domains/{@event.DomainName}/renew" // TODO: Get from configuration
+            };
+
+            // Render email from template
+            var emailBody = _messagingService.RenderMessage("DomainExpired", MessageChannel.EmailHtml, model);
+
             // Send expiration notification
             await _emailService.QueueEmailAsync(new QueueEmailDto
             {
                 To = customer.Email,
                 Subject = $"URGENT: Domain Expired - {@event.DomainName}",
-                BodyHtml = BuildExpirationEmailBody(@event)
+                BodyHtml = emailBody
             });
 
             _log.Information("DomainExpired event handled successfully for domain {DomainName}", 
@@ -56,27 +75,5 @@ public class DomainExpiredEventHandler : IDomainEventHandler<DomainExpiredEvent>
                 @event.DomainName);
             throw;
         }
-    }
-
-    private string BuildExpirationEmailBody(DomainExpiredEvent @event)
-    {
-        return $@"
-URGENT NOTICE
-
-Your domain {@event.DomainName} has EXPIRED!
-
-Expiration Date: {@event.ExpiredAt:yyyy-MM-dd}
-Auto-Renew Status: {@event.AutoRenewEnabled}
-
-IMMEDIATE ACTION REQUIRED:
-To prevent permanent loss of your domain, please renew it immediately through your customer portal.
-
-Your domain may enter a redemption period where recovery fees apply. Act now to avoid additional costs.
-
-Please contact support if you need assistance.
-
-Best regards,
-Your Domain Registration Team
-";
     }
 }

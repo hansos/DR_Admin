@@ -1,0 +1,22 @@
+?? URGENT NOTICE ??
+
+YOUR DOMAIN HAS EXPIRED!
+
+Domain: {{DomainName}}
+Expiration Date: {{ExpiredAt}}
+Auto-Renew Status: {{AutoRenewEnabled}}
+
+IMMEDIATE ACTION REQUIRED:
+To prevent permanent loss of your domain, please renew it immediately 
+through your customer portal.
+
+Your domain may enter a redemption period where additional recovery fees 
+apply. Act now to avoid extra costs!
+
+Renew Now: {{RenewUrl}}
+
+If you need assistance or have questions about the renewal process, 
+please contact our support team immediately.
+
+Best regards,
+Your Domain Registration Team

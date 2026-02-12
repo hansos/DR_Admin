@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Features/Hosting.md",
+                "file": "Template-System-Architecture.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Hosting"
+              "title": "Template-System-Architecture"
             }
           }
         ]
@@ -78,7 +78,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 200
+    "width": 440.5
   },
   "right": {
     "id": "d7a72af4e97930d3",
@@ -94,7 +94,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Features/Hosting.md",
+                "file": "Template-System-Architecture.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -104,7 +104,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for Hosting"
+              "title": "Backlinks for Template-System-Architecture"
             }
           },
           {
@@ -113,12 +113,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Features/Hosting.md",
+                "file": "Template-System-Architecture.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from Hosting"
+              "title": "Outgoing links from Template-System-Architecture"
             }
           },
           {
@@ -156,13 +156,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Features/Hosting.md",
+                "file": "Template-System-Architecture.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of Hosting"
+              "title": "Outline of Template-System-Architecture"
             }
           }
         ]
@@ -185,6 +185,14 @@
   },
   "active": "74d45673dae996cd",
   "lastOpenFiles": [
+    "Template-System-Deployment-Checklist.md",
+    "Features/Hosting.md",
+    "h4wc2k0g.vi2~",
+    "Template-System-Architecture.md",
+    "tzrv0uiz.k24~",
+    "bdaqgc0a.brg~",
+    "Template-System-Implementation-Summary.md",
+    "Email-Template-System-QuickStart.md",
     "API/EmailQueue",
     "API/Ny mappe",
     "OperationalReliability_Analysis.md",
@@ -197,10 +205,6 @@
     "Features/BillingAndSales/PaymentCollectionMechanisms.md",
     "l31veafr.2w5~",
     "a3f35v4l.hk4~",
-    "tgwxxhkx.xia~",
-    "ht11x1r3.fj3~",
-    "gbjx1eps.wjh~",
-    "Features/BillingAndSales/i51jgcmj.sxg~",
     "Features/BillingAndSales/Payment Service Providers.md",
     "Features/BillingAndSales/TaxAndVendor.md",
     "Features/BillingAndSales/BetalingsinnkrevingOgMottak.md",
@@ -216,10 +220,6 @@
     "Features/DomainRegistration/TLD-Pricing-Summary.md",
     "Features/DomainRegistration/TLD-Pricing-Quick-Reference.md",
     "Features/DomainRegistration/TLD-Pricing-Migration-Guide.md",
-    "Features/DomainRegistration/TLD-Pricing-Implementation-Final.md",
-    "Features/DomainRegistration/TLD-Pricing-Diagrams.md",
-    "Features/DomainRegistration/TLD-Pricing-Checklist.md",
-    "TLD-Pricing-Quick-Reference.md",
-    "TLD-Pricing-Implementation-Final.md"
+    "Features/DomainRegistration/TLD-Pricing-Implementation-Final.md"
   ]
 }

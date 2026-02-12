@@ -1,0 +1,24 @@
+<h2>Welcome! Your Domain is Ready ??</h2>
+
+<p>Hello,</p>
+
+<p>Great news! Your domain <strong>{{DomainName}}</strong> has been successfully registered.</p>
+
+<h3>Domain Details:</h3>
+<ul>
+    <li><strong>Domain Name:</strong> {{DomainName}}</li>
+    <li><strong>Registration Date:</strong> {{RegistrationDate}}</li>
+    <li><strong>Expiration Date:</strong> {{ExpirationDate}}</li>
+    <li><strong>Auto-Renew:</strong> {{AutoRenew}}</li>
+</ul>
+
+<p>You can manage your domain, configure DNS settings, and view detailed information through your customer portal.</p>
+
+<a href="{{CustomerPortalUrl}}" class="button">Go to Customer Portal</a>
+
+<p>If you have any questions or need assistance, our support team is here to help!</p>
+
+<p>Thank you for choosing our services!</p>
+
+<p>Best regards,<br>
+Your Domain Registration Team</p>
