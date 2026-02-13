@@ -1,0 +1,18 @@
+<h2>Password Reset Request</h2>
+
+<p>We received a request to reset your password. Click the button below to create a new password:</p>
+
+<p style="text-align: center; margin: 30px 0;">
+    <a href="{{ResetUrl}}" class="button" style="background-color: #007bff;">Reset Password</a>
+</p>
+
+<p>Or copy and paste this link into your browser:</p>
+<p style="word-break: break-all; color: #666;">{{ResetUrl}}</p>
+
+<p><strong>Important:</strong> This link will expire in {{ExpirationHours}} hours.</p>
+
+<div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0;">
+    <strong>Security Notice:</strong>
+    <p>If you did not request a password reset, please ignore this email. Your password will remain unchanged and your account is secure.</p>
+    <p>If you're concerned about your account security, please contact our support team.</p>
+</div>

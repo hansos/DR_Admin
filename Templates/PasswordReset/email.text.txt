@@ -1,0 +1,15 @@
+PASSWORD RESET REQUEST
+
+We received a request to reset your password. Click the link below to create a new password:
+
+{{ResetUrl}}
+
+IMPORTANT: This link will expire in {{ExpirationHours}} hours.
+
+SECURITY NOTICE:
+If you did not request a password reset, please ignore this email. Your password will remain unchanged and your account is secure.
+
+If you're concerned about your account security, please contact our support team.
+
+Best regards,
+The Security Team

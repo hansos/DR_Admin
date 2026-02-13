@@ -1,0 +1,22 @@
+YOUR SERVICE IS NOW ACTIVE!
+
+Great news! Your service order {{OrderNumber}} has been successfully activated.
+
+ACTIVATION DETAILS:
+- Order Number: {{OrderNumber}}
+- Service Name: {{ServiceName}}
+- Activated Date: {{ActivatedAt}}
+
+You can now start using your service!
+
+NEXT STEPS:
+Visit your customer portal to view service details, access credentials, and manage your services.
+
+Customer Portal: {{CustomerPortalUrl}}
+
+If you have any questions or need assistance, our support team is here to help!
+
+Thank you for your business!
+
+Best regards,
+Your Service Team

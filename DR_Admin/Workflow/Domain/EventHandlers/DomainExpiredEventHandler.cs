@@ -56,15 +56,17 @@ public class DomainExpiredEventHandler : IDomainEventHandler<DomainExpiredEvent>
                 RenewUrl = $"https://portal.example.com/domains/{@event.DomainName}/renew" // TODO: Get from configuration
             };
 
-            // Render email from template
-            var emailBody = _messagingService.RenderMessage("DomainExpired", MessageChannel.EmailHtml, model);
+            // Render both HTML and plain text versions
+            var emailBodyHtml = _messagingService.RenderMessage("DomainExpired", MessageChannel.EmailHtml, model);
+            var emailBodyText = _messagingService.RenderMessage("DomainExpired", MessageChannel.EmailText, model);
 
             // Send expiration notification
             await _emailService.QueueEmailAsync(new QueueEmailDto
             {
                 To = customer.Email,
                 Subject = $"URGENT: Domain Expired - {@event.DomainName}",
-                BodyHtml = emailBody
+                BodyHtml = emailBodyHtml,
+                BodyText = emailBodyText
             });
 
             _log.Information("DomainExpired event handled successfully for domain {DomainName}", 

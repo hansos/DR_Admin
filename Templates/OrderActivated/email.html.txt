@@ -1,0 +1,25 @@
+<h2>🎉 Your Service is Now Active!</h2>
+
+<p>Great news! Your service order <strong>{{OrderNumber}}</strong> has been successfully activated.</p>
+
+<h3>Activation Details:</h3>
+<ul>
+    <li><strong>Order Number:</strong> {{OrderNumber}}</li>
+    <li><strong>Service Name:</strong> {{ServiceName}}</li>
+    <li><strong>Activated Date:</strong> {{ActivatedAt}}</li>
+</ul>
+
+<p>You can now start using your service!</p>
+
+<p style="text-align: center; margin: 30px 0;">
+    <a href="{{CustomerPortalUrl}}" class="button">Go to Customer Portal</a>
+</p>
+
+<div style="background-color: #d1ecf1; border-left: 4px solid #0c5460; padding: 15px; margin: 20px 0;">
+    <strong>Next Steps:</strong>
+    <p>Visit your customer portal to view service details, access credentials, and manage your services.</p>
+</div>
+
+<p>If you have any questions or need assistance, our support team is here to help!</p>
+
+<p>Thank you for your business!</p>

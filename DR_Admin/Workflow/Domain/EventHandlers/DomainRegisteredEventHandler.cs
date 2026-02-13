@@ -56,15 +56,17 @@ public class DomainRegisteredEventHandler : IDomainEventHandler<DomainRegistered
                 CustomerPortalUrl = "https://portal.example.com/domains" // TODO: Get from configuration
             };
 
-            // Render email from template
-            var emailBody = _messagingService.RenderMessage("DomainRegistered", MessageChannel.EmailHtml, model);
+            // Render both HTML and plain text versions
+            var emailBodyHtml = _messagingService.RenderMessage("DomainRegistered", MessageChannel.EmailHtml, model);
+            var emailBodyText = _messagingService.RenderMessage("DomainRegistered", MessageChannel.EmailText, model);
 
             // Send welcome email
             await _emailService.QueueEmailAsync(new QueueEmailDto
             {
                 To = customer.Email,
                 Subject = $"Domain Registration Successful - {@event.DomainName}",
-                BodyHtml = emailBody
+                BodyHtml = emailBodyHtml,
+                BodyText = emailBodyText
             });
 
             // TODO: Additional side effects

@@ -1,0 +1,1 @@
+Service activated! Order {{OrderNumber}} ({{ServiceName}}) is now ready. Access at {{CustomerPortalUrl}}

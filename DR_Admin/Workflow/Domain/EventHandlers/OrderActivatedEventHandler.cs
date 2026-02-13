@@ -2,6 +2,11 @@ using ISPAdmin.DTOs;
 using ISPAdmin.Services;
 using ISPAdmin.Workflow.Domain.Events.OrderEvents;
 using ISPAdmin.Workflow.Domain.Services;
+using MessagingTemplateLib.Templating;
+using MessagingTemplateLib.Models;
+using MessagingTemplateLib;
+using ISPAdmin.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace ISPAdmin.Workflow.Domain.EventHandlers;
 
@@ -12,14 +17,20 @@ public class OrderActivatedEventHandler : IDomainEventHandler<OrderActivatedEven
 {
     private readonly IEmailQueueService _emailService;
     private readonly ICustomerService _customerService;
+    private readonly MessagingService _messagingService;
+    private readonly ApplicationDbContext _context;
     private static readonly Serilog.ILogger _log = Serilog.Log.ForContext<OrderActivatedEventHandler>();
 
     public OrderActivatedEventHandler(
         IEmailQueueService emailService,
-        ICustomerService customerService)
+        ICustomerService customerService,
+        MessagingService messagingService,
+        ApplicationDbContext context)
     {
         _emailService = emailService;
         _customerService = customerService;
+        _messagingService = messagingService;
+        _context = context;
     }
 
     public async Task HandleAsync(OrderActivatedEvent @event)
@@ -39,12 +50,33 @@ public class OrderActivatedEventHandler : IDomainEventHandler<OrderActivatedEven
                 return;
             }
 
+            // Get service name from database
+            var service = await _context.Services
+                .Include(s => s.ServiceType)
+                .FirstOrDefaultAsync(s => s.Id == @event.ServiceId);
+
+            var serviceName = service?.ServiceType?.Name ?? service?.Name ?? "Your Service";
+
+            // Create template model
+            var model = new OrderActivatedModel
+            {
+                OrderNumber = @event.OrderNumber,
+                ServiceName = serviceName,
+                ActivatedAt = @event.ActivatedAt.ToString("yyyy-MM-dd HH:mm:ss") + " UTC",
+                CustomerPortalUrl = "https://portal.example.com/orders" // TODO: Get from configuration
+            };
+
+            // Render both HTML and plain text versions
+            var emailBodyHtml = _messagingService.RenderMessage("OrderActivated", MessageChannel.EmailHtml, model);
+            var emailBodyText = _messagingService.RenderMessage("OrderActivated", MessageChannel.EmailText, model);
+
             // Send activation confirmation email
             await _emailService.QueueEmailAsync(new QueueEmailDto
             {
                 To = customer.Email,
                 Subject = $"Service Activated - Order {@event.OrderNumber}",
-                BodyHtml = BuildActivationEmailBody(@event)
+                BodyHtml = emailBodyHtml,
+                BodyText = emailBodyText
             });
 
             _log.Information("OrderActivated event handled successfully for order {OrderNumber}", 
@@ -56,25 +88,5 @@ public class OrderActivatedEventHandler : IDomainEventHandler<OrderActivatedEven
                 @event.OrderNumber);
             throw;
         }
-    }
-
-    private string BuildActivationEmailBody(OrderActivatedEvent @event)
-    {
-        return $@"
-Hello,
-
-Your service order {@event.OrderNumber} has been successfully activated!
-
-Activation Details:
-- Order Number: {@event.OrderNumber}
-- Activated Date: {@event.ActivatedAt:yyyy-MM-dd HH:mm:ss} UTC
-
-You can now start using your service. Please visit your customer portal for more details.
-
-Thank you for your business!
-
-Best regards,
-Your Service Team
-";
     }
 }
