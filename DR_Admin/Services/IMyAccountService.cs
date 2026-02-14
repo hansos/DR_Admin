@@ -12,7 +12,7 @@ public interface IMyAccountService
     /// <summary>
     /// Confirm email address using confirmation token
     /// </summary>
-    Task<bool> ConfirmEmailAsync(string email, string confirmationToken);
+    Task<bool> ConfirmEmailAsync(string confirmationToken);
 
     /// <summary>
     /// Set password for new account using token

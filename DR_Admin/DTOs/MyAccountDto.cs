@@ -58,7 +58,6 @@ public class RegisterAccountResponseDto
 /// </summary>
 public class ConfirmEmailRequestDto
 {
-    public string Email { get; set; } = string.Empty;
     public string ConfirmationToken { get; set; } = string.Empty;
 }
 

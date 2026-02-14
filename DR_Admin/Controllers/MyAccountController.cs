@@ -68,10 +68,10 @@ public class MyAccountController : ControllerBase
     /// <summary>
     /// Confirms user email address using the confirmation token sent during registration
     /// </summary>
-    /// <param name="request">Email address and confirmation token</param>
+    /// <param name="request">Confirmation token</param>
     /// <returns>Success status message</returns>
     /// <response code="200">If email was confirmed successfully</response>
-    /// <response code="400">If email or token is missing, invalid, or expired</response>
+    /// <response code="400">If token is missing, invalid, or expired</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpPost("confirm-email")]
     [AllowAnonymous]
@@ -82,26 +82,26 @@ public class MyAccountController : ControllerBase
     {
         try
         {
-            if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.ConfirmationToken))
+            if (string.IsNullOrEmpty(request.ConfirmationToken))
             {
-                _log.Warning("Email confirmation attempt with empty email or token");
-                return BadRequest(new { message = "Email and confirmation token are required" });
+                _log.Warning("Email confirmation attempt with empty token");
+                return BadRequest(new { message = "Confirmation token is required" });
             }
 
-            var result = await _myAccountService.ConfirmEmailAsync(request.Email, request.ConfirmationToken);
+            var result = await _myAccountService.ConfirmEmailAsync(request.ConfirmationToken);
 
             if (!result)
             {
-                _log.Warning("Email confirmation failed for: {Email}", request.Email);
+                _log.Warning("Email confirmation failed");
                 return BadRequest(new { message = "Invalid or expired confirmation token" });
             }
 
-            _log.Information("Email confirmed successfully: {Email}", request.Email);
+            _log.Information("Email confirmed successfully");
             return Ok(new { message = "Email confirmed successfully" });
         }
         catch (Exception ex)
         {
-            _log.Error(ex, "Error during email confirmation for: {Email}", request.Email);
+            _log.Error(ex, "Error during email confirmation");
             return StatusCode(500, new { message = "An error occurred during email confirmation" });
         }
     }

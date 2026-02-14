@@ -111,29 +111,27 @@ public class MyAccountService : IMyAccountService
         }
     }
 
-    public async Task<bool> ConfirmEmailAsync(string email, string confirmationToken)
+    public async Task<bool> ConfirmEmailAsync(string confirmationToken)
     {
         try
         {
-            var user = await _context.Users
-                .Include(u => u.Tokens)
-                .FirstOrDefaultAsync(u => u.Email == email);
-
-            if (user == null)
-            {
-                _log.Warning("Email confirmation failed: User not found - {Email}", email);
-                return false;
-            }
-
-            var token = user.Tokens
-                .FirstOrDefault(t => t.TokenType == "EmailConfirmation" 
+            var token = await _context.Tokens
+                .Include(t => t.User)
+                .FirstOrDefaultAsync(t => t.TokenType == "EmailConfirmation" 
                     && t.TokenValue == confirmationToken 
                     && t.RevokedAt == null 
                     && t.Expiry > DateTime.UtcNow);
 
             if (token == null)
             {
-                _log.Warning("Email confirmation failed: Invalid or expired token - {Email}", email);
+                _log.Warning("Email confirmation failed: Invalid or expired token");
+                return false;
+            }
+
+            var user = token.User;
+            if (user == null)
+            {
+                _log.Warning("Email confirmation failed: User not found for token");
                 return false;
             }
 
@@ -143,12 +141,12 @@ public class MyAccountService : IMyAccountService
 
             await _context.SaveChangesAsync();
 
-            _log.Information("Email confirmed successfully: {Email}", email);
+            _log.Information("Email confirmed successfully: {Email}", user.Email);
             return true;
         }
         catch (Exception ex)
         {
-            _log.Error(ex, "Error during email confirmation for: {Email}", email);
+            _log.Error(ex, "Error during email confirmation");
             return false;
         }
     }
@@ -431,7 +429,7 @@ public class MyAccountService : IMyAccountService
     private async Task QueueEmailConfirmationAsync(string email, string token, int userId, int? customerId)
     {
         var baseUrl = _configuration["AppSettings:BaseUrl"] ?? "https://localhost";
-        var confirmationUrl = $"{baseUrl}/confirm-email?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(email)}";
+        var confirmationUrl = $"{baseUrl}/confirm-email?token={Uri.EscapeDataString(token)}";
 
         // Create template model
         var model = new EmailConfirmationModel
