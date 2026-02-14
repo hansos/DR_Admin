@@ -7,6 +7,7 @@ namespace EmailSenderLib.Infrastructure.Settings
     public class EmailSettings
     {
         public string Provider { get; set; } = string.Empty;
+        public string TemplatesPath { get; set; } = "Templates";
         public Smtp? Smtp { get; set; }
         public MailKit? MailKit { get; set; }
         public GraphApi? GraphApi { get; set; }

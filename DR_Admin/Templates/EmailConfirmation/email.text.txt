@@ -1,0 +1,14 @@
+CONFIRM YOUR EMAIL ADDRESS
+
+Thank you for registering! Please confirm your email address by visiting the link below:
+
+{{ConfirmationUrl}}
+
+IMPORTANT: This link will expire in {{ExpirationDays}} days.
+
+If you did not create an account, please ignore this email and no account will be created.
+
+Welcome to our service!
+
+Best regards,
+The Team

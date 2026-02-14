@@ -54,7 +54,7 @@
 
   <!-- Copy Templates folder to output directory -->
   <ItemGroup>
-    <None Include="..\Templates\**\*.*" Link="Templates\%(RecursiveDir)%(Filename)%(Extension)">
+    <None Include="Templates\**\*.*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

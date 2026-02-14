@@ -1,6 +1,7 @@
 using ISPAdmin.Data;
 using ISPAdmin.Data.Entities;
 using ISPAdmin.DTOs;
+using ISPAdmin.Infrastructure.Settings;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -17,19 +18,19 @@ namespace ISPAdmin.Services;
 public class MyAccountService : IMyAccountService
 {
     private readonly ApplicationDbContext _context;
-    private readonly IConfiguration _configuration;
+    private readonly AppSettings _appSettings;
     private readonly IEmailQueueService _emailQueueService;
     private readonly MessagingService _messagingService;
     private static readonly Serilog.ILogger _log = Log.ForContext<MyAccountService>();
 
     public MyAccountService(
         ApplicationDbContext context, 
-        IConfiguration configuration, 
+        AppSettings appSettings, 
         IEmailQueueService emailQueueService,
         MessagingService messagingService)
     {
         _context = context;
-        _configuration = configuration;
+        _appSettings = appSettings;
         _emailQueueService = emailQueueService;
         _messagingService = messagingService;
     }
@@ -52,7 +53,7 @@ public class MyAccountService : IMyAccountService
             }
 
             // Check if username already exists
-            var existingUsername = await _context.Users.FirstOrDefaultAsync(u => u.Username == request.Username);
+            var existingUsername = await _context.Users.FirstOrDefaultAsync(u => u.NormalizedUsername == StringNormalizationExtensions.Normalize(request.Username));
             if (existingUsername != null)
             {
                 throw new InvalidOperationException("Username already taken");
@@ -71,6 +72,7 @@ public class MyAccountService : IMyAccountService
             _context.Customers.Add(customer);
             await _context.SaveChangesAsync();
 
+            var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password, workFactor: 12);
             // Create user
             // TODO: In production, use proper password hashing (BCrypt, PBKDF2)
             var user = new User
@@ -78,7 +80,7 @@ public class MyAccountService : IMyAccountService
                 CustomerId = customer.Id,
                 Username = request.Username,
                 Email = request.Email,
-                PasswordHash = request.Password, // TODO: Hash this properly
+                PasswordHash = passwordHash, // TODO: Hash this properly
                 EmailConfirmed = null,
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow,
@@ -428,8 +430,7 @@ public class MyAccountService : IMyAccountService
 
     private async Task QueueEmailConfirmationAsync(string email, string token, int userId, int? customerId)
     {
-        var baseUrl = _configuration["AppSettings:BaseUrl"] ?? "https://localhost";
-        var confirmationUrl = $"{baseUrl}/confirm-email?token={Uri.EscapeDataString(token)}";
+        var confirmationUrl = $"{_appSettings.FrontendBaseUrl}/confirm-email?token={Uri.EscapeDataString(token)}";
 
         // Create template model
         var model = new EmailConfirmationModel
@@ -460,8 +461,7 @@ public class MyAccountService : IMyAccountService
 
     private async Task QueuePasswordResetEmailAsync(string email, string token, int userId, int? customerId)
     {
-        var baseUrl = _configuration["AppSettings:BaseUrl"] ?? "https://localhost";
-        var resetUrl = $"{baseUrl}/reset-password?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(email)}";
+        var resetUrl = $"{_appSettings.FrontendBaseUrl}/reset-password?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(email)}";
 
         // Create template model
         var model = new PasswordResetModel

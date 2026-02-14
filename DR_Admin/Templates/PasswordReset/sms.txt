@@ -1,0 +1,1 @@
+Reset your password: {{ResetUrl}} (expires in {{ExpirationHours}} hours). Didn't request this? Ignore this message.

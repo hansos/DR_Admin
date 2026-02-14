@@ -155,7 +155,6 @@ public class MyAccountControllerTests : IClassFixture<TestWebApplicationFactory>
         // Act - Confirm email
         var confirmRequest = new ConfirmEmailRequestDto
         {
-            Email = registerResult.Email,
             ConfirmationToken = registerResult.EmailConfirmationToken
         };
 
@@ -175,7 +174,6 @@ public class MyAccountControllerTests : IClassFixture<TestWebApplicationFactory>
         // Arrange
         var request = new ConfirmEmailRequestDto
         {
-            Email = "test@example.com",
             ConfirmationToken = "invalid-token-12345"
         };
 
@@ -369,7 +367,6 @@ public class MyAccountControllerTests : IClassFixture<TestWebApplicationFactory>
         // Confirm email
         var confirmRequest = new ConfirmEmailRequestDto
         {
-            Email = registerResult.Email,
             ConfirmationToken = registerResult.EmailConfirmationToken
         };
         var confirmResponse = await _client.PostAsJsonAsync("/api/v1/MyAccount/confirm-email", confirmRequest);

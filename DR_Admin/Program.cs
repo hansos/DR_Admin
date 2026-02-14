@@ -37,6 +37,7 @@ builder.Services.AddSingleton(Log.Logger);
 var appSettings = new AppSettings
 {
     DefaultConnection = builder.Configuration.GetConnectionString("DefaultConnection") ?? string.Empty,
+    FrontendBaseUrl = builder.Configuration["AppSettings:FrontendBaseUrl"] ?? "https://localhost:5001",
     DbSettings = builder.Configuration.GetSection("DbSettings").Get<DbSettings>() ?? new DbSettings()
 };
 builder.Services.AddSingleton(appSettings);
@@ -210,7 +211,7 @@ builder.Services.AddSingleton<EmailSenderLib.Factories.EmailSenderFactory>();
 // Messaging Template System
 builder.Services.AddSingleton(sp => new MessagingTemplateLib.Templating.TemplateLoader(
     sp.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>(),
-    "Templates" // Base path for templates
+    emailSettings.TemplatesPath // Use path from EmailSettings
 ));
 builder.Services.AddSingleton<MessagingTemplateLib.Templating.MessagingService>();
 
