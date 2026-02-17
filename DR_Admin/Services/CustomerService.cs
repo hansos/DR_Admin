@@ -123,8 +123,9 @@ public class CustomerService : ICustomerService
     /// Retrieves a customer by their email address
     /// </summary>
     /// <param name="email">The email address to search for</param>
+    /// <param name="includeContacts"></param>
     /// <returns>The customer if found; otherwise, null</returns>
-    public async Task<CustomerDto?> GetCustomerByEmailAsync(string email)
+    public async Task<CustomerDto?> GetCustomerByEmailAsync(string email, bool? includeContacts = false)
     {
         try
         {
@@ -136,8 +137,26 @@ public class CustomerService : ICustomerService
 
             if (customer == null)
             {
-                _log.Warning("Customer with email {Email} not found", email);
-                return null;
+                // If includeContacts is set to true, we might want to check if any contact person has the email as well
+                if (includeContacts == true)
+                {
+                    var contact = await _context.ContactPersons
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(cp => cp.Email == email);
+
+                    if (contact != null)
+                    {
+                        customer = await _context.Customers
+                            .AsNoTracking()
+                            .FirstOrDefaultAsync(c => c.Id == contact.CustomerId);
+                    }
+                }
+
+                if (customer == null)
+                {
+                    _log.Warning("Customer with email {Email} not found", email);
+                    return null;
+                }
             }
 
             _log.Information("Successfully fetched customer with email: {Email}", email);

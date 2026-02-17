@@ -26,13 +26,14 @@ public interface ICustomerService
     /// <param name="id">The customer's unique identifier</param>
     /// <returns>The customer if found; otherwise, null</returns>
     Task<CustomerDto?> GetCustomerByIdAsync(int id);
-    
+
     /// <summary>
     /// Retrieves a customer by their email address
     /// </summary>
     /// <param name="email">The email address to search for</param>
+    /// <param name="includeContacts"></param>
     /// <returns>The customer if found; otherwise, null</returns>
-    Task<CustomerDto?> GetCustomerByEmailAsync(string email);
+    Task<CustomerDto?> GetCustomerByEmailAsync(string email, bool? includeContacts = false);
     
     /// <summary>
     /// Checks if an email address exists in the customer database

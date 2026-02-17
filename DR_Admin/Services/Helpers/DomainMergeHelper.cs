@@ -332,7 +332,7 @@ public class DomainMergeHelper
         if (ownerContact != null && !string.IsNullOrWhiteSpace(ownerContact.Email))
         {
             _log.Debug("Looking up customer by email: {Email}", ownerContact.Email);
-            var customer = await _customerService.GetCustomerByEmailAsync(ownerContact.Email);
+            var customer = await _customerService.GetCustomerByEmailAsync(ownerContact.Email,true);
             if (customer != null)
             {
                 _log.Information("Found customer {CustomerId} ({CustomerName}) for domain {DomainName} using email {Email}", 
