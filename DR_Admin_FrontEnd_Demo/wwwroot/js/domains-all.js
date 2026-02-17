@@ -31,26 +31,60 @@ function setupEventListeners() {
 async function loadRegistrars() {
     try {
         const registrarFilter = document.getElementById('registrarFilter');
-        
-        // For demo purposes, create sample registrars
-        // In production, fetch from: GET /api/v1/Registrars
-        const sampleRegistrars = [
-            'AWS Route53',
-            'Cloudflare',
-            'GoDaddy',
-            'Namecheap',
-            'Google Domains'
-        ];
 
+        console.log('Fetching registrars from API...');
+
+        // Fetch registrars from API
+        const authToken = localStorage.getItem('authToken');
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+
+        if (authToken && !authToken.startsWith('demo-token-')) {
+            headers['Authorization'] = `Bearer ${authToken}`;
+        }
+
+        const response = await fetch('https://localhost:7201/api/v1/Registrars/active', {
+            method: 'GET',
+            headers: headers,
+            credentials: 'include'
+        });
+
+        if (response.ok) {
+            const registrars = await response.json();
+            console.log('Registrars loaded:', registrars);
+
+            if (Array.isArray(registrars) && registrars.length > 0) {
+                registrars.forEach(registrar => {
+                    const option = document.createElement('option');
+                    option.value = registrar.name;
+                    option.textContent = registrar.name;
+                    registrarFilter.appendChild(option);
+                });
+            }
+        } else {
+            // Fallback to sample data
+            console.warn('Failed to load registrars from API, using fallback');
+            const sampleRegistrars = ['AWS Route53', 'Cloudflare', 'GoDaddy', 'Namecheap', 'Google Domains'];
+            sampleRegistrars.forEach(registrar => {
+                const option = document.createElement('option');
+                option.value = registrar;
+                option.textContent = registrar;
+                registrarFilter.appendChild(option);
+            });
+        }
+
+    } catch (error) {
+        console.error('Error loading registrars:', error);
+        // Fallback to sample data on error
+        const sampleRegistrars = ['AWS Route53', 'Cloudflare', 'GoDaddy', 'Namecheap', 'Google Domains'];
+        const registrarFilter = document.getElementById('registrarFilter');
         sampleRegistrars.forEach(registrar => {
             const option = document.createElement('option');
             option.value = registrar;
             option.textContent = registrar;
             registrarFilter.appendChild(option);
         });
-
-    } catch (error) {
-        console.error('Error loading registrars:', error);
     }
 }
 
@@ -65,10 +99,45 @@ async function loadAllDomains() {
         tableDiv.classList.add('d-none');
         noDomainsDiv.classList.add('d-none');
 
-        // In production, fetch from: GET /api/v1/RegisteredDomains
-        // This endpoint requires Admin.Only policy
-        // For demo purposes, generate sample data
-        allDomains = generateSampleAllDomains();
+        console.log('Fetching all domains from API...');
+
+        // Fetch domains from API: GET /api/v1/RegisteredDomains
+        const authToken = localStorage.getItem('authToken');
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+
+        if (authToken && !authToken.startsWith('demo-token-')) {
+            headers['Authorization'] = `Bearer ${authToken}`;
+        }
+
+        const response = await fetch('https://localhost:7201/api/v1/RegisteredDomains', {
+            method: 'GET',
+            headers: headers,
+            credentials: 'include'
+        });
+
+        console.log('Domains API Response Status:', response.status);
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Domains API Error Response:', errorText);
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log('Domains loaded from API:', result);
+
+        // Handle backend response format
+        if (result.domains && Array.isArray(result.domains)) {
+            allDomains = result.domains;
+        } else if (Array.isArray(result)) {
+            allDomains = result;
+        } else {
+            console.warn('Unexpected response format, using fallback');
+            allDomains = generateSampleAllDomains();
+        }
+
         filteredDomains = [...allDomains];
 
         // Hide loading
@@ -76,6 +145,7 @@ async function loadAllDomains() {
 
         if (allDomains.length === 0) {
             noDomainsDiv.classList.remove('d-none');
+            noDomainsDiv.innerHTML = '<i class="bi bi-info-circle"></i> No domains found in the database.';
             return;
         }
 
@@ -84,9 +154,30 @@ async function loadAllDomains() {
         tableDiv.classList.remove('d-none');
 
     } catch (error) {
-        console.error('Error loading domains:', error);
+        console.error('Error loading domains from API:', error);
+        console.error('Error details:', { message: error.message, stack: error.stack });
+
         loadingDiv.classList.add('d-none');
-        showAlert('noDomainsMessage', 'Error loading domains. Please try again.', 'danger');
+
+        // Fallback to demo data on error
+        console.log('Using demo data as fallback');
+        allDomains = generateSampleAllDomains();
+        filteredDomains = [...allDomains];
+
+        if (allDomains.length > 0) {
+            updateDomainCount();
+            displayDomains();
+            tableDiv.classList.remove('d-none');
+
+            // Show warning that we're using demo data
+            const warningDiv = document.createElement('div');
+            warningDiv.className = 'alert alert-warning mt-3';
+            warningDiv.innerHTML = '<i class="bi bi-exclamation-triangle"></i> <strong>Demo Mode:</strong> Could not connect to API. Showing sample data.';
+            tableDiv.insertBefore(warningDiv, tableDiv.firstChild);
+        } else {
+            noDomainsDiv.classList.remove('d-none');
+            noDomainsDiv.innerHTML = '<i class="bi bi-exclamation-circle"></i> Error loading domains. Please try again.';
+        }
     }
 }
 
@@ -127,9 +218,12 @@ function applyFilters() {
     const searchFilter = document.getElementById('searchFilter').value.toLowerCase();
 
     filteredDomains = allDomains.filter(domain => {
+        // Get domain name (API returns 'name' not 'domainName')
+        const domainName = (domain.name || domain.domainName || '').toLowerCase();
+
         const matchesStatus = !statusFilter || domain.status === statusFilter;
         const matchesRegistrar = !registrarFilter || domain.registrar === registrarFilter;
-        const matchesSearch = !searchFilter || domain.domainName.toLowerCase().includes(searchFilter);
+        const matchesSearch = !searchFilter || domainName.includes(searchFilter);
 
         return matchesStatus && matchesRegistrar && matchesSearch;
     });
@@ -169,19 +263,67 @@ function displayDomains() {
 
 function createDomainRow(domain) {
     const row = document.createElement('tr');
-    
-    const statusBadge = getStatusBadge(domain.status);
+
+    // API returns 'name' not 'domainName'
+    const domainName = domain.name || domain.domainName || 'N/A';
+
+    // Format dates - handle multiple property name variations
+    const registeredDate = domain.registrationDate || domain.registeredDate || domain.createdAt || 'N/A';
+    const expiryDate = domain.expirationDate || domain.expiryDate || domain.expiry || 'N/A';
+
+    // Determine user-friendly status
+    const userFriendlyStatus = determineStatus(domain, expiryDate, registeredDate);
+    const statusBadge = getStatusBadge(userFriendlyStatus);
+
     const autoRenewIcon = domain.autoRenew 
         ? '<i class="bi bi-check-circle-fill text-success"></i>' 
         : '<i class="bi bi-x-circle-fill text-secondary"></i>';
 
+    // Extract customer name (from contacts array or direct properties)
+    let customerName = 'N/A';
+
+    // Try to get customer from API structure
+    if (domain.customerId) {
+        customerName = `Customer ${domain.customerId}`;
+    }
+
+    // Check for contacts array (registrar data structure)
+    let registrantContact = null;
+    if (domain.contacts && Array.isArray(domain.contacts)) {
+        registrantContact = domain.contacts.find(c => c.contactType === 'Registrant');
+    }
+
+    if (registrantContact?.organization) {
+        customerName = registrantContact.organization;
+    } else if (domain.organization || domain.customer?.organization) {
+        customerName = domain.organization || domain.customer.organization;
+    } else if (registrantContact?.firstName || registrantContact?.lastName) {
+        const firstName = registrantContact.firstName || '';
+        const lastName = registrantContact.lastName || '';
+        customerName = `${firstName} ${lastName}`.trim() || 'N/A';
+    } else if (domain.firstName || domain.lastName || domain.customer?.firstName || domain.customer?.lastName) {
+        const firstName = domain.firstName || domain.customer?.firstName || '';
+        const lastName = domain.lastName || domain.customer?.lastName || '';
+        customerName = `${firstName} ${lastName}`.trim() || 'N/A';
+    } else if (domain.customerName || domain.customer?.name) {
+        customerName = domain.customerName || domain.customer.name;
+    }
+
+    // Get registrar/provider name
+    let registrarName = 'N/A';
+    if (domain.providerId) {
+        registrarName = `Provider ${domain.providerId}`;
+    } else if (domain.registrarName || domain.registrar?.name || domain.registrar) {
+        registrarName = domain.registrarName || domain.registrar?.name || domain.registrar;
+    }
+
     row.innerHTML = `
-        <td><strong>${domain.domainName}</strong></td>
-        <td>${domain.customerName}</td>
+        <td><strong>${domainName}</strong></td>
+        <td>${customerName}</td>
         <td>${statusBadge}</td>
-        <td>${domain.registrar}</td>
-        <td>${domain.registeredDate}</td>
-        <td>${domain.expiryDate}</td>
+        <td>${registrarName}</td>
+        <td>${formatDate(registeredDate)}</td>
+        <td>${formatDate(expiryDate)}</td>
         <td class="text-center">${autoRenewIcon}</td>
         <td>
             <div class="btn-group btn-group-sm" role="group">
@@ -199,6 +341,62 @@ function createDomainRow(domain) {
     `;
 
     return row;
+}
+
+function determineStatus(domain, expiryDate, registeredDate) {
+    // If we have a simple status already, use it
+    if (domain.status && !domain.status.includes(',') && !domain.status.includes('Prohibited')) {
+        const simpleStatuses = ['Active', 'Expired', 'Suspended', 'Cancelled'];
+        if (simpleStatuses.includes(domain.status)) {
+            return domain.status;
+        }
+    }
+
+    // Determine status based on dates
+    const now = new Date();
+
+    try {
+        // Check expiration date
+        if (expiryDate && expiryDate !== 'N/A') {
+            const expiry = new Date(expiryDate);
+
+            // Already expired
+            if (expiry < now) {
+                return 'Expired';
+            }
+
+            // Expiring soon (within 30 days)
+            const daysUntilExpiry = Math.floor((expiry - now) / (1000 * 60 * 60 * 24));
+            if (daysUntilExpiry <= 30) {
+                return 'Expiring Soon';
+            }
+        }
+
+        // Check if newly registered (within 7 days)
+        if (registeredDate && registeredDate !== 'N/A') {
+            const registered = new Date(registeredDate);
+            const daysSinceRegistration = Math.floor((now - registered) / (1000 * 60 * 60 * 24));
+            if (daysSinceRegistration <= 7 && daysSinceRegistration >= 0) {
+                return 'New';
+            }
+        }
+
+    } catch (error) {
+        console.warn('Error determining status:', error);
+    }
+
+    // Default to Active if nothing else matches
+    return 'Active';
+}
+
+function formatDate(dateString) {
+    if (!dateString || dateString === 'N/A') return 'N/A';
+    try {
+        const date = new Date(dateString);
+        return date.toISOString().split('T')[0];
+    } catch {
+        return dateString;
+    }
 }
 
 function renderPagination() {
@@ -261,10 +459,13 @@ function getStatusBadge(status) {
     const badges = {
         'Active': 'badge bg-success',
         'Expired': 'badge bg-danger',
+        'Expiring Soon': 'badge bg-warning text-dark',
+        'New': 'badge bg-primary',
         'Pending': 'badge bg-warning text-dark',
-        'Suspended': 'badge bg-secondary'
+        'Suspended': 'badge bg-dark',
+        'Cancelled': 'badge bg-secondary'
     };
-    
+
     const badgeClass = badges[status] || 'badge bg-secondary';
     return `<span class="${badgeClass}">${status}</span>`;
 }

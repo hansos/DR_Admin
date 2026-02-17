@@ -144,8 +144,62 @@ const HostingAPI = {
  */
 const CustomerAPI = {
     async getCustomers() {
-        return apiRequest(`${BASE_URL}/Customers/list`, {
+        return apiRequest(`${BASE_URL}/Customers`, {
             method: 'GET',
+        });
+    },
+    async getCustomer(id) {
+        return apiRequest(`${BASE_URL}/Customers/${id}`, {
+            method: 'GET',
+        });
+    },
+    async createCustomer(customerData) {
+        return apiRequest(`${BASE_URL}/Customers`, {
+            method: 'POST',
+            body: JSON.stringify(customerData),
+        });
+    },
+    async updateCustomer(id, customerData) {
+        return apiRequest(`${BASE_URL}/Customers/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(customerData),
+        });
+    },
+    async deleteCustomer(id) {
+        return apiRequest(`${BASE_URL}/Customers/${id}`, {
+            method: 'DELETE',
+        });
+    },
+};
+/**
+ * User API calls
+ */
+const UserAPI = {
+    async getUsers() {
+        return apiRequest(`${BASE_URL}/Users`, {
+            method: 'GET',
+        });
+    },
+    async getUser(id) {
+        return apiRequest(`${BASE_URL}/Users/${id}`, {
+            method: 'GET',
+        });
+    },
+    async createUser(userData) {
+        return apiRequest(`${BASE_URL}/Users`, {
+            method: 'POST',
+            body: JSON.stringify(userData),
+        });
+    },
+    async updateUser(id, userData) {
+        return apiRequest(`${BASE_URL}/Users/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(userData),
+        });
+    },
+    async deleteUser(id) {
+        return apiRequest(`${BASE_URL}/Users/${id}`, {
+            method: 'DELETE',
         });
     },
 };
@@ -154,7 +208,7 @@ const CustomerAPI = {
  */
 const OrderAPI = {
     async getOrders() {
-        return apiRequest(`${BASE_URL}/Orders/list`, {
+        return apiRequest(`${BASE_URL}/Orders`, {
             method: 'GET',
         });
     },
@@ -183,6 +237,7 @@ if (typeof window !== 'undefined') {
     window.DomainAPI = DomainAPI;
     window.HostingAPI = HostingAPI;
     window.CustomerAPI = CustomerAPI;
+    window.UserAPI = UserAPI;
     window.OrderAPI = OrderAPI;
     window.showMessage = showMessage;
     window.hideMessage = hideMessage;
