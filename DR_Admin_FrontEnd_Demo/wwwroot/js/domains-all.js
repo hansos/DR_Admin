@@ -344,7 +344,7 @@ function createDomainRow(domain) {
         <td class="text-center">${autoRenewIcon}</td>
         <td>
             <div class="btn-group btn-group-sm" role="group">
-                <button type="button" class="btn btn-outline-primary" title="View Details">
+                <button type="button" class="btn btn-outline-primary btn-view-details" data-domain-id="${domain.id}" title="View Details">
                     <i class="bi bi-eye"></i>
                 </button>
                 <button type="button" class="btn btn-outline-secondary" title="Manage DNS">
@@ -356,6 +356,14 @@ function createDomainRow(domain) {
             </div>
         </td>
     `;
+
+    // Add click handler for View Details button
+    const viewDetailsBtn = row.querySelector('.btn-view-details');
+    if (viewDetailsBtn) {
+        viewDetailsBtn.addEventListener('click', () => {
+            window.location.href = `/domain-details.html?id=${domain.id}`;
+        });
+    }
 
     return row;
 }

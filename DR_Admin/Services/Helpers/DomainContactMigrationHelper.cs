@@ -76,6 +76,7 @@ public class DomainContactMigrationHelper
             .ToListAsync();
 
         var uniqueContacts = await _context.DomainContacts
+            .Include(dc => dc.Domain)
             .Where(dc => !existingEmails.Contains(dc.Email.ToLower()))
             .GroupBy(dc => new { dc.Email, dc.FirstName, dc.LastName })
             .Select(g => g.First())
@@ -88,6 +89,7 @@ public class DomainContactMigrationHelper
             Email = dc.Email,
             Phone = dc.Phone,
             Department = dc.Organization,
+            CustomerId = dc.Domain?.CustomerId,
             IsActive = dc.IsActive,
             IsPrimary = false,
             Notes = $"Migrated from DomainContact on {DateTime.UtcNow:yyyy-MM-dd}"
