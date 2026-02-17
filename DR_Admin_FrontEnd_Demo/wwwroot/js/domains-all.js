@@ -279,42 +279,59 @@ function createDomainRow(domain) {
         ? '<i class="bi bi-check-circle-fill text-success"></i>' 
         : '<i class="bi bi-x-circle-fill text-secondary"></i>';
 
-    // Extract customer name (from contacts array or direct properties)
+    // Extract customer name (from customer object or fallback to ID)
     let customerName = 'N/A';
 
-    // Try to get customer from API structure
-    if (domain.customerId) {
-        customerName = `Customer ${domain.customerId}`;
-    }
+    // First try to get customer from the customer object (API structure)
+    if (domain.customer?.name) {
+        customerName = domain.customer.name;
+    } else if (domain.customerName) {
+        customerName = domain.customerName;
+    } else if (domain.customer?.customerName) {
+        customerName = domain.customer.customerName;
+    } else if (domain.customer) {
+        // Try to build name from customer object properties
+        if (domain.customer.organization) {
+            customerName = domain.customer.organization;
+        } else if (domain.customer.firstName || domain.customer.lastName) {
+            const firstName = domain.customer.firstName || '';
+            const lastName = domain.customer.lastName || '';
+            customerName = `${firstName} ${lastName}`.trim() || 'N/A';
+        } else if (domain.customer.email) {
+            customerName = domain.customer.email;
+        }
+    } else if (domain.customerId) {
+        // Fallback to customer ID if no name available
+        customerName = `Customer #${domain.customerId}`;
+    } else {
+        // Check for contacts array (registrar data structure)
+        let registrantContact = null;
+        if (domain.contacts && Array.isArray(domain.contacts)) {
+            registrantContact = domain.contacts.find(c => c.contactType === 'Registrant');
+        }
 
-    // Check for contacts array (registrar data structure)
-    let registrantContact = null;
-    if (domain.contacts && Array.isArray(domain.contacts)) {
-        registrantContact = domain.contacts.find(c => c.contactType === 'Registrant');
-    }
-
-    if (registrantContact?.organization) {
-        customerName = registrantContact.organization;
-    } else if (domain.organization || domain.customer?.organization) {
-        customerName = domain.organization || domain.customer.organization;
-    } else if (registrantContact?.firstName || registrantContact?.lastName) {
-        const firstName = registrantContact.firstName || '';
-        const lastName = registrantContact.lastName || '';
-        customerName = `${firstName} ${lastName}`.trim() || 'N/A';
-    } else if (domain.firstName || domain.lastName || domain.customer?.firstName || domain.customer?.lastName) {
-        const firstName = domain.firstName || domain.customer?.firstName || '';
-        const lastName = domain.lastName || domain.customer?.lastName || '';
-        customerName = `${firstName} ${lastName}`.trim() || 'N/A';
-    } else if (domain.customerName || domain.customer?.name) {
-        customerName = domain.customerName || domain.customer.name;
+        if (registrantContact?.organization) {
+            customerName = registrantContact.organization;
+        } else if (registrantContact?.firstName || registrantContact?.lastName) {
+            const firstName = registrantContact.firstName || '';
+            const lastName = registrantContact.lastName || '';
+            customerName = `${firstName} ${lastName}`.trim() || 'N/A';
+        }
     }
 
     // Get registrar/provider name
     let registrarName = 'N/A';
-    if (domain.providerId) {
-        registrarName = `Provider ${domain.providerId}`;
-    } else if (domain.registrarName || domain.registrar?.name || domain.registrar) {
-        registrarName = domain.registrarName || domain.registrar?.name || domain.registrar;
+
+    // First try to get registrar from the registrar object (API structure)
+    if (domain.registrar?.name) {
+        registrarName = domain.registrar.name;
+    } else if (domain.registrarName) {
+        registrarName = domain.registrarName;
+    } else if (typeof domain.registrar === 'string') {
+        registrarName = domain.registrar;
+    } else if (domain.providerId) {
+        // Fallback to provider ID if no name available
+        registrarName = `Provider #${domain.providerId}`;
     }
 
     row.innerHTML = `
