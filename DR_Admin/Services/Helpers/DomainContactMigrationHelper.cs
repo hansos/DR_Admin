@@ -135,7 +135,7 @@ public class DomainContactMigrationHelper
                         RoleType = dc.RoleType,
                         AssignedAt = dc.CreatedAt,
                         IsActive = dc.IsActive,
-                        Notes = "Migrated from existing DomainContact"
+                        Notes = "Migrated from existing DomainContact",
                     });
                 }
             }

@@ -1,6 +1,7 @@
 using ISPAdmin.Data;
 using ISPAdmin.Data.Entities;
 using ISPAdmin.DTOs;
+using ISPAdmin.Services.Helpers;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -381,4 +382,80 @@ public class DomainContactService : IDomainContactService
             UpdatedAt = domainContact.UpdatedAt
         };
     }
+
+    /// <summary>
+    /// Migrates domain contacts to the hybrid ContactPerson/DomainContactAssignment system
+    /// </summary>
+    /// <returns>Migration result with statistics</returns>
+    public async Task<MigrationResult> MigrateDomainContactsToContactPersonsAsync()
+    {
+        try
+        {
+            _log.Information("Starting domain contacts migration to ContactPersons and DomainContactAssignments");
+
+            var migrationHelper = new DomainContactMigrationHelper(_context);
+            var result = await migrationHelper.MigrateToHybridSystemAsync();
+
+            _log.Information("Domain contacts migration completed. Success: {Success}, ContactPersons created: {ContactPersonsCreated}, " +
+                           "Assignments created: {AssignmentsCreated}, DomainContacts linked: {DomainContactsLinked}",
+                result.Success, result.ContactPersonsCreated, result.AssignmentsCreated, result.DomainContactsLinked);
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while migrating domain contacts");
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Checks if migration is needed
+    /// </summary>
+    /// <returns>True if there are unmigrated domain contacts</returns>
+    public async Task<bool> IsMigrationNeededAsync()
+    {
+        try
+        {
+            _log.Information("Checking if domain contacts migration is needed");
+
+            var migrationHelper = new DomainContactMigrationHelper(_context);
+            var isNeeded = await migrationHelper.IsMigrationNeededAsync();
+
+            _log.Information("Migration needed: {IsNeeded}", isNeeded);
+            return isNeeded;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while checking if migration is needed");
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Gets a preview of what the migration would do
+    /// </summary>
+    /// <returns>Migration preview with statistics</returns>
+    public async Task<MigrationPreview> GetMigrationPreviewAsync()
+    {
+        try
+        {
+            _log.Information("Getting domain contacts migration preview");
+
+            var migrationHelper = new DomainContactMigrationHelper(_context);
+            var preview = await migrationHelper.GetMigrationPreviewAsync();
+
+            _log.Information("Migration preview retrieved. Unique contacts to migrate: {UniqueContactsToMigrate}, " +
+                           "Total domain contacts: {TotalDomainContacts}, Assignments to create: {AssignmentsToCreate}",
+                preview.UniqueContactsToMigrate, preview.TotalDomainContacts, preview.AssignmentsToCreate);
+
+            return preview;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while getting migration preview");
+            throw;
+        }
+    }
 }
+

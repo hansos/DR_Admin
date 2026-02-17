@@ -1,5 +1,6 @@
 using ISPAdmin.DTOs;
 using ISPAdmin.Services;
+using ISPAdmin.Services.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
@@ -305,4 +306,113 @@ public class DomainContactsController : ControllerBase
             return StatusCode(500, "An error occurred while deleting the domain contact");
         }
     }
+
+    /// <summary>
+    /// Migrates domain contacts to the normalized ContactPerson and DomainContactAssignment tables
+    /// </summary>
+    /// <returns>Migration result with statistics about created records</returns>
+    /// <response code="200">Returns migration result with statistics</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have required role</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpPost("migrate-to-contact-persons")]
+    [Authorize(Policy = "Domain.Write")]
+    [ProducesResponseType(typeof(MigrationResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<MigrationResult>> MigrateDomainContactsToContactPersons()
+    {
+        try
+        {
+            _log.Information("API: MigrateDomainContactsToContactPersons called by user {User}", User.Identity?.Name);
+
+            var result = await _domainContactService.MigrateDomainContactsToContactPersonsAsync();
+
+            if (!result.Success)
+            {
+                _log.Warning("API: Migration completed with errors. Error: {ErrorMessage}", result.ErrorMessage);
+                return StatusCode(500, result);
+            }
+
+            _log.Information("API: Migration completed successfully. ContactPersons created: {ContactPersonsCreated}, " +
+                           "Assignments created: {AssignmentsCreated}, DomainContacts linked: {DomainContactsLinked}",
+                result.ContactPersonsCreated, result.AssignmentsCreated, result.DomainContactsLinked);
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in MigrateDomainContactsToContactPersons");
+            return StatusCode(500, "An error occurred while migrating domain contacts");
+        }
+    }
+
+    /// <summary>
+    /// Checks if domain contact migration is needed
+    /// </summary>
+    /// <returns>True if there are unmigrated domain contacts</returns>
+    /// <response code="200">Returns whether migration is needed</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have required role</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpGet("migration-needed")]
+    [Authorize(Policy = "Domain.Read")]
+    [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<bool>> IsMigrationNeeded()
+    {
+        try
+        {
+            _log.Information("API: IsMigrationNeeded called by user {User}", User.Identity?.Name);
+
+            var isNeeded = await _domainContactService.IsMigrationNeededAsync();
+
+            _log.Information("API: Migration needed check result: {IsNeeded}", isNeeded);
+            return Ok(isNeeded);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in IsMigrationNeeded");
+            return StatusCode(500, "An error occurred while checking if migration is needed");
+        }
+    }
+
+    /// <summary>
+    /// Gets a preview of what the migration would do without performing it
+    /// </summary>
+    /// <returns>Migration preview with statistics</returns>
+    /// <response code="200">Returns migration preview with statistics</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have required role</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpGet("migration-preview")]
+    [Authorize(Policy = "Domain.Read")]
+    [ProducesResponseType(typeof(MigrationPreview), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<MigrationPreview>> GetMigrationPreview()
+    {
+        try
+        {
+            _log.Information("API: GetMigrationPreview called by user {User}", User.Identity?.Name);
+
+            var preview = await _domainContactService.GetMigrationPreviewAsync();
+
+            _log.Information("API: Migration preview retrieved. Unique contacts to migrate: {UniqueContactsToMigrate}, " +
+                           "Total domain contacts: {TotalDomainContacts}, Assignments to create: {AssignmentsToCreate}",
+                preview.UniqueContactsToMigrate, preview.TotalDomainContacts, preview.AssignmentsToCreate);
+
+            return Ok(preview);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in GetMigrationPreview");
+            return StatusCode(500, "An error occurred while getting migration preview");
+        }
+    }
 }
+

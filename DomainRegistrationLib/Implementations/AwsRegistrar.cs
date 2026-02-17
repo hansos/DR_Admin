@@ -740,24 +740,28 @@ namespace DomainRegistrationLib.Implementations
                             .ToList() ?? new List<string>();
 
                         var contacts = new List<DomainContactInfo>();
-                        
+
                         // Map registrant contact
                         if (details.RegistrantContact != null)
                         {
                             contacts.Add(MapFromAwsContact(details.RegistrantContact, "Registrant"));
                         }
-                        
+
                         // Map admin contact
                         if (details.AdminContact != null)
                         {
-                            contacts.Add(MapFromAwsContact(details.AdminContact, "Admin"));
+                            contacts.Add(MapFromAwsContact(details.AdminContact, "Administrative"));
                         }
-                        
+
                         // Map tech contact
                         if (details.TechContact != null)
                         {
                             contacts.Add(MapFromAwsContact(details.TechContact, "Technical"));
                         }
+
+                        // Map billing contact (AWS Route 53 doesn't have separate billing contact, use admin)
+                        // Note: AWS Route 53 only provides Registrant, Admin, and Tech contacts
+                        // If you need a separate billing contact, you'll need to manage it separately
 
                         var domainInfo = new RegisteredDomainInfo
                         {

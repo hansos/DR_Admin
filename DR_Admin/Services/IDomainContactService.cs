@@ -1,4 +1,5 @@
 using ISPAdmin.DTOs;
+using ISPAdmin.Services.Helpers;
 
 namespace ISPAdmin.Services;
 
@@ -70,4 +71,22 @@ public interface IDomainContactService
     /// <param name="id">The domain contact ID</param>
     /// <returns>True if the domain contact exists, otherwise false</returns>
     Task<bool> DomainContactExistsAsync(int id);
+
+    /// <summary>
+    /// Migrates domain contacts to the hybrid ContactPerson/DomainContactAssignment system
+    /// </summary>
+    /// <returns>Migration result with statistics</returns>
+    Task<MigrationResult> MigrateDomainContactsToContactPersonsAsync();
+
+    /// <summary>
+    /// Checks if migration is needed
+    /// </summary>
+    /// <returns>True if there are unmigrated domain contacts</returns>
+    Task<bool> IsMigrationNeededAsync();
+
+    /// <summary>
+    /// Gets a preview of what the migration would do
+    /// </summary>
+    /// <returns>Migration preview with statistics</returns>
+    Task<MigrationPreview> GetMigrationPreviewAsync();
 }
