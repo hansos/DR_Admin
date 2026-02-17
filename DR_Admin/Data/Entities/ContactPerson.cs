@@ -64,9 +64,19 @@ public class ContactPerson : EntityBase
     /// Gets or sets the foreign key to the customer
     /// </summary>
     public int? CustomerId { get; set; }
-    
+
     /// <summary>
     /// Gets or sets the customer associated with this contact person
     /// </summary>
     public Customer? Customer { get; set; }
+
+    /// <summary>
+    /// Gets or sets the collection of domain contact assignments for this contact person
+    /// </summary>
+    public ICollection<DomainContactAssignment> DomainContactAssignments { get; set; } = new List<DomainContactAssignment>();
+
+    /// <summary>
+    /// Gets or sets the collection of domain contacts that were sourced from this contact person
+    /// </summary>
+    public ICollection<DomainContact> SourcedDomainContacts { get; set; } = new List<DomainContact>();
 }

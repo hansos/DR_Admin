@@ -91,6 +91,41 @@ public class DomainContactDto
     public int DomainId { get; set; }
 
     /// <summary>
+    /// Gets or sets the source contact person ID (if linked to master data)
+    /// </summary>
+    public int? SourceContactPersonId { get; set; }
+
+    /// <summary>
+    /// Gets or sets when this contact was last synced with the registrar
+    /// </summary>
+    public DateTime? LastSyncedAt { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether this contact needs to be synced to the registrar
+    /// </summary>
+    public bool NeedsSync { get; set; }
+
+    /// <summary>
+    /// Gets or sets the registrar contact ID (external reference)
+    /// </summary>
+    public string? RegistrarContactId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the registrar type
+    /// </summary>
+    public string? RegistrarType { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether privacy protection is enabled
+    /// </summary>
+    public bool IsPrivacyProtected { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether this is the current version
+    /// </summary>
+    public bool IsCurrentVersion { get; set; }
+
+    /// <summary>
     /// Gets or sets the date and time when the contact was created
     /// </summary>
     public DateTime CreatedAt { get; set; }
@@ -185,6 +220,26 @@ public class CreateDomainContactDto
     /// Domain ID associated with this contact
     /// </summary>
     public int DomainId { get; set; }
+
+    /// <summary>
+    /// Source contact person ID (if linked to master data)
+    /// </summary>
+    public int? SourceContactPersonId { get; set; }
+
+    /// <summary>
+    /// Registrar contact ID (external reference)
+    /// </summary>
+    public string? RegistrarContactId { get; set; }
+
+    /// <summary>
+    /// Registrar type
+    /// </summary>
+    public string? RegistrarType { get; set; }
+
+    /// <summary>
+    /// Whether privacy protection is enabled
+    /// </summary>
+    public bool IsPrivacyProtected { get; set; }
 }
 
 /// <summary>

@@ -557,11 +557,18 @@ public class DomainMergeHelper
                     continue;
                 }
 
+                // Parse string to enum
+                if (!Enum.TryParse<ContactRoleType>(contactInfo.ContactType, true, out var roleType))
+                {
+                    _log.Warning("Invalid contact type {ContactType} for domain {DomainId}", contactInfo.ContactType, domainId);
+                    continue;
+                }
+
                 // Try to find existing contact by type and email
                 var existingContact = await _context.DomainContacts
                     .FirstOrDefaultAsync(dc => 
                         dc.DomainId == domainId && 
-                        dc.ContactType == contactInfo.ContactType &&
+                        dc.RoleType == roleType &&
                         dc.Email == contactInfo.Email);
 
                 if (existingContact != null)
@@ -590,11 +597,11 @@ public class DomainMergeHelper
                 {
                     // Create new contact
                     _log.Debug("Creating new {ContactType} contact for domain {DomainId}", contactInfo.ContactType, domainId);
-                    
+
                     var newContact = new DomainContact
                     {
                         DomainId = domainId,
-                        ContactType = contactInfo.ContactType,
+                        RoleType = roleType,
                         FirstName = contactInfo.FirstName,
                         LastName = contactInfo.LastName,
                         Organization = contactInfo.Organization,

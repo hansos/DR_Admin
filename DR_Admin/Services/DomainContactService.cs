@@ -121,17 +121,24 @@ public class DomainContactService : IDomainContactService
     /// Retrieves all domain contacts of a specific type for a domain
     /// </summary>
     /// <param name="domainId">The domain ID</param>
-    /// <param name="contactType">The contact type (Registrant, Admin, Technical, Billing)</param>
+    /// <param name="contactType">The contact type (Registrant, Administrative, Technical, Billing)</param>
     /// <returns>A collection of domain contact DTOs matching the criteria</returns>
     public async Task<IEnumerable<DomainContactDto>> GetDomainContactsByTypeAsync(int domainId, string contactType)
     {
         try
         {
+            // Parse string to enum
+            if (!Enum.TryParse<ContactRoleType>(contactType, true, out var roleType))
+            {
+                _log.Warning("Invalid contact type: {ContactType}", contactType);
+                return Enumerable.Empty<DomainContactDto>();
+            }
+
             _log.Information("Fetching domain contacts for domain ID: {DomainId} with type: {ContactType}", domainId, contactType);
 
             var domainContacts = await _context.DomainContacts
                 .AsNoTracking()
-                .Where(dc => dc.DomainId == domainId && dc.ContactType == contactType)
+                .Where(dc => dc.DomainId == domainId && dc.RoleType == roleType)
                 .ToListAsync();
 
             var domainContactDtos = domainContacts.Select(MapToDto);
@@ -189,9 +196,15 @@ public class DomainContactService : IDomainContactService
         {
             _log.Information("Creating new domain contact for domain ID: {DomainId}", createDto.DomainId);
 
+            // Parse string to enum
+            if (!Enum.TryParse<ContactRoleType>(createDto.ContactType, true, out var roleType))
+            {
+                throw new ArgumentException($"Invalid contact type: {createDto.ContactType}", nameof(createDto));
+            }
+
             var domainContact = new DomainContact
             {
-                ContactType = createDto.ContactType,
+                RoleType = roleType,
                 FirstName = createDto.FirstName,
                 LastName = createDto.LastName,
                 Organization = createDto.Organization,
@@ -244,7 +257,13 @@ public class DomainContactService : IDomainContactService
                 return null;
             }
 
-            domainContact.ContactType = updateDto.ContactType;
+            // Parse string to enum
+            if (!Enum.TryParse<ContactRoleType>(updateDto.ContactType, true, out var roleType))
+            {
+                throw new ArgumentException($"Invalid contact type: {updateDto.ContactType}", nameof(updateDto));
+            }
+
+            domainContact.RoleType = roleType;
             domainContact.FirstName = updateDto.FirstName;
             domainContact.LastName = updateDto.LastName;
             domainContact.Organization = updateDto.Organization;
@@ -335,7 +354,7 @@ public class DomainContactService : IDomainContactService
         return new DomainContactDto
         {
             Id = domainContact.Id,
-            ContactType = domainContact.ContactType,
+            ContactType = domainContact.RoleType.ToString(),
             FirstName = domainContact.FirstName,
             LastName = domainContact.LastName,
             Organization = domainContact.Organization,
@@ -351,6 +370,13 @@ public class DomainContactService : IDomainContactService
             IsActive = domainContact.IsActive,
             Notes = domainContact.Notes,
             DomainId = domainContact.DomainId,
+            SourceContactPersonId = domainContact.SourceContactPersonId,
+            LastSyncedAt = domainContact.LastSyncedAt,
+            NeedsSync = domainContact.NeedsSync,
+            RegistrarContactId = domainContact.RegistrarContactId,
+            RegistrarType = domainContact.RegistrarType,
+            IsPrivacyProtected = domainContact.IsPrivacyProtected,
+            IsCurrentVersion = domainContact.IsCurrentVersion,
             CreatedAt = domainContact.CreatedAt,
             UpdatedAt = domainContact.UpdatedAt
         };

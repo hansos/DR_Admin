@@ -148,6 +148,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<PaymentGateway> PaymentGateways { get; set; }
     public DbSet<RegisteredDomain> RegisteredDomains { get; set; }
     public DbSet<DomainContact> DomainContacts { get; set; }
+    public DbSet<DomainContactAssignment> DomainContactAssignments { get; set; }
     public DbSet<Tld> Tlds { get; set; }
     public DbSet<Registrar> Registrars { get; set; }
     public DbSet<RegistrarTld> RegistrarTlds { get; set; }
@@ -586,6 +587,72 @@ public class ApplicationDbContext : DbContext
             entity.HasOne(e => e.RegistrarTld)
                 .WithMany(rt => rt.RegisteredDomains)
                 .HasForeignKey(e => e.RegistrarTldId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // DomainContact configuration
+        modelBuilder.Entity<DomainContact>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.FirstName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.LastName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Organization).HasMaxLength(200);
+            entity.Property(e => e.Email).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Phone).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Fax).HasMaxLength(50);
+            entity.Property(e => e.Address1).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.Address2).HasMaxLength(500);
+            entity.Property(e => e.City).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.State).HasMaxLength(100);
+            entity.Property(e => e.PostalCode).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.CountryCode).IsRequired().HasMaxLength(2);
+            entity.Property(e => e.Notes).HasMaxLength(2000);
+            entity.Property(e => e.NormalizedFirstName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.NormalizedLastName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.NormalizedEmail).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.RegistrarContactId).HasMaxLength(200);
+            entity.Property(e => e.RegistrarType).HasMaxLength(100);
+
+            entity.HasIndex(e => e.DomainId);
+            entity.HasIndex(e => e.RoleType);
+            entity.HasIndex(e => e.SourceContactPersonId);
+            entity.HasIndex(e => e.NeedsSync);
+            entity.HasIndex(e => e.IsCurrentVersion);
+            entity.HasIndex(e => new { e.DomainId, e.RoleType, e.IsCurrentVersion });
+            entity.HasIndex(e => e.Email);
+            entity.HasIndex(e => e.NormalizedEmail);
+
+            entity.HasOne(e => e.Domain)
+                .WithMany(d => d.DomainContacts)
+                .HasForeignKey(e => e.DomainId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.SourceContactPerson)
+                .WithMany(cp => cp.SourcedDomainContacts)
+                .HasForeignKey(e => e.SourceContactPersonId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // DomainContactAssignment configuration
+        modelBuilder.Entity<DomainContactAssignment>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Notes).HasMaxLength(1000);
+
+            entity.HasIndex(e => e.RegisteredDomainId);
+            entity.HasIndex(e => e.ContactPersonId);
+            entity.HasIndex(e => new { e.RegisteredDomainId, e.RoleType, e.IsActive });
+            entity.HasIndex(e => e.IsActive);
+            entity.HasIndex(e => e.AssignedAt);
+
+            entity.HasOne(e => e.RegisteredDomain)
+                .WithMany(rd => rd.DomainContactAssignments)
+                .HasForeignKey(e => e.RegisteredDomainId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.ContactPerson)
+                .WithMany(cp => cp.DomainContactAssignments)
+                .HasForeignKey(e => e.ContactPersonId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
 

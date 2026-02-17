@@ -1,15 +1,16 @@
 namespace ISPAdmin.Data.Entities;
 
 /// <summary>
-/// Represents a contact person associated with a domain registration.
-/// Stores standardized contact information that supports all TLDs.
+/// Represents a snapshot/cache of contact information as it was sent to or received from a domain registrar.
+/// This serves as an audit trail showing exactly what the registrar has on file.
+/// The master/normalized contact data lives in ContactPerson.
 /// </summary>
 public class DomainContact : EntityBase
 {
     /// <summary>
-    /// Gets or sets the type of contact (Registrant, Admin, Technical, Billing)
+    /// Gets or sets the role type for this contact on the domain
     /// </summary>
-    public string ContactType { get; set; } = string.Empty;
+    public ContactRoleType RoleType { get; set; }
 
     /// <summary>
     /// Gets or sets the first name of the contact person
@@ -105,4 +106,52 @@ public class DomainContact : EntityBase
     /// Gets or sets the domain associated with this contact
     /// </summary>
     public RegisteredDomain Domain { get; set; } = null!;
+
+    /// <summary>
+    /// Gets or sets the optional foreign key linking back to the master ContactPerson record.
+    /// If null, this is a standalone registrar contact not managed in our system.
+    /// </summary>
+    public int? SourceContactPersonId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the navigation property to the source ContactPerson (if linked)
+    /// </summary>
+    public ContactPerson? SourceContactPerson { get; set; }
+
+    /// <summary>
+    /// Gets or sets when this contact was last synchronized with the registrar
+    /// </summary>
+    public DateTime? LastSyncedAt { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether this contact needs to be synchronized to the registrar
+    /// </summary>
+    public bool NeedsSync { get; set; }
+
+    /// <summary>
+    /// Gets or sets the external contact ID from the registrar (if applicable)
+    /// </summary>
+    public string? RegistrarContactId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the type/name of the registrar this contact is associated with
+    /// </summary>
+    public string? RegistrarType { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether this domain uses privacy protection (WHOIS privacy)
+    /// </summary>
+    public bool IsPrivacyProtected { get; set; }
+
+    /// <summary>
+    /// Gets or sets a JSON snapshot of the exact data received from/sent to the registrar.
+    /// This serves as a complete audit trail of registrar interactions.
+    /// </summary>
+    public string? RegistrarSnapshot { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether this is the current/active version of the contact for this domain and role.
+    /// Used if implementing historical versioning (append-only pattern).
+    /// </summary>
+    public bool IsCurrentVersion { get; set; } = true;
 }

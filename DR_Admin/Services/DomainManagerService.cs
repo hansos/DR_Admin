@@ -1,6 +1,7 @@
 using DomainRegistrationLib.Factories;
 using DomainRegistrationLib.Models;
 using ISPAdmin.Data;
+using ISPAdmin.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -206,8 +207,13 @@ public class DomainManagerService : IDomainManagerService
 
     private ContactInformation? GetContactInformation(Data.Entities.RegisteredDomain domain, string contactType)
     {
-        var contact = domain.DomainContacts.FirstOrDefault(c => 
-            string.Equals(c.ContactType, contactType, StringComparison.OrdinalIgnoreCase));
+        // Parse string to enum
+        if (!Enum.TryParse<ContactRoleType>(contactType, true, out var roleType))
+        {
+            return null;
+        }
+
+        var contact = domain.DomainContacts.FirstOrDefault(c => c.RoleType == roleType);
 
         if (contact == null)
             return null;
