@@ -12,6 +12,9 @@ public class RegisteredDomainDto
     public DateTime ExpirationDate { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+
+    public CustomerDto? Customer { get; set; }
+    public RegistrarDto? Registrar { get; set; }
 }
 
 public class CreateRegisteredDomainDto

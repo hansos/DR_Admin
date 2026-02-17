@@ -34,14 +34,16 @@ public class DomainRegistrationService : IRegisteredDomainService
         try
         {
             _log.Information("Fetching all domains");
-            
+
             var domains = await _context.RegisteredDomains
                 .AsNoTracking()
+                .Include(d => d.Registrar)
+                .Include(d => d.Customer)
                 .OrderBy(d => d.Name)
                 .ToListAsync();
 
             var domainDtos = domains.Select(MapToDto);
-            
+
             _log.Information("Successfully fetched {Count} domains", domains.Count);
             return domainDtos;
         }
@@ -61,6 +63,8 @@ public class DomainRegistrationService : IRegisteredDomainService
             var domains = await _context.RegisteredDomains
                 .AsNoTracking()
                 .Where(d => d.CustomerId == customerId)
+                .Include(d => d.Registrar)
+                .Include(d => d.Customer)
                 .OrderBy(d => d.Name)
                 .ToListAsync();
 
@@ -85,6 +89,8 @@ public class DomainRegistrationService : IRegisteredDomainService
             var domains = await _context.RegisteredDomains
                 .AsNoTracking()
                 .Where(d => d.RegistrarId == registrarId)
+                .Include(d => d.Registrar)
+                .Include(d => d.Customer)
                 .OrderBy(d => d.Name)
                 .ToListAsync();
 
@@ -109,6 +115,8 @@ public class DomainRegistrationService : IRegisteredDomainService
             var domains = await _context.RegisteredDomains
                 .AsNoTracking()
                 .Where(d => d.Status == status)
+                .Include(d => d.Registrar)
+                .Include(d => d.Customer)
                 .OrderBy(d => d.Name)
                 .ToListAsync();
 
@@ -135,6 +143,9 @@ public class DomainRegistrationService : IRegisteredDomainService
             var domains = await _context.RegisteredDomains
                 .AsNoTracking()
                 .Where(d => d.ExpirationDate <= targetDate && d.ExpirationDate >= DateTime.UtcNow)
+                .Include(d => d.Registrar)
+                .Include(d => d.Customer)   
+                .OrderBy(d => d.Name)   
                 .OrderBy(d => d.ExpirationDate)
                 .ToListAsync();
 
@@ -158,6 +169,9 @@ public class DomainRegistrationService : IRegisteredDomainService
 
             var domain = await _context.RegisteredDomains
                 .AsNoTracking()
+                .Include(d => d.Registrar)
+                .Include(d => d.Customer) 
+                .OrderBy(d => d.Name)
                 .FirstOrDefaultAsync(d => d.Id == id);
 
             if (domain == null)
@@ -186,6 +200,8 @@ public class DomainRegistrationService : IRegisteredDomainService
             
             var domain = await _context.RegisteredDomains
                 .AsNoTracking()
+                .Include(d => d.Registrar)
+                .Include(d => d.Customer)
                 .FirstOrDefaultAsync(d => d.NormalizedName == normalizedName);
 
             if (domain == null)
@@ -393,7 +409,28 @@ public class DomainRegistrationService : IRegisteredDomainService
             RegistrationDate = domain.RegistrationDate,
             ExpirationDate = domain.ExpirationDate,
             CreatedAt = domain.CreatedAt,
-            UpdatedAt = domain.UpdatedAt
+            UpdatedAt = domain.UpdatedAt,
+            Customer = domain.Customer != null ? new CustomerDto
+            {
+                Id = domain.Customer.Id,
+                Name = domain.Customer.Name,
+                Email = domain.Customer.Email,
+                Phone = domain.Customer.Phone
+            } : null,
+            Registrar = domain.Registrar != null ? new RegistrarDto
+            {
+                Id = domain.Registrar.Id,
+                Name = domain.Registrar.Name,
+                Code = domain.Registrar.Code,
+                IsActive = domain.Registrar.IsActive,
+                ContactEmail = domain.Registrar.ContactEmail,
+                ContactPhone = domain.Registrar.ContactPhone,
+                Website = domain.Registrar.Website,
+                Notes = domain.Registrar.Notes,
+                IsDefault = domain.Registrar.IsDefault,
+                CreatedAt = domain.Registrar.CreatedAt,
+                UpdatedAt = domain.Registrar.UpdatedAt
+            } : null
         };
     }
 
