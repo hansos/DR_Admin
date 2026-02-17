@@ -204,6 +204,38 @@ const UserAPI = {
     },
 };
 /**
+ * Contact Person API calls
+ */
+const ContactPersonAPI = {
+    async getContactPersonsByCustomer(customerId) {
+        return apiRequest(`${BASE_URL}/ContactPersons/customer/${customerId}`, {
+            method: 'GET',
+        });
+    },
+    async getContactPerson(id) {
+        return apiRequest(`${BASE_URL}/ContactPersons/${id}`, {
+            method: 'GET',
+        });
+    },
+    async createContactPerson(contactPersonData) {
+        return apiRequest(`${BASE_URL}/ContactPersons`, {
+            method: 'POST',
+            body: JSON.stringify(contactPersonData),
+        });
+    },
+    async updateContactPerson(id, contactPersonData) {
+        return apiRequest(`${BASE_URL}/ContactPersons/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(contactPersonData),
+        });
+    },
+    async deleteContactPerson(id) {
+        return apiRequest(`${BASE_URL}/ContactPersons/${id}`, {
+            method: 'DELETE',
+        });
+    },
+};
+/**
  * Order API calls
  */
 const OrderAPI = {
@@ -238,6 +270,7 @@ if (typeof window !== 'undefined') {
     window.HostingAPI = HostingAPI;
     window.CustomerAPI = CustomerAPI;
     window.UserAPI = UserAPI;
+    window.ContactPersonAPI = ContactPersonAPI;
     window.OrderAPI = OrderAPI;
     window.showMessage = showMessage;
     window.hideMessage = hideMessage;
