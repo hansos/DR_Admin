@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DR Admin Demo - Hosting</title>
+    <title>DR Admin Demo - All Domains</title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -28,14 +28,14 @@
                         </a>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="domainsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <a class="nav-link dropdown-toggle active" href="#" id="domainsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-globe2"></i> Domains
                         </a>
                         <ul class="dropdown-menu" aria-labelledby="domainsDropdown">
                             <li><a class="dropdown-item" href="/domains-by-registrant.html">
                                 <i class="bi bi-building"></i> By Registrar
                             </a></li>
-                            <li><a class="dropdown-item" href="/domains-all.html">
+                            <li><a class="dropdown-item active" href="/domains-all.html">
                                 <i class="bi bi-list-ul"></i> All Domains
                             </a></li>
                             <li><a class="dropdown-item" href="/domains-register.html">
@@ -44,7 +44,7 @@
                         </ul>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" href="/hosting.html">
+                        <a class="nav-link" href="/hosting.html">
                             <i class="bi bi-server"></i> Hosting
                         </a>
                     </li>
@@ -70,59 +70,88 @@
 
     <!-- Main Content -->
     <main class="container mt-4">
-        <h2><i class="bi bi-server"></i> Hosting Services</h2>
+        <h2><i class="bi bi-list-ul"></i> All Domains in Database</h2>
+        <p class="text-muted">Complete list of all registered domains in the local database</p>
         <hr>
 
-        <!-- Available Hosting Plans -->
+        <!-- Filters Section -->
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><i class="bi bi-box"></i> Available Hosting Plans</h5>
+                <h5 class="mb-0"><i class="bi bi-funnel"></i> Filters</h5>
             </div>
             <div class="card-body">
-                <div id="loadingPlans" class="text-center py-3">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label for="statusFilter" class="form-label">Status</label>
+                        <select class="form-select" id="statusFilter">
+                            <option value="">All Statuses</option>
+                            <option value="Active">Active</option>
+                            <option value="Expired">Expired</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Suspended">Suspended</option>
+                        </select>
                     </div>
-                    <p class="mt-2">Loading hosting plans...</p>
-                </div>
-                <div id="hostingPlans" class="row d-none">
-                    <!-- Populated by JavaScript -->
+                    <div class="col-md-3">
+                        <label for="registrarFilter" class="form-label">Registrar</label>
+                        <select class="form-select" id="registrarFilter">
+                            <option value="">All Registrars</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="searchFilter" class="form-label">Search Domain</label>
+                        <input type="text" class="form-control" id="searchFilter" placeholder="Enter domain name...">
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="button" class="btn btn-primary w-100" id="applyFiltersBtn">
+                            <i class="bi bi-search"></i> Apply
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- My Hosting Services -->
+        <!-- Domains List Section -->
         <div class="card shadow-sm">
-            <div class="card-header bg-success text-white">
-                <h5 class="mb-0"><i class="bi bi-hdd-rack"></i> My Hosting Services</h5>
+            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-database"></i> All Domains</h5>
+                <span class="badge bg-light text-dark" id="domainCount">0 domains</span>
             </div>
             <div class="card-body">
-                <div id="loadingServices" class="text-center py-3">
-                    <div class="spinner-border text-success" role="status">
+                <div id="loadingDomains" class="text-center py-3">
+                    <div class="spinner-border text-primary" role="status">
                         <span class="visually-hidden">Loading...</span>
                     </div>
-                    <p class="mt-2">Loading your hosting services...</p>
+                    <p class="mt-2">Loading all domains...</p>
                 </div>
-                <div id="hostingServicesTable" class="d-none">
+                <div id="domainsTable" class="d-none">
                     <div class="table-responsive">
                         <table class="table table-hover">
                             <thead>
                                 <tr>
-                                    <th>Plan</th>
-                                    <th>Domain</th>
+                                    <th>Domain Name</th>
+                                    <th>Customer</th>
                                     <th>Status</th>
-                                    <th>Renewal Date</th>
+                                    <th>Registrar</th>
+                                    <th>Registered Date</th>
+                                    <th>Expiry Date</th>
+                                    <th>Auto Renew</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
-                            <tbody id="hostingServicesTableBody">
+                            <tbody id="domainsTableBody">
                                 <!-- Populated by JavaScript -->
                             </tbody>
                         </table>
                     </div>
+                    <!-- Pagination -->
+                    <nav aria-label="Domain pagination">
+                        <ul class="pagination justify-content-center" id="pagination">
+                            <!-- Populated by JavaScript -->
+                        </ul>
+                    </nav>
                 </div>
-                <div id="noServicesMessage" class="alert alert-info d-none" role="alert">
-                    <i class="bi bi-info-circle"></i> You don't have any hosting services yet. Choose a plan above to get started!
+                <div id="noDomainsMessage" class="alert alert-info d-none" role="alert">
+                    <i class="bi bi-info-circle"></i> No domains found in the database.
                 </div>
             </div>
         </div>
@@ -130,9 +159,8 @@
         <div class="alert alert-warning mt-4" role="alert">
             <h5 class="alert-heading"><i class="bi bi-code-square"></i> Developer Note</h5>
             <p class="mb-0">
-                This page shows available hosting plans and user's active services. 
-                Update the API calls in <code>wwwroot/js/hosting.js</code> to integrate with 
-                DR_Admin backend endpoints (e.g., <code>/api/hosting/plans</code>, <code>/api/hosting/services</code>).
+                This page demonstrates viewing all domains in the database. 
+                API endpoint: <code>GET /api/v1/RegisteredDomains</code> (requires Admin.Only policy)
             </p>
         </div>
     </main>
@@ -161,6 +189,6 @@
     <!-- TypeScript compiled JavaScript -->
     <script src="/js/api-client.js"></script>
     <script src="/js/auth-state.js"></script>
-    <script src="/js/hosting.js"></script>
+    <script src="/js/domains-all.js"></script>
 </body>
 </html>

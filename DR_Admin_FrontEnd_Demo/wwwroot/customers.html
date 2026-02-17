@@ -26,10 +26,21 @@
                         <i class="bi bi-house"></i> Home
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/domains.html">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="domainsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="bi bi-globe2"></i> Domains
                     </a>
+                    <ul class="dropdown-menu" aria-labelledby="domainsDropdown">
+                        <li><a class="dropdown-item" href="/domains-by-registrant.html">
+                            <i class="bi bi-building"></i> By Registrar
+                        </a></li>
+                        <li><a class="dropdown-item" href="/domains-all.html">
+                            <i class="bi bi-list-ul"></i> All Domains
+                        </a></li>
+                        <li><a class="dropdown-item" href="/domains-register.html">
+                            <i class="bi bi-plus-circle"></i> Register New
+                        </a></li>
+                    </ul>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="/hosting.html">

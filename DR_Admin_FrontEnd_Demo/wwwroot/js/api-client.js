@@ -9,11 +9,22 @@ const BASE_URL = 'https://localhost:7201/api/v1';
  */
 async function apiRequest(endpoint, options = {}) {
     try {
+        // Get auth token from localStorage
+        const authToken = localStorage.getItem('authToken');
+
+        // Build headers
+        const headers = {
+            'Content-Type': 'application/json',
+            ...options.headers,
+        };
+
+        // Add auth token if available
+        if (authToken) {
+            headers['Authorization'] = `Bearer ${authToken}`;
+        }
+
         const response = await fetch(endpoint, {
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers,
-            },
+            headers,
             credentials: 'include', // Changed from 'same-origin' to support CORS
             ...options,
         });
@@ -43,10 +54,38 @@ async function apiRequest(endpoint, options = {}) {
  */
 const AuthAPI = {
     async login(email, password) {
-        return apiRequest(`${BASE_URL}/auth/login`, {
+        const result = await apiRequest(`${BASE_URL}/auth/login`, {
             method: 'POST',
             body: JSON.stringify({ username: email, password }),
         });
+
+        // Store authentication info in localStorage on successful login
+        if (result.success) {
+            localStorage.setItem('userEmail', email);
+
+            // Backend returns AccessToken and RefreshToken (not just "token")
+            if (result.data) {
+                if (result.data.accessToken) {
+                    localStorage.setItem('authToken', result.data.accessToken);
+                    console.log('Access token stored:', result.data.accessToken.substring(0, 20) + '...');
+                }
+                if (result.data.refreshToken) {
+                    localStorage.setItem('refreshToken', result.data.refreshToken);
+                    console.log('Refresh token stored');
+                }
+                if (result.data.username) {
+                    localStorage.setItem('username', result.data.username);
+                }
+                if (result.data.roles) {
+                    localStorage.setItem('userRoles', JSON.stringify(result.data.roles));
+                }
+                if (result.data.expiresAt) {
+                    localStorage.setItem('tokenExpiresAt', result.data.expiresAt);
+                }
+            }
+        }
+
+        return result;
     },
     async register(name, email, password, confirmPassword) {
         return apiRequest(`${BASE_URL}/myaccount/register`, {
