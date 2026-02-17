@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ISPAdmin.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260209081108_AddFinancialTrackingEntities")]
-    partial class AddFinancialTrackingEntities
+    [Migration("20260217164032_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -1481,17 +1481,53 @@ namespace ISPAdmin.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("BandwidthLimitMB")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("BandwidthUsageMB")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ConfigurationJson")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("CustomerId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("DiskQuotaMB")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("DiskUsageMB")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTime>("ExpirationDate")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("ExternalAccountId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("LastSyncedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("MaxDatabases")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("MaxEmailAccounts")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("MaxFtpAccounts")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("MaxSubdomains")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PlanName")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Provider")
@@ -1513,6 +1549,9 @@ namespace ISPAdmin.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("SyncStatus")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("TEXT");
 
@@ -1532,6 +1571,299 @@ namespace ISPAdmin.Migrations
                     b.HasIndex("ServiceId");
 
                     b.ToTable("HostingAccounts");
+                });
+
+            modelBuilder.Entity("ISPAdmin.Data.Entities.HostingDatabase", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("CharacterSet")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Collation")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DatabaseName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DatabaseType")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ExternalDatabaseId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("HostingAccountId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("LastSyncedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ServerHost")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("ServerPort")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("SizeMB")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("SyncStatus")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HostingAccountId");
+
+                    b.ToTable("HostingDatabases");
+                });
+
+            modelBuilder.Entity("ISPAdmin.Data.Entities.HostingDatabaseUser", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("AllowedHosts")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ExternalUserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("HostingDatabaseId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("LastSyncedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Privileges")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SyncStatus")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HostingDatabaseId");
+
+                    b.ToTable("HostingDatabaseUsers");
+                });
+
+            modelBuilder.Entity("ISPAdmin.Data.Entities.HostingDomain", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("AutoRenewSsl")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DocumentRoot")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DomainName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DomainType")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ExternalDomainId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("HostingAccountId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("LastSyncedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("PhpEnabled")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("PhpVersion")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("SslEnabled")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("SslExpirationDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SslIssuer")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SyncStatus")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HostingAccountId");
+
+                    b.ToTable("HostingDomains");
+                });
+
+            modelBuilder.Entity("ISPAdmin.Data.Entities.HostingEmailAccount", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("AutoResponderEnabled")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("AutoResponderMessage")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EmailAddress")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ExternalEmailId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ForwardTo")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("HostingAccountId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsForwarderOnly")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("LastSyncedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("QuotaMB")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("SpamFilterEnabled")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("SpamScoreThreshold")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("SyncStatus")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("UsageMB")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HostingAccountId");
+
+                    b.ToTable("HostingEmailAccounts");
+                });
+
+            modelBuilder.Entity("ISPAdmin.Data.Entities.HostingFtpAccount", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ExternalFtpId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("FtpsEnabled")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("HomeDirectory")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("HostingAccountId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("LastSyncedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("QuotaMB")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("ReadOnly")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("SftpEnabled")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("SyncStatus")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HostingAccountId");
+
+                    b.ToTable("HostingFtpAccounts");
                 });
 
             modelBuilder.Entity("ISPAdmin.Data.Entities.HostingPackage", b =>
@@ -1833,6 +2165,49 @@ namespace ISPAdmin.Migrations
                     b.ToTable("InvoiceLines");
                 });
 
+            modelBuilder.Entity("ISPAdmin.Data.Entities.InvoicePayment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("AmountApplied")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("InvoiceBalance")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("InvoiceId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("InvoiceTotalAmount")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsFullPayment")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("PaymentTransactionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InvoiceId");
+
+                    b.HasIndex("PaymentTransactionId");
+
+                    b.ToTable("InvoicePayments");
+                });
+
             modelBuilder.Entity("ISPAdmin.Data.Entities.NameServer", b =>
                 {
                     b.Property<int>("Id")
@@ -2027,6 +2402,88 @@ namespace ISPAdmin.Migrations
                     b.ToTable("OutboxEvents");
                 });
 
+            modelBuilder.Entity("ISPAdmin.Data.Entities.PaymentAttempt", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("AttemptedAmount")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("AuthenticationStatus")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("AuthenticationUrl")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("CustomerPaymentMethodId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ErrorCode")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ErrorMessage")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("GatewayResponse")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("GatewayTransactionId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("InvoiceId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("IpAddress")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("NextRetryAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("PaymentTransactionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("RequiresAuthentication")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("RetryCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserAgent")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerPaymentMethodId");
+
+                    b.HasIndex("InvoiceId");
+
+                    b.HasIndex("PaymentTransactionId");
+
+                    b.ToTable("PaymentAttempts");
+                });
+
             modelBuilder.Entity("ISPAdmin.Data.Entities.PaymentGateway", b =>
                 {
                     b.Property<int>("Id")
@@ -2218,6 +2675,66 @@ namespace ISPAdmin.Migrations
                     b.HasIndex("PaymentGatewayId");
 
                     b.ToTable("PaymentIntents");
+                });
+
+            modelBuilder.Entity("ISPAdmin.Data.Entities.PaymentMethodToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("CardBrand")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("CustomerPaymentMethodId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("EncryptedToken")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("ExpiryMonth")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("ExpiryYear")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("GatewayCustomerId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("GatewayPaymentMethodId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsVerified")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Last4Digits")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("VerifiedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerPaymentMethodId");
+
+                    b.ToTable("PaymentMethodTokens");
                 });
 
             modelBuilder.Entity("ISPAdmin.Data.Entities.PaymentTransaction", b =>
@@ -4925,6 +5442,61 @@ namespace ISPAdmin.Migrations
                     b.Navigation("Service");
                 });
 
+            modelBuilder.Entity("ISPAdmin.Data.Entities.HostingDatabase", b =>
+                {
+                    b.HasOne("ISPAdmin.Data.Entities.HostingAccount", "HostingAccount")
+                        .WithMany("Databases")
+                        .HasForeignKey("HostingAccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("HostingAccount");
+                });
+
+            modelBuilder.Entity("ISPAdmin.Data.Entities.HostingDatabaseUser", b =>
+                {
+                    b.HasOne("ISPAdmin.Data.Entities.HostingDatabase", "HostingDatabase")
+                        .WithMany("DatabaseUsers")
+                        .HasForeignKey("HostingDatabaseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("HostingDatabase");
+                });
+
+            modelBuilder.Entity("ISPAdmin.Data.Entities.HostingDomain", b =>
+                {
+                    b.HasOne("ISPAdmin.Data.Entities.HostingAccount", "HostingAccount")
+                        .WithMany("Domains")
+                        .HasForeignKey("HostingAccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("HostingAccount");
+                });
+
+            modelBuilder.Entity("ISPAdmin.Data.Entities.HostingEmailAccount", b =>
+                {
+                    b.HasOne("ISPAdmin.Data.Entities.HostingAccount", "HostingAccount")
+                        .WithMany("EmailAccounts")
+                        .HasForeignKey("HostingAccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("HostingAccount");
+                });
+
+            modelBuilder.Entity("ISPAdmin.Data.Entities.HostingFtpAccount", b =>
+                {
+                    b.HasOne("ISPAdmin.Data.Entities.HostingAccount", "HostingAccount")
+                        .WithMany("FtpAccounts")
+                        .HasForeignKey("HostingAccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("HostingAccount");
+                });
+
             modelBuilder.Entity("ISPAdmin.Data.Entities.Invoice", b =>
                 {
                     b.HasOne("ISPAdmin.Data.Entities.Customer", "Customer")
@@ -4972,6 +5544,25 @@ namespace ISPAdmin.Migrations
                     b.Navigation("Unit");
                 });
 
+            modelBuilder.Entity("ISPAdmin.Data.Entities.InvoicePayment", b =>
+                {
+                    b.HasOne("ISPAdmin.Data.Entities.Invoice", "Invoice")
+                        .WithMany()
+                        .HasForeignKey("InvoiceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ISPAdmin.Data.Entities.PaymentTransaction", "PaymentTransaction")
+                        .WithMany()
+                        .HasForeignKey("PaymentTransactionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Invoice");
+
+                    b.Navigation("PaymentTransaction");
+                });
+
             modelBuilder.Entity("ISPAdmin.Data.Entities.NameServer", b =>
                 {
                     b.HasOne("ISPAdmin.Data.Entities.RegisteredDomain", "Domain")
@@ -5014,6 +5605,31 @@ namespace ISPAdmin.Migrations
                     b.Navigation("Service");
                 });
 
+            modelBuilder.Entity("ISPAdmin.Data.Entities.PaymentAttempt", b =>
+                {
+                    b.HasOne("ISPAdmin.Data.Entities.CustomerPaymentMethod", "CustomerPaymentMethod")
+                        .WithMany()
+                        .HasForeignKey("CustomerPaymentMethodId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ISPAdmin.Data.Entities.Invoice", "Invoice")
+                        .WithMany()
+                        .HasForeignKey("InvoiceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ISPAdmin.Data.Entities.PaymentTransaction", "PaymentTransaction")
+                        .WithMany()
+                        .HasForeignKey("PaymentTransactionId");
+
+                    b.Navigation("CustomerPaymentMethod");
+
+                    b.Navigation("Invoice");
+
+                    b.Navigation("PaymentTransaction");
+                });
+
             modelBuilder.Entity("ISPAdmin.Data.Entities.PaymentIntent", b =>
                 {
                     b.HasOne("ISPAdmin.Data.Entities.Customer", "Customer")
@@ -5043,6 +5659,17 @@ namespace ISPAdmin.Migrations
                     b.Navigation("Order");
 
                     b.Navigation("PaymentGateway");
+                });
+
+            modelBuilder.Entity("ISPAdmin.Data.Entities.PaymentMethodToken", b =>
+                {
+                    b.HasOne("ISPAdmin.Data.Entities.CustomerPaymentMethod", "CustomerPaymentMethod")
+                        .WithMany()
+                        .HasForeignKey("CustomerPaymentMethodId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CustomerPaymentMethod");
                 });
 
             modelBuilder.Entity("ISPAdmin.Data.Entities.PaymentTransaction", b =>
@@ -5577,6 +6204,22 @@ namespace ISPAdmin.Migrations
             modelBuilder.Entity("ISPAdmin.Data.Entities.DnsZonePackage", b =>
                 {
                     b.Navigation("Records");
+                });
+
+            modelBuilder.Entity("ISPAdmin.Data.Entities.HostingAccount", b =>
+                {
+                    b.Navigation("Databases");
+
+                    b.Navigation("Domains");
+
+                    b.Navigation("EmailAccounts");
+
+                    b.Navigation("FtpAccounts");
+                });
+
+            modelBuilder.Entity("ISPAdmin.Data.Entities.HostingDatabase", b =>
+                {
+                    b.Navigation("DatabaseUsers");
                 });
 
             modelBuilder.Entity("ISPAdmin.Data.Entities.HostingPackage", b =>

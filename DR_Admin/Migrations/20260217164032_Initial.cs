@@ -585,6 +585,31 @@ namespace ISPAdmin.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "VendorTaxProfiles",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    VendorId = table.Column<int>(type: "INTEGER", nullable: false),
+                    VendorType = table.Column<int>(type: "INTEGER", nullable: false),
+                    TaxIdNumber = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
+                    TaxResidenceCountry = table.Column<string>(type: "TEXT", maxLength: 2, nullable: false),
+                    Require1099 = table.Column<bool>(type: "INTEGER", nullable: false),
+                    W9OnFile = table.Column<bool>(type: "INTEGER", nullable: false),
+                    W9FileUrl = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
+                    WithholdingTaxRate = table.Column<decimal>(type: "TEXT", precision: 5, scale: 4, nullable: true),
+                    TaxTreatyExempt = table.Column<bool>(type: "INTEGER", nullable: false),
+                    TaxTreatyCountry = table.Column<string>(type: "TEXT", maxLength: 2, nullable: true),
+                    TaxNotes = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_VendorTaxProfiles", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "PostalCodes",
                 columns: table => new
                 {
@@ -1037,6 +1062,37 @@ namespace ISPAdmin.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "CustomerTaxProfiles",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    CustomerId = table.Column<int>(type: "INTEGER", nullable: false),
+                    TaxIdNumber = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
+                    TaxIdType = table.Column<int>(type: "INTEGER", nullable: false),
+                    TaxIdValidated = table.Column<bool>(type: "INTEGER", nullable: false),
+                    TaxIdValidationDate = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    TaxIdValidationResponse = table.Column<string>(type: "TEXT", maxLength: 4000, nullable: false),
+                    TaxResidenceCountry = table.Column<string>(type: "TEXT", maxLength: 2, nullable: false),
+                    CustomerType = table.Column<int>(type: "INTEGER", nullable: false),
+                    TaxExempt = table.Column<bool>(type: "INTEGER", nullable: false),
+                    TaxExemptionReason = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
+                    TaxExemptionCertificateUrl = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CustomerTaxProfiles", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CustomerTaxProfiles_Customers_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "RegistrarMailAddresses",
                 columns: table => new
                 {
@@ -1208,6 +1264,38 @@ namespace ISPAdmin.Migrations
                         name: "FK_RegistrarTldCostPricing_RegistrarTlds_RegistrarTldId",
                         column: x => x.RegistrarTldId,
                         principalTable: "RegistrarTlds",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PaymentMethodTokens",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    CustomerPaymentMethodId = table.Column<int>(type: "INTEGER", nullable: false),
+                    EncryptedToken = table.Column<string>(type: "TEXT", nullable: false),
+                    GatewayCustomerId = table.Column<string>(type: "TEXT", nullable: false),
+                    GatewayPaymentMethodId = table.Column<string>(type: "TEXT", nullable: false),
+                    ExpiresAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    Last4Digits = table.Column<string>(type: "TEXT", nullable: false),
+                    CardBrand = table.Column<string>(type: "TEXT", nullable: false),
+                    ExpiryMonth = table.Column<int>(type: "INTEGER", nullable: true),
+                    ExpiryYear = table.Column<int>(type: "INTEGER", nullable: true),
+                    IsDefault = table.Column<bool>(type: "INTEGER", nullable: false),
+                    IsVerified = table.Column<bool>(type: "INTEGER", nullable: false),
+                    VerifiedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PaymentMethodTokens", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_PaymentMethodTokens_CustomerPaymentMethods_CustomerPaymentMethodId",
+                        column: x => x.CustomerPaymentMethodId,
+                        principalTable: "CustomerPaymentMethods",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -1392,6 +1480,48 @@ namespace ISPAdmin.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "VendorPayouts",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    VendorId = table.Column<int>(type: "INTEGER", nullable: false),
+                    VendorType = table.Column<int>(type: "INTEGER", nullable: false),
+                    VendorName = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                    PayoutMethod = table.Column<int>(type: "INTEGER", nullable: false),
+                    VendorCurrency = table.Column<string>(type: "TEXT", maxLength: 3, nullable: false),
+                    VendorAmount = table.Column<decimal>(type: "TEXT", precision: 18, scale: 2, nullable: false),
+                    BaseCurrency = table.Column<string>(type: "TEXT", maxLength: 3, nullable: false),
+                    BaseAmount = table.Column<decimal>(type: "TEXT", precision: 18, scale: 2, nullable: false),
+                    ExchangeRate = table.Column<decimal>(type: "TEXT", precision: 18, scale: 6, nullable: false),
+                    ExchangeRateDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    Status = table.Column<int>(type: "INTEGER", nullable: false),
+                    ScheduledDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    ProcessedDate = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    FailureReason = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: false),
+                    FailureCount = table.Column<int>(type: "INTEGER", nullable: false),
+                    TransactionReference = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                    PaymentGatewayResponse = table.Column<string>(type: "TEXT", maxLength: 4000, nullable: false),
+                    RequiresManualIntervention = table.Column<bool>(type: "INTEGER", nullable: false),
+                    InterventionReason = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: false),
+                    InterventionResolvedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    InterventionResolvedByUserId = table.Column<int>(type: "INTEGER", nullable: true),
+                    InternalNotes = table.Column<string>(type: "TEXT", maxLength: 4000, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_VendorPayouts", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_VendorPayouts_Users_InterventionResolvedByUserId",
+                        column: x => x.InterventionResolvedByUserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "DnsZonePackageRecords",
                 columns: table => new
                 {
@@ -1441,6 +1571,19 @@ namespace ISPAdmin.Migrations
                     PasswordHash = table.Column<string>(type: "TEXT", nullable: false),
                     Status = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
                     ExpirationDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    ExternalAccountId = table.Column<string>(type: "TEXT", nullable: true),
+                    LastSyncedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    SyncStatus = table.Column<string>(type: "TEXT", nullable: true),
+                    ConfigurationJson = table.Column<string>(type: "TEXT", nullable: true),
+                    DiskUsageMB = table.Column<int>(type: "INTEGER", nullable: true),
+                    BandwidthUsageMB = table.Column<int>(type: "INTEGER", nullable: true),
+                    DiskQuotaMB = table.Column<int>(type: "INTEGER", nullable: true),
+                    BandwidthLimitMB = table.Column<int>(type: "INTEGER", nullable: true),
+                    MaxEmailAccounts = table.Column<int>(type: "INTEGER", nullable: true),
+                    MaxDatabases = table.Column<int>(type: "INTEGER", nullable: true),
+                    MaxFtpAccounts = table.Column<int>(type: "INTEGER", nullable: true),
+                    MaxSubdomains = table.Column<int>(type: "INTEGER", nullable: true),
+                    PlanName = table.Column<string>(type: "TEXT", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
@@ -1704,6 +1847,140 @@ namespace ISPAdmin.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "HostingDatabases",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    HostingAccountId = table.Column<int>(type: "INTEGER", nullable: false),
+                    DatabaseName = table.Column<string>(type: "TEXT", nullable: false),
+                    DatabaseType = table.Column<string>(type: "TEXT", nullable: false),
+                    SizeMB = table.Column<int>(type: "INTEGER", nullable: true),
+                    ServerHost = table.Column<string>(type: "TEXT", nullable: true),
+                    ServerPort = table.Column<int>(type: "INTEGER", nullable: true),
+                    CharacterSet = table.Column<string>(type: "TEXT", nullable: true),
+                    Collation = table.Column<string>(type: "TEXT", nullable: true),
+                    ExternalDatabaseId = table.Column<string>(type: "TEXT", nullable: true),
+                    LastSyncedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    SyncStatus = table.Column<string>(type: "TEXT", nullable: true),
+                    Notes = table.Column<string>(type: "TEXT", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_HostingDatabases", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_HostingDatabases_HostingAccounts_HostingAccountId",
+                        column: x => x.HostingAccountId,
+                        principalTable: "HostingAccounts",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "HostingDomains",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    HostingAccountId = table.Column<int>(type: "INTEGER", nullable: false),
+                    DomainName = table.Column<string>(type: "TEXT", nullable: false),
+                    DomainType = table.Column<string>(type: "TEXT", nullable: false),
+                    DocumentRoot = table.Column<string>(type: "TEXT", nullable: true),
+                    SslEnabled = table.Column<bool>(type: "INTEGER", nullable: false),
+                    SslExpirationDate = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    SslIssuer = table.Column<string>(type: "TEXT", nullable: true),
+                    AutoRenewSsl = table.Column<bool>(type: "INTEGER", nullable: false),
+                    ExternalDomainId = table.Column<string>(type: "TEXT", nullable: true),
+                    LastSyncedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    SyncStatus = table.Column<string>(type: "TEXT", nullable: true),
+                    PhpEnabled = table.Column<bool>(type: "INTEGER", nullable: false),
+                    PhpVersion = table.Column<string>(type: "TEXT", nullable: true),
+                    Notes = table.Column<string>(type: "TEXT", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_HostingDomains", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_HostingDomains_HostingAccounts_HostingAccountId",
+                        column: x => x.HostingAccountId,
+                        principalTable: "HostingAccounts",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "HostingEmailAccounts",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    HostingAccountId = table.Column<int>(type: "INTEGER", nullable: false),
+                    EmailAddress = table.Column<string>(type: "TEXT", nullable: false),
+                    Username = table.Column<string>(type: "TEXT", nullable: false),
+                    PasswordHash = table.Column<string>(type: "TEXT", nullable: true),
+                    QuotaMB = table.Column<int>(type: "INTEGER", nullable: true),
+                    UsageMB = table.Column<int>(type: "INTEGER", nullable: true),
+                    IsForwarderOnly = table.Column<bool>(type: "INTEGER", nullable: false),
+                    ForwardTo = table.Column<string>(type: "TEXT", nullable: true),
+                    AutoResponderEnabled = table.Column<bool>(type: "INTEGER", nullable: false),
+                    AutoResponderMessage = table.Column<string>(type: "TEXT", nullable: true),
+                    SpamFilterEnabled = table.Column<bool>(type: "INTEGER", nullable: false),
+                    SpamScoreThreshold = table.Column<int>(type: "INTEGER", nullable: true),
+                    ExternalEmailId = table.Column<string>(type: "TEXT", nullable: true),
+                    LastSyncedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    SyncStatus = table.Column<string>(type: "TEXT", nullable: true),
+                    Notes = table.Column<string>(type: "TEXT", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_HostingEmailAccounts", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_HostingEmailAccounts_HostingAccounts_HostingAccountId",
+                        column: x => x.HostingAccountId,
+                        principalTable: "HostingAccounts",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "HostingFtpAccounts",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    HostingAccountId = table.Column<int>(type: "INTEGER", nullable: false),
+                    Username = table.Column<string>(type: "TEXT", nullable: false),
+                    PasswordHash = table.Column<string>(type: "TEXT", nullable: true),
+                    HomeDirectory = table.Column<string>(type: "TEXT", nullable: false),
+                    QuotaMB = table.Column<int>(type: "INTEGER", nullable: true),
+                    ReadOnly = table.Column<bool>(type: "INTEGER", nullable: false),
+                    SftpEnabled = table.Column<bool>(type: "INTEGER", nullable: false),
+                    FtpsEnabled = table.Column<bool>(type: "INTEGER", nullable: false),
+                    ExternalFtpId = table.Column<string>(type: "TEXT", nullable: true),
+                    LastSyncedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    SyncStatus = table.Column<string>(type: "TEXT", nullable: true),
+                    Notes = table.Column<string>(type: "TEXT", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_HostingFtpAccounts", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_HostingFtpAccounts_HostingAccounts_HostingAccountId",
+                        column: x => x.HostingAccountId,
+                        principalTable: "HostingAccounts",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "DnsRecords",
                 columns: table => new
                 {
@@ -1875,6 +2152,7 @@ namespace ISPAdmin.Migrations
                     PaymentMethod = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
                     Notes = table.Column<string>(type: "TEXT", nullable: false),
                     InternalComment = table.Column<string>(type: "TEXT", nullable: false),
+                    SelectedPaymentGatewayId = table.Column<int>(type: "INTEGER", nullable: true),
                     DeletedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
                     OrderId = table.Column<int>(type: "INTEGER", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
@@ -1894,6 +2172,41 @@ namespace ISPAdmin.Migrations
                         column: x => x.OrderId,
                         principalTable: "Orders",
                         principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Invoices_PaymentGateways_SelectedPaymentGatewayId",
+                        column: x => x.SelectedPaymentGatewayId,
+                        principalTable: "PaymentGateways",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "HostingDatabaseUsers",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    HostingDatabaseId = table.Column<int>(type: "INTEGER", nullable: false),
+                    Username = table.Column<string>(type: "TEXT", nullable: false),
+                    PasswordHash = table.Column<string>(type: "TEXT", nullable: true),
+                    Privileges = table.Column<string>(type: "TEXT", nullable: true),
+                    AllowedHosts = table.Column<string>(type: "TEXT", nullable: true),
+                    ExternalUserId = table.Column<string>(type: "TEXT", nullable: true),
+                    LastSyncedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    SyncStatus = table.Column<string>(type: "TEXT", nullable: true),
+                    Notes = table.Column<string>(type: "TEXT", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_HostingDatabaseUsers", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_HostingDatabaseUsers_HostingDatabases_HostingDatabaseId",
+                        column: x => x.HostingDatabaseId,
+                        principalTable: "HostingDatabases",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -1908,6 +2221,8 @@ namespace ISPAdmin.Migrations
                     LineNumber = table.Column<int>(type: "INTEGER", nullable: false),
                     Description = table.Column<string>(type: "TEXT", maxLength: 500, nullable: false),
                     Quantity = table.Column<int>(type: "INTEGER", nullable: false),
+                    LineType = table.Column<int>(type: "INTEGER", nullable: false),
+                    IsGatewayFee = table.Column<bool>(type: "INTEGER", nullable: false),
                     UnitPrice = table.Column<decimal>(type: "TEXT", precision: 18, scale: 2, nullable: false),
                     Discount = table.Column<decimal>(type: "TEXT", precision: 18, scale: 2, nullable: false),
                     TotalPrice = table.Column<decimal>(type: "TEXT", precision: 18, scale: 2, nullable: false),
@@ -2000,6 +2315,48 @@ namespace ISPAdmin.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "VendorCosts",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    InvoiceLineId = table.Column<int>(type: "INTEGER", nullable: false),
+                    VendorPayoutId = table.Column<int>(type: "INTEGER", nullable: true),
+                    VendorType = table.Column<int>(type: "INTEGER", nullable: false),
+                    VendorId = table.Column<int>(type: "INTEGER", nullable: true),
+                    VendorName = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                    VendorCurrency = table.Column<string>(type: "TEXT", maxLength: 3, nullable: false),
+                    VendorAmount = table.Column<decimal>(type: "TEXT", precision: 18, scale: 2, nullable: false),
+                    BaseCurrency = table.Column<string>(type: "TEXT", maxLength: 3, nullable: false),
+                    BaseAmount = table.Column<decimal>(type: "TEXT", precision: 18, scale: 2, nullable: false),
+                    ExchangeRate = table.Column<decimal>(type: "TEXT", precision: 18, scale: 6, nullable: false),
+                    ExchangeRateDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    IsRefundable = table.Column<bool>(type: "INTEGER", nullable: false),
+                    RefundPolicy = table.Column<int>(type: "INTEGER", nullable: false),
+                    RefundDeadline = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    Status = table.Column<int>(type: "INTEGER", nullable: false),
+                    Notes = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_VendorCosts", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_VendorCosts_InvoiceLines_InvoiceLineId",
+                        column: x => x.InvoiceLineId,
+                        principalTable: "InvoiceLines",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_VendorCosts_VendorPayouts_VendorPayoutId",
+                        column: x => x.VendorPayoutId,
+                        principalTable: "VendorPayouts",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "PaymentTransactions",
                 columns: table => new
                 {
@@ -2015,6 +2372,9 @@ namespace ISPAdmin.Migrations
                     BaseCurrencyCode = table.Column<string>(type: "TEXT", nullable: true),
                     ExchangeRate = table.Column<decimal>(type: "TEXT", nullable: true),
                     BaseAmount = table.Column<decimal>(type: "TEXT", nullable: true),
+                    GatewayFeeAmount = table.Column<decimal>(type: "TEXT", nullable: true),
+                    GatewayFeeCurrency = table.Column<string>(type: "TEXT", nullable: true),
+                    ActualExchangeRate = table.Column<decimal>(type: "TEXT", nullable: true),
                     PaymentGatewayId = table.Column<int>(type: "INTEGER", nullable: true),
                     GatewayResponse = table.Column<string>(type: "TEXT", nullable: false),
                     FailureReason = table.Column<string>(type: "TEXT", nullable: false),
@@ -2087,6 +2447,87 @@ namespace ISPAdmin.Migrations
                         name: "FK_CreditTransactions_Users_CreatedByUserId",
                         column: x => x.CreatedByUserId,
                         principalTable: "Users",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "InvoicePayments",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    InvoiceId = table.Column<int>(type: "INTEGER", nullable: false),
+                    PaymentTransactionId = table.Column<int>(type: "INTEGER", nullable: false),
+                    AmountApplied = table.Column<decimal>(type: "TEXT", nullable: false),
+                    Currency = table.Column<string>(type: "TEXT", nullable: false),
+                    InvoiceBalance = table.Column<decimal>(type: "TEXT", nullable: false),
+                    InvoiceTotalAmount = table.Column<decimal>(type: "TEXT", nullable: false),
+                    IsFullPayment = table.Column<bool>(type: "INTEGER", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_InvoicePayments", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_InvoicePayments_Invoices_InvoiceId",
+                        column: x => x.InvoiceId,
+                        principalTable: "Invoices",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_InvoicePayments_PaymentTransactions_PaymentTransactionId",
+                        column: x => x.PaymentTransactionId,
+                        principalTable: "PaymentTransactions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PaymentAttempts",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    InvoiceId = table.Column<int>(type: "INTEGER", nullable: false),
+                    PaymentTransactionId = table.Column<int>(type: "INTEGER", nullable: true),
+                    CustomerPaymentMethodId = table.Column<int>(type: "INTEGER", nullable: false),
+                    AttemptedAmount = table.Column<decimal>(type: "TEXT", nullable: false),
+                    Currency = table.Column<string>(type: "TEXT", nullable: false),
+                    Status = table.Column<int>(type: "INTEGER", nullable: false),
+                    GatewayResponse = table.Column<string>(type: "TEXT", nullable: false),
+                    GatewayTransactionId = table.Column<string>(type: "TEXT", nullable: false),
+                    ErrorCode = table.Column<string>(type: "TEXT", nullable: false),
+                    ErrorMessage = table.Column<string>(type: "TEXT", nullable: false),
+                    RetryCount = table.Column<int>(type: "INTEGER", nullable: false),
+                    NextRetryAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    RequiresAuthentication = table.Column<bool>(type: "INTEGER", nullable: false),
+                    AuthenticationUrl = table.Column<string>(type: "TEXT", nullable: false),
+                    AuthenticationStatus = table.Column<int>(type: "INTEGER", nullable: false),
+                    IpAddress = table.Column<string>(type: "TEXT", nullable: false),
+                    UserAgent = table.Column<string>(type: "TEXT", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PaymentAttempts", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_PaymentAttempts_CustomerPaymentMethods_CustomerPaymentMethodId",
+                        column: x => x.CustomerPaymentMethodId,
+                        principalTable: "CustomerPaymentMethods",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_PaymentAttempts_Invoices_InvoiceId",
+                        column: x => x.InvoiceId,
+                        principalTable: "Invoices",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_PaymentAttempts_PaymentTransactions_PaymentTransactionId",
+                        column: x => x.PaymentTransactionId,
+                        principalTable: "PaymentTransactions",
                         principalColumn: "Id");
                 });
 
@@ -2182,6 +2623,51 @@ namespace ISPAdmin.Migrations
                         column: x => x.ProcessedByUserId,
                         principalTable: "Users",
                         principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "RefundLossAudits",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    RefundId = table.Column<int>(type: "INTEGER", nullable: false),
+                    InvoiceId = table.Column<int>(type: "INTEGER", nullable: false),
+                    OriginalInvoiceAmount = table.Column<decimal>(type: "TEXT", precision: 18, scale: 2, nullable: false),
+                    RefundedAmount = table.Column<decimal>(type: "TEXT", precision: 18, scale: 2, nullable: false),
+                    VendorCostUnrecoverable = table.Column<decimal>(type: "TEXT", precision: 18, scale: 2, nullable: false),
+                    NetLoss = table.Column<decimal>(type: "TEXT", precision: 18, scale: 2, nullable: false),
+                    Currency = table.Column<string>(type: "TEXT", maxLength: 3, nullable: false),
+                    Reason = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: false),
+                    ApprovalStatus = table.Column<int>(type: "INTEGER", nullable: false),
+                    ApprovedByUserId = table.Column<int>(type: "INTEGER", nullable: true),
+                    ApprovedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    DenialReason = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: true),
+                    InternalNotes = table.Column<string>(type: "TEXT", maxLength: 4000, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RefundLossAudits", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_RefundLossAudits_Invoices_InvoiceId",
+                        column: x => x.InvoiceId,
+                        principalTable: "Invoices",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_RefundLossAudits_Refunds_RefundId",
+                        column: x => x.RefundId,
+                        principalTable: "Refunds",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_RefundLossAudits_Users_ApprovedByUserId",
+                        column: x => x.ApprovedByUserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateIndex(
@@ -2462,6 +2948,22 @@ namespace ISPAdmin.Migrations
                 column: "SortOrder");
 
             migrationBuilder.CreateIndex(
+                name: "IX_CustomerTaxProfiles_CustomerId",
+                table: "CustomerTaxProfiles",
+                column: "CustomerId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CustomerTaxProfiles_TaxIdNumber",
+                table: "CustomerTaxProfiles",
+                column: "TaxIdNumber");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CustomerTaxProfiles_TaxResidenceCountry",
+                table: "CustomerTaxProfiles",
+                column: "TaxResidenceCountry");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_DnsRecords_DnsRecordTypeId",
                 table: "DnsRecords",
                 column: "DnsRecordTypeId");
@@ -2553,6 +3055,31 @@ namespace ISPAdmin.Migrations
                 column: "ServiceId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_HostingDatabases_HostingAccountId",
+                table: "HostingDatabases",
+                column: "HostingAccountId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_HostingDatabaseUsers_HostingDatabaseId",
+                table: "HostingDatabaseUsers",
+                column: "HostingDatabaseId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_HostingDomains_HostingAccountId",
+                table: "HostingDomains",
+                column: "HostingAccountId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_HostingEmailAccounts_HostingAccountId",
+                table: "HostingEmailAccounts",
+                column: "HostingAccountId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_HostingFtpAccounts_HostingAccountId",
+                table: "HostingFtpAccounts",
+                column: "HostingAccountId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_HostingPackages_IsActive",
                 table: "HostingPackages",
                 column: "IsActive");
@@ -2583,6 +3110,16 @@ namespace ISPAdmin.Migrations
                 column: "UnitId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_InvoicePayments_InvoiceId",
+                table: "InvoicePayments",
+                column: "InvoiceId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_InvoicePayments_PaymentTransactionId",
+                table: "InvoicePayments",
+                column: "PaymentTransactionId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Invoices_CustomerId",
                 table: "Invoices",
                 column: "CustomerId");
@@ -2597,6 +3134,11 @@ namespace ISPAdmin.Migrations
                 name: "IX_Invoices_OrderId",
                 table: "Invoices",
                 column: "OrderId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Invoices_SelectedPaymentGatewayId",
+                table: "Invoices",
+                column: "SelectedPaymentGatewayId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_NameServers_DomainId",
@@ -2627,6 +3169,21 @@ namespace ISPAdmin.Migrations
                 name: "IX_Orders_ServiceId",
                 table: "Orders",
                 column: "ServiceId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PaymentAttempts_CustomerPaymentMethodId",
+                table: "PaymentAttempts",
+                column: "CustomerPaymentMethodId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PaymentAttempts_InvoiceId",
+                table: "PaymentAttempts",
+                column: "InvoiceId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PaymentAttempts_PaymentTransactionId",
+                table: "PaymentAttempts",
+                column: "PaymentTransactionId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_PaymentGateways_IsActive",
@@ -2667,6 +3224,11 @@ namespace ISPAdmin.Migrations
                 name: "IX_PaymentIntents_PaymentGatewayId",
                 table: "PaymentIntents",
                 column: "PaymentGatewayId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PaymentMethodTokens_CustomerPaymentMethodId",
+                table: "PaymentMethodTokens",
+                column: "CustomerPaymentMethodId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_PaymentTransactions_InvoiceId",
@@ -2737,6 +3299,31 @@ namespace ISPAdmin.Migrations
                 name: "IX_Quotes_PreparedByUserId",
                 table: "Quotes",
                 column: "PreparedByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RefundLossAudits_ApprovalStatus",
+                table: "RefundLossAudits",
+                column: "ApprovalStatus");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RefundLossAudits_ApprovedAt",
+                table: "RefundLossAudits",
+                column: "ApprovedAt");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RefundLossAudits_ApprovedByUserId",
+                table: "RefundLossAudits",
+                column: "ApprovedByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RefundLossAudits_InvoiceId",
+                table: "RefundLossAudits",
+                column: "InvoiceId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RefundLossAudits_RefundId",
+                table: "RefundLossAudits",
+                column: "RefundId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Refunds_InitiatedByUserId",
@@ -3133,6 +3720,72 @@ namespace ISPAdmin.Migrations
                 table: "Users",
                 column: "Username",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_VendorCosts_InvoiceLineId",
+                table: "VendorCosts",
+                column: "InvoiceLineId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_VendorCosts_IsRefundable",
+                table: "VendorCosts",
+                column: "IsRefundable");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_VendorCosts_Status",
+                table: "VendorCosts",
+                column: "Status");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_VendorCosts_VendorPayoutId",
+                table: "VendorCosts",
+                column: "VendorPayoutId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_VendorCosts_VendorType",
+                table: "VendorCosts",
+                column: "VendorType");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_VendorPayouts_InterventionResolvedByUserId",
+                table: "VendorPayouts",
+                column: "InterventionResolvedByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_VendorPayouts_RequiresManualIntervention",
+                table: "VendorPayouts",
+                column: "RequiresManualIntervention");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_VendorPayouts_ScheduledDate",
+                table: "VendorPayouts",
+                column: "ScheduledDate");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_VendorPayouts_Status",
+                table: "VendorPayouts",
+                column: "Status");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_VendorPayouts_VendorId",
+                table: "VendorPayouts",
+                column: "VendorId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_VendorPayouts_VendorType",
+                table: "VendorPayouts",
+                column: "VendorType");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_VendorTaxProfiles_Require1099",
+                table: "VendorTaxProfiles",
+                column: "Require1099");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_VendorTaxProfiles_VendorId_VendorType",
+                table: "VendorTaxProfiles",
+                columns: new[] { "VendorId", "VendorType" },
+                unique: true);
         }
 
         /// <inheritdoc />
@@ -3160,6 +3813,9 @@ namespace ISPAdmin.Migrations
                 name: "CustomerAddresses");
 
             migrationBuilder.DropTable(
+                name: "CustomerTaxProfiles");
+
+            migrationBuilder.DropTable(
                 name: "DnsRecords");
 
             migrationBuilder.DropTable(
@@ -3175,10 +3831,19 @@ namespace ISPAdmin.Migrations
                 name: "ExchangeRateDownloadLogs");
 
             migrationBuilder.DropTable(
-                name: "HostingAccounts");
+                name: "HostingDatabaseUsers");
 
             migrationBuilder.DropTable(
-                name: "InvoiceLines");
+                name: "HostingDomains");
+
+            migrationBuilder.DropTable(
+                name: "HostingEmailAccounts");
+
+            migrationBuilder.DropTable(
+                name: "HostingFtpAccounts");
+
+            migrationBuilder.DropTable(
+                name: "InvoicePayments");
 
             migrationBuilder.DropTable(
                 name: "NameServers");
@@ -3187,10 +3852,16 @@ namespace ISPAdmin.Migrations
                 name: "OutboxEvents");
 
             migrationBuilder.DropTable(
+                name: "PaymentAttempts");
+
+            migrationBuilder.DropTable(
+                name: "PaymentMethodTokens");
+
+            migrationBuilder.DropTable(
                 name: "QuoteLines");
 
             migrationBuilder.DropTable(
-                name: "Refunds");
+                name: "RefundLossAudits");
 
             migrationBuilder.DropTable(
                 name: "RegistrarMailAddresses");
@@ -3232,6 +3903,12 @@ namespace ISPAdmin.Migrations
                 name: "UserRoles");
 
             migrationBuilder.DropTable(
+                name: "VendorCosts");
+
+            migrationBuilder.DropTable(
+                name: "VendorTaxProfiles");
+
+            migrationBuilder.DropTable(
                 name: "CustomerCredits");
 
             migrationBuilder.DropTable(
@@ -3247,16 +3924,13 @@ namespace ISPAdmin.Migrations
                 name: "DnsZonePackages");
 
             migrationBuilder.DropTable(
-                name: "ServerControlPanels");
-
-            migrationBuilder.DropTable(
-                name: "Units");
+                name: "HostingDatabases");
 
             migrationBuilder.DropTable(
                 name: "RegisteredDomains");
 
             migrationBuilder.DropTable(
-                name: "PaymentTransactions");
+                name: "Refunds");
 
             migrationBuilder.DropTable(
                 name: "Subscriptions");
@@ -3265,19 +3939,28 @@ namespace ISPAdmin.Migrations
                 name: "Roles");
 
             migrationBuilder.DropTable(
-                name: "ControlPanelTypes");
+                name: "InvoiceLines");
 
             migrationBuilder.DropTable(
-                name: "Servers");
+                name: "VendorPayouts");
+
+            migrationBuilder.DropTable(
+                name: "HostingAccounts");
 
             migrationBuilder.DropTable(
                 name: "RegistrarTlds");
 
             migrationBuilder.DropTable(
-                name: "PaymentIntents");
+                name: "PaymentTransactions");
 
             migrationBuilder.DropTable(
                 name: "CustomerPaymentMethods");
+
+            migrationBuilder.DropTable(
+                name: "Units");
+
+            migrationBuilder.DropTable(
+                name: "ServerControlPanels");
 
             migrationBuilder.DropTable(
                 name: "Registrars");
@@ -3286,13 +3969,22 @@ namespace ISPAdmin.Migrations
                 name: "Tlds");
 
             migrationBuilder.DropTable(
+                name: "PaymentIntents");
+
+            migrationBuilder.DropTable(
+                name: "ControlPanelTypes");
+
+            migrationBuilder.DropTable(
+                name: "Servers");
+
+            migrationBuilder.DropTable(
                 name: "Invoices");
 
             migrationBuilder.DropTable(
-                name: "PaymentGateways");
+                name: "Orders");
 
             migrationBuilder.DropTable(
-                name: "Orders");
+                name: "PaymentGateways");
 
             migrationBuilder.DropTable(
                 name: "Quotes");

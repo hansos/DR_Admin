@@ -213,7 +213,7 @@ namespace ISPAdmin.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("CustomerId")
+                    b.Property<int?>("CustomerId")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Department")
@@ -5192,8 +5192,7 @@ namespace ISPAdmin.Migrations
                     b.HasOne("ISPAdmin.Data.Entities.Customer", "Customer")
                         .WithMany()
                         .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("Customer");
                 });
