@@ -58,7 +58,7 @@ public class ContactPersonDto
     /// <summary>
     /// Gets or sets the customer ID associated with this contact person
     /// </summary>
-    public int CustomerId { get; set; }
+    public int? CustomerId { get; set; }
     
     /// <summary>
     /// Gets or sets the date and time when the contact person was created
@@ -124,7 +124,7 @@ public class CreateContactPersonDto
     /// <summary>
     /// Customer ID associated with this contact person
     /// </summary>
-    public int CustomerId { get; set; }
+    public int? CustomerId { get; set; }
 }
 
 /// <summary>
@@ -180,5 +180,5 @@ public class UpdateContactPersonDto
     /// <summary>
     /// Customer ID associated with this contact person
     /// </summary>
-    public int CustomerId { get; set; }
+    public int? CustomerId { get; set; }
 }
