@@ -67,88 +67,97 @@
     </div>
 </nav>
 
-    <div class="container">
-        <div class="row mb-4">
-            <div class="col-md-8">
-                <h2><i class="bi bi-people-fill"></i> Customer Management</h2>
-                <p class="text-muted">
-                    <i class="bi bi-shield-lock-fill text-warning"></i> 
-                    <strong>Note:</strong> Requires authentication with Customer.Read policy (Admin/Sales)
-                </p>
-            </div>
-            <div class="col-md-4 text-end">
-                <a href="/customer-create.html" class="btn btn-primary">
-                    <i class="bi bi-plus-circle"></i> New Customer
-                </a>
-            </div>
+<!-- Main Content -->
+<main class="container mt-4">
+    <h2><i class="bi bi-people-fill"></i> Customer Management</h2>
+    <p class="text-muted">
+        <i class="bi bi-shield-lock-fill text-warning"></i> 
+        <strong>Note:</strong> Requires authentication with Customer.Read policy (Admin/Sales)
+    </p>
+    <hr>
+
+    <div class="row mb-4">
+        <div class="col-md-12 text-end">
+            <a href="/customer-create.html" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> New Customer
+            </a>
         </div>
+    </div>
 
-        <div id="alertSuccess" class="alert alert-success d-none" role="alert"></div>
-        <div id="alertError" class="alert alert-danger d-none" role="alert"></div>
+    <div id="alertSuccess" class="alert alert-success d-none" role="alert"></div>
+    <div id="alertError" class="alert alert-danger d-none" role="alert"></div>
 
-        <div class="card mb-4">
-            <div class="card-body">
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <label for="searchInput" class="form-label">Search</label>
-                        <input type="text" class="form-control" id="searchInput" placeholder="Name or email...">
-                    </div>
-                    <div class="col-md-3">
-                        <label for="statusFilter" class="form-label">Status</label>
-                        <select class="form-select" id="statusFilter">
-                            <option value="">All</option>
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label for="typeFilter" class="form-label">Type</label>
-                        <select class="form-select" id="typeFilter">
-                            <option value="">All</option>
-                            <option value="company">Company</option>
-                            <option value="individual">Individual</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2 d-flex align-items-end">
-                        <button class="btn btn-secondary w-100" id="clearFilters"><i class="bi bi-x-circle"></i> Clear</button>
-                    </div>
-                </div>
-            </div>
+    <!-- Filters Card -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-funnel"></i> Filters</h5>
         </div>
-
-        <div class="card">
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th><a href="#" class="text-decoration-none sort-link" data-sort="id">ID <i class="bi bi-arrow-down-up"></i></a></th>
-                                <th><a href="#" class="text-decoration-none sort-link" data-sort="name">Name <i class="bi bi-arrow-down-up"></i></a></th>
-                                <th><a href="#" class="text-decoration-none sort-link" data-sort="email">Email <i class="bi bi-arrow-down-up"></i></a></th>
-                                <th>Phone</th>
-                                <th>Type</th>
-                                <th>Status</th>
-                                <th>Balance</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="customersTableBody">
-                            <tr><td colspan="8" class="text-center"><div class="spinner-border text-primary"></div></td></tr>
-                        </tbody>
-                    </table>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label for="searchInput" class="form-label">Search</label>
+                    <input type="text" class="form-control" id="searchInput" placeholder="Name or email...">
                 </div>
-
-                <nav aria-label="Pagination" class="mt-3">
-                    <div class="row align-items-center">
-                        <div class="col-md-6"><p class="text-muted mb-0" id="paginationInfo">Showing 0 of 0</p></div>
-                        <div class="col-md-6"><ul class="pagination justify-content-end mb-0" id="pagination"></ul></div>
-                    </div>
-                </nav>
+                <div class="col-md-3">
+                    <label for="statusFilter" class="form-label">Status</label>
+                    <select class="form-select" id="statusFilter">
+                        <option value="">All</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="typeFilter" class="form-label">Type</label>
+                    <select class="form-select" id="typeFilter">
+                        <option value="">All</option>
+                        <option value="company">Company</option>
+                        <option value="individual">Individual</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button class="btn btn-secondary w-100" id="clearFilters"><i class="bi bi-x-circle"></i> Clear</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="modal fade" id="deleteModal" tabindex="-1">
+    <!-- Customers Table Card -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-people"></i> Customers List</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th><a href="#" class="text-decoration-none sort-link" data-sort="id">ID <i class="bi bi-arrow-down-up"></i></a></th>
+                            <th><a href="#" class="text-decoration-none sort-link" data-sort="name">Name <i class="bi bi-arrow-down-up"></i></a></th>
+                            <th><a href="#" class="text-decoration-none sort-link" data-sort="email">Email <i class="bi bi-arrow-down-up"></i></a></th>
+                            <th>Phone</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Balance</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="customersTableBody">
+                        <tr><td colspan="8" class="text-center"><div class="spinner-border text-primary"></div></td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <nav aria-label="Pagination" class="mt-3">
+                <div class="row align-items-center">
+                    <div class="col-md-6"><p class="text-muted mb-0" id="paginationInfo">Showing 0 of 0</p></div>
+                    <div class="col-md-6"><ul class="pagination justify-content-end mb-0" id="pagination"></ul></div>
+                </div>
+            </nav>
+        </div>
+    </div>
+</main>
+
+<div class="modal fade" id="deleteModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -170,6 +179,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/api-client.js"></script>
+    <script src="/js/auth-state.js"></script>
     <script src="/js/utils.js"></script>
     <script src="/js/customers.js"></script>
 </body>
