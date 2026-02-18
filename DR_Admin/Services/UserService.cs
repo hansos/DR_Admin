@@ -230,21 +230,36 @@ public class UserService : IUserService
 
             await _context.SaveChangesAsync();
 
-            // Update role if provided
-            if (updateDto.Role != null)
+            // Update roles if provided
+            // Priority: Roles list > single Role > no change
+            if (updateDto.Roles != null || updateDto.Role != null)
             {
                 // Remove existing roles
                 var existingUserRoles = await _context.UserRoles
                     .Where(ur => ur.UserId == id)
                     .ToListAsync();
-                
+
                 _context.UserRoles.RemoveRange(existingUserRoles);
 
-                // Add new role if not empty
-                if (!string.IsNullOrWhiteSpace(updateDto.Role))
+                // Determine which roles to assign
+                List<string> rolesToAssign = new List<string>();
+
+                if (updateDto.Roles != null && updateDto.Roles.Any())
+                {
+                    // Use the Roles list if provided
+                    rolesToAssign = updateDto.Roles.Where(r => !string.IsNullOrWhiteSpace(r)).ToList();
+                }
+                else if (!string.IsNullOrWhiteSpace(updateDto.Role))
+                {
+                    // Fall back to single Role for backward compatibility
+                    rolesToAssign.Add(updateDto.Role);
+                }
+
+                // Add new roles
+                foreach (var roleName in rolesToAssign)
                 {
                     var role = await _context.Roles
-                        .FirstOrDefaultAsync(r => r.Name == updateDto.Role);
+                        .FirstOrDefaultAsync(r => r.Name == roleName);
 
                     if (role != null)
                     {
@@ -254,11 +269,11 @@ public class UserService : IUserService
                             RoleId = role.Id
                         };
                         _context.UserRoles.Add(userRole);
-                        _log.Information("Updated role to {RoleName} for user {UserId}", updateDto.Role, id);
+                        _log.Information("Assigned role {RoleName} to user {UserId}", roleName, id);
                     }
                     else
                     {
-                        _log.Warning("Role {RoleName} not found, existing roles removed", updateDto.Role);
+                        _log.Warning("Role {RoleName} not found, skipping assignment", roleName);
                     }
                 }
 

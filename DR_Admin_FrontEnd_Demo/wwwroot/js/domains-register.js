@@ -33,27 +33,83 @@ function setupEventListeners() {
 }
 
 async function loadRegistrars() {
-    try {
-        const registrarSelect = document.getElementById('registrarSelect');
-        
-        // For demo purposes, create sample registrars
-        // In production, fetch from: GET /api/v1/Registrars
-        const sampleRegistrars = [
-            { id: 1, code: 'aws', name: 'AWS Route53' },
-            { id: 2, code: 'cloudflare', name: 'Cloudflare' },
-            { id: 3, code: 'godaddy', name: 'GoDaddy' },
-            { id: 4, code: 'namecheap', name: 'Namecheap' }
-        ];
+    const registrarSelect = document.getElementById('registrarSelect');
+    const registrarSearchSelect = document.getElementById('registrarSearchSelect');
 
-        sampleRegistrars.forEach(registrar => {
-            const option = document.createElement('option');
-            option.value = registrar.code;
-            option.textContent = registrar.name;
-            registrarSelect.appendChild(option);
+    try {
+        // Show loading state
+        registrarSearchSelect.innerHTML = '<option value="">Loading registrars...</option>';
+        registrarSearchSelect.disabled = true;
+
+        console.log('Fetching registrars from API...');
+
+        // Fetch registrars from API
+        const authToken = localStorage.getItem('authToken');
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+
+        // Only add Authorization header if we have a token
+        if (authToken && !authToken.startsWith('demo-token-')) {
+            headers['Authorization'] = `Bearer ${authToken}`;
+        }
+
+        const response = await fetch('https://localhost:7201/api/v1/Registrars/active', {
+            method: 'GET',
+            headers: headers,
+            credentials: 'include'
         });
+
+        console.log('API Response Status:', response.status);
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('API Error Response:', errorText);
+            throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+        }
+
+        const registrars = await response.json();
+        console.log('Registrars loaded from API:', registrars);
+
+        // Populate both dropdowns
+        registrarSearchSelect.innerHTML = '<option value="">-- Select Registrar --</option>';
+
+        if (Array.isArray(registrars) && registrars.length > 0) {
+            console.log(`Populating dropdowns with ${registrars.length} registrars`);
+            registrars.forEach(registrar => {
+                // For search select
+                const searchOption = document.createElement('option');
+                searchOption.value = registrar.id;
+                searchOption.textContent = `${registrar.name} (${registrar.code})`;
+                registrarSearchSelect.appendChild(searchOption);
+
+                // For registration select
+                const option = document.createElement('option');
+                option.value = registrar.id;
+                option.textContent = `${registrar.name} (${registrar.code})`;
+                registrarSelect.appendChild(option);
+            });
+        } else {
+            console.warn('No registrars returned from API');
+            registrarSearchSelect.innerHTML = '<option value="">No registrars available</option>';
+        }
+
+        registrarSearchSelect.disabled = false;
 
     } catch (error) {
         console.error('Error loading registrars:', error);
+        registrarSearchSelect.innerHTML = '<option value="">-- Select Registrar --</option>';
+        registrarSearchSelect.disabled = false;
+
+        // Show error message to user
+        const searchResult = document.getElementById('searchResult');
+        if (searchResult) {
+            searchResult.innerHTML = `
+                <div class="alert alert-danger" role="alert">
+                    <i class="bi bi-exclamation-triangle"></i> Error loading registrars: ${error.message}. Please refresh the page.
+                </div>
+            `;
+        }
     }
 }
 
@@ -96,6 +152,16 @@ async function checkDomainAvailability() {
         return;
     }
 
+    const registrarSearchSelect = document.getElementById('registrarSearchSelect');
+    if (!registrarSearchSelect.value) {
+        searchResult.innerHTML = `
+            <div class="alert alert-warning" role="alert">
+                <i class="bi bi-exclamation-triangle"></i> Please select a registrar first.
+            </div>
+        `;
+        return;
+    }
+
     try {
         // Show loading
         searchResult.innerHTML = `
@@ -107,12 +173,36 @@ async function checkDomainAvailability() {
             </div>
         `;
 
-        // In production, call: GET /api/v1/DomainManager/registrar/{registrarCode}/domain/{registeredDomainId}/is-available
-        // For demo purposes, simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        const registrarId = registrarSearchSelect.value;
 
-        // Simulate availability check (random result)
-        const isAvailable = Math.random() > 0.5;
+        // Prepare authentication headers
+        const authToken = localStorage.getItem('authToken');
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+
+        // Only add Authorization header if we have a token
+        if (authToken && !authToken.startsWith('demo-token-')) {
+            headers['Authorization'] = `Bearer ${authToken}`;
+        }
+
+        const response = await fetch(`https://localhost:7201/api/v1/Registrars/${registrarId}/isavailable/${encodeURIComponent(domainName)}`, {
+            method: 'GET',
+            headers: headers,
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('API Error Response:', errorText);
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('Domain availability check response:', data);
+
+        // Correctly parse the boolean value
+        const isAvailable = data.isAvailable === true;
 
         if (isAvailable) {
             searchResult.innerHTML = `

@@ -204,6 +204,21 @@ const UserAPI = {
     },
 };
 /**
+ * Role API calls
+ */
+const RoleAPI = {
+    async getRoles() {
+        return apiRequest(`${BASE_URL}/Roles`, {
+            method: 'GET',
+        });
+    },
+    async getRole(id) {
+        return apiRequest(`${BASE_URL}/Roles/${id}`, {
+            method: 'GET',
+        });
+    },
+};
+/**
  * Contact Person API calls
  */
 const ContactPersonAPI = {
@@ -270,6 +285,7 @@ if (typeof window !== 'undefined') {
     window.HostingAPI = HostingAPI;
     window.CustomerAPI = CustomerAPI;
     window.UserAPI = UserAPI;
+    window.RoleAPI = RoleAPI;
     window.ContactPersonAPI = ContactPersonAPI;
     window.OrderAPI = OrderAPI;
     window.showMessage = showMessage;

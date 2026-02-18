@@ -97,6 +97,16 @@ public class UpdateUserDto
     public int? CustomerId { get; set; }
     public string Username { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the single role name (for backward compatibility)
+    /// </summary>
     public string? Role { get; set; }
+
+    /// <summary>
+    /// Gets or sets the list of role names to assign to the user
+    /// </summary>
+    public List<string>? Roles { get; set; }
+
     public bool IsActive { get; set; }
 }
