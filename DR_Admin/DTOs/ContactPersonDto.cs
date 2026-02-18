@@ -64,11 +64,31 @@ public class ContactPersonDto
     /// Gets or sets the date and time when the contact person was created
     /// </summary>
     public DateTime CreatedAt { get; set; }
-    
+
     /// <summary>
     /// Gets or sets the date and time when the contact person was last updated
     /// </summary>
     public DateTime UpdatedAt { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether this contact person is the default owner/registrant for domain registrations
+    /// </summary>
+    public bool IsDefaultOwner { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether this contact person is the default billing contact for domain registrations
+    /// </summary>
+    public bool IsDefaultBilling { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether this contact person is the default technical contact for domain registrations
+    /// </summary>
+    public bool IsDefaultTech { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether this contact person is the default administrative contact for domain registrations
+    /// </summary>
+    public bool IsDefaultAdministrator { get; set; }
 }
 
 /// <summary>
@@ -125,6 +145,26 @@ public class CreateContactPersonDto
     /// Customer ID associated with this contact person
     /// </summary>
     public int? CustomerId { get; set; }
+
+    /// <summary>
+    /// Whether this contact person is the default owner/registrant for domain registrations
+    /// </summary>
+    public bool IsDefaultOwner { get; set; }
+
+    /// <summary>
+    /// Whether this contact person is the default billing contact for domain registrations
+    /// </summary>
+    public bool IsDefaultBilling { get; set; }
+
+    /// <summary>
+    /// Whether this contact person is the default technical contact for domain registrations
+    /// </summary>
+    public bool IsDefaultTech { get; set; }
+
+    /// <summary>
+    /// Whether this contact person is the default administrative contact for domain registrations
+    /// </summary>
+    public bool IsDefaultAdministrator { get; set; }
 }
 
 /// <summary>
@@ -176,9 +216,29 @@ public class UpdateContactPersonDto
     /// Additional notes about the contact person
     /// </summary>
     public string? Notes { get; set; }
-    
+
     /// <summary>
     /// Customer ID associated with this contact person
     /// </summary>
     public int? CustomerId { get; set; }
+
+    /// <summary>
+    /// Whether this contact person is the default owner/registrant for domain registrations
+    /// </summary>
+    public bool IsDefaultOwner { get; set; }
+
+    /// <summary>
+    /// Whether this contact person is the default billing contact for domain registrations
+    /// </summary>
+    public bool IsDefaultBilling { get; set; }
+
+    /// <summary>
+    /// Whether this contact person is the default technical contact for domain registrations
+    /// </summary>
+    public bool IsDefaultTech { get; set; }
+
+    /// <summary>
+    /// Whether this contact person is the default administrative contact for domain registrations
+    /// </summary>
+    public bool IsDefaultAdministrator { get; set; }
 }

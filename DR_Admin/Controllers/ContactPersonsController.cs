@@ -1,3 +1,4 @@
+using ISPAdmin.Data.Entities;
 using ISPAdmin.DTOs;
 using ISPAdmin.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -270,6 +271,54 @@ public class ContactPersonsController : ControllerBase
         {
             _log.Error(ex, "API: Error in DeleteContactPerson for ID {ContactPersonId}", id);
             return StatusCode(500, "An error occurred while deleting the contact person");
+        }
+    }
+
+    /// <summary>
+    /// Retrieves contact persons for a customer categorized by role preference and usage.
+    /// Returns a three-tiered list:
+    /// 1. Preferred - Contact persons marked as default for the specified role
+    /// 2. Frequently Used - Contact persons used 3+ times for the specified role
+    /// 3. Available - All other contact persons
+    /// </summary>
+    /// <param name="customerId">The unique identifier of the customer</param>
+    /// <param name="roleType">The domain contact role type (Registrant=1, Administrative=2, Technical=3, Billing=4)</param>
+    /// <returns>Categorized list of contact persons sorted by preference and usage</returns>
+    /// <response code="200">Returns the categorized list of contact persons</response>
+    /// <response code="400">If the role type is invalid</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have required role (Admin, Support, or Sales)</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpGet("customer/{customerId}/for-role/{roleType}")]
+    [Authorize(Policy = "Customer.Read")]
+    [ProducesResponseType(typeof(CategorizedContactPersonListResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<CategorizedContactPersonListResponse>> GetContactPersonsForRole(
+        int customerId, 
+        ContactRoleType roleType)
+    {
+        try
+        {
+            _log.Information("API: GetContactPersonsForRole called for customer ID {CustomerId}, role {RoleType} by user {User}", 
+                customerId, roleType, User.Identity?.Name);
+
+            if (!Enum.IsDefined(typeof(ContactRoleType), roleType))
+            {
+                _log.Warning("API: Invalid role type {RoleType} provided", roleType);
+                return BadRequest($"Invalid role type: {roleType}. Valid values are: Registrant (1), Administrative (2), Technical (3), Billing (4)");
+            }
+
+            var result = await _contactPersonService.GetContactPersonsForRoleAsync(customerId, roleType);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in GetContactPersonsForRole for customer ID {CustomerId}, role {RoleType}", 
+                customerId, roleType);
+            return StatusCode(500, "An error occurred while retrieving contact persons");
         }
     }
 }

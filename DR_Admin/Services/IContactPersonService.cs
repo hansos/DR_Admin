@@ -1,3 +1,4 @@
+using ISPAdmin.Data.Entities;
 using ISPAdmin.DTOs;
 
 namespace ISPAdmin.Services;
@@ -50,4 +51,12 @@ public interface IContactPersonService
     /// <param name="id">The contact person ID</param>
     /// <returns>True if the contact person was deleted, otherwise false</returns>
     Task<bool> DeleteContactPersonAsync(int id);
+
+    /// <summary>
+    /// Retrieves contact persons for a specific customer categorized by role preference and usage
+    /// </summary>
+    /// <param name="customerId">The customer ID</param>
+    /// <param name="roleType">The contact role type to filter and sort by</param>
+    /// <returns>Categorized list of contact persons sorted by preference</returns>
+    Task<CategorizedContactPersonListResponse> GetContactPersonsForRoleAsync(int customerId, ContactRoleType roleType);
 }

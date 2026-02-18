@@ -166,6 +166,10 @@ public class ContactPersonService : IContactPersonService
                 IsActive = createDto.IsActive,
                 Notes = createDto.Notes,
                 CustomerId = createDto.CustomerId,
+                IsDefaultOwner = createDto.IsDefaultOwner,
+                IsDefaultBilling = createDto.IsDefaultBilling,
+                IsDefaultTech = createDto.IsDefaultTech,
+                IsDefaultAdministrator = createDto.IsDefaultAdministrator,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -213,6 +217,10 @@ public class ContactPersonService : IContactPersonService
             contactPerson.IsActive = updateDto.IsActive;
             contactPerson.Notes = updateDto.Notes;
             contactPerson.CustomerId = updateDto.CustomerId;
+            contactPerson.IsDefaultOwner = updateDto.IsDefaultOwner;
+            contactPerson.IsDefaultBilling = updateDto.IsDefaultBilling;
+            contactPerson.IsDefaultTech = updateDto.IsDefaultTech;
+            contactPerson.IsDefaultAdministrator = updateDto.IsDefaultAdministrator;
             contactPerson.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
@@ -260,6 +268,120 @@ public class ContactPersonService : IContactPersonService
     }
 
     /// <summary>
+    /// Retrieves contact persons for a specific customer categorized by role preference and usage
+    /// Three-tiered sorting:
+    /// 1. Preferred - marked with IsDefault[Role] flag
+    /// 2. Frequently Used - used 3+ times for this role
+    /// 3. Available - all other contact persons
+    /// </summary>
+    /// <param name="customerId">The customer ID</param>
+    /// <param name="roleType">The contact role type to filter and sort by</param>
+    /// <returns>Categorized list of contact persons sorted by preference</returns>
+    public async Task<CategorizedContactPersonListResponse> GetContactPersonsForRoleAsync(int customerId, ContactRoleType roleType)
+    {
+        try
+        {
+            _log.Information("Fetching categorized contact persons for customer ID: {CustomerId}, role: {RoleType}", 
+                customerId, roleType);
+
+            // Get all active contact persons for the customer
+            var contactPersons = await _context.ContactPersons
+                .AsNoTracking()
+                .Where(cp => cp.CustomerId == customerId && cp.IsActive)
+                .ToListAsync();
+
+            // Get IDs of contact persons for this customer
+            var contactPersonIds = contactPersons.Select(cp => cp.Id).ToList();
+
+            // Get usage counts for this role
+            var usageCounts = await _context.DomainContactAssignments
+                .AsNoTracking()
+                .Where(a => contactPersonIds.Contains(a.ContactPersonId) && a.RoleType == roleType && a.IsActive)
+                .GroupBy(a => a.ContactPersonId)
+                .Select(g => new { ContactPersonId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.ContactPersonId, x => x.Count);
+
+            const int frequentUsageThreshold = 3;
+
+            // Categorize and map contact persons
+            var categorizedList = contactPersons.Select(cp =>
+            {
+                var usageCount = usageCounts.GetValueOrDefault(cp.Id, 0);
+                var category = DetermineCategory(cp, roleType, usageCount, frequentUsageThreshold);
+
+                return new CategorizedContactPersonDto
+                {
+                    Id = cp.Id,
+                    FirstName = cp.FirstName,
+                    LastName = cp.LastName,
+                    FullName = $"{cp.FirstName} {cp.LastName}".Trim(),
+                    Email = cp.Email,
+                    Phone = cp.Phone,
+                    Position = cp.Position,
+                    Department = cp.Department,
+                    IsPrimary = cp.IsPrimary,
+                    IsActive = cp.IsActive,
+                    Category = category,
+                    UsageCount = usageCount,
+                    CustomerId = cp.CustomerId
+                };
+            })
+            .OrderBy(cp => cp.Category)
+            .ThenByDescending(cp => cp.UsageCount)
+            .ThenBy(cp => cp.LastName)
+            .ThenBy(cp => cp.FirstName)
+            .ToList();
+
+            _log.Information("Successfully fetched {Count} categorized contact persons for customer ID: {CustomerId}, role: {RoleType}. " +
+                           "Preferred: {Preferred}, Frequently Used: {FrequentlyUsed}, Available: {Available}",
+                categorizedList.Count, customerId, roleType,
+                categorizedList.Count(cp => cp.Category == ContactPersonCategory.Preferred),
+                categorizedList.Count(cp => cp.Category == ContactPersonCategory.FrequentlyUsed),
+                categorizedList.Count(cp => cp.Category == ContactPersonCategory.Available));
+
+            return new CategorizedContactPersonListResponse
+            {
+                ContactPersons = categorizedList
+            };
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while fetching categorized contact persons for customer ID: {CustomerId}, role: {RoleType}", 
+                customerId, roleType);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Determines the category for a contact person based on default flags and usage
+    /// </summary>
+    private static ContactPersonCategory DetermineCategory(ContactPerson contactPerson, ContactRoleType roleType, 
+        int usageCount, int frequentUsageThreshold)
+    {
+        // Check if marked as default for this role
+        var isPreferred = roleType switch
+        {
+            ContactRoleType.Registrant => contactPerson.IsDefaultOwner,
+            ContactRoleType.Administrative => contactPerson.IsDefaultAdministrator,
+            ContactRoleType.Technical => contactPerson.IsDefaultTech,
+            ContactRoleType.Billing => contactPerson.IsDefaultBilling,
+            _ => false
+        };
+
+        if (isPreferred)
+        {
+            return ContactPersonCategory.Preferred;
+        }
+
+        if (usageCount >= frequentUsageThreshold)
+        {
+            return ContactPersonCategory.FrequentlyUsed;
+        }
+
+        return ContactPersonCategory.Available;
+    }
+
+    /// <summary>
     /// Maps a ContactPerson entity to a ContactPersonDto
     /// </summary>
     /// <param name="contactPerson">The contact person entity</param>
@@ -279,6 +401,10 @@ public class ContactPersonService : IContactPersonService
             IsActive = contactPerson.IsActive,
             Notes = contactPerson.Notes,
             CustomerId = contactPerson.CustomerId,
+            IsDefaultOwner = contactPerson.IsDefaultOwner,
+            IsDefaultBilling = contactPerson.IsDefaultBilling,
+            IsDefaultTech = contactPerson.IsDefaultTech,
+            IsDefaultAdministrator = contactPerson.IsDefaultAdministrator,
             CreatedAt = contactPerson.CreatedAt,
             UpdatedAt = contactPerson.UpdatedAt
         };

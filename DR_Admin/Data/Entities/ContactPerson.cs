@@ -44,11 +44,31 @@ public class ContactPerson : EntityBase
     /// Gets or sets whether the contact person is active
     /// </summary>
     public bool IsActive { get; set; } = true;
-    
+
     /// <summary>
     /// Gets or sets additional notes about the contact person
     /// </summary>
     public string? Notes { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether this contact person is the default owner/registrant for domain registrations
+    /// </summary>
+    public bool IsDefaultOwner { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether this contact person is the default billing contact for domain registrations
+    /// </summary>
+    public bool IsDefaultBilling { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether this contact person is the default technical contact for domain registrations
+    /// </summary>
+    public bool IsDefaultTech { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether this contact person is the default administrative contact for domain registrations
+    /// </summary>
+    public bool IsDefaultAdministrator { get; set; }
     
     /// <summary>
     /// Gets or sets the normalized version of the first name for case-insensitive searches
