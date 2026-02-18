@@ -52,6 +52,34 @@ public class RegistrarsController : ControllerBase
     }
 
     /// <summary>
+    /// Retrieves all active TLDs supported by a specific registrar
+    /// </summary>
+    /// <param name="registrarId">The unique identifier of the registrar</param>
+    /// <returns>List of active TLDs supported by the registrar where both RegistrarTld.IsActive and Tld.IsActive are true</returns>
+    /// <response code="200">Returns the list of active TLDs</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpGet("{registrarId}/tlds/active")]
+    [ProducesResponseType(typeof(IEnumerable<TldDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<IEnumerable<TldDto>>> GetActiveTldsByRegistrar(int registrarId)
+    {
+        try
+        {
+            _log.Information("API: GetActiveTldsByRegistrar called for registrar {RegistrarId} by user {User}", registrarId, User.Identity?.Name);
+
+            var tlds = await _registrarService.GetActiveTldsByRegistrarAsync(registrarId);
+            return Ok(tlds);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in GetActiveTldsByRegistrar for registrar {RegistrarId}", registrarId);
+            return StatusCode(500, "An error occurred while retrieving active TLDs for the registrar");
+        }
+    }
+
+    /// <summary>
     /// Downloads TLDs for the registrar filtered by a single TLD string and updates the database
     /// </summary>
     [HttpPost("{registrarId}/tlds/download/{tld}")]

@@ -591,6 +591,44 @@ public class RegistrarService : IRegistrarService
         }
     }
 
+    public async Task<IEnumerable<TldDto>> GetActiveTldsByRegistrarAsync(int registrarId)
+    {
+        try
+        {
+            _log.Information("Fetching active TLDs for registrar {RegistrarId}", registrarId);
+
+            var tlds = await _context.RegistrarTlds
+                .AsNoTracking()
+                .Where(rt => rt.RegistrarId == registrarId && rt.IsActive && rt.Tld.IsActive)
+                .Include(rt => rt.Tld)
+                .Select(rt => rt.Tld)
+                .OrderBy(t => t.Extension)
+                .ToListAsync();
+
+            var tldDtos = tlds.Select(t => new TldDto
+            {
+                Id = t.Id,
+                Extension = t.Extension,
+                Description = t.Description,
+                IsActive = t.IsActive,
+                DefaultRegistrationYears = t.DefaultRegistrationYears,
+                MaxRegistrationYears = t.MaxRegistrationYears,
+                RequiresPrivacy = t.RequiresPrivacy,
+                Notes = t.Notes,
+                CreatedAt = t.CreatedAt,
+                UpdatedAt = t.UpdatedAt
+            });
+
+            _log.Information("Successfully fetched {Count} active TLDs for registrar {RegistrarId}", tlds.Count, registrarId);
+            return tldDtos;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while fetching active TLDs for registrar {RegistrarId}", registrarId);
+            throw;
+        }
+    }
+
     public async Task<int> DownloadTldsForRegistrarAsync(int registrarId, string tld)
     {
         try

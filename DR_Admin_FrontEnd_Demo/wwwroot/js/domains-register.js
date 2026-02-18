@@ -201,6 +201,22 @@ async function checkDomainAvailability() {
         const data = await response.json();
         console.log('Domain availability check response:', data);
 
+        // Check if TLD is supported first
+        if (data.isTldSupported === false) {
+            // Extract TLD from domain name
+            const parts = domainName.split('.');
+            const tld = parts.length > 1 ? parts[parts.length - 1] : 'unknown';
+
+            searchResult.innerHTML = `
+                <div class="alert alert-warning" role="alert">
+                    <h5 class="alert-heading"><i class="bi bi-exclamation-triangle"></i> TLD Not Supported</h5>
+                    <p>The <strong>.${tld}</strong> top-level domain is not supported by the selected registrar.</p>
+                    <p class="mb-0">${data.message || 'Please select a different registrar or try a different domain extension.'}</p>
+                </div>
+            `;
+            return;
+        }
+
         // Correctly parse the boolean value
         const isAvailable = data.isAvailable === true;
 

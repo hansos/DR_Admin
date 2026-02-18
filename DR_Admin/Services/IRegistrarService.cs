@@ -17,6 +17,7 @@ public interface IRegistrarService
     Task<RegistrarTldDto> AssignTldToRegistrarAsync(CreateRegistrarTldDto createDto);
     Task<RegistrarTldDto> AssignTldToRegistrarAsync(int registrarId, TldDto tldDto);
     Task<IEnumerable<TldDto>> GetTldsByRegistrarAsync(int registrarId);
+    Task<IEnumerable<TldDto>> GetActiveTldsByRegistrarAsync(int registrarId);
     Task<int> DownloadTldsForRegistrarAsync(int registrarId);
     // Default implementations delegate to the main download method. Implementing classes may override.
     Task<int> DownloadTldsForRegistrarAsync(int registrarId, string tld)

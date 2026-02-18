@@ -53,6 +53,7 @@ namespace DomainRegistrationLib.Implementations
                     Success = true,
                     DomainName = domainName,
                     IsAvailable = isAvailable,
+                    IsTldSupported = true,
                     Message = response.Availability.Value
                 };
             }
@@ -64,6 +65,7 @@ namespace DomainRegistrationLib.Implementations
                     Success = false,
                     DomainName = domainName,
                     IsAvailable = false,
+                    IsTldSupported = false,
                     Message = $"Error checking availability: {ex.Message}",
                     Errors = new List<string> { ex.Message }
                 };
