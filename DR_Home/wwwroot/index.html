@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DR_Admin - API-First Domain & Hosting Management Platform</title>
+    
+    <!-- Bootstrap 5.3 CSS (Dark Mode) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .hero-section {
+            background: var(--primary-gradient);
+            padding: 120px 0 80px 0;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="rgba(255,255,255,0.05)" fill-opacity="1" d="M0,96L48,112C96,128,192,160,288,186.7C384,213,480,235,576,213.3C672,192,768,128,864,128C960,128,1056,192,1152,197.3C1248,203,1344,149,1392,122.7L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>') no-repeat bottom;
+            background-size: cover;
+        }
+        
+        .hero-section h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+        
+        .hero-section .lead {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            opacity: 0.95;
+        }
+        
+        .btn-hero {
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-hero:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+        
+        .feature-card {
+            border: none;
+            transition: all 0.3s ease;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.3);
+        }
+        
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            margin: 0 auto 1.5rem auto;
+            background: var(--primary-gradient);
+        }
+        
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        
+        .section-subtitle {
+            font-size: 1.2rem;
+            color: #adb5bd;
+            margin-bottom: 3rem;
+        }
+        
+        .api-endpoint {
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 4px solid #667eea;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .stats-section {
+            background: var(--primary-gradient);
+            padding: 60px 0;
+            color: white;
+        }
+        
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .cta-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f5576c 100%);
+            padding: 80px 0;
+            color: white;
+        }
+        
+        footer {
+            background: #0d0d0d;
+            padding: 40px 0 20px 0;
+            color: #adb5bd;
+        }
+        
+        .integration-logo {
+            height: 60px;
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+            filter: grayscale(100%) brightness(2);
+        }
+        
+        .integration-logo:hover {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#">
+                <i class="bi bi-hdd-network-fill"></i> DR_Admin
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#features">Features</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#api">API</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#integrations">Integrations</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#docs">Documentation</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="btn btn-outline-light ms-3" href="/api/health" target="_blank">
+                            <i class="bi bi-heart-pulse-fill"></i> API Status
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container position-relative">
+            <div class="row align-items-center">
+                <div class="col-lg-7">
+                    <h1 class="display-3 fw-bold">
+                        API-First Platform for Domain & Hosting Management
+                    </h1>
+                    <p class="lead">
+                        DR_Admin is a powerful RESTful API backend built with ASP.NET Core, designed for ISPs, resellers, 
+                        and hosting providers who need complete automation of domain registration, web hosting, and email services.
+                    </p>
+                    <div class="d-flex gap-3 flex-wrap">
+                        <a href="#features" class="btn btn-light btn-hero">
+                            <i class="bi bi-rocket-takeoff-fill"></i> Explore Features
+                        </a>
+                        <a href="#api" class="btn btn-outline-light btn-hero">
+                            <i class="bi bi-code-slash"></i> View API Docs
+                        </a>
+                    </div>
+                </div>
+                <div class="col-lg-5 text-center mt-5 mt-lg-0">
+                    <i class="bi bi-terminal-fill" style="font-size: 15rem; opacity: 0.2;"></i>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats-section">
+        <div class="container">
+            <div class="row text-center">
+                <div class="col-md-3 mb-4 mb-md-0">
+                    <div class="stat-number">6+</div>
+                    <div>API Controllers</div>
+                </div>
+                <div class="col-md-3 mb-4 mb-md-0">
+                    <div class="stat-number">50+</div>
+                    <div>REST Endpoints</div>
+                </div>
+                <div class="col-md-3 mb-4 mb-md-0">
+                    <div class="stat-number">4</div>
+                    <div>Supported Registrars</div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-number">2</div>
+                    <div>Control Panels</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-5 my-5">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="section-title">Comprehensive Feature Set</h2>
+                <p class="section-subtitle">Everything you need to run a modern hosting business</p>
+            </div>
+            
+            <div class="row g-4">
+                <!-- Domain Management -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="card feature-card p-4">
+                        <div class="feature-icon">
+                            <i class="bi bi-globe2"></i>
+                        </div>
+                        <h3 class="h4 mb-3 text-center">Domain Management</h3>
+                        <ul class="list-unstyled">
+                            <li><i class="bi bi-check-circle-fill text-success"></i> Check domain availability</li>
+                            <li><i class="bi bi-check-circle-fill text-success"></i> Register & renew domains</li>
+                            <li><i class="bi bi-check-circle-fill text-success"></i> Transfer domains</li>
+                            <li><i class="bi bi-check-circle-fill text-success"></i> DNS zone management</li>
+                            <li><i class="bi bi-check-circle-fill text-success"></i> WHOIS privacy protection</li>
+                            <li><i class="bi bi-check-circle-fill text-success"></i> Auto-renewal support</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Hosting Management -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="card feature-card p-4">
+                        <div class="feature-icon">
+                            <i class="bi bi-server"></i>
+                        </div>
+                        <h3 class="h4 mb-3 text-center">Hosting Management</h3>
+                        <ul class="list-unstyled">
+                            <li><i class="bi bi-check-circle-fill text-success"></i> cPanel & Plesk integration</li>
+                            <li><i class="bi bi-check-circle-fill text-success"></i> Account provisioning</li>
+                            <li><i class="bi bi-check-circle-fill text-success"></i> Resource quota management</li>
+                            <li><i class="bi bi-check-circle-fill text-success"></i> Subdomain management</li>
+                            <li><i class="bi bi-check-circle-fill text-success"></i> FTP account management</li>
+                            <li><i class="bi bi-check-circle-fill text-success"></i> Two-way sync support</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Email Services -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="card feature-card p-4">
+                        <div class="feature-icon">
+                            <i class="bi bi-envelope-at-fill"></i>
+                        </div>
+                        <h3 class="h4 mb-3 text-center">Email Services</h3>
+                        <ul class="list-unstyled">
+                            <li><i class="bi bi-check-circle-fill text-success"></i> Email account creation</li>
+                            <li><i class="bi bi-check-circle-fill text-success"></i> Mailbox quota management</li>
+                            <li><i class="bi bi-check-circle-fill text-success"></i> Password management</li>
+                            <li><i class="bi bi-check-circle-fill text-success"></i> Email forwarding</li>
+                            <li><i class="bi bi-check-circle-fill text-success"></i> Spam filter configuration</li>
+                            <li><i class="bi bi-check-circle-fill text-success"></i> Bulk operations support</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Customer Management -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="card feature-card p-4">
+                        <div class="feature-icon">
+                            <i class="bi bi-people-fill"></i>
+                        </div>
+                        <h3 class="h4 mb-3 text-center">Customer Management</h3>
+                        <ul class="list-unstyled">
+                            <li><i class="bi bi-check-circle-fill text-success"></i> Customer registry</li>
+                            <li><i class="bi bi-check-circle-fill text-success"></i> Role-based access control</li>
+                            <li><i class="bi bi-check-circle-fill text-success"></i> User authentication (OAuth2/JWT)</li>
+                            <li><i class="bi bi-check-circle-fill text-success"></i> Password recovery</li>
+                            <li><i class="bi bi-check-circle-fill text-success"></i> Admin & customer interfaces</li>
+                            <li><i class="bi bi-check-circle-fill text-success"></i> Multi-tenant support</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Billing & Payments -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="card feature-card p-4">
+                        <div class="feature-icon">
+                            <i class="bi bi-credit-card-fill"></i>
+                        </div>
+                        <h3 class="h4 mb-3 text-center">Billing & Payments</h3>
+                        <ul class="list-unstyled">
+                            <li><i class="bi bi-check-circle-fill text-success"></i> Invoice generation</li>
+                            <li><i class="bi bi-check-circle-fill text-success"></i> Stripe integration</li>
+                            <li><i class="bi bi-check-circle-fill text-success"></i> Order management</li>
+                            <li><i class="bi bi-check-circle-fill text-success"></i> Payment tracking</li>
+                            <li><i class="bi bi-check-circle-fill text-success"></i> Automated billing cycles</li>
+                            <li><i class="bi bi-check-circle-fill text-success"></i> Multi-currency support</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Database Management -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="card feature-card p-4">
+                        <div class="feature-icon">
+                            <i class="bi bi-database-fill"></i>
+                        </div>
+                        <h3 class="h4 mb-3 text-center">Database Management</h3>
+                        <ul class="list-unstyled">
+                            <li><i class="bi bi-check-circle-fill text-success"></i> MySQL database creation</li>
+                            <li><i class="bi bi-check-circle-fill text-success"></i> Database user management</li>
+                            <li><i class="bi bi-check-circle-fill text-success"></i> Privilege assignment</li>
+                            <li><i class="bi bi-check-circle-fill text-success"></i> Sync from control panels</li>
+                            <li><i class="bi bi-check-circle-fill text-success"></i> Multi-database support</li>
+                            <li><i class="bi bi-check-circle-fill text-success"></i> Automated backups ready</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- API Section -->
+    <section id="api" class="py-5 my-5 bg-dark">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="section-title">RESTful API Architecture</h2>
+                <p class="section-subtitle">Clean, versioned, and fully documented API endpoints</p>
+            </div>
+            
+            <div class="row">
+                <div class="col-lg-6 mb-4">
+                    <h3 class="h4 mb-3"><i class="bi bi-hdd-rack"></i> Hosting Accounts</h3>
+                    <div class="api-endpoint">
+                        <strong>GET</strong> /api/v1/HostingAccounts
+                    </div>
+                    <div class="api-endpoint">
+                        <strong>POST</strong> /api/v1/HostingAccounts/create-and-sync
+                    </div>
+                    <div class="api-endpoint">
+                        <strong>PUT</strong> /api/v1/HostingAccounts/{id}?syncToServer=true
+                    </div>
+                    <div class="api-endpoint">
+                        <strong>DELETE</strong> /api/v1/HostingAccounts/{id}?deleteFromServer=true
+                    </div>
+                </div>
+
+                <div class="col-lg-6 mb-4">
+                    <h3 class="h4 mb-3"><i class="bi bi-globe"></i> Domain Operations</h3>
+                    <div class="api-endpoint">
+                        <strong>GET</strong> /api/v1/hosting-accounts/{accountId}/domains
+                    </div>
+                    <div class="api-endpoint">
+                        <strong>POST</strong> /api/v1/hosting-accounts/{accountId}/domains
+                    </div>
+                    <div class="api-endpoint">
+                        <strong>POST</strong> /api/v1/hosting-accounts/{accountId}/domains/sync
+                    </div>
+                    <div class="api-endpoint">
+                        <strong>DELETE</strong> /api/v1/hosting-accounts/{accountId}/domains/{id}
+                    </div>
+                </div>
+
+                <div class="col-lg-6 mb-4">
+                    <h3 class="h4 mb-3"><i class="bi bi-envelope-fill"></i> Email Management</h3>
+                    <div class="api-endpoint">
+                        <strong>GET</strong> /api/v1/hosting-accounts/{accountId}/emails
+                    </div>
+                    <div class="api-endpoint">
+                        <strong>POST</strong> /api/v1/hosting-accounts/{accountId}/emails
+                    </div>
+                    <div class="api-endpoint">
+                        <strong>POST</strong> /api/v1/hosting-accounts/{accountId}/emails/{id}/change-password
+                    </div>
+                    <div class="api-endpoint">
+                        <strong>DELETE</strong> /api/v1/hosting-accounts/{accountId}/emails/{id}
+                    </div>
+                </div>
+
+                <div class="col-lg-6 mb-4">
+                    <h3 class="h4 mb-3"><i class="bi bi-database"></i> Database Operations</h3>
+                    <div class="api-endpoint">
+                        <strong>GET</strong> /api/v1/hosting-accounts/{accountId}/databases
+                    </div>
+                    <div class="api-endpoint">
+                        <strong>POST</strong> /api/v1/hosting-accounts/{accountId}/databases
+                    </div>
+                    <div class="api-endpoint">
+                        <strong>POST</strong> /api/v1/hosting-accounts/{accountId}/databases/{dbId}/users
+                    </div>
+                    <div class="api-endpoint">
+                        <strong>DELETE</strong> /api/v1/hosting-accounts/{accountId}/databases/{id}
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <p class="lead">Full OpenAPI/Swagger documentation available at runtime</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Integrations Section -->
+    <section id="integrations" class="py-5 my-5">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="section-title">Supported Integrations</h2>
+                <p class="section-subtitle">Connect with leading registrars and control panels</p>
+            </div>
+            
+            <div class="row text-center align-items-center">
+                <div class="col-md-3 mb-4">
+                    <h4><i class="bi bi-plugin text-primary"></i> Namecheap</h4>
+                    <p class="text-muted small">Full API Support</p>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <h4><i class="bi bi-plugin text-primary"></i> GoDaddy</h4>
+                    <p class="text-muted small">REST API</p>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <h4><i class="bi bi-plugin text-primary"></i> Cloudflare</h4>
+                    <p class="text-muted small">DNS & Domains</p>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <h4><i class="bi bi-plugin text-primary"></i> AWS Route 53</h4>
+                    <p class="text-muted small">Domain Registration</p>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <h4><i class="bi bi-plugin text-success"></i> cPanel</h4>
+                    <p class="text-muted small">UAPI Integration</p>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <h4><i class="bi bi-plugin text-success"></i> Plesk</h4>
+                    <p class="text-muted small">XML API</p>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <h4><i class="bi bi-plugin text-info"></i> Stripe</h4>
+                    <p class="text-muted small">Payment Gateway</p>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <h4><i class="bi bi-plugin text-warning"></i> Custom</h4>
+                    <p class="text-muted small">Extensible Architecture</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Technology Stack -->
+    <section class="py-5 my-5 bg-dark">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="section-title">Built with Modern Technology</h2>
+                <p class="section-subtitle">Enterprise-grade stack for reliability and performance</p>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <div class="card feature-card p-4 text-center">
+                        <i class="bi bi-microsoft display-4 mb-3 text-primary"></i>
+                        <h4>ASP.NET Core</h4>
+                        <p class="text-muted">Cross-platform, high-performance backend framework</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="card feature-card p-4 text-center">
+                        <i class="bi bi-database display-4 mb-3 text-success"></i>
+                        <h4>Entity Framework Core</h4>
+                        <p class="text-muted">Supports MSSQL, MySQL, PostgreSQL, SQLite</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="card feature-card p-4 text-center">
+                        <i class="bi bi-shield-lock-fill display-4 mb-3 text-warning"></i>
+                        <h4>OAuth2 / JWT</h4>
+                        <p class="text-muted">Secure token-based authentication</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="card feature-card p-4 text-center">
+                        <i class="bi bi-file-earmark-code display-4 mb-3 text-info"></i>
+                        <h4>OpenAPI / Swagger</h4>
+                        <p class="text-muted">Interactive API documentation</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="card feature-card p-4 text-center">
+                        <i class="bi bi-journal-code display-4 mb-3 text-danger"></i>
+                        <h4>Serilog</h4>
+                        <p class="text-muted">Structured logging for diagnostics</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="card feature-card p-4 text-center">
+                        <i class="bi bi-cloud-check-fill display-4 mb-3 text-primary"></i>
+                        <h4>Cloud Ready</h4>
+                        <p class="text-muted">Deploy to Linux, AWS, Azure, or on-premises</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Use Cases -->
+    <section class="py-5 my-5">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="section-title">Perfect For</h2>
+                <p class="section-subtitle">Built for businesses that need automation at scale</p>
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-lg-4">
+                    <div class="card feature-card p-4 h-100">
+                        <i class="bi bi-building display-4 mb-3 text-primary"></i>
+                        <h4>Hosting Providers</h4>
+                        <p>Automate account provisioning, resource management, and customer operations across multiple servers and control panels.</p>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="card feature-card p-4 h-100">
+                        <i class="bi bi-shop display-4 mb-3 text-success"></i>
+                        <h4>Domain Resellers</h4>
+                        <p>Integrate with multiple registrars, automate domain registration workflows, and provide seamless customer experiences.</p>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="card feature-card p-4 h-100">
+                        <i class="bi bi-gear-wide-connected display-4 mb-3 text-info"></i>
+                        <h4>ISPs & SaaS Providers</h4>
+                        <p>Build custom interfaces on top of DR_Admin's API to deliver tailored hosting and domain services to your customers.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Dual Licensing Section -->
+    <section class="py-5 my-5 bg-dark">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="section-title">
+                    <i class="bi bi-shield-check-fill text-primary"></i> Flexible Dual Licensing
+                </h2>
+                <p class="section-subtitle">Choose the license that fits your needs</p>
+            </div>
+
+            <div class="row g-4">
+                <!-- Open Source License -->
+                <div class="col-lg-6">
+                    <div class="card feature-card p-4 h-100">
+                        <div class="text-center mb-4">
+                            <i class="bi bi-code-square display-1 text-success"></i>
+                            <h3 class="h3 mt-3 mb-2">Open Source License</h3>
+                            <span class="badge bg-success fs-6">AGPL-3.0-only</span>
+                        </div>
+
+                        <p class="lead mb-4">Free for open source projects and developers who share their improvements with the community.</p>
+
+                        <h5 class="mb-3">You can:</h5>
+                        <ul class="list-unstyled mb-4">
+                            <li class="mb-2"><i class="bi bi-check-circle-fill text-success"></i> Use freely for open source projects</li>
+                            <li class="mb-2"><i class="bi bi-check-circle-fill text-success"></i> Modify and customize the code</li>
+                            <li class="mb-2"><i class="bi bi-check-circle-fill text-success"></i> Deploy for internal use</li>
+                            <li class="mb-2"><i class="bi bi-check-circle-fill text-success"></i> Contribute improvements back</li>
+                        </ul>
+
+                        <h5 class="mb-3">Requirements:</h5>
+                        <ul class="list-unstyled mb-4">
+                            <li class="mb-2"><i class="bi bi-exclamation-circle text-warning"></i> <strong>Source code disclosure</strong> - You must release your modifications under AGPL-3.0</li>
+                            <li class="mb-2"><i class="bi bi-exclamation-circle text-warning"></i> <strong>Network use</strong> - If users interact with it over a network, you must provide source code</li>
+                            <li class="mb-2"><i class="bi bi-exclamation-circle text-warning"></i> <strong>License propagation</strong> - Your entire application must be AGPL-3.0 licensed</li>
+                        </ul>
+
+                        <div class="mt-auto">
+                            <a href="https://github.com/hansos/DR_Admin/blob/master/LICENSE" target="_blank" class="btn btn-outline-success w-100">
+                                <i class="bi bi-github"></i> View AGPL-3.0 License
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Commercial License -->
+                <div class="col-lg-6">
+                    <div class="card feature-card p-4 h-100 border-primary" style="border-width: 2px !important;">
+                        <div class="text-center mb-4">
+                            <i class="bi bi-briefcase display-1 text-primary"></i>
+                            <h3 class="h3 mt-3 mb-2">Commercial License</h3>
+                            <span class="badge bg-primary fs-6">Proprietary</span>
+                        </div>
+
+                        <p class="lead mb-4">For businesses that want to keep their code proprietary and avoid AGPL requirements.</p>
+
+                        <h5 class="mb-3">Perfect for:</h5>
+                        <ul class="list-unstyled mb-4">
+                            <li class="mb-2"><i class="bi bi-check-circle-fill text-primary"></i> <strong>SaaS providers</strong> - Host without sharing source code</li>
+                            <li class="mb-2"><i class="bi bi-check-circle-fill text-primary"></i> <strong>ISPs & hosting companies</strong> - Integrate into proprietary systems</li>
+                            <li class="mb-2"><i class="bi bi-check-circle-fill text-primary"></i> <strong>Resellers</strong> - White-label and rebrand</li>
+                            <li class="mb-2"><i class="bi bi-check-circle-fill text-primary"></i> <strong>Enterprises</strong> - Keep modifications private</li>
+                        </ul>
+
+                        <h5 class="mb-3">Benefits:</h5>
+                        <ul class="list-unstyled mb-4">
+                            <li class="mb-2"><i class="bi bi-star-fill text-warning"></i> No source code disclosure required</li>
+                            <li class="mb-2"><i class="bi bi-star-fill text-warning"></i> No AGPL restrictions or obligations</li>
+                            <li class="mb-2"><i class="bi bi-star-fill text-warning"></i> Keep your modifications proprietary</li>
+                            <li class="mb-2"><i class="bi bi-star-fill text-warning"></i> Commercial support available</li>
+                        </ul>
+
+                        <div class="mt-auto">
+                            <a href="mailto:licensing@dradmin.io?subject=Commercial%20License%20Inquiry" class="btn btn-primary w-100">
+                                <i class="bi bi-envelope-fill"></i> Request Commercial License
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comparison -->
+            <div class="row mt-5">
+                <div class="col-lg-12">
+                    <div class="card feature-card p-4">
+                        <h4 class="text-center mb-4">Which License Do I Need?</h4>
+                        <div class="table-responsive">
+                            <table class="table table-dark table-bordered mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Use Case</th>
+                                        <th class="text-center">Open Source<br><small>(AGPL-3.0)</small></th>
+                                        <th class="text-center">Commercial<br><small>(Proprietary)</small></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Open source project</td>
+                                        <td class="text-center"><i class="bi bi-check-circle-fill text-success fs-4"></i></td>
+                                        <td class="text-center"><i class="bi bi-check-circle-fill text-success fs-4"></i></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Internal business use (closed network)</td>
+                                        <td class="text-center"><i class="bi bi-check-circle-fill text-success fs-4"></i></td>
+                                        <td class="text-center"><i class="bi bi-check-circle-fill text-success fs-4"></i></td>
+                                    </tr>
+                                    <tr>
+                                        <td>SaaS / Hosting service (public access)</td>
+                                        <td class="text-center"><i class="bi bi-exclamation-triangle-fill text-warning fs-4"></i><br><small>Must share source</small></td>
+                                        <td class="text-center"><i class="bi bi-check-circle-fill text-success fs-4"></i></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Proprietary modifications</td>
+                                        <td class="text-center"><i class="bi bi-x-circle-fill text-danger fs-4"></i><br><small>Must be open source</small></td>
+                                        <td class="text-center"><i class="bi bi-check-circle-fill text-success fs-4"></i></td>
+                                    </tr>
+                                    <tr>
+                                        <td>White-labeling / Rebranding</td>
+                                        <td class="text-center"><i class="bi bi-exclamation-triangle-fill text-warning fs-4"></i><br><small>Must share source</small></td>
+                                        <td class="text-center"><i class="bi bi-check-circle-fill text-success fs-4"></i></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Embed in proprietary product</td>
+                                        <td class="text-center"><i class="bi bi-x-circle-fill text-danger fs-4"></i><br><small>Infects your code</small></td>
+                                        <td class="text-center"><i class="bi bi-check-circle-fill text-success fs-4"></i></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom CTA -->
+            <div class="row mt-5 text-center">
+                <div class="col-md-6 mb-4">
+                    <div class="card feature-card p-4 h-100">
+                        <i class="bi bi-github display-4 mb-3 text-success"></i>
+                        <h5>Open Source Community</h5>
+                        <p class="text-muted mb-3">Join the community, contribute improvements, and build amazing things together.</p>
+                        <a href="https://github.com/hansos/DR_Admin" target="_blank" class="btn btn-outline-success">
+                            <i class="bi bi-github"></i> View on GitHub
+                        </a>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <div class="card feature-card p-4 h-100">
+                        <i class="bi bi-briefcase-fill display-4 mb-3 text-primary"></i>
+                        <h5>Commercial Licensing</h5>
+                        <p class="text-muted mb-3">Need to keep your code private or avoid AGPL restrictions? Get in touch for a commercial license.</p>
+                        <a href="mailto:licensing@dradmin.io?subject=Commercial%20License%20Inquiry" class="btn btn-outline-primary">
+                            <i class="bi bi-envelope-fill"></i> Contact Sales
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section id="docs" class="cta-section">
+        <div class="container text-center">
+            <h2 class="display-4 fw-bold mb-4">Ready to Get Started?</h2>
+            <p class="lead mb-5">DR_Admin is designed for developers who need a powerful, flexible API backend for domain and hosting automation.</p>
+            <div class="d-flex gap-3 justify-content-center flex-wrap">
+                <a href="https://github.com/hansos/DR_Admin/blob/master/Documentation/Index.md" target="_blank" class="btn btn-light btn-lg btn-hero">
+                    <i class="bi bi-book-fill"></i> Read Documentation
+                </a>
+                <a href="/api/health" class="btn btn-outline-light btn-lg btn-hero">
+                    <i class="bi bi-heart-pulse-fill"></i> Check API Health
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-4">
+                    <h5 class="fw-bold mb-3">
+                        <i class="bi bi-hdd-network-fill"></i> DR_Admin
+                    </h5>
+                    <p>API-first platform for domain registration, web hosting, and email services. Built with ASP.NET Core.</p>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <h5 class="fw-bold mb-3">Key Features</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#features" class="text-decoration-none text-muted">Domain Management</a></li>
+                        <li><a href="#features" class="text-decoration-none text-muted">Hosting Automation</a></li>
+                        <li><a href="#features" class="text-decoration-none text-muted">Email Services</a></li>
+                        <li><a href="#api" class="text-decoration-none text-muted">RESTful API</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <h5 class="fw-bold mb-3">Resources</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="https://github.com/hansos/DR_Admin/blob/master/Documentation/Index.md" target="_blank" class="text-decoration-none text-muted">API Documentation</a></li>
+                        <li><a href="https://github.com/hansos/DR_Admin/blob/master/Documentation/Installation/Installation.md" target="_blank" class="text-decoration-none text-muted">Integration Guides</a></li>
+                        <li><a href="/api/health" class="text-decoration-none text-muted">System Status</a></li>
+                        <li><a href="https://github.com/hansos/DR_Admin" class="text-decoration-none text-muted" target="_blank">
+                            <i class="bi bi-github"></i> GitHub Repository
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="my-4">
+            <div class="text-center">
+                <p class="mb-0">&copy; 2024 DR_Admin. Built with ASP.NET Core, Entity Framework, and modern web technologies.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+    
+    <!-- Smooth Scrolling -->
+    <script>
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -183,9 +183,16 @@ dotnet test DR_Admin.IntegrationTests
 
 ## License
 
-This project is licensed under the MIT License.
-See the LICENSE file for details.
+This software is licensed under **AGPL-3.0**.
 
+- Internal use is permitted without source disclosure.
+- If the software is made available to users over a network, you must provide the complete corresponding source code.
+- Commercial licenses are available.
+
+For full details, see:
+- `LICENSE.txt` (AGPL-3.0-only)
+- `COMMERCIAL-LICENSE.md` (commercial license summary)
+- `LICENSE-SUMMARY.md` (dual licensing overview)
 
 ## Contributing
 
