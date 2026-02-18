@@ -47,9 +47,8 @@ If you want to:
 
 ## 4. Contact
 
-For commercial licensing, please contact:
+For commercial licensing, please use the contact form at:
 
-- Email: `licensing@dradmin.io`
-- Subject: `DR_Admin Commercial License Inquiry`
+- **https://dradmin.net** (Contact Sales section)
 
 We will provide you with the current commercial license terms and pricing.

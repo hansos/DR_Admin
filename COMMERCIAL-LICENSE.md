@@ -36,10 +36,9 @@ Warranty, support, SLAs, and customization services (if any) are defined in the 
 
 ## 5. Contact
 
-To obtain a commercial license or discuss terms, contact:
+To obtain a commercial license or discuss terms, please use the contact form at:
 
-- Email: `licensing@dradmin.io`
-- Subject: `DR_Admin Commercial License Inquiry`
+- **https://dradmin.net** (Contact Sales section)
 
 You must have a **signed agreement** with the author for the commercial license to be valid.
 
