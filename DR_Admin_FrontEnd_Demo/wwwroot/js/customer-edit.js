@@ -202,6 +202,10 @@ function openContactPersonModal(contactPerson = null) {
         document.getElementById('isPrimary').checked = contactPerson.isPrimary;
         document.getElementById('isContactActive').checked = contactPerson.isActive;
         document.getElementById('contactNotes').value = contactPerson.notes || '';
+        document.getElementById('isDefaultOwner').checked = contactPerson.isDefaultOwner || false;
+        document.getElementById('isDefaultBilling').checked = contactPerson.isDefaultBilling || false;
+        document.getElementById('isDefaultTech').checked = contactPerson.isDefaultTech || false;
+        document.getElementById('isDefaultAdministrator').checked = contactPerson.isDefaultAdministrator || false;
     } else {
         document.getElementById('contactPersonId').value = '';
         document.getElementById('isContactActive').checked = true;
@@ -242,7 +246,11 @@ async function saveContactPerson() {
         isPrimary: document.getElementById('isPrimary').checked,
         isActive: document.getElementById('isContactActive').checked,
         notes: document.getElementById('contactNotes').value.trim() || null,
-        customerId: parseInt(customerId)
+        customerId: parseInt(customerId),
+        isDefaultOwner: document.getElementById('isDefaultOwner').checked,
+        isDefaultBilling: document.getElementById('isDefaultBilling').checked,
+        isDefaultTech: document.getElementById('isDefaultTech').checked,
+        isDefaultAdministrator: document.getElementById('isDefaultAdministrator').checked
     };
 
     const saveBtn = document.getElementById('saveContactPersonBtn');
