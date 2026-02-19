@@ -190,6 +190,11 @@ var registrarSettings = builder.Configuration.GetSection("RegistrarSettings").Ge
     ?? new DomainRegistrationLib.Infrastructure.Settings.RegistrarSettings();
 builder.Services.AddSingleton(registrarSettings);
 
+// Sandbox Settings
+var sandboxSettings = builder.Configuration.GetSection("SandboxSettings").Get<DomainRegistrationLib.Infrastructure.Settings.SandboxSettings>()
+    ?? new DomainRegistrationLib.Infrastructure.Settings.SandboxSettings();
+builder.Services.AddSingleton(sandboxSettings);
+
 // Domain Registration Library - Registrar Factory
 builder.Services.AddSingleton<DomainRegistrationLib.Factories.DomainRegistrarFactory>();
 

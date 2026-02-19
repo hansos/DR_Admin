@@ -1,20 +1,34 @@
 using DomainRegistrationLib.Implementations;
 using DomainRegistrationLib.Infrastructure.Settings;
 using DomainRegistrationLib.Interfaces;
+using Serilog;
 
 namespace DomainRegistrationLib.Factories
 {
     public class DomainRegistrarFactory
     {
         private readonly RegistrarSettings _registrarSettings;
+        private readonly SandboxSettings? _sandboxSettings;
+        private static readonly ILogger _logger = Log.ForContext<DomainRegistrarFactory>();
 
-        public DomainRegistrarFactory(RegistrarSettings registrarSettings)
+        public DomainRegistrarFactory(RegistrarSettings registrarSettings, SandboxSettings? sandboxSettings = null)
         {
             _registrarSettings = registrarSettings ?? throw new ArgumentNullException(nameof(registrarSettings));
+            _sandboxSettings = sandboxSettings;
         }
+
+        /// <summary>
+        /// Returns true when sandbox mode is enabled and the DomainRegistrationLib filter is active
+        /// </summary>
+        private bool IsSandboxActive => _sandboxSettings is { Enabled: true, Filters.DomainRegistrationLib: true };
 
         public IDomainRegistrar CreateRegistrar()
         {
+            if (IsSandboxActive)
+            {
+                _logger.Information("[SANDBOX] Sandbox mode is active — returning SandboxRegistrar instead of provider '{Provider}'", _registrarSettings.Provider);
+                return new SandboxRegistrar();
+            }
 
             return _registrarSettings.Provider.ToLower() switch
             {
@@ -115,6 +129,12 @@ namespace DomainRegistrationLib.Factories
 
         public IDomainRegistrar CreateRegistrar(string providerCode)
         {
+            if (IsSandboxActive)
+            {
+                _logger.Information("[SANDBOX] Sandbox mode is active — ignoring provider code '{ProviderCode}', returning SandboxRegistrar", providerCode);
+                return new SandboxRegistrar();
+            }
+
             var originalProvider = _registrarSettings.Provider;
             try
             {
