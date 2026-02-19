@@ -33,8 +33,8 @@ public class CustomerService : ICustomerService
                 .AsNoTracking()
                 .ToListAsync();
 
-            var customerDtos = customers.Select(MapToDto);
-            
+            var customerDtos = await MapToDtosAsync(customers);
+
             _log.Information("Successfully fetched {Count} customers", customers.Count);
             return customerDtos;
         }
@@ -68,7 +68,7 @@ public class CustomerService : ICustomerService
                 .Take(parameters.PageSize)
                 .ToListAsync();
 
-            var customerDtos = customers.Select(MapToDto).ToList();
+            var customerDtos = await MapToDtosAsync(customers);
             
             var result = new PagedResult<CustomerDto>(
                 customerDtos, 
@@ -110,7 +110,7 @@ public class CustomerService : ICustomerService
             }
 
             _log.Information("Successfully fetched customer with ID: {CustomerId}", id);
-            return MapToDto(customer);
+            return await MapToDtoAsync(customer);
         }
         catch (Exception ex)
         {
@@ -160,7 +160,7 @@ public class CustomerService : ICustomerService
             }
 
             _log.Information("Successfully fetched customer with email: {Email}", email);
-            return MapToDto(customer);
+            return await MapToDtoAsync(customer);
         }
         catch (Exception ex)
         {
@@ -205,8 +205,11 @@ public class CustomerService : ICustomerService
         {
             _log.Information("Creating new customer with email: {Email}", createDto.Email);
 
+            var nextNumber = await GetNextCustomerNumberAsync();
+
             var customer = new Customer
             {
+                CustomerNumber = nextNumber,
                 Name = createDto.Name,
                 Email = createDto.Email,
                 Phone = createDto.Phone,
@@ -231,8 +234,8 @@ public class CustomerService : ICustomerService
             _context.Customers.Add(customer);
             await _context.SaveChangesAsync();
 
-            _log.Information("Successfully created customer with ID: {CustomerId}", customer.Id);
-            return MapToDto(customer);
+            _log.Information("Successfully created customer with ID: {CustomerId}, CustomerNumber: {CustomerNumber}", customer.Id, customer.CustomerNumber);
+            return await MapToDtoAsync(customer);
         }
         catch (Exception ex)
         {
@@ -282,7 +285,7 @@ public class CustomerService : ICustomerService
             await _context.SaveChangesAsync();
 
             _log.Information("Successfully updated customer with ID: {CustomerId}", id);
-            return MapToDto(customer);
+            return await MapToDtoAsync(customer);
         }
         catch (Exception ex)
         {
@@ -323,11 +326,13 @@ public class CustomerService : ICustomerService
         }
     }
 
-    private static CustomerDto MapToDto(Customer customer)
+    private static CustomerDto MapToDto(Customer customer, string? customerNumberPrefix = null)
     {
             return new CustomerDto
             {
                 Id = customer.Id,
+                CustomerNumber = customer.CustomerNumber,
+                FormattedCustomerNumber = FormatCustomerNumber(customer.CustomerNumber, customerNumberPrefix),
                 Name = customer.Name,
                 Email = customer.Email,
                 Phone = customer.Phone,
@@ -349,5 +354,92 @@ public class CustomerService : ICustomerService
                 CreatedAt = customer.CreatedAt,
                 UpdatedAt = customer.UpdatedAt
             };
+    }
+
+    /// <summary>
+    /// Maps a Customer entity to a CustomerDto, resolving the customer number prefix from the database
+    /// </summary>
+    private async Task<CustomerDto> MapToDtoAsync(Customer customer)
+    {
+        var prefix = await GetCustomerNumberPrefixAsync();
+        return MapToDto(customer, prefix);
+    }
+
+    /// <summary>
+    /// Maps a collection of Customer entities to CustomerDtos, resolving the prefix once
+    /// </summary>
+    private async Task<List<CustomerDto>> MapToDtosAsync(IEnumerable<Customer> customers)
+    {
+        var prefix = await GetCustomerNumberPrefixAsync();
+        return customers.Select(c => MapToDto(c, prefix)).ToList();
+    }
+
+    /// <summary>
+    /// Formats a customer number with the optional prefix (e.g., "CUST-1001")
+    /// </summary>
+    private static string? FormatCustomerNumber(long? customerNumber, string? prefix)
+    {
+        if (customerNumber == null)
+            return null;
+
+        return string.IsNullOrEmpty(prefix)
+            ? customerNumber.Value.ToString()
+            : $"{prefix}{customerNumber.Value}";
+    }
+
+    /// <summary>
+    /// Gets the next customer number from SystemSettings and increments it atomically.
+    /// If the setting does not exist, it is created with a default starting value of 1001.
+    /// </summary>
+    private async Task<long> GetNextCustomerNumberAsync()
+    {
+        const string key = "CustomerNumber.NextValue";
+        const long defaultStartValue = 1001;
+
+        var setting = await _context.SystemSettings
+            .FirstOrDefaultAsync(s => s.Key == key);
+
+        if (setting == null)
+        {
+            setting = new Data.Entities.SystemSetting
+            {
+                Key = key,
+                Value = (defaultStartValue + 1).ToString(),
+                Description = "The next customer number to assign. Auto-incremented on each new customer creation.",
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+            _context.SystemSettings.Add(setting);
+            await _context.SaveChangesAsync();
+
+            _log.Information("Initialized {Key} system setting with starting value {Value}", key, defaultStartValue);
+            return defaultStartValue;
+        }
+
+        if (!long.TryParse(setting.Value, out var currentValue))
+        {
+            _log.Warning("Invalid {Key} value '{Value}', resetting to default {Default}", key, setting.Value, defaultStartValue);
+            currentValue = defaultStartValue;
+        }
+
+        setting.Value = (currentValue + 1).ToString();
+        setting.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
+        return currentValue;
+    }
+
+    /// <summary>
+    /// Gets the optional customer number prefix from SystemSettings (e.g., "CUST-")
+    /// </summary>
+    private async Task<string?> GetCustomerNumberPrefixAsync()
+    {
+        const string key = "CustomerNumber.Prefix";
+
+        var setting = await _context.SystemSettings
+            .AsNoTracking()
+            .FirstOrDefaultAsync(s => s.Key == key);
+
+        return setting?.Value;
     }
 }

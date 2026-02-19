@@ -9,7 +9,17 @@ public class CustomerDto
     /// Gets or sets the unique identifier of the customer
     /// </summary>
     public int Id { get; set; }
-    
+
+    /// <summary>
+    /// Gets or sets the internal numerical customer number (auto-assigned)
+    /// </summary>
+    public long? CustomerNumber { get; set; }
+
+    /// <summary>
+    /// Gets or sets the formatted customer number including the optional prefix (e.g., "CUST-1001")
+    /// </summary>
+    public string? FormattedCustomerNumber { get; set; }
+
     /// <summary>
     /// Gets or sets the customer's name
     /// </summary>

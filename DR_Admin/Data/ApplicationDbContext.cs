@@ -228,6 +228,7 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<Customer>(entity =>
         {
             entity.HasKey(e => e.Id);
+            entity.Property(e => e.CustomerNumber);
             entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
             entity.Property(e => e.Email).IsRequired().HasMaxLength(200);
             entity.Property(e => e.Phone).HasMaxLength(50);
@@ -244,7 +245,8 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.NormalizedName).IsRequired().HasMaxLength(200);
             entity.Property(e => e.NormalizedCustomerName).HasMaxLength(200);
             // ContactPerson removed; contact persons are stored in ContactPersons table
-            
+
+            entity.HasIndex(e => e.CustomerNumber).IsUnique().HasFilter(null);
             entity.HasIndex(e => e.Email);
             entity.HasIndex(e => e.Status);
             entity.HasIndex(e => e.TaxId);

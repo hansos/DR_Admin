@@ -2,6 +2,12 @@ namespace ISPAdmin.Data.Entities;
 
 public class Customer : EntityBase
 {
+    /// <summary>
+    /// Internal numerical customer number, auto-assigned on creation.
+    /// The starting value and optional prefix are stored in the SystemSettings table.
+    /// </summary>
+    public long? CustomerNumber { get; set; }
+
     public string Name { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string Phone { get; set; } = string.Empty;

@@ -402,6 +402,16 @@ public static class AuthorizationPoliciesConfiguration
         options.AddPolicy("ServerIpAddress.Write", policy =>
             policy.RequireRole(ADMIN));
 
+        // SystemSetting policies
+        options.AddPolicy("SystemSetting.Delete", policy =>
+            policy.RequireRole(ADMIN));
+
+        options.AddPolicy("SystemSetting.Read", policy =>
+            policy.RequireRole(ADMIN));
+
+        options.AddPolicy("SystemSetting.Write", policy =>
+            policy.RequireRole(ADMIN));
+
         // Service policies
         options.AddPolicy("Service.Delete", policy =>
             policy.RequireRole(ADMIN));
