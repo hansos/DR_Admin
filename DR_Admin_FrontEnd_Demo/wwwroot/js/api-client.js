@@ -261,6 +261,38 @@ const OrderAPI = {
     },
 };
 /**
+ * System Setting API calls
+ */
+const SystemSettingAPI = {
+    async getSystemSettings() {
+        return apiRequest(`${BASE_URL}/SystemSettings`, {
+            method: 'GET',
+        });
+    },
+    async getSystemSetting(id) {
+        return apiRequest(`${BASE_URL}/SystemSettings/${id}`, {
+            method: 'GET',
+        });
+    },
+    async createSystemSetting(settingData) {
+        return apiRequest(`${BASE_URL}/SystemSettings`, {
+            method: 'POST',
+            body: JSON.stringify(settingData),
+        });
+    },
+    async updateSystemSetting(id, settingData) {
+        return apiRequest(`${BASE_URL}/SystemSettings/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(settingData),
+        });
+    },
+    async deleteSystemSetting(id) {
+        return apiRequest(`${BASE_URL}/SystemSettings/${id}`, {
+            method: 'DELETE',
+        });
+    },
+};
+/**
  * Utility functions
  */
 function showMessage(elementId, message, isError = false) {
@@ -288,6 +320,7 @@ if (typeof window !== 'undefined') {
     window.RoleAPI = RoleAPI;
     window.ContactPersonAPI = ContactPersonAPI;
     window.OrderAPI = OrderAPI;
+    window.SystemSettingAPI = SystemSettingAPI;
     window.showMessage = showMessage;
     window.hideMessage = hideMessage;
 }
