@@ -86,6 +86,7 @@ async function loadRegistrars() {
                 // For registration select
                 const option = document.createElement('option');
                 option.value = registrar.id;
+                option.dataset.code = registrar.code;
                 option.textContent = `${registrar.name} (${registrar.code})`;
                 registrarSelect.appendChild(option);
             });
@@ -114,28 +115,47 @@ async function loadRegistrars() {
 }
 
 async function loadCustomers() {
-    try {
-        const customerSelect = document.getElementById('customerSelect');
-        
-        // For demo purposes, create sample customers
-        // In production, fetch from: GET /api/v1/Customers
-        const sampleCustomers = [
-            { id: 1, name: 'John Doe', email: 'john@example.com' },
-            { id: 2, name: 'Jane Smith', email: 'jane@example.com' },
-            { id: 3, name: 'Acme Corporation', email: 'contact@acme.com' },
-            { id: 4, name: 'Tech Solutions Inc', email: 'info@techsolutions.com' },
-            { id: 5, name: 'Global Enterprises', email: 'admin@global.com' }
-        ];
+    const customerSelect = document.getElementById('customerSelect');
 
-        sampleCustomers.forEach(customer => {
-            const option = document.createElement('option');
-            option.value = customer.id;
-            option.textContent = `${customer.name} (${customer.email})`;
-            customerSelect.appendChild(option);
-        });
+    const authToken = localStorage.getItem('authToken');
+    if (!authToken) {
+        customerSelect.innerHTML = '<option value="">-- Login to load customers --</option>';
+        customerSelect.disabled = true;
+        return;
+    }
+
+    try {
+        customerSelect.innerHTML = '<option value="">Loading customers...</option>';
+        customerSelect.disabled = true;
+
+        const response = await window.CustomerAPI.getCustomers();
+
+        customerSelect.innerHTML = '<option value="">-- Select Customer --</option>';
+
+        if (response.success) {
+            const customers = Array.isArray(response.data) ? response.data : (response.data.items || []);
+
+            if (customers.length > 0) {
+                customers.forEach(customer => {
+                    const option = document.createElement('option');
+                    option.value = customer.id;
+                    option.textContent = `${customer.name} (${customer.email})`;
+                    customerSelect.appendChild(option);
+                });
+            } else {
+                customerSelect.innerHTML = '<option value="">No customers available</option>';
+            }
+        } else {
+            console.error('Failed to load customers:', response.message);
+            customerSelect.innerHTML = '<option value="">Error loading customers</option>';
+        }
+
+        customerSelect.disabled = false;
 
     } catch (error) {
         console.error('Error loading customers:', error);
+        customerSelect.innerHTML = '<option value="">-- Select Customer --</option>';
+        customerSelect.disabled = false;
     }
 }
 
@@ -292,8 +312,16 @@ function showRegistrationForm(domainName) {
     const selectedDomain = document.getElementById('selectedDomain');
 
     selectedDomain.value = domainName;
+
+    // Auto-select the same registrar used for the availability search
+    const registrarSearchSelect = document.getElementById('registrarSearchSelect');
+    const registrarSelect = document.getElementById('registrarSelect');
+    if (registrarSearchSelect.value) {
+        registrarSelect.value = registrarSearchSelect.value;
+    }
+
     registrationFormCard.classList.remove('d-none');
-    
+
     // Scroll to form
     registrationFormCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
@@ -312,9 +340,48 @@ async function registerDomain() {
     try {
         // Get form values
         const domainName = document.getElementById('selectedDomain').value;
-        const years = document.getElementById('registrationYears').value;
-        const registrarCode = document.getElementById('registrarSelect').value;
-        const customerId = document.getElementById('customerSelect').value;
+        const years = parseInt(document.getElementById('registrationYears').value, 10);
+        const registrarSelect = document.getElementById('registrarSelect');
+        const customerSelect = document.getElementById('customerSelect');
+        const autoRenew = document.getElementById('autoRenew').checked;
+        const privacyProtection = document.getElementById('privacyProtection').checked;
+
+        // Validate registrar and customer before proceeding
+        if (!registrarSelect.value) {
+            registrationResult.innerHTML = `
+                <div class="alert alert-warning" role="alert">
+                    <i class="bi bi-exclamation-triangle"></i> Please select a registrar.
+                </div>
+            `;
+            registrarSelect.focus();
+            return;
+        }
+
+        if (!customerSelect.value) {
+            registrationResult.innerHTML = `
+                <div class="alert alert-warning" role="alert">
+                    <i class="bi bi-exclamation-triangle"></i> Please select a customer.
+                </div>
+            `;
+            customerSelect.focus();
+            return;
+        }
+
+        const registrarId = parseInt(registrarSelect.value, 10);
+        const registrarCode = registrarSelect.options[registrarSelect.selectedIndex].dataset.code;
+        const customerId = parseInt(customerSelect.value, 10);
+
+        // Contact information
+        const contactFirstName = document.getElementById('contactFirstName').value.trim();
+        const contactLastName = document.getElementById('contactLastName').value.trim();
+        const contactEmail = document.getElementById('contactEmail').value.trim();
+        const contactPhone = document.getElementById('contactPhone').value.trim();
+        const contactOrganization = document.getElementById('contactOrganization').value.trim();
+        const contactAddress = document.getElementById('contactAddress').value.trim();
+        const contactCity = document.getElementById('contactCity').value.trim();
+        const contactState = document.getElementById('contactState').value.trim();
+        const contactPostalCode = document.getElementById('contactPostalCode').value.trim();
+        const contactCountry = document.getElementById('contactCountry').value.trim();
 
         // Show loading
         registrationResult.innerHTML = `
@@ -328,14 +395,141 @@ async function registerDomain() {
             </div>
         `;
 
-        // In production, call: POST /api/v1/DomainManager/registrar/{registrarCode}/domain/{registeredDomainId}
-        // For demo purposes, simulate API call
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        // Prepare authentication headers
+        const authToken = localStorage.getItem('authToken');
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+        if (authToken && !authToken.startsWith('demo-token-')) {
+            headers['Authorization'] = `Bearer ${authToken}`;
+        }
 
-        // Simulate success
-        const success = Math.random() > 0.2; // 80% success rate
+        const fetchOptions = { headers, credentials: 'include' };
 
-        if (success) {
+        // Step 1: Check if domain already exists in the system
+        const existingDomainResponse = await fetch(`https://localhost:7201/api/v1/RegisteredDomains/name/${encodeURIComponent(domainName)}`, {
+            method: 'GET',
+            ...fetchOptions
+        });
+
+        if (existingDomainResponse.ok) {
+            throw new Error(`Domain "${domainName}" is already registered in the system.`);
+        }
+
+        // Step 2: Create a Service record for the domain registration
+        // Find the DOMAIN service type
+        const serviceTypesResponse = await fetch('https://localhost:7201/api/v1/ServiceTypes', {
+            method: 'GET',
+            ...fetchOptions
+        });
+
+        if (!serviceTypesResponse.ok) {
+            const errorText = await serviceTypesResponse.text();
+            throw new Error(`Failed to load service types: ${errorText}`);
+        }
+
+        const serviceTypes = await serviceTypesResponse.json();
+        const domainServiceType = serviceTypes.find(st => st.name === 'DOMAIN' || st.name === 'Domain Registration');
+
+        if (!domainServiceType) {
+            throw new Error('Domain service type not found. Please run system initialization first.');
+        }
+
+        const createServicePayload = {
+            name: domainName,
+            description: `Domain registration for ${domainName}`,
+            serviceTypeId: domainServiceType.id
+        };
+
+        const serviceResponse = await fetch('https://localhost:7201/api/v1/Services', {
+            method: 'POST',
+            ...fetchOptions,
+            body: JSON.stringify(createServicePayload)
+        });
+
+        if (!serviceResponse.ok) {
+            const errorText = await serviceResponse.text();
+            throw new Error(`Failed to create service: ${errorText}`);
+        }
+
+        const createdService = await serviceResponse.json();
+
+        // Step 3: Create the RegisteredDomain record
+        const now = new Date();
+        const expiration = new Date(now);
+        expiration.setFullYear(expiration.getFullYear() + years);
+
+        const createDomainPayload = {
+            customerId: customerId,
+            serviceId: createdService.id,
+            name: domainName,
+            providerId: registrarId,
+            status: 'Pending',
+            registrationDate: now.toISOString(),
+            expirationDate: expiration.toISOString()
+        };
+
+        const domainResponse = await fetch('https://localhost:7201/api/v1/RegisteredDomains', {
+            method: 'POST',
+            ...fetchOptions,
+            body: JSON.stringify(createDomainPayload)
+        });
+
+        if (!domainResponse.ok) {
+            const errorText = await domainResponse.text();
+            throw new Error(`Failed to create domain record: ${errorText}`);
+        }
+
+        const createdDomain = await domainResponse.json();
+        const registeredDomainId = createdDomain.id;
+
+        // Step 4: Create domain contacts for all roles using the same contact info
+        const contactRoles = ['Registrant', 'Administrative', 'Technical', 'Billing'];
+
+        for (const role of contactRoles) {
+            const contactPayload = {
+                contactType: role,
+                firstName: contactFirstName,
+                lastName: contactLastName,
+                organization: contactOrganization || null,
+                email: contactEmail,
+                phone: contactPhone,
+                address1: contactAddress,
+                city: contactCity,
+                state: contactState || null,
+                postalCode: contactPostalCode,
+                countryCode: contactCountry,
+                isActive: true,
+                domainId: registeredDomainId,
+                isPrivacyProtected: privacyProtection
+            };
+
+            const contactResponse = await fetch('https://localhost:7201/api/v1/DomainContacts', {
+                method: 'POST',
+                ...fetchOptions,
+                body: JSON.stringify(contactPayload)
+            });
+
+            if (!contactResponse.ok) {
+                const errorText = await contactResponse.text();
+                throw new Error(`Failed to create ${role} contact: ${errorText}`);
+            }
+        }
+
+        // Step 5: Register the domain with the registrar
+        const registerResponse = await fetch(`https://localhost:7201/api/v1/DomainManager/registrar/${encodeURIComponent(registrarCode)}/domain/${registeredDomainId}`, {
+            method: 'POST',
+            ...fetchOptions
+        });
+
+        if (!registerResponse.ok) {
+            const errorText = await registerResponse.text();
+            throw new Error(`Domain registration failed: ${errorText}`);
+        }
+
+        const registerResult = await registerResponse.json();
+
+        if (registerResult.success) {
             registrationResult.innerHTML = `
                 <div class="alert alert-success" role="alert">
                     <h5 class="alert-heading"><i class="bi bi-check-circle"></i> Domain Registered Successfully!</h5>
@@ -343,7 +537,7 @@ async function registerDomain() {
                     <hr>
                     <p class="mb-0">
                         <strong>Customer:</strong> ${document.getElementById('customerSelect').options[document.getElementById('customerSelect').selectedIndex].text}<br>
-                        <strong>Registrar:</strong> ${document.getElementById('registrarSelect').options[document.getElementById('registrarSelect').selectedIndex].text}<br>
+                        <strong>Registrar:</strong> ${registrarSelect.options[registrarSelect.selectedIndex].text}<br>
                         <strong>Registration Period:</strong> ${years} year(s)
                     </p>
                     <hr>
@@ -363,13 +557,12 @@ async function registerDomain() {
 
             // Scroll to result
             registrationResult.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
         } else {
             registrationResult.innerHTML = `
                 <div class="alert alert-danger" role="alert">
                     <h5 class="alert-heading"><i class="bi bi-x-circle"></i> Registration Failed</h5>
                     <p>There was an error registering <strong>${domainName}</strong>.</p>
-                    <p class="mb-0">Please verify your information and try again, or contact support if the problem persists.</p>
+                    <p class="mb-0">${registerResult.message || 'Please verify your information and try again, or contact support if the problem persists.'}</p>
                 </div>
             `;
         }
@@ -379,7 +572,7 @@ async function registerDomain() {
         registrationResult.innerHTML = `
             <div class="alert alert-danger" role="alert">
                 <h5 class="alert-heading"><i class="bi bi-exclamation-triangle"></i> Error</h5>
-                <p class="mb-0">An unexpected error occurred. Please try again later.</p>
+                <p class="mb-0">${error.message || 'An unexpected error occurred. Please try again later.'}</p>
             </div>
         `;
     }

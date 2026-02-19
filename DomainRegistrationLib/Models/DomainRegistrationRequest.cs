@@ -15,6 +15,10 @@ namespace DomainRegistrationLib.Models
 
     public class ContactInformation
     {
+        /// <summary>
+        /// Contact entity type: PERSON, COMPANY, ASSOCIATION, PUBLIC_BODY, RESELLER
+        /// </summary>
+        public string ContactType { get; set; } = "PERSON";
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
         public string Organization { get; set; } = string.Empty;

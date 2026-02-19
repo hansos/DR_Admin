@@ -166,10 +166,15 @@
                     <!-- Domain Contact Information -->
                     <div class="mb-4">
                         <h6 class="border-bottom pb-2">Contact Information</h6>
+                        <div class="form-text mb-2">This information will be used for all contact roles (Registrant, Admin, Tech, Billing).</div>
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label for="contactName" class="form-label">Full Name</label>
-                                <input type="text" class="form-control" id="contactName" required>
+                                <label for="contactFirstName" class="form-label">First Name</label>
+                                <input type="text" class="form-control" id="contactFirstName" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="contactLastName" class="form-label">Last Name</label>
+                                <input type="text" class="form-control" id="contactLastName" required>
                             </div>
                             <div class="col-md-6">
                                 <label for="contactEmail" class="form-label">Email</label>
@@ -182,6 +187,17 @@
                             <div class="col-md-6">
                                 <label for="contactOrganization" class="form-label">Organization (Optional)</label>
                                 <input type="text" class="form-control" id="contactOrganization">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="contactType" class="form-label">Contact Type</label>
+                                <select class="form-select" id="contactType" required>
+                                    <option value="PERSON" selected>Person</option>
+                                    <option value="COMPANY">Company</option>
+                                    <option value="ASSOCIATION">Association</option>
+                                    <option value="PUBLIC_BODY">Public Body</option>
+                                    <option value="RESELLER">Reseller</option>
+                                </select>
+                                <div class="form-text">Entity type for all contact roles</div>
                             </div>
                             <div class="col-md-12">
                                 <label for="contactAddress" class="form-label">Address</label>
@@ -200,8 +216,9 @@
                                 <input type="text" class="form-control" id="contactPostalCode" required>
                             </div>
                             <div class="col-md-6">
-                                <label for="contactCountry" class="form-label">Country</label>
-                                <input type="text" class="form-control" id="contactCountry" required>
+                                <label for="contactCountry" class="form-label">Country Code</label>
+                                <input type="text" class="form-control" id="contactCountry" placeholder="e.g. US, NO, GB" required>
+                                <div class="form-text">ISO 3166-1 alpha-2 country code</div>
                             </div>
                         </div>
                     </div>

@@ -72,13 +72,13 @@ public class DomainManagerService : IDomainManagerService
                     .Select(ns => ns.Hostname)
                     .ToList(),
                 RegistrantContact = GetContactInformation(registeredDomain, "Registrant"),
-                AdminContact = GetContactInformation(registeredDomain, "Admin"),
-                TechContact = GetContactInformation(registeredDomain, "Tech"),
+                AdminContact = GetContactInformation(registeredDomain, "Administrative"),
+                TechContact = GetContactInformation(registeredDomain, "Technical"),
                 BillingContact = GetContactInformation(registeredDomain, "Billing")
             };
 
             // Create registrar instance and register domain
-            var registrar = _domainRegistrarFactory.CreateRegistrar();
+            var registrar = _domainRegistrarFactory.CreateRegistrar(registrarCode);
             var result = await registrar.RegisterDomainAsync(request);
 
             _log.Information("Domain registration {Status} for {DomainName}. Message: {Message}", 
@@ -130,7 +130,7 @@ public class DomainManagerService : IDomainManagerService
             }
 
             // Create registrar instance and check availability
-            var registrar = _domainRegistrarFactory.CreateRegistrar();
+            var registrar = _domainRegistrarFactory.CreateRegistrar(registrarCode);
             var result = await registrar.CheckAvailabilityAsync(registeredDomain.Name);
 
             _log.Information("Domain availability check completed for {DomainName}. Available: {Available}", 
@@ -220,6 +220,7 @@ public class DomainManagerService : IDomainManagerService
 
         return new ContactInformation
         {
+            ContactType = string.IsNullOrWhiteSpace(contact.Organization) ? "PERSON" : "COMPANY",
             FirstName = contact.FirstName ?? string.Empty,
             LastName = contact.LastName ?? string.Empty,
             Organization = contact.Organization ?? string.Empty,

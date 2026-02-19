@@ -829,6 +829,14 @@ namespace DomainRegistrationLib.Implementations
         {
             return new ContactDetail
             {
+                ContactType = contact.ContactType?.ToUpperInvariant() switch
+                {
+                    "COMPANY" => Amazon.Route53Domains.ContactType.COMPANY,
+                    "ASSOCIATION" => Amazon.Route53Domains.ContactType.ASSOCIATION,
+                    "PUBLIC_BODY" => Amazon.Route53Domains.ContactType.PUBLIC_BODY,
+                    "RESELLER" => Amazon.Route53Domains.ContactType.RESELLER,
+                    _ => Amazon.Route53Domains.ContactType.PERSON
+                },
                 FirstName = contact.FirstName,
                 LastName = contact.LastName,
                 OrganizationName = contact.Organization,
