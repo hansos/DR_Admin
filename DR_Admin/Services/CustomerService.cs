@@ -205,11 +205,11 @@ public class CustomerService : ICustomerService
         {
             _log.Information("Creating new customer with email: {Email}", createDto.Email);
 
-            var nextNumber = await GetNextCustomerNumberAsync();
+            var nextRefNumber = await GetNextReferenceNumberAsync();
 
             var customer = new Customer
             {
-                CustomerNumber = nextNumber,
+                ReferenceNumber = nextRefNumber,
                 Name = createDto.Name,
                 Email = createDto.Email,
                 Phone = createDto.Phone,
@@ -234,7 +234,7 @@ public class CustomerService : ICustomerService
             _context.Customers.Add(customer);
             await _context.SaveChangesAsync();
 
-            _log.Information("Successfully created customer with ID: {CustomerId}, CustomerNumber: {CustomerNumber}", customer.Id, customer.CustomerNumber);
+            _log.Information("Successfully created customer with ID: {CustomerId}, ReferenceNumber: {ReferenceNumber}", customer.Id, customer.ReferenceNumber);
             return await MapToDtoAsync(customer);
         }
         catch (Exception ex)
@@ -326,11 +326,13 @@ public class CustomerService : ICustomerService
         }
     }
 
-    private static CustomerDto MapToDto(Customer customer, string? customerNumberPrefix = null)
+    private static CustomerDto MapToDto(Customer customer, string? customerNumberPrefix = null, string? referenceNumberPrefix = null)
     {
             return new CustomerDto
             {
                 Id = customer.Id,
+                ReferenceNumber = customer.ReferenceNumber,
+                FormattedReferenceNumber = FormatReferenceNumber(customer.ReferenceNumber, referenceNumberPrefix),
                 CustomerNumber = customer.CustomerNumber,
                 FormattedCustomerNumber = FormatCustomerNumber(customer.CustomerNumber, customerNumberPrefix),
                 Name = customer.Name,
@@ -357,21 +359,23 @@ public class CustomerService : ICustomerService
     }
 
     /// <summary>
-    /// Maps a Customer entity to a CustomerDto, resolving the customer number prefix from the database
+    /// Maps a Customer entity to a CustomerDto, resolving prefixes from the database
     /// </summary>
     private async Task<CustomerDto> MapToDtoAsync(Customer customer)
     {
-        var prefix = await GetCustomerNumberPrefixAsync();
-        return MapToDto(customer, prefix);
+        var custPrefix = await GetCustomerNumberPrefixAsync();
+        var refPrefix = await GetReferenceNumberPrefixAsync();
+        return MapToDto(customer, custPrefix, refPrefix);
     }
 
     /// <summary>
-    /// Maps a collection of Customer entities to CustomerDtos, resolving the prefix once
+    /// Maps a collection of Customer entities to CustomerDtos, resolving prefixes once
     /// </summary>
     private async Task<List<CustomerDto>> MapToDtosAsync(IEnumerable<Customer> customers)
     {
-        var prefix = await GetCustomerNumberPrefixAsync();
-        return customers.Select(c => MapToDto(c, prefix)).ToList();
+        var custPrefix = await GetCustomerNumberPrefixAsync();
+        var refPrefix = await GetReferenceNumberPrefixAsync();
+        return customers.Select(c => MapToDto(c, custPrefix, refPrefix)).ToList();
     }
 
     /// <summary>
@@ -388,12 +392,22 @@ public class CustomerService : ICustomerService
     }
 
     /// <summary>
-    /// Gets the next customer number from SystemSettings and increments it atomically.
-    /// If the setting does not exist, it is created with a default starting value of 1001.
+    /// Formats a reference number with the optional prefix (e.g., "REF-1001")
     /// </summary>
-    private async Task<long> GetNextCustomerNumberAsync()
+    private static string FormatReferenceNumber(long referenceNumber, string? prefix)
     {
-        const string key = "CustomerNumber.NextValue";
+        return string.IsNullOrEmpty(prefix)
+            ? referenceNumber.ToString()
+            : $"{prefix}{referenceNumber}";
+    }
+
+    /// <summary>
+    /// Gets the next reference number from SystemSettings (key "PNR") and increments it atomically.
+    /// If the setting does not exist, it is created with a default starting value of 1.
+    /// </summary>
+    private async Task<long> GetNextReferenceNumberAsync()
+    {
+        const string key = "PNR";
         const long defaultStartValue = 1001;
 
         var setting = await _context.SystemSettings
@@ -405,7 +419,7 @@ public class CustomerService : ICustomerService
             {
                 Key = key,
                 Value = (defaultStartValue + 1).ToString(),
-                Description = "The next customer number to assign. Auto-incremented on each new customer creation.",
+                Description = "The next customer reference number (PNR) to assign. Auto-incremented on each new customer creation.",
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -430,16 +444,94 @@ public class CustomerService : ICustomerService
     }
 
     /// <summary>
-    /// Gets the optional customer number prefix from SystemSettings (e.g., "CUST-")
+    /// Gets the optional reference number prefix from SystemSettings (key "RSX")
     /// </summary>
-    private async Task<string?> GetCustomerNumberPrefixAsync()
+    private async Task<string?> GetReferenceNumberPrefixAsync()
     {
-        const string key = "CustomerNumber.Prefix";
+        const string key = "RSX";
 
         var setting = await _context.SystemSettings
             .AsNoTracking()
             .FirstOrDefaultAsync(s => s.Key == key);
 
         return setting?.Value;
+    }
+
+    /// <summary>
+    /// Gets the next customer number from SystemSettings (key "CNR") and increments it atomically.
+    /// If the setting does not exist, it is created with a default starting value of 1.
+    /// </summary>
+    private async Task<long> GetNextCustomerNumberAsync()
+    {
+        const string key = "CNR";
+        const long defaultStartValue = 1001;
+
+        var setting = await _context.SystemSettings
+            .FirstOrDefaultAsync(s => s.Key == key);
+
+        if (setting == null)
+        {
+            setting = new Data.Entities.SystemSetting
+            {
+                Key = key,
+                Value = (defaultStartValue + 1).ToString(),
+                Description = "The next customer number (CNR) to assign. Auto-incremented on each customer's first sale.",
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+            _context.SystemSettings.Add(setting);
+            await _context.SaveChangesAsync();
+
+            _log.Information("Initialized {Key} system setting with starting value {Value}", key, defaultStartValue);
+            return defaultStartValue;
+        }
+
+        if (!long.TryParse(setting.Value, out var currentValue))
+        {
+            _log.Warning("Invalid {Key} value '{Value}', resetting to default {Default}", key, setting.Value, defaultStartValue);
+            currentValue = defaultStartValue;
+        }
+
+        setting.Value = (currentValue + 1).ToString();
+        setting.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
+        return currentValue;
+    }
+
+    /// <summary>
+    /// Gets the optional customer number prefix from SystemSettings (key "CSX")
+    /// </summary>
+    private async Task<string?> GetCustomerNumberPrefixAsync()
+    {
+        const string key = "CSX";
+
+        var setting = await _context.SystemSettings
+            .AsNoTracking()
+            .FirstOrDefaultAsync(s => s.Key == key);
+
+        return setting?.Value;
+    }
+
+    /// <inheritdoc />
+    public async Task<long> EnsureCustomerNumberAsync(int customerId)
+    {
+        var customer = await _context.Customers.FindAsync(customerId);
+        if (customer == null)
+            throw new InvalidOperationException($"Customer with ID {customerId} not found");
+
+        if (customer.CustomerNumber.HasValue)
+        {
+            _log.Information("Customer {CustomerId} already has CustomerNumber {CustomerNumber}", customerId, customer.CustomerNumber.Value);
+            return customer.CustomerNumber.Value;
+        }
+
+        var nextNumber = await GetNextCustomerNumberAsync();
+        customer.CustomerNumber = nextNumber;
+        customer.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
+        _log.Information("Assigned CustomerNumber {CustomerNumber} to customer {CustomerId} on first sale", nextNumber, customerId);
+        return nextNumber;
     }
 }

@@ -145,9 +145,31 @@ public class InitializationService : IInitializationService
 
             await _context.SaveChangesAsync();
 
-            _log.Information("Code tables updated - Roles: {RolesAdded}/{TotalRoles}, Statuses: {StatusesAdded}/{TotalStatuses}, DNS Types: {DnsAdded}/{TotalDns}, Service Types: {ServiceAdded}/{TotalService}",
+            // Ensure system settings exist
+            var systemSettingsAdded = 0;
+            var systemSettings = new[]
+            {
+                new SystemSetting { Key = "CNR", Value = "1001", Description = "First customer number"},
+                new SystemSetting { Key = "PNR", Value = "1001", Description = "First reference number"},
+                new SystemSetting { Key = "CSX", Value = "CUST", Description = "customer number prefix"},
+                new SystemSetting { Key = "RSX", Value = "REF", Description = "Reference number prefix"},
+            };
+
+            foreach (var ss in systemSettings)
+            {
+                var exists = await _context.SystemSettings.FirstOrDefaultAsync(x => x.Key == ss.Key);
+                if (exists == null)
+                {
+                    _context.SystemSettings.Add(ss);
+                    systemSettingsAdded++;
+                    _log.Information("Created system setting: {Key}", ss.Key);
+                }
+            }
+            await _context.SaveChangesAsync();
+
+            _log.Information("Code tables updated - Roles: {RolesAdded}/{TotalRoles}, Statuses: {StatusesAdded}/{TotalStatuses}, DNS Types: {DnsAdded}/{TotalDns}, Service Types: {ServiceAdded}/{TotalService}, System Settings: {SettingsAdded}",
                 rolesAdded, response.TotalRoles, statusesAdded, response.TotalCustomerStatuses, 
-                dnsTypesAdded, response.TotalDnsRecordTypes, serviceTypesAdded, response.TotalServiceTypes);
+                dnsTypesAdded, response.TotalDnsRecordTypes, serviceTypesAdded, response.TotalServiceTypes, systemSettingsAdded);
 
             return response;
         }

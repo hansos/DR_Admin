@@ -45,6 +45,8 @@ async function loadCustomer() {
             const customer = response.data;
 
             document.getElementById('customerId').value = customer.id;
+            document.getElementById('customerNumber').value = customer.formattedCustomerNumber || customer.customerNumber || 'Not assigned';
+            document.getElementById('referenceNumber').value = customer.formattedReferenceNumber || customer.referenceNumber || '';
             document.getElementById('name').value = customer.name || '';
             document.getElementById('email').value = customer.email || '';
             document.getElementById('phone').value = customer.phone || '';

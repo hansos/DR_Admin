@@ -11,7 +11,17 @@ public class CustomerDto
     public int Id { get; set; }
 
     /// <summary>
-    /// Gets or sets the internal numerical customer number (auto-assigned)
+    /// Gets or sets the reference number assigned to every customer on creation
+    /// </summary>
+    public long ReferenceNumber { get; set; }
+
+    /// <summary>
+    /// Gets or sets the formatted reference number including the optional prefix (e.g., "REF-1001")
+    /// </summary>
+    public string? FormattedReferenceNumber { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the internal customer number (auto-assigned on first sale)
     /// </summary>
     public long? CustomerNumber { get; set; }
 

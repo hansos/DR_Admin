@@ -63,4 +63,13 @@ public interface ICustomerService
     /// <param name="id">The customer's unique identifier</param>
     /// <returns>True if the customer was deleted; otherwise, false</returns>
     Task<bool> DeleteCustomerAsync(int id);
+
+    /// <summary>
+    /// Ensures a customer has a CustomerNumber assigned. If the customer does not yet
+    /// have one (i.e. has never made a purchase), the next available number is assigned
+    /// atomically and persisted. Subsequent calls for the same customer are no-ops.
+    /// </summary>
+    /// <param name="customerId">The customer's unique identifier</param>
+    /// <returns>The customer's CustomerNumber (existing or newly assigned)</returns>
+    Task<long> EnsureCustomerNumberAsync(int customerId);
 }

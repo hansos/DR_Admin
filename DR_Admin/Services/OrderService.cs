@@ -9,11 +9,13 @@ namespace ISPAdmin.Services;
 public class OrderService : IOrderService
 {
     private readonly ApplicationDbContext _context;
+    private readonly ICustomerService _customerService;
     private static readonly Serilog.ILogger _log = Log.ForContext<OrderService>();
 
-    public OrderService(ApplicationDbContext context)
+    public OrderService(ApplicationDbContext context, ICustomerService customerService)
     {
         _context = context;
+        _customerService = customerService;
     }
 
     public async Task<IEnumerable<OrderDto>> GetAllOrdersAsync()
@@ -98,6 +100,9 @@ public class OrderService : IOrderService
 
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();
+
+            // Assign a CustomerNumber on first sale if the customer doesn't have one yet
+            await _customerService.EnsureCustomerNumberAsync(createDto.CustomerId);
 
             _log.Information("Successfully created order with ID: {OrderId}", order.Id);
             return MapToDto(order);

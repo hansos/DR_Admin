@@ -3,8 +3,15 @@ namespace ISPAdmin.Data.Entities;
 public class Customer : EntityBase
 {
     /// <summary>
-    /// Internal numerical customer number, auto-assigned on creation.
-    /// The starting value and optional prefix are stored in the SystemSettings table.
+    /// Reference number assigned to every customer on creation.
+    /// The next value to assign is stored in SystemSettings with key "PNR".
+    /// </summary>
+    public long ReferenceNumber { get; set; }
+
+    /// <summary>
+    /// Internal customer number, auto-assigned on first sale (order creation).
+    /// Customers who have never purchased anything will have a null value.
+    /// The next value to assign is stored in SystemSettings with key "CNR".
     /// </summary>
     public long? CustomerNumber { get; set; }
 
