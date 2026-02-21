@@ -435,4 +435,255 @@ public class DomainManagerService : IDomainManagerService
             return result;
         }
     }
+
+    /// <inheritdoc/>
+    public async Task<DnsPushRecordResult> PushDnsRecordAsync(int dnsRecordId)
+    {
+        var result = new DnsPushRecordResult { DnsRecordId = dnsRecordId };
+
+        try
+        {
+            _log.Information("Pushing DNS record with ID {DnsRecordId} to registrar", dnsRecordId);
+
+            var dnsRecord = await _context.DnsRecords
+                .Include(r => r.DnsRecordType)
+                .Include(r => r.Domain)
+                    .ThenInclude(d => d.Registrar)
+                .FirstOrDefaultAsync(r => r.Id == dnsRecordId);
+
+            if (dnsRecord == null)
+            {
+                result.Message = $"DNS record with ID {dnsRecordId} not found";
+                return result;
+            }
+
+            var registrarCode = dnsRecord.Domain.Registrar.Code;
+            var domainName = dnsRecord.Domain.Name;
+            var registrarClient = _domainRegistrarFactory.CreateRegistrar(registrarCode);
+
+            var recordModel = new DomainRegistrationLib.Models.DnsRecordModel
+            {
+                Id = dnsRecord.Id,
+                Type = dnsRecord.DnsRecordType.Type,
+                Name = QualifyDnsName(dnsRecord.Name, domainName),
+                Value = dnsRecord.Value,
+                TTL = dnsRecord.TTL,
+                Priority = dnsRecord.Priority,
+                Weight = dnsRecord.Weight,
+                Port = dnsRecord.Port
+            };
+
+            if (dnsRecord.IsDeleted)
+            {
+                // Find the matching record in the remote zone and delete it
+                var zone = await registrarClient.GetDnsZoneAsync(domainName);
+                var remoteRecord = zone?.Records?.FirstOrDefault(r =>
+                    string.Equals(r.Type, recordModel.Type, StringComparison.OrdinalIgnoreCase) &&
+                    string.Equals(r.Name.TrimEnd('.'), recordModel.Name.TrimEnd('.'), StringComparison.OrdinalIgnoreCase) &&
+                    string.Equals(r.Value, recordModel.Value, StringComparison.OrdinalIgnoreCase));
+
+                if (remoteRecord != null)
+                {
+                    var deleteResult = await registrarClient.DeleteDnsRecordAsync(domainName, remoteRecord.Id ?? 0);
+                    if (!deleteResult.Success)
+                    {
+                        result.Message = $"Registrar rejected deletion: {deleteResult.Message}";
+                        return result;
+                    }
+                }
+                else
+                {
+                    _log.Information("DNS record {DnsRecordId} not found on registrar — treating as already deleted", dnsRecordId);
+                }
+
+                _context.DnsRecords.Remove(dnsRecord);
+                await _context.SaveChangesAsync();
+
+                result.Success = true;
+                result.Action = "Deleted";
+                result.Message = "Record deleted from registrar and removed locally";
+                _log.Information("Successfully deleted DNS record {DnsRecordId} from registrar and local DB", dnsRecordId);
+            }
+            else
+            {
+                var upsertResult = await registrarClient.UpdateDnsRecordAsync(domainName, recordModel);
+                if (!upsertResult.Success)
+                {
+                    result.Message = $"Registrar rejected upsert: {upsertResult.Message}";
+                    return result;
+                }
+
+                dnsRecord.IsPendingSync = false;
+                dnsRecord.UpdatedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+
+                result.Success = true;
+                result.Action = "Upserted";
+                result.Message = "Record upserted on registrar and marked as synced";
+                _log.Information("Successfully pushed DNS record {DnsRecordId} to registrar", dnsRecordId);
+            }
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error pushing DNS record {DnsRecordId} to registrar", dnsRecordId);
+            result.Message = ex.Message;
+            return result;
+        }
+    }
+
+    /// <inheritdoc/>
+    public async Task<DnsPushPendingResult> PushPendingSyncRecordsAsync(int domainId)
+    {
+        var result = new DnsPushPendingResult();
+
+        try
+        {
+            _log.Information("Pushing all pending-sync DNS records for domain ID {DomainId}", domainId);
+
+            var domain = await _context.RegisteredDomains
+                .Include(d => d.Registrar)
+                .FirstOrDefaultAsync(d => d.Id == domainId);
+
+            if (domain == null)
+            {
+                result.Message = $"Domain with ID {domainId} not found";
+                return result;
+            }
+
+            result.DomainName = domain.Name;
+
+            var pendingRecords = await _context.DnsRecords
+                .Include(r => r.DnsRecordType)
+                .Where(r => r.DomainId == domainId && r.IsPendingSync)
+                .ToListAsync();
+
+            if (pendingRecords.Count == 0)
+            {
+                result.Success = true;
+                result.Message = "No pending-sync records found";
+                return result;
+            }
+
+            _log.Information("Found {Count} pending-sync DNS records for domain {DomainName}", pendingRecords.Count, domain.Name);
+
+            var registrarClient = _domainRegistrarFactory.CreateRegistrar(domain.Registrar.Code);
+
+            // Fetch the remote zone once for deletion matching
+            DomainRegistrationLib.Models.DnsZone? remoteZone = null;
+
+            foreach (var dnsRecord in pendingRecords)
+            {
+                var recordResult = new DnsPushRecordResult { DnsRecordId = dnsRecord.Id };
+
+                try
+                {
+                    var recordModel = new DomainRegistrationLib.Models.DnsRecordModel
+                    {
+                        Id = dnsRecord.Id,
+                        Type = dnsRecord.DnsRecordType.Type,
+                        Name = QualifyDnsName(dnsRecord.Name, domain.Name),
+                        Value = dnsRecord.Value,
+                        TTL = dnsRecord.TTL,
+                        Priority = dnsRecord.Priority,
+                        Weight = dnsRecord.Weight,
+                        Port = dnsRecord.Port
+                    };
+
+                    if (dnsRecord.IsDeleted)
+                    {
+                        remoteZone ??= await registrarClient.GetDnsZoneAsync(domain.Name);
+
+                        var remoteRecord = remoteZone?.Records?.FirstOrDefault(r =>
+                            string.Equals(r.Type, recordModel.Type, StringComparison.OrdinalIgnoreCase) &&
+                            string.Equals(r.Name.TrimEnd('.'), recordModel.Name.TrimEnd('.'), StringComparison.OrdinalIgnoreCase) &&
+                            string.Equals(r.Value, recordModel.Value, StringComparison.OrdinalIgnoreCase));
+
+                        if (remoteRecord != null)
+                        {
+                            var deleteResult = await registrarClient.DeleteDnsRecordAsync(domain.Name, remoteRecord.Id ?? 0);
+                            if (!deleteResult.Success)
+                            {
+                                recordResult.Message = $"Registrar rejected deletion: {deleteResult.Message}";
+                                result.Failed++;
+                                result.RecordResults.Add(recordResult);
+                                continue;
+                            }
+                        }
+                        else
+                        {
+                            _log.Information("DNS record {DnsRecordId} not found on registrar — treating as already deleted", dnsRecord.Id);
+                        }
+
+                        _context.DnsRecords.Remove(dnsRecord);
+                        recordResult.Success = true;
+                        recordResult.Action = "Deleted";
+                        recordResult.Message = "Deleted from registrar and removed locally";
+                        result.Deleted++;
+                    }
+                    else
+                    {
+                        var upsertResult = await registrarClient.UpdateDnsRecordAsync(domain.Name, recordModel);
+                        if (!upsertResult.Success)
+                        {
+                            recordResult.Message = $"Registrar rejected upsert: {upsertResult.Message}";
+                            result.Failed++;
+                            result.RecordResults.Add(recordResult);
+                            continue;
+                        }
+
+                        dnsRecord.IsPendingSync = false;
+                        dnsRecord.UpdatedAt = DateTime.UtcNow;
+                        recordResult.Success = true;
+                        recordResult.Action = "Upserted";
+                        recordResult.Message = "Upserted on registrar and marked as synced";
+                        result.Upserted++;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _log.Error(ex, "Error pushing DNS record {DnsRecordId}", dnsRecord.Id);
+                    recordResult.Message = ex.Message;
+                    result.Failed++;
+                }
+
+                result.RecordResults.Add(recordResult);
+            }
+
+            await _context.SaveChangesAsync();
+
+            result.Success = result.Failed == 0;
+            result.Message = $"Pushed {result.Upserted} upserted, {result.Deleted} deleted, {result.Failed} failed";
+
+            _log.Information("Push pending-sync for domain {DomainName}: {Upserted} upserted, {Deleted} deleted, {Failed} failed",
+                domain.Name, result.Upserted, result.Deleted, result.Failed);
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error pushing pending-sync DNS records for domain ID {DomainId}", domainId);
+            result.Message = ex.Message;
+            return result;
+        }
+    }
+
+    /// <summary>
+    /// Converts a relative DNS record name (e.g. "www", "@") to the fully-qualified name
+    /// expected by Route 53 and other registrars (e.g. "www.oblynix.com", "oblynix.com").
+    /// </summary>
+    private static string QualifyDnsName(string name, string domainName)
+    {
+        name = name.TrimEnd('.');
+
+        if (string.IsNullOrWhiteSpace(name) || name == "@")
+            return domainName;
+
+        if (name.Equals(domainName, StringComparison.OrdinalIgnoreCase) ||
+            name.EndsWith("." + domainName, StringComparison.OrdinalIgnoreCase))
+            return name;
+
+        return $"{name}.{domainName}";
+    }
 }

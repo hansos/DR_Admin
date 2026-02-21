@@ -48,4 +48,21 @@ public interface IDomainManagerService
     /// <param name="domainName">The fully-qualified domain name</param>
     /// <returns>Sync result for the domain</returns>
     Task<DnsRecordSyncResult> SyncDnsRecordsByDomainNameAsync(string registrarCode, string domainName);
+
+    /// <summary>
+    /// Pushes a single DNS record from the local database to the registrar's DNS server.
+    /// Non-deleted records are upserted; soft-deleted records are removed from the server and hard-deleted locally.
+    /// Clears IsPendingSync on success.
+    /// </summary>
+    /// <param name="dnsRecordId">The local database ID of the DNS record to push.</param>
+    /// <returns>Result of the push operation.</returns>
+    Task<DnsPushRecordResult> PushDnsRecordAsync(int dnsRecordId);
+
+    /// <summary>
+    /// Pushes all pending-sync DNS records for a given domain to the registrar's DNS server.
+    /// Non-deleted records are upserted; soft-deleted records are removed and hard-deleted locally.
+    /// </summary>
+    /// <param name="domainId">The local database ID of the registered domain.</param>
+    /// <returns>Aggregated push result with per-record details.</returns>
+    Task<DnsPushPendingResult> PushPendingSyncRecordsAsync(int domainId);
 }

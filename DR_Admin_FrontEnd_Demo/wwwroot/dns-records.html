@@ -110,21 +110,25 @@
             </div>
             <div class="card-body">
                 <div class="row g-3 align-items-end">
-                    <div class="col-md-6">
+                    <div class="col-md-5">
                         <label for="domainSelect" class="form-label fw-semibold">Domain</label>
                         <select class="form-select" id="domainSelect">
                             <option value="">-- Loading domains... --</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <div class="form-check mt-2">
                             <input class="form-check-input" type="checkbox" id="showDeleted">
                             <label class="form-check-label" for="showDeleted">
-                                Show deleted records
+                                Show deleted
                             </label>
                         </div>
                     </div>
-                    <div class="col-md-3 text-end">
+                    <div class="col-md-5 text-end d-flex gap-2 justify-content-end flex-wrap">
+                        <button class="btn btn-warning" id="syncToServerBtn" disabled>
+                            <i class="bi bi-arrow-repeat"></i> Sync to DNS Server
+                            <span class="badge bg-dark ms-1 d-none" id="pendingSyncCount">0</span>
+                        </button>
                         <button class="btn btn-success" id="addRecordBtn" disabled>
                             <i class="bi bi-plus-circle"></i> Add DNS Record
                         </button>
@@ -178,6 +182,74 @@
             </div>
         </div>
     </main>
+
+    <!-- Sync to DNS Server Modal -->
+    <div class="modal fade" id="syncModal" tabindex="-1" aria-labelledby="syncModalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title" id="syncModalTitle">
+                        <i class="bi bi-arrow-repeat"></i> Sync Records to DNS Server
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Loading -->
+                    <div id="syncModalLoading" class="text-center py-4">
+                        <div class="spinner-border text-warning" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2 text-muted">Loading pending records...</p>
+                    </div>
+                    <!-- Nothing pending -->
+                    <div id="syncModalEmpty" class="text-center py-4 text-muted d-none">
+                        <i class="bi bi-check-circle-fill fs-1 text-success d-block mb-2"></i>
+                        All DNS records are already in sync. Nothing to push.
+                    </div>
+                    <!-- Pending records list -->
+                    <div id="syncModalContent" class="d-none">
+                        <p class="mb-3">
+                            <strong id="syncPendingCount">0</strong> record(s) have local changes pending push to the DNS server.
+                            Clicking <strong>Sync All</strong> will call <code>mark-synced</code> on each record after it has been confirmed as pushed.
+                        </p>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered mb-0">
+                                <thead class="table-warning text-dark">
+                                    <tr>
+                                        <th style="width:70px">Type</th>
+                                        <th>Name</th>
+                                        <th>Value</th>
+                                        <th style="width:70px">TTL</th>
+                                        <th style="width:110px">Result</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="syncRecordsTableBody"></tbody>
+                            </table>
+                        </div>
+                        <!-- Progress bar (shown during sync) -->
+                        <div id="syncProgressWrapper" class="d-none mt-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <small class="text-muted">Syncing records to DNS server...</small>
+                                <small class="text-muted" id="syncProgressText">0 / 0</small>
+                            </div>
+                            <div class="progress" style="height:8px">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated bg-warning"
+                                     id="syncProgressBar" role="progressbar" style="width:0%"></div>
+                            </div>
+                        </div>
+                        <!-- Summary (shown after sync completes) -->
+                        <div id="syncSummary" class="d-none mt-3 alert" role="alert"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="syncCancelBtn">Cancel</button>
+                    <button type="button" class="btn btn-warning" id="confirmSyncBtn" disabled>
+                        <i class="bi bi-arrow-repeat"></i> Sync All to DNS Server
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Create/Edit Modal -->
     <div class="modal fade" id="recordModal" tabindex="-1" aria-labelledby="recordModalTitle" aria-hidden="true">

@@ -5,6 +5,7 @@ let selectedDomainName = '';
 let dnsRecordTypes = [];
 let activeRecords = [];
 let deletedRecords = [];
+let pendingRecords = [];
 let recordToDelete = null;
 let recordToHardDelete = null;
 let editingRecordId = null;
@@ -62,6 +63,7 @@ function initEventListeners() {
         selectedDomainId = e.target.value || null;
         selectedDomainName = selectedDomainId ? (e.target.options[e.target.selectedIndex]?.text || '') : '';
         document.getElementById('addRecordBtn').disabled = !selectedDomainId;
+        document.getElementById('syncToServerBtn').disabled = !selectedDomainId;
         if (selectedDomainId) {
             await loadRecords();
         } else {
@@ -71,6 +73,8 @@ function initEventListeners() {
 
     document.getElementById('showDeleted').addEventListener('change', () => renderTable());
     document.getElementById('addRecordBtn').addEventListener('click', () => openCreateModal());
+    document.getElementById('syncToServerBtn').addEventListener('click', () => openSyncModal());
+    document.getElementById('confirmSyncBtn').addEventListener('click', () => performSync());
     document.getElementById('saveRecordBtn').addEventListener('click', saveRecord);
     document.getElementById('recordType').addEventListener('change', updateFieldVisibility);
 
@@ -128,8 +132,7 @@ function renderTable() {
     document.getElementById('noRecordsMsg').classList.add('d-none');
     document.getElementById('recordsTableWrapper').classList.remove('d-none');
 
-    tbody.innerHTML = records.map(r => {
-        const typeBadge = getDnsTypeBadge(r.type);
+    tbody.innerHTML = records.map(r => {        const typeBadge = getDnsTypeBadge(r.type);
         const syncBadge = r.isPendingSync
             ? '<span class="badge bg-warning text-dark" title="Pending sync"><i class="bi bi-arrow-repeat"></i> Pending</span>'
             : '<span class="badge bg-success" title="Synced"><i class="bi bi-check2"></i> Synced</span>';
@@ -156,6 +159,8 @@ function renderTable() {
             <td class="text-nowrap">${buildActionButtons(r)}</td>
         </tr>`;
     }).join('');
+
+    updatePendingSyncBadge();
 }
 
 function buildActionButtons(r) {
@@ -414,9 +419,136 @@ function showNoSelection() {
     document.getElementById('noRecordsMsg').classList.add('d-none');
     document.getElementById('recordCount').textContent = '0';
     document.getElementById('selectedDomainLabel').textContent = 'No domain selected';
+    document.getElementById('syncToServerBtn').disabled = true;
+    document.getElementById('pendingSyncCount').classList.add('d-none');
     activeRecords = [];
     deletedRecords = [];
     selectedDomainName = '';
+}
+
+function updatePendingSyncBadge() {
+    const badge = document.getElementById('pendingSyncCount');
+    const count = activeRecords.filter(r => r.isPendingSync).length;
+    if (count > 0) {
+        badge.textContent = count;
+        badge.classList.remove('d-none');
+    } else {
+        badge.classList.add('d-none');
+    }
+}
+
+async function openSyncModal() {
+    const syncModal = new bootstrap.Modal(document.getElementById('syncModal'));
+
+    document.getElementById('syncModalLoading').classList.remove('d-none');
+    document.getElementById('syncModalEmpty').classList.add('d-none');
+    document.getElementById('syncModalContent').classList.add('d-none');
+    document.getElementById('syncProgressWrapper').classList.add('d-none');
+    document.getElementById('syncSummary').classList.add('d-none');
+    document.getElementById('confirmSyncBtn').disabled = true;
+    document.getElementById('confirmSyncBtn').innerHTML = '<i class="bi bi-arrow-repeat"></i> Sync All to DNS Server';
+    document.getElementById('syncCancelBtn').disabled = false;
+    document.getElementById('syncCancelBtn').textContent = 'Cancel';
+
+    const bar = document.getElementById('syncProgressBar');
+    bar.style.width = '0%';
+    bar.className = 'progress-bar progress-bar-striped progress-bar-animated bg-warning';
+
+    syncModal.show();
+
+    try {
+        const result = await window.DnsRecordAPI.getPendingSyncByDomain(selectedDomainId);
+        pendingRecords = (result.success && Array.isArray(result.data)) ? result.data : [];
+    } catch (err) {
+        console.error('Failed to load pending-sync records:', err);
+        pendingRecords = [];
+    }
+
+    document.getElementById('syncModalLoading').classList.add('d-none');
+
+    if (pendingRecords.length === 0) {
+        document.getElementById('syncModalEmpty').classList.remove('d-none');
+    } else {
+        document.getElementById('syncPendingCount').textContent = pendingRecords.length;
+        renderSyncTable();
+        document.getElementById('syncModalContent').classList.remove('d-none');
+        document.getElementById('confirmSyncBtn').disabled = false;
+    }
+}
+
+function renderSyncTable() {
+    const tbody = document.getElementById('syncRecordsTableBody');
+    tbody.innerHTML = pendingRecords.map(r => `
+        <tr id="sync-row-${r.id}">
+            <td>${getDnsTypeBadge(r.type)}</td>
+            <td><code>${esc(getFullDnsName(r.name, selectedDomainName))}</code></td>
+            <td class="text-break"><code class="small">${esc(r.value || '-')}</code></td>
+            <td>${r.ttl ?? '-'}</td>
+            <td><span class="badge bg-warning text-dark"><i class="bi bi-clock"></i> Pending</span></td>
+        </tr>
+    `).join('');
+}
+
+async function performSync() {
+    const confirmBtn = document.getElementById('confirmSyncBtn');
+    const cancelBtn = document.getElementById('syncCancelBtn');
+    const progressWrapper = document.getElementById('syncProgressWrapper');
+    const progressBar = document.getElementById('syncProgressBar');
+    const progressText = document.getElementById('syncProgressText');
+    const summary = document.getElementById('syncSummary');
+
+    confirmBtn.disabled = true;
+    confirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Syncing...';
+    cancelBtn.disabled = true;
+    progressWrapper.classList.remove('d-none');
+    summary.classList.add('d-none');
+
+    let succeeded = 0;
+    let failed = 0;
+    const total = pendingRecords.length;
+
+    for (let i = 0; i < total; i++) {
+        const record = pendingRecords[i];
+        const pct = Math.round(((i + 1) / total) * 100);
+        progressText.textContent = `${i + 1} / ${total}`;
+        progressBar.style.width = `${pct}%`;
+        progressBar.setAttribute('aria-valuenow', pct);
+
+        const row = document.getElementById(`sync-row-${record.id}`);
+        try {
+            const result = await window.DnsRecordAPI.push(record.id);
+            if (result.success) {
+                succeeded++;
+                if (row) row.cells[4].innerHTML = '<span class="badge bg-success"><i class="bi bi-check2"></i> Synced</span>';
+            } else {
+                failed++;
+                const errMsg = (result.data?.message || result.message || 'Failed').substring(0, 80);
+                if (row) row.cells[4].innerHTML = `<span class="badge bg-danger" title="${esc(errMsg)}"><i class="bi bi-x"></i> Failed</span>`;
+            }
+        } catch (err) {
+            failed++;
+            if (row) row.cells[4].innerHTML = '<span class="badge bg-danger"><i class="bi bi-x"></i> Error</span>';
+            console.error(`Error pushing record ${record.id}:`, err);
+        }
+    }
+
+    progressBar.classList.remove('progress-bar-animated');
+
+    if (failed === 0) {
+        progressBar.classList.replace('bg-warning', 'bg-success');
+        summary.className = 'mt-3 alert alert-success';
+        summary.innerHTML = `<i class="bi bi-check-circle-fill"></i> All <strong>${succeeded}</strong> record(s) were successfully marked as synced.`;
+    } else {
+        summary.className = 'mt-3 alert alert-warning';
+        summary.innerHTML = `<i class="bi bi-exclamation-triangle-fill"></i> <strong>${succeeded}</strong> record(s) synced, <strong>${failed}</strong> failed. Check the table above for details.`;
+    }
+    summary.classList.remove('d-none');
+
+    confirmBtn.innerHTML = '<i class="bi bi-check2-circle"></i> Done';
+    cancelBtn.disabled = false;
+    cancelBtn.textContent = 'Close';
+
+    await loadRecords();
 }
 
 function getFullDnsName(name, domainName) {
@@ -456,3 +588,5 @@ window.promptSoftDelete = promptSoftDelete;
 window.promptHardDelete = promptHardDelete;
 window.restoreRecord = restoreRecord;
 window.markSynced = markSynced;
+window.openSyncModal = openSyncModal;
+window.performSync = performSync;

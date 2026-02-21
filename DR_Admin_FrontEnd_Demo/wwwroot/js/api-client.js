@@ -334,8 +334,17 @@ const DnsRecordAPI = {
     async restore(id) {
         return apiRequest(`${BASE_URL}/DnsRecords/${id}/restore`, { method: 'POST' });
     },
+    async getPendingSyncByDomain(domainId) {
+        return apiRequest(`${BASE_URL}/DnsRecords/domain/${domainId}/pending-sync`, { method: 'GET' });
+    },
     async markSynced(id) {
         return apiRequest(`${BASE_URL}/DnsRecords/${id}/mark-synced`, { method: 'POST' });
+    },
+    async push(id) {
+        return apiRequest(`${BASE_URL}/DnsRecords/${id}/push`, { method: 'POST' });
+    },
+    async pushPending(domainId) {
+        return apiRequest(`${BASE_URL}/DnsRecords/domain/${domainId}/push-pending`, { method: 'POST' });
     },
 };
 /**
