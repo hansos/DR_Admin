@@ -367,9 +367,9 @@ public class DomainManagerService : IDomainManagerService
                 .Where(t => t.IsActive)
                 .ToDictionaryAsync(t => t.Type.ToUpper());
 
-            // Load all existing records for this domain into memory for matching
+            // Load all non-deleted existing records for this domain into memory for matching
             var existingRecords = await _context.DnsRecords
-                .Where(r => r.DomainId == domain.Id)
+                .Where(r => r.DomainId == domain.Id && !r.IsDeleted)
                 .ToListAsync();
 
             foreach (var incoming in zone.Records)
@@ -394,6 +394,7 @@ public class DomainManagerService : IDomainManagerService
                     existing.Priority = incoming.Priority;
                     existing.Weight = incoming.Weight;
                     existing.Port = incoming.Port;
+                    existing.IsPendingSync = false;
                     existing.UpdatedAt = DateTime.UtcNow;
                     result.Updated++;
                 }
@@ -409,6 +410,8 @@ public class DomainManagerService : IDomainManagerService
                         Priority = incoming.Priority,
                         Weight = incoming.Weight,
                         Port = incoming.Port,
+                        IsPendingSync = false,
+                        IsDeleted = false,
                         CreatedAt = DateTime.UtcNow,
                         UpdatedAt = DateTime.UtcNow
                     });

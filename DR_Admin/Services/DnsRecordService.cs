@@ -1,4 +1,4 @@
-using ISPAdmin.Data;
+﻿using ISPAdmin.Data;
 using ISPAdmin.Data.Entities;
 using ISPAdmin.DTOs;
 using Microsoft.EntityFrameworkCore;
@@ -16,22 +16,22 @@ public class DnsRecordService : IDnsRecordService
         _context = context;
     }
 
+    /// <inheritdoc/>
     public async Task<IEnumerable<DnsRecordDto>> GetAllDnsRecordsAsync()
     {
         try
         {
             _log.Information("Fetching all DNS records");
-            
+
             var dnsRecords = await _context.DnsRecords
                 .AsNoTracking()
                 .Include(d => d.Domain)
                 .Include(d => d.DnsRecordType)
+                .Where(d => !d.IsDeleted)
                 .ToListAsync();
 
-            var dnsRecordDtos = dnsRecords.Select(MapToDto);
-            
             _log.Information("Successfully fetched {Count} DNS records", dnsRecords.Count);
-            return dnsRecordDtos;
+            return dnsRecords.Select(MapToDto);
         }
         catch (Exception ex)
         {
@@ -40,19 +40,21 @@ public class DnsRecordService : IDnsRecordService
         }
     }
 
+    /// <inheritdoc/>
     public async Task<PagedResult<DnsRecordDto>> GetAllDnsRecordsPagedAsync(PaginationParameters parameters)
     {
         try
         {
-            _log.Information("Fetching paginated DNS records - Page: {PageNumber}, PageSize: {PageSize}", 
+            _log.Information("Fetching paginated DNS records - Page: {PageNumber}, PageSize: {PageSize}",
                 parameters.PageNumber, parameters.PageSize);
-            
-            var totalCount = await _context.DnsRecords
-                .AsNoTracking()
-                .CountAsync();
 
-            var dnsRecords = await _context.DnsRecords
+            var query = _context.DnsRecords
                 .AsNoTracking()
+                .Where(d => !d.IsDeleted);
+
+            var totalCount = await query.CountAsync();
+
+            var dnsRecords = await query
                 .Include(d => d.Domain)
                 .Include(d => d.DnsRecordType)
                 .OrderBy(d => d.Name)
@@ -61,16 +63,16 @@ public class DnsRecordService : IDnsRecordService
                 .ToListAsync();
 
             var dnsRecordDtos = dnsRecords.Select(MapToDto).ToList();
-            
+
             var result = new PagedResult<DnsRecordDto>(
-                dnsRecordDtos, 
-                totalCount, 
-                parameters.PageNumber, 
+                dnsRecordDtos,
+                totalCount,
+                parameters.PageNumber,
                 parameters.PageSize);
 
-            _log.Information("Successfully fetched page {PageNumber} of DNS records - Returned {Count} of {TotalCount} total", 
+            _log.Information("Successfully fetched page {PageNumber} of DNS records - Returned {Count} of {TotalCount} total",
                 parameters.PageNumber, dnsRecordDtos.Count, totalCount);
-            
+
             return result;
         }
         catch (Exception ex)
@@ -80,17 +82,18 @@ public class DnsRecordService : IDnsRecordService
         }
     }
 
+    /// <inheritdoc/>
     public async Task<DnsRecordDto?> GetDnsRecordByIdAsync(int id)
     {
         try
         {
             _log.Information("Fetching DNS record with ID: {DnsRecordId}", id);
-            
+
             var dnsRecord = await _context.DnsRecords
                 .AsNoTracking()
                 .Include(d => d.Domain)
                 .Include(d => d.DnsRecordType)
-                .FirstOrDefaultAsync(d => d.Id == id);
+                .FirstOrDefaultAsync(d => d.Id == id && !d.IsDeleted);
 
             if (dnsRecord == null)
             {
@@ -108,23 +111,22 @@ public class DnsRecordService : IDnsRecordService
         }
     }
 
+    /// <inheritdoc/>
     public async Task<IEnumerable<DnsRecordDto>> GetDnsRecordsByDomainIdAsync(int domainId)
     {
         try
         {
             _log.Information("Fetching DNS records for domain ID: {DomainId}", domainId);
-            
+
             var dnsRecords = await _context.DnsRecords
                 .AsNoTracking()
                 .Include(d => d.Domain)
                 .Include(d => d.DnsRecordType)
-                .Where(d => d.DomainId == domainId)
+                .Where(d => d.DomainId == domainId && !d.IsDeleted)
                 .ToListAsync();
 
-            var dnsRecordDtos = dnsRecords.Select(MapToDto);
-            
             _log.Information("Successfully fetched {Count} DNS records for domain ID: {DomainId}", dnsRecords.Count, domainId);
-            return dnsRecordDtos;
+            return dnsRecords.Select(MapToDto);
         }
         catch (Exception ex)
         {
@@ -133,23 +135,22 @@ public class DnsRecordService : IDnsRecordService
         }
     }
 
+    /// <inheritdoc/>
     public async Task<IEnumerable<DnsRecordDto>> GetDnsRecordsByTypeAsync(string type)
     {
         try
         {
             _log.Information("Fetching DNS records with type: {Type}", type);
-            
+
             var dnsRecords = await _context.DnsRecords
                 .AsNoTracking()
                 .Include(d => d.Domain)
                 .Include(d => d.DnsRecordType)
-                .Where(d => d.DnsRecordType.Type.ToUpper() == type.ToUpper())
+                .Where(d => !d.IsDeleted && d.DnsRecordType.Type.ToUpper() == type.ToUpper())
                 .ToListAsync();
 
-            var dnsRecordDtos = dnsRecords.Select(MapToDto);
-            
             _log.Information("Successfully fetched {Count} DNS records with type: {Type}", dnsRecords.Count, type);
-            return dnsRecordDtos;
+            return dnsRecords.Select(MapToDto);
         }
         catch (Exception ex)
         {
@@ -158,46 +159,80 @@ public class DnsRecordService : IDnsRecordService
         }
     }
 
+    /// <inheritdoc/>
+    public async Task<IEnumerable<DnsRecordDto>> GetPendingSyncRecordsAsync(int domainId)
+    {
+        try
+        {
+            _log.Information("Fetching pending-sync DNS records for domain ID: {DomainId}", domainId);
+
+            var dnsRecords = await _context.DnsRecords
+                .AsNoTracking()
+                .Include(d => d.Domain)
+                .Include(d => d.DnsRecordType)
+                .Where(d => d.DomainId == domainId && d.IsPendingSync)
+                .ToListAsync();
+
+            _log.Information("Successfully fetched {Count} pending-sync DNS records for domain ID: {DomainId}", dnsRecords.Count, domainId);
+            return dnsRecords.Select(MapToDto);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while fetching pending-sync DNS records for domain ID: {DomainId}", domainId);
+            throw;
+        }
+    }
+
+    /// <inheritdoc/>
+    public async Task<IEnumerable<DnsRecordDto>> GetDeletedDnsRecordsAsync(int domainId)
+    {
+        try
+        {
+            _log.Information("Fetching soft-deleted DNS records for domain ID: {DomainId}", domainId);
+
+            var dnsRecords = await _context.DnsRecords
+                .AsNoTracking()
+                .Include(d => d.Domain)
+                .Include(d => d.DnsRecordType)
+                .Where(d => d.DomainId == domainId && d.IsDeleted)
+                .ToListAsync();
+
+            _log.Information("Successfully fetched {Count} soft-deleted DNS records for domain ID: {DomainId}", dnsRecords.Count, domainId);
+            return dnsRecords.Select(MapToDto);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while fetching soft-deleted DNS records for domain ID: {DomainId}", domainId);
+            throw;
+        }
+    }
+
+    /// <inheritdoc/>
     public async Task<DnsRecordDto> CreateDnsRecordAsync(CreateDnsRecordDto createDto)
     {
         try
         {
             _log.Information("Creating new DNS record of type ID {DnsRecordTypeId} for domain ID: {DomainId}", createDto.DnsRecordTypeId, createDto.DomainId);
 
-            // Validate that the domain exists
             var domainExists = await _context.RegisteredDomains.AnyAsync(d => d.Id == createDto.DomainId);
             if (!domainExists)
-            {
                 throw new InvalidOperationException($"Domain with ID {createDto.DomainId} not found");
-            }
 
-            // Validate that the DNS record type exists and is active
             var dnsRecordType = await _context.DnsRecordTypes.FindAsync(createDto.DnsRecordTypeId);
             if (dnsRecordType == null)
-            {
                 throw new InvalidOperationException($"DNS record type with ID {createDto.DnsRecordTypeId} not found");
-            }
 
             if (!dnsRecordType.IsActive)
-            {
                 throw new InvalidOperationException($"DNS record type '{dnsRecordType.Type}' is not active");
-            }
 
-            // Validate Priority, Weight, Port based on record type
             if (dnsRecordType.HasPriority && !createDto.Priority.HasValue)
-            {
                 throw new InvalidOperationException($"Priority is required for DNS record type '{dnsRecordType.Type}'");
-            }
 
             if (dnsRecordType.HasWeight && !createDto.Weight.HasValue)
-            {
                 throw new InvalidOperationException($"Weight is required for DNS record type '{dnsRecordType.Type}'");
-            }
 
             if (dnsRecordType.HasPort && !createDto.Port.HasValue)
-            {
                 throw new InvalidOperationException($"Port is required for DNS record type '{dnsRecordType.Type}'");
-            }
 
             var dnsRecord = new DnsRecord
             {
@@ -209,6 +244,8 @@ public class DnsRecordService : IDnsRecordService
                 Priority = createDto.Priority,
                 Weight = createDto.Weight,
                 Port = createDto.Port,
+                IsPendingSync = createDto.IsPendingSync,
+                IsDeleted = false,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -218,7 +255,6 @@ public class DnsRecordService : IDnsRecordService
 
             _log.Information("Successfully created DNS record with ID: {DnsRecordId}", dnsRecord.Id);
 
-            // Fetch the created record with navigation properties
             var createdRecord = await _context.DnsRecords
                 .AsNoTracking()
                 .Include(d => d.Domain)
@@ -234,6 +270,7 @@ public class DnsRecordService : IDnsRecordService
         }
     }
 
+    /// <inheritdoc/>
     public async Task<DnsRecordDto?> UpdateDnsRecordAsync(int id, UpdateDnsRecordDto updateDto)
     {
         try
@@ -243,7 +280,7 @@ public class DnsRecordService : IDnsRecordService
             var dnsRecord = await _context.DnsRecords
                 .Include(d => d.Domain)
                 .Include(d => d.DnsRecordType)
-                .FirstOrDefaultAsync(d => d.Id == id);
+                .FirstOrDefaultAsync(d => d.Id == id && !d.IsDeleted);
 
             if (dnsRecord == null)
             {
@@ -251,45 +288,30 @@ public class DnsRecordService : IDnsRecordService
                 return null;
             }
 
-            // Validate that the domain exists if domain ID is being changed
             if (dnsRecord.DomainId != updateDto.DomainId)
             {
                 var domainExists = await _context.RegisteredDomains.AnyAsync(d => d.Id == updateDto.DomainId);
                 if (!domainExists)
-                {
                     throw new InvalidOperationException($"Domain with ID {updateDto.DomainId} not found");
-                }
             }
 
-            // Validate that the DNS record type exists and is active if type is being changed
             if (dnsRecord.DnsRecordTypeId != updateDto.DnsRecordTypeId)
             {
                 var dnsRecordType = await _context.DnsRecordTypes.FindAsync(updateDto.DnsRecordTypeId);
                 if (dnsRecordType == null)
-                {
                     throw new InvalidOperationException($"DNS record type with ID {updateDto.DnsRecordTypeId} not found");
-                }
 
                 if (!dnsRecordType.IsActive)
-                {
                     throw new InvalidOperationException($"DNS record type '{dnsRecordType.Type}' is not active");
-                }
 
-                // Validate Priority, Weight, Port based on new record type
                 if (dnsRecordType.HasPriority && !updateDto.Priority.HasValue)
-                {
                     throw new InvalidOperationException($"Priority is required for DNS record type '{dnsRecordType.Type}'");
-                }
 
                 if (dnsRecordType.HasWeight && !updateDto.Weight.HasValue)
-                {
                     throw new InvalidOperationException($"Weight is required for DNS record type '{dnsRecordType.Type}'");
-                }
 
                 if (dnsRecordType.HasPort && !updateDto.Port.HasValue)
-                {
                     throw new InvalidOperationException($"Port is required for DNS record type '{dnsRecordType.Type}'");
-                }
 
                 dnsRecord.DnsRecordType = dnsRecordType;
             }
@@ -302,6 +324,7 @@ public class DnsRecordService : IDnsRecordService
             dnsRecord.Priority = updateDto.Priority;
             dnsRecord.Weight = updateDto.Weight;
             dnsRecord.Port = updateDto.Port;
+            dnsRecord.IsPendingSync = true;
             dnsRecord.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
@@ -316,29 +339,131 @@ public class DnsRecordService : IDnsRecordService
         }
     }
 
-    public async Task<bool> DeleteDnsRecordAsync(int id)
+    /// <inheritdoc/>
+    public async Task<bool> SoftDeleteDnsRecordAsync(int id)
     {
         try
         {
-            _log.Information("Deleting DNS record with ID: {DnsRecordId}", id);
+            _log.Information("Soft-deleting DNS record with ID: {DnsRecordId}", id);
+
+            var dnsRecord = await _context.DnsRecords
+                .FirstOrDefaultAsync(d => d.Id == id && !d.IsDeleted);
+
+            if (dnsRecord == null)
+            {
+                _log.Warning("DNS record with ID {DnsRecordId} not found for soft-delete", id);
+                return false;
+            }
+
+            dnsRecord.IsDeleted = true;
+            dnsRecord.IsPendingSync = true;
+            dnsRecord.DeletedAt = DateTime.UtcNow;
+            dnsRecord.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            _log.Information("Successfully soft-deleted DNS record with ID: {DnsRecordId}", id);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while soft-deleting DNS record with ID: {DnsRecordId}", id);
+            throw;
+        }
+    }
+
+    /// <inheritdoc/>
+    public async Task<bool> HardDeleteDnsRecordAsync(int id)
+    {
+        try
+        {
+            _log.Information("Hard-deleting DNS record with ID: {DnsRecordId}", id);
 
             var dnsRecord = await _context.DnsRecords.FindAsync(id);
 
             if (dnsRecord == null)
             {
-                _log.Warning("DNS record with ID {DnsRecordId} not found for deletion", id);
+                _log.Warning("DNS record with ID {DnsRecordId} not found for hard-delete", id);
                 return false;
             }
 
             _context.DnsRecords.Remove(dnsRecord);
             await _context.SaveChangesAsync();
 
-            _log.Information("Successfully deleted DNS record with ID: {DnsRecordId}", id);
+            _log.Information("Successfully hard-deleted DNS record with ID: {DnsRecordId}", id);
             return true;
         }
         catch (Exception ex)
         {
-            _log.Error(ex, "Error occurred while deleting DNS record with ID: {DnsRecordId}", id);
+            _log.Error(ex, "Error occurred while hard-deleting DNS record with ID: {DnsRecordId}", id);
+            throw;
+        }
+    }
+
+    /// <inheritdoc/>
+    public async Task<DnsRecordDto?> RestoreDnsRecordAsync(int id)
+    {
+        try
+        {
+            _log.Information("Restoring soft-deleted DNS record with ID: {DnsRecordId}", id);
+
+            var dnsRecord = await _context.DnsRecords
+                .Include(d => d.Domain)
+                .Include(d => d.DnsRecordType)
+                .FirstOrDefaultAsync(d => d.Id == id && d.IsDeleted);
+
+            if (dnsRecord == null)
+            {
+                _log.Warning("DNS record with ID {DnsRecordId} not found or is not soft-deleted", id);
+                return null;
+            }
+
+            dnsRecord.IsDeleted = false;
+            dnsRecord.DeletedAt = null;
+            dnsRecord.IsPendingSync = true;
+            dnsRecord.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            _log.Information("Successfully restored DNS record with ID: {DnsRecordId}", id);
+            return MapToDto(dnsRecord);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while restoring DNS record with ID: {DnsRecordId}", id);
+            throw;
+        }
+    }
+
+    /// <inheritdoc/>
+    public async Task<DnsRecordDto?> MarkAsSyncedAsync(int id)
+    {
+        try
+        {
+            _log.Information("Marking DNS record with ID {DnsRecordId} as synced", id);
+
+            var dnsRecord = await _context.DnsRecords
+                .Include(d => d.Domain)
+                .Include(d => d.DnsRecordType)
+                .FirstOrDefaultAsync(d => d.Id == id);
+
+            if (dnsRecord == null)
+            {
+                _log.Warning("DNS record with ID {DnsRecordId} not found for mark-as-synced", id);
+                return null;
+            }
+
+            dnsRecord.IsPendingSync = false;
+            dnsRecord.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            _log.Information("Successfully marked DNS record with ID {DnsRecordId} as synced", id);
+            return MapToDto(dnsRecord);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while marking DNS record with ID {DnsRecordId} as synced", id);
             throw;
         }
     }
@@ -361,8 +486,12 @@ public class DnsRecordService : IDnsRecordService
             HasPriority = dnsRecord.DnsRecordType.HasPriority,
             HasWeight = dnsRecord.DnsRecordType.HasWeight,
             HasPort = dnsRecord.DnsRecordType.HasPort,
+            IsPendingSync = dnsRecord.IsPendingSync,
+            IsDeleted = dnsRecord.IsDeleted,
+            DeletedAt = dnsRecord.DeletedAt,
             CreatedAt = dnsRecord.CreatedAt,
             UpdatedAt = dnsRecord.UpdatedAt
         };
     }
 }
+

@@ -116,6 +116,9 @@ public static class AuthorizationPoliciesConfiguration
         options.AddPolicy("DnsRecord.Delete", policy =>
             policy.RequireRole(ADMIN, SUPPORT));
 
+        options.AddPolicy("DnsRecord.HardDelete", policy =>
+            policy.RequireRole(ADMIN));
+
         options.AddPolicy("DnsRecord.Read", policy =>
             policy.RequireRole(ADMIN, SUPPORT));
 
