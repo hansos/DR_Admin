@@ -1,7 +1,10 @@
 using DomainRegistrationLib.Factories;
+using DomainRegistrationLib.Interfaces;
 using DomainRegistrationLib.Models;
 using ISPAdmin.Data;
 using ISPAdmin.Data.Entities;
+using ISPAdmin.DTOs;
+using ISPAdmin.Utilities;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -233,5 +236,200 @@ public class DomainManagerService : IDomainManagerService
             PostalCode = contact.PostalCode ?? string.Empty,
             Country = contact.CountryCode ?? string.Empty
         };
+    }
+
+    /// <inheritdoc/>
+    public async Task<DnsBulkSyncResult> SyncDnsRecordsForAllDomainsAsync(string registrarCode)
+    {
+        var bulk = new DnsBulkSyncResult();
+
+        try
+        {
+            _log.Information("Starting bulk DNS record sync for registrar {RegistrarCode}", registrarCode);
+
+            var registrarEntity = await _context.Registrars
+                .FirstOrDefaultAsync(r => r.Code.ToLower() == registrarCode.ToLower());
+
+            if (registrarEntity == null)
+                throw new InvalidOperationException($"Registrar with code '{registrarCode}' not found");
+
+            if (!registrarEntity.IsActive)
+                throw new InvalidOperationException($"Registrar '{registrarCode}' is not active");
+
+            var domains = await _context.RegisteredDomains
+                .Where(d => d.RegistrarId == registrarEntity.Id)
+                .ToListAsync();
+
+            _log.Information("Found {DomainCount} domains for registrar {RegistrarCode}", domains.Count, registrarCode);
+
+            var registrarClient = _domainRegistrarFactory.CreateRegistrar(registrarCode);
+
+            foreach (var domain in domains)
+            {
+                bulk.DomainsProcessed++;
+                var result = await SyncDnsRecordsForDomainAsync(registrarClient, domain);
+                bulk.DomainResults.Add(result);
+
+                if (result.Success)
+                    bulk.DomainsSucceeded++;
+                else
+                    bulk.DomainsFailed++;
+
+                bulk.TotalCreated += result.Created;
+                bulk.TotalUpdated += result.Updated;
+                bulk.TotalSkipped += result.Skipped;
+            }
+
+            bulk.Success = bulk.DomainsFailed == 0;
+            bulk.Message = $"Processed {bulk.DomainsProcessed} domain(s): {bulk.DomainsSucceeded} succeeded, {bulk.DomainsFailed} failed. " +
+                           $"Records: {bulk.TotalCreated} created, {bulk.TotalUpdated} updated, {bulk.TotalSkipped} skipped.";
+
+            _log.Information("Bulk DNS sync complete for registrar {RegistrarCode}. {Message}", registrarCode, bulk.Message);
+            return bulk;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error during bulk DNS record sync for registrar {RegistrarCode}", registrarCode);
+            throw;
+        }
+    }
+
+    /// <inheritdoc/>
+    public async Task<DnsRecordSyncResult> SyncDnsRecordsByDomainNameAsync(string registrarCode, string domainName)
+    {
+        try
+        {
+            _log.Information("Syncing DNS records for domain {DomainName} via registrar {RegistrarCode}", domainName, registrarCode);
+
+            var registrarEntity = await _context.Registrars
+                .FirstOrDefaultAsync(r => r.Code.ToLower() == registrarCode.ToLower());
+
+            if (registrarEntity == null)
+                throw new InvalidOperationException($"Registrar with code '{registrarCode}' not found");
+
+            if (!registrarEntity.IsActive)
+                throw new InvalidOperationException($"Registrar '{registrarCode}' is not active");
+
+            var normalizedName = NormalizationHelper.Normalize(domainName);
+            var domain = await _context.RegisteredDomains
+                .Include(d => d.Registrar)
+                .FirstOrDefaultAsync(d => d.NormalizedName == normalizedName);
+
+            if (domain == null)
+                throw new InvalidOperationException($"Domain '{domainName}' not found");
+
+            if (!string.Equals(domain.Registrar.Code, registrarCode, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException(
+                    $"Domain '{domainName}' is assigned to registrar '{domain.Registrar.Code}', not '{registrarCode}'");
+
+            var registrarClient = _domainRegistrarFactory.CreateRegistrar(registrarCode);
+            return await SyncDnsRecordsForDomainAsync(registrarClient, domain);
+        }
+        catch (InvalidOperationException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error syncing DNS records for domain {DomainName} via registrar {RegistrarCode}", domainName, registrarCode);
+            return new DnsRecordSyncResult
+            {
+                DomainName = domainName,
+                Success = false,
+                ErrorMessage = ex.Message
+            };
+        }
+    }
+
+    /// <summary>
+    /// Downloads the DNS zone from the registrar for one domain and upserts records into the local DnsRecord table.
+    /// Existing records matched by (type, name, value) are updated; unmatched incoming records are inserted.
+    /// Local records not present in the remote zone are left untouched.
+    /// </summary>
+    private async Task<DnsRecordSyncResult> SyncDnsRecordsForDomainAsync(IDomainRegistrar registrarClient, Data.Entities.RegisteredDomain domain)
+    {
+        var result = new DnsRecordSyncResult { DomainName = domain.Name };
+
+        try
+        {
+            _log.Information("Fetching DNS zone for {DomainName} from registrar", domain.Name);
+            var zone = await registrarClient.GetDnsZoneAsync(domain.Name);
+
+            if (zone?.Records == null || zone.Records.Count == 0)
+            {
+                _log.Information("No DNS records returned for {DomainName}", domain.Name);
+                result.Success = true;
+                return result;
+            }
+
+            // Build a lookup of active DNS record types keyed by uppercased type string
+            var dnsRecordTypes = await _context.DnsRecordTypes
+                .Where(t => t.IsActive)
+                .ToDictionaryAsync(t => t.Type.ToUpper());
+
+            // Load all existing records for this domain into memory for matching
+            var existingRecords = await _context.DnsRecords
+                .Where(r => r.DomainId == domain.Id)
+                .ToListAsync();
+
+            foreach (var incoming in zone.Records)
+            {
+                if (string.IsNullOrWhiteSpace(incoming.Type) ||
+                    !dnsRecordTypes.TryGetValue(incoming.Type.ToUpper(), out var dnsRecordType))
+                {
+                    _log.Warning("Unknown DNS record type '{Type}' for domain {DomainName} — skipping", incoming.Type, domain.Name);
+                    result.Skipped++;
+                    continue;
+                }
+
+                // Match on type + name + value — all three must be equal for an update
+                var existing = existingRecords.FirstOrDefault(r =>
+                    r.DnsRecordTypeId == dnsRecordType.Id &&
+                    r.Name == incoming.Name &&
+                    r.Value == incoming.Value);
+
+                if (existing != null)
+                {
+                    existing.TTL = incoming.TTL > 0 ? incoming.TTL : existing.TTL;
+                    existing.Priority = incoming.Priority;
+                    existing.Weight = incoming.Weight;
+                    existing.Port = incoming.Port;
+                    existing.UpdatedAt = DateTime.UtcNow;
+                    result.Updated++;
+                }
+                else
+                {
+                    _context.DnsRecords.Add(new DnsRecord
+                    {
+                        DomainId = domain.Id,
+                        DnsRecordTypeId = dnsRecordType.Id,
+                        Name = incoming.Name,
+                        Value = incoming.Value,
+                        TTL = incoming.TTL > 0 ? incoming.TTL : dnsRecordType.DefaultTTL,
+                        Priority = incoming.Priority,
+                        Weight = incoming.Weight,
+                        Port = incoming.Port,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    });
+                    result.Created++;
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            result.Success = true;
+
+            _log.Information("DNS sync for {DomainName}: {Created} created, {Updated} updated, {Skipped} skipped",
+                domain.Name, result.Created, result.Updated, result.Skipped);
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error syncing DNS records for domain {DomainName}", domain.Name);
+            result.Success = false;
+            result.ErrorMessage = ex.Message;
+            return result;
+        }
     }
 }

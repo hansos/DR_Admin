@@ -1,4 +1,5 @@
 using DomainRegistrationLib.Models;
+using ISPAdmin.DTOs;
 
 namespace ISPAdmin.Services;
 
@@ -30,4 +31,21 @@ public interface IDomainManagerService
     /// <param name="domainName">The domain name to check</param>
     /// <returns>Domain availability result from the registrar</returns>
     Task<DomainAvailabilityResult> CheckDomainAvailabilityByNameAsync(string registrarCode, string domainName);
+
+    /// <summary>
+    /// Downloads DNS records from the registrar for all domains assigned to that registrar
+    /// and merges them into the local DnsRecord table
+    /// </summary>
+    /// <param name="registrarCode">The code of the registrar to use</param>
+    /// <returns>Aggregated sync result with per-domain details</returns>
+    Task<DnsBulkSyncResult> SyncDnsRecordsForAllDomainsAsync(string registrarCode);
+
+    /// <summary>
+    /// Downloads DNS records from the registrar for a single domain identified by name
+    /// and merges them into the local DnsRecord table
+    /// </summary>
+    /// <param name="registrarCode">The code of the registrar to use</param>
+    /// <param name="domainName">The fully-qualified domain name</param>
+    /// <returns>Sync result for the domain</returns>
+    Task<DnsRecordSyncResult> SyncDnsRecordsByDomainNameAsync(string registrarCode, string domainName);
 }

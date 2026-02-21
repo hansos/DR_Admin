@@ -1,4 +1,5 @@
 using DomainRegistrationLib.Models;
+using ISPAdmin.DTOs;
 using ISPAdmin.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -197,6 +198,106 @@ public class DomainManagerController : ControllerBase
         }
     }
 
+
+    /// <summary>
+    /// Downloads DNS records from the registrar for a single domain and merges them into the local database
+    /// </summary>
+    /// <param name="registrarCode">The code of the registrar to use</param>
+    /// <param name="domainName">The fully-qualified domain name</param>
+    /// <returns>DNS record sync result</returns>
+    /// <response code="200">Returns the sync result</response>
+    /// <response code="400">If the request is invalid or domain/registrar mismatch</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have required permissions</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpPost("registrar/{registrarCode}/domain/name/{domainName}/dns-records/sync")]
+    [Authorize(Policy = "Domain.Write")]
+    [ProducesResponseType(typeof(DnsRecordSyncResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<DnsRecordSyncResult>> SyncDnsRecordsForDomain(
+        string registrarCode,
+        string domainName)
+    {
+        try
+        {
+            _log.Information("API: SyncDnsRecordsForDomain called for registrar {RegistrarCode} and domain {DomainName} by user {User}",
+                registrarCode, domainName, User.Identity?.Name);
+
+            if (string.IsNullOrWhiteSpace(registrarCode))
+            {
+                _log.Warning("API: SyncDnsRecordsForDomain called with empty registrar code");
+                return BadRequest("Registrar code is required");
+            }
+
+            if (string.IsNullOrWhiteSpace(domainName))
+            {
+                _log.Warning("API: SyncDnsRecordsForDomain called with empty domain name");
+                return BadRequest("Domain name is required");
+            }
+
+            var result = await _domainManagerService.SyncDnsRecordsByDomainNameAsync(registrarCode, domainName);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _log.Warning(ex, "API: Invalid operation in SyncDnsRecordsForDomain for domain {DomainName}", domainName);
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in SyncDnsRecordsForDomain for domain {DomainName}", domainName);
+            return StatusCode(500, "An error occurred while syncing DNS records");
+        }
+    }
+
+    /// <summary>
+    /// Downloads DNS records from the registrar for all domains assigned to that registrar
+    /// and merges them into the local database
+    /// </summary>
+    /// <param name="registrarCode">The code of the registrar to use</param>
+    /// <returns>Aggregated bulk sync result with per-domain details</returns>
+    /// <response code="200">Returns the bulk sync result</response>
+    /// <response code="400">If the registrar is invalid or inactive</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have required permissions</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpPost("registrar/{registrarCode}/dns-records/sync")]
+    [Authorize(Policy = "Domain.Write")]
+    [ProducesResponseType(typeof(DnsBulkSyncResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<DnsBulkSyncResult>> SyncDnsRecordsForAllDomains(string registrarCode)
+    {
+        try
+        {
+            _log.Information("API: SyncDnsRecordsForAllDomains called for registrar {RegistrarCode} by user {User}",
+                registrarCode, User.Identity?.Name);
+
+            if (string.IsNullOrWhiteSpace(registrarCode))
+            {
+                _log.Warning("API: SyncDnsRecordsForAllDomains called with empty registrar code");
+                return BadRequest("Registrar code is required");
+            }
+
+            var result = await _domainManagerService.SyncDnsRecordsForAllDomainsAsync(registrarCode);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _log.Warning(ex, "API: Invalid operation in SyncDnsRecordsForAllDomains for registrar {RegistrarCode}", registrarCode);
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in SyncDnsRecordsForAllDomains for registrar {RegistrarCode}", registrarCode);
+            return StatusCode(500, "An error occurred while syncing DNS records");
+        }
+    }
 
     /// <summary>
     /// Checks if a domain is available for registration based on domain name
