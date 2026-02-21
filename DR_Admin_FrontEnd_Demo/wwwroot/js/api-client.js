@@ -293,6 +293,63 @@ const SystemSettingAPI = {
     },
 };
 /**
+ * DNS Record Type API calls
+ */
+const DnsRecordTypeAPI = {
+    async getAll() {
+        return apiRequest(`${BASE_URL}/DnsRecordTypes`, { method: 'GET' });
+    },
+};
+/**
+ * DNS Record API calls
+ */
+const DnsRecordAPI = {
+    async getByDomain(domainId) {
+        return apiRequest(`${BASE_URL}/DnsRecords/domain/${domainId}`, { method: 'GET' });
+    },
+    async getDeletedByDomain(domainId) {
+        return apiRequest(`${BASE_URL}/DnsRecords/domain/${domainId}/deleted`, { method: 'GET' });
+    },
+    async getById(id) {
+        return apiRequest(`${BASE_URL}/DnsRecords/${id}`, { method: 'GET' });
+    },
+    async create(data) {
+        return apiRequest(`${BASE_URL}/DnsRecords`, {
+            method: 'POST',
+            body: JSON.stringify(data),
+        });
+    },
+    async update(id, data) {
+        return apiRequest(`${BASE_URL}/DnsRecords/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(data),
+        });
+    },
+    async softDelete(id) {
+        return apiRequest(`${BASE_URL}/DnsRecords/${id}`, { method: 'DELETE' });
+    },
+    async hardDelete(id) {
+        return apiRequest(`${BASE_URL}/DnsRecords/${id}/hard`, { method: 'DELETE' });
+    },
+    async restore(id) {
+        return apiRequest(`${BASE_URL}/DnsRecords/${id}/restore`, { method: 'POST' });
+    },
+    async markSynced(id) {
+        return apiRequest(`${BASE_URL}/DnsRecords/${id}/mark-synced`, { method: 'POST' });
+    },
+};
+/**
+ * Registered Domain API calls
+ */
+const RegisteredDomainAPI = {
+    async getAll() {
+        return apiRequest(`${BASE_URL}/RegisteredDomains`, { method: 'GET' });
+    },
+    async getById(id) {
+        return apiRequest(`${BASE_URL}/RegisteredDomains/${id}`, { method: 'GET' });
+    },
+};
+/**
  * Utility functions
  */
 function showMessage(elementId, message, isError = false) {
@@ -321,6 +378,9 @@ if (typeof window !== 'undefined') {
     window.ContactPersonAPI = ContactPersonAPI;
     window.OrderAPI = OrderAPI;
     window.SystemSettingAPI = SystemSettingAPI;
+    window.DnsRecordTypeAPI = DnsRecordTypeAPI;
+    window.DnsRecordAPI = DnsRecordAPI;
+    window.RegisteredDomainAPI = RegisteredDomainAPI;
     window.showMessage = showMessage;
     window.hideMessage = hideMessage;
 }

@@ -1,4 +1,4 @@
-Copyright (C) 2026  Hans OLav Sorteberg
+Copyright (C) 2026  Hans Olav Sorteberg
 SPDX-License-Identifier: AGPL-3.0-only
 
                     GNU AFFERO GENERAL PUBLIC LICENSE
