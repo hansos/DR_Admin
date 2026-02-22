@@ -293,6 +293,49 @@ const SystemSettingAPI = {
     },
 };
 /**
+ * Server Type API calls
+ */
+const ServerTypeAPI = {
+    async getAll() { return apiRequest(`${BASE_URL}/ServerTypes`, { method: 'GET' }); },
+    async getActive() { return apiRequest(`${BASE_URL}/ServerTypes/active`, { method: 'GET' }); },
+    async getById(id) { return apiRequest(`${BASE_URL}/ServerTypes/${id}`, { method: 'GET' }); },
+    async create(data) { return apiRequest(`${BASE_URL}/ServerTypes`, { method: 'POST', body: JSON.stringify(data) }); },
+    async update(id, data) { return apiRequest(`${BASE_URL}/ServerTypes/${id}`, { method: 'PUT', body: JSON.stringify(data) }); },
+    async delete(id) { return apiRequest(`${BASE_URL}/ServerTypes/${id}`, { method: 'DELETE' }); },
+};
+/**
+ * Host Provider API calls
+ */
+const HostProviderAPI = {
+    async getAll() { return apiRequest(`${BASE_URL}/HostProviders`, { method: 'GET' }); },
+    async getActive() { return apiRequest(`${BASE_URL}/HostProviders/active`, { method: 'GET' }); },
+    async getById(id) { return apiRequest(`${BASE_URL}/HostProviders/${id}`, { method: 'GET' }); },
+    async create(data) { return apiRequest(`${BASE_URL}/HostProviders`, { method: 'POST', body: JSON.stringify(data) }); },
+    async update(id, data) { return apiRequest(`${BASE_URL}/HostProviders/${id}`, { method: 'PUT', body: JSON.stringify(data) }); },
+    async delete(id) { return apiRequest(`${BASE_URL}/HostProviders/${id}`, { method: 'DELETE' }); },
+};
+/**
+ * Operating System API calls
+ */
+const OperatingSystemAPI = {
+    async getAll() { return apiRequest(`${BASE_URL}/OperatingSystems`, { method: 'GET' }); },
+    async getActive() { return apiRequest(`${BASE_URL}/OperatingSystems/active`, { method: 'GET' }); },
+    async getById(id) { return apiRequest(`${BASE_URL}/OperatingSystems/${id}`, { method: 'GET' }); },
+    async create(data) { return apiRequest(`${BASE_URL}/OperatingSystems`, { method: 'POST', body: JSON.stringify(data) }); },
+    async update(id, data) { return apiRequest(`${BASE_URL}/OperatingSystems/${id}`, { method: 'PUT', body: JSON.stringify(data) }); },
+    async delete(id) { return apiRequest(`${BASE_URL}/OperatingSystems/${id}`, { method: 'DELETE' }); },
+};
+/**
+ * Server API calls
+ */
+const ServerAPI = {
+    async getAll() { return apiRequest(`${BASE_URL}/Servers`, { method: 'GET' }); },
+    async getById(id) { return apiRequest(`${BASE_URL}/Servers/${id}`, { method: 'GET' }); },
+    async create(data) { return apiRequest(`${BASE_URL}/Servers`, { method: 'POST', body: JSON.stringify(data) }); },
+    async update(id, data) { return apiRequest(`${BASE_URL}/Servers/${id}`, { method: 'PUT', body: JSON.stringify(data) }); },
+    async delete(id) { return apiRequest(`${BASE_URL}/Servers/${id}`, { method: 'DELETE' }); },
+};
+/**
  * DNS Record Type API calls
  */
 const DnsRecordTypeAPI = {
@@ -378,6 +421,10 @@ function hideMessage(elementId) {
 }
 // Export for use in other modules
 if (typeof window !== 'undefined') {
+    window.ServerTypeAPI = ServerTypeAPI;
+    window.HostProviderAPI = HostProviderAPI;
+    window.OperatingSystemAPI = OperatingSystemAPI;
+    window.ServerAPI = ServerAPI;
     window.AuthAPI = AuthAPI;
     window.DomainAPI = DomainAPI;
     window.HostingAPI = HostingAPI;
