@@ -9,31 +9,46 @@ public class ServerDto
     /// Gets or sets the unique identifier of the server
     /// </summary>
     public int Id { get; set; }
-    
+
     /// <summary>
     /// Gets or sets the server name
     /// </summary>
     public string Name { get; set; } = string.Empty;
-    
+
     /// <summary>
-    /// Gets or sets the server type (Physical, Cloud, Virtual)
+    /// Gets or sets the server type ID
     /// </summary>
-    public string ServerType { get; set; } = string.Empty;
-    
+    public int ServerTypeId { get; set; }
+
     /// <summary>
-    /// Gets or sets the hosting provider (AWS, Azure, DigitalOcean, etc.)
+    /// Gets or sets the display name of the server type
     /// </summary>
-    public string? HostProvider { get; set; }
-    
+    public string ServerTypeName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the host provider ID
+    /// </summary>
+    public int? HostProviderId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the display name of the host provider
+    /// </summary>
+    public string? HostProviderName { get; set; }
+
     /// <summary>
     /// Gets or sets the server location
     /// </summary>
     public string? Location { get; set; }
-    
+
     /// <summary>
-    /// Gets or sets the operating system
+    /// Gets or sets the operating system ID
     /// </summary>
-    public string OperatingSystem { get; set; } = string.Empty;
+    public int OperatingSystemId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the display name of the operating system
+    /// </summary>
+    public string OperatingSystemName { get; set; } = string.Empty;
     
     /// <summary>
     /// Gets or sets the server status (Active, Inactive, Maintenance)
@@ -80,47 +95,47 @@ public class CreateServerDto
     /// Gets or sets the server name
     /// </summary>
     public string Name { get; set; } = string.Empty;
-    
+
     /// <summary>
-    /// Gets or sets the server type (Physical, Cloud, Virtual)
+    /// Gets or sets the server type ID
     /// </summary>
-    public string ServerType { get; set; } = string.Empty;
-    
+    public int ServerTypeId { get; set; }
+
     /// <summary>
-    /// Gets or sets the hosting provider (AWS, Azure, DigitalOcean, etc.)
+    /// Gets or sets the host provider ID
     /// </summary>
-    public string? HostProvider { get; set; }
-    
+    public int? HostProviderId { get; set; }
+
     /// <summary>
     /// Gets or sets the server location
     /// </summary>
     public string? Location { get; set; }
-    
+
     /// <summary>
-    /// Gets or sets the operating system
+    /// Gets or sets the operating system ID
     /// </summary>
-    public string OperatingSystem { get; set; } = string.Empty;
-    
+    public int OperatingSystemId { get; set; }
+
     /// <summary>
     /// Gets or sets the server status (Active, Inactive, Maintenance)
     /// </summary>
     public string Status { get; set; } = string.Empty;
-    
+
     /// <summary>
     /// Gets or sets the number of CPU cores
     /// </summary>
     public int? CpuCores { get; set; }
-    
+
     /// <summary>
     /// Gets or sets the RAM size in megabytes
     /// </summary>
     public int? RamMB { get; set; }
-    
+
     /// <summary>
     /// Gets or sets the disk space in gigabytes
     /// </summary>
     public int? DiskSpaceGB { get; set; }
-    
+
     /// <summary>
     /// Gets or sets additional notes about the server
     /// </summary>
@@ -136,49 +151,50 @@ public class UpdateServerDto
     /// Gets or sets the server name
     /// </summary>
     public string Name { get; set; } = string.Empty;
-    
+
     /// <summary>
-    /// Gets or sets the server type (Physical, Cloud, Virtual)
+    /// Gets or sets the server type ID
     /// </summary>
-    public string ServerType { get; set; } = string.Empty;
-    
+    public int ServerTypeId { get; set; }
+
     /// <summary>
-    /// Gets or sets the hosting provider (AWS, Azure, DigitalOcean, etc.)
+    /// Gets or sets the host provider ID
     /// </summary>
-    public string? HostProvider { get; set; }
-    
+    public int? HostProviderId { get; set; }
+
     /// <summary>
     /// Gets or sets the server location
     /// </summary>
     public string? Location { get; set; }
-    
+
     /// <summary>
-    /// Gets or sets the operating system
+    /// Gets or sets the operating system ID
     /// </summary>
-    public string OperatingSystem { get; set; } = string.Empty;
-    
+    public int OperatingSystemId { get; set; }
+
     /// <summary>
     /// Gets or sets the server status (Active, Inactive, Maintenance)
     /// </summary>
     public string Status { get; set; } = string.Empty;
-    
+
     /// <summary>
     /// Gets or sets the number of CPU cores
     /// </summary>
     public int? CpuCores { get; set; }
-    
+
     /// <summary>
     /// Gets or sets the RAM size in megabytes
     /// </summary>
     public int? RamMB { get; set; }
-    
+
     /// <summary>
     /// Gets or sets the disk space in gigabytes
     /// </summary>
     public int? DiskSpaceGB { get; set; }
-    
+
     /// <summary>
     /// Gets or sets additional notes about the server
     /// </summary>
     public string? Notes { get; set; }
 }
+

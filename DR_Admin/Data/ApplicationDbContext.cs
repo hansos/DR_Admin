@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using ISPAdmin.Data.Entities;
 using ISPAdmin.Utilities;
+using OperatingSystem = ISPAdmin.Data.Entities.OperatingSystem;
 
 namespace ISPAdmin.Data;
 
@@ -164,6 +165,9 @@ public class ApplicationDbContext : DbContext
     public DbSet<HostingDatabaseUser> HostingDatabaseUsers { get; set; }
     public DbSet<HostingFtpAccount> HostingFtpAccounts { get; set; }
     public DbSet<Server> Servers { get; set; }
+    public DbSet<ServerType> ServerTypes { get; set; }
+    public DbSet<HostProvider> HostProviders { get; set; }
+    public DbSet<OperatingSystem> OperatingSystems { get; set; }
     public DbSet<ServerIpAddress> ServerIpAddresses { get; set; }
     public DbSet<ControlPanelType> ControlPanelTypes { get; set; }
     public DbSet<ServerControlPanel> ServerControlPanels { get; set; }
@@ -788,21 +792,71 @@ public class ApplicationDbContext : DbContext
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
+        // ServerType configuration
+        modelBuilder.Entity<ServerType>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.DisplayName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Description).HasMaxLength(500);
+
+            entity.HasIndex(e => e.Name).IsUnique();
+            entity.HasIndex(e => e.IsActive);
+        });
+
+        // HostProvider configuration
+        modelBuilder.Entity<HostProvider>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.DisplayName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.WebsiteUrl).HasMaxLength(500);
+
+            entity.HasIndex(e => e.Name).IsUnique();
+            entity.HasIndex(e => e.IsActive);
+        });
+
+        // OperatingSystem configuration
+        modelBuilder.Entity<OperatingSystem>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.DisplayName).IsRequired().HasMaxLength(150);
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.Version).HasMaxLength(50);
+
+            entity.HasIndex(e => e.Name).IsUnique();
+            entity.HasIndex(e => e.IsActive);
+        });
+
         // Server configuration
         modelBuilder.Entity<Server>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
-            entity.Property(e => e.ServerType).IsRequired().HasMaxLength(50);
-            entity.Property(e => e.HostProvider).HasMaxLength(100);
             entity.Property(e => e.Location).HasMaxLength(200);
-            entity.Property(e => e.OperatingSystem).IsRequired().HasMaxLength(100);
             entity.Property(e => e.Status).IsRequired().HasMaxLength(50);
             entity.Property(e => e.Notes).HasMaxLength(2000);
-            
+
             entity.HasIndex(e => e.Name);
             entity.HasIndex(e => e.Status);
-            entity.HasIndex(e => e.ServerType);
+            entity.HasIndex(e => e.ServerTypeId);
+
+            entity.HasOne(e => e.ServerType)
+                .WithMany(st => st.Servers)
+                .HasForeignKey(e => e.ServerTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.HostProvider)
+                .WithMany(hp => hp.Servers)
+                .HasForeignKey(e => e.HostProviderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.OperatingSystem)
+                .WithMany(os => os.Servers)
+                .HasForeignKey(e => e.OperatingSystemId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         // ServerIpAddress configuration

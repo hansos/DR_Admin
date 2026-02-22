@@ -405,6 +405,36 @@ public static class AuthorizationPoliciesConfiguration
         options.AddPolicy("ServerIpAddress.Write", policy =>
             policy.RequireRole(ADMIN));
 
+        // ServerType policies
+        options.AddPolicy("ServerType.Delete", policy =>
+            policy.RequireRole(ADMIN));
+
+        options.AddPolicy("ServerType.Read", policy =>
+            policy.RequireRole(ADMIN, SUPPORT));
+
+        options.AddPolicy("ServerType.Write", policy =>
+            policy.RequireRole(ADMIN));
+
+        // HostProvider policies
+        options.AddPolicy("HostProvider.Delete", policy =>
+            policy.RequireRole(ADMIN));
+
+        options.AddPolicy("HostProvider.Read", policy =>
+            policy.RequireRole(ADMIN, SUPPORT));
+
+        options.AddPolicy("HostProvider.Write", policy =>
+            policy.RequireRole(ADMIN));
+
+        // OperatingSystem policies
+        options.AddPolicy("OperatingSystem.Delete", policy =>
+            policy.RequireRole(ADMIN));
+
+        options.AddPolicy("OperatingSystem.Read", policy =>
+            policy.RequireRole(ADMIN, SUPPORT));
+
+        options.AddPolicy("OperatingSystem.Write", policy =>
+            policy.RequireRole(ADMIN));
+
         // SystemSetting policies
         options.AddPolicy("SystemSetting.Delete", policy =>
             policy.RequireRole(ADMIN));

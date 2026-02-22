@@ -28,13 +28,16 @@ public class ServerService : IServerService
         try
         {
             _log.Information("Fetching all servers");
-            
+
             var servers = await _context.Servers
                 .AsNoTracking()
+                .Include(s => s.ServerType)
+                .Include(s => s.HostProvider)
+                .Include(s => s.OperatingSystem)
                 .ToListAsync();
 
             var serverDtos = servers.Select(MapToDto);
-            
+
             _log.Information("Successfully fetched {Count} servers", servers.Count);
             return serverDtos;
         }
@@ -58,6 +61,9 @@ public class ServerService : IServerService
             
             var server = await _context.Servers
                 .AsNoTracking()
+                .Include(s => s.ServerType)
+                .Include(s => s.HostProvider)
+                .Include(s => s.OperatingSystem)
                 .FirstOrDefaultAsync(s => s.Id == id);
 
             if (server == null)
@@ -90,10 +96,10 @@ public class ServerService : IServerService
             var server = new Server
             {
                 Name = createDto.Name,
-                ServerType = createDto.ServerType,
-                HostProvider = createDto.HostProvider,
+                ServerTypeId = createDto.ServerTypeId,
+                HostProviderId = createDto.HostProviderId,
                 Location = createDto.Location,
-                OperatingSystem = createDto.OperatingSystem,
+                OperatingSystemId = createDto.OperatingSystemId,
                 Status = createDto.Status,
                 CpuCores = createDto.CpuCores,
                 RamMB = createDto.RamMB,
@@ -103,6 +109,10 @@ public class ServerService : IServerService
 
             _context.Servers.Add(server);
             await _context.SaveChangesAsync();
+
+            await _context.Entry(server).Reference(s => s.ServerType).LoadAsync();
+            await _context.Entry(server).Reference(s => s.HostProvider).LoadAsync();
+            await _context.Entry(server).Reference(s => s.OperatingSystem).LoadAsync();
 
             _log.Information("Successfully created server with ID: {ServerId}", server.Id);
             return MapToDto(server);
@@ -135,10 +145,10 @@ public class ServerService : IServerService
             }
 
             server.Name = updateDto.Name;
-            server.ServerType = updateDto.ServerType;
-            server.HostProvider = updateDto.HostProvider;
+            server.ServerTypeId = updateDto.ServerTypeId;
+            server.HostProviderId = updateDto.HostProviderId;
             server.Location = updateDto.Location;
-            server.OperatingSystem = updateDto.OperatingSystem;
+            server.OperatingSystemId = updateDto.OperatingSystemId;
             server.Status = updateDto.Status;
             server.CpuCores = updateDto.CpuCores;
             server.RamMB = updateDto.RamMB;
@@ -146,6 +156,10 @@ public class ServerService : IServerService
             server.Notes = updateDto.Notes;
 
             await _context.SaveChangesAsync();
+
+            await _context.Entry(server).Reference(s => s.ServerType).LoadAsync();
+            await _context.Entry(server).Reference(s => s.HostProvider).LoadAsync();
+            await _context.Entry(server).Reference(s => s.OperatingSystem).LoadAsync();
 
             _log.Information("Successfully updated server with ID: {ServerId}", id);
             return MapToDto(server);
@@ -195,10 +209,13 @@ public class ServerService : IServerService
         {
             Id = server.Id,
             Name = server.Name,
-            ServerType = server.ServerType,
-            HostProvider = server.HostProvider,
+            ServerTypeId = server.ServerTypeId,
+            ServerTypeName = server.ServerType?.DisplayName ?? string.Empty,
+            HostProviderId = server.HostProviderId,
+            HostProviderName = server.HostProvider?.DisplayName,
             Location = server.Location,
-            OperatingSystem = server.OperatingSystem,
+            OperatingSystemId = server.OperatingSystemId,
+            OperatingSystemName = server.OperatingSystem?.DisplayName ?? string.Empty,
             Status = server.Status,
             CpuCores = server.CpuCores,
             RamMB = server.RamMB,

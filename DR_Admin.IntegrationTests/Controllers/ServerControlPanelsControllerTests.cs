@@ -57,11 +57,33 @@ public class ServerControlPanelsControllerTests : IClassFixture<TestWebApplicati
         using var scope = _factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
+        var serverType = await context.ServerTypes.FirstOrDefaultAsync(st => st.Name == "virtual")
+            ?? context.ServerTypes.Add(new ISPAdmin.Data.Entities.ServerType
+            {
+                Name = "virtual",
+                DisplayName = "Virtual",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            }).Entity;
+        await context.SaveChangesAsync();
+
+        var os = await context.OperatingSystems.FirstOrDefaultAsync(o => o.Name == "linux")
+            ?? context.OperatingSystems.Add(new ISPAdmin.Data.Entities.OperatingSystem
+            {
+                Name = "linux",
+                DisplayName = "Linux",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            }).Entity;
+        await context.SaveChangesAsync();
+
         var server = new Server
         {
             Name = "Test Server",
-            ServerType = "Virtual",
-            OperatingSystem = "Linux",
+            ServerTypeId = serverType.Id,
+            OperatingSystemId = os.Id,
             Status = "Active",
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow

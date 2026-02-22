@@ -49,7 +49,7 @@ public class ServersControllerTests : IClassFixture<TestWebApplicationFactory>
         Console.WriteLine($"Retrieved {result.Count()} servers");
         foreach (var server in result)
         {
-            Console.WriteLine($"  - {server.Name} ({server.ServerType}): {server.Status}");
+            Console.WriteLine($"  - {server.Name} ({server.ServerTypeName}): {server.Status}");
         }
     }
 
@@ -121,8 +121,8 @@ public class ServersControllerTests : IClassFixture<TestWebApplicationFactory>
         Assert.NotEmpty(result.Name);
 
         Console.WriteLine($"Retrieved server: {result.Name}");
-        Console.WriteLine($"  Type: {result.ServerType}");
-        Console.WriteLine($"  OS: {result.OperatingSystem}");
+        Console.WriteLine($"  Type: {result.ServerTypeName}");
+        Console.WriteLine($"  OS: {result.OperatingSystemName}");
         Console.WriteLine($"  Status: {result.Status}");
     }
 
@@ -154,13 +154,15 @@ public class ServersControllerTests : IClassFixture<TestWebApplicationFactory>
         var token = await GetAdminTokenAsync();
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
+        var (serverTypeId, hostProviderId, osId) = await SeedLookupDataAsync();
+
         var createDto = new CreateServerDto
         {
             Name = "Test Server 1",
-            ServerType = "Cloud",
-            HostProvider = "AWS",
+            ServerTypeId = serverTypeId,
+            HostProviderId = hostProviderId,
             Location = "US-East",
-            OperatingSystem = "Ubuntu 22.04 LTS",
+            OperatingSystemId = osId,
             Status = "Active",
             CpuCores = 8,
             RamMB = 16384,
@@ -178,10 +180,10 @@ public class ServersControllerTests : IClassFixture<TestWebApplicationFactory>
         Assert.NotNull(result);
         Assert.True(result.Id > 0);
         Assert.Equal(createDto.Name, result.Name);
-        Assert.Equal(createDto.ServerType, result.ServerType);
-        Assert.Equal(createDto.HostProvider, result.HostProvider);
+        Assert.Equal(createDto.ServerTypeId, result.ServerTypeId);
+        Assert.Equal(createDto.HostProviderId, result.HostProviderId);
         Assert.Equal(createDto.Location, result.Location);
-        Assert.Equal(createDto.OperatingSystem, result.OperatingSystem);
+        Assert.Equal(createDto.OperatingSystemId, result.OperatingSystemId);
         Assert.Equal(createDto.Status, result.Status);
         Assert.Equal(createDto.CpuCores, result.CpuCores);
         Assert.Equal(createDto.RamMB, result.RamMB);
@@ -189,7 +191,7 @@ public class ServersControllerTests : IClassFixture<TestWebApplicationFactory>
 
         Console.WriteLine($"Created server with ID: {result.Id}");
         Console.WriteLine($"  Name: {result.Name}");
-        Console.WriteLine($"  Type: {result.ServerType}");
+        Console.WriteLine($"  Type: {result.ServerTypeName}");
         Console.WriteLine($"  Specs: {result.CpuCores} cores, {result.RamMB}MB RAM, {result.DiskSpaceGB}GB disk");
     }
 
@@ -201,11 +203,13 @@ public class ServersControllerTests : IClassFixture<TestWebApplicationFactory>
         var token = await GetSupportTokenAsync();
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
+        var (serverTypeId, _, osId) = await SeedLookupDataAsync();
+
         var createDto = new CreateServerDto
         {
             Name = "Test Server",
-            ServerType = "Physical",
-            OperatingSystem = "Windows Server 2022",
+            ServerTypeId = serverTypeId,
+            OperatingSystemId = osId,
             Status = "Active"
         };
 
@@ -230,13 +234,15 @@ public class ServersControllerTests : IClassFixture<TestWebApplicationFactory>
         var token = await GetAdminTokenAsync();
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
+        var (serverTypeId, hostProviderId, osId) = await SeedLookupDataAsync();
+
         var updateDto = new UpdateServerDto
         {
             Name = "Updated Server Name",
-            ServerType = "Virtual",
-            HostProvider = "DigitalOcean",
+            ServerTypeId = serverTypeId,
+            HostProviderId = hostProviderId,
             Location = "EU-West",
-            OperatingSystem = "CentOS 8",
+            OperatingSystemId = osId,
             Status = "Maintenance",
             CpuCores = 16,
             RamMB = 32768,
@@ -270,11 +276,13 @@ public class ServersControllerTests : IClassFixture<TestWebApplicationFactory>
         var token = await GetAdminTokenAsync();
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
+        var (serverTypeId, _, osId) = await SeedLookupDataAsync();
+
         var updateDto = new UpdateServerDto
         {
             Name = "Test",
-            ServerType = "Cloud",
-            OperatingSystem = "Linux",
+            ServerTypeId = serverTypeId,
+            OperatingSystemId = osId,
             Status = "Active"
         };
 
@@ -353,13 +361,15 @@ public class ServersControllerTests : IClassFixture<TestWebApplicationFactory>
         context.Servers.RemoveRange(existingServers);
         await context.SaveChangesAsync();
 
+        var (serverTypeId, hostProviderId, osId) = await SeedLookupDataAsync();
+
         var server = new Server
         {
             Name = "Primary Web Server",
-            ServerType = "Physical",
-            HostProvider = "On-Premise",
+            ServerTypeId = serverTypeId,
+            HostProviderId = hostProviderId,
             Location = "DataCenter-1",
-            OperatingSystem = "Ubuntu 22.04 LTS",
+            OperatingSystemId = osId,
             Status = "Active",
             CpuCores = 32,
             RamMB = 65536,
@@ -373,6 +383,47 @@ public class ServersControllerTests : IClassFixture<TestWebApplicationFactory>
         await context.SaveChangesAsync();
 
         return server.Id;
+    }
+
+    private async Task<(int serverTypeId, int hostProviderId, int osId)> SeedLookupDataAsync()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        var serverType = await context.ServerTypes.FirstOrDefaultAsync(st => st.Name == "cloud")
+            ?? context.ServerTypes.Add(new ISPAdmin.Data.Entities.ServerType
+            {
+                Name = "cloud",
+                DisplayName = "Cloud",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            }).Entity;
+        await context.SaveChangesAsync();
+
+        var hostProvider = await context.HostProviders.FirstOrDefaultAsync(hp => hp.Name == "aws")
+            ?? context.HostProviders.Add(new ISPAdmin.Data.Entities.HostProvider
+            {
+                Name = "aws",
+                DisplayName = "AWS",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            }).Entity;
+        await context.SaveChangesAsync();
+
+        var os = await context.OperatingSystems.FirstOrDefaultAsync(o => o.Name == "ubuntu-22")
+            ?? context.OperatingSystems.Add(new ISPAdmin.Data.Entities.OperatingSystem
+            {
+                Name = "ubuntu-22",
+                DisplayName = "Ubuntu 22.04 LTS",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            }).Entity;
+        await context.SaveChangesAsync();
+
+        return (serverType.Id, hostProvider.Id, os.Id);
     }
 
     /// <summary>
