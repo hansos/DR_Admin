@@ -207,7 +207,7 @@ function openCreateModal() {
     document.getElementById('recordId').value = '';
     document.getElementById('recordTTL').value = 3600;
     document.getElementById('modalAlertError').classList.add('d-none');
-    populateTypeDropdown(null);
+    populateTypeDropdown(null, true);
     updateFieldVisibility();
     updateDomainSuffix();
     new bootstrap.Modal(document.getElementById('recordModal')).show();
@@ -237,10 +237,13 @@ function openEditModal(id) {
     new bootstrap.Modal(document.getElementById('recordModal')).show();
 }
 
-function populateTypeDropdown(selectedTypeId) {
+function populateTypeDropdown(selectedTypeId, editableOnly = false) {
     const select = document.getElementById('recordType');
     select.innerHTML = '<option value="">-- Select type --</option>';
-    dnsRecordTypes.forEach(t => {
+    const types = editableOnly
+        ? dnsRecordTypes.filter(t => t.isEditableByUser)
+        : dnsRecordTypes;
+    types.forEach(t => {
         const opt = document.createElement('option');
         opt.value = t.id;
         opt.textContent = t.type + (t.description ? ` \u2014 ${t.description}` : '');
