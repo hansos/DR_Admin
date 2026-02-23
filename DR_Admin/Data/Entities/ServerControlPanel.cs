@@ -35,4 +35,5 @@ public class ServerControlPanel : EntityBase
     public Server Server { get; set; } = null!;
     public ControlPanelType ControlPanelType { get; set; } = null!;
     public ServerIpAddress? IpAddress { get; set; }
+    public ICollection<DnsZonePackageControlPanel> DnsZonePackages { get; set; } = new List<DnsZonePackageControlPanel>();
 }

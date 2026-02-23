@@ -158,6 +158,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<NameServer> NameServers { get; set; }
     public DbSet<DnsZonePackage> DnsZonePackages { get; set; }
     public DbSet<DnsZonePackageRecord> DnsZonePackageRecords { get; set; }
+    public DbSet<DnsZonePackageControlPanel> DnsZonePackageControlPanels { get; set; }
+    public DbSet<DnsZonePackageServer> DnsZonePackageServers { get; set; }
     public DbSet<HostingAccount> HostingAccounts { get; set; }
     public DbSet<HostingDomain> HostingDomains { get; set; }
     public DbSet<HostingEmailAccount> HostingEmailAccounts { get; set; }
@@ -746,19 +748,57 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Name).IsRequired().HasMaxLength(255);
             entity.Property(e => e.Value).IsRequired().HasMaxLength(1000);
             entity.Property(e => e.Notes).HasMaxLength(500);
-            
+
             entity.HasIndex(e => e.DnsZonePackageId);
             entity.HasIndex(e => e.DnsRecordTypeId);
-            
+
             entity.HasOne(e => e.DnsZonePackage)
                 .WithMany(p => p.Records)
                 .HasForeignKey(e => e.DnsZonePackageId)
                 .OnDelete(DeleteBehavior.Cascade);
-            
+
             entity.HasOne(e => e.DnsRecordType)
                 .WithMany()
                 .HasForeignKey(e => e.DnsRecordTypeId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // DnsZonePackageControlPanel configuration (M2M: DnsZonePackage <-> ServerControlPanel)
+        modelBuilder.Entity<DnsZonePackageControlPanel>(entity =>
+        {
+            entity.HasKey(e => new { e.DnsZonePackageId, e.ServerControlPanelId });
+
+            entity.HasIndex(e => e.DnsZonePackageId);
+            entity.HasIndex(e => e.ServerControlPanelId);
+
+            entity.HasOne(e => e.DnsZonePackage)
+                .WithMany(p => p.ControlPanels)
+                .HasForeignKey(e => e.DnsZonePackageId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.ServerControlPanel)
+                .WithMany(cp => cp.DnsZonePackages)
+                .HasForeignKey(e => e.ServerControlPanelId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // DnsZonePackageServer configuration (M2M: DnsZonePackage <-> Server)
+        modelBuilder.Entity<DnsZonePackageServer>(entity =>
+        {
+            entity.HasKey(e => new { e.DnsZonePackageId, e.ServerId });
+
+            entity.HasIndex(e => e.DnsZonePackageId);
+            entity.HasIndex(e => e.ServerId);
+
+            entity.HasOne(e => e.DnsZonePackage)
+                .WithMany(p => p.Servers)
+                .HasForeignKey(e => e.DnsZonePackageId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Server)
+                .WithMany(s => s.DnsZonePackages)
+                .HasForeignKey(e => e.ServerId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
 

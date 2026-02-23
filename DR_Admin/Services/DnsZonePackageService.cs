@@ -405,7 +405,9 @@ public class DnsZonePackageService : IDnsZonePackageService
             SalesAgentId = package.SalesAgentId,
             CreatedAt = package.CreatedAt,
             UpdatedAt = package.UpdatedAt,
-            Records = new List<DnsZonePackageRecordDto>()
+            Records = new List<DnsZonePackageRecordDto>(),
+            ControlPanels = new List<DnsZonePackageControlPanelSummaryDto>(),
+            Servers = new List<DnsZonePackageServerSummaryDto>()
         };
     }
 
@@ -437,7 +439,263 @@ public class DnsZonePackageService : IDnsZonePackageService
                 Notes = r.Notes,
                 CreatedAt = r.CreatedAt,
                 UpdatedAt = r.UpdatedAt
-            }).ToList()
+            }).ToList(),
+            ControlPanels = new List<DnsZonePackageControlPanelSummaryDto>(),
+            Servers = new List<DnsZonePackageServerSummaryDto>()
         };
+    }
+
+    private static DnsZonePackageDto MapToDtoWithAssignments(DnsZonePackage package)
+    {
+        var dto = MapToDtoWithRecords(package);
+
+        dto.ControlPanels = package.ControlPanels.Select(cp => new DnsZonePackageControlPanelSummaryDto
+        {
+            ControlPanelId = cp.ServerControlPanelId,
+            ApiUrl = cp.ServerControlPanel?.ApiUrl ?? string.Empty,
+            ServerName = cp.ServerControlPanel?.Server?.Name ?? string.Empty,
+            ControlPanelTypeName = cp.ServerControlPanel?.ControlPanelType?.DisplayName ?? string.Empty
+        }).ToList();
+
+        dto.Servers = package.Servers.Select(s => new DnsZonePackageServerSummaryDto
+        {
+            ServerId = s.ServerId,
+            ServerName = s.Server?.Name ?? string.Empty,
+            Status = s.Server?.Status ?? string.Empty
+        }).ToList();
+
+        return dto;
+    }
+
+    // ── M2M: GetDnsZonePackageWithAssignmentsAsync ────────────────────────────
+
+    public async Task<DnsZonePackageDto?> GetDnsZonePackageWithAssignmentsAsync(int id)
+    {
+        try
+        {
+            _log.Information("Fetching DNS zone package with assignments, ID: {PackageId}", id);
+
+            var package = await _context.DnsZonePackages
+                .AsNoTracking()
+                .Include(p => p.Records)
+                .Include(p => p.ControlPanels)
+                    .ThenInclude(cp => cp.ServerControlPanel)
+                        .ThenInclude(cp => cp.Server)
+                .Include(p => p.ControlPanels)
+                    .ThenInclude(cp => cp.ServerControlPanel)
+                        .ThenInclude(cp => cp.ControlPanelType)
+                .Include(p => p.Servers)
+                    .ThenInclude(s => s.Server)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (package == null)
+            {
+                _log.Warning("DNS zone package with ID {PackageId} not found", id);
+                return null;
+            }
+
+            return MapToDtoWithAssignments(package);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error fetching DNS zone package with assignments, ID: {PackageId}", id);
+            throw;
+        }
+    }
+
+    // ── M2M: Control Panel assignments ───────────────────────────────────────
+
+    public async Task<IEnumerable<DnsZonePackageDto>> GetPackagesByControlPanelAsync(int controlPanelId)
+    {
+        try
+        {
+            _log.Information("Fetching DNS zone packages for control panel {ControlPanelId}", controlPanelId);
+
+            var packages = await _context.DnsZonePackageControlPanels
+                .AsNoTracking()
+                .Where(cp => cp.ServerControlPanelId == controlPanelId)
+                .Include(cp => cp.DnsZonePackage)
+                .Select(cp => cp.DnsZonePackage)
+                .OrderBy(p => p.SortOrder).ThenBy(p => p.Name)
+                .ToListAsync();
+
+            return packages.Select(MapToDto);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error fetching DNS zone packages for control panel {ControlPanelId}", controlPanelId);
+            throw;
+        }
+    }
+
+    public async Task<bool> AssignControlPanelAsync(int packageId, int controlPanelId)
+    {
+        try
+        {
+            _log.Information("Assigning control panel {ControlPanelId} to DNS zone package {PackageId}", controlPanelId, packageId);
+
+            var packageExists = await _context.DnsZonePackages.AnyAsync(p => p.Id == packageId);
+            if (!packageExists)
+            {
+                _log.Warning("DNS zone package {PackageId} not found", packageId);
+                return false;
+            }
+
+            var panelExists = await _context.ServerControlPanels.AnyAsync(p => p.Id == controlPanelId);
+            if (!panelExists)
+            {
+                _log.Warning("ServerControlPanel {ControlPanelId} not found", controlPanelId);
+                return false;
+            }
+
+            var alreadyAssigned = await _context.DnsZonePackageControlPanels
+                .AnyAsync(x => x.DnsZonePackageId == packageId && x.ServerControlPanelId == controlPanelId);
+
+            if (alreadyAssigned)
+            {
+                _log.Information("Control panel {ControlPanelId} already assigned to package {PackageId}", controlPanelId, packageId);
+                return true;
+            }
+
+            _context.DnsZonePackageControlPanels.Add(new Data.Entities.DnsZonePackageControlPanel
+            {
+                DnsZonePackageId = packageId,
+                ServerControlPanelId = controlPanelId
+            });
+
+            await _context.SaveChangesAsync();
+            _log.Information("Successfully assigned control panel {ControlPanelId} to package {PackageId}", controlPanelId, packageId);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error assigning control panel {ControlPanelId} to package {PackageId}", controlPanelId, packageId);
+            throw;
+        }
+    }
+
+    public async Task<bool> RemoveControlPanelAsync(int packageId, int controlPanelId)
+    {
+        try
+        {
+            _log.Information("Removing control panel {ControlPanelId} from DNS zone package {PackageId}", controlPanelId, packageId);
+
+            var assignment = await _context.DnsZonePackageControlPanels
+                .FirstOrDefaultAsync(x => x.DnsZonePackageId == packageId && x.ServerControlPanelId == controlPanelId);
+
+            if (assignment == null)
+            {
+                _log.Warning("Assignment not found: control panel {ControlPanelId} / package {PackageId}", controlPanelId, packageId);
+                return false;
+            }
+
+            _context.DnsZonePackageControlPanels.Remove(assignment);
+            await _context.SaveChangesAsync();
+            _log.Information("Successfully removed control panel {ControlPanelId} from package {PackageId}", controlPanelId, packageId);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error removing control panel {ControlPanelId} from package {PackageId}", controlPanelId, packageId);
+            throw;
+        }
+    }
+
+    // ── M2M: Server assignments ───────────────────────────────────────────────
+
+    public async Task<IEnumerable<DnsZonePackageDto>> GetPackagesByServerAsync(int serverId)
+    {
+        try
+        {
+            _log.Information("Fetching DNS zone packages for server {ServerId}", serverId);
+
+            var packages = await _context.DnsZonePackageServers
+                .AsNoTracking()
+                .Where(s => s.ServerId == serverId)
+                .Include(s => s.DnsZonePackage)
+                .Select(s => s.DnsZonePackage)
+                .OrderBy(p => p.SortOrder).ThenBy(p => p.Name)
+                .ToListAsync();
+
+            return packages.Select(MapToDto);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error fetching DNS zone packages for server {ServerId}", serverId);
+            throw;
+        }
+    }
+
+    public async Task<bool> AssignServerAsync(int packageId, int serverId)
+    {
+        try
+        {
+            _log.Information("Assigning server {ServerId} to DNS zone package {PackageId}", serverId, packageId);
+
+            var packageExists = await _context.DnsZonePackages.AnyAsync(p => p.Id == packageId);
+            if (!packageExists)
+            {
+                _log.Warning("DNS zone package {PackageId} not found", packageId);
+                return false;
+            }
+
+            var serverExists = await _context.Servers.AnyAsync(s => s.Id == serverId);
+            if (!serverExists)
+            {
+                _log.Warning("Server {ServerId} not found", serverId);
+                return false;
+            }
+
+            var alreadyAssigned = await _context.DnsZonePackageServers
+                .AnyAsync(x => x.DnsZonePackageId == packageId && x.ServerId == serverId);
+
+            if (alreadyAssigned)
+            {
+                _log.Information("Server {ServerId} already assigned to package {PackageId}", serverId, packageId);
+                return true;
+            }
+
+            _context.DnsZonePackageServers.Add(new Data.Entities.DnsZonePackageServer
+            {
+                DnsZonePackageId = packageId,
+                ServerId = serverId
+            });
+
+            await _context.SaveChangesAsync();
+            _log.Information("Successfully assigned server {ServerId} to package {PackageId}", serverId, packageId);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error assigning server {ServerId} to package {PackageId}", serverId, packageId);
+            throw;
+        }
+    }
+
+    public async Task<bool> RemoveServerAsync(int packageId, int serverId)
+    {
+        try
+        {
+            _log.Information("Removing server {ServerId} from DNS zone package {PackageId}", serverId, packageId);
+
+            var assignment = await _context.DnsZonePackageServers
+                .FirstOrDefaultAsync(x => x.DnsZonePackageId == packageId && x.ServerId == serverId);
+
+            if (assignment == null)
+            {
+                _log.Warning("Assignment not found: server {ServerId} / package {PackageId}", serverId, packageId);
+                return false;
+            }
+
+            _context.DnsZonePackageServers.Remove(assignment);
+            await _context.SaveChangesAsync();
+            _log.Information("Successfully removed server {ServerId} from package {PackageId}", serverId, packageId);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error removing server {ServerId} from package {PackageId}", serverId, packageId);
+            throw;
+        }
     }
 }

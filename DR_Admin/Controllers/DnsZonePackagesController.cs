@@ -404,4 +404,147 @@ public class DnsZonePackagesController : ControllerBase
             return StatusCode(500, "An error occurred while applying the DNS zone package");
         }
     }
+
+    [HttpGet("{id}/assignments")]
+    [Authorize(Policy = "DnsZonePackage.Read")]
+    [ProducesResponseType(typeof(DnsZonePackageDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<DnsZonePackageDto>> GetDnsZonePackageWithAssignments(int id)
+    {
+        try
+        {
+            _log.Information("API: GetDnsZonePackageWithAssignments called for ID {PackageId} by {User}", id, User.Identity?.Name);
+            var package = await _dnsZonePackageService.GetDnsZonePackageWithAssignmentsAsync(id);
+            if (package == null) return NotFound($"DNS zone package with ID {id} not found");
+            return Ok(package);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in GetDnsZonePackageWithAssignments for ID {PackageId}", id);
+            return StatusCode(500, "An error occurred while retrieving the DNS zone package assignments");
+        }
+    }
+
+    [HttpGet("by-control-panel/{controlPanelId}")]
+    [Authorize(Policy = "DnsZonePackage.Read")]
+    [ProducesResponseType(typeof(IEnumerable<DnsZonePackageDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<IEnumerable<DnsZonePackageDto>>> GetPackagesByControlPanel(int controlPanelId)
+    {
+        try
+        {
+            _log.Information("API: GetPackagesByControlPanel called for panel {ControlPanelId} by {User}", controlPanelId, User.Identity?.Name);
+            var packages = await _dnsZonePackageService.GetPackagesByControlPanelAsync(controlPanelId);
+            return Ok(packages);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in GetPackagesByControlPanel for panel {ControlPanelId}", controlPanelId);
+            return StatusCode(500, "An error occurred while retrieving DNS zone packages for the control panel");
+        }
+    }
+
+    [HttpPost("{packageId}/control-panels/{controlPanelId}")]
+    [Authorize(Policy = "DnsZonePackage.Write")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult> AssignControlPanel(int packageId, int controlPanelId)
+    {
+        try
+        {
+            _log.Information("API: AssignControlPanel {ControlPanelId} to package {PackageId} by {User}", controlPanelId, packageId, User.Identity?.Name);
+            var result = await _dnsZonePackageService.AssignControlPanelAsync(packageId, controlPanelId);
+            if (!result) return NotFound("DNS zone package or control panel not found");
+            return Ok(new { success = true });
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in AssignControlPanel {ControlPanelId} to package {PackageId}", controlPanelId, packageId);
+            return StatusCode(500, "An error occurred while assigning the control panel");
+        }
+    }
+
+    [HttpDelete("{packageId}/control-panels/{controlPanelId}")]
+    [Authorize(Policy = "DnsZonePackage.Write")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult> RemoveControlPanel(int packageId, int controlPanelId)
+    {
+        try
+        {
+            _log.Information("API: RemoveControlPanel {ControlPanelId} from package {PackageId} by {User}", controlPanelId, packageId, User.Identity?.Name);
+            var result = await _dnsZonePackageService.RemoveControlPanelAsync(packageId, controlPanelId);
+            if (!result) return NotFound("Assignment not found");
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in RemoveControlPanel {ControlPanelId} from package {PackageId}", controlPanelId, packageId);
+            return StatusCode(500, "An error occurred while removing the control panel assignment");
+        }
+    }
+
+    [HttpGet("by-server/{serverId}")]
+    [Authorize(Policy = "DnsZonePackage.Read")]
+    [ProducesResponseType(typeof(IEnumerable<DnsZonePackageDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<IEnumerable<DnsZonePackageDto>>> GetPackagesByServer(int serverId)
+    {
+        try
+        {
+            _log.Information("API: GetPackagesByServer called for server {ServerId} by {User}", serverId, User.Identity?.Name);
+            var packages = await _dnsZonePackageService.GetPackagesByServerAsync(serverId);
+            return Ok(packages);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in GetPackagesByServer for server {ServerId}", serverId);
+            return StatusCode(500, "An error occurred while retrieving DNS zone packages for the server");
+        }
+    }
+
+    [HttpPost("{packageId}/servers/{serverId}")]
+    [Authorize(Policy = "DnsZonePackage.Write")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult> AssignServer(int packageId, int serverId)
+    {
+        try
+        {
+            _log.Information("API: AssignServer {ServerId} to package {PackageId} by {User}", serverId, packageId, User.Identity?.Name);
+            var result = await _dnsZonePackageService.AssignServerAsync(packageId, serverId);
+            if (!result) return NotFound("DNS zone package or server not found");
+            return Ok(new { success = true });
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in AssignServer {ServerId} to package {PackageId}", serverId, packageId);
+            return StatusCode(500, "An error occurred while assigning the server");
+        }
+    }
+
+    [HttpDelete("{packageId}/servers/{serverId}")]
+    [Authorize(Policy = "DnsZonePackage.Write")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult> RemoveServer(int packageId, int serverId)
+    {
+        try
+        {
+            _log.Information("API: RemoveServer {ServerId} from package {PackageId} by {User}", serverId, packageId, User.Identity?.Name);
+            var result = await _dnsZonePackageService.RemoveServerAsync(packageId, serverId);
+            if (!result) return NotFound("Assignment not found");
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in RemoveServer {ServerId} from package {PackageId}", serverId, packageId);
+            return StatusCode(500, "An error occurred while removing the server assignment");
+        }
+    }
 }

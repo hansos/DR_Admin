@@ -13,5 +13,7 @@ public class DnsZonePackage : EntityBase
     public ResellerCompany? ResellerCompany { get; set; }
     public SalesAgent? SalesAgent { get; set; }
     public ICollection<DnsZonePackageRecord> Records { get; set; } = new List<DnsZonePackageRecord>();
+    public ICollection<DnsZonePackageControlPanel> ControlPanels { get; set; } = new List<DnsZonePackageControlPanel>();
+    public ICollection<DnsZonePackageServer> Servers { get; set; } = new List<DnsZonePackageServer>();
 }
 

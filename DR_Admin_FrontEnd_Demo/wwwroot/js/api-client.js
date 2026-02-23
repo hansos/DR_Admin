@@ -284,6 +284,37 @@ const RegisteredDomainAPI = {
     async getById(id) { return apiRequest(`${BASE_URL}/RegisteredDomains/${id}`, { method: 'GET' }); },
 };
 /**
+ * DNS Zone Package (Template) API calls
+ */
+const DnsZonePackageAPI = {
+    async getAll() { return apiRequest(`${BASE_URL}/DnsZonePackages`, { method: 'GET' }); },
+    async getActive() { return apiRequest(`${BASE_URL}/DnsZonePackages/active`, { method: 'GET' }); },
+    async getWithRecords() { return apiRequest(`${BASE_URL}/DnsZonePackages/with-records`, { method: 'GET' }); },
+    async getById(id) { return apiRequest(`${BASE_URL}/DnsZonePackages/${id}`, { method: 'GET' }); },
+    async getWithRecordsById(id) { return apiRequest(`${BASE_URL}/DnsZonePackages/${id}/with-records`, { method: 'GET' }); },
+    async getWithAssignments(id) { return apiRequest(`${BASE_URL}/DnsZonePackages/${id}/assignments`, { method: 'GET' }); },
+    async create(data) { return apiRequest(`${BASE_URL}/DnsZonePackages`, { method: 'POST', body: JSON.stringify(data) }); },
+    async update(id, data) { return apiRequest(`${BASE_URL}/DnsZonePackages/${id}`, { method: 'PUT', body: JSON.stringify(data) }); },
+    async delete(id) { return apiRequest(`${BASE_URL}/DnsZonePackages/${id}`, { method: 'DELETE' }); },
+    async applyToDomain(packageId, domainId) { return apiRequest(`${BASE_URL}/DnsZonePackages/${packageId}/apply-to-domain/${domainId}`, { method: 'POST' }); },
+    async getByControlPanel(controlPanelId) { return apiRequest(`${BASE_URL}/DnsZonePackages/by-control-panel/${controlPanelId}`, { method: 'GET' }); },
+    async assignControlPanel(packageId, controlPanelId) { return apiRequest(`${BASE_URL}/DnsZonePackages/${packageId}/control-panels/${controlPanelId}`, { method: 'POST' }); },
+    async removeControlPanel(packageId, controlPanelId) { return apiRequest(`${BASE_URL}/DnsZonePackages/${packageId}/control-panels/${controlPanelId}`, { method: 'DELETE' }); },
+    async getByServer(serverId) { return apiRequest(`${BASE_URL}/DnsZonePackages/by-server/${serverId}`, { method: 'GET' }); },
+    async assignServer(packageId, serverId) { return apiRequest(`${BASE_URL}/DnsZonePackages/${packageId}/servers/${serverId}`, { method: 'POST' }); },
+    async removeServer(packageId, serverId) { return apiRequest(`${BASE_URL}/DnsZonePackages/${packageId}/servers/${serverId}`, { method: 'DELETE' }); },
+};
+/**
+ * DNS Zone Package Record API calls
+ */
+const DnsZonePackageRecordAPI = {
+    async getByPackage(packageId) { return apiRequest(`${BASE_URL}/DnsZonePackageRecords/package/${packageId}`, { method: 'GET' }); },
+    async getById(id) { return apiRequest(`${BASE_URL}/DnsZonePackageRecords/${id}`, { method: 'GET' }); },
+    async create(data) { return apiRequest(`${BASE_URL}/DnsZonePackageRecords`, { method: 'POST', body: JSON.stringify(data) }); },
+    async update(id, data) { return apiRequest(`${BASE_URL}/DnsZonePackageRecords/${id}`, { method: 'PUT', body: JSON.stringify(data) }); },
+    async delete(id) { return apiRequest(`${BASE_URL}/DnsZonePackageRecords/${id}`, { method: 'DELETE' }); },
+};
+/**
  * Utility functions
  */
 function showMessage(elementId, message, isError = false) {
@@ -320,6 +351,8 @@ if (typeof window !== 'undefined') {
     window.DnsRecordTypeAPI = DnsRecordTypeAPI;
     window.DnsRecordAPI = DnsRecordAPI;
     window.RegisteredDomainAPI = RegisteredDomainAPI;
+    window.DnsZonePackageAPI = DnsZonePackageAPI;
+    window.DnsZonePackageRecordAPI = DnsZonePackageRecordAPI;
     window.ControlPanelTypeAPI = ControlPanelTypeAPI;
     window.ServerControlPanelAPI = ServerControlPanelAPI;
     window.showMessage = showMessage;

@@ -20,4 +20,5 @@ public class Server : EntityBase
     public ICollection<ServerIpAddress> IpAddresses { get; set; } = new List<ServerIpAddress>();
     public ICollection<ServerControlPanel> ControlPanels { get; set; } = new List<ServerControlPanel>();
     public ICollection<HostingAccount> HostingAccounts { get; set; } = new List<HostingAccount>();
+    public ICollection<DnsZonePackageServer> DnsZonePackages { get; set; } = new List<DnsZonePackageServer>();
 }
