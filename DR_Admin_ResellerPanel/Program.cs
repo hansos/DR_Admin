@@ -28,6 +28,7 @@ namespace DR_Admin_ResellerPanel
             app.UseAntiforgery();
 
             app.MapStaticAssets();
+
             app.MapRazorComponents<App>()
                 .AddInteractiveServerRenderMode();
 

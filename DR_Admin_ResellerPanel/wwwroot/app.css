@@ -2,6 +2,22 @@ html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
+.login-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #052767 0%, #3a0647 100%);
+    display: flex;
+    align-items: center;
+}
+
+.login-card {
+    border-radius: 0.75rem;
+}
+
+.login-brand-icon {
+    font-size: 2.5rem;
+    color: #052767;
+}
+
 a, .btn-link {
     color: #006bb7;
 }

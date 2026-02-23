@@ -1,0 +1,58 @@
+@page "/login"
+@layout EmptyLayout
+
+<PageTitle>Sign In - DR Admin Reseller Panel</PageTitle>
+
+<div class="login-page">
+    <div class="container">
+        <div class="row align-items-center justify-content-center">
+            <div class="col-sm-10 col-md-7 col-lg-4">
+                <div class="card shadow login-card">
+                    <div class="card-body p-4">
+
+                        <div class="text-center mb-4">
+                            <div class="login-brand-icon">
+                                <i class="bi bi-globe2"></i>
+                            </div>
+                            <h4 class="mt-2 mb-0">DR Admin</h4>
+                            <p class="text-muted small mb-0">Reseller Panel</p>
+                        </div>
+
+                        <form id="loginForm" novalidate>
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Username or Email</label>
+                                <input type="text" class="form-control" id="email" name="username"
+                                       placeholder="Enter your username"
+                                       autocomplete="username" required />
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="password" name="password"
+                                           placeholder="Enter your password"
+                                           autocomplete="current-password" required />
+                                    <button class="btn btn-outline-secondary" type="button"
+                                            id="togglePassword" tabindex="-1"
+                                            title="Toggle password visibility">
+                                        <i class="bi bi-eye" id="togglePasswordIcon"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="loginError" class="alert alert-danger d-none" role="alert"></div>
+                            <div id="loginSuccess" class="alert alert-success d-none" role="alert"></div>
+
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-box-arrow-in-right"></i> Sign In
+                            </button>
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/js/login.js"></script>
