@@ -19,6 +19,13 @@ public interface IServerControlPanelService
     /// <param name="serverId">The server ID</param>
     /// <returns>Collection of server control panel DTOs</returns>
     Task<IEnumerable<ServerControlPanelDto>> GetServerControlPanelsByServerIdAsync(int serverId);
+
+    /// <summary>
+    /// Retrieves control panels bound to a specific IP address
+    /// </summary>
+    /// <param name="ipAddressId">The server IP address ID</param>
+    /// <returns>Collection of server control panel DTOs</returns>
+    Task<IEnumerable<ServerControlPanelDto>> GetServerControlPanelsByIpAddressIdAsync(int ipAddressId);
     
     /// <summary>
     /// Retrieves a server control panel by its unique identifier

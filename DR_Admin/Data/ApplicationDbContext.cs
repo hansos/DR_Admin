@@ -910,16 +910,22 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => e.ServerId);
             entity.HasIndex(e => e.ControlPanelTypeId);
             entity.HasIndex(e => e.Status);
-            
+            entity.HasIndex(e => e.IpAddressId);
+
             entity.HasOne(e => e.Server)
                 .WithMany(s => s.ControlPanels)
                 .HasForeignKey(e => e.ServerId)
                 .OnDelete(DeleteBehavior.Cascade);
-            
+
             entity.HasOne(e => e.ControlPanelType)
                 .WithMany(c => c.ServerControlPanels)
                 .HasForeignKey(e => e.ControlPanelTypeId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.IpAddress)
+                .WithMany(ip => ip.ControlPanels)
+                .HasForeignKey(e => e.IpAddressId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         // HostingPackage configuration

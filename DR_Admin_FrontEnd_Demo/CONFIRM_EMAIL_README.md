@@ -1,15 +1,18 @@
 # Email Confirmation Page
 
 ## Overview
+
 The email confirmation page (`confirm-email.html`) handles email verification for newly registered users.
 
 ## Location
+
 - **HTML**: `DR_Admin_FrontEnd_Demo/wwwroot/confirm-email.html`
 - **JavaScript**: `DR_Admin_FrontEnd_Demo/wwwroot/js/confirm-email.js`
 
 ## How It Works
 
 ### 1. User Flow
+
 1. User registers an account via `/register.html`
 2. Backend sends an email with a confirmation link
 3. User clicks the link: `https://localhost:XXXX/confirm-email?token={confirmationToken}`
@@ -17,17 +20,23 @@ The email confirmation page (`confirm-email.html`) handles email verification fo
 5. User sees success/error message and can navigate to login
 
 ### 2. URL Parameters
+
 - `token` (required): The email confirmation token from the registration email
 
 Example URL:
+
 ```
 https://localhost:XXXX/confirm-email?token=ABC123XYZ456
 ```
 
 ### 3. API Integration
+
 The page calls the DR_Admin API endpoint:
+
 - **Endpoint**: `POST /api/v1/myaccount/confirm-email`
+
 - **Request Body**:
+  
   ```json
   {
     "confirmationToken": "ABC123XYZ456"
@@ -35,13 +44,16 @@ The page calls the DR_Admin API endpoint:
   ```
 
 ### 4. Page States
+
 The page displays different states based on the confirmation result:
 
 #### Loading State
+
 - Shows a spinner while verifying the token
 - Displayed when the page is processing the confirmation
 
 #### Success State
+
 - Email confirmed successfully
 - Shows success icon and message
 - Provides navigation to:
@@ -49,6 +61,7 @@ The page displays different states based on the confirmation result:
   - Home page
 
 #### Error State
+
 - Token is invalid or expired
 - Shows error icon and helpful message
 - Lists troubleshooting steps
@@ -58,6 +71,7 @@ The page displays different states based on the confirmation result:
   - Home page
 
 #### Missing Token State
+
 - No token provided in URL
 - Shows warning message
 - Provides navigation to:
@@ -67,6 +81,7 @@ The page displays different states based on the confirmation result:
 ## Changes Made
 
 ### 1. Backend Changes (Already Completed)
+
 - Updated `ConfirmEmailAsync` method to only require token parameter
 - Removed email parameter from:
   - `IMyAccountService.cs`
@@ -76,6 +91,7 @@ The page displays different states based on the confirmation result:
 - Updated email confirmation URL generation to exclude email parameter
 
 ### 2. Frontend Changes (New)
+
 - Created `confirm-email.html` page
 - Created `confirm-email.js` script
 - Updated integration tests to match new API
@@ -83,6 +99,7 @@ The page displays different states based on the confirmation result:
 ## Testing
 
 ### Manual Testing
+
 1. Start the DR_Admin API (`https://localhost:7201`)
 2. Start the Frontend Demo app
 3. Register a new account
@@ -91,6 +108,7 @@ The page displays different states based on the confirmation result:
 6. Verify the confirmation works
 
 ### Test Cases
+
 1. **Valid Token**: Should show success state and confirm email
 2. **Invalid Token**: Should show error state with appropriate message
 3. **Expired Token**: Should show error state
@@ -98,6 +116,7 @@ The page displays different states based on the confirmation result:
 5. **Network Error**: Should show error state with network error message
 
 ## Security Considerations
+
 - Token is validated server-side
 - No email address needed in URL (prevents email enumeration)
 - Token is single-use (revoked after successful confirmation)
@@ -105,7 +124,9 @@ The page displays different states based on the confirmation result:
 - HTTPS required for production
 
 ## Styling
+
 The page uses the same styling as other pages in the demo:
+
 - Bootstrap 5.3.0
 - Bootstrap Icons
 - Consistent card-based layout
@@ -113,6 +134,7 @@ The page uses the same styling as other pages in the demo:
 - Matches the login/register page style
 
 ## Future Enhancements
+
 - Add ability to resend confirmation email
 - Add countdown timer showing token expiration
 - Add email preview/masking for privacy

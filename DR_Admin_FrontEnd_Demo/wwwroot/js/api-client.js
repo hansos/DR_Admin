@@ -9,36 +9,33 @@ const BASE_URL = 'https://localhost:7201/api/v1';
  */
 async function apiRequest(endpoint, options = {}) {
     try {
-        // Get auth token from localStorage
         const authToken = localStorage.getItem('authToken');
-
-        // Build headers
         const headers = {
             'Content-Type': 'application/json',
             ...options.headers,
         };
-
-        // Add auth token if available
         if (authToken) {
             headers['Authorization'] = `Bearer ${authToken}`;
         }
-
         const response = await fetch(endpoint, {
-            headers,
-            credentials: 'include', // Changed from 'same-origin' to support CORS
             ...options,
+            headers,
+            credentials: 'include',
         });
-        const data = await response.json();
+        // Some responses (204, 401 with no body) have no JSON body
+        const contentType = response.headers.get('content-type') || '';
+        const hasJson = contentType.includes('application/json');
+        const data = hasJson ? await response.json() : null;
         if (!response.ok) {
             return {
                 success: false,
-                message: data.message || 'An error occurred',
+                message: (data && data.message) || `Request failed with status ${response.status}`,
             };
         }
         return {
-            success: data.success !== false,
-            data: data.data || data,
-            message: data.message,
+            success: data?.success !== false,
+            data: data?.data ?? data,
+            message: data?.message,
         };
     }
     catch (error) {
@@ -58,33 +55,27 @@ const AuthAPI = {
             method: 'POST',
             body: JSON.stringify({ username: email, password }),
         });
-
-        // Store authentication info in localStorage on successful login
         if (result.success) {
             localStorage.setItem('userEmail', email);
-
-            // Backend returns AccessToken and RefreshToken (not just "token")
-            if (result.data) {
-                if (result.data.accessToken) {
-                    localStorage.setItem('authToken', result.data.accessToken);
-                    console.log('Access token stored:', result.data.accessToken.substring(0, 20) + '...');
+            const data = result.data;
+            if (data) {
+                if (data.accessToken) {
+                    localStorage.setItem('authToken', data.accessToken);
                 }
-                if (result.data.refreshToken) {
-                    localStorage.setItem('refreshToken', result.data.refreshToken);
-                    console.log('Refresh token stored');
+                if (data.refreshToken) {
+                    localStorage.setItem('refreshToken', data.refreshToken);
                 }
-                if (result.data.username) {
-                    localStorage.setItem('username', result.data.username);
+                if (data.username) {
+                    localStorage.setItem('username', data.username);
                 }
-                if (result.data.roles) {
-                    localStorage.setItem('userRoles', JSON.stringify(result.data.roles));
+                if (data.roles) {
+                    localStorage.setItem('userRoles', JSON.stringify(data.roles));
                 }
-                if (result.data.expiresAt) {
-                    localStorage.setItem('tokenExpiresAt', result.data.expiresAt);
+                if (data.expiresAt) {
+                    localStorage.setItem('tokenExpiresAt', data.expiresAt);
                 }
             }
         }
-
         return result;
     },
     async register(name, email, password, confirmPassword) {
@@ -114,14 +105,10 @@ const AuthAPI = {
  */
 const DomainAPI = {
     async getDomains() {
-        return apiRequest(`${BASE_URL}/Domains/list`, {
-            method: 'GET',
-        });
+        return apiRequest(`${BASE_URL}/Domains/list`, { method: 'GET' });
     },
     async searchDomain(domain) {
-        return apiRequest(`${BASE_URL}/Domains/search?domain=${encodeURIComponent(domain)}`, {
-            method: 'GET',
-        });
+        return apiRequest(`${BASE_URL}/Domains/search?domain=${encodeURIComponent(domain)}`, { method: 'GET' });
     },
 };
 /**
@@ -129,168 +116,64 @@ const DomainAPI = {
  */
 const HostingAPI = {
     async getHostingPlans() {
-        return apiRequest(`${BASE_URL}/Hosting/plans`, {
-            method: 'GET',
-        });
+        return apiRequest(`${BASE_URL}/Hosting/plans`, { method: 'GET' });
     },
     async getMyHosting() {
-        return apiRequest(`${BASE_URL}/Hosting/services`, {
-            method: 'GET',
-        });
+        return apiRequest(`${BASE_URL}/Hosting/services`, { method: 'GET' });
     },
 };
 /**
  * Customer API calls
  */
 const CustomerAPI = {
-    async getCustomers() {
-        return apiRequest(`${BASE_URL}/Customers`, {
-            method: 'GET',
-        });
-    },
-    async getCustomer(id) {
-        return apiRequest(`${BASE_URL}/Customers/${id}`, {
-            method: 'GET',
-        });
-    },
-    async createCustomer(customerData) {
-        return apiRequest(`${BASE_URL}/Customers`, {
-            method: 'POST',
-            body: JSON.stringify(customerData),
-        });
-    },
-    async updateCustomer(id, customerData) {
-        return apiRequest(`${BASE_URL}/Customers/${id}`, {
-            method: 'PUT',
-            body: JSON.stringify(customerData),
-        });
-    },
-    async deleteCustomer(id) {
-        return apiRequest(`${BASE_URL}/Customers/${id}`, {
-            method: 'DELETE',
-        });
-    },
+    async getCustomers() { return apiRequest(`${BASE_URL}/Customers`, { method: 'GET' }); },
+    async getCustomer(id) { return apiRequest(`${BASE_URL}/Customers/${id}`, { method: 'GET' }); },
+    async createCustomer(data) { return apiRequest(`${BASE_URL}/Customers`, { method: 'POST', body: JSON.stringify(data) }); },
+    async updateCustomer(id, data) { return apiRequest(`${BASE_URL}/Customers/${id}`, { method: 'PUT', body: JSON.stringify(data) }); },
+    async deleteCustomer(id) { return apiRequest(`${BASE_URL}/Customers/${id}`, { method: 'DELETE' }); },
 };
 /**
  * User API calls
  */
 const UserAPI = {
-    async getUsers() {
-        return apiRequest(`${BASE_URL}/Users`, {
-            method: 'GET',
-        });
-    },
-    async getUser(id) {
-        return apiRequest(`${BASE_URL}/Users/${id}`, {
-            method: 'GET',
-        });
-    },
-    async createUser(userData) {
-        return apiRequest(`${BASE_URL}/Users`, {
-            method: 'POST',
-            body: JSON.stringify(userData),
-        });
-    },
-    async updateUser(id, userData) {
-        return apiRequest(`${BASE_URL}/Users/${id}`, {
-            method: 'PUT',
-            body: JSON.stringify(userData),
-        });
-    },
-    async deleteUser(id) {
-        return apiRequest(`${BASE_URL}/Users/${id}`, {
-            method: 'DELETE',
-        });
-    },
+    async getUsers() { return apiRequest(`${BASE_URL}/Users`, { method: 'GET' }); },
+    async getUser(id) { return apiRequest(`${BASE_URL}/Users/${id}`, { method: 'GET' }); },
+    async createUser(data) { return apiRequest(`${BASE_URL}/Users`, { method: 'POST', body: JSON.stringify(data) }); },
+    async updateUser(id, data) { return apiRequest(`${BASE_URL}/Users/${id}`, { method: 'PUT', body: JSON.stringify(data) }); },
+    async deleteUser(id) { return apiRequest(`${BASE_URL}/Users/${id}`, { method: 'DELETE' }); },
 };
 /**
  * Role API calls
  */
 const RoleAPI = {
-    async getRoles() {
-        return apiRequest(`${BASE_URL}/Roles`, {
-            method: 'GET',
-        });
-    },
-    async getRole(id) {
-        return apiRequest(`${BASE_URL}/Roles/${id}`, {
-            method: 'GET',
-        });
-    },
+    async getRoles() { return apiRequest(`${BASE_URL}/Roles`, { method: 'GET' }); },
+    async getRole(id) { return apiRequest(`${BASE_URL}/Roles/${id}`, { method: 'GET' }); },
 };
 /**
  * Contact Person API calls
  */
 const ContactPersonAPI = {
-    async getContactPersonsByCustomer(customerId) {
-        return apiRequest(`${BASE_URL}/ContactPersons/customer/${customerId}`, {
-            method: 'GET',
-        });
-    },
-    async getContactPerson(id) {
-        return apiRequest(`${BASE_URL}/ContactPersons/${id}`, {
-            method: 'GET',
-        });
-    },
-    async createContactPerson(contactPersonData) {
-        return apiRequest(`${BASE_URL}/ContactPersons`, {
-            method: 'POST',
-            body: JSON.stringify(contactPersonData),
-        });
-    },
-    async updateContactPerson(id, contactPersonData) {
-        return apiRequest(`${BASE_URL}/ContactPersons/${id}`, {
-            method: 'PUT',
-            body: JSON.stringify(contactPersonData),
-        });
-    },
-    async deleteContactPerson(id) {
-        return apiRequest(`${BASE_URL}/ContactPersons/${id}`, {
-            method: 'DELETE',
-        });
-    },
+    async getContactPersonsByCustomer(customerId) { return apiRequest(`${BASE_URL}/ContactPersons/customer/${customerId}`, { method: 'GET' }); },
+    async getContactPerson(id) { return apiRequest(`${BASE_URL}/ContactPersons/${id}`, { method: 'GET' }); },
+    async createContactPerson(data) { return apiRequest(`${BASE_URL}/ContactPersons`, { method: 'POST', body: JSON.stringify(data) }); },
+    async updateContactPerson(id, data) { return apiRequest(`${BASE_URL}/ContactPersons/${id}`, { method: 'PUT', body: JSON.stringify(data) }); },
+    async deleteContactPerson(id) { return apiRequest(`${BASE_URL}/ContactPersons/${id}`, { method: 'DELETE' }); },
 };
 /**
  * Order API calls
  */
 const OrderAPI = {
-    async getOrders() {
-        return apiRequest(`${BASE_URL}/Orders`, {
-            method: 'GET',
-        });
-    },
+    async getOrders() { return apiRequest(`${BASE_URL}/Orders`, { method: 'GET' }); },
 };
 /**
  * System Setting API calls
  */
 const SystemSettingAPI = {
-    async getSystemSettings() {
-        return apiRequest(`${BASE_URL}/SystemSettings`, {
-            method: 'GET',
-        });
-    },
-    async getSystemSetting(id) {
-        return apiRequest(`${BASE_URL}/SystemSettings/${id}`, {
-            method: 'GET',
-        });
-    },
-    async createSystemSetting(settingData) {
-        return apiRequest(`${BASE_URL}/SystemSettings`, {
-            method: 'POST',
-            body: JSON.stringify(settingData),
-        });
-    },
-    async updateSystemSetting(id, settingData) {
-        return apiRequest(`${BASE_URL}/SystemSettings/${id}`, {
-            method: 'PUT',
-            body: JSON.stringify(settingData),
-        });
-    },
-    async deleteSystemSetting(id) {
-        return apiRequest(`${BASE_URL}/SystemSettings/${id}`, {
-            method: 'DELETE',
-        });
-    },
+    async getSystemSettings() { return apiRequest(`${BASE_URL}/SystemSettings`, { method: 'GET' }); },
+    async getSystemSetting(id) { return apiRequest(`${BASE_URL}/SystemSettings/${id}`, { method: 'GET' }); },
+    async createSystemSetting(data) { return apiRequest(`${BASE_URL}/SystemSettings`, { method: 'POST', body: JSON.stringify(data) }); },
+    async updateSystemSetting(id, data) { return apiRequest(`${BASE_URL}/SystemSettings/${id}`, { method: 'PUT', body: JSON.stringify(data) }); },
+    async deleteSystemSetting(id) { return apiRequest(`${BASE_URL}/SystemSettings/${id}`, { method: 'DELETE' }); },
 };
 /**
  * Server Type API calls
@@ -336,70 +219,69 @@ const ServerAPI = {
     async delete(id) { return apiRequest(`${BASE_URL}/Servers/${id}`, { method: 'DELETE' }); },
 };
 /**
+ * Control Panel Type API calls
+ */
+const ControlPanelTypeAPI = {
+    async getAll() { return apiRequest(`${BASE_URL}/ControlPanelTypes`, { method: 'GET' }); },
+    async getActive() { return apiRequest(`${BASE_URL}/ControlPanelTypes/active`, { method: 'GET' }); },
+    async getById(id) { return apiRequest(`${BASE_URL}/ControlPanelTypes/${id}`, { method: 'GET' }); },
+    async create(data) { return apiRequest(`${BASE_URL}/ControlPanelTypes`, { method: 'POST', body: JSON.stringify(data) }); },
+    async update(id, data) { return apiRequest(`${BASE_URL}/ControlPanelTypes/${id}`, { method: 'PUT', body: JSON.stringify(data) }); },
+    async delete(id) { return apiRequest(`${BASE_URL}/ControlPanelTypes/${id}`, { method: 'DELETE' }); },
+};
+/**
+ * Server Control Panel API calls
+ */
+const ServerControlPanelAPI = {
+    async getAll() { return apiRequest(`${BASE_URL}/ServerControlPanels`, { method: 'GET' }); },
+    async getByServerId(serverId) { return apiRequest(`${BASE_URL}/ServerControlPanels/server/${serverId}`, { method: 'GET' }); },
+    async getByIpAddressId(ipAddressId) { return apiRequest(`${BASE_URL}/ServerControlPanels/ipaddress/${ipAddressId}`, { method: 'GET' }); },
+    async getById(id) { return apiRequest(`${BASE_URL}/ServerControlPanels/${id}`, { method: 'GET' }); },
+    async create(data) { return apiRequest(`${BASE_URL}/ServerControlPanels`, { method: 'POST', body: JSON.stringify(data) }); },
+    async update(id, data) { return apiRequest(`${BASE_URL}/ServerControlPanels/${id}`, { method: 'PUT', body: JSON.stringify(data) }); },
+    async delete(id) { return apiRequest(`${BASE_URL}/ServerControlPanels/${id}`, { method: 'DELETE' }); },
+    async testConnection(id) { return apiRequest(`${BASE_URL}/ServerControlPanels/${id}/test-connection`, { method: 'POST' }); },
+};
+/**
+ * Server IP Address API calls
+ */
+const ServerIpAddressAPI = {
+    async getAll() { return apiRequest(`${BASE_URL}/ServerIpAddresses`, { method: 'GET' }); },
+    async getByServerId(serverId) { return apiRequest(`${BASE_URL}/ServerIpAddresses/server/${serverId}`, { method: 'GET' }); },
+    async getById(id) { return apiRequest(`${BASE_URL}/ServerIpAddresses/${id}`, { method: 'GET' }); },
+    async create(data) { return apiRequest(`${BASE_URL}/ServerIpAddresses`, { method: 'POST', body: JSON.stringify(data) }); },
+    async update(id, data) { return apiRequest(`${BASE_URL}/ServerIpAddresses/${id}`, { method: 'PUT', body: JSON.stringify(data) }); },
+    async delete(id) { return apiRequest(`${BASE_URL}/ServerIpAddresses/${id}`, { method: 'DELETE' }); },
+};
+/**
  * DNS Record Type API calls
  */
 const DnsRecordTypeAPI = {
-    async getAll() {
-        return apiRequest(`${BASE_URL}/DnsRecordTypes`, { method: 'GET' });
-    },
+    async getAll() { return apiRequest(`${BASE_URL}/DnsRecordTypes`, { method: 'GET' }); },
 };
 /**
  * DNS Record API calls
  */
 const DnsRecordAPI = {
-    async getByDomain(domainId) {
-        return apiRequest(`${BASE_URL}/DnsRecords/domain/${domainId}`, { method: 'GET' });
-    },
-    async getDeletedByDomain(domainId) {
-        return apiRequest(`${BASE_URL}/DnsRecords/domain/${domainId}/deleted`, { method: 'GET' });
-    },
-    async getById(id) {
-        return apiRequest(`${BASE_URL}/DnsRecords/${id}`, { method: 'GET' });
-    },
-    async create(data) {
-        return apiRequest(`${BASE_URL}/DnsRecords`, {
-            method: 'POST',
-            body: JSON.stringify(data),
-        });
-    },
-    async update(id, data) {
-        return apiRequest(`${BASE_URL}/DnsRecords/${id}`, {
-            method: 'PUT',
-            body: JSON.stringify(data),
-        });
-    },
-    async softDelete(id) {
-        return apiRequest(`${BASE_URL}/DnsRecords/${id}`, { method: 'DELETE' });
-    },
-    async hardDelete(id) {
-        return apiRequest(`${BASE_URL}/DnsRecords/${id}/hard`, { method: 'DELETE' });
-    },
-    async restore(id) {
-        return apiRequest(`${BASE_URL}/DnsRecords/${id}/restore`, { method: 'POST' });
-    },
-    async getPendingSyncByDomain(domainId) {
-        return apiRequest(`${BASE_URL}/DnsRecords/domain/${domainId}/pending-sync`, { method: 'GET' });
-    },
-    async markSynced(id) {
-        return apiRequest(`${BASE_URL}/DnsRecords/${id}/mark-synced`, { method: 'POST' });
-    },
-    async push(id) {
-        return apiRequest(`${BASE_URL}/DnsRecords/${id}/push`, { method: 'POST' });
-    },
-    async pushPending(domainId) {
-        return apiRequest(`${BASE_URL}/DnsRecords/domain/${domainId}/push-pending`, { method: 'POST' });
-    },
+    async getByDomain(domainId) { return apiRequest(`${BASE_URL}/DnsRecords/domain/${domainId}`, { method: 'GET' }); },
+    async getDeletedByDomain(domainId) { return apiRequest(`${BASE_URL}/DnsRecords/domain/${domainId}/deleted`, { method: 'GET' }); },
+    async getById(id) { return apiRequest(`${BASE_URL}/DnsRecords/${id}`, { method: 'GET' }); },
+    async create(data) { return apiRequest(`${BASE_URL}/DnsRecords`, { method: 'POST', body: JSON.stringify(data) }); },
+    async update(id, data) { return apiRequest(`${BASE_URL}/DnsRecords/${id}`, { method: 'PUT', body: JSON.stringify(data) }); },
+    async softDelete(id) { return apiRequest(`${BASE_URL}/DnsRecords/${id}`, { method: 'DELETE' }); },
+    async hardDelete(id) { return apiRequest(`${BASE_URL}/DnsRecords/${id}/hard`, { method: 'DELETE' }); },
+    async restore(id) { return apiRequest(`${BASE_URL}/DnsRecords/${id}/restore`, { method: 'POST' }); },
+    async getPendingSyncByDomain(domainId) { return apiRequest(`${BASE_URL}/DnsRecords/domain/${domainId}/pending-sync`, { method: 'GET' }); },
+    async markSynced(id) { return apiRequest(`${BASE_URL}/DnsRecords/${id}/mark-synced`, { method: 'POST' }); },
+    async push(id) { return apiRequest(`${BASE_URL}/DnsRecords/${id}/push`, { method: 'POST' }); },
+    async pushPending(domainId) { return apiRequest(`${BASE_URL}/DnsRecords/domain/${domainId}/push-pending`, { method: 'POST' }); },
 };
 /**
  * Registered Domain API calls
  */
 const RegisteredDomainAPI = {
-    async getAll() {
-        return apiRequest(`${BASE_URL}/RegisteredDomains`, { method: 'GET' });
-    },
-    async getById(id) {
-        return apiRequest(`${BASE_URL}/RegisteredDomains/${id}`, { method: 'GET' });
-    },
+    async getAll() { return apiRequest(`${BASE_URL}/RegisteredDomains`, { method: 'GET' }); },
+    async getById(id) { return apiRequest(`${BASE_URL}/RegisteredDomains/${id}`, { method: 'GET' }); },
 };
 /**
  * Utility functions
@@ -421,10 +303,6 @@ function hideMessage(elementId) {
 }
 // Export for use in other modules
 if (typeof window !== 'undefined') {
-    window.ServerTypeAPI = ServerTypeAPI;
-    window.HostProviderAPI = HostProviderAPI;
-    window.OperatingSystemAPI = OperatingSystemAPI;
-    window.ServerAPI = ServerAPI;
     window.AuthAPI = AuthAPI;
     window.DomainAPI = DomainAPI;
     window.HostingAPI = HostingAPI;
@@ -434,9 +312,16 @@ if (typeof window !== 'undefined') {
     window.ContactPersonAPI = ContactPersonAPI;
     window.OrderAPI = OrderAPI;
     window.SystemSettingAPI = SystemSettingAPI;
+    window.ServerTypeAPI = ServerTypeAPI;
+    window.HostProviderAPI = HostProviderAPI;
+    window.OperatingSystemAPI = OperatingSystemAPI;
+    window.ServerAPI = ServerAPI;
+    window.ServerIpAddressAPI = ServerIpAddressAPI;
     window.DnsRecordTypeAPI = DnsRecordTypeAPI;
     window.DnsRecordAPI = DnsRecordAPI;
     window.RegisteredDomainAPI = RegisteredDomainAPI;
+    window.ControlPanelTypeAPI = ControlPanelTypeAPI;
+    window.ServerControlPanelAPI = ServerControlPanelAPI;
     window.showMessage = showMessage;
     window.hideMessage = hideMessage;
 }

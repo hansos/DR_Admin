@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Servers - DR Admin Demo</title>
+    <title>Control Panels - DR Admin Demo</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/css/site.css">
@@ -38,9 +38,9 @@
                         <i class="bi bi-hdd-rack"></i> Infrastructure
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="infraDropdown">
-                        <li><a class="dropdown-item active" href="/servers.html"><i class="bi bi-server"></i> Servers</a></li>
+                        <li><a class="dropdown-item" href="/servers.html"><i class="bi bi-server"></i> Servers</a></li>
                         <li><a class="dropdown-item" href="/server-ip-addresses.html"><i class="bi bi-router"></i> Server IP Addresses</a></li>
-                        <li><a class="dropdown-item" href="/control-panels.html"><i class="bi bi-speedometer2"></i> Control Panels</a></li>
+                        <li><a class="dropdown-item active" href="/control-panels.html"><i class="bi bi-speedometer2"></i> Control Panels</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="/server-types.html"><i class="bi bi-diagram-3"></i> Server Types</a></li>
                         <li><a class="dropdown-item" href="/host-providers.html"><i class="bi bi-cloud"></i> Host Providers</a></li>
@@ -68,11 +68,11 @@
 <main class="container-fluid mt-4 px-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
-            <h2><i class="bi bi-server"></i> Servers</h2>
-            <p class="text-muted mb-0">Manage physical, virtual and cloud servers in the infrastructure.</p>
+            <h2><i class="bi bi-speedometer2"></i> Control Panels</h2>
+            <p class="text-muted mb-0">Manage hosting control panel installations across all servers.</p>
         </div>
         <button class="btn btn-primary" onclick="openCreate()">
-            <i class="bi bi-plus-circle"></i> New Server
+            <i class="bi bi-plus-circle"></i> New Control Panel
         </button>
     </div>
     <hr>
@@ -89,35 +89,41 @@
             <div class="row g-3">
                 <div class="col-md-4">
                     <label for="searchInput" class="form-label">Search</label>
-                    <input type="text" class="form-control" id="searchInput" placeholder="Server name or location...">
+                    <input type="text" class="form-control" id="searchInput" placeholder="API URL...">
                 </div>
                 <div class="col-md-3">
+                    <label for="serverFilter" class="form-label">Server</label>
+                    <select class="form-select" id="serverFilter">
+                        <option value="">All Servers</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="typeFilter" class="form-label">Panel Type</label>
+                    <select class="form-select" id="typeFilter">
+                        <option value="">All Types</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
                     <label for="statusFilter" class="form-label">Status</label>
                     <select class="form-select" id="statusFilter">
                         <option value="">All</option>
                         <option value="Active">Active</option>
                         <option value="Inactive">Inactive</option>
-                        <option value="Maintenance">Maintenance</option>
+                        <option value="Error">Error</option>
                     </select>
                 </div>
-                <div class="col-md-3">
-                    <label for="typeFilter" class="form-label">Server Type</label>
-                    <select class="form-select" id="typeFilter">
-                        <option value="">All Types</option>
-                    </select>
-                </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button class="btn btn-secondary w-100" id="clearFilters"><i class="bi bi-x-circle"></i> Clear</button>
+                <div class="col-md-1 d-flex align-items-end">
+                    <button class="btn btn-secondary w-100" id="clearFilters" title="Clear Filters"><i class="bi bi-x-circle"></i></button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Servers Table -->
+    <!-- Control Panels Table -->
     <div class="card shadow-sm">
         <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-            <h5 class="mb-0"><i class="bi bi-server"></i> Servers</h5>
-            <small id="serverCount" class="text-white-50"></small>
+            <h5 class="mb-0"><i class="bi bi-speedometer2"></i> Control Panels</h5>
+            <small id="panelCount" class="text-white-50"></small>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -125,15 +131,15 @@
                     <thead class="table-light">
                         <tr>
                             <th>ID</th>
-                            <th>Name</th>
-                            <th>Type</th>
-                            <th>Host Provider</th>
-                            <th>Location</th>
-                            <th>OS</th>
+                            <th>Server</th>
+                            <th>Panel Type</th>
+                            <th>API URL</th>
+                            <th>IP Address</th>
+                            <th>Port</th>
+                            <th>HTTPS</th>
                             <th>Status</th>
-                            <th>CPU</th>
-                            <th>RAM</th>
-                            <th>Disk</th>
+                            <th>Health</th>
+                            <th>Last Test</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -157,58 +163,82 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="modalTitle">New Server</h5>
+                <h5 class="modal-title" id="modalTitle">New Control Panel</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form id="form" novalidate>
                     <div class="row g-3">
-                        <div class="col-md-8">
-                            <label for="name" class="form-label">Server Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="name" placeholder="e.g. web-prod-01">
-                        </div>
-                        <div class="col-md-4">
-                            <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
-                            <select class="form-select" id="status">
-                                <option value="Active">Active</option>
-                                <option value="Inactive">Inactive</option>
-                                <option value="Maintenance">Maintenance</option>
+                        <!-- Basic -->
+                        <div class="col-md-6">
+                            <label for="serverId" class="form-label">Server <span class="text-danger">*</span></label>
+                            <select class="form-select" id="serverId">
+                                <option value="">-- Select server --</option>
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label for="serverTypeId" class="form-label">Server Type <span class="text-danger">*</span></label>
-                            <select class="form-select" id="serverTypeId">
+                            <label for="controlPanelTypeId" class="form-label">Panel Type <span class="text-danger">*</span></label>
+                            <select class="form-select" id="controlPanelTypeId">
                                 <option value="">-- Select type --</option>
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label for="hostProviderId" class="form-label">Host Provider</label>
-                            <select class="form-select" id="hostProviderId">
-                                <option value="">-- None --</option>
+                            <label for="ipAddressId" class="form-label">Bound IP Address</label>
+                            <select class="form-select" id="ipAddressId">
+                                <option value="">-- None / select server first --</option>
                             </select>
+                            <div class="form-text">The specific server IP this panel API listens on.</div>
                         </div>
                         <div class="col-md-6">
-                            <label for="operatingSystemId" class="form-label">Operating System <span class="text-danger">*</span></label>
-                            <select class="form-select" id="operatingSystemId">
-                                <option value="">-- Select OS --</option>
+                            <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
+                            <select class="form-select" id="status">
+                                <option value="Active">Active</option>
+                                <option value="Inactive">Inactive</option>
+                                <option value="Error">Error</option>
                             </select>
                         </div>
+
+                        <!-- Connection -->
+                        <div class="col-12"><hr class="my-1"><small class="text-muted fw-semibold">Connection</small></div>
+                        <div class="col-md-8">
+                            <label for="apiUrl" class="form-label">API URL <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="apiUrl" placeholder="e.g. https://server.example.com">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="port" class="form-label">Port <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="port" min="1" max="65535" value="2087">
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="useHttps" checked>
+                                <label class="form-check-label" for="useHttps">Use HTTPS</label>
+                            </div>
+                        </div>
+
+                        <!-- Authentication -->
+                        <div class="col-12"><hr class="my-1"><small class="text-muted fw-semibold">Authentication <span class="text-muted fw-normal">(leave blank to keep existing)</span></small></div>
                         <div class="col-md-6">
-                            <label for="location" class="form-label">Location</label>
-                            <input type="text" class="form-control" id="location" placeholder="e.g. US-East, DataCenter-1">
+                            <label for="apiToken" class="form-label">API Token</label>
+                            <input type="password" class="form-control" id="apiToken" placeholder="Token / WHM API key">
                         </div>
-                        <div class="col-12"><hr class="my-1"><small class="text-muted">Hardware Specs (optional)</small></div>
-                        <div class="col-md-4">
-                            <label for="cpuCores" class="form-label">CPU Cores</label>
-                            <input type="number" class="form-control" id="cpuCores" min="1" placeholder="e.g. 8">
+                        <div class="col-md-6">
+                            <label for="apiKey" class="form-label">API Key</label>
+                            <input type="password" class="form-control" id="apiKey" placeholder="Secondary API key">
                         </div>
-                        <div class="col-md-4">
-                            <label for="ramMB" class="form-label">RAM (MB)</label>
-                            <input type="number" class="form-control" id="ramMB" min="1" placeholder="e.g. 16384">
+                        <div class="col-md-6">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="username" placeholder="API username">
                         </div>
-                        <div class="col-md-4">
-                            <label for="diskSpaceGB" class="form-label">Disk Space (GB)</label>
-                            <input type="number" class="form-control" id="diskSpaceGB" min="1" placeholder="e.g. 500">
+                        <div class="col-md-6">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" placeholder="Leave blank to keep existing">
+                        </div>
+
+                        <!-- Extra -->
+                        <div class="col-12"><hr class="my-1"><small class="text-muted fw-semibold">Additional</small></div>
+                        <div class="col-12">
+                            <label for="additionalSettings" class="form-label">Additional Settings <span class="text-muted">(JSON)</span></label>
+                            <textarea class="form-control font-monospace" id="additionalSettings" rows="2" placeholder='{"key": "value"}'></textarea>
                         </div>
                         <div class="col-12">
                             <label for="notes" class="form-label">Notes</label>
@@ -234,8 +264,8 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p>Delete server <strong id="deleteName"></strong>?</p>
-                <p class="text-danger"><i class="bi bi-exclamation-triangle-fill"></i> This will also remove associated IP addresses and control panels.</p>
+                <p>Delete control panel <strong id="deleteName"></strong>?</p>
+                <p class="text-danger"><i class="bi bi-exclamation-triangle-fill"></i> This will also remove associated hosting account links.</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -249,6 +279,6 @@
 <script src="/js/api-client.js"></script>
 <script src="/js/auth-state.js"></script>
 <script src="/js/utils.js"></script>
-<script src="/js/servers.js"></script>
+<script src="/js/control-panels.js"></script>
 </body>
 </html>

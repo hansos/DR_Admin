@@ -31,10 +31,11 @@ public class ServerControlPanelService : IServerControlPanelService
             
             var controlPanels = await _context.ServerControlPanels
                 .AsNoTracking()
+                .Include(scp => scp.IpAddress)
                 .ToListAsync();
 
             var controlPanelDtos = controlPanels.Select(MapToDto);
-            
+
             _log.Information("Successfully fetched {Count} server control panels", controlPanels.Count);
             return controlPanelDtos;
         }
@@ -58,11 +59,12 @@ public class ServerControlPanelService : IServerControlPanelService
             
             var controlPanels = await _context.ServerControlPanels
                 .AsNoTracking()
+                .Include(scp => scp.IpAddress)
                 .Where(scp => scp.ServerId == serverId)
                 .ToListAsync();
 
             var controlPanelDtos = controlPanels.Select(MapToDto);
-            
+
             _log.Information("Successfully fetched {Count} control panels for server ID: {ServerId}", controlPanels.Count, serverId);
             return controlPanelDtos;
         }
@@ -86,6 +88,7 @@ public class ServerControlPanelService : IServerControlPanelService
             
             var controlPanel = await _context.ServerControlPanels
                 .AsNoTracking()
+                .Include(scp => scp.IpAddress)
                 .FirstOrDefaultAsync(scp => scp.Id == id);
 
             if (controlPanel == null)
@@ -128,11 +131,15 @@ public class ServerControlPanelService : IServerControlPanelService
                 PasswordHash = string.IsNullOrEmpty(createDto.Password) ? null : HashPassword(createDto.Password),
                 AdditionalSettings = createDto.AdditionalSettings,
                 Status = createDto.Status,
+                IpAddressId = createDto.IpAddressId,
                 Notes = createDto.Notes
             };
 
             _context.ServerControlPanels.Add(controlPanel);
             await _context.SaveChangesAsync();
+
+            // Reload with navigation to populate IpAddressValue
+            await _context.Entry(controlPanel).Reference(cp => cp.IpAddress).LoadAsync();
 
             _log.Information("Successfully created server control panel with ID: {ControlPanelId}", controlPanel.Id);
             return MapToDto(controlPanel);
@@ -178,9 +185,13 @@ public class ServerControlPanelService : IServerControlPanelService
             
             controlPanel.AdditionalSettings = updateDto.AdditionalSettings;
             controlPanel.Status = updateDto.Status;
+            controlPanel.IpAddressId = updateDto.IpAddressId;
             controlPanel.Notes = updateDto.Notes;
 
             await _context.SaveChangesAsync();
+
+            // Reload with navigation to populate IpAddressValue
+            await _context.Entry(controlPanel).Reference(cp => cp.IpAddress).LoadAsync();
 
             _log.Information("Successfully updated server control panel with ID: {ControlPanelId}", id);
             return MapToDto(controlPanel);
@@ -220,6 +231,35 @@ public class ServerControlPanelService : IServerControlPanelService
         catch (Exception ex)
         {
             _log.Error(ex, "Error occurred while deleting server control panel with ID: {ControlPanelId}", id);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Retrieves control panels bound to a specific IP address
+    /// </summary>
+    /// <param name="ipAddressId">The server IP address ID</param>
+    /// <returns>Collection of server control panel DTOs</returns>
+    public async Task<IEnumerable<ServerControlPanelDto>> GetServerControlPanelsByIpAddressIdAsync(int ipAddressId)
+    {
+        try
+        {
+            _log.Information("Fetching control panels for IP address ID: {IpAddressId}", ipAddressId);
+
+            var controlPanels = await _context.ServerControlPanels
+                .AsNoTracking()
+                .Include(scp => scp.IpAddress)
+                .Where(scp => scp.IpAddressId == ipAddressId)
+                .ToListAsync();
+
+            var controlPanelDtos = controlPanels.Select(MapToDto);
+
+            _log.Information("Successfully fetched {Count} control panels for IP address ID: {IpAddressId}", controlPanels.Count, ipAddressId);
+            return controlPanelDtos;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while fetching control panels for IP address ID: {IpAddressId}", ipAddressId);
             throw;
         }
     }
@@ -287,6 +327,8 @@ public class ServerControlPanelService : IServerControlPanelService
             IsConnectionHealthy = controlPanel.IsConnectionHealthy,
             LastError = controlPanel.LastError,
             Notes = controlPanel.Notes,
+            IpAddressId = controlPanel.IpAddressId,
+            IpAddressValue = controlPanel.IpAddress?.IpAddress,
             CreatedAt = controlPanel.CreatedAt,
             UpdatedAt = controlPanel.UpdatedAt
         };

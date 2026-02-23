@@ -11,4 +11,5 @@ public class ServerIpAddress : EntityBase
     public string? Notes { get; set; }
 
     public Server Server { get; set; } = null!;
+    public ICollection<ServerControlPanel> ControlPanels { get; set; } = new List<ServerControlPanel>();
 }

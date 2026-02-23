@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Operating Systems - DR Admin Demo</title>
+    <title>Control Panel Types - DR Admin Demo</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/css/site.css">
@@ -44,7 +44,8 @@
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="/server-types.html"><i class="bi bi-diagram-3"></i> Server Types</a></li>
                         <li><a class="dropdown-item" href="/host-providers.html"><i class="bi bi-cloud"></i> Host Providers</a></li>
-                        <li><a class="dropdown-item active" href="/operating-systems.html"><i class="bi bi-terminal"></i> Operating Systems</a></li>
+                        <li><a class="dropdown-item" href="/operating-systems.html"><i class="bi bi-terminal"></i> Operating Systems</a></li>
+                        <li><a class="dropdown-item active" href="/control-panel-types.html"><i class="bi bi-toggles"></i> Control Panel Types</a></li>
                     </ul>
                 </li>
                 <li class="nav-item dropdown">
@@ -67,11 +68,11 @@
 <main class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
-            <h2><i class="bi bi-terminal-fill"></i> Operating Systems</h2>
-            <p class="text-muted mb-0">Manage operating system definitions (Ubuntu, Windows Server, CentOS, etc.)</p>
+            <h2><i class="bi bi-toggles"></i> Control Panel Types</h2>
+            <p class="text-muted mb-0">Manage hosting control panel type definitions (cPanel, Plesk, DirectAdmin, etc.)</p>
         </div>
         <button class="btn btn-primary" onclick="openCreate()">
-            <i class="bi bi-plus-circle"></i> New Operating System
+            <i class="bi bi-plus-circle"></i> New Control Panel Type
         </button>
     </div>
     <hr>
@@ -81,24 +82,25 @@
 
     <div class="card shadow-sm">
         <div class="card-header bg-primary text-white">
-            <h5 class="mb-0"><i class="bi bi-terminal"></i> Operating Systems</h5>
+            <h5 class="mb-0"><i class="bi bi-toggles"></i> Control Panel Types</h5>
         </div>
-        <div class="card-body">
+        <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead>
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
                         <tr>
                             <th>ID</th>
                             <th>Name</th>
                             <th>Display Name</th>
-                            <th>Version</th>
                             <th>Description</th>
+                            <th>Version</th>
+                            <th>Website</th>
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody">
-                        <tr><td colspan="7" class="text-center"><div class="spinner-border text-primary"></div></td></tr>
+                        <tr><td colspan="8" class="text-center p-4"><div class="spinner-border text-primary"></div></td></tr>
                     </tbody>
                 </table>
             </div>
@@ -108,34 +110,42 @@
 
 <!-- Create / Edit Modal -->
 <div class="modal fade" id="editModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="modalTitle">New Operating System</h5>
+                <h5 class="modal-title" id="modalTitle">New Control Panel Type</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form id="form" novalidate>
-                    <div class="mb-3">
-                        <label for="name" class="form-label">Internal Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="name" placeholder="e.g. ubuntu-22, windows-2022">
-                        <div class="form-text">Lowercase identifier used internally.</div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="displayName" class="form-label">Display Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="displayName" placeholder="e.g. Ubuntu 22.04 LTS">
-                    </div>
-                    <div class="mb-3">
-                        <label for="version" class="form-label">Version</label>
-                        <input type="text" class="form-control" id="version" placeholder="e.g. 22.04">
-                    </div>
-                    <div class="mb-3">
-                        <label for="description" class="form-label">Description</label>
-                        <textarea class="form-control" id="description" rows="2"></textarea>
-                    </div>
-                    <div class="form-check form-switch">
-                        <input class="form-check-input" type="checkbox" id="isActive" checked>
-                        <label class="form-check-label" for="isActive">Active</label>
+                    <div class="row g-3">
+                        <div class="col-md-5">
+                            <label for="name" class="form-label">Internal Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="name" placeholder="e.g. cpanel, plesk, directadmin">
+                            <div class="form-text">Lowercase identifier used internally.</div>
+                        </div>
+                        <div class="col-md-7">
+                            <label for="displayName" class="form-label">Display Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="displayName" placeholder="e.g. cPanel, Plesk, DirectAdmin">
+                        </div>
+                        <div class="col-12">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea class="form-control" id="description" rows="2" placeholder="Brief description of this control panel software"></textarea>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="version" class="form-label">Version</label>
+                            <input type="text" class="form-control" id="version" placeholder="e.g. 11.x, 18.x">
+                        </div>
+                        <div class="col-md-8">
+                            <label for="websiteUrl" class="form-label">Website URL</label>
+                            <input type="url" class="form-control" id="websiteUrl" placeholder="https://...">
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="isActive" checked>
+                                <label class="form-check-label" for="isActive">Active</label>
+                            </div>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -156,8 +166,8 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p>Delete operating system <strong id="deleteName"></strong>?</p>
-                <p class="text-danger"><i class="bi bi-exclamation-triangle-fill"></i> Servers using this OS must be updated first.</p>
+                <p>Delete control panel type <strong id="deleteName"></strong>?</p>
+                <p class="text-danger"><i class="bi bi-exclamation-triangle-fill"></i> This cannot be undone. Control panels using this type must be reassigned first.</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -171,6 +181,6 @@
 <script src="/js/api-client.js"></script>
 <script src="/js/auth-state.js"></script>
 <script src="/js/utils.js"></script>
-<script src="/js/operating-systems.js"></script>
+<script src="/js/control-panel-types.js"></script>
 </body>
 </html>

@@ -27,6 +27,12 @@ public class ServerControlPanel : EntityBase
     
     public string? Notes { get; set; }
 
+    /// <summary>
+    /// Optional FK to the specific IP address this control panel API is bound to.
+    /// </summary>
+    public int? IpAddressId { get; set; }
+
     public Server Server { get; set; } = null!;
     public ControlPanelType ControlPanelType { get; set; } = null!;
+    public ServerIpAddress? IpAddress { get; set; }
 }

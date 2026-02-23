@@ -72,13 +72,44 @@ public class ServerControlPanelsController : ControllerBase
         try
         {
             _log.Information("API: GetServerControlPanelsByServerId called for server ID {ServerId} by user {User}", serverId, User.Identity?.Name);
-            
+
             var panels = await _serverControlPanelService.GetServerControlPanelsByServerIdAsync(serverId);
             return Ok(panels);
         }
         catch (Exception ex)
         {
             _log.Error(ex, "API: Error in GetServerControlPanelsByServerId for server ID {ServerId}", serverId);
+            return StatusCode(500, "An error occurred while retrieving server control panels");
+        }
+    }
+
+    /// <summary>
+    /// Retrieves control panels bound to a specific IP address
+    /// </summary>
+    /// <param name="ipAddressId">The unique identifier of the server IP address</param>
+    /// <returns>List of control panels bound to the IP address</returns>
+    /// <response code="200">Returns the list of server control panels</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have required role</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpGet("ipaddress/{ipAddressId}")]
+    [Authorize(Policy = "ServerControlPanel.Read")]
+    [ProducesResponseType(typeof(IEnumerable<ServerControlPanelDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<IEnumerable<ServerControlPanelDto>>> GetServerControlPanelsByIpAddressId(int ipAddressId)
+    {
+        try
+        {
+            _log.Information("API: GetServerControlPanelsByIpAddressId called for IP address ID {IpAddressId} by user {User}", ipAddressId, User.Identity?.Name);
+
+            var panels = await _serverControlPanelService.GetServerControlPanelsByIpAddressIdAsync(ipAddressId);
+            return Ok(panels);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in GetServerControlPanelsByIpAddressId for IP address ID {IpAddressId}", ipAddressId);
             return StatusCode(500, "An error occurred while retrieving server control panels");
         }
     }

@@ -7,7 +7,9 @@ The email confirmation page has been successfully created in the `DR_Admin_Front
 ## File Locations
 
 ### 1. HTML Page
+
 **Path**: `DR_Admin_FrontEnd_Demo\wwwroot\confirm-email.html`
+
 - ✅ EXISTS
 - Bootstrap 5.3.0 UI
 - 4 different states (Loading, Success, Error, Missing Token)
@@ -15,7 +17,9 @@ The email confirmation page has been successfully created in the `DR_Admin_Front
 - Navigation to login and home pages
 
 ### 2. JavaScript Logic
+
 **Path**: `DR_Admin_FrontEnd_Demo\wwwroot\js\confirm-email.js`
+
 - ✅ EXISTS
 - Extracts token from URL query parameter
 - Calls backend API: `POST https://localhost:7201/api/v1/myaccount/confirm-email`
@@ -25,7 +29,9 @@ The email confirmation page has been successfully created in the `DR_Admin_Front
 ## Configuration Verified
 
 ### Backend Configuration
+
 **File**: `DR_Admin\appsettings.Development.json`
+
 ```json
 {
   "AppSettings": {
@@ -35,7 +41,9 @@ The email confirmation page has been successfully created in the `DR_Admin_Front
 ```
 
 ### Frontend API Endpoint
+
 **File**: `DR_Admin_FrontEnd_Demo\wwwroot\js\confirm-email.js`
+
 ```javascript
 const BASE_URL = 'https://localhost:7201/api/v1';  ✅ CORRECT BACKEND PORT
 ```
@@ -43,17 +51,20 @@ const BASE_URL = 'https://localhost:7201/api/v1';  ✅ CORRECT BACKEND PORT
 ## How It Works
 
 ### 1. User Registration
+
 ```
 User registers → Backend generates token → Queues confirmation email
 ```
 
 ### 2. Email Link
+
 ```
 Link format: https://localhost:7247/confirm-email?token={token}
 Example: https://localhost:7247/confirm-email?token=d7ZFaml13ifNy%2FN6D7pfPRnxNu%2BxRyJWWFOo1NzjUrM%3D
 ```
 
 ### 3. Confirmation Process
+
 ```
 User clicks link → 
 Frontend page loads → 
@@ -67,11 +78,13 @@ Page shows appropriate state
 ## Page States
 
 ### Loading State (Initial)
+
 - Spinner animation
 - "Confirming Your Email" message
 - Shown while API call is in progress
 
 ### Success State
+
 - Green checkmark icon
 - "Email Confirmed!" message
 - "You can now sign in" info
@@ -80,6 +93,7 @@ Page shows appropriate state
   - "Back to Home" → `/index.html`
 
 ### Error State
+
 - Red X icon
 - "Confirmation Failed" message
 - Helpful troubleshooting steps
@@ -89,6 +103,7 @@ Page shows appropriate state
   - "Back to Home" → `/index.html`
 
 ### Missing Token State
+
 - Warning icon
 - "Missing Confirmation Token" message
 - Info about clicking the correct link
@@ -99,6 +114,7 @@ Page shows appropriate state
 ## Testing the Page
 
 ### 1. Start Both Applications
+
 ```bash
 # Terminal 1: Start backend API
 cd DR_Admin
@@ -112,6 +128,7 @@ dotnet run
 ```
 
 ### 2. Test Registration Flow
+
 1. Navigate to: `https://localhost:7247/register.html`
 2. Fill in registration form
 3. Submit registration
@@ -119,26 +136,33 @@ dotnet run
 5. Get token from registration response or email queue
 
 ### 3. Test Confirmation Page Directly
+
 Navigate to: `https://localhost:7247/confirm-email?token={actualToken}`
 
 ### 4. Test Different Scenarios
 
 **Valid Token**:
+
 ```
 https://localhost:7247/confirm-email?token=d7ZFaml13ifNy%2FN6D7pfPRnxNu%2BxRyJWWFOo1NzjUrM%3D
 ```
+
 Expected: Success state
 
 **Invalid Token**:
+
 ```
 https://localhost:7247/confirm-email?token=invalid123
 ```
+
 Expected: Error state
 
 **Missing Token**:
+
 ```
 https://localhost:7247/confirm-email
 ```
+
 Expected: Missing token state
 
 ## CORS Configuration
@@ -148,6 +172,7 @@ The backend must allow requests from the frontend:
 **File**: `DR_Admin\appsettings.Development.json`
 
 Should have CORS configured to allow `https://localhost:7247`:
+
 ```json
 {
   "CorsSettings": {
@@ -162,16 +187,19 @@ Should have CORS configured to allow `https://localhost:7247`:
 ## API Request Details
 
 ### Endpoint
+
 ```
 POST https://localhost:7201/api/v1/myaccount/confirm-email
 ```
 
 ### Request Headers
+
 ```
 Content-Type: application/json
 ```
 
 ### Request Body
+
 ```json
 {
   "confirmationToken": "d7ZFaml13ifNy%2FN6D7pfPRnxNu%2BxRyJWWFOo1NzjUrM%3D"
@@ -179,6 +207,7 @@ Content-Type: application/json
 ```
 
 ### Success Response (200 OK)
+
 ```json
 {
   "message": "Email confirmed successfully"
@@ -186,6 +215,7 @@ Content-Type: application/json
 ```
 
 ### Error Response (400 Bad Request)
+
 ```json
 {
   "message": "Invalid or expired confirmation token"
@@ -213,21 +243,27 @@ DR_Admin_FrontEnd_Demo/
 ## Troubleshooting
 
 ### Issue: Page not found (404)
+
 **Solution**: Ensure frontend demo is running on port 7247
 
 ### Issue: API call fails (CORS error)
+
 **Solution**: Check CORS settings in backend appsettings
 
 ### Issue: Token not extracted
+
 **Solution**: Verify URL has `?token=` query parameter
 
 ### Issue: "Invalid token" error
+
 **Solution**: 
+
 - Token may be expired (3 days expiration)
 - Token may already be used (single-use)
 - Token may be invalid
 
 ### Issue: Page shows blank
+
 **Solution**: Check browser console for JavaScript errors
 
 ## Next Steps
@@ -247,6 +283,7 @@ https://localhost:7247/confirm-email?token=d7ZFaml13ifNy%2FN6D7pfPRnxNu%2BxRyJWW
 ```
 
 **Key Points**:
+
 - ✅ HTML page exists at `/confirm-email.html`
 - ✅ JavaScript logic handles token extraction and API call
 - ✅ Backend API endpoint is configured at port 7201

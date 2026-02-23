@@ -156,6 +156,7 @@ function renderTable() {
             <td>${s.diskSpaceGB != null ? s.diskSpaceGB + ' GB' : '-'}</td>
             <td>
                 <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-secondary" onclick="location.href='/server-ip-addresses.html?serverId=${s.id}'" title="IP Addresses"><i class="bi bi-router"></i></button>
                     <button class="btn btn-outline-primary" onclick="openEdit(${s.id})" title="Edit"><i class="bi bi-pencil"></i></button>
                     <button class="btn btn-outline-danger" onclick="openDelete(${s.id}, '${esc(s.name)}')" title="Delete"><i class="bi bi-trash"></i></button>
                 </div>

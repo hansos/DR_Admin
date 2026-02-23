@@ -34,57 +34,21 @@ function checkAuthState() {
 }
 // Logout function
 function logout() {
-    // Clear all authentication data
     localStorage.removeItem('userEmail');
     localStorage.removeItem('authToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('username');
-    localStorage.removeItem('userRoles');
-    localStorage.removeItem('tokenExpiresAt');
-
-    console.log('All authentication data cleared');
     window.location.href = '/login.html';
-}
-
-// Demo login function - for testing without backend
-function demoLogin(email = 'demo@example.com') {
-    localStorage.setItem('userEmail', email);
-    localStorage.setItem('authToken', 'demo-token-' + Date.now());
-    console.log('Demo login successful:', email);
-    checkAuthState();
-    return true;
-}
-
-// Check if in demo mode
-function isDemoMode() {
-    const authToken = localStorage.getItem('authToken');
-    return authToken && authToken.startsWith('demo-token-');
 }
 // Check if user is logged in for protected pages
 function requireAuth() {
     const userEmail = localStorage.getItem('userEmail');
     const currentPage = window.location.pathname;
-
     // List of pages that don't require authentication
-    const publicPages = [
-        '/', 
-        '/index.html', 
-        '/login.html', 
-        '/register.html', 
-        '/reset-password.html',
-        '/confirm-email.html'
-    ];
-
-    // For demo purposes, allow access to all pages without authentication
-    // In production, uncomment the lines below to enforce authentication
-    /*
+    const publicPages = ['/', '/index.html', '/login.html', '/register.html', '/reset-password.html'];
     if (!userEmail && !publicPages.includes(currentPage)) {
         // Redirect to login if not authenticated
         window.location.href = '/login.html';
         return false;
     }
-    */
-
     return true;
 }
 // Show user status message on home page
@@ -126,6 +90,4 @@ if (typeof window !== 'undefined') {
     window.logout = logout;
     window.checkAuthState = checkAuthState;
     window.requireAuth = requireAuth;
-    window.demoLogin = demoLogin;
-    window.isDemoMode = isDemoMode;
 }

@@ -64,12 +64,22 @@ public class ServerControlPanelDto
     /// Gets or sets additional notes
     /// </summary>
     public string? Notes { get; set; }
-    
+
+    /// <summary>
+    /// Gets or sets the ID of the server IP address this control panel API is bound to
+    /// </summary>
+    public int? IpAddressId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the IP address value this control panel API is bound to (read-only, populated from related entity)
+    /// </summary>
+    public string? IpAddressValue { get; set; }
+
     /// <summary>
     /// Gets or sets the date and time when the control panel was created
     /// </summary>
     public DateTime CreatedAt { get; set; }
-    
+
     /// <summary>
     /// Gets or sets the date and time when the control panel was last updated
     /// </summary>
@@ -135,7 +145,12 @@ public class CreateServerControlPanelDto
     /// Gets or sets the status (Active, Inactive, Error)
     /// </summary>
     public string Status { get; set; } = "Active";
-    
+
+    /// <summary>
+    /// Gets or sets the ID of the server IP address this control panel API is bound to
+    /// </summary>
+    public int? IpAddressId { get; set; }
+
     /// <summary>
     /// Gets or sets additional notes
     /// </summary>
@@ -191,9 +206,15 @@ public class UpdateServerControlPanelDto
     /// Gets or sets the status (Active, Inactive, Error)
     /// </summary>
     public string Status { get; set; } = "Active";
-    
+
+    /// <summary>
+    /// Gets or sets the ID of the server IP address this control panel API is bound to
+    /// </summary>
+    public int? IpAddressId { get; set; }
+
     /// <summary>
     /// Gets or sets additional notes
     /// </summary>
     public string? Notes { get; set; }
 }
+
