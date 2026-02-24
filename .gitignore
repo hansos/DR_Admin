@@ -371,3 +371,4 @@ FodyWeavers.xsd
 /BATCH_1_ENTITIES.md
 /DR_Home/DR_Home.csproj
 /DR_Home/appsettings.Development.json
+/DR_Admin_ResellerPanel/appsettings.Development.json
