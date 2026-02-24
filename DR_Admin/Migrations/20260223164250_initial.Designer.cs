@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ISPAdmin.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260218054826_ContactPersonRole")]
-    partial class ContactPersonRole
+    [Migration("20260223164250_initial")]
+    partial class initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -693,6 +693,9 @@ namespace ISPAdmin.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
+                    b.Property<long?>("CustomerNumber")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int?>("CustomerStatusId")
                         .HasColumnType("INTEGER");
 
@@ -738,6 +741,9 @@ namespace ISPAdmin.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
+                    b.Property<long>("ReferenceNumber")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -758,6 +764,9 @@ namespace ISPAdmin.Migrations
 
                     b.HasIndex("CountryId");
 
+                    b.HasIndex("CustomerNumber")
+                        .IsUnique();
+
                     b.HasIndex("CustomerStatusId");
 
                     b.HasIndex("Email");
@@ -767,6 +776,9 @@ namespace ISPAdmin.Migrations
                     b.HasIndex("NormalizedCustomerName");
 
                     b.HasIndex("NormalizedName");
+
+                    b.HasIndex("ReferenceNumber")
+                        .IsUnique();
 
                     b.HasIndex("Status");
 
@@ -1079,10 +1091,19 @@ namespace ISPAdmin.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("DnsRecordTypeId")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("DomainId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsPendingSync")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Name")
@@ -1230,6 +1251,23 @@ namespace ISPAdmin.Migrations
                     b.ToTable("DnsZonePackages");
                 });
 
+            modelBuilder.Entity("ISPAdmin.Data.Entities.DnsZonePackageControlPanel", b =>
+                {
+                    b.Property<int>("DnsZonePackageId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ServerControlPanelId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("DnsZonePackageId", "ServerControlPanelId");
+
+                    b.HasIndex("DnsZonePackageId");
+
+                    b.HasIndex("ServerControlPanelId");
+
+                    b.ToTable("DnsZonePackageControlPanels");
+                });
+
             modelBuilder.Entity("ISPAdmin.Data.Entities.DnsZonePackageRecord", b =>
                 {
                     b.Property<int>("Id")
@@ -1281,6 +1319,23 @@ namespace ISPAdmin.Migrations
                     b.HasIndex("DnsZonePackageId");
 
                     b.ToTable("DnsZonePackageRecords");
+                });
+
+            modelBuilder.Entity("ISPAdmin.Data.Entities.DnsZonePackageServer", b =>
+                {
+                    b.Property<int>("DnsZonePackageId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ServerId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("DnsZonePackageId", "ServerId");
+
+                    b.HasIndex("DnsZonePackageId");
+
+                    b.HasIndex("ServerId");
+
+                    b.ToTable("DnsZonePackageServers");
                 });
 
             modelBuilder.Entity("ISPAdmin.Data.Entities.DocumentTemplate", b =>
@@ -1586,6 +1641,49 @@ namespace ISPAdmin.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("ExchangeRateDownloadLogs");
+                });
+
+            modelBuilder.Entity("ISPAdmin.Data.Entities.HostProvider", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("WebsiteUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("HostProviders");
                 });
 
             modelBuilder.Entity("ISPAdmin.Data.Entities.HostingAccount", b =>
@@ -2358,6 +2456,49 @@ namespace ISPAdmin.Migrations
                     b.HasIndex("DomainId", "SortOrder");
 
                     b.ToTable("NameServers");
+                });
+
+            modelBuilder.Entity("ISPAdmin.Data.Entities.OperatingSystem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Version")
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("OperatingSystems");
                 });
 
             modelBuilder.Entity("ISPAdmin.Data.Entities.Order", b =>
@@ -4176,9 +4317,8 @@ namespace ISPAdmin.Migrations
                     b.Property<int?>("DiskSpaceGB")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("HostProvider")
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                    b.Property<int?>("HostProviderId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Location")
                         .HasMaxLength(200)
@@ -4193,18 +4333,14 @@ namespace ISPAdmin.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("OperatingSystem")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                    b.Property<int>("OperatingSystemId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int?>("RamMB")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("ServerType")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
+                    b.Property<int>("ServerTypeId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -4216,9 +4352,13 @@ namespace ISPAdmin.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("HostProviderId");
+
                     b.HasIndex("Name");
 
-                    b.HasIndex("ServerType");
+                    b.HasIndex("OperatingSystemId");
+
+                    b.HasIndex("ServerTypeId");
 
                     b.HasIndex("Status");
 
@@ -4253,6 +4393,9 @@ namespace ISPAdmin.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
+
+                    b.Property<int?>("IpAddressId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<bool?>("IsConnectionHealthy")
                         .HasColumnType("INTEGER");
@@ -4296,6 +4439,8 @@ namespace ISPAdmin.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ControlPanelTypeId");
+
+                    b.HasIndex("IpAddressId");
 
                     b.HasIndex("ServerId");
 
@@ -4354,6 +4499,45 @@ namespace ISPAdmin.Migrations
                     b.HasIndex("Status");
 
                     b.ToTable("ServerIpAddresses");
+                });
+
+            modelBuilder.Entity("ISPAdmin.Data.Entities.ServerType", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("ServerTypes");
                 });
 
             modelBuilder.Entity("ISPAdmin.Data.Entities.Service", b =>
@@ -4672,6 +4856,11 @@ namespace ISPAdmin.Migrations
                         .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsSystemKey")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
 
                     b.Property<string>("Key")
                         .IsRequired()
@@ -5491,6 +5680,25 @@ namespace ISPAdmin.Migrations
                     b.Navigation("SalesAgent");
                 });
 
+            modelBuilder.Entity("ISPAdmin.Data.Entities.DnsZonePackageControlPanel", b =>
+                {
+                    b.HasOne("ISPAdmin.Data.Entities.DnsZonePackage", "DnsZonePackage")
+                        .WithMany("ControlPanels")
+                        .HasForeignKey("DnsZonePackageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ISPAdmin.Data.Entities.ServerControlPanel", "ServerControlPanel")
+                        .WithMany("DnsZonePackages")
+                        .HasForeignKey("ServerControlPanelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("DnsZonePackage");
+
+                    b.Navigation("ServerControlPanel");
+                });
+
             modelBuilder.Entity("ISPAdmin.Data.Entities.DnsZonePackageRecord", b =>
                 {
                     b.HasOne("ISPAdmin.Data.Entities.DnsRecordType", "DnsRecordType")
@@ -5508,6 +5716,25 @@ namespace ISPAdmin.Migrations
                     b.Navigation("DnsRecordType");
 
                     b.Navigation("DnsZonePackage");
+                });
+
+            modelBuilder.Entity("ISPAdmin.Data.Entities.DnsZonePackageServer", b =>
+                {
+                    b.HasOne("ISPAdmin.Data.Entities.DnsZonePackage", "DnsZonePackage")
+                        .WithMany("Servers")
+                        .HasForeignKey("DnsZonePackageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ISPAdmin.Data.Entities.Server", "Server")
+                        .WithMany("DnsZonePackages")
+                        .HasForeignKey("ServerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("DnsZonePackage");
+
+                    b.Navigation("Server");
                 });
 
             modelBuilder.Entity("ISPAdmin.Data.Entities.DomainContact", b =>
@@ -6078,6 +6305,32 @@ namespace ISPAdmin.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("ISPAdmin.Data.Entities.Server", b =>
+                {
+                    b.HasOne("ISPAdmin.Data.Entities.HostProvider", "HostProvider")
+                        .WithMany("Servers")
+                        .HasForeignKey("HostProviderId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("ISPAdmin.Data.Entities.OperatingSystem", "OperatingSystem")
+                        .WithMany("Servers")
+                        .HasForeignKey("OperatingSystemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ISPAdmin.Data.Entities.ServerType", "ServerType")
+                        .WithMany("Servers")
+                        .HasForeignKey("ServerTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("HostProvider");
+
+                    b.Navigation("OperatingSystem");
+
+                    b.Navigation("ServerType");
+                });
+
             modelBuilder.Entity("ISPAdmin.Data.Entities.ServerControlPanel", b =>
                 {
                     b.HasOne("ISPAdmin.Data.Entities.ControlPanelType", "ControlPanelType")
@@ -6086,6 +6339,11 @@ namespace ISPAdmin.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("ISPAdmin.Data.Entities.ServerIpAddress", "IpAddress")
+                        .WithMany("ControlPanels")
+                        .HasForeignKey("IpAddressId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("ISPAdmin.Data.Entities.Server", "Server")
                         .WithMany("ControlPanels")
                         .HasForeignKey("ServerId")
@@ -6093,6 +6351,8 @@ namespace ISPAdmin.Migrations
                         .IsRequired();
 
                     b.Navigation("ControlPanelType");
+
+                    b.Navigation("IpAddress");
 
                     b.Navigation("Server");
                 });
@@ -6348,7 +6608,16 @@ namespace ISPAdmin.Migrations
 
             modelBuilder.Entity("ISPAdmin.Data.Entities.DnsZonePackage", b =>
                 {
+                    b.Navigation("ControlPanels");
+
                     b.Navigation("Records");
+
+                    b.Navigation("Servers");
+                });
+
+            modelBuilder.Entity("ISPAdmin.Data.Entities.HostProvider", b =>
+                {
+                    b.Navigation("Servers");
                 });
 
             modelBuilder.Entity("ISPAdmin.Data.Entities.HostingAccount", b =>
@@ -6382,6 +6651,11 @@ namespace ISPAdmin.Migrations
             modelBuilder.Entity("ISPAdmin.Data.Entities.InvoiceLine", b =>
                 {
                     b.Navigation("VendorCosts");
+                });
+
+            modelBuilder.Entity("ISPAdmin.Data.Entities.OperatingSystem", b =>
+                {
+                    b.Navigation("Servers");
                 });
 
             modelBuilder.Entity("ISPAdmin.Data.Entities.Order", b =>
@@ -6471,9 +6745,26 @@ namespace ISPAdmin.Migrations
                 {
                     b.Navigation("ControlPanels");
 
+                    b.Navigation("DnsZonePackages");
+
                     b.Navigation("HostingAccounts");
 
                     b.Navigation("IpAddresses");
+                });
+
+            modelBuilder.Entity("ISPAdmin.Data.Entities.ServerControlPanel", b =>
+                {
+                    b.Navigation("DnsZonePackages");
+                });
+
+            modelBuilder.Entity("ISPAdmin.Data.Entities.ServerIpAddress", b =>
+                {
+                    b.Navigation("ControlPanels");
+                });
+
+            modelBuilder.Entity("ISPAdmin.Data.Entities.ServerType", b =>
+                {
+                    b.Navigation("Servers");
                 });
 
             modelBuilder.Entity("ISPAdmin.Data.Entities.Service", b =>

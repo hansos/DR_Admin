@@ -1,0 +1,109 @@
+@page "/infrastructure/operating-systems"
+
+<div id="operating-systems-page" class="container-fluid">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+        <div>
+            <h2 class="h4 mb-1"><i class="bi bi-terminal-fill"></i> Operating Systems</h2>
+            <p class="text-muted mb-0">Manage operating system definitions (Ubuntu, Windows Server, CentOS, etc.)</p>
+        </div>
+        <button class="btn btn-primary" id="operating-systems-create" type="button">
+            <i class="bi bi-plus-circle"></i> New Operating System
+        </button>
+    </div>
+
+    <div id="operating-systems-alert-success" class="alert alert-success d-none" role="alert"></div>
+    <div id="operating-systems-alert-error" class="alert alert-danger d-none" role="alert"></div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-terminal"></i> Operating Systems</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Display Name</th>
+                            <th>Version</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="operating-systems-table-body">
+                        <tr>
+                            <td colspan="7" class="text-center">
+                                <div class="spinner-border text-primary"></div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="operating-systems-edit-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="operating-systems-modal-title">New Operating System</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="operating-systems-form" novalidate>
+                    <div class="mb-3">
+                        <label for="operating-systems-name" class="form-label">Internal Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="operating-systems-name" placeholder="e.g. ubuntu-22, windows-2022">
+                        <div class="form-text">Lowercase identifier used internally.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="operating-systems-display-name" class="form-label">Display Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="operating-systems-display-name" placeholder="e.g. Ubuntu 22.04 LTS">
+                    </div>
+                    <div class="mb-3">
+                        <label for="operating-systems-version" class="form-label">Version</label>
+                        <input type="text" class="form-control" id="operating-systems-version" placeholder="e.g. 22.04">
+                    </div>
+                    <div class="mb-3">
+                        <label for="operating-systems-description" class="form-label">Description</label>
+                        <textarea class="form-control" id="operating-systems-description" rows="2"></textarea>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="operating-systems-is-active" checked>
+                        <label class="form-check-label" for="operating-systems-is-active">Active</label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="operating-systems-save">
+                    <i class="bi bi-check-lg"></i> Save
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="operating-systems-delete-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Delete operating system <strong id="operating-systems-delete-name"></strong>?</p>
+                <p class="text-danger"><i class="bi bi-exclamation-triangle-fill"></i> Servers using this OS must be updated first.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="operating-systems-confirm-delete">
+                    <i class="bi bi-trash"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

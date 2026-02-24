@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace ISPAdmin.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -300,6 +300,44 @@ namespace ISPAdmin.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "HostProviders",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    DisplayName = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    Description = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
+                    WebsiteUrl = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
+                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_HostProviders", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "OperatingSystems",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    DisplayName = table.Column<string>(type: "TEXT", maxLength: 150, nullable: false),
+                    Description = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
+                    Version = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
+                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_OperatingSystems", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "OutboxEvents",
                 columns: table => new
                 {
@@ -457,27 +495,21 @@ namespace ISPAdmin.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Servers",
+                name: "ServerTypes",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    Name = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    ServerType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
-                    HostProvider = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
-                    Location = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
-                    OperatingSystem = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-                    Status = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
-                    CpuCores = table.Column<int>(type: "INTEGER", nullable: true),
-                    RamMB = table.Column<int>(type: "INTEGER", nullable: true),
-                    DiskSpaceGB = table.Column<int>(type: "INTEGER", nullable: true),
-                    Notes = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: true),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    DisplayName = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    Description = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
+                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Servers", x => x.Id);
+                    table.PrimaryKey("PK_ServerTypes", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -505,6 +537,7 @@ namespace ISPAdmin.Migrations
                     Key = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
                     Value = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: false),
                     Description = table.Column<string>(type: "TEXT", maxLength: 500, nullable: false),
+                    IsSystemKey = table.Column<bool>(type: "INTEGER", nullable: false, defaultValue: false),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
@@ -650,6 +683,8 @@ namespace ISPAdmin.Migrations
                 {
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
+                    ReferenceNumber = table.Column<long>(type: "INTEGER", nullable: false),
+                    CustomerNumber = table.Column<long>(type: "INTEGER", nullable: true),
                     Name = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
                     Email = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
                     Phone = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
@@ -750,71 +785,45 @@ namespace ISPAdmin.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "ServerControlPanels",
+                name: "Servers",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    ServerId = table.Column<int>(type: "INTEGER", nullable: false),
-                    ControlPanelTypeId = table.Column<int>(type: "INTEGER", nullable: false),
-                    ApiUrl = table.Column<string>(type: "TEXT", maxLength: 500, nullable: false),
-                    Port = table.Column<int>(type: "INTEGER", nullable: false),
-                    UseHttps = table.Column<bool>(type: "INTEGER", nullable: false),
-                    ApiToken = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
-                    ApiKey = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
-                    Username = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
-                    PasswordHash = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
-                    AdditionalSettings = table.Column<string>(type: "TEXT", maxLength: 4000, nullable: true),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                    ServerTypeId = table.Column<int>(type: "INTEGER", nullable: false),
+                    HostProviderId = table.Column<int>(type: "INTEGER", nullable: true),
+                    Location = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
+                    OperatingSystemId = table.Column<int>(type: "INTEGER", nullable: false),
                     Status = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
-                    LastConnectionTest = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    IsConnectionHealthy = table.Column<bool>(type: "INTEGER", nullable: true),
-                    LastError = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: true),
+                    CpuCores = table.Column<int>(type: "INTEGER", nullable: true),
+                    RamMB = table.Column<int>(type: "INTEGER", nullable: true),
+                    DiskSpaceGB = table.Column<int>(type: "INTEGER", nullable: true),
                     Notes = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ServerControlPanels", x => x.Id);
+                    table.PrimaryKey("PK_Servers", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_ServerControlPanels_ControlPanelTypes_ControlPanelTypeId",
-                        column: x => x.ControlPanelTypeId,
-                        principalTable: "ControlPanelTypes",
+                        name: "FK_Servers_HostProviders_HostProviderId",
+                        column: x => x.HostProviderId,
+                        principalTable: "HostProviders",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_ServerControlPanels_Servers_ServerId",
-                        column: x => x.ServerId,
-                        principalTable: "Servers",
+                        name: "FK_Servers_OperatingSystems_OperatingSystemId",
+                        column: x => x.OperatingSystemId,
+                        principalTable: "OperatingSystems",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "ServerIpAddresses",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    ServerId = table.Column<int>(type: "INTEGER", nullable: false),
-                    IpAddress = table.Column<string>(type: "TEXT", maxLength: 45, nullable: false),
-                    IpVersion = table.Column<string>(type: "TEXT", maxLength: 10, nullable: false),
-                    IsPrimary = table.Column<bool>(type: "INTEGER", nullable: false),
-                    Status = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
-                    AssignedTo = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
-                    Notes = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ServerIpAddresses", x => x.Id);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_ServerIpAddresses_Servers_ServerId",
-                        column: x => x.ServerId,
-                        principalTable: "Servers",
+                        name: "FK_Servers_ServerTypes_ServerTypeId",
+                        column: x => x.ServerTypeId,
+                        principalTable: "ServerTypes",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -938,9 +947,13 @@ namespace ISPAdmin.Migrations
                     IsPrimary = table.Column<bool>(type: "INTEGER", nullable: false),
                     IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
                     Notes = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: true),
+                    IsDefaultOwner = table.Column<bool>(type: "INTEGER", nullable: false),
+                    IsDefaultBilling = table.Column<bool>(type: "INTEGER", nullable: false),
+                    IsDefaultTech = table.Column<bool>(type: "INTEGER", nullable: false),
+                    IsDefaultAdministrator = table.Column<bool>(type: "INTEGER", nullable: false),
                     NormalizedFirstName = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
                     NormalizedLastName = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-                    CustomerId = table.Column<int>(type: "INTEGER", nullable: false),
+                    CustomerId = table.Column<int>(type: "INTEGER", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
@@ -1234,6 +1247,33 @@ namespace ISPAdmin.Migrations
                         principalTable: "ServiceTypes",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ServerIpAddresses",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    ServerId = table.Column<int>(type: "INTEGER", nullable: false),
+                    IpAddress = table.Column<string>(type: "TEXT", maxLength: 45, nullable: false),
+                    IpVersion = table.Column<string>(type: "TEXT", maxLength: 10, nullable: false),
+                    IsPrimary = table.Column<bool>(type: "INTEGER", nullable: false),
+                    Status = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    AssignedTo = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
+                    Notes = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ServerIpAddresses", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ServerIpAddresses_Servers_ServerId",
+                        column: x => x.ServerId,
+                        principalTable: "Servers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -1557,63 +1597,27 @@ namespace ISPAdmin.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "HostingAccounts",
+                name: "DnsZonePackageServers",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    CustomerId = table.Column<int>(type: "INTEGER", nullable: false),
-                    ServiceId = table.Column<int>(type: "INTEGER", nullable: false),
-                    ServerId = table.Column<int>(type: "INTEGER", nullable: true),
-                    ServerControlPanelId = table.Column<int>(type: "INTEGER", nullable: true),
-                    Provider = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
-                    Username = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-                    PasswordHash = table.Column<string>(type: "TEXT", nullable: false),
-                    Status = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
-                    ExpirationDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    ExternalAccountId = table.Column<string>(type: "TEXT", nullable: true),
-                    LastSyncedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    SyncStatus = table.Column<string>(type: "TEXT", nullable: true),
-                    ConfigurationJson = table.Column<string>(type: "TEXT", nullable: true),
-                    DiskUsageMB = table.Column<int>(type: "INTEGER", nullable: true),
-                    BandwidthUsageMB = table.Column<int>(type: "INTEGER", nullable: true),
-                    DiskQuotaMB = table.Column<int>(type: "INTEGER", nullable: true),
-                    BandwidthLimitMB = table.Column<int>(type: "INTEGER", nullable: true),
-                    MaxEmailAccounts = table.Column<int>(type: "INTEGER", nullable: true),
-                    MaxDatabases = table.Column<int>(type: "INTEGER", nullable: true),
-                    MaxFtpAccounts = table.Column<int>(type: "INTEGER", nullable: true),
-                    MaxSubdomains = table.Column<int>(type: "INTEGER", nullable: true),
-                    PlanName = table.Column<string>(type: "TEXT", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                    DnsZonePackageId = table.Column<int>(type: "INTEGER", nullable: false),
+                    ServerId = table.Column<int>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_HostingAccounts", x => x.Id);
+                    table.PrimaryKey("PK_DnsZonePackageServers", x => new { x.DnsZonePackageId, x.ServerId });
                     table.ForeignKey(
-                        name: "FK_HostingAccounts_Customers_CustomerId",
-                        column: x => x.CustomerId,
-                        principalTable: "Customers",
+                        name: "FK_DnsZonePackageServers_DnsZonePackages_DnsZonePackageId",
+                        column: x => x.DnsZonePackageId,
+                        principalTable: "DnsZonePackages",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_HostingAccounts_ServerControlPanels_ServerControlPanelId",
-                        column: x => x.ServerControlPanelId,
-                        principalTable: "ServerControlPanels",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_HostingAccounts_Servers_ServerId",
+                        name: "FK_DnsZonePackageServers_Servers_ServerId",
                         column: x => x.ServerId,
                         principalTable: "Servers",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_HostingAccounts_Services_ServiceId",
-                        column: x => x.ServiceId,
-                        principalTable: "Services",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -1735,6 +1739,54 @@ namespace ISPAdmin.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "ServerControlPanels",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    ServerId = table.Column<int>(type: "INTEGER", nullable: false),
+                    ControlPanelTypeId = table.Column<int>(type: "INTEGER", nullable: false),
+                    ApiUrl = table.Column<string>(type: "TEXT", maxLength: 500, nullable: false),
+                    Port = table.Column<int>(type: "INTEGER", nullable: false),
+                    UseHttps = table.Column<bool>(type: "INTEGER", nullable: false),
+                    ApiToken = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
+                    ApiKey = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
+                    Username = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
+                    PasswordHash = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
+                    AdditionalSettings = table.Column<string>(type: "TEXT", maxLength: 4000, nullable: true),
+                    Status = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    LastConnectionTest = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    IsConnectionHealthy = table.Column<bool>(type: "INTEGER", nullable: true),
+                    LastError = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: true),
+                    Notes = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: true),
+                    IpAddressId = table.Column<int>(type: "INTEGER", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ServerControlPanels", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ServerControlPanels_ControlPanelTypes_ControlPanelTypeId",
+                        column: x => x.ControlPanelTypeId,
+                        principalTable: "ControlPanelTypes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_ServerControlPanels_ServerIpAddresses_IpAddressId",
+                        column: x => x.IpAddressId,
+                        principalTable: "ServerIpAddresses",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_ServerControlPanels_Servers_ServerId",
+                        column: x => x.ServerId,
+                        principalTable: "Servers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Orders",
                 columns: table => new
                 {
@@ -1844,6 +1896,339 @@ namespace ISPAdmin.Migrations
                         principalTable: "Services",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "DnsRecords",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    DomainId = table.Column<int>(type: "INTEGER", nullable: false),
+                    DnsRecordTypeId = table.Column<int>(type: "INTEGER", nullable: false),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false),
+                    Value = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: false),
+                    TTL = table.Column<int>(type: "INTEGER", nullable: false),
+                    Priority = table.Column<int>(type: "INTEGER", nullable: true),
+                    Weight = table.Column<int>(type: "INTEGER", nullable: true),
+                    Port = table.Column<int>(type: "INTEGER", nullable: true),
+                    IsPendingSync = table.Column<bool>(type: "INTEGER", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false),
+                    DeletedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_DnsRecords", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_DnsRecords_DnsRecordTypes_DnsRecordTypeId",
+                        column: x => x.DnsRecordTypeId,
+                        principalTable: "DnsRecordTypes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_DnsRecords_RegisteredDomains_DomainId",
+                        column: x => x.DomainId,
+                        principalTable: "RegisteredDomains",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "DomainContactAssignments",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    RegisteredDomainId = table.Column<int>(type: "INTEGER", nullable: false),
+                    ContactPersonId = table.Column<int>(type: "INTEGER", nullable: false),
+                    RoleType = table.Column<int>(type: "INTEGER", nullable: false),
+                    AssignedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
+                    Notes = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_DomainContactAssignments", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_DomainContactAssignments_ContactPersons_ContactPersonId",
+                        column: x => x.ContactPersonId,
+                        principalTable: "ContactPersons",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_DomainContactAssignments_RegisteredDomains_RegisteredDomainId",
+                        column: x => x.RegisteredDomainId,
+                        principalTable: "RegisteredDomains",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "DomainContacts",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    RoleType = table.Column<int>(type: "INTEGER", nullable: false),
+                    FirstName = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    LastName = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    Organization = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
+                    Email = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                    Phone = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    Fax = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
+                    Address1 = table.Column<string>(type: "TEXT", maxLength: 500, nullable: false),
+                    Address2 = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
+                    City = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    State = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
+                    PostalCode = table.Column<string>(type: "TEXT", maxLength: 20, nullable: false),
+                    CountryCode = table.Column<string>(type: "TEXT", maxLength: 2, nullable: false),
+                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
+                    Notes = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: true),
+                    NormalizedFirstName = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    NormalizedLastName = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    NormalizedEmail = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                    DomainId = table.Column<int>(type: "INTEGER", nullable: false),
+                    SourceContactPersonId = table.Column<int>(type: "INTEGER", nullable: true),
+                    LastSyncedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    NeedsSync = table.Column<bool>(type: "INTEGER", nullable: false),
+                    RegistrarContactId = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
+                    RegistrarType = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
+                    IsPrivacyProtected = table.Column<bool>(type: "INTEGER", nullable: false),
+                    RegistrarSnapshot = table.Column<string>(type: "TEXT", nullable: true),
+                    IsCurrentVersion = table.Column<bool>(type: "INTEGER", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_DomainContacts", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_DomainContacts_ContactPersons_SourceContactPersonId",
+                        column: x => x.SourceContactPersonId,
+                        principalTable: "ContactPersons",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_DomainContacts_RegisteredDomains_DomainId",
+                        column: x => x.DomainId,
+                        principalTable: "RegisteredDomains",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "NameServers",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    DomainId = table.Column<int>(type: "INTEGER", nullable: false),
+                    Hostname = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false),
+                    IpAddress = table.Column<string>(type: "TEXT", maxLength: 45, nullable: true),
+                    IsPrimary = table.Column<bool>(type: "INTEGER", nullable: false),
+                    SortOrder = table.Column<int>(type: "INTEGER", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_NameServers", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_NameServers_RegisteredDomains_DomainId",
+                        column: x => x.DomainId,
+                        principalTable: "RegisteredDomains",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "DnsZonePackageControlPanels",
+                columns: table => new
+                {
+                    DnsZonePackageId = table.Column<int>(type: "INTEGER", nullable: false),
+                    ServerControlPanelId = table.Column<int>(type: "INTEGER", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_DnsZonePackageControlPanels", x => new { x.DnsZonePackageId, x.ServerControlPanelId });
+                    table.ForeignKey(
+                        name: "FK_DnsZonePackageControlPanels_DnsZonePackages_DnsZonePackageId",
+                        column: x => x.DnsZonePackageId,
+                        principalTable: "DnsZonePackages",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_DnsZonePackageControlPanels_ServerControlPanels_ServerControlPanelId",
+                        column: x => x.ServerControlPanelId,
+                        principalTable: "ServerControlPanels",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "HostingAccounts",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    CustomerId = table.Column<int>(type: "INTEGER", nullable: false),
+                    ServiceId = table.Column<int>(type: "INTEGER", nullable: false),
+                    ServerId = table.Column<int>(type: "INTEGER", nullable: true),
+                    ServerControlPanelId = table.Column<int>(type: "INTEGER", nullable: true),
+                    Provider = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    Username = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    PasswordHash = table.Column<string>(type: "TEXT", nullable: false),
+                    Status = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    ExpirationDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    ExternalAccountId = table.Column<string>(type: "TEXT", nullable: true),
+                    LastSyncedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    SyncStatus = table.Column<string>(type: "TEXT", nullable: true),
+                    ConfigurationJson = table.Column<string>(type: "TEXT", nullable: true),
+                    DiskUsageMB = table.Column<int>(type: "INTEGER", nullable: true),
+                    BandwidthUsageMB = table.Column<int>(type: "INTEGER", nullable: true),
+                    DiskQuotaMB = table.Column<int>(type: "INTEGER", nullable: true),
+                    BandwidthLimitMB = table.Column<int>(type: "INTEGER", nullable: true),
+                    MaxEmailAccounts = table.Column<int>(type: "INTEGER", nullable: true),
+                    MaxDatabases = table.Column<int>(type: "INTEGER", nullable: true),
+                    MaxFtpAccounts = table.Column<int>(type: "INTEGER", nullable: true),
+                    MaxSubdomains = table.Column<int>(type: "INTEGER", nullable: true),
+                    PlanName = table.Column<string>(type: "TEXT", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_HostingAccounts", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_HostingAccounts_Customers_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_HostingAccounts_ServerControlPanels_ServerControlPanelId",
+                        column: x => x.ServerControlPanelId,
+                        principalTable: "ServerControlPanels",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_HostingAccounts_Servers_ServerId",
+                        column: x => x.ServerId,
+                        principalTable: "Servers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_HostingAccounts_Services_ServiceId",
+                        column: x => x.ServiceId,
+                        principalTable: "Services",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "CouponUsages",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    CouponId = table.Column<int>(type: "INTEGER", nullable: false),
+                    CustomerId = table.Column<int>(type: "INTEGER", nullable: false),
+                    QuoteId = table.Column<int>(type: "INTEGER", nullable: true),
+                    OrderId = table.Column<int>(type: "INTEGER", nullable: true),
+                    DiscountAmount = table.Column<decimal>(type: "TEXT", nullable: false),
+                    UsedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CouponUsages", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CouponUsages_Coupons_CouponId",
+                        column: x => x.CouponId,
+                        principalTable: "Coupons",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_CouponUsages_Customers_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_CouponUsages_Orders_OrderId",
+                        column: x => x.OrderId,
+                        principalTable: "Orders",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_CouponUsages_Quotes_QuoteId",
+                        column: x => x.QuoteId,
+                        principalTable: "Quotes",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Invoices",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    InvoiceNumber = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    CustomerId = table.Column<int>(type: "INTEGER", nullable: false),
+                    Status = table.Column<int>(type: "INTEGER", nullable: false),
+                    IssueDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    DueDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    PaidAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    SubTotal = table.Column<decimal>(type: "TEXT", nullable: false),
+                    TaxAmount = table.Column<decimal>(type: "TEXT", nullable: false),
+                    TotalAmount = table.Column<decimal>(type: "TEXT", nullable: false),
+                    AmountPaid = table.Column<decimal>(type: "TEXT", nullable: false),
+                    AmountDue = table.Column<decimal>(type: "TEXT", nullable: false),
+                    CurrencyCode = table.Column<string>(type: "TEXT", maxLength: 3, nullable: false),
+                    TaxRate = table.Column<decimal>(type: "TEXT", nullable: false),
+                    TaxName = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    BaseCurrencyCode = table.Column<string>(type: "TEXT", nullable: false),
+                    DisplayCurrencyCode = table.Column<string>(type: "TEXT", nullable: false),
+                    ExchangeRate = table.Column<decimal>(type: "TEXT", nullable: true),
+                    BaseTotalAmount = table.Column<decimal>(type: "TEXT", nullable: true),
+                    ExchangeRateDate = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    CustomerName = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                    CustomerAddress = table.Column<string>(type: "TEXT", nullable: false),
+                    CustomerTaxId = table.Column<string>(type: "TEXT", nullable: false),
+                    PaymentReference = table.Column<string>(type: "TEXT", nullable: false),
+                    PaymentMethod = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    Notes = table.Column<string>(type: "TEXT", nullable: false),
+                    InternalComment = table.Column<string>(type: "TEXT", nullable: false),
+                    SelectedPaymentGatewayId = table.Column<int>(type: "INTEGER", nullable: true),
+                    DeletedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    OrderId = table.Column<int>(type: "INTEGER", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Invoices", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Invoices_Customers_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Invoices_Orders_OrderId",
+                        column: x => x.OrderId,
+                        principalTable: "Orders",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Invoices_PaymentGateways_SelectedPaymentGatewayId",
+                        column: x => x.SelectedPaymentGatewayId,
+                        principalTable: "PaymentGateways",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -1981,235 +2366,6 @@ namespace ISPAdmin.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "DnsRecords",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    DomainId = table.Column<int>(type: "INTEGER", nullable: false),
-                    DnsRecordTypeId = table.Column<int>(type: "INTEGER", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false),
-                    Value = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: false),
-                    TTL = table.Column<int>(type: "INTEGER", nullable: false),
-                    Priority = table.Column<int>(type: "INTEGER", nullable: true),
-                    Weight = table.Column<int>(type: "INTEGER", nullable: true),
-                    Port = table.Column<int>(type: "INTEGER", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_DnsRecords", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_DnsRecords_DnsRecordTypes_DnsRecordTypeId",
-                        column: x => x.DnsRecordTypeId,
-                        principalTable: "DnsRecordTypes",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_DnsRecords_RegisteredDomains_DomainId",
-                        column: x => x.DomainId,
-                        principalTable: "RegisteredDomains",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "DomainContacts",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    ContactType = table.Column<string>(type: "TEXT", nullable: false),
-                    FirstName = table.Column<string>(type: "TEXT", nullable: false),
-                    LastName = table.Column<string>(type: "TEXT", nullable: false),
-                    Organization = table.Column<string>(type: "TEXT", nullable: true),
-                    Email = table.Column<string>(type: "TEXT", nullable: false),
-                    Phone = table.Column<string>(type: "TEXT", nullable: false),
-                    Fax = table.Column<string>(type: "TEXT", nullable: true),
-                    Address1 = table.Column<string>(type: "TEXT", nullable: false),
-                    Address2 = table.Column<string>(type: "TEXT", nullable: true),
-                    City = table.Column<string>(type: "TEXT", nullable: false),
-                    State = table.Column<string>(type: "TEXT", nullable: true),
-                    PostalCode = table.Column<string>(type: "TEXT", nullable: false),
-                    CountryCode = table.Column<string>(type: "TEXT", nullable: false),
-                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
-                    Notes = table.Column<string>(type: "TEXT", nullable: true),
-                    NormalizedFirstName = table.Column<string>(type: "TEXT", nullable: false),
-                    NormalizedLastName = table.Column<string>(type: "TEXT", nullable: false),
-                    NormalizedEmail = table.Column<string>(type: "TEXT", nullable: false),
-                    DomainId = table.Column<int>(type: "INTEGER", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_DomainContacts", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_DomainContacts_RegisteredDomains_DomainId",
-                        column: x => x.DomainId,
-                        principalTable: "RegisteredDomains",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "NameServers",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    DomainId = table.Column<int>(type: "INTEGER", nullable: false),
-                    Hostname = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false),
-                    IpAddress = table.Column<string>(type: "TEXT", maxLength: 45, nullable: true),
-                    IsPrimary = table.Column<bool>(type: "INTEGER", nullable: false),
-                    SortOrder = table.Column<int>(type: "INTEGER", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_NameServers", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_NameServers_RegisteredDomains_DomainId",
-                        column: x => x.DomainId,
-                        principalTable: "RegisteredDomains",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "CouponUsages",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    CouponId = table.Column<int>(type: "INTEGER", nullable: false),
-                    CustomerId = table.Column<int>(type: "INTEGER", nullable: false),
-                    QuoteId = table.Column<int>(type: "INTEGER", nullable: true),
-                    OrderId = table.Column<int>(type: "INTEGER", nullable: true),
-                    DiscountAmount = table.Column<decimal>(type: "TEXT", nullable: false),
-                    UsedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_CouponUsages", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_CouponUsages_Coupons_CouponId",
-                        column: x => x.CouponId,
-                        principalTable: "Coupons",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_CouponUsages_Customers_CustomerId",
-                        column: x => x.CustomerId,
-                        principalTable: "Customers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_CouponUsages_Orders_OrderId",
-                        column: x => x.OrderId,
-                        principalTable: "Orders",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_CouponUsages_Quotes_QuoteId",
-                        column: x => x.QuoteId,
-                        principalTable: "Quotes",
-                        principalColumn: "Id");
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Invoices",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    InvoiceNumber = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
-                    CustomerId = table.Column<int>(type: "INTEGER", nullable: false),
-                    Status = table.Column<int>(type: "INTEGER", nullable: false),
-                    IssueDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    DueDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    PaidAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    SubTotal = table.Column<decimal>(type: "TEXT", nullable: false),
-                    TaxAmount = table.Column<decimal>(type: "TEXT", nullable: false),
-                    TotalAmount = table.Column<decimal>(type: "TEXT", nullable: false),
-                    AmountPaid = table.Column<decimal>(type: "TEXT", nullable: false),
-                    AmountDue = table.Column<decimal>(type: "TEXT", nullable: false),
-                    CurrencyCode = table.Column<string>(type: "TEXT", maxLength: 3, nullable: false),
-                    TaxRate = table.Column<decimal>(type: "TEXT", nullable: false),
-                    TaxName = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
-                    BaseCurrencyCode = table.Column<string>(type: "TEXT", nullable: false),
-                    DisplayCurrencyCode = table.Column<string>(type: "TEXT", nullable: false),
-                    ExchangeRate = table.Column<decimal>(type: "TEXT", nullable: true),
-                    BaseTotalAmount = table.Column<decimal>(type: "TEXT", nullable: true),
-                    ExchangeRateDate = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    CustomerName = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    CustomerAddress = table.Column<string>(type: "TEXT", nullable: false),
-                    CustomerTaxId = table.Column<string>(type: "TEXT", nullable: false),
-                    PaymentReference = table.Column<string>(type: "TEXT", nullable: false),
-                    PaymentMethod = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-                    Notes = table.Column<string>(type: "TEXT", nullable: false),
-                    InternalComment = table.Column<string>(type: "TEXT", nullable: false),
-                    SelectedPaymentGatewayId = table.Column<int>(type: "INTEGER", nullable: true),
-                    DeletedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    OrderId = table.Column<int>(type: "INTEGER", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Invoices", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Invoices_Customers_CustomerId",
-                        column: x => x.CustomerId,
-                        principalTable: "Customers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Invoices_Orders_OrderId",
-                        column: x => x.OrderId,
-                        principalTable: "Orders",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_Invoices_PaymentGateways_SelectedPaymentGatewayId",
-                        column: x => x.SelectedPaymentGatewayId,
-                        principalTable: "PaymentGateways",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "HostingDatabaseUsers",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    HostingDatabaseId = table.Column<int>(type: "INTEGER", nullable: false),
-                    Username = table.Column<string>(type: "TEXT", nullable: false),
-                    PasswordHash = table.Column<string>(type: "TEXT", nullable: true),
-                    Privileges = table.Column<string>(type: "TEXT", nullable: true),
-                    AllowedHosts = table.Column<string>(type: "TEXT", nullable: true),
-                    ExternalUserId = table.Column<string>(type: "TEXT", nullable: true),
-                    LastSyncedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    SyncStatus = table.Column<string>(type: "TEXT", nullable: true),
-                    Notes = table.Column<string>(type: "TEXT", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_HostingDatabaseUsers", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_HostingDatabaseUsers_HostingDatabases_HostingDatabaseId",
-                        column: x => x.HostingDatabaseId,
-                        principalTable: "HostingDatabases",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "InvoiceLines",
                 columns: table => new
                 {
@@ -2310,6 +2466,35 @@ namespace ISPAdmin.Migrations
                         name: "FK_PaymentIntents_PaymentGateways_PaymentGatewayId",
                         column: x => x.PaymentGatewayId,
                         principalTable: "PaymentGateways",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "HostingDatabaseUsers",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    HostingDatabaseId = table.Column<int>(type: "INTEGER", nullable: false),
+                    Username = table.Column<string>(type: "TEXT", nullable: false),
+                    PasswordHash = table.Column<string>(type: "TEXT", nullable: true),
+                    Privileges = table.Column<string>(type: "TEXT", nullable: true),
+                    AllowedHosts = table.Column<string>(type: "TEXT", nullable: true),
+                    ExternalUserId = table.Column<string>(type: "TEXT", nullable: true),
+                    LastSyncedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    SyncStatus = table.Column<string>(type: "TEXT", nullable: true),
+                    Notes = table.Column<string>(type: "TEXT", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_HostingDatabaseUsers", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_HostingDatabaseUsers_HostingDatabases_HostingDatabaseId",
+                        column: x => x.HostingDatabaseId,
+                        principalTable: "HostingDatabases",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -2881,6 +3066,12 @@ namespace ISPAdmin.Migrations
                 column: "CountryId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Customers_CustomerNumber",
+                table: "Customers",
+                column: "CustomerNumber",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Customers_CustomerStatusId",
                 table: "Customers",
                 column: "CustomerStatusId");
@@ -2904,6 +3095,12 @@ namespace ISPAdmin.Migrations
                 name: "IX_Customers_NormalizedName",
                 table: "Customers",
                 column: "NormalizedName");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Customers_ReferenceNumber",
+                table: "Customers",
+                column: "ReferenceNumber",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Customers_Status",
@@ -2990,6 +3187,16 @@ namespace ISPAdmin.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_DnsZonePackageControlPanels_DnsZonePackageId",
+                table: "DnsZonePackageControlPanels",
+                column: "DnsZonePackageId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DnsZonePackageControlPanels_ServerControlPanelId",
+                table: "DnsZonePackageControlPanels",
+                column: "ServerControlPanelId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_DnsZonePackageRecords_DnsRecordTypeId",
                 table: "DnsZonePackageRecords",
                 column: "DnsRecordTypeId");
@@ -3030,9 +3237,79 @@ namespace ISPAdmin.Migrations
                 column: "SortOrder");
 
             migrationBuilder.CreateIndex(
+                name: "IX_DnsZonePackageServers_DnsZonePackageId",
+                table: "DnsZonePackageServers",
+                column: "DnsZonePackageId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DnsZonePackageServers_ServerId",
+                table: "DnsZonePackageServers",
+                column: "ServerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DomainContactAssignments_AssignedAt",
+                table: "DomainContactAssignments",
+                column: "AssignedAt");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DomainContactAssignments_ContactPersonId",
+                table: "DomainContactAssignments",
+                column: "ContactPersonId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DomainContactAssignments_IsActive",
+                table: "DomainContactAssignments",
+                column: "IsActive");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DomainContactAssignments_RegisteredDomainId",
+                table: "DomainContactAssignments",
+                column: "RegisteredDomainId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DomainContactAssignments_RegisteredDomainId_RoleType_IsActive",
+                table: "DomainContactAssignments",
+                columns: new[] { "RegisteredDomainId", "RoleType", "IsActive" });
+
+            migrationBuilder.CreateIndex(
                 name: "IX_DomainContacts_DomainId",
                 table: "DomainContacts",
                 column: "DomainId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DomainContacts_DomainId_RoleType_IsCurrentVersion",
+                table: "DomainContacts",
+                columns: new[] { "DomainId", "RoleType", "IsCurrentVersion" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DomainContacts_Email",
+                table: "DomainContacts",
+                column: "Email");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DomainContacts_IsCurrentVersion",
+                table: "DomainContacts",
+                column: "IsCurrentVersion");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DomainContacts_NeedsSync",
+                table: "DomainContacts",
+                column: "NeedsSync");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DomainContacts_NormalizedEmail",
+                table: "DomainContacts",
+                column: "NormalizedEmail");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DomainContacts_RoleType",
+                table: "DomainContacts",
+                column: "RoleType");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DomainContacts_SourceContactPersonId",
+                table: "DomainContacts",
+                column: "SourceContactPersonId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_HostingAccounts_CustomerId",
@@ -3095,6 +3372,17 @@ namespace ISPAdmin.Migrations
                 column: "NormalizedName");
 
             migrationBuilder.CreateIndex(
+                name: "IX_HostProviders_IsActive",
+                table: "HostProviders",
+                column: "IsActive");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_HostProviders_Name",
+                table: "HostProviders",
+                column: "Name",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_InvoiceLines_InvoiceId",
                 table: "InvoiceLines",
                 column: "InvoiceId");
@@ -3149,6 +3437,17 @@ namespace ISPAdmin.Migrations
                 name: "IX_NameServers_DomainId_SortOrder",
                 table: "NameServers",
                 columns: new[] { "DomainId", "SortOrder" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OperatingSystems_IsActive",
+                table: "OperatingSystems",
+                column: "IsActive");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OperatingSystems_Name",
+                table: "OperatingSystems",
+                column: "Name",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Orders_CouponId",
@@ -3551,6 +3850,11 @@ namespace ISPAdmin.Migrations
                 column: "ControlPanelTypeId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ServerControlPanels_IpAddressId",
+                table: "ServerControlPanels",
+                column: "IpAddressId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ServerControlPanels_ServerId",
                 table: "ServerControlPanels",
                 column: "ServerId");
@@ -3576,19 +3880,40 @@ namespace ISPAdmin.Migrations
                 column: "Status");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Servers_HostProviderId",
+                table: "Servers",
+                column: "HostProviderId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Servers_Name",
                 table: "Servers",
                 column: "Name");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Servers_ServerType",
+                name: "IX_Servers_OperatingSystemId",
                 table: "Servers",
-                column: "ServerType");
+                column: "OperatingSystemId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Servers_ServerTypeId",
+                table: "Servers",
+                column: "ServerTypeId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Servers_Status",
                 table: "Servers",
                 column: "Status");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ServerTypes_IsActive",
+                table: "ServerTypes",
+                column: "IsActive");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ServerTypes_Name",
+                table: "ServerTypes",
+                column: "Name",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Services_BillingCycleId",
@@ -3798,9 +4123,6 @@ namespace ISPAdmin.Migrations
                 name: "BackupSchedules");
 
             migrationBuilder.DropTable(
-                name: "ContactPersons");
-
-            migrationBuilder.DropTable(
                 name: "CouponUsages");
 
             migrationBuilder.DropTable(
@@ -3819,10 +4141,19 @@ namespace ISPAdmin.Migrations
                 name: "DnsRecords");
 
             migrationBuilder.DropTable(
+                name: "DnsZonePackageControlPanels");
+
+            migrationBuilder.DropTable(
                 name: "DnsZonePackageRecords");
 
             migrationBuilder.DropTable(
+                name: "DnsZonePackageServers");
+
+            migrationBuilder.DropTable(
                 name: "DocumentTemplates");
+
+            migrationBuilder.DropTable(
+                name: "DomainContactAssignments");
 
             migrationBuilder.DropTable(
                 name: "DomainContacts");
@@ -3882,9 +4213,6 @@ namespace ISPAdmin.Migrations
                 name: "SentEmails");
 
             migrationBuilder.DropTable(
-                name: "ServerIpAddresses");
-
-            migrationBuilder.DropTable(
                 name: "SubscriptionBillingHistories");
 
             migrationBuilder.DropTable(
@@ -3922,6 +4250,9 @@ namespace ISPAdmin.Migrations
 
             migrationBuilder.DropTable(
                 name: "DnsZonePackages");
+
+            migrationBuilder.DropTable(
+                name: "ContactPersons");
 
             migrationBuilder.DropTable(
                 name: "HostingDatabases");
@@ -3975,16 +4306,28 @@ namespace ISPAdmin.Migrations
                 name: "ControlPanelTypes");
 
             migrationBuilder.DropTable(
-                name: "Servers");
+                name: "ServerIpAddresses");
 
             migrationBuilder.DropTable(
                 name: "Invoices");
+
+            migrationBuilder.DropTable(
+                name: "Servers");
 
             migrationBuilder.DropTable(
                 name: "Orders");
 
             migrationBuilder.DropTable(
                 name: "PaymentGateways");
+
+            migrationBuilder.DropTable(
+                name: "HostProviders");
+
+            migrationBuilder.DropTable(
+                name: "OperatingSystems");
+
+            migrationBuilder.DropTable(
+                name: "ServerTypes");
 
             migrationBuilder.DropTable(
                 name: "Quotes");

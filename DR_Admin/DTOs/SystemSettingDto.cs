@@ -26,6 +26,11 @@ public class SystemSettingDto
     public string Description { get; set; } = string.Empty;
 
     /// <summary>
+    /// Gets or sets a value indicating whether the setting is a system key
+    /// </summary>
+    public bool IsSystemKey { get; set; }
+
+    /// <summary>
     /// Gets or sets the date and time when the setting was created
     /// </summary>
     public DateTime CreatedAt { get; set; }
@@ -55,6 +60,11 @@ public class CreateSystemSettingDto
     /// A human-readable description of the setting
     /// </summary>
     public string Description { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Indicates whether the setting is a system key
+    /// </summary>
+    public bool IsSystemKey { get; set; }
 }
 
 /// <summary>
@@ -71,4 +81,9 @@ public class UpdateSystemSettingDto
     /// The updated description of the setting
     /// </summary>
     public string Description { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Indicates whether the setting is a system key
+    /// </summary>
+    public bool IsSystemKey { get; set; }
 }

@@ -48,8 +48,9 @@ public interface ISystemSettingService
     /// <param name="key">The system setting key</param>
     /// <param name="value">The new value</param>
     /// <param name="description">Optional description (used only when creating)</param>
+    /// <param name="isSystemKey">Indicates whether the setting is a system key</param>
     /// <returns>The upserted system setting DTO</returns>
-    Task<SystemSettingDto> UpsertSystemSettingAsync(string key, string value, string? description = null);
+    Task<SystemSettingDto> UpsertSystemSettingAsync(string key, string value, string? description = null, bool isSystemKey = false);
 
     /// <summary>
     /// Deletes a system setting

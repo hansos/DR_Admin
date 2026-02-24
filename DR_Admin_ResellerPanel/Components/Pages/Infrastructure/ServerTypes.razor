@@ -1,0 +1,106 @@
+@page "/infrastructure/server-types"
+
+<div id="server-types-page" class="container-fluid">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+        <div>
+            <h2 class="h4 mb-1"><i class="bi bi-diagram-3-fill"></i> Server Types</h2>
+            <p class="text-muted mb-0">Manage server type definitions (Physical, Cloud, Virtual, etc.)</p>
+        </div>
+        <button class="btn btn-primary" id="server-types-create" type="button">
+            <i class="bi bi-plus-circle"></i> New Server Type
+        </button>
+    </div>
+
+    <div id="server-types-alert-success" class="alert alert-success d-none" role="alert"></div>
+    <div id="server-types-alert-error" class="alert alert-danger d-none" role="alert"></div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-diagram-3"></i> Server Types</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Display Name</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="server-types-table-body">
+                        <tr>
+                            <td colspan="6" class="text-center">
+                                <div class="spinner-border text-primary"></div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="server-types-edit-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="server-types-modal-title">New Server Type</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="server-types-form" novalidate>
+                    <div class="mb-3">
+                        <label for="server-types-name" class="form-label">Internal Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="server-types-name" placeholder="e.g. physical, cloud, virtual">
+                        <div class="form-text">Lowercase identifier used internally.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="server-types-display-name" class="form-label">Display Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="server-types-display-name" placeholder="e.g. Physical, Cloud, Virtual">
+                    </div>
+                    <div class="mb-3">
+                        <label for="server-types-description" class="form-label">Description</label>
+                        <textarea class="form-control" id="server-types-description" rows="2"></textarea>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="server-types-is-active" checked>
+                        <label class="form-check-label" for="server-types-is-active">Active</label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="server-types-save">
+                    <i class="bi bi-check-lg"></i> Save
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="server-types-delete-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Delete server type <strong id="server-types-delete-name"></strong>?</p>
+                <p class="text-danger"><i class="bi bi-exclamation-triangle-fill"></i> This cannot be undone. Servers using this type must be reassigned first.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="server-types-confirm-delete">
+                    <i class="bi bi-trash"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="/js/server-types.js"></script>
+

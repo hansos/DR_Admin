@@ -1006,6 +1006,7 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Key).IsRequired().HasMaxLength(100);
             entity.Property(e => e.Value).HasMaxLength(1000);
             entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.IsSystemKey).HasDefaultValue(false);
             entity.HasIndex(e => e.Key).IsUnique();
         });
 

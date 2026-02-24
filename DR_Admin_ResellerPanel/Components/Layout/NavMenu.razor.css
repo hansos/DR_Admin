@@ -83,12 +83,17 @@
     transform: rotate(180deg);
 }
 
-/* Sub-items container */
+/* Sub-items container - hidden by default, shown when expanded */
 .nav-subitems {
+    display: none;
     padding: 0.125rem 0 0.375rem 2.75rem;
 }
 
-.nav-subitems ::deep .nav-sublink {
+.nav-group.expanded .nav-subitems {
+    display: block;
+}
+
+.nav-sublink {
     display: flex;
     align-items: center;
     height: 2.4rem;
@@ -101,14 +106,15 @@
     transition: background-color 0.15s ease;
 }
 
-.nav-subitems ::deep .nav-sublink:hover {
+.nav-sublink:hover {
     background-color: rgba(255, 255, 255, 0.1);
     color: white;
 }
 
-.nav-subitems ::deep a.active {
+.nav-sublink.active {
     background-color: rgba(255, 255, 255, 0.25);
     color: white;
+    font-weight: 500;
 }
 
 @media (min-width: 641px) {

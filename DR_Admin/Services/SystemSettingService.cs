@@ -133,6 +133,7 @@ public class SystemSettingService : ISystemSettingService
                 Key = createDto.Key,
                 Value = createDto.Value,
                 Description = createDto.Description,
+                IsSystemKey = createDto.IsSystemKey,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -172,6 +173,7 @@ public class SystemSettingService : ISystemSettingService
 
             setting.Value = updateDto.Value;
             setting.Description = updateDto.Description;
+            setting.IsSystemKey = updateDto.IsSystemKey;
             setting.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
@@ -192,8 +194,9 @@ public class SystemSettingService : ISystemSettingService
     /// <param name="key">The system setting key</param>
     /// <param name="value">The new value</param>
     /// <param name="description">Optional description (used only when creating)</param>
+    /// <param name="isSystemKey">Indicates whether the setting is a system key</param>
     /// <returns>The upserted system setting DTO</returns>
-    public async Task<SystemSettingDto> UpsertSystemSettingAsync(string key, string value, string? description = null)
+    public async Task<SystemSettingDto> UpsertSystemSettingAsync(string key, string value, string? description = null, bool isSystemKey = false)
     {
         try
         {
@@ -209,6 +212,7 @@ public class SystemSettingService : ISystemSettingService
                     Key = key,
                     Value = value,
                     Description = description ?? string.Empty,
+                    IsSystemKey = isSystemKey,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 };
@@ -219,6 +223,7 @@ public class SystemSettingService : ISystemSettingService
                 setting.Value = value;
                 if (description != null)
                     setting.Description = description;
+                setting.IsSystemKey = isSystemKey;
                 setting.UpdatedAt = DateTime.UtcNow;
             }
 
@@ -279,6 +284,7 @@ public class SystemSettingService : ISystemSettingService
             Key = setting.Key,
             Value = setting.Value,
             Description = setting.Description,
+            IsSystemKey = setting.IsSystemKey,
             CreatedAt = setting.CreatedAt,
             UpdatedAt = setting.UpdatedAt
         };

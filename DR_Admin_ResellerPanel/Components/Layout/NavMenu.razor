@@ -6,261 +6,224 @@
     </div>
 </div>
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+<input type="checkbox" title="Navigation menu" class="navbar-toggler" id="nav-menu-toggler" />
 
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="nav flex-column">
+<div class="nav-scrollable" id="nav-menu-container">
+    <nav class="nav flex-column" id="nav-menu">
 
-        @* 1. Dashboard *@
-        <div class="nav-group @(IsExpanded("dashboard") ? "expanded" : "")">
-            <button class="nav-group-header" @onclick='() => Toggle("dashboard")' @onclick:stopPropagation="true">
+        <!-- 1. Dashboard -->
+        <div class="nav-group" data-section="dashboard">
+            <button class="nav-group-header" type="button">
                 <i class="bi bi-speedometer2 nav-icon"></i>
                 <span>Dashboard</span>
                 <i class="bi bi-chevron-down nav-chevron"></i>
             </button>
-            @if (IsExpanded("dashboard"))
-            {
-                <div class="nav-subitems">
-                    <NavLink class="nav-link nav-sublink" href="" Match="NavLinkMatch.All">Summary</NavLink>
-                    <NavLink class="nav-link nav-sublink" href="dashboard/expiring-domains" Match="NavLinkMatch.All">Expiring Domains</NavLink>
-                    <NavLink class="nav-link nav-sublink" href="dashboard/invoices" Match="NavLinkMatch.All">Unpaid Invoices</NavLink>
-                    <NavLink class="nav-link nav-sublink" href="dashboard/transfers" Match="NavLinkMatch.All">Ongoing Transfers</NavLink>
-                    <NavLink class="nav-link nav-sublink" href="dashboard/alerts" Match="NavLinkMatch.All">Alerts</NavLink>
-                    <NavLink class="nav-link nav-sublink" href="dashboard/quick-actions" Match="NavLinkMatch.All">Quick Actions</NavLink>
-                </div>
-            }
+            <div class="nav-subitems">
+                <a class="nav-link nav-sublink" href="">Summary</a>
+                <a class="nav-link nav-sublink" href="dashboard/expiring-domains">Expiring Domains</a>
+                <a class="nav-link nav-sublink" href="dashboard/invoices">Unpaid Invoices</a>
+                <a class="nav-link nav-sublink" href="dashboard/transfers">Ongoing Transfers</a>
+                <a class="nav-link nav-sublink" href="dashboard/alerts">Alerts</a>
+                <a class="nav-link nav-sublink" href="dashboard/quick-actions">Quick Actions</a>
+            </div>
         </div>
 
-        @* 2. Domains *@
-        <div class="nav-group @(IsExpanded("domains") ? "expanded" : "")">
-            <button class="nav-group-header" @onclick='() => Toggle("domains")' @onclick:stopPropagation="true">
+        <!-- 2. Domains -->
+        <div class="nav-group" data-section="domains">
+            <button class="nav-group-header" type="button">
                 <i class="bi bi-globe2 nav-icon"></i>
                 <span>Domains</span>
                 <i class="bi bi-chevron-down nav-chevron"></i>
             </button>
-            @if (IsExpanded("domains"))
-            {
-                <div class="nav-subitems">
-                    <NavLink class="nav-link nav-sublink" href="domains" Match="NavLinkMatch.All">Domain List</NavLink>
-                    <NavLink class="nav-link nav-sublink" href="domains/details" Match="NavLinkMatch.All">Domain Details</NavLink>
-                    <NavLink class="nav-link nav-sublink" href="domains/bulk" Match="NavLinkMatch.All">Bulk Operations</NavLink>
-                </div>
-            }
+            <div class="nav-subitems">
+                <a class="nav-link nav-sublink" href="domains">Domain List</a>
+                <a class="nav-link nav-sublink" href="domains/details">Domain Details</a>
+                <a class="nav-link nav-sublink" href="domains/bulk">Bulk Operations</a>
+            </div>
         </div>
 
-        @* 3. DNS & Nameservers *@
-        <div class="nav-group @(IsExpanded("dns") ? "expanded" : "")">
-            <button class="nav-group-header" @onclick='() => Toggle("dns")' @onclick:stopPropagation="true">
+        <!-- 3. DNS & Nameservers -->
+        <div class="nav-group" data-section="dns">
+            <button class="nav-group-header" type="button">
                 <i class="bi bi-hdd-network nav-icon"></i>
                 <span>DNS &amp; Nameservers</span>
                 <i class="bi bi-chevron-down nav-chevron"></i>
             </button>
-            @if (IsExpanded("dns"))
-            {
-                <div class="nav-subitems">
-                    <NavLink class="nav-link nav-sublink" href="dns/zones" Match="NavLinkMatch.All">DNS Zones</NavLink>
-                    <NavLink class="nav-link nav-sublink" href="dns/nameservers" Match="NavLinkMatch.All">Nameserver Management</NavLink>
-                    <NavLink class="nav-link nav-sublink" href="dns/templates" Match="NavLinkMatch.All">DNS Templates</NavLink>
-                    <NavLink class="nav-link nav-sublink" href="dns/history" Match="NavLinkMatch.All">Change History</NavLink>
-                    <NavLink class="nav-link nav-sublink" href="dns/troubleshoot" Match="NavLinkMatch.All">Troubleshooting</NavLink>
-                </div>
-            }
+            <div class="nav-subitems">
+                <a class="nav-link nav-sublink" href="dns/zones">DNS Zones</a>
+                <a class="nav-link nav-sublink" href="dns/nameservers">Nameserver Management</a>
+                <a class="nav-link nav-sublink" href="dns/templates">DNS Templates</a>
+                <a class="nav-link nav-sublink" href="dns/history">Change History</a>
+                <a class="nav-link nav-sublink" href="dns/troubleshoot">Troubleshooting</a>
+            </div>
         </div>
 
-        @* 4. Customers *@
-        <div class="nav-group @(IsExpanded("customers") ? "expanded" : "")">
-            <button class="nav-group-header" @onclick='() => Toggle("customers")' @onclick:stopPropagation="true">
+        <!-- 4. Customers -->
+        <div class="nav-group" data-section="customers">
+            <button class="nav-group-header" type="button">
                 <i class="bi bi-people nav-icon"></i>
                 <span>Customers</span>
                 <i class="bi bi-chevron-down nav-chevron"></i>
             </button>
-            @if (IsExpanded("customers"))
-            {
-                <div class="nav-subitems">
-                    <NavLink class="nav-link nav-sublink" href="customers" Match="NavLinkMatch.All">Customer List</NavLink>
-                    <NavLink class="nav-link nav-sublink" href="customers/details" Match="NavLinkMatch.All">Customer Details</NavLink>
-                    <NavLink class="nav-link nav-sublink" href="customers/domains" Match="NavLinkMatch.All">Customer Domains</NavLink>
-                    <NavLink class="nav-link nav-sublink" href="customers/notes" Match="NavLinkMatch.All">Notes &amp; History</NavLink>
-                    <NavLink class="nav-link nav-sublink" href="customers/communication" Match="NavLinkMatch.All">Communication</NavLink>
-                </div>
-            }
+            <div class="nav-subitems">
+                <a class="nav-link nav-sublink" href="customers">Customer List</a>
+                <a class="nav-link nav-sublink" href="customers/details">Customer Details</a>
+                <a class="nav-link nav-sublink" href="customers/domains">Customer Domains</a>
+                <a class="nav-link nav-sublink" href="customers/notes">Notes &amp; History</a>
+                <a class="nav-link nav-sublink" href="customers/communication">Communication</a>
+            </div>
         </div>
 
-        @* 5. Transfers *@
-        <div class="nav-group @(IsExpanded("transfers") ? "expanded" : "")">
-            <button class="nav-group-header" @onclick='() => Toggle("transfers")' @onclick:stopPropagation="true">
+        <!-- 5. Transfers -->
+        <div class="nav-group" data-section="transfers">
+            <button class="nav-group-header" type="button">
                 <i class="bi bi-arrow-left-right nav-icon"></i>
                 <span>Transfers</span>
                 <i class="bi bi-chevron-down nav-chevron"></i>
             </button>
-            @if (IsExpanded("transfers"))
-            {
-                <div class="nav-subitems">
-                    <NavLink class="nav-link nav-sublink" href="transfers/incoming" Match="NavLinkMatch.All">Incoming Transfers</NavLink>
-                    <NavLink class="nav-link nav-sublink" href="transfers/outgoing" Match="NavLinkMatch.All">Outgoing Transfers</NavLink>
-                    <NavLink class="nav-link nav-sublink" href="transfers/auth-codes" Match="NavLinkMatch.All">Auth Codes</NavLink>
-                    <NavLink class="nav-link nav-sublink" href="transfers/status" Match="NavLinkMatch.All">Status &amp; Errors</NavLink>
-                    <NavLink class="nav-link nav-sublink" href="transfers/registry-rules" Match="NavLinkMatch.All">Registry Rules</NavLink>
-                </div>
-            }
+            <div class="nav-subitems">
+                <a class="nav-link nav-sublink" href="transfers/incoming">Incoming Transfers</a>
+                <a class="nav-link nav-sublink" href="transfers/outgoing">Outgoing Transfers</a>
+                <a class="nav-link nav-sublink" href="transfers/auth-codes">Auth Codes</a>
+                <a class="nav-link nav-sublink" href="transfers/status">Status &amp; Errors</a>
+                <a class="nav-link nav-sublink" href="transfers/registry-rules">Registry Rules</a>
+            </div>
         </div>
 
-        @* 6. Billing & Finance *@
-        <div class="nav-group @(IsExpanded("billing") ? "expanded" : "")">
-            <button class="nav-group-header" @onclick='() => Toggle("billing")' @onclick:stopPropagation="true">
+        <!-- 6. Billing & Finance -->
+        <div class="nav-group" data-section="billing">
+            <button class="nav-group-header" type="button">
                 <i class="bi bi-credit-card nav-icon"></i>
                 <span>Billing &amp; Finance</span>
                 <i class="bi bi-chevron-down nav-chevron"></i>
             </button>
-            @if (IsExpanded("billing"))
-            {
-                <div class="nav-subitems">
-                    <NavLink class="nav-link nav-sublink" href="billing/invoices" Match="NavLinkMatch.All">Invoices</NavLink>
-                    <NavLink class="nav-link nav-sublink" href="billing/payments" Match="NavLinkMatch.All">Payments</NavLink>
-                    <NavLink class="nav-link nav-sublink" href="billing/pricing" Match="NavLinkMatch.All">Pricing</NavLink>
-                    <NavLink class="nav-link nav-sublink" href="billing/reports" Match="NavLinkMatch.All">Reports</NavLink>
-                </div>
-            }
+            <div class="nav-subitems">
+                <a class="nav-link nav-sublink" href="billing/invoices">Invoices</a>
+                <a class="nav-link nav-sublink" href="billing/payments">Payments</a>
+                <a class="nav-link nav-sublink" href="billing/pricing">Pricing</a>
+                <a class="nav-link nav-sublink" href="billing/reports">Reports</a>
+            </div>
         </div>
 
-        @* 7. TLD & Registry Management *@
-        <div class="nav-group @(IsExpanded("tld") ? "expanded" : "")">
-            <button class="nav-group-header" @onclick='() => Toggle("tld")' @onclick:stopPropagation="true">
+        <!-- 7. TLD & Registry Management -->
+        <div class="nav-group" data-section="tld">
+            <button class="nav-group-header" type="button">
                 <i class="bi bi-building nav-icon"></i>
                 <span>TLD &amp; Registry</span>
                 <i class="bi bi-chevron-down nav-chevron"></i>
             </button>
-            @if (IsExpanded("tld"))
-            {
-                <div class="nav-subitems">
-                    <NavLink class="nav-link nav-sublink" href="tld" Match="NavLinkMatch.All">TLD Overview</NavLink>
-                    <NavLink class="nav-link nav-sublink" href="tld/registry-rules" Match="NavLinkMatch.All">Registry Rules</NavLink>
-                    <NavLink class="nav-link nav-sublink" href="tld/pricing" Match="NavLinkMatch.All">Pricing per TLD</NavLink>
-                    <NavLink class="nav-link nav-sublink" href="tld/campaigns" Match="NavLinkMatch.All">Campaigns &amp; Discounts</NavLink>
-                </div>
-            }
+            <div class="nav-subitems">
+                <a class="nav-link nav-sublink" href="tld">TLD Overview</a>
+                <a class="nav-link nav-sublink" href="tld/registry-rules">Registry Rules</a>
+                <a class="nav-link nav-sublink" href="tld/pricing">Pricing per TLD</a>
+                <a class="nav-link nav-sublink" href="tld/campaigns">Campaigns &amp; Discounts</a>
+            </div>
         </div>
 
-        @* 8. Alerts & Automation *@
-        <div class="nav-group @(IsExpanded("alerts") ? "expanded" : "")">
-            <button class="nav-group-header" @onclick='() => Toggle("alerts")' @onclick:stopPropagation="true">
+        <!-- 8. Alerts & Automation -->
+        <div class="nav-group" data-section="alerts">
+            <button class="nav-group-header" type="button">
                 <i class="bi bi-bell nav-icon"></i>
                 <span>Alerts &amp; Automation</span>
                 <i class="bi bi-chevron-down nav-chevron"></i>
             </button>
-            @if (IsExpanded("alerts"))
-            {
-                <div class="nav-subitems">
-                    <NavLink class="nav-link nav-sublink" href="alerts/notifications" Match="NavLinkMatch.All">Notifications</NavLink>
-                    <NavLink class="nav-link nav-sublink" href="alerts/automation" Match="NavLinkMatch.All">Automated Actions</NavLink>
-                    <NavLink class="nav-link nav-sublink" href="alerts/templates" Match="NavLinkMatch.All">Templates</NavLink>
-                </div>
-            }
+            <div class="nav-subitems">
+                <a class="nav-link nav-sublink" href="alerts/notifications">Notifications</a>
+                <a class="nav-link nav-sublink" href="alerts/automation">Automated Actions</a>
+                <a class="nav-link nav-sublink" href="alerts/templates">Templates</a>
+            </div>
         </div>
 
-        @* 9. Reports & Export *@
-        <div class="nav-group @(IsExpanded("reports") ? "expanded" : "")">
-            <button class="nav-group-header" @onclick='() => Toggle("reports")' @onclick:stopPropagation="true">
+        <!-- 9. Reports & Export -->
+        <div class="nav-group" data-section="reports">
+            <button class="nav-group-header" type="button">
                 <i class="bi bi-bar-chart nav-icon"></i>
                 <span>Reports &amp; Export</span>
                 <i class="bi bi-chevron-down nav-chevron"></i>
             </button>
-            @if (IsExpanded("reports"))
-            {
-                <div class="nav-subitems">
-                    <NavLink class="nav-link nav-sublink" href="reports/domains" Match="NavLinkMatch.All">Domain Reports</NavLink>
-                    <NavLink class="nav-link nav-sublink" href="reports/customers" Match="NavLinkMatch.All">Customer Reports</NavLink>
-                    <NavLink class="nav-link nav-sublink" href="reports/finance" Match="NavLinkMatch.All">Finance Reports</NavLink>
-                    <NavLink class="nav-link nav-sublink" href="reports/export" Match="NavLinkMatch.All">Export</NavLink>
-                </div>
-            }
+            <div class="nav-subitems">
+                <a class="nav-link nav-sublink" href="reports/domains">Domain Reports</a>
+                <a class="nav-link nav-sublink" href="reports/customers">Customer Reports</a>
+                <a class="nav-link nav-sublink" href="reports/finance">Finance Reports</a>
+                <a class="nav-link nav-sublink" href="reports/export">Export</a>
+            </div>
         </div>
 
-        @* 10. Integrations *@
-        <div class="nav-group @(IsExpanded("integrations") ? "expanded" : "")">
-            <button class="nav-group-header" @onclick='() => Toggle("integrations")' @onclick:stopPropagation="true">
+        <!-- 10. Integrations -->
+        <div class="nav-group" data-section="integrations">
+            <button class="nav-group-header" type="button">
                 <i class="bi bi-puzzle nav-icon"></i>
                 <span>Integrations</span>
                 <i class="bi bi-chevron-down nav-chevron"></i>
             </button>
-            @if (IsExpanded("integrations"))
-            {
-                <div class="nav-subitems">
-                    <NavLink class="nav-link nav-sublink" href="integrations/registry-apis" Match="NavLinkMatch.All">Registry APIs</NavLink>
-                    <NavLink class="nav-link nav-sublink" href="integrations/payment" Match="NavLinkMatch.All">Payment Solutions</NavLink>
-                    <NavLink class="nav-link nav-sublink" href="integrations/accounting" Match="NavLinkMatch.All">Accounting</NavLink>
-                    <NavLink class="nav-link nav-sublink" href="integrations/email-sms" Match="NavLinkMatch.All">Email &amp; SMS</NavLink>
-                    <NavLink class="nav-link nav-sublink" href="integrations/webhooks" Match="NavLinkMatch.All">Webhooks</NavLink>
-                </div>
-            }
+            <div class="nav-subitems">
+                <a class="nav-link nav-sublink" href="integrations/registry-apis">Registry APIs</a>
+                <a class="nav-link nav-sublink" href="integrations/payment">Payment Solutions</a>
+                <a class="nav-link nav-sublink" href="integrations/accounting">Accounting</a>
+                <a class="nav-link nav-sublink" href="integrations/email-sms">Email &amp; SMS</a>
+                <a class="nav-link nav-sublink" href="integrations/webhooks">Webhooks</a>
+            </div>
         </div>
 
-        @* 11. Users & Roles *@
-        <div class="nav-group @(IsExpanded("users") ? "expanded" : "")">
-            <button class="nav-group-header" @onclick='() => Toggle("users")' @onclick:stopPropagation="true">
+        <!-- 11. Infrastructure -->
+        <div class="nav-group" data-section="infrastructure">
+            <button class="nav-group-header" type="button">
+                <i class="bi bi-hdd-rack nav-icon"></i>
+                <span>Infrastructure</span>
+                <i class="bi bi-chevron-down nav-chevron"></i>
+            </button>
+            <div class="nav-subitems">
+                <a class="nav-link nav-sublink" href="infrastructure/server-types">Server Types</a>
+                <a class="nav-link nav-sublink" href="infrastructure/operating-systems">Operating Systems</a>
+            </div>
+        </div>
+
+        <!-- 12. Users & Roles -->
+        <div class="nav-group" data-section="users">
+            <button class="nav-group-header" type="button">
                 <i class="bi bi-person-badge nav-icon"></i>
                 <span>Users &amp; Roles</span>
                 <i class="bi bi-chevron-down nav-chevron"></i>
             </button>
-            @if (IsExpanded("users"))
-            {
-                <div class="nav-subitems">
-                    <NavLink class="nav-link nav-sublink" href="users" Match="NavLinkMatch.All">Users</NavLink>
-                    <NavLink class="nav-link nav-sublink" href="users/roles" Match="NavLinkMatch.All">Roles &amp; Permissions</NavLink>
-                    <NavLink class="nav-link nav-sublink" href="users/api-keys" Match="NavLinkMatch.All">API Keys</NavLink>
-                    <NavLink class="nav-link nav-sublink" href="users/login-history" Match="NavLinkMatch.All">Login History</NavLink>
-                </div>
-            }
+            <div class="nav-subitems">
+                <a class="nav-link nav-sublink" href="users">Users</a>
+                <a class="nav-link nav-sublink" href="users/roles">Roles &amp; Permissions</a>
+                <a class="nav-link nav-sublink" href="users/api-keys">API Keys</a>
+                <a class="nav-link nav-sublink" href="users/login-history">Login History</a>
+            </div>
         </div>
 
-        @* 12. Settings *@
-        <div class="nav-group @(IsExpanded("settings") ? "expanded" : "")">
-            <button class="nav-group-header" @onclick='() => Toggle("settings")' @onclick:stopPropagation="true">
+        <!-- 13. Settings -->
+        <div class="nav-group" data-section="settings">
+            <button class="nav-group-header" type="button">
                 <i class="bi bi-gear nav-icon"></i>
                 <span>Settings</span>
                 <i class="bi bi-chevron-down nav-chevron"></i>
             </button>
-            @if (IsExpanded("settings"))
-            {
-                <div class="nav-subitems">
-                    <NavLink class="nav-link nav-sublink" href="settings/company" Match="NavLinkMatch.All">Company Setup</NavLink>
-                    <NavLink class="nav-link nav-sublink" href="settings/defaults" Match="NavLinkMatch.All">Default Values</NavLink>
-                    <NavLink class="nav-link nav-sublink" href="settings/language" Match="NavLinkMatch.All">Language &amp; Region</NavLink>
-                    <NavLink class="nav-link nav-sublink" href="settings/deadlines" Match="NavLinkMatch.All">Deadlines</NavLink>
-                    <NavLink class="nav-link nav-sublink" href="settings/security" Match="NavLinkMatch.All">Security</NavLink>
-                </div>
-            }
+            <div class="nav-subitems">
+                <a class="nav-link nav-sublink" href="settings/company">Company Setup</a>
+                <a class="nav-link nav-sublink" href="settings/defaults">Default Values</a>
+                <a class="nav-link nav-sublink" href="settings/language">Language &amp; Region</a>
+                <a class="nav-link nav-sublink" href="settings/deadlines">Deadlines</a>
+                <a class="nav-link nav-sublink" href="settings/security">Security</a>
+            </div>
         </div>
 
-        @* 13. Help & Support *@
-        <div class="nav-group @(IsExpanded("help") ? "expanded" : "")">
-            <button class="nav-group-header" @onclick='() => Toggle("help")' @onclick:stopPropagation="true">
+        <!-- 14. Help & Support -->
+        <div class="nav-group" data-section="help">
+            <button class="nav-group-header" type="button">
                 <i class="bi bi-question-circle nav-icon"></i>
                 <span>Help &amp; Support</span>
                 <i class="bi bi-chevron-down nav-chevron"></i>
             </button>
-            @if (IsExpanded("help"))
-            {
-                <div class="nav-subitems">
-                    <NavLink class="nav-link nav-sublink" href="help/documentation" Match="NavLinkMatch.All">Documentation</NavLink>
-                    <NavLink class="nav-link nav-sublink" href="help/registry-manuals" Match="NavLinkMatch.All">Registry Manuals</NavLink>
-                    <NavLink class="nav-link nav-sublink" href="help/support" Match="NavLinkMatch.All">Support Tickets</NavLink>
-                    <NavLink class="nav-link nav-sublink" href="help/status" Match="NavLinkMatch.All">System Status</NavLink>
-                </div>
-            }
+            <div class="nav-subitems">
+                <a class="nav-link nav-sublink" href="help/documentation">Documentation</a>
+                <a class="nav-link nav-sublink" href="help/registry-manuals">Registry Manuals</a>
+                <a class="nav-link nav-sublink" href="help/support">Support Tickets</a>
+                <a class="nav-link nav-sublink" href="help/status">System Status</a>
+            </div>
         </div>
 
     </nav>
 </div>
-
-@code {
-    private string? _expandedSection;
-
-    private bool IsExpanded(string section) => _expandedSection == section;
-
-    private void Toggle(string section)
-    {
-        _expandedSection = _expandedSection == section ? null : section;
-    }
-}
 

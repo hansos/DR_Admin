@@ -20,4 +20,9 @@ public class SystemSetting : EntityBase
     /// Gets or sets a human-readable description of the setting
     /// </summary>
     public string Description { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the setting is a system key
+    /// </summary>
+    public bool IsSystemKey { get; set; } = false;
 }

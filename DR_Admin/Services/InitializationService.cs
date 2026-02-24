@@ -149,10 +149,10 @@ public class InitializationService : IInitializationService
             var systemSettingsAdded = 0;
             var systemSettings = new[]
             {
-                new SystemSetting { Key = "CNR", Value = "1001", Description = "First customer number"},
-                new SystemSetting { Key = "PNR", Value = "1001", Description = "First reference number"},
-                new SystemSetting { Key = "CSX", Value = "CUST", Description = "customer number prefix"},
-                new SystemSetting { Key = "RSX", Value = "REF", Description = "Reference number prefix"},
+                new SystemSetting { Key = "CNR", Value = "1001", Description = "First customer number", IsSystemKey=true},
+                new SystemSetting { Key = "PNR", Value = "1001", Description = "First reference number", IsSystemKey=true},
+                new SystemSetting { Key = "CSX", Value = "CUST", Description = "customer number prefix", IsSystemKey=true},
+                new SystemSetting { Key = "RSX", Value = "REF", Description = "Reference number prefix", IsSystemKey=true},
             };
 
             foreach (var ss in systemSettings)
