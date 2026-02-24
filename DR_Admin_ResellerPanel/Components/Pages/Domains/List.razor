@@ -6,9 +6,14 @@
             <h2 class="h4 mb-1"><i class="bi bi-globe2"></i> Domains</h2>
             <p class="text-muted mb-0">Manage registered domains.</p>
         </div>
-        <button class="btn btn-primary" id="domains-create" type="button">
-            <i class="bi bi-plus-circle"></i> New Domain
-        </button>
+        <div class="d-flex flex-wrap gap-2">
+            <button class="btn btn-primary" id="domains-create" type="button">
+                <i class="bi bi-plus-circle"></i> New Domain
+            </button>
+            <button class="btn btn-outline-primary" id="domains-import" type="button">
+                <i class="bi bi-cloud-download"></i> Import
+            </button>
+        </div>
     </div>
 
     <div id="domains-alert-success" class="alert alert-success d-none" role="alert"></div>
@@ -60,6 +65,32 @@
                         <ul class="pagination justify-content-center mb-0" id="pagingControlsList"></ul>
                     </nav>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="domains-import-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Import Domains</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted">Merge all domains from the selected registrar into Registered Domains.</p>
+                <div class="mb-3">
+                    <label for="domains-import-registrar" class="form-label">Registrar <span class="text-danger">*</span></label>
+                    <select class="form-select" id="domains-import-registrar">
+                        <option value="">Select registrar</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="domains-import-confirm">
+                    <i class="bi bi-cloud-download"></i> Import
+                </button>
             </div>
         </div>
     </div>

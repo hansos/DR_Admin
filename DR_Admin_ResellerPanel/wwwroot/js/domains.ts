@@ -15,6 +15,12 @@ interface Domain {
     registrar?: { id?: number; Id?: number; name?: string; Name?: string } | null;
 }
 
+interface RegistrarOption {
+    id: number;
+    name: string;
+    code?: string | null;
+}
+
 interface PagedResult<T> {
     data?: T[];
     Data?: T[];
@@ -118,6 +124,7 @@ function extractItems(raw: any): { items: any[]; meta: any } {
 let allDomains: Domain[] = [];
 let editingId: number | null = null;
 let pendingDeleteId: number | null = null;
+let registrarOptions: RegistrarOption[] = [];
 
 let currentPage = 1;
 let pageSize = 25;
@@ -156,11 +163,51 @@ function normalizeItem(item: any): Domain {
     };
 }
 
+function normalizeRegistrarOption(item: any): RegistrarOption {
+    return {
+        id: item.id ?? item.Id ?? 0,
+        name: item.name ?? item.Name ?? '',
+        code: item.code ?? item.Code ?? null,
+    };
+}
+
 async function loadDomains(): Promise<void> {
     const tableBody = document.getElementById('domains-table-body');
     if (!tableBody) {
         return;
     }
+
+async function loadRegistrarsForImport(): Promise<void> {
+    const select = document.getElementById('domains-import-registrar') as HTMLSelectElement | null;
+    if (!select) {
+        return;
+    }
+
+    select.innerHTML = '<option value="">Loading...</option>';
+
+    const response = await apiRequest<RegistrarOption[]>(`${getApiBaseUrl()}/Registrars`, { method: 'GET' });
+    if (!response.success) {
+        select.innerHTML = '<option value="">Select registrar</option>';
+        showError(response.message || 'Failed to load registrars');
+        return;
+    }
+
+    const rawItems = Array.isArray(response.data)
+        ? response.data
+        : Array.isArray((response.data as any)?.data)
+            ? (response.data as any).data
+            : [];
+
+    registrarOptions = rawItems.map(normalizeRegistrarOption);
+    registrarOptions.sort((a, b) => a.name.localeCompare(b.name));
+
+    const options = registrarOptions.map((registrar) => {
+        const label = registrar.code ? `${registrar.name} (${registrar.code})` : registrar.name;
+        return `<option value="${registrar.id}">${esc(label)}</option>`;
+    }).join('');
+
+    select.innerHTML = `<option value="">Select registrar</option>${options}`;
+}
 
     tableBody.innerHTML = '<tr><td colspan="8" class="text-center"><div class="spinner-border text-primary"></div></td></tr>';
 
@@ -171,6 +218,16 @@ async function loadDomains(): Promise<void> {
         tableBody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Failed to load data</td></tr>';
         return;
     }
+
+function openImport(): void {
+    const select = document.getElementById('domains-import-registrar') as HTMLSelectElement | null;
+    if (select) {
+        select.value = '';
+    }
+
+    loadRegistrarsForImport();
+    showModal('domains-import-modal');
+}
 
     const raw = response.data as any;
     const extracted = extractItems(raw);
@@ -187,9 +244,33 @@ async function loadDomains(): Promise<void> {
     renderPagination();
 }
 
+function getSelectValue(id: string): string {
+    const el = document.getElementById(id) as HTMLSelectElement | null;
+    return (el?.value ?? '').trim();
+}
+
 function getCustomerName(domain: Domain): string {
     const cust = domain.customer as any;
     return cust?.name ?? cust?.Name ?? '';
+}
+
+async function importDomains(): Promise<void> {
+    const registrarValue = getSelectValue('domains-import-registrar');
+    const registrarId = Number(registrarValue);
+
+    if (!registrarValue || !Number.isFinite(registrarId) || registrarId <= 0) {
+        showError('Select a registrar to import domains');
+        return;
+    }
+
+    const response = await apiRequest(`${getApiBaseUrl()}/Registrars/${registrarId}/domains/download`, { method: 'POST' });
+    if (response.success) {
+        hideModal('domains-import-modal');
+        showSuccess(response.message || 'Domains imported successfully');
+        loadDomains();
+    } else {
+        showError(response.message || 'Import failed');
+    }
 }
 
 function getRegistrarName(domain: Domain): string {
@@ -621,6 +702,8 @@ function initializeDomainsPage(): void {
 
     document.getElementById('domains-create')?.addEventListener('click', openCreate);
     document.getElementById('domains-save')?.addEventListener('click', saveDomain);
+    document.getElementById('domains-import')?.addEventListener('click', openImport);
+    document.getElementById('domains-import-confirm')?.addEventListener('click', importDomains);
     document.getElementById('domains-confirm-delete')?.addEventListener('click', doDelete);
 
     bindTableActions();

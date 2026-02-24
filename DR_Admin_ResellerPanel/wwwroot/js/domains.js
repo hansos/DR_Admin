@@ -65,6 +65,7 @@
     let allDomains = [];
     let editingId = null;
     let pendingDeleteId = null;
+    let registrarOptions = [];
     let currentPage = 1;
     let pageSize = 25;
     let totalCount = 0;
@@ -100,6 +101,14 @@
             registrar: (_z = (_y = item.registrar) !== null && _y !== void 0 ? _y : item.Registrar) !== null && _z !== void 0 ? _z : null,
         };
     }
+    function normalizeRegistrarOption(item) {
+        var _a, _b, _c, _d, _e, _f;
+        return {
+            id: (_b = (_a = item.id) !== null && _a !== void 0 ? _a : item.Id) !== null && _b !== void 0 ? _b : 0,
+            name: (_d = (_c = item.name) !== null && _c !== void 0 ? _c : item.Name) !== null && _d !== void 0 ? _d : '',
+            code: (_f = (_e = item.code) !== null && _e !== void 0 ? _e : item.Code) !== null && _f !== void 0 ? _f : null,
+        };
+    }
     async function loadDomains() {
         var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s;
         const tableBody = document.getElementById('domains-table-body');
@@ -124,6 +133,32 @@
         currentPage = (_s = (_r = (_q = (_p = meta === null || meta === void 0 ? void 0 : meta.currentPage) !== null && _p !== void 0 ? _p : meta === null || meta === void 0 ? void 0 : meta.CurrentPage) !== null && _q !== void 0 ? _q : raw === null || raw === void 0 ? void 0 : raw.currentPage) !== null && _r !== void 0 ? _r : raw === null || raw === void 0 ? void 0 : raw.CurrentPage) !== null && _s !== void 0 ? _s : currentPage;
         renderTable();
         renderPagination();
+    }
+    async function loadRegistrarsForImport() {
+        const select = document.getElementById('domains-import-registrar');
+        if (!select) {
+            return;
+        }
+        select.innerHTML = '<option value="">Loading...</option>';
+        const response = await apiRequest(`${getApiBaseUrl()}/Registrars`, { method: 'GET' });
+        if (!response.success) {
+            select.innerHTML = '<option value="">Select registrar</option>';
+            showError(response.message || 'Failed to load registrars');
+            return;
+        }
+        const rawItems = Array.isArray(response.data)
+            ? response.data
+            : Array.isArray((_a = response.data) === null || _a === void 0 ? void 0 : _a.data)
+                ? response.data.data
+                : [];
+        registrarOptions = rawItems.map(normalizeRegistrarOption);
+        registrarOptions.sort((a, b) => a.name.localeCompare(b.name));
+        const options = registrarOptions.map((registrar) => {
+            const label = registrar.code ? `${registrar.name} (${registrar.code})` : registrar.name;
+            return `<option value="${registrar.id}">${esc(label)}</option>`;
+        }).join('');
+        select.innerHTML = `<option value="">Select registrar</option>${options}`;
+        var _a;
     }
     function getCustomerName(domain) {
         var _a, _b;
@@ -279,6 +314,14 @@
         setDateTimeLocalValue('domains-registration-date', new Date());
         showModal('domains-edit-modal');
     }
+    function openImport() {
+        const select = document.getElementById('domains-import-registrar');
+        if (select) {
+            select.value = '';
+        }
+        loadRegistrarsForImport();
+        showModal('domains-import-modal');
+    }
     function openEdit(id) {
         var _a, _b, _c;
         const domain = allDomains.find((d) => d.id === id);
@@ -311,6 +354,11 @@
         }
     }
     function getInputValue(id) {
+        var _a;
+        const el = document.getElementById(id);
+        return ((_a = el === null || el === void 0 ? void 0 : el.value) !== null && _a !== void 0 ? _a : '').trim();
+    }
+    function getSelectValue(id) {
         var _a;
         const el = document.getElementById(id);
         return ((_a = el === null || el === void 0 ? void 0 : el.value) !== null && _a !== void 0 ? _a : '').trim();
@@ -374,6 +422,23 @@
         }
         else {
             showError(response.message || 'Save failed');
+        }
+    }
+    async function importDomains() {
+        const registrarValue = getSelectValue('domains-import-registrar');
+        const registrarId = Number(registrarValue);
+        if (!registrarValue || !Number.isFinite(registrarId) || registrarId <= 0) {
+            showError('Select a registrar to import domains');
+            return;
+        }
+        const response = await apiRequest(`${getApiBaseUrl()}/Registrars/${registrarId}/domains/download`, { method: 'POST' });
+        if (response.success) {
+            hideModal('domains-import-modal');
+            showSuccess(response.message || 'Domains imported successfully');
+            loadDomains();
+        }
+        else {
+            showError(response.message || 'Import failed');
         }
     }
     function openDelete(id, name) {
@@ -476,7 +541,7 @@
         modal === null || modal === void 0 ? void 0 : modal.hide();
     }
     function initializeDomainsPage() {
-        var _a, _b, _c, _d;
+        var _a, _b, _c, _d, _e, _f;
         const page = document.getElementById('domains-page');
         if (!page || page.dataset.initialized === 'true') {
             return;
@@ -484,10 +549,12 @@
         page.dataset.initialized = 'true';
         (_a = document.getElementById('domains-create')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', openCreate);
         (_b = document.getElementById('domains-save')) === null || _b === void 0 ? void 0 : _b.addEventListener('click', saveDomain);
-        (_c = document.getElementById('domains-confirm-delete')) === null || _c === void 0 ? void 0 : _c.addEventListener('click', doDelete);
+        (_c = document.getElementById('domains-import')) === null || _c === void 0 ? void 0 : _c.addEventListener('click', openImport);
+        (_d = document.getElementById('domains-import-confirm')) === null || _d === void 0 ? void 0 : _d.addEventListener('click', importDomains);
+        (_e = document.getElementById('domains-confirm-delete')) === null || _e === void 0 ? void 0 : _e.addEventListener('click', doDelete);
         bindTableActions();
         bindPagingControlsActions();
-        (_d = document.getElementById('domains-page-size')) === null || _d === void 0 ? void 0 : _d.addEventListener('change', () => {
+        (_f = document.getElementById('domains-page-size')) === null || _f === void 0 ? void 0 : _f.addEventListener('change', () => {
             currentPage = 1;
             loadDomains();
         });
