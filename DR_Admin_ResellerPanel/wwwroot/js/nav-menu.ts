@@ -1,4 +1,5 @@
 // @ts-nocheck
+(function() {
 let expandedSection: string | null = null;
 let navMenuInitialized = false;
 
@@ -8,7 +9,7 @@ function toggleSection(section: string): void {
     console.log("Ready to toggle the main menu...");
     navGroups.forEach((group) => {
         const groupSection = (group as HTMLElement).dataset.section;
-        console.log(groupSection.data-section)
+        console.log('Toggling section:', groupSection);
         if (groupSection === section) {
             if (expandedSection === section) {
                 // Collapse current section
@@ -60,15 +61,29 @@ function closeMenuOnMobile(): void {
     }
 }
 
+let eventsBound = false;
+
 function bindNavMenuEvents(): void {
-    const navMenu = document.getElementById('nav-menu');
-    if (!navMenu) {
+    console.log('Trying to bind NavMenuEvents...')
+
+    // Use event delegation on document to survive Blazor DOM replacement
+    if (eventsBound) {
+        console.log('Events already bound to document');
         return;
     }
 
-    // Bind click events to section headers
-    navMenu.addEventListener('click', (event) => {
+    eventsBound = true;
+
+    // Bind click events using document-level delegation
+    document.addEventListener('click', (event) => {
         const target = event.target as HTMLElement;
+
+        // Check if click is within nav-menu
+        const navMenu = target.closest('#nav-menu');
+        if (!navMenu) {
+            return;
+        }
+
         const header = target.closest('.nav-group-header') as HTMLElement | null;
 
         if (header) {
@@ -76,6 +91,7 @@ function bindNavMenuEvents(): void {
             event.stopPropagation();
             const group = header.closest('.nav-group') as HTMLElement | null;
             if (group?.dataset.section) {
+                console.log('Header clicked, calling toggleSection');
                 toggleSection(group.dataset.section);
             }
             return;
@@ -87,6 +103,8 @@ function bindNavMenuEvents(): void {
             closeMenuOnMobile();
         }
     });
+
+    console.log('Events bound to document for nav-menu delegation');
 }
 
 function initializeNavMenu(): boolean {
@@ -139,3 +157,9 @@ window.addEventListener('load', () => {
         console.log('EventListener for load already added')
     }
 });
+
+// Listen for Blazor's enhanced navigation
+document.addEventListener('enhancedload', () => {
+    updateActiveLink();
+});
+})();
