@@ -7,6 +7,23 @@
         "sourceMap": true,
         "noEmitOnError": true
     },
-    "files": ["auth.ts", "login.ts", "app-settings.ts", "servers.ts", "server-ip-addresses.ts", "server-types.ts", "operating-systems.ts", "nav-menu.ts", "host-providers.ts", "control-panel-types.ts", "change-password.ts", "forgot-password.ts", "reset-password.ts"]
+    "files": [
+        "auth.ts",
+        "login.ts",
+        "app-settings.ts",
+        "servers.ts",
+        "server-ip-addresses.ts",
+        "server-types.ts",
+        "operating-systems.ts",
+        "nav-menu.ts",
+        "host-providers.ts",
+        "control-panel-types.ts",
+        "change-password.ts",
+        "forgot-password.ts",
+        "reset-password.ts",
+        "users.ts",
+        "roles.ts",
+        "login-histories.ts"
+    ]
 }
 

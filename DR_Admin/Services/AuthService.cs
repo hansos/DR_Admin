@@ -79,6 +79,7 @@ public class AuthService : IAuthService
 
             return new LoginResponseDto
             {
+                UserId = user.Id,
                 AccessToken = accessToken,        // ← Short-lived JWT
                 RefreshToken = refreshToken,      // ← Long-lived, stored in DB
                 Username = user.Username,
@@ -141,6 +142,7 @@ public class AuthService : IAuthService
 
         return new LoginResponseDto
         {
+            UserId = user.Id,
             AccessToken = newAccessToken,
             RefreshToken = newRefreshToken,
             Username = user.Username,

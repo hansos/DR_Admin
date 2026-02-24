@@ -175,6 +175,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<ServerControlPanel> ServerControlPanels { get; set; }
     public DbSet<HostingPackage> HostingPackages { get; set; }
     public DbSet<AuditLog> AuditLogs { get; set; }
+    public DbSet<LoginHistory> LoginHistories { get; set; }
     public DbSet<SystemSetting> SystemSettings { get; set; }
     public DbSet<BackupSchedule> BackupSchedules { get; set; }
     public DbSet<Country> Countries { get; set; }
@@ -997,6 +998,25 @@ public class ApplicationDbContext : DbContext
                 .WithMany(u => u.AuditLogs)
                 .HasForeignKey(e => e.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // LoginHistory configuration
+        modelBuilder.Entity<LoginHistory>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Identifier).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.IPAddress).HasMaxLength(50);
+            entity.Property(e => e.UserAgent).HasMaxLength(500);
+            entity.Property(e => e.FailureReason).HasMaxLength(500);
+
+            entity.HasIndex(e => e.AttemptedAt);
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.IsSuccessful);
+
+            entity.HasOne(e => e.User)
+                .WithMany(u => u.LoginHistories)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         // SystemSetting configuration

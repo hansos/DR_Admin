@@ -18,4 +18,5 @@ public class User : EntityBase
     public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
     public ICollection<Token> Tokens { get; set; } = new List<Token>();
     public ICollection<AuditLog> AuditLogs { get; set; } = new List<AuditLog>();
+    public ICollection<LoginHistory> LoginHistories { get; set; } = new List<LoginHistory>();
 }

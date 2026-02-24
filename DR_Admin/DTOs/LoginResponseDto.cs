@@ -6,6 +6,11 @@ namespace ISPAdmin.DTOs;
 public class LoginResponseDto
 {
     /// <summary>
+    /// Gets or sets the unique identifier of the authenticated user.
+    /// </summary>
+    public int UserId { get; set; }
+
+    /// <summary>
     /// Gets or sets the JWT access token for API authentication
     /// </summary>
     public string AccessToken { get; set; } = string.Empty;

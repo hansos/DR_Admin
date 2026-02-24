@@ -150,31 +150,47 @@ public class UserService : IUserService
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            // Assign role if provided
-            if (!string.IsNullOrWhiteSpace(createDto.Role))
-            {
-                var role = await _context.Roles
-                    .FirstOrDefaultAsync(r => r.Name == createDto.Role);
+            // Assign roles if provided
+            var rolesToAssign = createDto.Roles?
+                .Where(r => !string.IsNullOrWhiteSpace(r))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList() ?? new List<string>();
 
-                if (role != null)
+            if (rolesToAssign.Count > 0)
+            {
+                var roles = await _context.Roles
+                    .Where(r => rolesToAssign.Contains(r.Name))
+                    .ToListAsync();
+
+                var createdUserRoles = new List<UserRole>();
+
+                foreach (var roleName in rolesToAssign)
                 {
+                    var role = roles.FirstOrDefault(r => r.Name == roleName);
+                    if (role == null)
+                    {
+                        _log.Warning("Role {RoleName} not found, skipping assignment", roleName);
+                        continue;
+                    }
+
                     var userRole = new UserRole
                     {
                         UserId = user.Id,
                         RoleId = role.Id
                     };
-                    _context.UserRoles.Add(userRole);
-                    await _context.SaveChangesAsync();
 
-                    // Load the role for the DTO mapping
-                    user.UserRoles.Add(userRole);
-                    userRole.Role = role;
-                    
-                    _log.Information("Assigned role {RoleName} to user {UserId}", createDto.Role, user.Id);
+                    _context.UserRoles.Add(userRole);
+                    createdUserRoles.Add(userRole);
+                    _log.Information("Assigned role {RoleName} to user {UserId}", roleName, user.Id);
                 }
-                else
+
+                await _context.SaveChangesAsync();
+
+                // Load the roles for the DTO mapping
+                foreach (var userRole in createdUserRoles)
                 {
-                    _log.Warning("Role {RoleName} not found, user created without role", createDto.Role);
+                    user.UserRoles.Add(userRole);
+                    userRole.Role = roles.First(r => r.Id == userRole.RoleId);
                 }
             }
 
@@ -231,8 +247,7 @@ public class UserService : IUserService
             await _context.SaveChangesAsync();
 
             // Update roles if provided
-            // Priority: Roles list > single Role > no change
-            if (updateDto.Roles != null || updateDto.Role != null)
+            if (updateDto.Roles != null)
             {
                 // Remove existing roles
                 var existingUserRoles = await _context.UserRoles
@@ -241,19 +256,10 @@ public class UserService : IUserService
 
                 _context.UserRoles.RemoveRange(existingUserRoles);
 
-                // Determine which roles to assign
-                List<string> rolesToAssign = new List<string>();
-
-                if (updateDto.Roles != null && updateDto.Roles.Any())
-                {
-                    // Use the Roles list if provided
-                    rolesToAssign = updateDto.Roles.Where(r => !string.IsNullOrWhiteSpace(r)).ToList();
-                }
-                else if (!string.IsNullOrWhiteSpace(updateDto.Role))
-                {
-                    // Fall back to single Role for backward compatibility
-                    rolesToAssign.Add(updateDto.Role);
-                }
+                var rolesToAssign = updateDto.Roles
+                    .Where(r => !string.IsNullOrWhiteSpace(r))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToList();
 
                 // Add new roles
                 foreach (var roleName in rolesToAssign)

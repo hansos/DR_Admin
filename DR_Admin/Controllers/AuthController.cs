@@ -11,11 +11,13 @@ namespace ISPAdmin.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
+    private readonly ILoginHistoryService _loginHistoryService;
     private static readonly Serilog.ILogger _log = Log.ForContext<AuthController>();
 
-    public AuthController(IAuthService authService)
+    public AuthController(IAuthService authService, ILoginHistoryService loginHistoryService)
     {
         _authService = authService;
+        _loginHistoryService = loginHistoryService;
     }
 
     /// <summary>
@@ -36,10 +38,47 @@ public class AuthController : ControllerBase
         if (result == null)
         {
             _log.Warning("Failed login attempt for username/email: {UsernameOrEmail}", loginRequest.Username);
+
+            try
+            {
+                await _loginHistoryService.CreateLoginHistoryAsync(new CreateLoginHistoryDto
+                {
+                    UserId = null,
+                    Identifier = loginRequest.Username,
+                    IsSuccessful = false,
+                    AttemptedAt = DateTime.UtcNow,
+                    IPAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? string.Empty,
+                    UserAgent = Request.Headers.UserAgent.ToString(),
+                    FailureReason = "Invalid username/email or password"
+                });
+            }
+            catch (Exception ex)
+            {
+                _log.Error(ex, "Failed to write login history entry for unsuccessful login attempt");
+            }
+
             return Unauthorized(new { message = "Invalid username/email or password" });
         }
 
         _log.Information("Successful login for username: {Username}", loginRequest.Username);
+
+        try
+        {
+            await _loginHistoryService.CreateLoginHistoryAsync(new CreateLoginHistoryDto
+            {
+                UserId = result.UserId,
+                Identifier = loginRequest.Username,
+                IsSuccessful = true,
+                AttemptedAt = DateTime.UtcNow,
+                IPAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? string.Empty,
+                UserAgent = Request.Headers.UserAgent.ToString()
+            });
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Failed to write login history entry for successful login");
+        }
+
         return Ok(result);
     }
 

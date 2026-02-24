@@ -110,6 +110,7 @@ builder.Services.AddAuthorization(options =>
 
 // Add services to the container.
 builder.Services.AddTransient<IAuthService, AuthService>();
+builder.Services.AddTransient<ILoginHistoryService, LoginHistoryService>();
 builder.Services.AddTransient<IInitializationService, InitializationService>();
 builder.Services.AddTransient<IMyAccountService, MyAccountService>();
 builder.Services.AddTransient<ICustomerService, CustomerService>();

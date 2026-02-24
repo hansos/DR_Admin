@@ -8,6 +8,7 @@
     <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
   </PropertyGroup>
 
+
   <ItemGroup>
     <Folder Include="Components\Pages\MyAccount\" />
     <Folder Include="Services\" />
