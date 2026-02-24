@@ -33,7 +33,7 @@
             };
         }
         catch (error) {
-            console.error('Forgot password request failed', error);
+            console.error('Reset password request failed', error);
             return {
                 success: false,
                 message: 'Network error. Please try again.',
@@ -41,8 +41,8 @@
         }
     }
     function showSuccess(message) {
-        const alertEl = document.getElementById('forgot-password-alert-success');
-        const errorEl = document.getElementById('forgot-password-alert-error');
+        const alertEl = document.getElementById('reset-password-alert-success');
+        const errorEl = document.getElementById('reset-password-alert-error');
         if (errorEl) {
             errorEl.classList.add('d-none');
             errorEl.textContent = '';
@@ -53,8 +53,8 @@
         }
     }
     function showError(message) {
-        const alertEl = document.getElementById('forgot-password-alert-error');
-        const successEl = document.getElementById('forgot-password-alert-success');
+        const alertEl = document.getElementById('reset-password-alert-error');
+        const successEl = document.getElementById('reset-password-alert-success');
         if (successEl) {
             successEl.classList.add('d-none');
             successEl.textContent = '';
@@ -65,8 +65,8 @@
         }
     }
     function hideAlerts() {
-        const successEl = document.getElementById('forgot-password-alert-success');
-        const errorEl = document.getElementById('forgot-password-alert-error');
+        const successEl = document.getElementById('reset-password-alert-success');
+        const errorEl = document.getElementById('reset-password-alert-error');
         if (successEl) {
             successEl.classList.add('d-none');
             successEl.textContent = '';
@@ -76,57 +76,84 @@
             errorEl.textContent = '';
         }
     }
-    async function requestPasswordReset(email) {
-        const submitBtn = document.getElementById('forgot-password-submit');
+    function getQueryParameter(name) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(name);
+    }
+    async function resetPassword(token, newPassword, confirmPassword) {
+        const submitBtn = document.getElementById('reset-password-submit');
         if (submitBtn) {
             submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sending...';
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Resetting...';
         }
-        const response = await apiRequest(`${getApiBaseUrl()}/MyAccount/request-password-reset`, {
+        const response = await apiRequest(`${getApiBaseUrl()}/MyAccount/reset-password`, {
             method: 'POST',
-            body: JSON.stringify({ email }),
+            body: JSON.stringify({ token, newPassword, confirmPassword }),
         });
         if (submitBtn) {
             submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="bi bi-send"></i> Send Reset Link';
+            submitBtn.innerHTML = '<i class="bi bi-check-lg"></i> Reset Password';
         }
         if (response.success) {
-            showSuccess(response.message || 'If the email address exists in our system, a password reset link has been sent.');
-            const form = document.getElementById('forgot-password-form');
+            showSuccess(response.message || 'Password reset successfully. You can now sign in with your new password.');
+            const form = document.getElementById('reset-password-form');
             if (form) {
                 form.reset();
             }
+            // Redirect to login page after 2 seconds
+            setTimeout(() => {
+                window.location.href = '/login';
+            }, 2000);
         }
         else {
-            showError(response.message || 'Failed to request password reset. Please try again.');
+            showError(response.message || 'Failed to reset password. Please try again or request a new reset link.');
         }
     }
     function bindEvents() {
-        const form = document.getElementById('forgot-password-form');
+        const form = document.getElementById('reset-password-form');
         if (!form) {
             return;
         }
+        // Check if token exists in URL
+        const token = getQueryParameter('token');
+        if (!token) {
+            showError('Invalid or missing reset token. Please request a new password reset.');
+            const submitBtn = document.getElementById('reset-password-submit');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+            }
+            return;
+        }
         form.addEventListener('submit', async (e) => {
-            var _a;
+            var _a, _b;
             e.preventDefault();
             hideAlerts();
-            const emailInput = document.getElementById('forgot-password-email');
-            const email = (_a = emailInput === null || emailInput === void 0 ? void 0 : emailInput.value.trim()) !== null && _a !== void 0 ? _a : '';
-            if (!email) {
-                showError('Please enter your email address.');
+            const newPasswordInput = document.getElementById('reset-password-new');
+            const confirmPasswordInput = document.getElementById('reset-password-confirm');
+            const newPassword = (_a = newPasswordInput === null || newPasswordInput === void 0 ? void 0 : newPasswordInput.value.trim()) !== null && _a !== void 0 ? _a : '';
+            const confirmPassword = (_b = confirmPasswordInput === null || confirmPasswordInput === void 0 ? void 0 : confirmPasswordInput.value.trim()) !== null && _b !== void 0 ? _b : '';
+            if (!newPassword) {
+                showError('Please enter your new password.');
                 return;
             }
-            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailPattern.test(email)) {
-                showError('Please enter a valid email address.');
+            if (newPassword.length < 6) {
+                showError('Password must be at least 6 characters long.');
                 return;
             }
-            await requestPasswordReset(email);
+            if (!confirmPassword) {
+                showError('Please confirm your new password.');
+                return;
+            }
+            if (newPassword !== confirmPassword) {
+                showError('Passwords do not match.');
+                return;
+            }
+            await resetPassword(token, newPassword, confirmPassword);
         });
     }
     let initialized = false;
-    function initializeForgotPassword() {
-        const form = document.getElementById('forgot-password-form');
+    function initializeResetPassword() {
+        const form = document.getElementById('reset-password-form');
         if (!form) {
             return false;
         }
@@ -135,18 +162,18 @@
         }
         initialized = true;
         bindEvents();
-        console.log('Forgot password page initialized');
+        console.log('Reset password page initialized');
         return true;
     }
     function tryInitialize() {
-        if (initializeForgotPassword()) {
+        if (initializeResetPassword()) {
             return;
         }
         let attempts = 0;
         const maxAttempts = 50;
         const interval = setInterval(() => {
             attempts++;
-            if (initializeForgotPassword() || attempts >= maxAttempts) {
+            if (initializeResetPassword() || attempts >= maxAttempts) {
                 clearInterval(interval);
             }
         }, 100);
@@ -157,23 +184,5 @@
     else {
         tryInitialize();
     }
-    function setupBlazorNavListener() {
-        const blazor = window.Blazor;
-        if (blazor === null || blazor === void 0 ? void 0 : blazor.addEventListener) {
-            blazor.addEventListener('enhancedload', () => {
-                initialized = false;
-                tryInitialize();
-            });
-        }
-        else {
-            setTimeout(setupBlazorNavListener, 100);
-        }
-    }
-    setupBlazorNavListener();
-    window.addEventListener('load', () => {
-        if (!initialized) {
-            tryInitialize();
-        }
-    });
 })();
-//# sourceMappingURL=forgot-password.js.map
+//# sourceMappingURL=reset-password.js.map

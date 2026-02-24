@@ -179,8 +179,9 @@ public class MyAccountService : IMyAccountService
                 return false;
             }
 
-            // TODO: In production, use proper password hashing (BCrypt, PBKDF2)
-            user.PasswordHash = newPassword;
+            // Hash the new password
+            var passwordHash = BCrypt.Net.BCrypt.HashPassword(newPassword, workFactor: 12);
+            user.PasswordHash = passwordHash;
             user.UpdatedAt = DateTime.UtcNow;
             passwordResetToken.RevokedAt = DateTime.UtcNow;
 
@@ -208,14 +209,16 @@ public class MyAccountService : IMyAccountService
                 return false;
             }
 
-            // TODO: In production, use proper password hashing (BCrypt, PBKDF2)
-            if (user.PasswordHash != currentPassword)
+            // Verify current password using BCrypt
+            if (!BCrypt.Net.BCrypt.Verify(currentPassword, user.PasswordHash))
             {
                 _log.Warning("Change password failed: Invalid current password - {UserId}", userId);
                 return false;
             }
 
-            user.PasswordHash = newPassword;
+            // Hash the new password
+            var passwordHash = BCrypt.Net.BCrypt.HashPassword(newPassword, workFactor: 12);
+            user.PasswordHash = passwordHash;
             user.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
@@ -242,9 +245,8 @@ public class MyAccountService : IMyAccountService
                 return false;
             }
 
-            // Verify password
-            // TODO: In production, use proper password hashing (BCrypt, PBKDF2)
-            if (user.PasswordHash != password)
+            // Verify password using BCrypt
+            if (!BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
             {
                 _log.Warning("Patch email failed: Invalid password - {UserId}", userId);
                 return false;
@@ -430,7 +432,7 @@ public class MyAccountService : IMyAccountService
 
     private async Task QueueEmailConfirmationAsync(string email, string token, int userId, int? customerId)
     {
-        var confirmationUrl = $"{_appSettings.FrontendBaseUrl}/confirm-email?token={Uri.EscapeDataString(token)}";
+        var confirmationUrl = $"{_appSettings.FrontendBaseUrl}{_appSettings.EmailConfirmationPath}?token={Uri.EscapeDataString(token)}";
 
         // Create template model
         var model = new EmailConfirmationModel
@@ -461,7 +463,7 @@ public class MyAccountService : IMyAccountService
 
     private async Task QueuePasswordResetEmailAsync(string email, string token, int userId, int? customerId)
     {
-        var resetUrl = $"{_appSettings.FrontendBaseUrl}/reset-password?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(email)}";
+        var resetUrl = $"{_appSettings.FrontendBaseUrl}{_appSettings.PasswordResetPath}?token={Uri.EscapeDataString(token)}";
 
         // Create template model
         var model = new PasswordResetModel
@@ -528,6 +530,51 @@ public class MyAccountService : IMyAccountService
         catch (Exception ex)
         {
             _log.Error(ex, "Error during password reset request for: {Email}", email);
+            return false;
+        }
+    }
+
+    public async Task<bool> ResetPasswordWithTokenAsync(string token, string newPassword)
+    {
+        try
+        {
+            // Find the token
+            var passwordResetToken = await _context.Tokens
+                .Include(t => t.User)
+                .FirstOrDefaultAsync(t => t.TokenType == "PasswordReset" 
+                    && t.TokenValue == token 
+                    && t.RevokedAt == null 
+                    && t.Expiry > DateTime.UtcNow);
+
+            if (passwordResetToken == null)
+            {
+                _log.Warning("Reset password failed: Invalid or expired token");
+                return false;
+            }
+
+            var user = passwordResetToken.User;
+            if (user == null)
+            {
+                _log.Warning("Reset password failed: User not found for token");
+                return false;
+            }
+
+            // Hash the new password
+            var passwordHash = BCrypt.Net.BCrypt.HashPassword(newPassword, workFactor: 12);
+            user.PasswordHash = passwordHash;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            // Revoke the token
+            passwordResetToken.RevokedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            _log.Information("Password reset successfully for user: {UserId}", user.Id);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error during password reset with token");
             return false;
         }
     }

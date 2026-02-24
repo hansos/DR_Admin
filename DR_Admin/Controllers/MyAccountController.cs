@@ -149,6 +149,53 @@ public class MyAccountController : ControllerBase
     }
 
     /// <summary>
+    /// Resets password using password reset token (no email required)
+    /// </summary>
+    /// <param name="request">Token, new password, and password confirmation</param>
+    /// <returns>Success status message</returns>
+    /// <response code="200">If password was reset successfully</response>
+    /// <response code="400">If required fields are missing, passwords don't match, or token is invalid/expired</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpPost("reset-password")]
+    [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult> ResetPassword([FromBody] ResetPasswordWithTokenRequestDto request)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(request.Token) || string.IsNullOrEmpty(request.NewPassword))
+            {
+                _log.Warning("Reset password attempt with missing required fields");
+                return BadRequest(new { message = "Token and new password are required" });
+            }
+
+            if (request.NewPassword != request.ConfirmPassword)
+            {
+                _log.Warning("Reset password attempt with mismatched passwords");
+                return BadRequest(new { message = "Passwords do not match" });
+            }
+
+            var result = await _myAccountService.ResetPasswordWithTokenAsync(request.Token, request.NewPassword);
+
+            if (!result)
+            {
+                _log.Warning("Reset password failed with token");
+                return BadRequest(new { message = "Invalid or expired token" });
+            }
+
+            _log.Information("Password reset successfully");
+            return Ok(new { message = "Password reset successfully" });
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error during password reset");
+            return StatusCode(500, new { message = "An error occurred while resetting password" });
+        }
+    }
+
+    /// <summary>
     /// Sets password for a new account or after password reset using a token
     /// </summary>
     /// <param name="request">Email, token, new password, and password confirmation</param>

@@ -43,4 +43,9 @@ public interface IMyAccountService
     /// Request password reset and send email with reset token
     /// </summary>
     Task<bool> RequestPasswordResetAsync(string email);
+
+    /// <summary>
+    /// Reset password using password reset token (no email required)
+    /// </summary>
+    Task<bool> ResetPasswordWithTokenAsync(string token, string newPassword);
 }

@@ -81,6 +81,16 @@ public class RequestPasswordResetDto
 }
 
 /// <summary>
+/// Request DTO for resetting password with token
+/// </summary>
+public class ResetPasswordWithTokenRequestDto
+{
+    public string Token { get; set; } = string.Empty;
+    public string NewPassword { get; set; } = string.Empty;
+    public string ConfirmPassword { get; set; } = string.Empty;
+}
+
+/// <summary>
 /// Request DTO for changing password (authenticated user)
 /// </summary>
 public class ChangePasswordRequestDto

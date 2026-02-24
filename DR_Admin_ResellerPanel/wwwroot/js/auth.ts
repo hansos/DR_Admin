@@ -85,7 +85,9 @@ function authUpdateTopRow(): void {
 function authEnforce(): void {
     const path = window.location.pathname.toLowerCase();
     const isPublicRoute = path === '/login' || path.startsWith('/login/') ||
-                          path === '/forgot-password' || path.startsWith('/forgot-password/');
+                          path === '/forgot-password' || path.startsWith('/forgot-password/') ||
+                          path === '/my-account/change-password' || path.startsWith('/my-account/change-password') ||
+                          path === '/my-account/confirm-email' || path.startsWith('/my-account/confirm-email');
     const expired = authIsExpired();
 
     if (expired) {

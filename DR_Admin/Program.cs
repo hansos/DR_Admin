@@ -38,6 +38,8 @@ var appSettings = new AppSettings
 {
     DefaultConnection = builder.Configuration.GetConnectionString("DefaultConnection") ?? string.Empty,
     FrontendBaseUrl = builder.Configuration["AppSettings:FrontendBaseUrl"] ?? "https://localhost:5001",
+    EmailConfirmationPath = builder.Configuration["AppSettings:EmailConfirmationPath"] ?? "/confirm-email",
+    PasswordResetPath = builder.Configuration["AppSettings:PasswordResetPath"] ?? "/reset-password",
     DbSettings = builder.Configuration.GetSection("DbSettings").Get<DbSettings>() ?? new DbSettings()
 };
 builder.Services.AddSingleton(appSettings);

@@ -1,212 +1,125 @@
-var __assign = (this && this.__assign) || function () {
-    __assign = Object.assign || function(t) {
-        for (var s, i = 1, n = arguments.length; i < n; i++) {
-            s = arguments[i];
-            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-                t[p] = s[p];
-        }
-        return t;
-    };
-    return __assign.apply(this, arguments);
-};
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator = (this && this.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g = Object.create((typeof Iterator === "function" ? Iterator : Object).prototype);
-    return g.next = verb(0), g["throw"] = verb(1), g["return"] = verb(2), typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (g && (g = 0, op[0] && (_ = 0)), _) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
+"use strict";
 // @ts-nocheck
 (function () {
     function getApiBaseUrl() {
         var _a, _b;
         return (_b = (_a = window.AppSettings) === null || _a === void 0 ? void 0 : _a.apiBaseUrl) !== null && _b !== void 0 ? _b : '';
     }
-    var allServerIpAddresses = [];
-    var servers = [];
-    var serverNameLookup = {};
-    var editingId = null;
-    var pendingDeleteId = null;
+    let allServerIpAddresses = [];
+    let servers = [];
+    const serverNameLookup = {};
+    let editingId = null;
+    let pendingDeleteId = null;
     function getAuthToken() {
-        var auth = window.Auth;
+        const auth = window.Auth;
         if (auth === null || auth === void 0 ? void 0 : auth.getToken) {
             return auth.getToken();
         }
         return sessionStorage.getItem('rp_authToken');
     }
-    function apiRequest(endpoint_1) {
-        return __awaiter(this, arguments, void 0, function (endpoint, options) {
-            var headers, authToken, response, contentType, hasJson, data, _a, error_1;
-            var _b, _c, _d;
-            if (options === void 0) { options = {}; }
-            return __generator(this, function (_e) {
-                switch (_e.label) {
-                    case 0:
-                        _e.trys.push([0, 5, , 6]);
-                        headers = __assign({ 'Content-Type': 'application/json' }, options.headers);
-                        authToken = getAuthToken();
-                        if (authToken) {
-                            headers['Authorization'] = "Bearer ".concat(authToken);
-                        }
-                        return [4 /*yield*/, fetch(endpoint, __assign(__assign({}, options), { headers: headers, credentials: 'include' }))];
-                    case 1:
-                        response = _e.sent();
-                        contentType = (_b = response.headers.get('content-type')) !== null && _b !== void 0 ? _b : '';
-                        hasJson = contentType.includes('application/json');
-                        if (!hasJson) return [3 /*break*/, 3];
-                        return [4 /*yield*/, response.json()];
-                    case 2:
-                        _a = _e.sent();
-                        return [3 /*break*/, 4];
-                    case 3:
-                        _a = null;
-                        _e.label = 4;
-                    case 4:
-                        data = _a;
-                        if (!response.ok) {
-                            return [2 /*return*/, {
-                                    success: false,
-                                    message: (data && ((_c = data.message) !== null && _c !== void 0 ? _c : data.title)) || "Request failed with status ".concat(response.status),
-                                }];
-                        }
-                        return [2 /*return*/, {
-                                success: (data === null || data === void 0 ? void 0 : data.success) !== false,
-                                data: (_d = data === null || data === void 0 ? void 0 : data.data) !== null && _d !== void 0 ? _d : data,
-                                message: data === null || data === void 0 ? void 0 : data.message,
-                            }];
-                    case 5:
-                        error_1 = _e.sent();
-                        console.error('Server IP addresses request failed', error_1);
-                        return [2 /*return*/, {
-                                success: false,
-                                message: 'Network error. Please try again.',
-                            }];
-                    case 6: return [2 /*return*/];
-                }
-            });
-        });
+    async function apiRequest(endpoint, options = {}) {
+        var _a, _b, _c;
+        try {
+            const headers = Object.assign({ 'Content-Type': 'application/json' }, options.headers);
+            const authToken = getAuthToken();
+            if (authToken) {
+                headers['Authorization'] = `Bearer ${authToken}`;
+            }
+            const response = await fetch(endpoint, Object.assign(Object.assign({}, options), { headers, credentials: 'include' }));
+            const contentType = (_a = response.headers.get('content-type')) !== null && _a !== void 0 ? _a : '';
+            const hasJson = contentType.includes('application/json');
+            const data = hasJson ? await response.json() : null;
+            if (!response.ok) {
+                return {
+                    success: false,
+                    message: (data && ((_b = data.message) !== null && _b !== void 0 ? _b : data.title)) || `Request failed with status ${response.status}`,
+                };
+            }
+            return {
+                success: (data === null || data === void 0 ? void 0 : data.success) !== false,
+                data: (_c = data === null || data === void 0 ? void 0 : data.data) !== null && _c !== void 0 ? _c : data,
+                message: data === null || data === void 0 ? void 0 : data.message,
+            };
+        }
+        catch (error) {
+            console.error('Server IP addresses request failed', error);
+            return {
+                success: false,
+                message: 'Network error. Please try again.',
+            };
+        }
     }
-    function loadServers() {
-        return __awaiter(this, void 0, void 0, function () {
-            var response, rawItems;
-            var _a;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0: return [4 /*yield*/, apiRequest("".concat(getApiBaseUrl(), "/Servers"), { method: 'GET' })];
-                    case 1:
-                        response = _b.sent();
-                        rawItems = Array.isArray(response.data)
-                            ? response.data
-                            : Array.isArray((_a = response.data) === null || _a === void 0 ? void 0 : _a.data)
-                                ? response.data.data
-                                : [];
-                        servers = rawItems.map(function (item) {
-                            var _a, _b, _c, _d;
-                            return ({
-                                id: (_b = (_a = item.id) !== null && _a !== void 0 ? _a : item.Id) !== null && _b !== void 0 ? _b : 0,
-                                name: (_d = (_c = item.name) !== null && _c !== void 0 ? _c : item.Name) !== null && _d !== void 0 ? _d : '',
-                            });
-                        });
-                        Object.keys(serverNameLookup).forEach(function (key) { return delete serverNameLookup[Number(key)]; });
-                        servers.forEach(function (srv) {
-                            if (srv.id) {
-                                serverNameLookup[srv.id] = srv.name;
-                            }
-                        });
-                        populateServerDropdown();
-                        return [2 /*return*/];
-                }
+    async function loadServers() {
+        var _a;
+        const response = await apiRequest(`${getApiBaseUrl()}/Servers`, { method: 'GET' });
+        const rawItems = Array.isArray(response.data)
+            ? response.data
+            : Array.isArray((_a = response.data) === null || _a === void 0 ? void 0 : _a.data)
+                ? response.data.data
+                : [];
+        servers = rawItems.map((item) => {
+            var _a, _b, _c, _d;
+            return ({
+                id: (_b = (_a = item.id) !== null && _a !== void 0 ? _a : item.Id) !== null && _b !== void 0 ? _b : 0,
+                name: (_d = (_c = item.name) !== null && _c !== void 0 ? _c : item.Name) !== null && _d !== void 0 ? _d : '',
             });
         });
+        Object.keys(serverNameLookup).forEach((key) => delete serverNameLookup[Number(key)]);
+        servers.forEach((srv) => {
+            if (srv.id) {
+                serverNameLookup[srv.id] = srv.name;
+            }
+        });
+        populateServerDropdown();
     }
     function populateServerDropdown() {
-        var serverSelect = document.getElementById('server-ip-addresses-server-id');
+        const serverSelect = document.getElementById('server-ip-addresses-server-id');
         if (serverSelect) {
-            var selected = serverSelect.value;
+            const selected = serverSelect.value;
             serverSelect.innerHTML = '<option value="">Select Server...</option>' +
-                servers.map(function (s) { return "<option value=\"".concat(s.id, "\">").concat(esc(s.name), "</option>"); }).join('');
+                servers.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
             if (selected) {
                 serverSelect.value = selected;
             }
         }
     }
-    function loadServerIpAddresses() {
-        return __awaiter(this, void 0, void 0, function () {
-            var tableBody, response, rawItems;
-            var _a;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        tableBody = document.getElementById('server-ip-addresses-table-body');
-                        if (!tableBody) {
-                            return [2 /*return*/];
-                        }
-                        tableBody.innerHTML = '<tr><td colspan="8" class="text-center"><div class="spinner-border text-primary"></div></td></tr>';
-                        return [4 /*yield*/, apiRequest("".concat(getApiBaseUrl(), "/ServerIpAddresses"), { method: 'GET' })];
-                    case 1:
-                        response = _b.sent();
-                        if (!response.success) {
-                            showError(response.message || 'Failed to load IP addresses');
-                            tableBody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Failed to load data</td></tr>';
-                            return [2 /*return*/];
-                        }
-                        rawItems = Array.isArray(response.data)
-                            ? response.data
-                            : Array.isArray((_a = response.data) === null || _a === void 0 ? void 0 : _a.data)
-                                ? response.data.data
-                                : [];
-                        allServerIpAddresses = rawItems.map(function (item) {
-                            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u;
-                            var serverId = (_b = (_a = item.serverId) !== null && _a !== void 0 ? _a : item.ServerId) !== null && _b !== void 0 ? _b : 0;
-                            return {
-                                id: (_d = (_c = item.id) !== null && _c !== void 0 ? _c : item.Id) !== null && _d !== void 0 ? _d : 0,
-                                serverId: serverId,
-                                serverName: (_g = (_f = (_e = item.serverName) !== null && _e !== void 0 ? _e : item.ServerName) !== null && _f !== void 0 ? _f : serverNameLookup[serverId]) !== null && _g !== void 0 ? _g : null,
-                                ipAddress: (_j = (_h = item.ipAddress) !== null && _h !== void 0 ? _h : item.IpAddress) !== null && _j !== void 0 ? _j : '',
-                                ipVersion: (_l = (_k = item.ipVersion) !== null && _k !== void 0 ? _k : item.IpVersion) !== null && _l !== void 0 ? _l : 'IPv4',
-                                isPrimary: (_o = (_m = item.isPrimary) !== null && _m !== void 0 ? _m : item.IsPrimary) !== null && _o !== void 0 ? _o : false,
-                                status: (_q = (_p = item.status) !== null && _p !== void 0 ? _p : item.Status) !== null && _q !== void 0 ? _q : 'Active',
-                                assignedTo: (_s = (_r = item.assignedTo) !== null && _r !== void 0 ? _r : item.AssignedTo) !== null && _s !== void 0 ? _s : null,
-                                notes: (_u = (_t = item.notes) !== null && _t !== void 0 ? _t : item.Notes) !== null && _u !== void 0 ? _u : null,
-                            };
-                        });
-                        renderTable();
-                        return [2 /*return*/];
-                }
-            });
+    async function loadServerIpAddresses() {
+        var _a;
+        const tableBody = document.getElementById('server-ip-addresses-table-body');
+        if (!tableBody) {
+            return;
+        }
+        tableBody.innerHTML = '<tr><td colspan="8" class="text-center"><div class="spinner-border text-primary"></div></td></tr>';
+        const response = await apiRequest(`${getApiBaseUrl()}/ServerIpAddresses`, { method: 'GET' });
+        if (!response.success) {
+            showError(response.message || 'Failed to load IP addresses');
+            tableBody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Failed to load data</td></tr>';
+            return;
+        }
+        const rawItems = Array.isArray(response.data)
+            ? response.data
+            : Array.isArray((_a = response.data) === null || _a === void 0 ? void 0 : _a.data)
+                ? response.data.data
+                : [];
+        allServerIpAddresses = rawItems.map((item) => {
+            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u;
+            const serverId = (_b = (_a = item.serverId) !== null && _a !== void 0 ? _a : item.ServerId) !== null && _b !== void 0 ? _b : 0;
+            return {
+                id: (_d = (_c = item.id) !== null && _c !== void 0 ? _c : item.Id) !== null && _d !== void 0 ? _d : 0,
+                serverId,
+                serverName: (_g = (_f = (_e = item.serverName) !== null && _e !== void 0 ? _e : item.ServerName) !== null && _f !== void 0 ? _f : serverNameLookup[serverId]) !== null && _g !== void 0 ? _g : null,
+                ipAddress: (_j = (_h = item.ipAddress) !== null && _h !== void 0 ? _h : item.IpAddress) !== null && _j !== void 0 ? _j : '',
+                ipVersion: (_l = (_k = item.ipVersion) !== null && _k !== void 0 ? _k : item.IpVersion) !== null && _l !== void 0 ? _l : 'IPv4',
+                isPrimary: (_o = (_m = item.isPrimary) !== null && _m !== void 0 ? _m : item.IsPrimary) !== null && _o !== void 0 ? _o : false,
+                status: (_q = (_p = item.status) !== null && _p !== void 0 ? _p : item.Status) !== null && _q !== void 0 ? _q : 'Active',
+                assignedTo: (_s = (_r = item.assignedTo) !== null && _r !== void 0 ? _r : item.AssignedTo) !== null && _s !== void 0 ? _s : null,
+                notes: (_u = (_t = item.notes) !== null && _t !== void 0 ? _t : item.Notes) !== null && _u !== void 0 ? _u : null,
+            };
         });
+        renderTable();
     }
     function renderTable() {
-        var tableBody = document.getElementById('server-ip-addresses-table-body');
+        const tableBody = document.getElementById('server-ip-addresses-table-body');
         if (!tableBody) {
             return;
         }
@@ -214,7 +127,23 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             tableBody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No IP addresses found. Click "New IP Address" to add one.</td></tr>';
             return;
         }
-        tableBody.innerHTML = allServerIpAddresses.map(function (ip) { return "\n        <tr>\n            <td>".concat(ip.id, "</td>\n            <td><code>").concat(esc(ip.ipAddress), "</code></td>\n            <td><span class=\"badge bg-").concat(ip.ipVersion === 'IPv6' ? 'info' : 'secondary', "\">").concat(esc(ip.ipVersion), "</span></td>\n            <td>").concat(esc(ip.serverName || '-'), "</td>\n            <td>").concat(ip.isPrimary ? '<span class="badge bg-primary">Primary</span>' : '-', "</td>\n            <td><span class=\"badge bg-").concat(getStatusBadgeColor(ip.status), "\">").concat(esc(ip.status), "</span></td>\n            <td>").concat(esc(ip.assignedTo || '-'), "</td>\n            <td>\n                <div class=\"btn-group btn-group-sm\">\n                    <button class=\"btn btn-outline-primary\" type=\"button\" data-action=\"edit\" data-id=\"").concat(ip.id, "\" title=\"Edit\"><i class=\"bi bi-pencil\"></i></button>\n                    <button class=\"btn btn-outline-danger\" type=\"button\" data-action=\"delete\" data-id=\"").concat(ip.id, "\" data-name=\"").concat(esc(ip.ipAddress), "\" title=\"Delete\"><i class=\"bi bi-trash\"></i></button>\n                </div>\n            </td>\n        </tr>\n    "); }).join('');
+        tableBody.innerHTML = allServerIpAddresses.map((ip) => `
+        <tr>
+            <td>${ip.id}</td>
+            <td><code>${esc(ip.ipAddress)}</code></td>
+            <td><span class="badge bg-${ip.ipVersion === 'IPv6' ? 'info' : 'secondary'}">${esc(ip.ipVersion)}</span></td>
+            <td>${esc(ip.serverName || '-')}</td>
+            <td>${ip.isPrimary ? '<span class="badge bg-primary">Primary</span>' : '-'}</td>
+            <td><span class="badge bg-${getStatusBadgeColor(ip.status)}">${esc(ip.status)}</span></td>
+            <td>${esc(ip.assignedTo || '-')}</td>
+            <td>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-primary" type="button" data-action="edit" data-id="${ip.id}" title="Edit"><i class="bi bi-pencil"></i></button>
+                    <button class="btn btn-outline-danger" type="button" data-action="delete" data-id="${ip.id}" data-name="${esc(ip.ipAddress)}" title="Delete"><i class="bi bi-trash"></i></button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
     }
     function getStatusBadgeColor(status) {
         switch (status === null || status === void 0 ? void 0 : status.toLowerCase()) {
@@ -226,21 +155,21 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
     function openCreate() {
         editingId = null;
-        var modalTitle = document.getElementById('server-ip-addresses-modal-title');
+        const modalTitle = document.getElementById('server-ip-addresses-modal-title');
         if (modalTitle) {
             modalTitle.textContent = 'New IP Address';
         }
-        var form = document.getElementById('server-ip-addresses-form');
+        const form = document.getElementById('server-ip-addresses-form');
         form === null || form === void 0 ? void 0 : form.reset();
-        var ipVersionSelect = document.getElementById('server-ip-addresses-ip-version');
+        const ipVersionSelect = document.getElementById('server-ip-addresses-ip-version');
         if (ipVersionSelect) {
             ipVersionSelect.value = 'IPv4';
         }
-        var statusSelect = document.getElementById('server-ip-addresses-status');
+        const statusSelect = document.getElementById('server-ip-addresses-status');
         if (statusSelect) {
             statusSelect.value = 'Active';
         }
-        var isPrimaryInput = document.getElementById('server-ip-addresses-is-primary');
+        const isPrimaryInput = document.getElementById('server-ip-addresses-is-primary');
         if (isPrimaryInput) {
             isPrimaryInput.checked = false;
         }
@@ -248,22 +177,22 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         showModal('server-ip-addresses-edit-modal');
     }
     function openEdit(id) {
-        var ip = allServerIpAddresses.find(function (item) { return item.id === id; });
+        const ip = allServerIpAddresses.find((item) => item.id === id);
         if (!ip) {
             return;
         }
         editingId = id;
-        var modalTitle = document.getElementById('server-ip-addresses-modal-title');
+        const modalTitle = document.getElementById('server-ip-addresses-modal-title');
         if (modalTitle) {
             modalTitle.textContent = 'Edit IP Address';
         }
-        var ipAddressInput = document.getElementById('server-ip-addresses-ip-address');
-        var ipVersionInput = document.getElementById('server-ip-addresses-ip-version');
-        var serverIdInput = document.getElementById('server-ip-addresses-server-id');
-        var statusInput = document.getElementById('server-ip-addresses-status');
-        var isPrimaryInput = document.getElementById('server-ip-addresses-is-primary');
-        var assignedToInput = document.getElementById('server-ip-addresses-assigned-to');
-        var notesInput = document.getElementById('server-ip-addresses-notes');
+        const ipAddressInput = document.getElementById('server-ip-addresses-ip-address');
+        const ipVersionInput = document.getElementById('server-ip-addresses-ip-version');
+        const serverIdInput = document.getElementById('server-ip-addresses-server-id');
+        const statusInput = document.getElementById('server-ip-addresses-status');
+        const isPrimaryInput = document.getElementById('server-ip-addresses-is-primary');
+        const assignedToInput = document.getElementById('server-ip-addresses-assigned-to');
+        const notesInput = document.getElementById('server-ip-addresses-notes');
         if (ipAddressInput) {
             ipAddressInput.value = ip.ipAddress;
         }
@@ -288,149 +217,121 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         }
         showModal('server-ip-addresses-edit-modal');
     }
-    function saveServerIpAddress() {
-        return __awaiter(this, void 0, void 0, function () {
-            var ipAddressInput, ipVersionInput, serverIdInput, statusInput, isPrimaryInput, assignedToInput, notesInput, ipAddress, ipVersion, serverId, status, payload, response, _a;
-            var _b, _c, _d, _e, _f, _g;
-            return __generator(this, function (_h) {
-                switch (_h.label) {
-                    case 0:
-                        ipAddressInput = document.getElementById('server-ip-addresses-ip-address');
-                        ipVersionInput = document.getElementById('server-ip-addresses-ip-version');
-                        serverIdInput = document.getElementById('server-ip-addresses-server-id');
-                        statusInput = document.getElementById('server-ip-addresses-status');
-                        isPrimaryInput = document.getElementById('server-ip-addresses-is-primary');
-                        assignedToInput = document.getElementById('server-ip-addresses-assigned-to');
-                        notesInput = document.getElementById('server-ip-addresses-notes');
-                        ipAddress = (_b = ipAddressInput === null || ipAddressInput === void 0 ? void 0 : ipAddressInput.value.trim()) !== null && _b !== void 0 ? _b : '';
-                        ipVersion = (_d = (_c = ipVersionInput === null || ipVersionInput === void 0 ? void 0 : ipVersionInput.value) === null || _c === void 0 ? void 0 : _c.trim()) !== null && _d !== void 0 ? _d : '';
-                        serverId = (serverIdInput === null || serverIdInput === void 0 ? void 0 : serverIdInput.value) ? Number(serverIdInput.value) : null;
-                        status = (_f = (_e = statusInput === null || statusInput === void 0 ? void 0 : statusInput.value) === null || _e === void 0 ? void 0 : _e.trim()) !== null && _f !== void 0 ? _f : 'Active';
-                        if (!ipAddress || !ipVersion || !serverId || !status) {
-                            showError('IP Address, IP Version, Server, and Status are required');
-                            return [2 /*return*/];
-                        }
-                        payload = {
-                            serverId: serverId,
-                            ipAddress: ipAddress,
-                            ipVersion: ipVersion,
-                            status: status,
-                            isPrimary: (_g = isPrimaryInput === null || isPrimaryInput === void 0 ? void 0 : isPrimaryInput.checked) !== null && _g !== void 0 ? _g : false,
-                            assignedTo: (assignedToInput === null || assignedToInput === void 0 ? void 0 : assignedToInput.value.trim()) || null,
-                            notes: (notesInput === null || notesInput === void 0 ? void 0 : notesInput.value.trim()) || null,
-                        };
-                        if (!editingId) return [3 /*break*/, 2];
-                        return [4 /*yield*/, apiRequest("".concat(getApiBaseUrl(), "/ServerIpAddresses/").concat(editingId), { method: 'PUT', body: JSON.stringify(payload) })];
-                    case 1:
-                        _a = _h.sent();
-                        return [3 /*break*/, 4];
-                    case 2: return [4 /*yield*/, apiRequest("".concat(getApiBaseUrl(), "/ServerIpAddresses"), { method: 'POST', body: JSON.stringify(payload) })];
-                    case 3:
-                        _a = _h.sent();
-                        _h.label = 4;
-                    case 4:
-                        response = _a;
-                        if (response.success) {
-                            hideModal('server-ip-addresses-edit-modal');
-                            showSuccess(editingId ? 'IP address updated successfully' : 'IP address created successfully');
-                            loadServerIpAddresses();
-                        }
-                        else {
-                            showError(response.message || 'Save failed');
-                        }
-                        return [2 /*return*/];
-                }
-            });
-        });
+    async function saveServerIpAddress() {
+        var _a, _b, _c, _d, _e, _f;
+        const ipAddressInput = document.getElementById('server-ip-addresses-ip-address');
+        const ipVersionInput = document.getElementById('server-ip-addresses-ip-version');
+        const serverIdInput = document.getElementById('server-ip-addresses-server-id');
+        const statusInput = document.getElementById('server-ip-addresses-status');
+        const isPrimaryInput = document.getElementById('server-ip-addresses-is-primary');
+        const assignedToInput = document.getElementById('server-ip-addresses-assigned-to');
+        const notesInput = document.getElementById('server-ip-addresses-notes');
+        const ipAddress = (_a = ipAddressInput === null || ipAddressInput === void 0 ? void 0 : ipAddressInput.value.trim()) !== null && _a !== void 0 ? _a : '';
+        const ipVersion = (_c = (_b = ipVersionInput === null || ipVersionInput === void 0 ? void 0 : ipVersionInput.value) === null || _b === void 0 ? void 0 : _b.trim()) !== null && _c !== void 0 ? _c : '';
+        const serverId = (serverIdInput === null || serverIdInput === void 0 ? void 0 : serverIdInput.value) ? Number(serverIdInput.value) : null;
+        const status = (_e = (_d = statusInput === null || statusInput === void 0 ? void 0 : statusInput.value) === null || _d === void 0 ? void 0 : _d.trim()) !== null && _e !== void 0 ? _e : 'Active';
+        if (!ipAddress || !ipVersion || !serverId || !status) {
+            showError('IP Address, IP Version, Server, and Status are required');
+            return;
+        }
+        const payload = {
+            serverId,
+            ipAddress,
+            ipVersion,
+            status,
+            isPrimary: (_f = isPrimaryInput === null || isPrimaryInput === void 0 ? void 0 : isPrimaryInput.checked) !== null && _f !== void 0 ? _f : false,
+            assignedTo: (assignedToInput === null || assignedToInput === void 0 ? void 0 : assignedToInput.value.trim()) || null,
+            notes: (notesInput === null || notesInput === void 0 ? void 0 : notesInput.value.trim()) || null,
+        };
+        const response = editingId
+            ? await apiRequest(`${getApiBaseUrl()}/ServerIpAddresses/${editingId}`, { method: 'PUT', body: JSON.stringify(payload) })
+            : await apiRequest(`${getApiBaseUrl()}/ServerIpAddresses`, { method: 'POST', body: JSON.stringify(payload) });
+        if (response.success) {
+            hideModal('server-ip-addresses-edit-modal');
+            showSuccess(editingId ? 'IP address updated successfully' : 'IP address created successfully');
+            loadServerIpAddresses();
+        }
+        else {
+            showError(response.message || 'Save failed');
+        }
     }
     function openDelete(id, name) {
         pendingDeleteId = id;
-        var deleteName = document.getElementById('server-ip-addresses-delete-name');
+        const deleteName = document.getElementById('server-ip-addresses-delete-name');
         if (deleteName) {
             deleteName.textContent = name;
         }
         showModal('server-ip-addresses-delete-modal');
     }
-    function doDelete() {
-        return __awaiter(this, void 0, void 0, function () {
-            var response;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        if (!pendingDeleteId) {
-                            return [2 /*return*/];
-                        }
-                        return [4 /*yield*/, apiRequest("".concat(getApiBaseUrl(), "/ServerIpAddresses/").concat(pendingDeleteId), { method: 'DELETE' })];
-                    case 1:
-                        response = _a.sent();
-                        hideModal('server-ip-addresses-delete-modal');
-                        if (response.success) {
-                            showSuccess('IP address deleted successfully');
-                            loadServerIpAddresses();
-                        }
-                        else {
-                            showError(response.message || 'Delete failed');
-                        }
-                        pendingDeleteId = null;
-                        return [2 /*return*/];
-                }
-            });
-        });
+    async function doDelete() {
+        if (!pendingDeleteId) {
+            return;
+        }
+        const response = await apiRequest(`${getApiBaseUrl()}/ServerIpAddresses/${pendingDeleteId}`, { method: 'DELETE' });
+        hideModal('server-ip-addresses-delete-modal');
+        if (response.success) {
+            showSuccess('IP address deleted successfully');
+            loadServerIpAddresses();
+        }
+        else {
+            showError(response.message || 'Delete failed');
+        }
+        pendingDeleteId = null;
     }
     function esc(text) {
-        var map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-        return (text || '').toString().replace(/[&<>"']/g, function (char) { return map[char]; });
+        const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+        return (text || '').toString().replace(/[&<>"']/g, (char) => map[char]);
     }
     function showSuccess(message) {
-        var alert = document.getElementById('server-ip-addresses-alert-success');
+        const alert = document.getElementById('server-ip-addresses-alert-success');
         if (!alert) {
             return;
         }
         alert.textContent = message;
         alert.classList.remove('d-none');
-        var errorAlert = document.getElementById('server-ip-addresses-alert-error');
+        const errorAlert = document.getElementById('server-ip-addresses-alert-error');
         errorAlert === null || errorAlert === void 0 ? void 0 : errorAlert.classList.add('d-none');
-        setTimeout(function () { return alert.classList.add('d-none'); }, 5000);
+        setTimeout(() => alert.classList.add('d-none'), 5000);
     }
     function showError(message) {
-        var alert = document.getElementById('server-ip-addresses-alert-error');
+        const alert = document.getElementById('server-ip-addresses-alert-error');
         if (!alert) {
             return;
         }
         alert.textContent = message;
         alert.classList.remove('d-none');
-        var successAlert = document.getElementById('server-ip-addresses-alert-success');
+        const successAlert = document.getElementById('server-ip-addresses-alert-success');
         successAlert === null || successAlert === void 0 ? void 0 : successAlert.classList.add('d-none');
     }
     function showModal(id) {
-        var element = document.getElementById(id);
+        const element = document.getElementById(id);
         if (!element || !window.bootstrap) {
             return;
         }
-        var modal = new window.bootstrap.Modal(element);
+        const modal = new window.bootstrap.Modal(element);
         modal.show();
     }
     function hideModal(id) {
-        var element = document.getElementById(id);
+        const element = document.getElementById(id);
         if (!element || !window.bootstrap) {
             return;
         }
-        var modal = window.bootstrap.Modal.getInstance(element);
+        const modal = window.bootstrap.Modal.getInstance(element);
         modal === null || modal === void 0 ? void 0 : modal.hide();
     }
     function bindTableActions() {
-        var tableBody = document.getElementById('server-ip-addresses-table-body');
+        const tableBody = document.getElementById('server-ip-addresses-table-body');
         if (!tableBody) {
             return;
         }
-        tableBody.addEventListener('click', function (event) {
+        tableBody.addEventListener('click', (event) => {
             var _a;
-            var target = event.target;
-            var button = target.closest('button[data-action]');
+            const target = event.target;
+            const button = target.closest('button[data-action]');
             if (!button) {
                 return;
             }
-            var id = Number(button.dataset.id);
+            const id = Number(button.dataset.id);
             if (!id) {
                 return;
             }
@@ -445,7 +346,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
     function initializeServerIpAddressesPage() {
         var _a, _b, _c;
-        var page = document.getElementById('server-ip-addresses-page');
+        const page = document.getElementById('server-ip-addresses-page');
         if (!page || page.dataset.initialized === 'true') {
             return;
         }
@@ -455,11 +356,11 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         (_c = document.getElementById('server-ip-addresses-confirm-delete')) === null || _c === void 0 ? void 0 : _c.addEventListener('click', doDelete);
         bindTableActions();
         loadServers()
-            .catch(function (error) {
+            .catch((error) => {
             console.error('Failed to load servers for IP addresses', error);
             showError('Failed to load servers. Some labels may be missing.');
         })
-            .finally(function () {
+            .finally(() => {
             loadServerIpAddresses();
         });
     }
@@ -468,8 +369,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         initializeServerIpAddressesPage();
         // Set up MutationObserver for Blazor navigation
         if (document.body) {
-            var observer = new MutationObserver(function () {
-                var page = document.getElementById('server-ip-addresses-page');
+            const observer = new MutationObserver(() => {
+                const page = document.getElementById('server-ip-addresses-page');
                 if (page && page.dataset.initialized !== 'true') {
                     initializeServerIpAddressesPage();
                 }
@@ -485,3 +386,4 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         setupPageObserver();
     }
 })();
+//# sourceMappingURL=server-ip-addresses.js.map
