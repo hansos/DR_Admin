@@ -29,6 +29,46 @@ public class DomainRegistrationService : IRegisteredDomainService
         _domainRegistrationSettings = domainRegistrationSettings.Value;
     }
 
+    public async Task<PagedResult<RegisteredDomainDto>> GetAllDomainsPagedAsync(PaginationParameters parameters)
+    {
+        try
+        {
+            _log.Information("Fetching paginated domains - Page: {PageNumber}, PageSize: {PageSize}",
+                parameters.PageNumber, parameters.PageSize);
+
+            var query = _context.RegisteredDomains
+                .AsNoTracking()
+                .Include(d => d.Registrar)
+                .Include(d => d.Customer)
+                .OrderBy(d => d.Name);
+
+            var totalCount = await query.CountAsync();
+
+            var domains = await query
+                .Skip((parameters.PageNumber - 1) * parameters.PageSize)
+                .Take(parameters.PageSize)
+                .ToListAsync();
+
+            var domainDtos = domains.Select(MapToDto).ToList();
+
+            var result = new PagedResult<RegisteredDomainDto>(
+                domainDtos,
+                totalCount,
+                parameters.PageNumber,
+                parameters.PageSize);
+
+            _log.Information("Successfully fetched page {PageNumber} of domains - Returned {Count} of {TotalCount} total",
+                parameters.PageNumber, domainDtos.Count, totalCount);
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while fetching paginated domains");
+            throw;
+        }
+    }
+
     public async Task<IEnumerable<RegisteredDomainDto>> GetAllDomainsAsync()
     {
         try

@@ -34,15 +34,31 @@ public class RegisteredDomainsController : ControllerBase
     [HttpGet]
     [Authorize(Policy = "Admin.Only")]
     [ProducesResponseType(typeof(IEnumerable<RegisteredDomainDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PagedResult<RegisteredDomainDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<IEnumerable<RegisteredDomainDto>>> GetAllDomains()
+    public async Task<ActionResult> GetAllDomains([FromQuery] int? pageNumber = null, [FromQuery] int? pageSize = null)
     {
         try
         {
+            if (pageNumber.HasValue || pageSize.HasValue)
+            {
+                var paginationParams = new PaginationParameters
+                {
+                    PageNumber = pageNumber ?? 1,
+                    PageSize = pageSize ?? 10
+                };
+
+                _log.Information("API: GetAllDomains (paginated) called with PageNumber: {PageNumber}, PageSize: {PageSize} by user {User}",
+                    paginationParams.PageNumber, paginationParams.PageSize, User.Identity?.Name);
+
+                var pagedResult = await _domainService.GetAllDomainsPagedAsync(paginationParams);
+                return Ok(pagedResult);
+            }
+
             _log.Information("API: GetAllDomains called by user {User}", User.Identity?.Name);
-            
+
             var domains = await _domainService.GetAllDomainsAsync();
             return Ok(domains);
         }

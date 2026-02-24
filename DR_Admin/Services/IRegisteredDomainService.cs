@@ -12,6 +12,13 @@ public interface IRegisteredDomainService
     /// </summary>
     /// <returns>Collection of domain DTOs</returns>
     Task<IEnumerable<RegisteredDomainDto>> GetAllDomainsAsync();
+
+    /// <summary>
+    /// Retrieves all domains with pagination
+    /// </summary>
+    /// <param name="parameters">Pagination parameters including page number and page size</param>
+    /// <returns>A paged result containing domains and pagination metadata</returns>
+    Task<PagedResult<RegisteredDomainDto>> GetAllDomainsPagedAsync(PaginationParameters parameters);
     
     /// <summary>
     /// Retrieves domains for a specific customer
