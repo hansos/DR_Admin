@@ -16,6 +16,7 @@
         "server-types.ts",
         "customers.ts",
         "contact-persons.ts",
+        "registry-apis.ts",
         "domains.ts",
         "operating-systems.ts",
         "nav-menu.ts",
