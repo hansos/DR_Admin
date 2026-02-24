@@ -152,6 +152,18 @@ function populateDropdowns(): void {
     }
 }
 
+function normalizeServerArray(data: any): any[] {
+    if (Array.isArray(data)) {
+        return data;
+    }
+
+    if (Array.isArray(data?.data)) {
+        return data.data;
+    }
+
+    return [];
+}
+
 async function loadServers(): Promise<void> {
     const tableBody = document.getElementById('servers-table-body');
     if (!tableBody) {
@@ -172,24 +184,32 @@ async function loadServers(): Promise<void> {
     console.log('Response.data type:', Array.isArray(response.data) ? 'Array' : typeof response.data);
     console.log('Response.data:', response.data);
 
-    const rawItems = extractArray(response.data);
+    const rawItems = normalizeServerArray(response.data);
     console.log('Extracted array length:', rawItems.length);
     if (rawItems.length > 0) {
         console.log('First raw item from API:', rawItems[0]);
     }
 
     allServers = rawItems.map((item: any) => {
-        const server = {
+        const rawStatus = item.status ?? item.Status;
+        let statusValue: boolean | null = null;
+        if (typeof rawStatus === 'boolean') {
+            statusValue = rawStatus;
+        } else if (typeof rawStatus === 'string') {
+            statusValue = rawStatus.toLowerCase() === 'active' ? true : rawStatus.toLowerCase() === 'inactive' ? false : null;
+        }
+
+        const server: Server = {
             id: item.id ?? item.Id ?? 0,
             name: item.name ?? item.Name ?? '',
             location: item.location ?? item.Location ?? null,
             serverTypeId: item.serverTypeId ?? item.ServerTypeId ?? 0,
-            serverTypeName: item.serverTypeName ?? item.ServerTypeName ?? null,
+            serverTypeName: item.serverTypeName ?? item.ServerTypeName ?? '',
             operatingSystemId: item.operatingSystemId ?? item.OperatingSystemId ?? 0,
-            operatingSystemName: item.operatingSystemName ?? item.OperatingSystemName ?? null,
+            operatingSystemName: item.operatingSystemName ?? item.OperatingSystemName ?? '',
             hostProviderId: item.hostProviderId ?? item.HostProviderId ?? null,
             hostProviderName: item.hostProviderName ?? item.HostProviderName ?? null,
-            status: item.status ?? item.Status ?? true,
+            status: statusValue,
             cpuCores: item.cpuCores ?? item.CpuCores ?? null,
             ramMB: item.ramMB ?? item.RamMB ?? item.ramMb ?? null,
             diskSpaceGB: item.diskSpaceGB ?? item.DiskSpaceGB ?? item.diskSpaceGb ?? null,
@@ -199,6 +219,7 @@ async function loadServers(): Promise<void> {
         // Debug log for first item to verify data structure
         if (rawItems.indexOf(item) === 0) {
             console.log('First server after mapping:', server);
+            console.log('Raw status was:', rawStatus, 'Converted to:', statusValue);
         }
 
         return server;
@@ -238,14 +259,22 @@ function renderTable(): void {
 }
 
 function getStatusBadgeColor(status: boolean | null): string {
-    if (status === true) return 'success';
-    if (status === false) return 'secondary';
+    if (status === true) {
+        return 'success';
+    }
+    if (status === false) {
+        return 'secondary';
+    }
     return 'warning';
 }
 
 function getStatusText(status: boolean | null): string {
-    if (status === true) return 'Active';
-    if (status === false) return 'Inactive';
+    if (status === true) {
+        return 'Active';
+    }
+    if (status === false) {
+        return 'Inactive';
+    }
     return 'Unknown';
 }
 
@@ -289,7 +318,7 @@ function openEdit(id: number): void {
     const serverTypeInput = document.getElementById('servers-server-type-id') as HTMLSelectElement | null;
     const osInput = document.getElementById('servers-operating-system-id') as HTMLSelectElement | null;
     const providerInput = document.getElementById('servers-host-provider-id') as HTMLSelectElement | null;
-    const statusInput = document.getElementById('servers-status') as HTMLSelectElement | null;
+    const statusInput = document.getElementById('servers-status') as HTMLInputElement | null;
     const cpuCoresInput = document.getElementById('servers-cpu-cores') as HTMLInputElement | null;
     const ramMBInput = document.getElementById('servers-ram-mb') as HTMLInputElement | null;
     const diskSpaceGBInput = document.getElementById('servers-disk-space-gb') as HTMLInputElement | null;
@@ -320,8 +349,8 @@ function openEdit(id: number): void {
         console.log('Set hostProviderId to:', providerInput.value);
     }
     if (statusInput) {
-        (statusInput as HTMLInputElement).checked = server.status === true;
-        console.log('Set status to:', (statusInput as HTMLInputElement).checked);
+        statusInput.checked = server.status !== false;
+        console.log('Set status to:', statusInput.checked);
     }
 
     // Set numeric fields - use empty string if null to clear the field
@@ -350,7 +379,7 @@ async function saveServer(): Promise<void> {
     const serverTypeInput = document.getElementById('servers-server-type-id') as HTMLSelectElement | null;
     const osInput = document.getElementById('servers-operating-system-id') as HTMLSelectElement | null;
     const providerInput = document.getElementById('servers-host-provider-id') as HTMLSelectElement | null;
-    const statusInput = document.getElementById('servers-status') as HTMLSelectElement | null;
+    const statusInput = document.getElementById('servers-status') as HTMLInputElement | null;
     const cpuCoresInput = document.getElementById('servers-cpu-cores') as HTMLInputElement | null;
     const ramMBInput = document.getElementById('servers-ram-mb') as HTMLInputElement | null;
     const diskSpaceGBInput = document.getElementById('servers-disk-space-gb') as HTMLInputElement | null;
@@ -359,7 +388,7 @@ async function saveServer(): Promise<void> {
     const name = nameInput?.value.trim() ?? '';
     const serverTypeId = serverTypeInput?.value ? Number(serverTypeInput.value) : null;
     const operatingSystemId = osInput?.value ? Number(osInput.value) : null;
-    const status = (statusInput as HTMLInputElement)?.checked ?? true;
+    const status = statusInput?.checked ?? true;
 
     if (!name || !serverTypeId || !operatingSystemId) {
         showError('Server Name, Server Type, and Operating System are required');
@@ -460,7 +489,7 @@ function showModal(id: string): void {
         return;
     }
 
-    const modal = new (window as any).bootstrap.Modal(element);
+    const modal = (window as any).bootstrap.Modal.getOrCreateInstance(element);
     modal.show();
 }
 

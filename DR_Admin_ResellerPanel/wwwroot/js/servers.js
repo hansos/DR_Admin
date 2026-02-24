@@ -181,6 +181,15 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             }
         }
     }
+    function normalizeServerArray(data) {
+        if (Array.isArray(data)) {
+            return data;
+        }
+        if (Array.isArray(data === null || data === void 0 ? void 0 : data.data)) {
+            return data.data;
+        }
+        return [];
+    }
     function loadServers() {
         return __awaiter(this, void 0, void 0, function () {
             var tableBody, response, rawItems;
@@ -204,32 +213,41 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
                         console.log('API Response structure:', response);
                         console.log('Response.data type:', Array.isArray(response.data) ? 'Array' : typeof response.data);
                         console.log('Response.data:', response.data);
-                        rawItems = extractArray(response.data);
+                        rawItems = normalizeServerArray(response.data);
                         console.log('Extracted array length:', rawItems.length);
                         if (rawItems.length > 0) {
                             console.log('First raw item from API:', rawItems[0]);
                         }
                         allServers = rawItems.map(function (item) {
-                            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _0, _1, _2, _3, _4, _5;
+                            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _0, _1, _2, _3, _4;
+                            var rawStatus = (_a = item.status) !== null && _a !== void 0 ? _a : item.Status;
+                            var statusValue = null;
+                            if (typeof rawStatus === 'boolean') {
+                                statusValue = rawStatus;
+                            }
+                            else if (typeof rawStatus === 'string') {
+                                statusValue = rawStatus.toLowerCase() === 'active' ? true : rawStatus.toLowerCase() === 'inactive' ? false : null;
+                            }
                             var server = {
-                                id: (_b = (_a = item.id) !== null && _a !== void 0 ? _a : item.Id) !== null && _b !== void 0 ? _b : 0,
-                                name: (_d = (_c = item.name) !== null && _c !== void 0 ? _c : item.Name) !== null && _d !== void 0 ? _d : '',
-                                location: (_f = (_e = item.location) !== null && _e !== void 0 ? _e : item.Location) !== null && _f !== void 0 ? _f : null,
-                                serverTypeId: (_h = (_g = item.serverTypeId) !== null && _g !== void 0 ? _g : item.ServerTypeId) !== null && _h !== void 0 ? _h : 0,
-                                serverTypeName: (_k = (_j = item.serverTypeName) !== null && _j !== void 0 ? _j : item.ServerTypeName) !== null && _k !== void 0 ? _k : null,
-                                operatingSystemId: (_m = (_l = item.operatingSystemId) !== null && _l !== void 0 ? _l : item.OperatingSystemId) !== null && _m !== void 0 ? _m : 0,
-                                operatingSystemName: (_p = (_o = item.operatingSystemName) !== null && _o !== void 0 ? _o : item.OperatingSystemName) !== null && _p !== void 0 ? _p : null,
-                                hostProviderId: (_r = (_q = item.hostProviderId) !== null && _q !== void 0 ? _q : item.HostProviderId) !== null && _r !== void 0 ? _r : null,
-                                hostProviderName: (_t = (_s = item.hostProviderName) !== null && _s !== void 0 ? _s : item.HostProviderName) !== null && _t !== void 0 ? _t : null,
-                                status: (_v = (_u = item.status) !== null && _u !== void 0 ? _u : item.Status) !== null && _v !== void 0 ? _v : true,
-                                cpuCores: (_x = (_w = item.cpuCores) !== null && _w !== void 0 ? _w : item.CpuCores) !== null && _x !== void 0 ? _x : null,
-                                ramMB: (_0 = (_z = (_y = item.ramMB) !== null && _y !== void 0 ? _y : item.RamMB) !== null && _z !== void 0 ? _z : item.ramMb) !== null && _0 !== void 0 ? _0 : null,
-                                diskSpaceGB: (_3 = (_2 = (_1 = item.diskSpaceGB) !== null && _1 !== void 0 ? _1 : item.DiskSpaceGB) !== null && _2 !== void 0 ? _2 : item.diskSpaceGb) !== null && _3 !== void 0 ? _3 : null,
-                                notes: (_5 = (_4 = item.notes) !== null && _4 !== void 0 ? _4 : item.Notes) !== null && _5 !== void 0 ? _5 : null,
+                                id: (_c = (_b = item.id) !== null && _b !== void 0 ? _b : item.Id) !== null && _c !== void 0 ? _c : 0,
+                                name: (_e = (_d = item.name) !== null && _d !== void 0 ? _d : item.Name) !== null && _e !== void 0 ? _e : '',
+                                location: (_g = (_f = item.location) !== null && _f !== void 0 ? _f : item.Location) !== null && _g !== void 0 ? _g : null,
+                                serverTypeId: (_j = (_h = item.serverTypeId) !== null && _h !== void 0 ? _h : item.ServerTypeId) !== null && _j !== void 0 ? _j : 0,
+                                serverTypeName: (_l = (_k = item.serverTypeName) !== null && _k !== void 0 ? _k : item.ServerTypeName) !== null && _l !== void 0 ? _l : '',
+                                operatingSystemId: (_o = (_m = item.operatingSystemId) !== null && _m !== void 0 ? _m : item.OperatingSystemId) !== null && _o !== void 0 ? _o : 0,
+                                operatingSystemName: (_q = (_p = item.operatingSystemName) !== null && _p !== void 0 ? _p : item.OperatingSystemName) !== null && _q !== void 0 ? _q : '',
+                                hostProviderId: (_s = (_r = item.hostProviderId) !== null && _r !== void 0 ? _r : item.HostProviderId) !== null && _s !== void 0 ? _s : null,
+                                hostProviderName: (_u = (_t = item.hostProviderName) !== null && _t !== void 0 ? _t : item.HostProviderName) !== null && _u !== void 0 ? _u : null,
+                                status: statusValue,
+                                cpuCores: (_w = (_v = item.cpuCores) !== null && _v !== void 0 ? _v : item.CpuCores) !== null && _w !== void 0 ? _w : null,
+                                ramMB: (_z = (_y = (_x = item.ramMB) !== null && _x !== void 0 ? _x : item.RamMB) !== null && _y !== void 0 ? _y : item.ramMb) !== null && _z !== void 0 ? _z : null,
+                                diskSpaceGB: (_2 = (_1 = (_0 = item.diskSpaceGB) !== null && _0 !== void 0 ? _0 : item.DiskSpaceGB) !== null && _1 !== void 0 ? _1 : item.diskSpaceGb) !== null && _2 !== void 0 ? _2 : null,
+                                notes: (_4 = (_3 = item.notes) !== null && _3 !== void 0 ? _3 : item.Notes) !== null && _4 !== void 0 ? _4 : null,
                             };
                             // Debug log for first item to verify data structure
                             if (rawItems.indexOf(item) === 0) {
                                 console.log('First server after mapping:', server);
+                                console.log('Raw status was:', rawStatus, 'Converted to:', statusValue);
                             }
                             return server;
                         });
@@ -251,17 +269,21 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         tableBody.innerHTML = allServers.map(function (server) { return "\n        <tr>\n            <td>".concat(server.id, "</td>\n            <td><strong>").concat(esc(server.name), "</strong></td>\n            <td>").concat(esc(server.location || '-'), "</td>\n            <td>").concat(esc(server.serverTypeName || '-'), "</td>\n            <td>").concat(esc(server.operatingSystemName || '-'), "</td>\n            <td>").concat(esc(server.hostProviderName || '-'), "</td>\n            <td><span class=\"badge bg-").concat(getStatusBadgeColor(server.status), "\">").concat(esc(getStatusText(server.status)), "</span></td>\n            <td>\n                <div class=\"btn-group btn-group-sm\">\n                    <button class=\"btn btn-outline-primary\" type=\"button\" data-action=\"edit\" data-id=\"").concat(server.id, "\" title=\"Edit\"><i class=\"bi bi-pencil\"></i></button>\n                    <button class=\"btn btn-outline-danger\" type=\"button\" data-action=\"delete\" data-id=\"").concat(server.id, "\" data-name=\"").concat(esc(server.name), "\" title=\"Delete\"><i class=\"bi bi-trash\"></i></button>\n                </div>\n            </td>\n        </tr>\n    "); }).join('');
     }
     function getStatusBadgeColor(status) {
-        if (status === true)
+        if (status === true) {
             return 'success';
-        if (status === false)
+        }
+        if (status === false) {
             return 'secondary';
+        }
         return 'warning';
     }
     function getStatusText(status) {
-        if (status === true)
+        if (status === true) {
             return 'Active';
-        if (status === false)
+        }
+        if (status === false) {
             return 'Inactive';
+        }
         return 'Unknown';
     }
     function openCreate() {
@@ -324,7 +346,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
             console.log('Set hostProviderId to:', providerInput.value);
         }
         if (statusInput) {
-            statusInput.checked = server.status === true;
+            statusInput.checked = server.status !== false;
             console.log('Set status to:', statusInput.checked);
         }
         // Set numeric fields - use empty string if null to clear the field
@@ -470,7 +492,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (!element || !window.bootstrap) {
             return;
         }
-        var modal = new window.bootstrap.Modal(element);
+        var modal = window.bootstrap.Modal.getOrCreateInstance(element);
         modal.show();
     }
     function hideModal(id) {

@@ -29,6 +29,7 @@ function getApiBaseUrl(): string {
 
 let allServerIpAddresses: ServerIpAddress[] = [];
 let servers: Server[] = [];
+const serverNameLookup: Record<number, string> = {};
 let editingId: number | null = null;
 let pendingDeleteId: number | null = null;
 
@@ -98,6 +99,13 @@ async function loadServers(): Promise<void> {
         name: item.name ?? item.Name ?? '',
     }));
 
+    Object.keys(serverNameLookup).forEach((key) => delete serverNameLookup[Number(key)]);
+    servers.forEach((srv) => {
+        if (srv.id) {
+            serverNameLookup[srv.id] = srv.name;
+        }
+    });
+
     populateServerDropdown();
 }
 
@@ -134,17 +142,20 @@ async function loadServerIpAddresses(): Promise<void> {
             ? (response.data as any).data
             : [];
 
-    allServerIpAddresses = rawItems.map((item: any) => ({
-        id: item.id ?? item.Id ?? 0,
-        serverId: item.serverId ?? item.ServerId ?? 0,
-        serverName: item.serverName ?? item.ServerName ?? null,
-        ipAddress: item.ipAddress ?? item.IpAddress ?? '',
-        ipVersion: item.ipVersion ?? item.IpVersion ?? 'IPv4',
-        isPrimary: item.isPrimary ?? item.IsPrimary ?? false,
-        status: item.status ?? item.Status ?? 'Active',
-        assignedTo: item.assignedTo ?? item.AssignedTo ?? null,
-        notes: item.notes ?? item.Notes ?? null,
-    }));
+    allServerIpAddresses = rawItems.map((item: any) => {
+        const serverId = item.serverId ?? item.ServerId ?? 0;
+        return {
+            id: item.id ?? item.Id ?? 0,
+            serverId,
+            serverName: item.serverName ?? item.ServerName ?? serverNameLookup[serverId] ?? null,
+            ipAddress: item.ipAddress ?? item.IpAddress ?? '',
+            ipVersion: item.ipVersion ?? item.IpVersion ?? 'IPv4',
+            isPrimary: item.isPrimary ?? item.IsPrimary ?? false,
+            status: item.status ?? item.Status ?? 'Active',
+            assignedTo: item.assignedTo ?? item.AssignedTo ?? null,
+            notes: item.notes ?? item.Notes ?? null,
+        };
+    });
 
     renderTable();
 }
@@ -433,8 +444,15 @@ function initializeServerIpAddressesPage(): void {
     document.getElementById('server-ip-addresses-confirm-delete')?.addEventListener('click', doDelete);
 
     bindTableActions();
-    loadServers();
-    loadServerIpAddresses();
+
+    loadServers()
+        .catch((error) => {
+            console.error('Failed to load servers for IP addresses', error);
+            showError('Failed to load servers. Some labels may be missing.');
+        })
+        .finally(() => {
+            loadServerIpAddresses();
+        });
 }
 
 function setupPageObserver(): void {

@@ -53,6 +53,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
     var allServerIpAddresses = [];
     var servers = [];
+    var serverNameLookup = {};
     var editingId = null;
     var pendingDeleteId = null;
     function getAuthToken() {
@@ -135,6 +136,12 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
                                 name: (_d = (_c = item.name) !== null && _c !== void 0 ? _c : item.Name) !== null && _d !== void 0 ? _d : '',
                             });
                         });
+                        Object.keys(serverNameLookup).forEach(function (key) { return delete serverNameLookup[Number(key)]; });
+                        servers.forEach(function (srv) {
+                            if (srv.id) {
+                                serverNameLookup[srv.id] = srv.name;
+                            }
+                        });
                         populateServerDropdown();
                         return [2 /*return*/];
                 }
@@ -178,18 +185,19 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
                                 ? response.data.data
                                 : [];
                         allServerIpAddresses = rawItems.map(function (item) {
-                            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t;
-                            return ({
-                                id: (_b = (_a = item.id) !== null && _a !== void 0 ? _a : item.Id) !== null && _b !== void 0 ? _b : 0,
-                                serverId: (_d = (_c = item.serverId) !== null && _c !== void 0 ? _c : item.ServerId) !== null && _d !== void 0 ? _d : 0,
-                                serverName: (_f = (_e = item.serverName) !== null && _e !== void 0 ? _e : item.ServerName) !== null && _f !== void 0 ? _f : null,
-                                ipAddress: (_h = (_g = item.ipAddress) !== null && _g !== void 0 ? _g : item.IpAddress) !== null && _h !== void 0 ? _h : '',
-                                ipVersion: (_k = (_j = item.ipVersion) !== null && _j !== void 0 ? _j : item.IpVersion) !== null && _k !== void 0 ? _k : 'IPv4',
-                                isPrimary: (_m = (_l = item.isPrimary) !== null && _l !== void 0 ? _l : item.IsPrimary) !== null && _m !== void 0 ? _m : false,
-                                status: (_p = (_o = item.status) !== null && _o !== void 0 ? _o : item.Status) !== null && _p !== void 0 ? _p : 'Active',
-                                assignedTo: (_r = (_q = item.assignedTo) !== null && _q !== void 0 ? _q : item.AssignedTo) !== null && _r !== void 0 ? _r : null,
-                                notes: (_t = (_s = item.notes) !== null && _s !== void 0 ? _s : item.Notes) !== null && _t !== void 0 ? _t : null,
-                            });
+                            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u;
+                            var serverId = (_b = (_a = item.serverId) !== null && _a !== void 0 ? _a : item.ServerId) !== null && _b !== void 0 ? _b : 0;
+                            return {
+                                id: (_d = (_c = item.id) !== null && _c !== void 0 ? _c : item.Id) !== null && _d !== void 0 ? _d : 0,
+                                serverId: serverId,
+                                serverName: (_g = (_f = (_e = item.serverName) !== null && _e !== void 0 ? _e : item.ServerName) !== null && _f !== void 0 ? _f : serverNameLookup[serverId]) !== null && _g !== void 0 ? _g : null,
+                                ipAddress: (_j = (_h = item.ipAddress) !== null && _h !== void 0 ? _h : item.IpAddress) !== null && _j !== void 0 ? _j : '',
+                                ipVersion: (_l = (_k = item.ipVersion) !== null && _k !== void 0 ? _k : item.IpVersion) !== null && _l !== void 0 ? _l : 'IPv4',
+                                isPrimary: (_o = (_m = item.isPrimary) !== null && _m !== void 0 ? _m : item.IsPrimary) !== null && _o !== void 0 ? _o : false,
+                                status: (_q = (_p = item.status) !== null && _p !== void 0 ? _p : item.Status) !== null && _q !== void 0 ? _q : 'Active',
+                                assignedTo: (_s = (_r = item.assignedTo) !== null && _r !== void 0 ? _r : item.AssignedTo) !== null && _s !== void 0 ? _s : null,
+                                notes: (_u = (_t = item.notes) !== null && _t !== void 0 ? _t : item.Notes) !== null && _u !== void 0 ? _u : null,
+                            };
                         });
                         renderTable();
                         return [2 /*return*/];
@@ -446,8 +454,14 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         (_b = document.getElementById('server-ip-addresses-save')) === null || _b === void 0 ? void 0 : _b.addEventListener('click', saveServerIpAddress);
         (_c = document.getElementById('server-ip-addresses-confirm-delete')) === null || _c === void 0 ? void 0 : _c.addEventListener('click', doDelete);
         bindTableActions();
-        loadServers();
-        loadServerIpAddresses();
+        loadServers()
+            .catch(function (error) {
+            console.error('Failed to load servers for IP addresses', error);
+            showError('Failed to load servers. Some labels may be missing.');
+        })
+            .finally(function () {
+            loadServerIpAddresses();
+        });
     }
     function setupPageObserver() {
         // Try immediate initialization
