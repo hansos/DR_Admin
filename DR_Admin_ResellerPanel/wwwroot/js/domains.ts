@@ -40,8 +40,51 @@ interface ApiResponse<T> {
     message?: string;
 }
 
+interface RegisteredDomainsResult {
+    success?: boolean;
+    message?: string;
+    domains?: any[];
+    Domains?: any[];
+    totalCount?: number;
+    TotalCount?: number;
+}
+
 function getApiBaseUrl(): string {
     return (window as any).AppSettings?.apiBaseUrl ?? '';
+}
+
+function setImportBusy(isBusy: boolean): void {
+    const progress = document.getElementById('domains-import-progress');
+    const select = document.getElementById('domains-import-registrar') as HTMLSelectElement | null;
+    const confirm = document.getElementById('domains-import-confirm') as HTMLButtonElement | null;
+
+    if (progress) {
+        progress.classList.toggle('d-none', !isBusy);
+    }
+
+    if (select) {
+        select.disabled = isBusy;
+    }
+
+    if (confirm) {
+        confirm.disabled = isBusy;
+    }
+}
+
+function setImportSummary(message: string): void {
+    const summary = document.getElementById('domains-import-summary');
+    if (!summary) {
+        return;
+    }
+
+    if (!message) {
+        summary.textContent = '';
+        summary.classList.add('d-none');
+        return;
+    }
+
+    summary.textContent = message;
+    summary.classList.remove('d-none');
 }
 
 function getAuthToken(): string | null {
@@ -225,6 +268,8 @@ function openImport(): void {
         select.value = '';
     }
 
+    setImportSummary('');
+    setImportBusy(false);
     loadRegistrarsForImport();
     showModal('domains-import-modal');
 }
@@ -263,10 +308,26 @@ async function importDomains(): Promise<void> {
         return;
     }
 
+    setImportSummary('');
+    setImportBusy(true);
+
+    let totalExisting: number | null = null;
+    const existingResponse = await apiRequest<RegisteredDomainsResult>(`${getApiBaseUrl()}/Registrars/${registrarId}/domains`, { method: 'GET' });
+    if (existingResponse.success) {
+        const existingData = existingResponse.data as any;
+        totalExisting = existingData?.totalCount ?? existingData?.TotalCount ?? existingData?.domains?.length ?? existingData?.Domains?.length ?? null;
+    }
+
     const response = await apiRequest(`${getApiBaseUrl()}/Registrars/${registrarId}/domains/download`, { method: 'POST' });
+    setImportBusy(false);
     if (response.success) {
-        hideModal('domains-import-modal');
-        showSuccess(response.message || 'Domains imported successfully');
+        const resultData = response.data as any;
+        const importedCount = resultData?.count ?? resultData?.Count ?? resultData?.data?.count ?? resultData?.data?.Count ?? null;
+        const totalLabel = totalExisting ?? importedCount ?? 0;
+        const importedLabel = importedCount ?? 0;
+        const summaryMessage = `Imported ${importedLabel} of ${totalLabel} domains.`;
+        setImportSummary(summaryMessage);
+        showSuccess(summaryMessage);
         loadDomains();
     } else {
         showError(response.message || 'Import failed');

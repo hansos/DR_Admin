@@ -17,6 +17,7 @@
         "customers.ts",
         "contact-persons.ts",
         "registry-apis.ts",
+        "expiring-domains.ts",
         "domains.ts",
         "operating-systems.ts",
         "nav-menu.ts",

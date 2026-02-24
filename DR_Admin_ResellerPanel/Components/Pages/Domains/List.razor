@@ -79,6 +79,10 @@
             </div>
             <div class="modal-body">
                 <p class="text-muted">Merge all domains from the selected registrar into Registered Domains.</p>
+                <div class="progress mb-3 d-none" id="domains-import-progress">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"></div>
+                </div>
+                <div class="alert alert-info d-none" id="domains-import-summary"></div>
                 <div class="mb-3">
                     <label for="domains-import-registrar" class="form-label">Registrar <span class="text-danger">*</span></label>
                     <select class="form-select" id="domains-import-registrar">

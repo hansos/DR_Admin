@@ -368,6 +368,33 @@
         const parsed = Number(raw);
         return Number.isFinite(parsed) ? parsed : 0;
     }
+    function setImportBusy(isBusy) {
+        const progress = document.getElementById('domains-import-progress');
+        const select = document.getElementById('domains-import-registrar');
+        const confirm = document.getElementById('domains-import-confirm');
+        if (progress) {
+            progress.classList.toggle('d-none', !isBusy);
+        }
+        if (select) {
+            select.disabled = isBusy;
+        }
+        if (confirm) {
+            confirm.disabled = isBusy;
+        }
+    }
+    function setImportSummary(message) {
+        const summary = document.getElementById('domains-import-summary');
+        if (!summary) {
+            return;
+        }
+        if (!message) {
+            summary.textContent = '';
+            summary.classList.add('d-none');
+            return;
+        }
+        summary.textContent = message;
+        summary.classList.remove('d-none');
+    }
     function setDateTimeLocalValue(id, date) {
         const el = document.getElementById(id);
         if (!el) {
@@ -431,10 +458,24 @@
             showError('Select a registrar to import domains');
             return;
         }
+        setImportSummary('');
+        setImportBusy(true);
+        let totalExisting = null;
+        const existingResponse = await apiRequest(`${getApiBaseUrl()}/Registrars/${registrarId}/domains`, { method: 'GET' });
+        if (existingResponse.success) {
+            const existingData = existingResponse.data;
+            totalExisting = (existingData === null || existingData === void 0 ? void 0 : existingData.totalCount) ?? (existingData === null || existingData === void 0 ? void 0 : existingData.TotalCount) ?? ((existingData === null || existingData === void 0 ? void 0 : existingData.domains) ? existingData.domains.length : null) ?? ((existingData === null || existingData === void 0 ? void 0 : existingData.Domains) ? existingData.Domains.length : null) ?? null;
+        }
         const response = await apiRequest(`${getApiBaseUrl()}/Registrars/${registrarId}/domains/download`, { method: 'POST' });
+        setImportBusy(false);
         if (response.success) {
-            hideModal('domains-import-modal');
-            showSuccess(response.message || 'Domains imported successfully');
+            const resultData = response.data;
+            const importedCount = (resultData === null || resultData === void 0 ? void 0 : resultData.count) ?? (resultData === null || resultData === void 0 ? void 0 : resultData.Count) ?? ((resultData === null || resultData === void 0 ? void 0 : resultData.data) ? resultData.data.count : null) ?? ((resultData === null || resultData === void 0 ? void 0 : resultData.data) ? resultData.data.Count : null) ?? null;
+            const totalLabel = totalExisting ?? importedCount ?? 0;
+            const importedLabel = importedCount ?? 0;
+            const summaryMessage = `Imported ${importedLabel} of ${totalLabel} domains.`;
+            setImportSummary(summaryMessage);
+            showSuccess(summaryMessage);
             loadDomains();
         }
         else {
