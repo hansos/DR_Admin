@@ -1,4 +1,3 @@
-"use strict";
 /**
  * Authentication State Management for DR Admin Reseller Panel.
  * Stores session data in sessionStorage so state is cleared when the browser tab is closed.
@@ -12,8 +11,7 @@ function authIsLoggedIn() {
     return !!sessionStorage.getItem(AUTH_TOKEN_KEY);
 }
 function authGetUsername() {
-    var _a;
-    return (_a = sessionStorage.getItem(AUTH_USERNAME_KEY)) !== null && _a !== void 0 ? _a : '';
+    return sessionStorage.getItem(AUTH_USERNAME_KEY) ?? '';
 }
 function authGetRoles() {
     const raw = sessionStorage.getItem(AUTH_ROLES_KEY);
@@ -22,7 +20,7 @@ function authGetRoles() {
     try {
         return JSON.parse(raw);
     }
-    catch (_a) {
+    catch {
         return [];
     }
 }
@@ -79,11 +77,12 @@ function authUpdateTopRow() {
 }
 function authEnforce() {
     const path = window.location.pathname.toLowerCase();
-    const isLoginRoute = path === '/login' || path.startsWith('/login/');
+    const isPublicRoute = path === '/login' || path.startsWith('/login/') ||
+        path === '/forgot-password' || path.startsWith('/forgot-password/');
     const expired = authIsExpired();
     if (expired) {
         authClear();
-        if (!isLoginRoute) {
+        if (!isPublicRoute) {
             window.location.href = '/login';
         }
         return;
@@ -98,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function setupBlazorNavigationListener() {
     // Check if Blazor object exists and has addEventListener
     const blazor = window.Blazor;
-    if (blazor === null || blazor === void 0 ? void 0 : blazor.addEventListener) {
+    if (blazor?.addEventListener) {
         blazor.addEventListener('enhancedload', () => {
             authEnforce();
             authUpdateTopRow();

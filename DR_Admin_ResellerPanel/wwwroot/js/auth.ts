@@ -84,12 +84,13 @@ function authUpdateTopRow(): void {
 
 function authEnforce(): void {
     const path = window.location.pathname.toLowerCase();
-    const isLoginRoute = path === '/login' || path.startsWith('/login/');
+    const isPublicRoute = path === '/login' || path.startsWith('/login/') ||
+                          path === '/forgot-password' || path.startsWith('/forgot-password/');
     const expired = authIsExpired();
 
     if (expired) {
         authClear();
-        if (!isLoginRoute) {
+        if (!isPublicRoute) {
             window.location.href = '/login';
         }
         return;

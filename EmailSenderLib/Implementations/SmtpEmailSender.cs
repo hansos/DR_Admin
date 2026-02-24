@@ -1,6 +1,7 @@
 using EmailSenderLib.Interfaces;
-using System.Net;
-using System.Net.Mail;
+using MailKit.Net.Smtp;
+using MailKit.Security;
+using MimeKit;
 using Serilog;
 
 namespace EmailSenderLib.Implementations
@@ -25,7 +26,7 @@ namespace EmailSenderLib.Implementations
             _enableSsl = enableSsl;
             _fromEmail = string.IsNullOrEmpty(fromEmail) ? username : fromEmail;
             _fromName = fromName;
-            
+
             _log.Information("SmtpEmailSender initialized - Host: {Host}, Port: {Port}, SSL: {EnableSsl}, Username: {Username}, FromEmail: {FromEmail}",
                 _host, _port, _enableSsl, _username, _fromEmail);
         }
@@ -39,31 +40,28 @@ namespace EmailSenderLib.Implementations
         {
             _log.Information("Attempting to send email - To: {To}, Subject: {Subject}, IsHtml: {IsHtml}, Attachments: {AttachmentCount}",
                 to, subject, isHtml, attachments?.Count ?? 0);
-            
+
             _log.Debug("SMTP Configuration - Host: {Host}, Port: {Port}, SSL: {EnableSsl}, Username: {Username}",
                 _host, _port, _enableSsl, _username);
 
             try
             {
-                using var client = new SmtpClient(_host, _port)
+                var message = new MimeMessage();
+                message.From.Add(new MailboxAddress(_fromName, _fromEmail));
+                message.To.Add(MailboxAddress.Parse(to));
+                message.Subject = subject;
+
+                var bodyBuilder = new BodyBuilder();
+                if (isHtml)
                 {
-                    EnableSsl = _enableSsl,
-                    Credentials = new NetworkCredential(_username, _password)
-                };
-
-                _log.Debug("SMTP client created, preparing mail message");
-
-                var mailMessage = new MailMessage
+                    bodyBuilder.HtmlBody = body;
+                }
+                else
                 {
-                    From = new MailAddress(_fromEmail, _fromName),
-                    Subject = subject,
-                    Body = body,
-                    IsBodyHtml = isHtml
-                };
+                    bodyBuilder.TextBody = body;
+                }
 
-                mailMessage.To.Add(to);
-                _log.Debug("Mail message created - From: {From} ({FromName}), To: {To}", _fromEmail, _fromName, to);
-
+                // Add attachments
                 if (attachments != null && attachments.Any())
                 {
                     _log.Debug("Processing {Count} attachments", attachments.Count);
@@ -71,7 +69,7 @@ namespace EmailSenderLib.Implementations
                     {
                         if (File.Exists(attachment))
                         {
-                            mailMessage.Attachments.Add(new Attachment(attachment));
+                            bodyBuilder.Attachments.Add(attachment);
                             _log.Debug("Attached file: {FileName}", attachment);
                         }
                         else
@@ -81,25 +79,53 @@ namespace EmailSenderLib.Implementations
                     }
                 }
 
+                message.Body = bodyBuilder.ToMessageBody();
+                _log.Debug("Mail message created - From: {From} ({FromName}), To: {To}", _fromEmail, _fromName, to);
+
+                using var client = new SmtpClient();
+
+                // Determine the secure socket options based on port and SSL setting
+                SecureSocketOptions socketOptions;
+                if (_port == 465)
+                {
+                    // Port 465 uses implicit SSL/TLS
+                    socketOptions = SecureSocketOptions.SslOnConnect;
+                }
+                else if (_enableSsl)
+                {
+                    // Port 587 and others typically use STARTTLS
+                    socketOptions = SecureSocketOptions.StartTls;
+                }
+                else
+                {
+                    socketOptions = SecureSocketOptions.None;
+                }
+
+                _log.Information("Connecting to SMTP server {Host}:{Port} with {SocketOptions}", _host, _port, socketOptions);
+                await client.ConnectAsync(_host, _port, socketOptions);
+
+                _log.Debug("Authenticating with SMTP server");
+                await client.AuthenticateAsync(_username, _password);
+
                 _log.Information("Sending email via SMTP server {Host}:{Port}", _host, _port);
-                await client.SendMailAsync(mailMessage);
+                await client.SendAsync(message);
+
+                await client.DisconnectAsync(true);
                 _log.Information("Email sent successfully to {To}", to);
             }
-            catch (SmtpFailedRecipientsException ex)
+            catch (AuthenticationException ex)
             {
-                _log.Error(ex, "SMTP Failed Recipients - Failed to send to one or more recipients. InnerExceptions: {InnerExceptionCount}",
-                    ex.InnerExceptions?.Length ?? 0);
-                foreach (var innerEx in ex.InnerExceptions ?? Array.Empty<SmtpFailedRecipientException>())
-                {
-                    _log.Error("Failed recipient: {Recipient}, StatusCode: {StatusCode}", 
-                        innerEx.FailedRecipient, innerEx.StatusCode);
-                }
+                _log.Error(ex, "SMTP Authentication Error - Message: {Message}", ex.Message);
                 throw;
             }
-            catch (SmtpException ex)
+            catch (MailKit.ServiceNotConnectedException ex)
             {
-                _log.Error(ex, "SMTP Error - StatusCode: {StatusCode}, Message: {Message}", 
-                    ex.StatusCode, ex.Message);
+                _log.Error(ex, "SMTP Connection Error - Not connected to server. Message: {Message}", ex.Message);
+                throw;
+            }
+            catch (MailKit.ServiceNotAuthenticatedException ex)
+            {
+                _log.Error(ex, "SMTP Authentication Required - Message: {Message}", ex.Message);
                 throw;
             }
             catch (InvalidOperationException ex)
