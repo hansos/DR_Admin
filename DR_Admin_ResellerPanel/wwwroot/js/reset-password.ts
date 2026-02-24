@@ -143,10 +143,14 @@ async function resetPassword(token: string, newPassword: string, confirmPassword
 
 function bindEvents(): void {
     const form = document.getElementById('reset-password-form') as HTMLFormElement | null;
-    
+
     if (!form) {
         return;
     }
+
+    // Password toggle functionality
+    setupPasswordToggle('toggle-reset-password-new', 'reset-password-new', 'toggle-reset-password-new-icon');
+    setupPasswordToggle('toggle-reset-password-confirm', 'reset-password-confirm', 'toggle-reset-password-confirm-icon');
 
     // Check if token exists in URL
     const token = getQueryParameter('token');
@@ -191,6 +195,24 @@ function bindEvents(): void {
 
         await resetPassword(token, newPassword, confirmPassword);
     });
+}
+
+function setupPasswordToggle(buttonId: string, inputId: string, iconId: string): void {
+    const toggleBtn = document.getElementById(buttonId) as HTMLButtonElement | null;
+    const passwordInput = document.getElementById(inputId) as HTMLInputElement | null;
+    const toggleIcon = document.getElementById(iconId);
+
+    if (toggleBtn && passwordInput && toggleIcon) {
+        toggleBtn.addEventListener('click', () => {
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.className = 'bi bi-eye-slash';
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.className = 'bi bi-eye';
+            }
+        });
+    }
 }
 
 let initialized = false;

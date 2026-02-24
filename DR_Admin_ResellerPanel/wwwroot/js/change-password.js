@@ -117,6 +117,10 @@
         if (!form) {
             return;
         }
+        // Password toggle functionality
+        setupPasswordToggle('toggle-change-password-current', 'change-password-current', 'toggle-change-password-current-icon');
+        setupPasswordToggle('toggle-change-password-new', 'change-password-new', 'toggle-change-password-new-icon');
+        setupPasswordToggle('toggle-change-password-confirm', 'change-password-confirm', 'toggle-change-password-confirm-icon');
         form.addEventListener('submit', async (e) => {
             var _a, _b, _c;
             e.preventDefault();
@@ -145,6 +149,23 @@
             }
             await changePassword(currentPassword, newPassword, confirmPassword);
         });
+    }
+    function setupPasswordToggle(buttonId, inputId, iconId) {
+        const toggleBtn = document.getElementById(buttonId);
+        const passwordInput = document.getElementById(inputId);
+        const toggleIcon = document.getElementById(iconId);
+        if (toggleBtn && passwordInput && toggleIcon) {
+            toggleBtn.addEventListener('click', () => {
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    toggleIcon.className = 'bi bi-eye-slash';
+                }
+                else {
+                    passwordInput.type = 'password';
+                    toggleIcon.className = 'bi bi-eye';
+                }
+            });
+        }
     }
     let initialized = false;
     function initializeChangePassword() {

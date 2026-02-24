@@ -114,6 +114,9 @@
         if (!form) {
             return;
         }
+        // Password toggle functionality
+        setupPasswordToggle('toggle-reset-password-new', 'reset-password-new', 'toggle-reset-password-new-icon');
+        setupPasswordToggle('toggle-reset-password-confirm', 'reset-password-confirm', 'toggle-reset-password-confirm-icon');
         // Check if token exists in URL
         const token = getQueryParameter('token');
         if (!token) {
@@ -150,6 +153,23 @@
             }
             await resetPassword(token, newPassword, confirmPassword);
         });
+    }
+    function setupPasswordToggle(buttonId, inputId, iconId) {
+        const toggleBtn = document.getElementById(buttonId);
+        const passwordInput = document.getElementById(inputId);
+        const toggleIcon = document.getElementById(iconId);
+        if (toggleBtn && passwordInput && toggleIcon) {
+            toggleBtn.addEventListener('click', () => {
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    toggleIcon.className = 'bi bi-eye-slash';
+                }
+                else {
+                    passwordInput.type = 'password';
+                    toggleIcon.className = 'bi bi-eye';
+                }
+            });
+        }
     }
     let initialized = false;
     function initializeResetPassword() {
