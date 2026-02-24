@@ -14,6 +14,7 @@
         "servers.ts",
         "server-ip-addresses.ts",
         "server-types.ts",
+        "customers.ts",
         "operating-systems.ts",
         "nav-menu.ts",
         "host-providers.ts",
