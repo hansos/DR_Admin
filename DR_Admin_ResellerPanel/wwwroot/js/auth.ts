@@ -102,10 +102,28 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Re-run after Blazor enhanced navigation so the top-row stays in sync
-document.addEventListener('enhancedload', () => {
-    authEnforce();
-    authUpdateTopRow();
-});
+// Use Blazor's API for enhanced navigation events
+function setupBlazorNavigationListener(): void {
+    // Check if Blazor object exists and has addEventListener
+    const blazor = (window as any).Blazor;
+    if (blazor?.addEventListener) {
+        blazor.addEventListener('enhancedload', () => {
+            authEnforce();
+            authUpdateTopRow();
+        });
+        console.log('Auth: Blazor enhancedload listener registered');
+    } else {
+        // Blazor not loaded yet, retry after a short delay
+        setTimeout(setupBlazorNavigationListener, 100);
+    }
+}
+
+// Start trying to set up the Blazor listener
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupBlazorNavigationListener);
+} else {
+    setupBlazorNavigationListener();
+}
 
 setInterval(() => { authEnforce(); }, 60000);
 

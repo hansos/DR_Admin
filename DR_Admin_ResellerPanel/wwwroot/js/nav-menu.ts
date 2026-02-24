@@ -158,8 +158,17 @@ window.addEventListener('load', () => {
     }
 });
 
-// Listen for Blazor's enhanced navigation
-document.addEventListener('enhancedload', () => {
-    updateActiveLink();
-});
+// Listen for Blazor's enhanced navigation using Blazor API
+function setupBlazorNavListener(): void {
+    const blazor = (window as any).Blazor;
+    if (blazor?.addEventListener) {
+        blazor.addEventListener('enhancedload', () => {
+            updateActiveLink();
+        });
+        console.log('NavMenu: Blazor enhancedload listener registered');
+    } else {
+        setTimeout(setupBlazorNavListener, 100);
+    }
+}
+setupBlazorNavListener();
 })();

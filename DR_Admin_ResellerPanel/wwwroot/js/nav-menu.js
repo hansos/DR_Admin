@@ -139,9 +139,19 @@
             console.log('EventListener for load already added');
         }
     });
-    // Listen for Blazor's enhanced navigation
-    document.addEventListener('enhancedload', () => {
-        updateActiveLink();
-    });
+    // Listen for Blazor's enhanced navigation using Blazor API
+    function setupBlazorNavListener() {
+        const blazor = window.Blazor;
+        if (blazor === null || blazor === void 0 ? void 0 : blazor.addEventListener) {
+            blazor.addEventListener('enhancedload', () => {
+                updateActiveLink();
+            });
+            console.log('NavMenu: Blazor enhancedload listener registered');
+        }
+        else {
+            setTimeout(setupBlazorNavListener, 100);
+        }
+    }
+    setupBlazorNavListener();
 })();
 //# sourceMappingURL=nav-menu.js.map
