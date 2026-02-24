@@ -121,7 +121,8 @@ function initFilters() {
 function applyFiltersAndRender() {
     filteredServers = allServers.filter(s => {
         if (searchTerm && !s.name?.toLowerCase().includes(searchTerm) && !s.location?.toLowerCase().includes(searchTerm)) return false;
-        if (statusFilter && s.status !== statusFilter) return false;
+        if (statusFilter === 'true' && s.status !== true) return false;
+        if (statusFilter === 'false' && s.status !== false) return false;
         if (typeFilter && s.serverTypeId !== parseInt(typeFilter)) return false;
         return true;
     });
@@ -203,7 +204,7 @@ function openCreate() {
     editingId = null;
     document.getElementById('modalTitle').textContent = 'New Server';
     document.getElementById('form').reset();
-    document.getElementById('status').value = 'Active';
+    document.getElementById('status').checked = true;
     new bootstrap.Modal(document.getElementById('editModal')).show();
 }
 
@@ -213,7 +214,7 @@ function openEdit(id) {
     editingId = id;
     document.getElementById('modalTitle').textContent = `Edit Server – ${s.name}`;
     document.getElementById('name').value = s.name;
-    document.getElementById('status').value = s.status;
+    document.getElementById('status').checked = s.status === true;
     document.getElementById('serverTypeId').value = s.serverTypeId || '';
     document.getElementById('hostProviderId').value = s.hostProviderId || '';
     document.getElementById('operatingSystemId').value = s.operatingSystemId || '';
@@ -229,7 +230,7 @@ async function saveServer() {
     const name = document.getElementById('name').value.trim();
     const serverTypeId = parseInt(document.getElementById('serverTypeId').value);
     const operatingSystemId = parseInt(document.getElementById('operatingSystemId').value);
-    const status = document.getElementById('status').value;
+    const status = document.getElementById('status').checked;
 
     if (!name) { showError('Server name is required'); return; }
     if (!serverTypeId) { showError('Server Type is required'); return; }
@@ -286,9 +287,18 @@ async function doDelete() {
 }
 
 function statusBadge(status) {
-    const map = { Active: 'success', Inactive: 'secondary', Maintenance: 'warning' };
-    const bg = map[status] || 'secondary';
-    return `<span class="badge bg-${bg}">${esc(status)}</span>`;
+    let text, bg;
+    if (status === true) {
+        text = 'Active';
+        bg = 'success';
+    } else if (status === false) {
+        text = 'Inactive';
+        bg = 'secondary';
+    } else {
+        text = 'Unknown';
+        bg = 'warning';
+    }
+    return `<span class="badge bg-${bg}">${text}</span>`;
 }
 
 function formatRam(mb) {

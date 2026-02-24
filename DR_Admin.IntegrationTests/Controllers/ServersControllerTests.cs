@@ -163,7 +163,7 @@ public class ServersControllerTests : IClassFixture<TestWebApplicationFactory>
             HostProviderId = hostProviderId,
             Location = "US-East",
             OperatingSystemId = osId,
-            Status = "Active",
+            Status = true,
             CpuCores = 8,
             RamMB = 16384,
             DiskSpaceGB = 500,
@@ -210,7 +210,7 @@ public class ServersControllerTests : IClassFixture<TestWebApplicationFactory>
             Name = "Test Server",
             ServerTypeId = serverTypeId,
             OperatingSystemId = osId,
-            Status = "Active"
+            Status = true
         };
 
         // Act
@@ -243,7 +243,7 @@ public class ServersControllerTests : IClassFixture<TestWebApplicationFactory>
             HostProviderId = hostProviderId,
             Location = "EU-West",
             OperatingSystemId = osId,
-            Status = "Maintenance",
+            Status = false,
             CpuCores = 16,
             RamMB = 32768,
             DiskSpaceGB = 1000,
@@ -283,7 +283,7 @@ public class ServersControllerTests : IClassFixture<TestWebApplicationFactory>
             Name = "Test",
             ServerTypeId = serverTypeId,
             OperatingSystemId = osId,
-            Status = "Active"
+            Status = true
         };
 
         // Act
@@ -370,7 +370,7 @@ public class ServersControllerTests : IClassFixture<TestWebApplicationFactory>
             HostProviderId = hostProviderId,
             Location = "DataCenter-1",
             OperatingSystemId = osId,
-            Status = "Active",
+            Status = true,
             CpuCores = 32,
             RamMB = 65536,
             DiskSpaceGB = 2000,

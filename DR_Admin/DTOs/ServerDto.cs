@@ -49,11 +49,11 @@ public class ServerDto
     /// Gets or sets the display name of the operating system
     /// </summary>
     public string OperatingSystemName { get; set; } = string.Empty;
-    
+
     /// <summary>
-    /// Gets or sets the server status (Active, Inactive, Maintenance)
+    /// Gets or sets the server status (true for active, false for inactive, null for unknown)
     /// </summary>
-    public string Status { get; set; } = string.Empty;
+    public bool? Status { get; set; }
     
     /// <summary>
     /// Gets or sets the number of CPU cores
@@ -117,9 +117,9 @@ public class CreateServerDto
     public int OperatingSystemId { get; set; }
 
     /// <summary>
-    /// Gets or sets the server status (Active, Inactive, Maintenance)
+    /// Gets or sets the server status (true for active, false for inactive, null for unknown)
     /// </summary>
-    public string Status { get; set; } = string.Empty;
+    public bool? Status { get; set; } = true;
 
     /// <summary>
     /// Gets or sets the number of CPU cores
@@ -173,9 +173,9 @@ public class UpdateServerDto
     public int OperatingSystemId { get; set; }
 
     /// <summary>
-    /// Gets or sets the server status (Active, Inactive, Maintenance)
+    /// Gets or sets the server status (true for active, false for inactive, null for unknown)
     /// </summary>
-    public string Status { get; set; } = string.Empty;
+    public bool? Status { get; set; } = true;
 
     /// <summary>
     /// Gets or sets the number of CPU cores

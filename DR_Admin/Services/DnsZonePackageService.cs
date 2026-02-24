@@ -461,7 +461,7 @@ public class DnsZonePackageService : IDnsZonePackageService
         {
             ServerId = s.ServerId,
             ServerName = s.Server?.Name ?? string.Empty,
-            Status = s.Server?.Status ?? string.Empty
+            Status = s.Server?.Status
         }).ToList();
 
         return dto;

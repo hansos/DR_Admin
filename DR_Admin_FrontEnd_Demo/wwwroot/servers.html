@@ -169,12 +169,11 @@
                             <input type="text" class="form-control" id="name" placeholder="e.g. web-prod-01">
                         </div>
                         <div class="col-md-4">
-                            <label for="status" class="form-label">Status <span class="text-danger">*</span></label>
-                            <select class="form-select" id="status">
-                                <option value="Active">Active</option>
-                                <option value="Inactive">Inactive</option>
-                                <option value="Maintenance">Maintenance</option>
-                            </select>
+                            <label for="status" class="form-label">Status</label>
+                            <div class="form-check form-switch mt-2">
+                                <input class="form-check-input" type="checkbox" id="status" checked>
+                                <label class="form-check-label" for="status">Active</label>
+                            </div>
                         </div>
                         <div class="col-md-6">
                             <label for="serverTypeId" class="form-label">Server Type <span class="text-danger">*</span></label>

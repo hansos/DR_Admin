@@ -7,7 +7,7 @@ public class Server : EntityBase
     public int? HostProviderId { get; set; }
     public string? Location { get; set; }
     public int OperatingSystemId { get; set; }
-    public string Status { get; set; } = string.Empty; // Active, Inactive, Maintenance
+    public bool? Status { get; set; } = true;
     public int? CpuCores { get; set; }
     public int? RamMB { get; set; }
     public int? DiskSpaceGB { get; set; }

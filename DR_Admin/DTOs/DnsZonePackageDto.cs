@@ -197,5 +197,5 @@ public class DnsZonePackageServerSummaryDto
     /// <summary>
     /// Gets or sets the server status
     /// </summary>
-    public string Status { get; set; } = string.Empty;
+    public bool? Status { get; set; }
 }

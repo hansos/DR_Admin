@@ -84,7 +84,7 @@ public class ServerControlPanelsControllerTests : IClassFixture<TestWebApplicati
             Name = "Test Server",
             ServerTypeId = serverType.Id,
             OperatingSystemId = os.Id,
-            Status = "Active",
+            Status = true,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
