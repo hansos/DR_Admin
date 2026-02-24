@@ -5,7 +5,7 @@ let navMenuInitialized = false;
 
 function toggleSection(section: string): void {
     const navGroups = document.querySelectorAll('#nav-menu .nav-group');
-
+    console.log("Ready to toggle the main menu...");
     navGroups.forEach((group) => {
         const groupSection = (group as HTMLElement).dataset.section;
         console.log(groupSection.data-section)
