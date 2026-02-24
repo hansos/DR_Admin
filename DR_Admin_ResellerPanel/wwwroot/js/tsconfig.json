@@ -7,6 +7,6 @@
         "sourceMap": true,
         "noEmitOnError": true
     },
-    "files": ["auth.ts", "login.ts", "app-settings.ts", "server-types.ts", "operating-systems.ts", "nav-menu.ts"]
+    "files": ["auth.ts", "login.ts", "app-settings.ts", "server-types.ts", "operating-systems.ts", "nav-menu.ts", "host-providers.ts", "control-panel-types.ts"]
 }
 

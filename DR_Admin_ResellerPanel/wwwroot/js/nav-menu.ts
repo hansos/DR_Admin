@@ -9,7 +9,6 @@ function toggleSection(section: string): void {
     console.log("Ready to toggle the main menu...");
     navGroups.forEach((group) => {
         const groupSection = (group as HTMLElement).dataset.section;
-        console.log('Toggling section:', groupSection);
         if (groupSection === section) {
             if (expandedSection === section) {
                 // Collapse current section

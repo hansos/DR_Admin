@@ -8,7 +8,6 @@
         console.log("Ready to toggle the main menu...");
         navGroups.forEach((group) => {
             const groupSection = group.dataset.section;
-            console.log('Toggling section:', groupSection);
             if (groupSection === section) {
                 if (expandedSection === section) {
                     // Collapse current section
