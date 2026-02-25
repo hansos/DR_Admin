@@ -114,6 +114,7 @@ function initializePage(): void {
 
     document.getElementById('dns-zones-select')?.addEventListener('click', openSelectDomainModal);
     document.getElementById('dns-zones-domain-load')?.addEventListener('click', loadDomainFromModal);
+    document.getElementById('dns-zones-add')?.addEventListener('click', openCreate);
     document.getElementById('dns-zones-save')?.addEventListener('click', saveRecord);
     document.getElementById('dns-zones-confirm-delete')?.addEventListener('click', deleteRecord);
     document.getElementById('dns-zones-record-type')?.addEventListener('change', updateFieldVisibility);
@@ -141,6 +142,7 @@ function initializePage(): void {
         showNoSelection();
         openSelectDomainModal();
     }
+}
 
 async function loadDnsRecordTypes(): Promise<void> {
     const response = await apiRequest<DnsRecordType[]>(`${getApiBaseUrl()}/DnsRecordTypes`, { method: 'GET' });
@@ -185,7 +187,6 @@ function renderRecordTypeOptions(): void {
     select.innerHTML = activeTypes
         .map((type) => `<option value="${type.id}">${esc(type.type)}</option>`)
         .join('');
-}
 }
 
 function bindTableActions(): void {
@@ -268,6 +269,7 @@ function setSelectedDomain(domain: Domain): void {
     setText('dns-zones-selected-id', String(domain.id));
     setSelectButtonLabel(selectedDomainName);
     updateSyncButtonState();
+    updateAddButtonState();
 }
 
 function normalizeDomain(raw: any): Domain {
@@ -304,6 +306,8 @@ async function loadRecords(): Promise<void> {
     renderRecords();
     setLoading(false);
     updatePendingSyncBadge();
+    updateSyncButtonState();
+    updateAddButtonState();
 }
 
 function renderRecords(): void {
@@ -349,6 +353,29 @@ function renderRecords(): void {
     showTable();
 }
 
+function openCreate(): void {
+    if (!selectedDomainId) {
+        showError('Select a domain before adding DNS records.');
+        return;
+    }
+
+    editingRecordId = null;
+
+    const defaultTypeId = recordTypes[0]?.id?.toString() ?? '';
+    const defaultTtl = recordTypes[0]?.defaultTTL?.toString() ?? '3600';
+
+    setSelectValue('dns-zones-record-type', defaultTypeId);
+    setInputValue('dns-zones-record-name', '');
+    setInputValue('dns-zones-record-value', '');
+    setInputValue('dns-zones-record-ttl', defaultTtl);
+    setInputValue('dns-zones-record-priority', '');
+    setInputValue('dns-zones-record-weight', '');
+    setInputValue('dns-zones-record-port', '');
+
+    updateFieldVisibility();
+    showModal('dns-zones-edit-modal');
+}
+
 function openEdit(id: number): void {
     const record = records.find((item) => item.id === id);
     if (!record) {
@@ -376,7 +403,7 @@ function openEdit(id: number): void {
 }
 
 async function saveRecord(): Promise<void> {
-    if (!editingRecordId || !selectedDomainId) {
+    if (!selectedDomainId) {
         return;
     }
 
@@ -397,10 +424,15 @@ async function saveRecord(): Promise<void> {
         port: getNullableNumberValue('dns-zones-record-port'),
     };
 
-    const response = await apiRequest(`${getApiBaseUrl()}/DnsRecords/${editingRecordId}`, {
-        method: 'PUT',
-        body: JSON.stringify(payload),
-    });
+    const response = editingRecordId
+        ? await apiRequest(`${getApiBaseUrl()}/DnsRecords/${editingRecordId}`, {
+            method: 'PUT',
+            body: JSON.stringify(payload),
+        })
+        : await apiRequest(`${getApiBaseUrl()}/DnsRecords`, {
+            method: 'POST',
+            body: JSON.stringify(payload),
+        });
 
     if (!response.success) {
         showError(response.message || 'Failed to save DNS record.');
@@ -408,7 +440,7 @@ async function saveRecord(): Promise<void> {
     }
 
     hideModal('dns-zones-edit-modal');
-    showSuccess('DNS record updated successfully.');
+    showSuccess(editingRecordId ? 'DNS record updated successfully.' : 'DNS record created successfully.');
     await loadRecords();
 }
 
@@ -473,10 +505,18 @@ function showNoSelection(): void {
     setSelectButtonLabel(null);
     setText('dns-zones-record-count', '0 records');
     updateSyncButtonState();
+    updateAddButtonState();
 }
 
 function updateSyncButtonState(): void {
     const button = document.getElementById('dns-zones-sync') as HTMLButtonElement | null;
+    if (button) {
+        button.disabled = !selectedDomainId;
+    }
+}
+
+function updateAddButtonState(): void {
+    const button = document.getElementById('dns-zones-add') as HTMLButtonElement | null;
     if (button) {
         button.disabled = !selectedDomainId;
     }

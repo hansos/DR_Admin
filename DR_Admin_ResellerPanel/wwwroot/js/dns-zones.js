@@ -52,7 +52,7 @@
     let editingRecordId = null;
     let pendingDeleteId = null;
     function initializePage() {
-        var _a, _b, _c, _d, _e, _f, _g;
+        var _a, _b, _c, _d, _e, _f, _g, _h;
         const page = document.getElementById('dns-zones-page');
         if (!page || page.dataset.initialized === 'true') {
             return;
@@ -60,11 +60,12 @@
         page.dataset.initialized = 'true';
         (_a = document.getElementById('dns-zones-select')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', openSelectDomainModal);
         (_b = document.getElementById('dns-zones-domain-load')) === null || _b === void 0 ? void 0 : _b.addEventListener('click', loadDomainFromModal);
-        (_c = document.getElementById('dns-zones-save')) === null || _c === void 0 ? void 0 : _c.addEventListener('click', saveRecord);
-        (_d = document.getElementById('dns-zones-confirm-delete')) === null || _d === void 0 ? void 0 : _d.addEventListener('click', deleteRecord);
-        (_e = document.getElementById('dns-zones-record-type')) === null || _e === void 0 ? void 0 : _e.addEventListener('change', updateFieldVisibility);
-        (_f = document.getElementById('dns-zones-sync')) === null || _f === void 0 ? void 0 : _f.addEventListener('click', openSyncModal);
-        (_g = document.getElementById('dns-zones-sync-confirm')) === null || _g === void 0 ? void 0 : _g.addEventListener('click', performSync);
+        (_c = document.getElementById('dns-zones-add')) === null || _c === void 0 ? void 0 : _c.addEventListener('click', openCreate);
+        (_d = document.getElementById('dns-zones-save')) === null || _d === void 0 ? void 0 : _d.addEventListener('click', saveRecord);
+        (_e = document.getElementById('dns-zones-confirm-delete')) === null || _e === void 0 ? void 0 : _e.addEventListener('click', deleteRecord);
+        (_f = document.getElementById('dns-zones-record-type')) === null || _f === void 0 ? void 0 : _f.addEventListener('change', updateFieldVisibility);
+        (_g = document.getElementById('dns-zones-sync')) === null || _g === void 0 ? void 0 : _g.addEventListener('click', openSyncModal);
+        (_h = document.getElementById('dns-zones-sync-confirm')) === null || _h === void 0 ? void 0 : _h.addEventListener('click', performSync);
         const input = document.getElementById('dns-zones-domain-name');
         input === null || input === void 0 ? void 0 : input.addEventListener('keydown', (event) => {
             if (event.key === 'Enter') {
@@ -84,47 +85,47 @@
             showNoSelection();
             openSelectDomainModal();
         }
-        async function loadDnsRecordTypes() {
-            const response = await apiRequest(`${getApiBaseUrl()}/DnsRecordTypes`, { method: 'GET' });
-            if (!response.success) {
-                showError(response.message || 'Failed to load DNS record types.');
-                return;
-            }
-            const raw = response.data;
-            const items = Array.isArray(raw)
-                ? raw
-                : Array.isArray(raw === null || raw === void 0 ? void 0 : raw.data)
-                    ? raw.data
-                    : Array.isArray(raw === null || raw === void 0 ? void 0 : raw.Data)
-                        ? raw.Data
-                        : [];
-            recordTypes = items.map((item) => {
-                var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t;
-                return ({
-                    id: (_b = (_a = item.id) !== null && _a !== void 0 ? _a : item.Id) !== null && _b !== void 0 ? _b : 0,
-                    type: (_d = (_c = item.type) !== null && _c !== void 0 ? _c : item.Type) !== null && _d !== void 0 ? _d : '',
-                    description: (_f = (_e = item.description) !== null && _e !== void 0 ? _e : item.Description) !== null && _f !== void 0 ? _f : '',
-                    hasPriority: (_h = (_g = item.hasPriority) !== null && _g !== void 0 ? _g : item.HasPriority) !== null && _h !== void 0 ? _h : false,
-                    hasWeight: (_k = (_j = item.hasWeight) !== null && _j !== void 0 ? _j : item.HasWeight) !== null && _k !== void 0 ? _k : false,
-                    hasPort: (_m = (_l = item.hasPort) !== null && _l !== void 0 ? _l : item.HasPort) !== null && _m !== void 0 ? _m : false,
-                    isEditableByUser: (_p = (_o = item.isEditableByUser) !== null && _o !== void 0 ? _o : item.IsEditableByUser) !== null && _p !== void 0 ? _p : true,
-                    isActive: (_r = (_q = item.isActive) !== null && _q !== void 0 ? _q : item.IsActive) !== null && _r !== void 0 ? _r : true,
-                    defaultTTL: (_t = (_s = item.defaultTTL) !== null && _s !== void 0 ? _s : item.DefaultTTL) !== null && _t !== void 0 ? _t : undefined,
-                });
+    }
+    async function loadDnsRecordTypes() {
+        const response = await apiRequest(`${getApiBaseUrl()}/DnsRecordTypes`, { method: 'GET' });
+        if (!response.success) {
+            showError(response.message || 'Failed to load DNS record types.');
+            return;
+        }
+        const raw = response.data;
+        const items = Array.isArray(raw)
+            ? raw
+            : Array.isArray(raw === null || raw === void 0 ? void 0 : raw.data)
+                ? raw.data
+                : Array.isArray(raw === null || raw === void 0 ? void 0 : raw.Data)
+                    ? raw.Data
+                    : [];
+        recordTypes = items.map((item) => {
+            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t;
+            return ({
+                id: (_b = (_a = item.id) !== null && _a !== void 0 ? _a : item.Id) !== null && _b !== void 0 ? _b : 0,
+                type: (_d = (_c = item.type) !== null && _c !== void 0 ? _c : item.Type) !== null && _d !== void 0 ? _d : '',
+                description: (_f = (_e = item.description) !== null && _e !== void 0 ? _e : item.Description) !== null && _f !== void 0 ? _f : '',
+                hasPriority: (_h = (_g = item.hasPriority) !== null && _g !== void 0 ? _g : item.HasPriority) !== null && _h !== void 0 ? _h : false,
+                hasWeight: (_k = (_j = item.hasWeight) !== null && _j !== void 0 ? _j : item.HasWeight) !== null && _k !== void 0 ? _k : false,
+                hasPort: (_m = (_l = item.hasPort) !== null && _l !== void 0 ? _l : item.HasPort) !== null && _m !== void 0 ? _m : false,
+                isEditableByUser: (_p = (_o = item.isEditableByUser) !== null && _o !== void 0 ? _o : item.IsEditableByUser) !== null && _p !== void 0 ? _p : true,
+                isActive: (_r = (_q = item.isActive) !== null && _q !== void 0 ? _q : item.IsActive) !== null && _r !== void 0 ? _r : true,
+                defaultTTL: (_t = (_s = item.defaultTTL) !== null && _s !== void 0 ? _s : item.DefaultTTL) !== null && _t !== void 0 ? _t : undefined,
             });
-            renderRecordTypeOptions();
+        });
+        renderRecordTypeOptions();
+    }
+    function renderRecordTypeOptions() {
+        const select = document.getElementById('dns-zones-record-type');
+        if (!select) {
+            return;
         }
-        function renderRecordTypeOptions() {
-            const select = document.getElementById('dns-zones-record-type');
-            if (!select) {
-                return;
-            }
-            const activeTypes = recordTypes.filter((type) => type.type && type.isActive !== false);
-            activeTypes.sort((a, b) => a.type.localeCompare(b.type));
-            select.innerHTML = activeTypes
-                .map((type) => `<option value="${type.id}">${esc(type.type)}</option>`)
-                .join('');
-        }
+        const activeTypes = recordTypes.filter((type) => type.type && type.isActive !== false);
+        activeTypes.sort((a, b) => a.type.localeCompare(b.type));
+        select.innerHTML = activeTypes
+            .map((type) => `<option value="${type.id}">${esc(type.type)}</option>`)
+            .join('');
     }
     function bindTableActions() {
         const tableBody = document.getElementById('dns-zones-table-body');
@@ -193,6 +194,7 @@
         setText('dns-zones-selected-id', String(domain.id));
         setSelectButtonLabel(selectedDomainName);
         updateSyncButtonState();
+        updateAddButtonState();
     }
     function normalizeDomain(raw) {
         var _a, _b, _c, _d, _e;
@@ -224,6 +226,8 @@
         renderRecords();
         setLoading(false);
         updatePendingSyncBadge();
+        updateSyncButtonState();
+        updateAddButtonState();
     }
     function renderRecords() {
         const tableBody = document.getElementById('dns-zones-table-body');
@@ -264,6 +268,25 @@
         }).join('');
         showTable();
     }
+    function openCreate() {
+        var _a, _b, _c, _d, _e, _f;
+        if (!selectedDomainId) {
+            showError('Select a domain before adding DNS records.');
+            return;
+        }
+        editingRecordId = null;
+        const defaultTypeId = (_c = (_b = (_a = recordTypes[0]) === null || _a === void 0 ? void 0 : _a.id) === null || _b === void 0 ? void 0 : _b.toString()) !== null && _c !== void 0 ? _c : '';
+        const defaultTtl = (_f = (_e = (_d = recordTypes[0]) === null || _d === void 0 ? void 0 : _d.defaultTTL) === null || _e === void 0 ? void 0 : _e.toString()) !== null && _f !== void 0 ? _f : '3600';
+        setSelectValue('dns-zones-record-type', defaultTypeId);
+        setInputValue('dns-zones-record-name', '');
+        setInputValue('dns-zones-record-value', '');
+        setInputValue('dns-zones-record-ttl', defaultTtl);
+        setInputValue('dns-zones-record-priority', '');
+        setInputValue('dns-zones-record-weight', '');
+        setInputValue('dns-zones-record-port', '');
+        updateFieldVisibility();
+        showModal('dns-zones-edit-modal');
+    }
     function openEdit(id) {
         var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
         const record = records.find((item) => item.id === id);
@@ -286,7 +309,7 @@
         showModal('dns-zones-edit-modal');
     }
     async function saveRecord() {
-        if (!editingRecordId || !selectedDomainId) {
+        if (!selectedDomainId) {
             return;
         }
         const dnsRecordTypeId = getSelectNumberValue('dns-zones-record-type');
@@ -304,16 +327,21 @@
             weight: getNullableNumberValue('dns-zones-record-weight'),
             port: getNullableNumberValue('dns-zones-record-port'),
         };
-        const response = await apiRequest(`${getApiBaseUrl()}/DnsRecords/${editingRecordId}`, {
-            method: 'PUT',
-            body: JSON.stringify(payload),
-        });
+        const response = editingRecordId
+            ? await apiRequest(`${getApiBaseUrl()}/DnsRecords/${editingRecordId}`, {
+                method: 'PUT',
+                body: JSON.stringify(payload),
+            })
+            : await apiRequest(`${getApiBaseUrl()}/DnsRecords`, {
+                method: 'POST',
+                body: JSON.stringify(payload),
+            });
         if (!response.success) {
             showError(response.message || 'Failed to save DNS record.');
             return;
         }
         hideModal('dns-zones-edit-modal');
-        showSuccess('DNS record updated successfully.');
+        showSuccess(editingRecordId ? 'DNS record updated successfully.' : 'DNS record created successfully.');
         await loadRecords();
     }
     function openDelete(id) {
@@ -367,9 +395,16 @@
         setSelectButtonLabel(null);
         setText('dns-zones-record-count', '0 records');
         updateSyncButtonState();
+        updateAddButtonState();
     }
     function updateSyncButtonState() {
         const button = document.getElementById('dns-zones-sync');
+        if (button) {
+            button.disabled = !selectedDomainId;
+        }
+    }
+    function updateAddButtonState() {
+        const button = document.getElementById('dns-zones-add');
         if (button) {
             button.disabled = !selectedDomainId;
         }

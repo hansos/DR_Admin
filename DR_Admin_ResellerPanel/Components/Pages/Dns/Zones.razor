@@ -23,10 +23,6 @@
         <div class="card-header bg-light d-flex justify-content-between align-items-center">
             <h5 class="mb-0"><i class="bi bi-globe2"></i> Selected Domain</h5>
             <div class="d-flex align-items-center gap-2">
-                <button class="btn btn-sm btn-outline-warning" id="dns-zones-sync" type="button" disabled>
-                    <i class="bi bi-arrow-repeat"></i> Sync to DNS Server
-                    <span class="badge bg-dark ms-1 d-none" id="dns-zones-pending-count">0</span>
-                </button>
                 <span class="badge bg-primary" id="dns-zones-record-count">0 records</span>
             </div>
         </div>
@@ -106,8 +102,17 @@
     </div>
 
     <div class="card shadow-sm">
-        <div class="card-header bg-light">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
             <h5 class="mb-0"><i class="bi bi-list-ul"></i> DNS Records</h5>
+            <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-sm btn-outline-warning" id="dns-zones-sync" type="button" disabled>
+                    <i class="bi bi-arrow-repeat"></i> Sync to DNS Server
+                    <span class="badge bg-dark ms-1 d-none" id="dns-zones-pending-count">0</span>
+                </button>
+                <button class="btn btn-sm btn-outline-success" id="dns-zones-add" type="button" disabled>
+                    <i class="bi bi-plus-circle"></i> Add DNS Record
+                </button>
+            </div>
         </div>
         <div class="card-body">
             <div id="dns-zones-no-selection" class="text-center py-5 text-muted">
