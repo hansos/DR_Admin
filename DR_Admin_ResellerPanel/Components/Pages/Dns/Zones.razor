@@ -1,0 +1,240 @@
+@page "/dns/zones"
+
+<div id="dns-zones-page" class="container-fluid">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+        <div>
+            <h2 class="h4 mb-1"><i class="bi bi-hdd-network"></i> DNS Zones</h2>
+            <p class="text-muted mb-0">View and manage DNS records by domain.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-outline-secondary" href="/domains/list">
+                <i class="bi bi-arrow-left"></i> Back to list
+            </a>
+            <button class="btn btn-outline-primary" id="dns-zones-select" type="button">
+                <i class="bi bi-search"></i> Select domain
+            </button>
+        </div>
+    </div>
+
+    <div id="dns-zones-alert-success" class="alert alert-success d-none" role="alert"></div>
+    <div id="dns-zones-alert-error" class="alert alert-danger d-none" role="alert"></div>
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-globe2"></i> Selected Domain</h5>
+            <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-sm btn-outline-warning" id="dns-zones-sync" type="button" disabled>
+                    <i class="bi bi-arrow-repeat"></i> Sync to DNS Server
+                    <span class="badge bg-dark ms-1 d-none" id="dns-zones-pending-count">0</span>
+                </button>
+                <span class="badge bg-primary" id="dns-zones-record-count">0 records</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row g-2">
+                <div class="col-md-6">
+                    <div class="text-muted">Domain</div>
+                    <div class="fw-semibold" id="dns-zones-selected-domain">No domain selected</div>
+                </div>
+
+<div class="modal fade" id="dns-zones-sync-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title">
+                    <i class="bi bi-arrow-repeat"></i> Sync Records to DNS Server
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="dns-zones-sync-loading" class="text-center py-4">
+                    <div class="spinner-border text-warning" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Loading pending records...</p>
+                </div>
+                <div id="dns-zones-sync-empty" class="text-center py-4 text-muted d-none">
+                    <i class="bi bi-check-circle-fill fs-1 text-success d-block mb-2"></i>
+                    All DNS records are already in sync. Nothing to push.
+                </div>
+                <div id="dns-zones-sync-content" class="d-none">
+                    <p class="mb-3">
+                        <strong id="dns-zones-sync-count">0</strong> record(s) have local changes pending push to the DNS server.
+                    </p>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered mb-0">
+                            <thead class="table-warning text-dark">
+                                <tr>
+                                    <th style="width:70px">Type</th>
+                                    <th>Name</th>
+                                    <th>Value</th>
+                                    <th style="width:70px">TTL</th>
+                                    <th style="width:110px">Result</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dns-zones-sync-table"></tbody>
+                        </table>
+                    </div>
+                    <div id="dns-zones-sync-progress" class="d-none mt-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small class="text-muted">Syncing records to DNS server...</small>
+                            <small class="text-muted" id="dns-zones-sync-progress-text">0 / 0</small>
+                        </div>
+                        <div class="progress" style="height:8px">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated bg-warning"
+                                 id="dns-zones-sync-progress-bar" role="progressbar" style="width:0%"></div>
+                        </div>
+                    </div>
+                    <div id="dns-zones-sync-summary" class="d-none mt-3 alert" role="alert"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="dns-zones-sync-cancel">Cancel</button>
+                <button type="button" class="btn btn-warning" id="dns-zones-sync-confirm" disabled>
+                    <i class="bi bi-arrow-repeat"></i> Sync All to DNS Server
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+                <div class="col-md-6">
+                    <div class="text-muted">Domain ID</div>
+                    <div class="fw-semibold" id="dns-zones-selected-id">-</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-light">
+            <h5 class="mb-0"><i class="bi bi-list-ul"></i> DNS Records</h5>
+        </div>
+        <div class="card-body">
+            <div id="dns-zones-no-selection" class="text-center py-5 text-muted">
+                <i class="bi bi-arrow-up-circle fs-1 d-block mb-2"></i>
+                Select a domain to view DNS records.
+            </div>
+            <div id="dns-zones-loading" class="text-center py-5 d-none">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Loading DNS records...</p>
+            </div>
+            <div id="dns-zones-table-wrapper" class="d-none">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Type</th>
+                                <th>Name</th>
+                                <th>Value</th>
+                                <th>TTL</th>
+                                <th>Priority</th>
+                                <th>Weight</th>
+                                <th>Port</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dns-zones-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div id="dns-zones-empty" class="alert alert-info d-none" role="alert">
+                <i class="bi bi-info-circle"></i> No DNS records found for this domain.
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="dns-zones-select-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Select Domain</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted">Enter the domain name to load DNS records.</p>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-globe"></i></span>
+                    <input type="text" class="form-control" id="dns-zones-domain-name" placeholder="example.com" />
+                    <button class="btn btn-primary" id="dns-zones-domain-load" type="button">
+                        <i class="bi bi-search"></i> Load
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="dns-zones-edit-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit DNS Record</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="dns-zones-edit-form" novalidate>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label" for="dns-zones-record-type">Type</label>
+                            <select class="form-select" id="dns-zones-record-type"></select>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label" for="dns-zones-record-name">Name</label>
+                            <input type="text" class="form-control" id="dns-zones-record-name" />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="dns-zones-record-value">Value</label>
+                            <input type="text" class="form-control" id="dns-zones-record-value" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="dns-zones-record-ttl">TTL</label>
+                            <input type="number" class="form-control" id="dns-zones-record-ttl" min="0" />
+                        </div>
+                        <div class="col-md-3" id="dns-zones-field-priority">
+                            <label class="form-label" for="dns-zones-record-priority">Priority</label>
+                            <input type="number" class="form-control" id="dns-zones-record-priority" min="0" />
+                        </div>
+                        <div class="col-md-3" id="dns-zones-field-weight">
+                            <label class="form-label" for="dns-zones-record-weight">Weight</label>
+                            <input type="number" class="form-control" id="dns-zones-record-weight" min="0" />
+                        </div>
+                        <div class="col-md-3" id="dns-zones-field-port">
+                            <label class="form-label" for="dns-zones-record-port">Port</label>
+                            <input type="number" class="form-control" id="dns-zones-record-port" min="0" />
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="dns-zones-save">
+                    <i class="bi bi-check-lg"></i> Save
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="dns-zones-delete-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete DNS Record</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Delete record <strong id="dns-zones-delete-name"></strong>?</p>
+                <p class="text-danger"><i class="bi bi-exclamation-triangle-fill"></i> This cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="dns-zones-confirm-delete">
+                    <i class="bi bi-trash"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

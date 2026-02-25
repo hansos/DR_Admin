@@ -126,11 +126,31 @@ function initializePage(): void {
     document.getElementById('domain-dns-sync-confirm')?.addEventListener('click', syncDnsRecords);
     document.getElementById('domain-details-select')?.addEventListener('click', openSelectDomainModal);
     document.getElementById('domain-details-manual-load')?.addEventListener('click', loadDomainFromManualInput);
+    document.getElementById('domain-dns-open-zones')?.addEventListener('click', openDnsZones);
+    document.getElementById('domain-dns-open-zones')?.addEventListener('click', openDnsZones);
 
     if (!idParam || !Number.isFinite(parsed) || parsed <= 0) {
         showManualEntry();
         return;
     }
+
+function openDnsZones(): void {
+    if (!domainId) {
+        showError('Select a domain before opening DNS zones.');
+        return;
+    }
+
+    window.location.href = `/dns/zones?domain-id=${encodeURIComponent(String(domainId))}`;
+}
+
+function openDnsZones(): void {
+    if (!domainId) {
+        showError('Select a domain before opening DNS zones.');
+        return;
+    }
+
+    window.location.href = `/dns/zones?domain-id=${encodeURIComponent(String(domainId))}`;
+}
 
     domainId = parsed;
 
@@ -278,6 +298,7 @@ async function loadDomainDetails(): Promise<void> {
     setLoading(false);
 
     await loadDnsRecords();
+    await loadDomainContacts();
 }
 
 function updateDomainFields(domain: Domain): void {
@@ -354,6 +375,123 @@ async function loadDnsRecords(): Promise<void> {
 
     const records = Array.isArray(response.data) ? response.data : [];
     renderDnsRecords(records);
+}
+
+async function loadDomainContacts(): Promise<void> {
+    const loading = document.getElementById('domain-contacts-loading');
+    const content = document.getElementById('domain-contacts-content');
+    const empty = document.getElementById('domain-contacts-empty');
+
+    loading?.classList.remove('d-none');
+    content?.classList.add('d-none');
+    empty?.classList.add('d-none');
+
+    if (!domainId) {
+        loading?.classList.add('d-none');
+        empty?.classList.remove('d-none');
+        return;
+    }
+
+    const response = await apiRequest<DomainContact[]>(`${getApiBaseUrl()}/DomainContacts/domain/${domainId}`, { method: 'GET' });
+    if (!response.success) {
+        loading?.classList.add('d-none');
+        empty?.classList.remove('d-none');
+        return;
+    }
+
+    const raw = response.data as any;
+    const contacts = Array.isArray(raw)
+        ? raw
+        : Array.isArray(raw?.data)
+            ? raw.data
+            : Array.isArray(raw?.Data)
+                ? raw.Data
+                : [];
+    renderDomainContacts(contacts);
+}
+
+function renderDomainContacts(contacts: DomainContact[]): void {
+    const loading = document.getElementById('domain-contacts-loading');
+    const content = document.getElementById('domain-contacts-content');
+    const empty = document.getElementById('domain-contacts-empty');
+    const accordion = document.getElementById('domain-contacts-accordion');
+
+    loading?.classList.add('d-none');
+
+    if (!accordion) {
+        return;
+    }
+
+    if (!contacts.length) {
+        accordion.innerHTML = '';
+        empty?.classList.remove('d-none');
+        content?.classList.add('d-none');
+        return;
+    }
+
+    const contactOrder: Record<string, number> = { Registrant: 1, Administrative: 2, Technical: 3, Billing: 4 };
+    contacts.sort((a, b) => (contactOrder[a.contactType ?? ''] ?? 999) - (contactOrder[b.contactType ?? ''] ?? 999));
+
+    accordion.innerHTML = contacts.map((contact, index) => {
+        const contactId = `domain-contact-${index}`;
+        const isFirst = index === 0;
+        const type = contact.contactType || 'Contact';
+        const fullName = `${contact.firstName ?? ''} ${contact.lastName ?? ''}`.trim() || '-';
+        const typeInfo = getContactTypeInfo(type);
+
+        return `
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="heading-${contactId}">
+                <button class="accordion-button ${isFirst ? '' : 'collapsed'}" type="button"
+                        data-bs-toggle="collapse" data-bs-target="#collapse-${contactId}"
+                        aria-expanded="${isFirst}" aria-controls="collapse-${contactId}">
+                    <i class="bi ${typeInfo.icon} ${typeInfo.color} me-2"></i>
+                    <strong>${esc(type)}</strong> - ${esc(fullName)}
+                </button>
+            </h2>
+            <div id="collapse-${contactId}" class="accordion-collapse collapse ${isFirst ? 'show' : ''}"
+                 aria-labelledby="heading-${contactId}" data-bs-parent="#domain-contacts-accordion">
+                <div class="accordion-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-sm table-borderless">
+                                <tr><th width="40%">First Name:</th><td>${esc(contact.firstName ?? '-')}</td></tr>
+                                <tr><th>Last Name:</th><td>${esc(contact.lastName ?? '-')}</td></tr>
+                                <tr><th>Organization:</th><td>${esc(contact.organization ?? '-')}</td></tr>
+                                <tr><th>Email:</th><td>${contact.email ? `<a href="mailto:${esc(contact.email)}">${esc(contact.email)}</a>` : '-'}</td></tr>
+                                <tr><th>Phone:</th><td>${contact.phone ? `<a href="tel:${esc(contact.phone)}">${esc(contact.phone)}</a>` : '-'}</td></tr>
+                                <tr><th>Fax:</th><td>${esc(contact.fax ?? '-')}</td></tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-sm table-borderless">
+                                <tr><th width="40%">Address Line 1:</th><td>${esc(contact.addressLine1 ?? '-')}</td></tr>
+                                <tr><th>Address Line 2:</th><td>${esc(contact.addressLine2 ?? '-')}</td></tr>
+                                <tr><th>City:</th><td>${esc(contact.city ?? '-')}</td></tr>
+                                <tr><th>State/Province:</th><td>${esc(contact.stateProvince ?? '-')}</td></tr>
+                                <tr><th>Postal Code:</th><td>${esc(contact.postalCode ?? '-')}</td></tr>
+                                <tr><th>Country:</th><td>${esc(contact.country ?? '-')}</td></tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+
+    empty?.classList.add('d-none');
+    content?.classList.remove('d-none');
+}
+
+function getContactTypeInfo(contactType: string): { icon: string; color: string } {
+    const typeMap: Record<string, { icon: string; color: string }> = {
+        Registrant: { icon: 'bi-person-badge', color: 'text-primary' },
+        Administrative: { icon: 'bi-person-gear', color: 'text-success' },
+        Technical: { icon: 'bi-person-workspace', color: 'text-info' },
+        Billing: { icon: 'bi-credit-card', color: 'text-warning' },
+    };
+
+    return typeMap[contactType] ?? { icon: 'bi-person', color: 'text-secondary' };
 }
 
 function renderDnsRecords(records: DnsRecord[]): void {

@@ -49,7 +49,7 @@
     let currentRegistrarCode = null;
     let currentDomainName = null;
     function initializePage() {
-        var _a, _b, _c, _d;
+        var _a, _b, _c, _d, _e, _f;
         const page = document.getElementById('domain-details-page');
         if (!page || page.dataset.initialized === 'true') {
             return;
@@ -62,9 +62,25 @@
         (_b = document.getElementById('domain-dns-sync-confirm')) === null || _b === void 0 ? void 0 : _b.addEventListener('click', syncDnsRecords);
         (_c = document.getElementById('domain-details-select')) === null || _c === void 0 ? void 0 : _c.addEventListener('click', openSelectDomainModal);
         (_d = document.getElementById('domain-details-manual-load')) === null || _d === void 0 ? void 0 : _d.addEventListener('click', loadDomainFromManualInput);
+        (_e = document.getElementById('domain-dns-open-zones')) === null || _e === void 0 ? void 0 : _e.addEventListener('click', openDnsZones);
+        (_f = document.getElementById('domain-dns-open-zones')) === null || _f === void 0 ? void 0 : _f.addEventListener('click', openDnsZones);
         if (!idParam || !Number.isFinite(parsed) || parsed <= 0) {
             showManualEntry();
             return;
+        }
+        function openDnsZones() {
+            if (!domainId) {
+                showError('Select a domain before opening DNS zones.');
+                return;
+            }
+            window.location.href = `/dns/zones?domain-id=${encodeURIComponent(String(domainId))}`;
+        }
+        function openDnsZones() {
+            if (!domainId) {
+                showError('Select a domain before opening DNS zones.');
+                return;
+            }
+            window.location.href = `/dns/zones?domain-id=${encodeURIComponent(String(domainId))}`;
         }
         domainId = parsed;
         loadDomainDetails();
@@ -185,6 +201,7 @@
         updateDomainFields(currentDomain);
         setLoading(false);
         await loadDnsRecords();
+        await loadDomainContacts();
     }
     function updateDomainFields(domain) {
         var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
@@ -248,6 +265,110 @@
         }
         const records = Array.isArray(response.data) ? response.data : [];
         renderDnsRecords(records);
+    }
+    async function loadDomainContacts() {
+        const loading = document.getElementById('domain-contacts-loading');
+        const content = document.getElementById('domain-contacts-content');
+        const empty = document.getElementById('domain-contacts-empty');
+        loading === null || loading === void 0 ? void 0 : loading.classList.remove('d-none');
+        content === null || content === void 0 ? void 0 : content.classList.add('d-none');
+        empty === null || empty === void 0 ? void 0 : empty.classList.add('d-none');
+        if (!domainId) {
+            loading === null || loading === void 0 ? void 0 : loading.classList.add('d-none');
+            empty === null || empty === void 0 ? void 0 : empty.classList.remove('d-none');
+            return;
+        }
+        const response = await apiRequest(`${getApiBaseUrl()}/DomainContacts/domain/${domainId}`, { method: 'GET' });
+        if (!response.success) {
+            loading === null || loading === void 0 ? void 0 : loading.classList.add('d-none');
+            empty === null || empty === void 0 ? void 0 : empty.classList.remove('d-none');
+            return;
+        }
+        const raw = response.data;
+        const contacts = Array.isArray(raw)
+            ? raw
+            : Array.isArray(raw === null || raw === void 0 ? void 0 : raw.data)
+                ? raw.data
+                : Array.isArray(raw === null || raw === void 0 ? void 0 : raw.Data)
+                    ? raw.Data
+                    : [];
+        renderDomainContacts(contacts);
+    }
+    function renderDomainContacts(contacts) {
+        const loading = document.getElementById('domain-contacts-loading');
+        const content = document.getElementById('domain-contacts-content');
+        const empty = document.getElementById('domain-contacts-empty');
+        const accordion = document.getElementById('domain-contacts-accordion');
+        loading === null || loading === void 0 ? void 0 : loading.classList.add('d-none');
+        if (!accordion) {
+            return;
+        }
+        if (!contacts.length) {
+            accordion.innerHTML = '';
+            empty === null || empty === void 0 ? void 0 : empty.classList.remove('d-none');
+            content === null || content === void 0 ? void 0 : content.classList.add('d-none');
+            return;
+        }
+        const contactOrder = { Registrant: 1, Administrative: 2, Technical: 3, Billing: 4 };
+        contacts.sort((a, b) => { var _a, _b, _c, _d; return ((_b = contactOrder[(_a = a.contactType) !== null && _a !== void 0 ? _a : '']) !== null && _b !== void 0 ? _b : 999) - ((_d = contactOrder[(_c = b.contactType) !== null && _c !== void 0 ? _c : '']) !== null && _d !== void 0 ? _d : 999); });
+        accordion.innerHTML = contacts.map((contact, index) => {
+            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
+            const contactId = `domain-contact-${index}`;
+            const isFirst = index === 0;
+            const type = contact.contactType || 'Contact';
+            const fullName = `${(_a = contact.firstName) !== null && _a !== void 0 ? _a : ''} ${(_b = contact.lastName) !== null && _b !== void 0 ? _b : ''}`.trim() || '-';
+            const typeInfo = getContactTypeInfo(type);
+            return `
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="heading-${contactId}">
+                <button class="accordion-button ${isFirst ? '' : 'collapsed'}" type="button"
+                        data-bs-toggle="collapse" data-bs-target="#collapse-${contactId}"
+                        aria-expanded="${isFirst}" aria-controls="collapse-${contactId}">
+                    <i class="bi ${typeInfo.icon} ${typeInfo.color} me-2"></i>
+                    <strong>${esc(type)}</strong> - ${esc(fullName)}
+                </button>
+            </h2>
+            <div id="collapse-${contactId}" class="accordion-collapse collapse ${isFirst ? 'show' : ''}"
+                 aria-labelledby="heading-${contactId}" data-bs-parent="#domain-contacts-accordion">
+                <div class="accordion-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-sm table-borderless">
+                                <tr><th width="40%">First Name:</th><td>${esc((_c = contact.firstName) !== null && _c !== void 0 ? _c : '-')}</td></tr>
+                                <tr><th>Last Name:</th><td>${esc((_d = contact.lastName) !== null && _d !== void 0 ? _d : '-')}</td></tr>
+                                <tr><th>Organization:</th><td>${esc((_e = contact.organization) !== null && _e !== void 0 ? _e : '-')}</td></tr>
+                                <tr><th>Email:</th><td>${contact.email ? `<a href="mailto:${esc(contact.email)}">${esc(contact.email)}</a>` : '-'}</td></tr>
+                                <tr><th>Phone:</th><td>${contact.phone ? `<a href="tel:${esc(contact.phone)}">${esc(contact.phone)}</a>` : '-'}</td></tr>
+                                <tr><th>Fax:</th><td>${esc((_f = contact.fax) !== null && _f !== void 0 ? _f : '-')}</td></tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-sm table-borderless">
+                                <tr><th width="40%">Address Line 1:</th><td>${esc((_g = contact.addressLine1) !== null && _g !== void 0 ? _g : '-')}</td></tr>
+                                <tr><th>Address Line 2:</th><td>${esc((_h = contact.addressLine2) !== null && _h !== void 0 ? _h : '-')}</td></tr>
+                                <tr><th>City:</th><td>${esc((_j = contact.city) !== null && _j !== void 0 ? _j : '-')}</td></tr>
+                                <tr><th>State/Province:</th><td>${esc((_k = contact.stateProvince) !== null && _k !== void 0 ? _k : '-')}</td></tr>
+                                <tr><th>Postal Code:</th><td>${esc((_l = contact.postalCode) !== null && _l !== void 0 ? _l : '-')}</td></tr>
+                                <tr><th>Country:</th><td>${esc((_m = contact.country) !== null && _m !== void 0 ? _m : '-')}</td></tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+        }).join('');
+        empty === null || empty === void 0 ? void 0 : empty.classList.add('d-none');
+        content === null || content === void 0 ? void 0 : content.classList.remove('d-none');
+    }
+    function getContactTypeInfo(contactType) {
+        var _a;
+        const typeMap = {
+            Registrant: { icon: 'bi-person-badge', color: 'text-primary' },
+            Administrative: { icon: 'bi-person-gear', color: 'text-success' },
+            Technical: { icon: 'bi-person-workspace', color: 'text-info' },
+            Billing: { icon: 'bi-credit-card', color: 'text-warning' },
+        };
+        return (_a = typeMap[contactType]) !== null && _a !== void 0 ? _a : { icon: 'bi-person', color: 'text-secondary' };
     }
     function renderDnsRecords(records) {
         const loading = document.getElementById('domain-dns-records-loading');
