@@ -1,4 +1,11 @@
 <Solution>
+  <Folder Name="/ai-prompts/">
+    <File Path="ai-prompts/api.md" />
+    <File Path="ai-prompts/dr_admin_test.md" />
+    <File Path="ai-prompts/dr_admin_test_fix.md" />
+    <File Path="ai-prompts/main_instructions.md" />
+    <File Path="ai-prompts/reseller-panel.md" />
+  </Folder>
   <Project Path="DomainRegistrationLib/DomainRegistrationLib.csproj" />
   <Project Path="DR_Admin.IntegrationTests/DR_Admin.IntegrationTests.csproj" />
   <Project Path="DR_Admin/DR_Admin.csproj" />

@@ -6,6 +6,8 @@
             <h2 class="h4 mb-1"><i class="bi bi-bag-plus"></i> New sale</h2>
             <p class="text-muted mb-0">Start a new domain sale workflow.</p>
         </div>
+
+<CustomerModal />
     </div>
 
     <div id="new-sale-alert-success" class="alert alert-success d-none" role="alert"></div>
@@ -69,9 +71,9 @@
                     </div>
                     <div class="mt-2 d-none" id="new-sale-new-customer">
                         <p class="text-muted small mb-2">Create a customer record before finishing the domain sale.</p>
-                        <a class="btn btn-outline-primary" href="customers/list">
+                        <button class="btn btn-outline-primary" type="button" id="new-sale-create-customer">
                             <i class="bi bi-person-plus"></i> Create customer
-                        </a>
+                        </button>
                     </div>
                 </div>
             </div>

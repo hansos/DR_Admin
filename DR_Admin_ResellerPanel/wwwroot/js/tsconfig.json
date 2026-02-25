@@ -18,6 +18,7 @@
         "contact-persons.ts",
         "registry-apis.ts",
         "expiring-domains.ts",
+        "new-sale.ts",
         "domains.ts",
         "dns-zones.ts",
         "domain-details.ts",

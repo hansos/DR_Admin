@@ -388,6 +388,7 @@
             hideModal('customers-edit-modal');
             showSuccess(editingId ? 'Customer updated successfully' : 'Customer created successfully');
             loadCustomers();
+            document.dispatchEvent(new CustomEvent('customers:saved'));
         }
         else {
             showError(response.message || 'Save failed');
@@ -400,6 +401,15 @@
             deleteName.textContent = name;
         }
         showModal('customers-delete-modal');
+    }
+    function initializeCustomerModal() {
+        const modal = document.getElementById('customers-edit-modal');
+        if (!modal || modal.dataset.initialized === 'true') {
+            return;
+        }
+        modal.dataset.initialized = 'true';
+        document.getElementById('customers-save')?.addEventListener('click', saveCustomer);
+        document.addEventListener('customers:open-create', () => openCreate());
     }
     async function doDelete() {
         if (!pendingDeleteId) {
@@ -449,6 +459,9 @@
         if (!element || !window.bootstrap) {
             return;
         }
+        if (element.parentElement !== document.body) {
+            document.body.appendChild(element);
+        }
         const modal = new window.bootstrap.Modal(element);
         modal.show();
     }
@@ -491,7 +504,6 @@
         }
         page.dataset.initialized = 'true';
         document.getElementById('customers-create')?.addEventListener('click', openCreate);
-        document.getElementById('customers-save')?.addEventListener('click', saveCustomer);
         document.getElementById('customers-confirm-delete')?.addEventListener('click', doDelete);
         bindTableActions();
         bindPagingControlsActions();
@@ -502,9 +514,11 @@
         loadCustomers();
     }
     function setupPageObserver() {
+        initializeCustomerModal();
         initializeCustomersPage();
         if (document.body) {
             const observer = new MutationObserver(() => {
+                initializeCustomerModal();
                 const page = document.getElementById('customers-page');
                 if (page && page.dataset.initialized !== 'true') {
                     initializeCustomersPage();

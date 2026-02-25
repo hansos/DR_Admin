@@ -66,99 +66,6 @@
     </div>
 </div>
 
-<div class="modal fade" id="customers-edit-modal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="customers-modal-title">New Customer</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="alert alert-info d-none" id="customers-edit-info"></div>
-                <form id="customers-form" novalidate>
-                    <div class="row g-3">
-                        <div class="col-12 col-md-6">
-                            <label for="customers-name" class="form-label">Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="customers-name" />
-                        </div>
-                        <div class="col-12 col-md-6">
-                            <label for="customers-customer-name" class="form-label">Customer Name</label>
-                            <input type="text" class="form-control" id="customers-customer-name" />
-                        </div>
-
-                        <div class="col-12 col-md-6">
-                            <label for="customers-email" class="form-label">Email <span class="text-danger">*</span></label>
-                            <input type="email" class="form-control" id="customers-email" />
-                        </div>
-                        <div class="col-12 col-md-6">
-                            <label for="customers-billing-email" class="form-label">Billing Email</label>
-                            <input type="email" class="form-control" id="customers-billing-email" />
-                        </div>
-
-                        <div class="col-12 col-md-6">
-                            <label for="customers-phone" class="form-label">Phone <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="customers-phone" />
-                        </div>
-                        <div class="col-12 col-md-3">
-                            <label for="customers-tax-id" class="form-label">Tax ID</label>
-                            <input type="text" class="form-control" id="customers-tax-id" />
-                        </div>
-                        <div class="col-12 col-md-3">
-                            <label for="customers-vat-number" class="form-label">VAT Number</label>
-                            <input type="text" class="form-control" id="customers-vat-number" />
-                        </div>
-
-                        <div class="col-12 col-md-4">
-                            <label for="customers-status" class="form-label">Status</label>
-                            <input type="text" class="form-control" id="customers-status" placeholder="Active" />
-                        </div>
-                        <div class="col-12 col-md-4">
-                            <label for="customers-preferred-currency" class="form-label">Preferred Currency</label>
-                            <input type="text" class="form-control" id="customers-preferred-currency" placeholder="EUR" />
-                        </div>
-                        <div class="col-12 col-md-4">
-                            <label for="customers-credit-limit" class="form-label">Credit Limit</label>
-                            <input type="number" class="form-control" id="customers-credit-limit" step="0.01" min="0" />
-                        </div>
-
-                        <div class="col-12 col-md-6">
-                            <label for="customers-preferred-payment-method" class="form-label">Preferred Payment Method</label>
-                            <input type="text" class="form-control" id="customers-preferred-payment-method" />
-                        </div>
-                        <div class="col-12 col-md-6">
-                            <label for="customers-notes" class="form-label">Notes</label>
-                            <textarea class="form-control" id="customers-notes" rows="2"></textarea>
-                        </div>
-
-                        <div class="col-12">
-                            <div class="d-flex flex-wrap gap-4">
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="customers-is-company">
-                                    <label class="form-check-label" for="customers-is-company">Company</label>
-                                </div>
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="customers-is-active" checked>
-                                    <label class="form-check-label" for="customers-is-active">Active</label>
-                                </div>
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="customers-allow-currency-override" checked>
-                                    <label class="form-check-label" for="customers-allow-currency-override">Allow Currency Override</label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="customers-save">
-                    <i class="bi bi-check-lg"></i> Save
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <div class="modal fade" id="customers-delete-modal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -179,3 +86,5 @@
         </div>
     </div>
 </div>
+
+<CustomerModal />

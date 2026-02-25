@@ -509,6 +509,7 @@ async function saveCustomer(): Promise<void> {
         hideModal('customers-edit-modal');
         showSuccess(editingId ? 'Customer updated successfully' : 'Customer created successfully');
         loadCustomers();
+        document.dispatchEvent(new CustomEvent('customers:saved'));
     } else {
         showError(response.message || 'Save failed');
     }
@@ -523,6 +524,18 @@ function openDelete(id: number, name: string): void {
     }
 
     showModal('customers-delete-modal');
+}
+
+function initializeCustomerModal(): void {
+    const modal = document.getElementById('customers-edit-modal') as HTMLElement | null;
+    if (!modal || modal.dataset.initialized === 'true') {
+        return;
+    }
+
+    modal.dataset.initialized = 'true';
+
+    document.getElementById('customers-save')?.addEventListener('click', saveCustomer);
+    document.addEventListener('customers:open-create', () => openCreate());
 }
 
 async function doDelete(): Promise<void> {
@@ -585,6 +598,10 @@ function showModal(id: string): void {
         return;
     }
 
+    if (element.parentElement !== document.body) {
+        document.body.appendChild(element);
+    }
+
     const modal = new (window as any).bootstrap.Modal(element);
     modal.show();
 }
@@ -637,7 +654,6 @@ function initializeCustomersPage(): void {
     (page as any).dataset.initialized = 'true';
 
     document.getElementById('customers-create')?.addEventListener('click', openCreate);
-    document.getElementById('customers-save')?.addEventListener('click', saveCustomer);
     document.getElementById('customers-confirm-delete')?.addEventListener('click', doDelete);
 
     bindTableActions();
@@ -652,10 +668,12 @@ function initializeCustomersPage(): void {
 }
 
 function setupPageObserver(): void {
+    initializeCustomerModal();
     initializeCustomersPage();
 
     if (document.body) {
         const observer = new MutationObserver(() => {
+            initializeCustomerModal();
             const page = document.getElementById('customers-page') as HTMLElement | null;
             if (page && (page as any).dataset.initialized !== 'true') {
                 initializeCustomersPage();
