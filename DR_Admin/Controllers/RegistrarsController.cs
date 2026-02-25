@@ -16,11 +16,13 @@ namespace ISPAdmin.Controllers;
 public class RegistrarsController : ControllerBase
 {
     private readonly IRegistrarService _registrarService;
+    private readonly IDomainManagerService _domainManagerService;
     private static readonly Serilog.ILogger _log = Log.ForContext<RegistrarsController>();
 
-    public RegistrarsController(IRegistrarService registrarService)
+    public RegistrarsController(IRegistrarService registrarService, IDomainManagerService domainManagerService)
     {
         _registrarService = registrarService;
+        _domainManagerService = domainManagerService;
     }
 
     /// <summary>
@@ -604,6 +606,62 @@ public class RegistrarsController : ControllerBase
         {
             _log.Error(ex, "API: Error in DownloadDomainsForRegistrar for registrar {RegistrarId}", registrarId);
             return StatusCode(500, "An error occurred while downloading domains for the registrar");
+        }
+    }
+
+    /// <summary>
+    /// Downloads DNS records from the registrar for all domains in the local database
+    /// and merges them into the DnsRecords table.
+    /// </summary>
+    /// <param name="registrarId">The unique identifier of the registrar</param>
+    /// <returns>Aggregated bulk sync result with per-domain details</returns>
+    /// <response code="200">Returns the bulk sync result</response>
+    /// <response code="400">If the registrar is invalid or inactive</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have required permissions</response>
+    /// <response code="404">If the registrar is not found</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpPost("{registrarId}/domains/dns-records/sync")]
+    [Authorize(Policy = "Domain.Write")]
+    [ProducesResponseType(typeof(DnsBulkSyncResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<DnsBulkSyncResult>> SyncDnsRecordsForRegistrarDomains(int registrarId)
+    {
+        try
+        {
+            _log.Information("API: SyncDnsRecordsForRegistrarDomains called for registrar {RegistrarId} by user {User}",
+                registrarId, User.Identity?.Name);
+
+            var registrar = await _registrarService.GetRegistrarByIdAsync(registrarId);
+
+            if (registrar == null)
+            {
+                _log.Warning("API: Registrar with ID {RegistrarId} not found", registrarId);
+                return NotFound($"Registrar with ID {registrarId} not found");
+            }
+
+            if (string.IsNullOrWhiteSpace(registrar.Code))
+            {
+                _log.Warning("API: Registrar {RegistrarId} has no code configured", registrarId);
+                return BadRequest("Registrar code is required");
+            }
+
+            var result = await _domainManagerService.SyncDnsRecordsForAllDomainsAsync(registrar.Code);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _log.Warning(ex, "API: Invalid operation in SyncDnsRecordsForRegistrarDomains for registrar {RegistrarId}", registrarId);
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in SyncDnsRecordsForRegistrarDomains for registrar {RegistrarId}", registrarId);
+            return StatusCode(500, "An error occurred while syncing DNS records for the registrar");
         }
     }
 

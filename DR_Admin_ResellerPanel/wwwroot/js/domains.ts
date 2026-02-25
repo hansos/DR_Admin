@@ -220,6 +220,31 @@ async function loadDomains(): Promise<void> {
         return;
     }
 
+    tableBody.innerHTML = '<tr><td colspan="8" class="text-center"><div class="spinner-border text-primary"></div></td></tr>';
+
+    loadPageSizeFromUi();
+    const response = await apiRequest<PagedResult<Domain> | Domain[]>(buildPagedUrl(), { method: 'GET' });
+    if (!response.success) {
+        showError(response.message || 'Failed to load domains');
+        tableBody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Failed to load data</td></tr>';
+        return;
+    }
+
+    const raw = response.data as any;
+    const extracted = extractItems(raw);
+    const meta = extracted.meta ?? raw;
+
+    allDomains = extracted.items.map(normalizeItem);
+
+    pageSize = meta?.pageSize ?? meta?.PageSize ?? raw?.pageSize ?? raw?.PageSize ?? pageSize;
+    totalCount = meta?.totalCount ?? meta?.TotalCount ?? raw?.totalCount ?? raw?.TotalCount ?? allDomains.length;
+    totalPages = meta?.totalPages ?? meta?.TotalPages ?? raw?.totalPages ?? raw?.TotalPages ?? Math.max(1, Math.ceil(totalCount / pageSize));
+    currentPage = meta?.currentPage ?? meta?.CurrentPage ?? raw?.currentPage ?? raw?.CurrentPage ?? currentPage;
+
+    renderTable();
+    renderPagination();
+}
+
 async function loadRegistrarsForImport(): Promise<void> {
     const select = document.getElementById('domains-import-registrar') as HTMLSelectElement | null;
     if (!select) {
@@ -252,16 +277,6 @@ async function loadRegistrarsForImport(): Promise<void> {
     select.innerHTML = `<option value="">Select registrar</option>${options}`;
 }
 
-    tableBody.innerHTML = '<tr><td colspan="8" class="text-center"><div class="spinner-border text-primary"></div></td></tr>';
-
-    loadPageSizeFromUi();
-    const response = await apiRequest<PagedResult<Domain> | Domain[]>(buildPagedUrl(), { method: 'GET' });
-    if (!response.success) {
-        showError(response.message || 'Failed to load domains');
-        tableBody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Failed to load data</td></tr>';
-        return;
-    }
-
 function openImport(): void {
     const select = document.getElementById('domains-import-registrar') as HTMLSelectElement | null;
     if (select) {
@@ -272,21 +287,6 @@ function openImport(): void {
     setImportBusy(false);
     loadRegistrarsForImport();
     showModal('domains-import-modal');
-}
-
-    const raw = response.data as any;
-    const extracted = extractItems(raw);
-    const meta = extracted.meta ?? raw;
-
-    allDomains = extracted.items.map(normalizeItem);
-
-    pageSize = meta?.pageSize ?? meta?.PageSize ?? raw?.pageSize ?? raw?.PageSize ?? pageSize;
-    totalCount = meta?.totalCount ?? meta?.TotalCount ?? raw?.totalCount ?? raw?.TotalCount ?? allDomains.length;
-    totalPages = meta?.totalPages ?? meta?.TotalPages ?? raw?.totalPages ?? raw?.TotalPages ?? Math.max(1, Math.ceil(totalCount / pageSize));
-    currentPage = meta?.currentPage ?? meta?.CurrentPage ?? raw?.currentPage ?? raw?.CurrentPage ?? currentPage;
-
-    renderTable();
-    renderPagination();
 }
 
 function getSelectValue(id: string): string {
@@ -376,6 +376,7 @@ function renderTable(): void {
             <td>${esc(expires)}</td>
             <td class="text-end">
                 <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-secondary" type="button" data-action="details" data-id="${domain.id}" title="Details"><i class="bi bi-box-arrow-up-right"></i></button>
                     <button class="btn btn-outline-primary" type="button" data-action="edit" data-id="${domain.id}" title="Edit"><i class="bi bi-pencil"></i></button>
                     <button class="btn btn-outline-danger" type="button" data-action="delete" data-id="${domain.id}" data-name="${esc(domain.name)}" title="Delete"><i class="bi bi-trash"></i></button>
                 </div>

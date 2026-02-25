@@ -45,22 +45,21 @@
         }
     }
     function extractItems(raw) {
+        var _a, _b, _c, _d, _e, _f;
         if (Array.isArray(raw)) {
             return { items: raw, meta: null };
         }
-        const candidates = [raw, raw === null || raw === void 0 ? void 0 : raw.data, raw === null || raw === void 0 ? void 0 : raw.Data, raw === null || raw === void 0 ? void 0 : raw.data.data, raw === null || raw === void 0 ? void 0 : raw.data.Data];
-        const items =
-            (Array.isArray(raw === null || raw === void 0 ? void 0 : raw.Data) && raw.Data) ||
-                (Array.isArray(raw === null || raw === void 0 ? void 0 : raw.data) && raw.data) ||
-                (Array.isArray(raw === null || raw === void 0 ? void 0 : raw.data.Data) && raw.data.Data) ||
-                (Array.isArray(raw === null || raw === void 0 ? void 0 : raw.data.data) && raw.data.data) ||
-                (Array.isArray(raw === null || raw === void 0 ? void 0 : raw.Data.Data) && raw.Data.Data) ||
-                [];
-        const meta = candidates.find((c) => c && typeof c === 'object' && (
-            c.totalCount !== undefined || c.TotalCount !== undefined ||
-                c.totalPages !== undefined || c.TotalPages !== undefined ||
-                c.currentPage !== undefined || c.CurrentPage !== undefined ||
-                c.pageSize !== undefined || c.PageSize !== undefined)) || null;
+        const candidates = [raw, raw === null || raw === void 0 ? void 0 : raw.data, raw === null || raw === void 0 ? void 0 : raw.Data, (_a = raw === null || raw === void 0 ? void 0 : raw.data) === null || _a === void 0 ? void 0 : _a.data, (_b = raw === null || raw === void 0 ? void 0 : raw.data) === null || _b === void 0 ? void 0 : _b.Data];
+        const items = (Array.isArray(raw === null || raw === void 0 ? void 0 : raw.Data) && raw.Data) ||
+            (Array.isArray(raw === null || raw === void 0 ? void 0 : raw.data) && raw.data) ||
+            (Array.isArray((_c = raw === null || raw === void 0 ? void 0 : raw.data) === null || _c === void 0 ? void 0 : _c.Data) && raw.data.Data) ||
+            (Array.isArray((_d = raw === null || raw === void 0 ? void 0 : raw.data) === null || _d === void 0 ? void 0 : _d.data) && raw.data.data) ||
+            (Array.isArray((_e = raw === null || raw === void 0 ? void 0 : raw.Data) === null || _e === void 0 ? void 0 : _e.Data) && raw.Data.Data) ||
+            [];
+        const meta = (_f = candidates.find((c) => c && typeof c === 'object' && (c.totalCount !== undefined || c.TotalCount !== undefined ||
+            c.totalPages !== undefined || c.TotalPages !== undefined ||
+            c.currentPage !== undefined || c.CurrentPage !== undefined ||
+            c.pageSize !== undefined || c.PageSize !== undefined))) !== null && _f !== void 0 ? _f : null;
         return { items, meta };
     }
     let allContactPersons = [];
@@ -73,8 +72,9 @@
     let totalCount = 0;
     let totalPages = 1;
     function loadPageSizeFromUi() {
+        var _a;
         const el = document.getElementById('contact-persons-page-size');
-        const parsed = Number(((el === null || el === void 0 ? void 0 : el.value) ?? '').trim());
+        const parsed = Number(((_a = el === null || el === void 0 ? void 0 : el.value) !== null && _a !== void 0 ? _a : '').trim());
         if (Number.isFinite(parsed) && parsed > 0) {
             pageSize = parsed;
         }
@@ -86,7 +86,7 @@
         return `${getApiBaseUrl()}/ContactPersons?${params.toString()}`;
     }
     function normalizeContactPerson(item) {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _0, _1, _2, _3, _4, _5, _6, _7, _8, _9;
         return {
             id: (_b = (_a = item.id) !== null && _a !== void 0 ? _a : item.Id) !== null && _b !== void 0 ? _b : 0,
             firstName: (_d = (_c = item.firstName) !== null && _c !== void 0 ? _c : item.FirstName) !== null && _d !== void 0 ? _d : '',
@@ -98,13 +98,13 @@
             isPrimary: (_r = (_q = item.isPrimary) !== null && _q !== void 0 ? _q : item.IsPrimary) !== null && _r !== void 0 ? _r : false,
             isActive: (_t = (_s = item.isActive) !== null && _s !== void 0 ? _s : item.IsActive) !== null && _t !== void 0 ? _t : false,
             notes: (_v = (_u = item.notes) !== null && _u !== void 0 ? _u : item.Notes) !== null && _v !== void 0 ? _v : null,
-            customerId: item.customerId ?? item.CustomerId ?? null,
-            createdAt: item.createdAt ?? item.CreatedAt ?? null,
-            updatedAt: item.updatedAt ?? item.UpdatedAt ?? null,
-            isDefaultOwner: item.isDefaultOwner ?? item.IsDefaultOwner ?? false,
-            isDefaultBilling: item.isDefaultBilling ?? item.IsDefaultBilling ?? false,
-            isDefaultTech: item.isDefaultTech ?? item.IsDefaultTech ?? false,
-            isDefaultAdministrator: item.isDefaultAdministrator ?? item.IsDefaultAdministrator ?? false,
+            customerId: (_x = (_w = item.customerId) !== null && _w !== void 0 ? _w : item.CustomerId) !== null && _x !== void 0 ? _x : null,
+            createdAt: (_z = (_y = item.createdAt) !== null && _y !== void 0 ? _y : item.CreatedAt) !== null && _z !== void 0 ? _z : null,
+            updatedAt: (_1 = (_0 = item.updatedAt) !== null && _0 !== void 0 ? _0 : item.UpdatedAt) !== null && _1 !== void 0 ? _1 : null,
+            isDefaultOwner: (_3 = (_2 = item.isDefaultOwner) !== null && _2 !== void 0 ? _2 : item.IsDefaultOwner) !== null && _3 !== void 0 ? _3 : false,
+            isDefaultBilling: (_5 = (_4 = item.isDefaultBilling) !== null && _4 !== void 0 ? _4 : item.IsDefaultBilling) !== null && _5 !== void 0 ? _5 : false,
+            isDefaultTech: (_7 = (_6 = item.isDefaultTech) !== null && _6 !== void 0 ? _6 : item.IsDefaultTech) !== null && _7 !== void 0 ? _7 : false,
+            isDefaultAdministrator: (_9 = (_8 = item.isDefaultAdministrator) !== null && _8 !== void 0 ? _8 : item.IsDefaultAdministrator) !== null && _9 !== void 0 ? _9 : false,
         };
     }
     function normalizeCustomerOption(item) {
@@ -134,6 +134,7 @@
         select.insertAdjacentHTML('beforeend', customerOptions.map((option) => (`<option value="${option.id}">${esc(option.name)}</option>`)).join(''));
     }
     async function loadContactPersons() {
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s;
         const tableBody = document.getElementById('contact-persons-table-body');
         if (!tableBody) {
             return;
@@ -148,12 +149,12 @@
         }
         const raw = response.data;
         const extracted = extractItems(raw);
-        const meta = extracted.meta ?? raw;
+        const meta = (_a = extracted.meta) !== null && _a !== void 0 ? _a : raw;
         allContactPersons = extracted.items.map(normalizeContactPerson);
-        pageSize = (meta === null || meta === void 0 ? void 0 : meta.pageSize) ?? (meta === null || meta === void 0 ? void 0 : meta.PageSize) ?? (raw === null || raw === void 0 ? void 0 : raw.pageSize) ?? (raw === null || raw === void 0 ? void 0 : raw.PageSize) ?? pageSize;
-        totalCount = (meta === null || meta === void 0 ? void 0 : meta.totalCount) ?? (meta === null || meta === void 0 ? void 0 : meta.TotalCount) ?? (raw === null || raw === void 0 ? void 0 : raw.totalCount) ?? (raw === null || raw === void 0 ? void 0 : raw.TotalCount) ?? allContactPersons.length;
-        totalPages = (meta === null || meta === void 0 ? void 0 : meta.totalPages) ?? (meta === null || meta === void 0 ? void 0 : meta.TotalPages) ?? (raw === null || raw === void 0 ? void 0 : raw.totalPages) ?? (raw === null || raw === void 0 ? void 0 : raw.TotalPages) ?? Math.max(1, Math.ceil(totalCount / pageSize));
-        currentPage = (meta === null || meta === void 0 ? void 0 : meta.currentPage) ?? (meta === null || meta === void 0 ? void 0 : meta.CurrentPage) ?? (raw === null || raw === void 0 ? void 0 : raw.currentPage) ?? (raw === null || raw === void 0 ? void 0 : raw.CurrentPage) ?? currentPage;
+        pageSize = (_e = (_d = (_c = (_b = meta === null || meta === void 0 ? void 0 : meta.pageSize) !== null && _b !== void 0 ? _b : meta === null || meta === void 0 ? void 0 : meta.PageSize) !== null && _c !== void 0 ? _c : raw === null || raw === void 0 ? void 0 : raw.pageSize) !== null && _d !== void 0 ? _d : raw === null || raw === void 0 ? void 0 : raw.PageSize) !== null && _e !== void 0 ? _e : pageSize;
+        totalCount = (_j = (_h = (_g = (_f = meta === null || meta === void 0 ? void 0 : meta.totalCount) !== null && _f !== void 0 ? _f : meta === null || meta === void 0 ? void 0 : meta.TotalCount) !== null && _g !== void 0 ? _g : raw === null || raw === void 0 ? void 0 : raw.totalCount) !== null && _h !== void 0 ? _h : raw === null || raw === void 0 ? void 0 : raw.TotalCount) !== null && _j !== void 0 ? _j : allContactPersons.length;
+        totalPages = (_o = (_m = (_l = (_k = meta === null || meta === void 0 ? void 0 : meta.totalPages) !== null && _k !== void 0 ? _k : meta === null || meta === void 0 ? void 0 : meta.TotalPages) !== null && _l !== void 0 ? _l : raw === null || raw === void 0 ? void 0 : raw.totalPages) !== null && _m !== void 0 ? _m : raw === null || raw === void 0 ? void 0 : raw.TotalPages) !== null && _o !== void 0 ? _o : Math.max(1, Math.ceil(totalCount / pageSize));
+        currentPage = (_s = (_r = (_q = (_p = meta === null || meta === void 0 ? void 0 : meta.currentPage) !== null && _p !== void 0 ? _p : meta === null || meta === void 0 ? void 0 : meta.CurrentPage) !== null && _q !== void 0 ? _q : raw === null || raw === void 0 ? void 0 : raw.currentPage) !== null && _r !== void 0 ? _r : raw === null || raw === void 0 ? void 0 : raw.CurrentPage) !== null && _s !== void 0 ? _s : currentPage;
         renderTable();
         renderPagination();
     }
@@ -515,6 +516,7 @@
             return;
         }
         tableBody.addEventListener('click', (event) => {
+            var _a;
             const target = event.target;
             const button = target.closest('button[data-action]');
             if (!button) {
@@ -529,22 +531,23 @@
                 return;
             }
             if (button.dataset.action === 'delete') {
-                openDelete(id, button.dataset.name ?? '');
+                openDelete(id, (_a = button.dataset.name) !== null && _a !== void 0 ? _a : '');
             }
         });
     }
     function initializeContactPersonsPage() {
+        var _a, _b, _c, _d;
         const page = document.getElementById('contact-persons-page');
         if (!page || page.dataset.initialized === 'true') {
             return;
         }
         page.dataset.initialized = 'true';
-        document.getElementById('contact-persons-create')?.addEventListener('click', openCreate);
-        document.getElementById('contact-persons-save')?.addEventListener('click', saveContactPerson);
-        document.getElementById('contact-persons-confirm-delete')?.addEventListener('click', doDelete);
+        (_a = document.getElementById('contact-persons-create')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', openCreate);
+        (_b = document.getElementById('contact-persons-save')) === null || _b === void 0 ? void 0 : _b.addEventListener('click', saveContactPerson);
+        (_c = document.getElementById('contact-persons-confirm-delete')) === null || _c === void 0 ? void 0 : _c.addEventListener('click', doDelete);
         bindTableActions();
         bindPagingControlsActions();
-        document.getElementById('contact-persons-page-size')?.addEventListener('change', () => {
+        (_d = document.getElementById('contact-persons-page-size')) === null || _d === void 0 ? void 0 : _d.addEventListener('change', () => {
             currentPage = 1;
             loadContactPersons();
         });
@@ -569,3 +572,4 @@
         setupPageObserver();
     }
 })();
+//# sourceMappingURL=contact-persons.js.map

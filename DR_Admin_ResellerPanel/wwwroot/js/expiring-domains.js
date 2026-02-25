@@ -63,7 +63,7 @@
         return { items, meta };
     }
     function normalizeItem(item) {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v;
         return {
             id: (_b = (_a = item.id) !== null && _a !== void 0 ? _a : item.Id) !== null && _b !== void 0 ? _b : 0,
             customerId: (_d = (_c = item.customerId) !== null && _c !== void 0 ? _c : item.CustomerId) !== null && _d !== void 0 ? _d : 0,
@@ -71,13 +71,14 @@
             name: (_h = (_g = item.name) !== null && _g !== void 0 ? _g : item.Name) !== null && _h !== void 0 ? _h : '',
             providerId: (_k = (_j = item.providerId) !== null && _j !== void 0 ? _j : item.ProviderId) !== null && _k !== void 0 ? _k : 0,
             status: (_m = (_l = item.status) !== null && _l !== void 0 ? _l : item.Status) !== null && _m !== void 0 ? _m : '',
-            registrationDate: item.registrationDate ?? item.RegistrationDate ?? '',
-            expirationDate: item.expirationDate ?? item.ExpirationDate ?? '',
-            customer: (_p = (_o = item.customer) !== null && _o !== void 0 ? _o : item.Customer) !== null && _p !== void 0 ? _p : null,
-            registrar: (_r = (_q = item.registrar) !== null && _q !== void 0 ? _q : item.Registrar) !== null && _r !== void 0 ? _r : null,
+            registrationDate: (_p = (_o = item.registrationDate) !== null && _o !== void 0 ? _o : item.RegistrationDate) !== null && _p !== void 0 ? _p : '',
+            expirationDate: (_r = (_q = item.expirationDate) !== null && _q !== void 0 ? _q : item.ExpirationDate) !== null && _r !== void 0 ? _r : '',
+            customer: (_t = (_s = item.customer) !== null && _s !== void 0 ? _s : item.Customer) !== null && _t !== void 0 ? _t : null,
+            registrar: (_v = (_u = item.registrar) !== null && _u !== void 0 ? _u : item.Registrar) !== null && _v !== void 0 ? _v : null,
         };
     }
     async function loadAllDomains() {
+        var _a, _b, _c, _d, _e;
         let allItems = [];
         let pageNumber = 1;
         const pageSize = 200;
@@ -92,10 +93,10 @@
             }
             const raw = response.data;
             const extracted = extractItems(raw);
-            const meta = extracted.meta ?? raw;
+            const meta = (_a = extracted.meta) !== null && _a !== void 0 ? _a : raw;
             const items = extracted.items.map(normalizeItem);
             allItems = allItems.concat(items);
-            totalPages = (meta === null || meta === void 0 ? void 0 : meta.totalPages) ?? (meta === null || meta === void 0 ? void 0 : meta.TotalPages) ?? (raw === null || raw === void 0 ? void 0 : raw.totalPages) ?? (raw === null || raw === void 0 ? void 0 : raw.TotalPages) ?? totalPages;
+            totalPages = (_e = (_d = (_c = (_b = meta === null || meta === void 0 ? void 0 : meta.totalPages) !== null && _b !== void 0 ? _b : meta === null || meta === void 0 ? void 0 : meta.TotalPages) !== null && _c !== void 0 ? _c : raw === null || raw === void 0 ? void 0 : raw.totalPages) !== null && _d !== void 0 ? _d : raw === null || raw === void 0 ? void 0 : raw.TotalPages) !== null && _e !== void 0 ? _e : totalPages;
             pageNumber += 1;
             if (!extracted.items.length) {
                 break;
@@ -216,3 +217,4 @@
         setupPageObserver();
     }
 })();
+//# sourceMappingURL=expiring-domains.js.map

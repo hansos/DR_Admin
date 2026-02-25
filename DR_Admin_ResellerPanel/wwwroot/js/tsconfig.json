@@ -19,6 +19,7 @@
         "registry-apis.ts",
         "expiring-domains.ts",
         "domains.ts",
+        "domain-details.ts",
         "operating-systems.ts",
         "nav-menu.ts",
         "host-providers.ts",

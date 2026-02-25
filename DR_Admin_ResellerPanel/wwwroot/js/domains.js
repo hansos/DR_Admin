@@ -5,6 +5,33 @@
         var _a, _b;
         return (_b = (_a = window.AppSettings) === null || _a === void 0 ? void 0 : _a.apiBaseUrl) !== null && _b !== void 0 ? _b : '';
     }
+    function setImportBusy(isBusy) {
+        const progress = document.getElementById('domains-import-progress');
+        const select = document.getElementById('domains-import-registrar');
+        const confirm = document.getElementById('domains-import-confirm');
+        if (progress) {
+            progress.classList.toggle('d-none', !isBusy);
+        }
+        if (select) {
+            select.disabled = isBusy;
+        }
+        if (confirm) {
+            confirm.disabled = isBusy;
+        }
+    }
+    function setImportSummary(message) {
+        const summary = document.getElementById('domains-import-summary');
+        if (!summary) {
+            return;
+        }
+        if (!message) {
+            summary.textContent = '';
+            summary.classList.add('d-none');
+            return;
+        }
+        summary.textContent = message;
+        summary.classList.remove('d-none');
+    }
     function getAuthToken() {
         const auth = window.Auth;
         if (auth === null || auth === void 0 ? void 0 : auth.getToken) {
@@ -135,6 +162,7 @@
         renderPagination();
     }
     async function loadRegistrarsForImport() {
+        var _a;
         const select = document.getElementById('domains-import-registrar');
         if (!select) {
             return;
@@ -158,12 +186,58 @@
             return `<option value="${registrar.id}">${esc(label)}</option>`;
         }).join('');
         select.innerHTML = `<option value="">Select registrar</option>${options}`;
+    }
+    function openImport() {
+        const select = document.getElementById('domains-import-registrar');
+        if (select) {
+            select.value = '';
+        }
+        setImportSummary('');
+        setImportBusy(false);
+        loadRegistrarsForImport();
+        showModal('domains-import-modal');
+    }
+    function getSelectValue(id) {
         var _a;
+        const el = document.getElementById(id);
+        return ((_a = el === null || el === void 0 ? void 0 : el.value) !== null && _a !== void 0 ? _a : '').trim();
     }
     function getCustomerName(domain) {
         var _a, _b;
         const cust = domain.customer;
         return (_b = (_a = cust === null || cust === void 0 ? void 0 : cust.name) !== null && _a !== void 0 ? _a : cust === null || cust === void 0 ? void 0 : cust.Name) !== null && _b !== void 0 ? _b : '';
+    }
+    async function importDomains() {
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o;
+        const registrarValue = getSelectValue('domains-import-registrar');
+        const registrarId = Number(registrarValue);
+        if (!registrarValue || !Number.isFinite(registrarId) || registrarId <= 0) {
+            showError('Select a registrar to import domains');
+            return;
+        }
+        setImportSummary('');
+        setImportBusy(true);
+        let totalExisting = null;
+        const existingResponse = await apiRequest(`${getApiBaseUrl()}/Registrars/${registrarId}/domains`, { method: 'GET' });
+        if (existingResponse.success) {
+            const existingData = existingResponse.data;
+            totalExisting = (_f = (_d = (_b = (_a = existingData === null || existingData === void 0 ? void 0 : existingData.totalCount) !== null && _a !== void 0 ? _a : existingData === null || existingData === void 0 ? void 0 : existingData.TotalCount) !== null && _b !== void 0 ? _b : (_c = existingData === null || existingData === void 0 ? void 0 : existingData.domains) === null || _c === void 0 ? void 0 : _c.length) !== null && _d !== void 0 ? _d : (_e = existingData === null || existingData === void 0 ? void 0 : existingData.Domains) === null || _e === void 0 ? void 0 : _e.length) !== null && _f !== void 0 ? _f : null;
+        }
+        const response = await apiRequest(`${getApiBaseUrl()}/Registrars/${registrarId}/domains/download`, { method: 'POST' });
+        setImportBusy(false);
+        if (response.success) {
+            const resultData = response.data;
+            const importedCount = (_m = (_k = (_h = (_g = resultData === null || resultData === void 0 ? void 0 : resultData.count) !== null && _g !== void 0 ? _g : resultData === null || resultData === void 0 ? void 0 : resultData.Count) !== null && _h !== void 0 ? _h : (_j = resultData === null || resultData === void 0 ? void 0 : resultData.data) === null || _j === void 0 ? void 0 : _j.count) !== null && _k !== void 0 ? _k : (_l = resultData === null || resultData === void 0 ? void 0 : resultData.data) === null || _l === void 0 ? void 0 : _l.Count) !== null && _m !== void 0 ? _m : null;
+            const totalLabel = (_o = totalExisting !== null && totalExisting !== void 0 ? totalExisting : importedCount) !== null && _o !== void 0 ? _o : 0;
+            const importedLabel = importedCount !== null && importedCount !== void 0 ? importedCount : 0;
+            const summaryMessage = `Imported ${importedLabel} of ${totalLabel} domains.`;
+            setImportSummary(summaryMessage);
+            showSuccess(summaryMessage);
+            loadDomains();
+        }
+        else {
+            showError(response.message || 'Import failed');
+        }
     }
     function getRegistrarName(domain) {
         var _a, _b;
@@ -201,6 +275,7 @@
             <td>${esc(expires)}</td>
             <td class="text-end">
                 <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-secondary" type="button" data-action="details" data-id="${domain.id}" title="Details"><i class="bi bi-box-arrow-up-right"></i></button>
                     <button class="btn btn-outline-primary" type="button" data-action="edit" data-id="${domain.id}" title="Edit"><i class="bi bi-pencil"></i></button>
                     <button class="btn btn-outline-danger" type="button" data-action="delete" data-id="${domain.id}" data-name="${esc(domain.name)}" title="Delete"><i class="bi bi-trash"></i></button>
                 </div>
@@ -314,14 +389,6 @@
         setDateTimeLocalValue('domains-registration-date', new Date());
         showModal('domains-edit-modal');
     }
-    function openImport() {
-        const select = document.getElementById('domains-import-registrar');
-        if (select) {
-            select.value = '';
-        }
-        loadRegistrarsForImport();
-        showModal('domains-import-modal');
-    }
     function openEdit(id) {
         var _a, _b, _c;
         const domain = allDomains.find((d) => d.id === id);
@@ -358,42 +425,10 @@
         const el = document.getElementById(id);
         return ((_a = el === null || el === void 0 ? void 0 : el.value) !== null && _a !== void 0 ? _a : '').trim();
     }
-    function getSelectValue(id) {
-        var _a;
-        const el = document.getElementById(id);
-        return ((_a = el === null || el === void 0 ? void 0 : el.value) !== null && _a !== void 0 ? _a : '').trim();
-    }
     function getNumberValue(id) {
         const raw = getInputValue(id);
         const parsed = Number(raw);
         return Number.isFinite(parsed) ? parsed : 0;
-    }
-    function setImportBusy(isBusy) {
-        const progress = document.getElementById('domains-import-progress');
-        const select = document.getElementById('domains-import-registrar');
-        const confirm = document.getElementById('domains-import-confirm');
-        if (progress) {
-            progress.classList.toggle('d-none', !isBusy);
-        }
-        if (select) {
-            select.disabled = isBusy;
-        }
-        if (confirm) {
-            confirm.disabled = isBusy;
-        }
-    }
-    function setImportSummary(message) {
-        const summary = document.getElementById('domains-import-summary');
-        if (!summary) {
-            return;
-        }
-        if (!message) {
-            summary.textContent = '';
-            summary.classList.add('d-none');
-            return;
-        }
-        summary.textContent = message;
-        summary.classList.remove('d-none');
     }
     function setDateTimeLocalValue(id, date) {
         const el = document.getElementById(id);
@@ -449,37 +484,6 @@
         }
         else {
             showError(response.message || 'Save failed');
-        }
-    }
-    async function importDomains() {
-        const registrarValue = getSelectValue('domains-import-registrar');
-        const registrarId = Number(registrarValue);
-        if (!registrarValue || !Number.isFinite(registrarId) || registrarId <= 0) {
-            showError('Select a registrar to import domains');
-            return;
-        }
-        setImportSummary('');
-        setImportBusy(true);
-        let totalExisting = null;
-        const existingResponse = await apiRequest(`${getApiBaseUrl()}/Registrars/${registrarId}/domains`, { method: 'GET' });
-        if (existingResponse.success) {
-            const existingData = existingResponse.data;
-            totalExisting = (existingData === null || existingData === void 0 ? void 0 : existingData.totalCount) ?? (existingData === null || existingData === void 0 ? void 0 : existingData.TotalCount) ?? ((existingData === null || existingData === void 0 ? void 0 : existingData.domains) ? existingData.domains.length : null) ?? ((existingData === null || existingData === void 0 ? void 0 : existingData.Domains) ? existingData.Domains.length : null) ?? null;
-        }
-        const response = await apiRequest(`${getApiBaseUrl()}/Registrars/${registrarId}/domains/download`, { method: 'POST' });
-        setImportBusy(false);
-        if (response.success) {
-            const resultData = response.data;
-            const importedCount = (resultData === null || resultData === void 0 ? void 0 : resultData.count) ?? (resultData === null || resultData === void 0 ? void 0 : resultData.Count) ?? ((resultData === null || resultData === void 0 ? void 0 : resultData.data) ? resultData.data.count : null) ?? ((resultData === null || resultData === void 0 ? void 0 : resultData.data) ? resultData.data.Count : null) ?? null;
-            const totalLabel = totalExisting ?? importedCount ?? 0;
-            const importedLabel = importedCount ?? 0;
-            const summaryMessage = `Imported ${importedLabel} of ${totalLabel} domains.`;
-            setImportSummary(summaryMessage);
-            showSuccess(summaryMessage);
-            loadDomains();
-        }
-        else {
-            showError(response.message || 'Import failed');
         }
     }
     function openDelete(id, name) {

@@ -1,0 +1,158 @@
+@page "/domains/details"
+
+<div id="domain-details-page" class="container-fluid">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+        <div>
+            <h2 class="h4 mb-1"><i class="bi bi-globe2"></i> Domain Details</h2>
+            <p class="text-muted mb-0">Review domain data and DNS records.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-outline-secondary" href="/domains/list">
+                <i class="bi bi-arrow-left"></i> Back to list
+            </a>
+            <button class="btn btn-outline-primary" id="domain-dns-sync" type="button">
+                <i class="bi bi-cloud-download"></i> Download DNS Zones
+            </button>
+        </div>
+    </div>
+
+    <div id="domain-details-alert-success" class="alert alert-success d-none" role="alert"></div>
+    <div id="domain-details-alert-error" class="alert alert-danger d-none" role="alert"></div>
+
+    <div id="domain-details-empty" class="card shadow-sm mb-3 d-none">
+        <div class="card-body">
+            <h5 class="card-title mb-2"><i class="bi bi-search"></i> Find domain by name</h5>
+            <p class="text-muted mb-3">Enter a domain name to continue.</p>
+            <div class="input-group" id="domain-details-manual-input">
+                <span class="input-group-text"><i class="bi bi-globe"></i></span>
+                <input type="text" class="form-control" id="domain-details-manual-name" placeholder="example.com" />
+                <button class="btn btn-outline-primary" id="domain-details-manual-load" type="button">
+                    <i class="bi bi-search"></i> Load
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="domain-details-loading" class="text-center py-4">
+        <div class="spinner-border text-primary"></div>
+        <p class="mt-2 text-muted">Loading domain details...</p>
+    </div>
+
+    <div id="domain-details-content" class="d-none">
+        <div class="card shadow-sm mb-3">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Domain Overview</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-lg-6">
+                        <table class="table table-borderless mb-0">
+                            <tbody>
+                                <tr>
+                                    <th class="text-muted" scope="row">Domain</th>
+                                    <td><code id="domain-details-name">-</code></td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted" scope="row">Domain ID</th>
+                                    <td id="domain-details-id">-</td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted" scope="row">Status</th>
+                                    <td id="domain-details-status">-</td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted" scope="row">Registrar</th>
+                                    <td id="domain-details-registrar">-</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="col-lg-6">
+                        <table class="table table-borderless mb-0">
+                            <tbody>
+                                <tr>
+                                    <th class="text-muted" scope="row">Customer</th>
+                                    <td id="domain-details-customer">-</td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted" scope="row">Service ID</th>
+                                    <td id="domain-details-service">-</td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted" scope="row">Registered</th>
+                                    <td id="domain-details-registered">-</td>
+                                </tr>
+                                <tr>
+                                    <th class="text-muted" scope="row">Expires</th>
+                                    <td id="domain-details-expires">-</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-diagram-3"></i> DNS Records</h5>
+                <span class="badge bg-primary" id="domain-dns-record-count">0 records</span>
+            </div>
+            <div class="card-body">
+                <div id="domain-dns-records-loading" class="text-center py-3">
+                    <div class="spinner-border text-primary"></div>
+                    <p class="mt-2 text-muted">Loading DNS records...</p>
+                </div>
+                <div id="domain-dns-records-content" class="d-none">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Name</th>
+                                    <th>Value</th>
+                                    <th>TTL</th>
+                                    <th>Priority</th>
+                                    <th>Weight</th>
+                                    <th>Port</th>
+                                </tr>
+                            </thead>
+                            <tbody id="domain-dns-records-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="domain-dns-records-empty" class="alert alert-info d-none" role="alert">
+                    <i class="bi bi-info-circle"></i> No DNS records found for this domain.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="domain-dns-sync-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Download DNS Zones</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted">Fetch DNS records from the registrar and sync them into the database.</p>
+                <div class="progress mb-3 d-none" id="domain-dns-sync-progress">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"></div>
+                </div>
+                <div class="alert alert-info d-none" id="domain-dns-sync-summary"></div>
+                <div class="small text-muted">
+                    <div class="mb-2"><strong>Domain:</strong> <span id="domain-dns-sync-domain">-</span></div>
+                    <div><strong>Registrar:</strong> <span id="domain-dns-sync-registrar">-</span></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="domain-dns-sync-confirm">
+                    <i class="bi bi-cloud-download"></i> Download
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

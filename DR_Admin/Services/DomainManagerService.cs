@@ -362,9 +362,8 @@ public class DomainManagerService : IDomainManagerService
                 return result;
             }
 
-            // Build a lookup of active DNS record types keyed by uppercased type string
+            // Build a lookup of DNS record types keyed by uppercased type string
             var dnsRecordTypes = await _context.DnsRecordTypes
-                .Where(t => t.IsActive)
                 .ToDictionaryAsync(t => t.Type.ToUpper());
 
             // Load all non-deleted existing records for this domain into memory for matching
@@ -374,12 +373,69 @@ public class DomainManagerService : IDomainManagerService
 
             foreach (var incoming in zone.Records)
             {
-                if (string.IsNullOrWhiteSpace(incoming.Type) ||
-                    !dnsRecordTypes.TryGetValue(incoming.Type.ToUpper(), out var dnsRecordType))
+                if (string.IsNullOrWhiteSpace(incoming.Type))
                 {
-                    _log.Warning("Unknown DNS record type '{Type}' for domain {DomainName} — skipping", incoming.Type, domain.Name);
+                    _log.Warning("DNS record type is missing for domain {DomainName} — skipping", domain.Name);
                     result.Skipped++;
                     continue;
+                }
+
+                var typeKey = incoming.Type.ToUpper();
+
+                if (!dnsRecordTypes.TryGetValue(typeKey, out var dnsRecordType))
+                {
+                    dnsRecordType = new DnsRecordType
+                    {
+                        Type = typeKey,
+                        Description = "Auto-created from registrar DNS sync",
+                        HasPriority = incoming.Priority.HasValue,
+                        HasWeight = incoming.Weight.HasValue,
+                        HasPort = incoming.Port.HasValue,
+                        IsEditableByUser = true,
+                        IsActive = true,
+                        DefaultTTL = 3600,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    };
+
+                    _context.DnsRecordTypes.Add(dnsRecordType);
+                    await _context.SaveChangesAsync();
+                    dnsRecordTypes[typeKey] = dnsRecordType;
+
+                    _log.Information("Created DNS record type '{Type}' during sync", typeKey);
+                }
+                else
+                {
+                    var updated = false;
+
+                    if (!dnsRecordType.IsActive)
+                    {
+                        dnsRecordType.IsActive = true;
+                        updated = true;
+                    }
+
+                    if (incoming.Priority.HasValue && !dnsRecordType.HasPriority)
+                    {
+                        dnsRecordType.HasPriority = true;
+                        updated = true;
+                    }
+
+                    if (incoming.Weight.HasValue && !dnsRecordType.HasWeight)
+                    {
+                        dnsRecordType.HasWeight = true;
+                        updated = true;
+                    }
+
+                    if (incoming.Port.HasValue && !dnsRecordType.HasPort)
+                    {
+                        dnsRecordType.HasPort = true;
+                        updated = true;
+                    }
+
+                    if (updated)
+                    {
+                        dnsRecordType.UpdatedAt = DateTime.UtcNow;
+                    }
                 }
 
                 // Match on type + name + value — all three must be equal for an update

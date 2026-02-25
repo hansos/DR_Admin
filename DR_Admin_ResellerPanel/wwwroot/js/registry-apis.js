@@ -52,14 +52,15 @@
     let totalCount = 0;
     let totalPages = 1;
     function loadPageSizeFromUi() {
+        var _a;
         const el = document.getElementById('registrars-page-size');
-        const parsed = Number(((el === null || el === void 0 ? void 0 : el.value) ?? '').trim());
+        const parsed = Number(((_a = el === null || el === void 0 ? void 0 : el.value) !== null && _a !== void 0 ? _a : '').trim());
         if (Number.isFinite(parsed) && parsed > 0) {
             pageSize = parsed;
         }
     }
     function normalizeRegistrar(item) {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x;
         return {
             id: (_b = (_a = item.id) !== null && _a !== void 0 ? _a : item.Id) !== null && _b !== void 0 ? _b : 0,
             name: (_d = (_c = item.name) !== null && _c !== void 0 ? _c : item.Name) !== null && _d !== void 0 ? _d : '',
@@ -69,12 +70,13 @@
             contactPhone: (_m = (_l = item.contactPhone) !== null && _l !== void 0 ? _l : item.ContactPhone) !== null && _m !== void 0 ? _m : null,
             website: (_p = (_o = item.website) !== null && _o !== void 0 ? _o : item.Website) !== null && _p !== void 0 ? _p : null,
             notes: (_r = (_q = item.notes) !== null && _q !== void 0 ? _q : item.Notes) !== null && _r !== void 0 ? _r : null,
-            isDefault: item.isDefault ?? item.IsDefault ?? false,
-            createdAt: item.createdAt ?? item.CreatedAt ?? null,
-            updatedAt: item.updatedAt ?? item.UpdatedAt ?? null,
+            isDefault: (_t = (_s = item.isDefault) !== null && _s !== void 0 ? _s : item.IsDefault) !== null && _t !== void 0 ? _t : false,
+            createdAt: (_v = (_u = item.createdAt) !== null && _u !== void 0 ? _u : item.CreatedAt) !== null && _v !== void 0 ? _v : null,
+            updatedAt: (_x = (_w = item.updatedAt) !== null && _w !== void 0 ? _w : item.UpdatedAt) !== null && _x !== void 0 ? _x : null,
         };
     }
     async function loadRegistrars() {
+        var _a;
         const tableBody = document.getElementById('registrars-table-body');
         if (!tableBody) {
             return;
@@ -98,7 +100,6 @@
         currentPage = Math.min(currentPage, totalPages);
         renderTable();
         renderPagination();
-        var _a;
     }
     function renderTable() {
         const tableBody = document.getElementById('registrars-table-body');
@@ -396,6 +397,7 @@
             return;
         }
         tableBody.addEventListener('click', (event) => {
+            var _a;
             const target = event.target;
             const button = target.closest('button[data-action]');
             if (!button) {
@@ -410,22 +412,23 @@
                 return;
             }
             if (button.dataset.action === 'delete') {
-                openDelete(id, button.dataset.name ?? '');
+                openDelete(id, (_a = button.dataset.name) !== null && _a !== void 0 ? _a : '');
             }
         });
     }
     function initializeRegistrarsPage() {
+        var _a, _b, _c, _d;
         const page = document.getElementById('registrars-page');
         if (!page || page.dataset.initialized === 'true') {
             return;
         }
         page.dataset.initialized = 'true';
-        document.getElementById('registrars-create')?.addEventListener('click', openCreate);
-        document.getElementById('registrars-save')?.addEventListener('click', saveRegistrar);
-        document.getElementById('registrars-confirm-delete')?.addEventListener('click', doDelete);
+        (_a = document.getElementById('registrars-create')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', openCreate);
+        (_b = document.getElementById('registrars-save')) === null || _b === void 0 ? void 0 : _b.addEventListener('click', saveRegistrar);
+        (_c = document.getElementById('registrars-confirm-delete')) === null || _c === void 0 ? void 0 : _c.addEventListener('click', doDelete);
         bindTableActions();
         bindPagingControlsActions();
-        document.getElementById('registrars-page-size')?.addEventListener('change', () => {
+        (_d = document.getElementById('registrars-page-size')) === null || _d === void 0 ? void 0 : _d.addEventListener('change', () => {
             currentPage = 1;
             renderTable();
             renderPagination();
@@ -451,3 +454,4 @@
         setupPageObserver();
     }
 })();
+//# sourceMappingURL=registry-apis.js.map
