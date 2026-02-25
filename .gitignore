@@ -373,3 +373,4 @@ FodyWeavers.xsd
 /DR_Home/appsettings.Development.json
 /DR_Admin_ResellerPanel/appsettings.Development.json
 /ai-prompts
+/ai-prompts/dr_admin_test.md
