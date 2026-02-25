@@ -270,6 +270,7 @@ function setSelectedDomain(domain: Domain): void {
     setSelectButtonLabel(selectedDomainName);
     updateSyncButtonState();
     updateAddButtonState();
+    updateDomainSuffix();
 }
 
 function normalizeDomain(raw: any): Domain {
@@ -389,6 +390,7 @@ function openCreate(): void {
     setInputValue('dns-zones-record-weight', '');
     setInputValue('dns-zones-record-port', '');
 
+    updateDomainSuffix();
     updateFieldVisibility();
     showModal('dns-zones-edit-modal');
 }
@@ -407,13 +409,14 @@ function openEdit(id: number): void {
     editingRecordId = id;
 
     setSelectValue('dns-zones-record-type', record.dnsRecordTypeId?.toString() ?? getRecordTypeIdByName(record.type)?.toString() ?? '');
-    setInputValue('dns-zones-record-name', record.name);
+    setInputValue('dns-zones-record-name', toRelativeName(record.name));
     setInputValue('dns-zones-record-value', record.value);
     setInputValue('dns-zones-record-ttl', record.ttl?.toString() ?? '');
     setInputValue('dns-zones-record-priority', record.priority?.toString() ?? '');
     setInputValue('dns-zones-record-weight', record.weight?.toString() ?? '');
     setInputValue('dns-zones-record-port', record.port?.toString() ?? '');
 
+    updateDomainSuffix();
     updateFieldVisibility();
 
     showModal('dns-zones-edit-modal');
@@ -433,7 +436,7 @@ async function saveRecord(): Promise<void> {
     const payload = {
         domainId: selectedDomainId,
         dnsRecordTypeId,
-        name: getInputValue('dns-zones-record-name'),
+        name: toAbsoluteName(getInputValue('dns-zones-record-name')),
         value: getInputValue('dns-zones-record-value'),
         ttl: getNumberValue('dns-zones-record-ttl'),
         priority: getNullableNumberValue('dns-zones-record-priority'),
@@ -455,6 +458,50 @@ async function saveRecord(): Promise<void> {
         showError(response.message || 'Failed to save DNS record.');
         return;
     }
+
+function updateDomainSuffix(): void {
+    const suffix = document.getElementById('dns-zones-record-name-suffix');
+    if (!suffix) {
+        return;
+    }
+
+    suffix.textContent = selectedDomainName ? `.${selectedDomainName}` : '';
+}
+
+function toAbsoluteName(name: string): string {
+    const trimmed = (name ?? '').trim();
+    if (!trimmed || !selectedDomainName) {
+        return trimmed;
+    }
+
+    if (trimmed === '@') {
+        return selectedDomainName;
+    }
+
+    if (trimmed.endsWith(`.${selectedDomainName}`)) {
+        return trimmed;
+    }
+
+    return `${trimmed}.${selectedDomainName}`;
+}
+
+function toRelativeName(name: string): string {
+    const trimmed = (name ?? '').trim();
+    if (!trimmed || !selectedDomainName) {
+        return trimmed;
+    }
+
+    if (trimmed.toLowerCase() === selectedDomainName.toLowerCase()) {
+        return '@';
+    }
+
+    if (trimmed.toLowerCase().endsWith(`.${selectedDomainName.toLowerCase()}`)) {
+        const relative = trimmed.slice(0, trimmed.length - selectedDomainName.length - 1);
+        return relative || '@';
+    }
+
+    return trimmed;
+}
 
     hideModal('dns-zones-edit-modal');
     showSuccess(editingRecordId ? 'DNS record updated successfully.' : 'DNS record created successfully.');
@@ -731,6 +778,53 @@ function getFullDnsName(name: string, domainName: string): string {
     }
 
     return `${name}.${domainName}`;
+}
+
+function updateDomainSuffix(): void {
+    const suffix = document.getElementById('dns-zones-record-name-suffix');
+    if (!suffix) {
+        return;
+    }
+
+    suffix.textContent = selectedDomainName ? `.${selectedDomainName}` : '';
+}
+
+function toAbsoluteName(name: string): string {
+    const trimmed = (name ?? '').trim();
+    if (!trimmed || !selectedDomainName) {
+        return trimmed;
+    }
+
+    if (trimmed === '@') {
+        return selectedDomainName;
+    }
+
+    if (trimmed.endsWith(`.${selectedDomainName}`)) {
+        return trimmed;
+    }
+
+    return `${trimmed}.${selectedDomainName}`;
+}
+
+function toRelativeName(name: string): string {
+    const trimmed = (name ?? '').trim();
+    if (!trimmed || !selectedDomainName) {
+        return trimmed;
+    }
+
+    const domainLower = selectedDomainName.toLowerCase();
+    const valueLower = trimmed.toLowerCase();
+
+    if (valueLower === domainLower) {
+        return '@';
+    }
+
+    if (valueLower.endsWith(`.${domainLower}`)) {
+        const relative = trimmed.slice(0, trimmed.length - selectedDomainName.length - 1);
+        return relative || '@';
+    }
+
+    return trimmed;
 }
 
 function showEmpty(): void {

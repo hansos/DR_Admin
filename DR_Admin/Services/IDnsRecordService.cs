@@ -22,6 +22,9 @@ public interface IDnsRecordService
     /// <summary>Returns all records for the specified domain that are flagged as pending synchronisation.</summary>
     Task<IEnumerable<DnsRecordDto>> GetPendingSyncRecordsAsync(int domainId);
 
+    /// <summary>Returns the count of DNS records flagged as pending synchronisation.</summary>
+    Task<int> GetPendingSyncCountAsync();
+
     /// <summary>Returns all soft-deleted records for the specified domain.</summary>
     Task<IEnumerable<DnsRecordDto>> GetDeletedDnsRecordsAsync(int domainId);
 

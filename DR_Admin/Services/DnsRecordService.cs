@@ -41,6 +41,28 @@ public class DnsRecordService : IDnsRecordService
     }
 
     /// <inheritdoc/>
+    public async Task<int> GetPendingSyncCountAsync()
+    {
+        try
+        {
+            _log.Information("Fetching pending-sync DNS record count");
+
+            var count = await _context.DnsRecords
+                .AsNoTracking()
+                .Where(r => r.IsPendingSync && !r.IsDeleted)
+                .CountAsync();
+
+            _log.Information("Pending-sync DNS record count: {Count}", count);
+            return count;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while fetching pending-sync DNS record count");
+            throw;
+        }
+    }
+
+    /// <inheritdoc/>
     public async Task<PagedResult<DnsRecordDto>> GetAllDnsRecordsPagedAsync(PaginationParameters parameters)
     {
         try

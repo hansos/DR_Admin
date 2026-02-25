@@ -195,6 +195,7 @@
         setSelectButtonLabel(selectedDomainName);
         updateSyncButtonState();
         updateAddButtonState();
+        updateDomainSuffix();
     }
     function normalizeDomain(raw) {
         var _a, _b, _c, _d, _e;
@@ -298,6 +299,7 @@
         setInputValue('dns-zones-record-priority', '');
         setInputValue('dns-zones-record-weight', '');
         setInputValue('dns-zones-record-port', '');
+        updateDomainSuffix();
         updateFieldVisibility();
         showModal('dns-zones-edit-modal');
     }
@@ -313,12 +315,13 @@
         }
         editingRecordId = id;
         setSelectValue('dns-zones-record-type', (_d = (_b = (_a = record.dnsRecordTypeId) === null || _a === void 0 ? void 0 : _a.toString()) !== null && _b !== void 0 ? _b : (_c = getRecordTypeIdByName(record.type)) === null || _c === void 0 ? void 0 : _c.toString()) !== null && _d !== void 0 ? _d : '');
-        setInputValue('dns-zones-record-name', record.name);
+        setInputValue('dns-zones-record-name', toRelativeName(record.name));
         setInputValue('dns-zones-record-value', record.value);
         setInputValue('dns-zones-record-ttl', (_f = (_e = record.ttl) === null || _e === void 0 ? void 0 : _e.toString()) !== null && _f !== void 0 ? _f : '');
         setInputValue('dns-zones-record-priority', (_h = (_g = record.priority) === null || _g === void 0 ? void 0 : _g.toString()) !== null && _h !== void 0 ? _h : '');
         setInputValue('dns-zones-record-weight', (_k = (_j = record.weight) === null || _j === void 0 ? void 0 : _j.toString()) !== null && _k !== void 0 ? _k : '');
         setInputValue('dns-zones-record-port', (_m = (_l = record.port) === null || _l === void 0 ? void 0 : _l.toString()) !== null && _m !== void 0 ? _m : '');
+        updateDomainSuffix();
         updateFieldVisibility();
         showModal('dns-zones-edit-modal');
     }
@@ -334,7 +337,7 @@
         const payload = {
             domainId: selectedDomainId,
             dnsRecordTypeId,
-            name: getInputValue('dns-zones-record-name'),
+            name: toAbsoluteName(getInputValue('dns-zones-record-name')),
             value: getInputValue('dns-zones-record-value'),
             ttl: getNumberValue('dns-zones-record-ttl'),
             priority: getNullableNumberValue('dns-zones-record-priority'),
@@ -353,6 +356,40 @@
         if (!response.success) {
             showError(response.message || 'Failed to save DNS record.');
             return;
+        }
+        function updateDomainSuffix() {
+            const suffix = document.getElementById('dns-zones-record-name-suffix');
+            if (!suffix) {
+                return;
+            }
+            suffix.textContent = selectedDomainName ? `.${selectedDomainName}` : '';
+        }
+        function toAbsoluteName(name) {
+            const trimmed = (name !== null && name !== void 0 ? name : '').trim();
+            if (!trimmed || !selectedDomainName) {
+                return trimmed;
+            }
+            if (trimmed === '@') {
+                return selectedDomainName;
+            }
+            if (trimmed.endsWith(`.${selectedDomainName}`)) {
+                return trimmed;
+            }
+            return `${trimmed}.${selectedDomainName}`;
+        }
+        function toRelativeName(name) {
+            const trimmed = (name !== null && name !== void 0 ? name : '').trim();
+            if (!trimmed || !selectedDomainName) {
+                return trimmed;
+            }
+            if (trimmed.toLowerCase() === selectedDomainName.toLowerCase()) {
+                return '@';
+            }
+            if (trimmed.toLowerCase().endsWith(`.${selectedDomainName.toLowerCase()}`)) {
+                const relative = trimmed.slice(0, trimmed.length - selectedDomainName.length - 1);
+                return relative || '@';
+            }
+            return trimmed;
         }
         hideModal('dns-zones-edit-modal');
         showSuccess(editingRecordId ? 'DNS record updated successfully.' : 'DNS record created successfully.');
@@ -596,6 +633,42 @@
             return name;
         }
         return `${name}.${domainName}`;
+    }
+    function updateDomainSuffix() {
+        const suffix = document.getElementById('dns-zones-record-name-suffix');
+        if (!suffix) {
+            return;
+        }
+        suffix.textContent = selectedDomainName ? `.${selectedDomainName}` : '';
+    }
+    function toAbsoluteName(name) {
+        const trimmed = (name !== null && name !== void 0 ? name : '').trim();
+        if (!trimmed || !selectedDomainName) {
+            return trimmed;
+        }
+        if (trimmed === '@') {
+            return selectedDomainName;
+        }
+        if (trimmed.endsWith(`.${selectedDomainName}`)) {
+            return trimmed;
+        }
+        return `${trimmed}.${selectedDomainName}`;
+    }
+    function toRelativeName(name) {
+        const trimmed = (name !== null && name !== void 0 ? name : '').trim();
+        if (!trimmed || !selectedDomainName) {
+            return trimmed;
+        }
+        const domainLower = selectedDomainName.toLowerCase();
+        const valueLower = trimmed.toLowerCase();
+        if (valueLower === domainLower) {
+            return '@';
+        }
+        if (valueLower.endsWith(`.${domainLower}`)) {
+            const relative = trimmed.slice(0, trimmed.length - selectedDomainName.length - 1);
+            return relative || '@';
+        }
+        return trimmed;
     }
     function showEmpty() {
         var _a, _b;

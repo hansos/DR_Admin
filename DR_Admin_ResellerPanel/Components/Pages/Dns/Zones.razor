@@ -6,32 +6,6 @@
             <h2 class="h4 mb-1"><i class="bi bi-hdd-network"></i> DNS Zones</h2>
             <p class="text-muted mb-0">View and manage DNS records by domain.</p>
         </div>
-        <div class="d-flex flex-wrap gap-2">
-            <a class="btn btn-outline-secondary" href="/domains/list">
-                <i class="bi bi-arrow-left"></i> Back to list
-            </a>
-            <button class="btn btn-outline-primary" id="dns-zones-select" type="button">
-                <i class="bi bi-search"></i> Select domain
-            </button>
-        </div>
-    </div>
-
-    <div id="dns-zones-alert-success" class="alert alert-success d-none" role="alert"></div>
-    <div id="dns-zones-alert-error" class="alert alert-danger d-none" role="alert"></div>
-
-    <div class="card shadow-sm mb-3">
-        <div class="card-header bg-light d-flex justify-content-between align-items-center">
-            <h5 class="mb-0"><i class="bi bi-globe2"></i> Selected Domain</h5>
-            <div class="d-flex align-items-center gap-2">
-                <span class="badge bg-primary" id="dns-zones-record-count">0 records</span>
-            </div>
-        </div>
-        <div class="card-body">
-            <div class="row g-2">
-                <div class="col-md-6">
-                    <div class="text-muted">Domain</div>
-                    <div class="fw-semibold" id="dns-zones-selected-domain">No domain selected</div>
-                </div>
 
 <div class="modal fade" id="dns-zones-sync-modal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -93,6 +67,32 @@
         </div>
     </div>
 </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-outline-secondary" href="/domains/list">
+                <i class="bi bi-arrow-left"></i> Back to list
+            </a>
+            <button class="btn btn-outline-primary" id="dns-zones-select" type="button">
+                <i class="bi bi-search"></i> Select domain
+            </button>
+        </div>
+    </div>
+
+    <div id="dns-zones-alert-success" class="alert alert-success d-none" role="alert"></div>
+    <div id="dns-zones-alert-error" class="alert alert-danger d-none" role="alert"></div>
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-globe2"></i> Selected Domain</h5>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-primary" id="dns-zones-record-count">0 records</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row g-2">
+                <div class="col-md-6">
+                    <div class="text-muted">Domain</div>
+                    <div class="fw-semibold" id="dns-zones-selected-domain">No domain selected</div>
+                </div>
                 <div class="col-md-6">
                     <div class="text-muted">Domain ID</div>
                     <div class="fw-semibold" id="dns-zones-selected-id">-</div>
@@ -188,7 +188,10 @@
                         </div>
                         <div class="col-md-8">
                             <label class="form-label" for="dns-zones-record-name">Name</label>
-                            <input type="text" class="form-control" id="dns-zones-record-name" />
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="dns-zones-record-name" placeholder="e.g. @@ or www or mail" />
+                                <span class="input-group-text text-muted" id="dns-zones-record-name-suffix"></span>
+                            </div>
                         </div>
                         <div class="col-12">
                             <label class="form-label" for="dns-zones-record-value">Value</label>

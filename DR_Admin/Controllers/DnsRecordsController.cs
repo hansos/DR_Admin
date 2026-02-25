@@ -207,6 +207,36 @@ public class DnsRecordsController : ControllerBase
     }
 
     /// <summary>
+    /// Retrieves the count of DNS records that are pending synchronisation to the DNS server.
+    /// </summary>
+    /// <returns>Count of pending-sync DNS records.</returns>
+    /// <response code="200">Returns the pending-sync record count.</response>
+    /// <response code="401">If the user is not authenticated.</response>
+    /// <response code="403">If the user does not have the required role.</response>
+    /// <response code="500">If an internal server error occurs.</response>
+    [HttpGet("pending/count")]
+    [Authorize(Policy = "DnsRecord.Read")]
+    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult> GetPendingSyncCount()
+    {
+        try
+        {
+            _log.Information("API: GetPendingSyncCount called by user {User}", User.Identity?.Name);
+
+            var count = await _dnsRecordService.GetPendingSyncCountAsync();
+            return Ok(new { count });
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in GetPendingSyncCount");
+            return StatusCode(500, "An error occurred while retrieving pending-sync DNS record count");
+        }
+    }
+
+    /// <summary>
     /// Retrieves all DNS records of a specific type (A, AAAA, CNAME, MX, TXT, NS, SRV, etc.).
     /// </summary>
     /// <param name="type">The DNS record type string (e.g., "A", "CNAME", "MX").</param>
