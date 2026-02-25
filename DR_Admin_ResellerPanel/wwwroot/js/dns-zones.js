@@ -209,20 +209,32 @@
             return;
         }
         setLoading(true);
-        const response = await apiRequest(`${getApiBaseUrl()}/DnsRecords/domain/${selectedDomainId}`, { method: 'GET' });
-        if (!response.success) {
+        const [activeResponse, deletedResponse] = await Promise.all([
+            apiRequest(`${getApiBaseUrl()}/DnsRecords/domain/${selectedDomainId}`, { method: 'GET' }),
+            apiRequest(`${getApiBaseUrl()}/DnsRecords/domain/${selectedDomainId}/deleted`, { method: 'GET' }),
+        ]);
+        if (!activeResponse.success) {
             setLoading(false);
-            showError(response.message || 'Failed to load DNS records.');
+            showError(activeResponse.message || 'Failed to load DNS records.');
             return;
         }
-        const raw = response.data;
-        records = Array.isArray(raw)
-            ? raw
-            : Array.isArray(raw === null || raw === void 0 ? void 0 : raw.data)
-                ? raw.data
-                : Array.isArray(raw === null || raw === void 0 ? void 0 : raw.Data)
-                    ? raw.Data
+        const activeRaw = activeResponse.data;
+        const activeRecords = Array.isArray(activeRaw)
+            ? activeRaw
+            : Array.isArray(activeRaw === null || activeRaw === void 0 ? void 0 : activeRaw.data)
+                ? activeRaw.data
+                : Array.isArray(activeRaw === null || activeRaw === void 0 ? void 0 : activeRaw.Data)
+                    ? activeRaw.Data
                     : [];
+        const deletedRaw = deletedResponse.success ? deletedResponse.data : [];
+        const deletedRecords = Array.isArray(deletedRaw)
+            ? deletedRaw
+            : Array.isArray(deletedRaw === null || deletedRaw === void 0 ? void 0 : deletedRaw.data)
+                ? deletedRaw.data
+                : Array.isArray(deletedRaw === null || deletedRaw === void 0 ? void 0 : deletedRaw.Data)
+                    ? deletedRaw.Data
+                    : [];
+        records = [...activeRecords, ...deletedRecords];
         renderRecords();
         setLoading(false);
         updatePendingSyncBadge();
@@ -242,12 +254,14 @@
         }
         tableBody.innerHTML = records.map((record) => {
             var _a, _b, _c, _d;
-            const editable = record.isEditableByUser !== false;
-            const rowClass = editable ? '' : 'table-warning';
+            const isDeleted = record.isDeleted === true;
+            const editable = record.isEditableByUser !== false && !isDeleted;
+            const rowClass = isDeleted ? 'table-danger' : editable ? '' : 'table-warning';
             const lockBadge = editable ? '' : ' <span class="badge bg-secondary" title="Not editable"><i class="bi bi-lock"></i></span>';
+            const pendingBadge = isDeleted ? ' <span class="badge bg-danger" title="Pending sync"><i class="bi bi-clock"></i> Pending</span>' : '';
             return `
         <tr class="${rowClass}">
-            <td>${esc(record.type || '-')}${lockBadge}</td>
+            <td>${esc(record.type || '-')}${lockBadge}${pendingBadge}</td>
             <td>${esc(record.name || '-')}</td>
             <td>${esc(record.value || '-')}</td>
             <td>${(_a = record.ttl) !== null && _a !== void 0 ? _a : '-'}</td>

@@ -287,21 +287,36 @@ async function loadRecords(): Promise<void> {
 
     setLoading(true);
 
-    const response = await apiRequest<DnsRecord[]>(`${getApiBaseUrl()}/DnsRecords/domain/${selectedDomainId}`, { method: 'GET' });
-    if (!response.success) {
+    const [activeResponse, deletedResponse] = await Promise.all([
+        apiRequest<DnsRecord[]>(`${getApiBaseUrl()}/DnsRecords/domain/${selectedDomainId}`, { method: 'GET' }),
+        apiRequest<DnsRecord[]>(`${getApiBaseUrl()}/DnsRecords/domain/${selectedDomainId}/deleted`, { method: 'GET' }),
+    ]);
+
+    if (!activeResponse.success) {
         setLoading(false);
-        showError(response.message || 'Failed to load DNS records.');
+        showError(activeResponse.message || 'Failed to load DNS records.');
         return;
     }
 
-    const raw = response.data as any;
-    records = Array.isArray(raw)
-        ? raw
-        : Array.isArray(raw?.data)
-            ? raw.data
-            : Array.isArray(raw?.Data)
-                ? raw.Data
+    const activeRaw = activeResponse.data as any;
+    const activeRecords = Array.isArray(activeRaw)
+        ? activeRaw
+        : Array.isArray(activeRaw?.data)
+            ? activeRaw.data
+            : Array.isArray(activeRaw?.Data)
+                ? activeRaw.Data
                 : [];
+
+    const deletedRaw = deletedResponse.success ? (deletedResponse.data as any) : [];
+    const deletedRecords = Array.isArray(deletedRaw)
+        ? deletedRaw
+        : Array.isArray(deletedRaw?.data)
+            ? deletedRaw.data
+            : Array.isArray(deletedRaw?.Data)
+                ? deletedRaw.Data
+                : [];
+
+    records = [...activeRecords, ...deletedRecords];
 
     renderRecords();
     setLoading(false);
@@ -325,12 +340,14 @@ function renderRecords(): void {
     }
 
     tableBody.innerHTML = records.map((record) => {
-        const editable = record.isEditableByUser !== false;
-        const rowClass = editable ? '' : 'table-warning';
+        const isDeleted = record.isDeleted === true;
+        const editable = record.isEditableByUser !== false && !isDeleted;
+        const rowClass = isDeleted ? 'table-danger' : editable ? '' : 'table-warning';
         const lockBadge = editable ? '' : ' <span class="badge bg-secondary" title="Not editable"><i class="bi bi-lock"></i></span>';
+        const pendingBadge = isDeleted ? ' <span class="badge bg-danger" title="Pending sync"><i class="bi bi-clock"></i> Pending</span>' : '';
         return `
         <tr class="${rowClass}">
-            <td>${esc(record.type || '-')}${lockBadge}</td>
+            <td>${esc(record.type || '-')}${lockBadge}${pendingBadge}</td>
             <td>${esc(record.name || '-')}</td>
             <td>${esc(record.value || '-')}</td>
             <td>${record.ttl ?? '-'}</td>
