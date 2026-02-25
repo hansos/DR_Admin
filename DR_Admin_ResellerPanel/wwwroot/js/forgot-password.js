@@ -2,8 +2,7 @@
 // @ts-nocheck
 (function () {
     function getApiBaseUrl() {
-        var _a;
-        const baseUrl = (_a = window.AppSettings) === null || _a === void 0 ? void 0 : _a.apiBaseUrl;
+        const baseUrl = window.AppSettings?.apiBaseUrl;
         if (!baseUrl) {
             const fallback = window.location.protocol === 'https:'
                 ? 'https://localhost:7201/api/v1'
@@ -13,23 +12,29 @@
         return baseUrl;
     }
     async function apiRequest(endpoint, options = {}) {
-        var _a, _b, _c;
         try {
-            const headers = Object.assign({ 'Content-Type': 'application/json' }, options.headers);
-            const response = await fetch(endpoint, Object.assign(Object.assign({}, options), { headers, credentials: 'include' }));
-            const contentType = (_a = response.headers.get('content-type')) !== null && _a !== void 0 ? _a : '';
+            const headers = {
+                'Content-Type': 'application/json',
+                ...options.headers,
+            };
+            const response = await fetch(endpoint, {
+                ...options,
+                headers,
+                credentials: 'include',
+            });
+            const contentType = response.headers.get('content-type') ?? '';
             const hasJson = contentType.includes('application/json');
             const data = hasJson ? await response.json() : null;
             if (!response.ok) {
                 return {
                     success: false,
-                    message: (data && ((_b = data.message) !== null && _b !== void 0 ? _b : data.title)) || `Request failed with status ${response.status}`,
+                    message: (data && (data.message ?? data.title)) || `Request failed with status ${response.status}`,
                 };
             }
             return {
                 success: true,
-                data: (_c = data === null || data === void 0 ? void 0 : data.data) !== null && _c !== void 0 ? _c : data,
-                message: data === null || data === void 0 ? void 0 : data.message,
+                data: data?.data ?? data,
+                message: data?.message,
             };
         }
         catch (error) {
@@ -107,11 +112,10 @@
             return;
         }
         form.addEventListener('submit', async (e) => {
-            var _a;
             e.preventDefault();
             hideAlerts();
             const emailInput = document.getElementById('forgot-password-email');
-            const email = (_a = emailInput === null || emailInput === void 0 ? void 0 : emailInput.value.trim()) !== null && _a !== void 0 ? _a : '';
+            const email = emailInput?.value.trim() ?? '';
             if (!email) {
                 showError('Please enter your email address.');
                 return;
@@ -159,7 +163,7 @@
     }
     function setupBlazorNavListener() {
         const blazor = window.Blazor;
-        if (blazor === null || blazor === void 0 ? void 0 : blazor.addEventListener) {
+        if (blazor?.addEventListener) {
             blazor.addEventListener('enhancedload', () => {
                 initialized = false;
                 tryInitialize();

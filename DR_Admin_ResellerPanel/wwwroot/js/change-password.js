@@ -2,8 +2,7 @@
 // @ts-nocheck
 (function () {
     function getApiBaseUrl() {
-        var _a;
-        const baseUrl = (_a = window.AppSettings) === null || _a === void 0 ? void 0 : _a.apiBaseUrl;
+        const baseUrl = window.AppSettings?.apiBaseUrl;
         if (!baseUrl) {
             const fallback = window.location.protocol === 'https:'
                 ? 'https://localhost:7201/api/v1'
@@ -14,33 +13,39 @@
     }
     function getAuthToken() {
         const auth = window.Auth;
-        if (auth === null || auth === void 0 ? void 0 : auth.getToken) {
+        if (auth?.getToken) {
             return auth.getToken();
         }
         return sessionStorage.getItem('rp_authToken');
     }
     async function apiRequest(endpoint, options = {}) {
-        var _a, _b, _c;
         try {
-            const headers = Object.assign({ 'Content-Type': 'application/json' }, options.headers);
+            const headers = {
+                'Content-Type': 'application/json',
+                ...options.headers,
+            };
             const authToken = getAuthToken();
             if (authToken) {
                 headers['Authorization'] = `Bearer ${authToken}`;
             }
-            const response = await fetch(endpoint, Object.assign(Object.assign({}, options), { headers, credentials: 'include' }));
-            const contentType = (_a = response.headers.get('content-type')) !== null && _a !== void 0 ? _a : '';
+            const response = await fetch(endpoint, {
+                ...options,
+                headers,
+                credentials: 'include',
+            });
+            const contentType = response.headers.get('content-type') ?? '';
             const hasJson = contentType.includes('application/json');
             const data = hasJson ? await response.json() : null;
             if (!response.ok) {
                 return {
                     success: false,
-                    message: (data && ((_b = data.message) !== null && _b !== void 0 ? _b : data.title)) || `Request failed with status ${response.status}`,
+                    message: (data && (data.message ?? data.title)) || `Request failed with status ${response.status}`,
                 };
             }
             return {
                 success: true,
-                data: (_c = data === null || data === void 0 ? void 0 : data.data) !== null && _c !== void 0 ? _c : data,
-                message: data === null || data === void 0 ? void 0 : data.message,
+                data: data?.data ?? data,
+                message: data?.message,
             };
         }
         catch (error) {
@@ -122,15 +127,14 @@
         setupPasswordToggle('toggle-change-password-new', 'change-password-new', 'toggle-change-password-new-icon');
         setupPasswordToggle('toggle-change-password-confirm', 'change-password-confirm', 'toggle-change-password-confirm-icon');
         form.addEventListener('submit', async (e) => {
-            var _a, _b, _c;
             e.preventDefault();
             hideAlerts();
             const currentInput = document.getElementById('change-password-current');
             const newInput = document.getElementById('change-password-new');
             const confirmInput = document.getElementById('change-password-confirm');
-            const currentPassword = (_a = currentInput === null || currentInput === void 0 ? void 0 : currentInput.value) !== null && _a !== void 0 ? _a : '';
-            const newPassword = (_b = newInput === null || newInput === void 0 ? void 0 : newInput.value) !== null && _b !== void 0 ? _b : '';
-            const confirmPassword = (_c = confirmInput === null || confirmInput === void 0 ? void 0 : confirmInput.value) !== null && _c !== void 0 ? _c : '';
+            const currentPassword = currentInput?.value ?? '';
+            const newPassword = newInput?.value ?? '';
+            const confirmPassword = confirmInput?.value ?? '';
             if (!currentPassword) {
                 showError('Please enter your current password.');
                 return;
@@ -204,7 +208,7 @@
     // Listen for Blazor's enhanced navigation
     function setupBlazorNavListener() {
         const blazor = window.Blazor;
-        if (blazor === null || blazor === void 0 ? void 0 : blazor.addEventListener) {
+        if (blazor?.addEventListener) {
             blazor.addEventListener('enhancedload', () => {
                 initialized = false;
                 tryInitialize();

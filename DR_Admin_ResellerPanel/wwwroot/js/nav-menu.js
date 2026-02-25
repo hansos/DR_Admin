@@ -118,7 +118,7 @@
                 foundActive = true;
                 // Auto-expand the parent section
                 const parentGroup = link.closest('.nav-group');
-                if ((parentGroup === null || parentGroup === void 0 ? void 0 : parentGroup.dataset.section) && expandedSection !== parentGroup.dataset.section) {
+                if (parentGroup?.dataset.section && expandedSection !== parentGroup.dataset.section) {
                     // Collapse all others first
                     document.querySelectorAll('#nav-menu .nav-group').forEach(g => g.classList.remove('expanded'));
                     parentGroup.classList.add('expanded');
@@ -159,7 +159,7 @@
                 event.preventDefault();
                 event.stopPropagation();
                 const group = header.closest('.nav-group');
-                if (group === null || group === void 0 ? void 0 : group.dataset.section) {
+                if (group?.dataset.section) {
                     console.log('Header clicked, calling toggleSection');
                     toggleSection(group.dataset.section);
                 }
@@ -213,7 +213,7 @@
     // Listen for Blazor's enhanced navigation using Blazor API
     function setupBlazorNavListener() {
         const blazor = window.Blazor;
-        if (blazor === null || blazor === void 0 ? void 0 : blazor.addEventListener) {
+        if (blazor?.addEventListener) {
             blazor.addEventListener('enhancedload', () => {
                 restoreExpandedSection();
                 updateActiveLink();

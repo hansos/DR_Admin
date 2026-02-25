@@ -2,38 +2,43 @@
 // @ts-nocheck
 (function () {
     function getApiBaseUrl() {
-        var _a, _b;
-        return (_b = (_a = window.AppSettings) === null || _a === void 0 ? void 0 : _a.apiBaseUrl) !== null && _b !== void 0 ? _b : '';
+        return window.AppSettings?.apiBaseUrl ?? '';
     }
     function getAuthToken() {
         const auth = window.Auth;
-        if (auth === null || auth === void 0 ? void 0 : auth.getToken) {
+        if (auth?.getToken) {
             return auth.getToken();
         }
         return sessionStorage.getItem('rp_authToken');
     }
     async function apiRequest(endpoint, options = {}) {
-        var _a, _b, _c;
         try {
-            const headers = Object.assign({ 'Content-Type': 'application/json' }, options.headers);
+            const headers = {
+                'Content-Type': 'application/json',
+                ...options.headers,
+            };
             const authToken = getAuthToken();
             if (authToken) {
                 headers['Authorization'] = `Bearer ${authToken}`;
             }
-            const response = await fetch(endpoint, Object.assign(Object.assign({}, options), { headers, credentials: 'include' }));
-            const contentType = (_a = response.headers.get('content-type')) !== null && _a !== void 0 ? _a : '';
+            const response = await fetch(endpoint, {
+                ...options,
+                headers,
+                credentials: 'include',
+            });
+            const contentType = response.headers.get('content-type') ?? '';
             const hasJson = contentType.includes('application/json');
             const data = hasJson ? await response.json() : null;
             if (!response.ok) {
                 return {
                     success: false,
-                    message: (data && ((_b = data.message) !== null && _b !== void 0 ? _b : data.title)) || `Request failed with status ${response.status}`,
+                    message: (data && (data.message ?? data.title)) || `Request failed with status ${response.status}`,
                 };
             }
             return {
-                success: (data === null || data === void 0 ? void 0 : data.success) !== false,
-                data: (_c = data === null || data === void 0 ? void 0 : data.data) !== null && _c !== void 0 ? _c : data,
-                message: data === null || data === void 0 ? void 0 : data.message,
+                success: data?.success !== false,
+                data: data?.data ?? data,
+                message: data?.message,
             };
         }
         catch (error) {
@@ -45,21 +50,20 @@
         }
     }
     function extractItems(raw) {
-        var _a, _b, _c, _d, _e, _f;
         if (Array.isArray(raw)) {
             return { items: raw, meta: null };
         }
-        const candidates = [raw, raw === null || raw === void 0 ? void 0 : raw.data, raw === null || raw === void 0 ? void 0 : raw.Data, (_a = raw === null || raw === void 0 ? void 0 : raw.data) === null || _a === void 0 ? void 0 : _a.data, (_b = raw === null || raw === void 0 ? void 0 : raw.data) === null || _b === void 0 ? void 0 : _b.Data];
-        const items = (Array.isArray(raw === null || raw === void 0 ? void 0 : raw.Data) && raw.Data) ||
-            (Array.isArray(raw === null || raw === void 0 ? void 0 : raw.data) && raw.data) ||
-            (Array.isArray((_c = raw === null || raw === void 0 ? void 0 : raw.data) === null || _c === void 0 ? void 0 : _c.Data) && raw.data.Data) ||
-            (Array.isArray((_d = raw === null || raw === void 0 ? void 0 : raw.data) === null || _d === void 0 ? void 0 : _d.data) && raw.data.data) ||
-            (Array.isArray((_e = raw === null || raw === void 0 ? void 0 : raw.Data) === null || _e === void 0 ? void 0 : _e.Data) && raw.Data.Data) ||
+        const candidates = [raw, raw?.data, raw?.Data, raw?.data?.data, raw?.data?.Data];
+        const items = (Array.isArray(raw?.Data) && raw.Data) ||
+            (Array.isArray(raw?.data) && raw.data) ||
+            (Array.isArray(raw?.data?.Data) && raw.data.Data) ||
+            (Array.isArray(raw?.data?.data) && raw.data.data) ||
+            (Array.isArray(raw?.Data?.Data) && raw.Data.Data) ||
             [];
-        const meta = (_f = candidates.find((c) => c && typeof c === 'object' && (c.totalCount !== undefined || c.TotalCount !== undefined ||
+        const meta = candidates.find((c) => c && typeof c === 'object' && (c.totalCount !== undefined || c.TotalCount !== undefined ||
             c.totalPages !== undefined || c.TotalPages !== undefined ||
             c.currentPage !== undefined || c.CurrentPage !== undefined ||
-            c.pageSize !== undefined || c.PageSize !== undefined))) !== null && _f !== void 0 ? _f : null;
+            c.pageSize !== undefined || c.PageSize !== undefined)) ?? null;
         return { items, meta };
     }
     let allContactPersons = [];
@@ -72,9 +76,8 @@
     let totalCount = 0;
     let totalPages = 1;
     function loadPageSizeFromUi() {
-        var _a;
         const el = document.getElementById('contact-persons-page-size');
-        const parsed = Number(((_a = el === null || el === void 0 ? void 0 : el.value) !== null && _a !== void 0 ? _a : '').trim());
+        const parsed = Number((el?.value ?? '').trim());
         if (Number.isFinite(parsed) && parsed > 0) {
             pageSize = parsed;
         }
@@ -86,31 +89,29 @@
         return `${getApiBaseUrl()}/ContactPersons?${params.toString()}`;
     }
     function normalizeContactPerson(item) {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _0, _1, _2, _3, _4, _5, _6, _7, _8, _9;
         return {
-            id: (_b = (_a = item.id) !== null && _a !== void 0 ? _a : item.Id) !== null && _b !== void 0 ? _b : 0,
-            firstName: (_d = (_c = item.firstName) !== null && _c !== void 0 ? _c : item.FirstName) !== null && _d !== void 0 ? _d : '',
-            lastName: (_f = (_e = item.lastName) !== null && _e !== void 0 ? _e : item.LastName) !== null && _f !== void 0 ? _f : '',
-            email: (_h = (_g = item.email) !== null && _g !== void 0 ? _g : item.Email) !== null && _h !== void 0 ? _h : '',
-            phone: (_k = (_j = item.phone) !== null && _j !== void 0 ? _j : item.Phone) !== null && _k !== void 0 ? _k : '',
-            position: (_m = (_l = item.position) !== null && _l !== void 0 ? _l : item.Position) !== null && _m !== void 0 ? _m : null,
-            department: (_p = (_o = item.department) !== null && _o !== void 0 ? _o : item.Department) !== null && _p !== void 0 ? _p : null,
-            isPrimary: (_r = (_q = item.isPrimary) !== null && _q !== void 0 ? _q : item.IsPrimary) !== null && _r !== void 0 ? _r : false,
-            isActive: (_t = (_s = item.isActive) !== null && _s !== void 0 ? _s : item.IsActive) !== null && _t !== void 0 ? _t : false,
-            notes: (_v = (_u = item.notes) !== null && _u !== void 0 ? _u : item.Notes) !== null && _v !== void 0 ? _v : null,
-            customerId: (_x = (_w = item.customerId) !== null && _w !== void 0 ? _w : item.CustomerId) !== null && _x !== void 0 ? _x : null,
-            createdAt: (_z = (_y = item.createdAt) !== null && _y !== void 0 ? _y : item.CreatedAt) !== null && _z !== void 0 ? _z : null,
-            updatedAt: (_1 = (_0 = item.updatedAt) !== null && _0 !== void 0 ? _0 : item.UpdatedAt) !== null && _1 !== void 0 ? _1 : null,
-            isDefaultOwner: (_3 = (_2 = item.isDefaultOwner) !== null && _2 !== void 0 ? _2 : item.IsDefaultOwner) !== null && _3 !== void 0 ? _3 : false,
-            isDefaultBilling: (_5 = (_4 = item.isDefaultBilling) !== null && _4 !== void 0 ? _4 : item.IsDefaultBilling) !== null && _5 !== void 0 ? _5 : false,
-            isDefaultTech: (_7 = (_6 = item.isDefaultTech) !== null && _6 !== void 0 ? _6 : item.IsDefaultTech) !== null && _7 !== void 0 ? _7 : false,
-            isDefaultAdministrator: (_9 = (_8 = item.isDefaultAdministrator) !== null && _8 !== void 0 ? _8 : item.IsDefaultAdministrator) !== null && _9 !== void 0 ? _9 : false,
+            id: item.id ?? item.Id ?? 0,
+            firstName: item.firstName ?? item.FirstName ?? '',
+            lastName: item.lastName ?? item.LastName ?? '',
+            email: item.email ?? item.Email ?? '',
+            phone: item.phone ?? item.Phone ?? '',
+            position: item.position ?? item.Position ?? null,
+            department: item.department ?? item.Department ?? null,
+            isPrimary: item.isPrimary ?? item.IsPrimary ?? false,
+            isActive: item.isActive ?? item.IsActive ?? false,
+            notes: item.notes ?? item.Notes ?? null,
+            customerId: item.customerId ?? item.CustomerId ?? null,
+            createdAt: item.createdAt ?? item.CreatedAt ?? null,
+            updatedAt: item.updatedAt ?? item.UpdatedAt ?? null,
+            isDefaultOwner: item.isDefaultOwner ?? item.IsDefaultOwner ?? false,
+            isDefaultBilling: item.isDefaultBilling ?? item.IsDefaultBilling ?? false,
+            isDefaultTech: item.isDefaultTech ?? item.IsDefaultTech ?? false,
+            isDefaultAdministrator: item.isDefaultAdministrator ?? item.IsDefaultAdministrator ?? false,
         };
     }
     function normalizeCustomerOption(item) {
-        var _a, _b, _c, _d, _e, _f;
-        const id = (_b = (_a = item.id) !== null && _a !== void 0 ? _a : item.Id) !== null && _b !== void 0 ? _b : 0;
-        const name = (_f = (_e = (_d = (_c = item.customerName) !== null && _c !== void 0 ? _c : item.CustomerName) !== null && _d !== void 0 ? _d : item.name) !== null && _e !== void 0 ? _e : item.Name) !== null && _f !== void 0 ? _f : `Customer ${id}`;
+        const id = item.id ?? item.Id ?? 0;
+        const name = item.customerName ?? item.CustomerName ?? item.name ?? item.Name ?? `Customer ${id}`;
         return { id, name };
     }
     async function loadCustomersForSelect() {
@@ -134,7 +135,6 @@
         select.insertAdjacentHTML('beforeend', customerOptions.map((option) => (`<option value="${option.id}">${esc(option.name)}</option>`)).join(''));
     }
     async function loadContactPersons() {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s;
         const tableBody = document.getElementById('contact-persons-table-body');
         if (!tableBody) {
             return;
@@ -149,12 +149,12 @@
         }
         const raw = response.data;
         const extracted = extractItems(raw);
-        const meta = (_a = extracted.meta) !== null && _a !== void 0 ? _a : raw;
+        const meta = extracted.meta ?? raw;
         allContactPersons = extracted.items.map(normalizeContactPerson);
-        pageSize = (_e = (_d = (_c = (_b = meta === null || meta === void 0 ? void 0 : meta.pageSize) !== null && _b !== void 0 ? _b : meta === null || meta === void 0 ? void 0 : meta.PageSize) !== null && _c !== void 0 ? _c : raw === null || raw === void 0 ? void 0 : raw.pageSize) !== null && _d !== void 0 ? _d : raw === null || raw === void 0 ? void 0 : raw.PageSize) !== null && _e !== void 0 ? _e : pageSize;
-        totalCount = (_j = (_h = (_g = (_f = meta === null || meta === void 0 ? void 0 : meta.totalCount) !== null && _f !== void 0 ? _f : meta === null || meta === void 0 ? void 0 : meta.TotalCount) !== null && _g !== void 0 ? _g : raw === null || raw === void 0 ? void 0 : raw.totalCount) !== null && _h !== void 0 ? _h : raw === null || raw === void 0 ? void 0 : raw.TotalCount) !== null && _j !== void 0 ? _j : allContactPersons.length;
-        totalPages = (_o = (_m = (_l = (_k = meta === null || meta === void 0 ? void 0 : meta.totalPages) !== null && _k !== void 0 ? _k : meta === null || meta === void 0 ? void 0 : meta.TotalPages) !== null && _l !== void 0 ? _l : raw === null || raw === void 0 ? void 0 : raw.totalPages) !== null && _m !== void 0 ? _m : raw === null || raw === void 0 ? void 0 : raw.TotalPages) !== null && _o !== void 0 ? _o : Math.max(1, Math.ceil(totalCount / pageSize));
-        currentPage = (_s = (_r = (_q = (_p = meta === null || meta === void 0 ? void 0 : meta.currentPage) !== null && _p !== void 0 ? _p : meta === null || meta === void 0 ? void 0 : meta.CurrentPage) !== null && _q !== void 0 ? _q : raw === null || raw === void 0 ? void 0 : raw.currentPage) !== null && _r !== void 0 ? _r : raw === null || raw === void 0 ? void 0 : raw.CurrentPage) !== null && _s !== void 0 ? _s : currentPage;
+        pageSize = meta?.pageSize ?? meta?.PageSize ?? raw?.pageSize ?? raw?.PageSize ?? pageSize;
+        totalCount = meta?.totalCount ?? meta?.TotalCount ?? raw?.totalCount ?? raw?.TotalCount ?? allContactPersons.length;
+        totalPages = meta?.totalPages ?? meta?.TotalPages ?? raw?.totalPages ?? raw?.TotalPages ?? Math.max(1, Math.ceil(totalCount / pageSize));
+        currentPage = meta?.currentPage ?? meta?.CurrentPage ?? raw?.currentPage ?? raw?.CurrentPage ?? currentPage;
         renderTable();
         renderPagination();
     }
@@ -314,7 +314,7 @@
             info.textContent = '';
         }
         const form = document.getElementById('contact-persons-form');
-        form === null || form === void 0 ? void 0 : form.reset();
+        form?.reset();
         setCheckboxValue('contact-persons-is-active', true);
         setCheckboxValue('contact-persons-is-primary', false);
         setCheckboxValue('contact-persons-default-owner', false);
@@ -358,19 +358,19 @@
     function setInputValue(id, value) {
         const el = document.getElementById(id);
         if (el) {
-            el.value = value !== null && value !== void 0 ? value : '';
+            el.value = value ?? '';
         }
     }
     function setTextAreaValue(id, value) {
         const el = document.getElementById(id);
         if (el) {
-            el.value = value !== null && value !== void 0 ? value : '';
+            el.value = value ?? '';
         }
     }
     function setSelectValue(id, value) {
         const el = document.getElementById(id);
         if (el) {
-            el.value = value !== null && value !== void 0 ? value : '';
+            el.value = value ?? '';
         }
     }
     function setCheckboxValue(id, value) {
@@ -380,23 +380,20 @@
         }
     }
     function getInputValue(id) {
-        var _a;
         const el = document.getElementById(id);
-        return ((_a = el === null || el === void 0 ? void 0 : el.value) !== null && _a !== void 0 ? _a : '').trim();
+        return (el?.value ?? '').trim();
     }
     function getTextAreaValue(id) {
-        var _a;
         const el = document.getElementById(id);
-        return ((_a = el === null || el === void 0 ? void 0 : el.value) !== null && _a !== void 0 ? _a : '').trim();
+        return (el?.value ?? '').trim();
     }
     function getSelectValue(id) {
-        var _a;
         const el = document.getElementById(id);
-        return ((_a = el === null || el === void 0 ? void 0 : el.value) !== null && _a !== void 0 ? _a : '').trim();
+        return (el?.value ?? '').trim();
     }
     function getCheckboxValue(id) {
         const el = document.getElementById(id);
-        return !!(el === null || el === void 0 ? void 0 : el.checked);
+        return !!el?.checked;
     }
     function getCustomerIdValue() {
         const raw = getSelectValue('contact-persons-customer');
@@ -481,7 +478,7 @@
         alert.textContent = message;
         alert.classList.remove('d-none');
         const errorAlert = document.getElementById('contact-persons-alert-error');
-        errorAlert === null || errorAlert === void 0 ? void 0 : errorAlert.classList.add('d-none');
+        errorAlert?.classList.add('d-none');
         setTimeout(() => alert.classList.add('d-none'), 5000);
     }
     function showError(message) {
@@ -492,7 +489,7 @@
         alert.textContent = message;
         alert.classList.remove('d-none');
         const successAlert = document.getElementById('contact-persons-alert-success');
-        successAlert === null || successAlert === void 0 ? void 0 : successAlert.classList.add('d-none');
+        successAlert?.classList.add('d-none');
     }
     function showModal(id) {
         const element = document.getElementById(id);
@@ -508,7 +505,7 @@
             return;
         }
         const modal = window.bootstrap.Modal.getInstance(element);
-        modal === null || modal === void 0 ? void 0 : modal.hide();
+        modal?.hide();
     }
     function bindTableActions() {
         const tableBody = document.getElementById('contact-persons-table-body');
@@ -516,7 +513,6 @@
             return;
         }
         tableBody.addEventListener('click', (event) => {
-            var _a;
             const target = event.target;
             const button = target.closest('button[data-action]');
             if (!button) {
@@ -531,23 +527,22 @@
                 return;
             }
             if (button.dataset.action === 'delete') {
-                openDelete(id, (_a = button.dataset.name) !== null && _a !== void 0 ? _a : '');
+                openDelete(id, button.dataset.name ?? '');
             }
         });
     }
     function initializeContactPersonsPage() {
-        var _a, _b, _c, _d;
         const page = document.getElementById('contact-persons-page');
         if (!page || page.dataset.initialized === 'true') {
             return;
         }
         page.dataset.initialized = 'true';
-        (_a = document.getElementById('contact-persons-create')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', openCreate);
-        (_b = document.getElementById('contact-persons-save')) === null || _b === void 0 ? void 0 : _b.addEventListener('click', saveContactPerson);
-        (_c = document.getElementById('contact-persons-confirm-delete')) === null || _c === void 0 ? void 0 : _c.addEventListener('click', doDelete);
+        document.getElementById('contact-persons-create')?.addEventListener('click', openCreate);
+        document.getElementById('contact-persons-save')?.addEventListener('click', saveContactPerson);
+        document.getElementById('contact-persons-confirm-delete')?.addEventListener('click', doDelete);
         bindTableActions();
         bindPagingControlsActions();
-        (_d = document.getElementById('contact-persons-page-size')) === null || _d === void 0 ? void 0 : _d.addEventListener('change', () => {
+        document.getElementById('contact-persons-page-size')?.addEventListener('change', () => {
             currentPage = 1;
             loadContactPersons();
         });

@@ -2,8 +2,7 @@
 // @ts-nocheck
 (function () {
     function getApiBaseUrl() {
-        var _a;
-        const baseUrl = (_a = window.AppSettings) === null || _a === void 0 ? void 0 : _a.apiBaseUrl;
+        const baseUrl = window.AppSettings?.apiBaseUrl;
         if (!baseUrl) {
             const fallback = window.location.protocol === 'https:'
                 ? 'https://localhost:7201/api/v1'
@@ -20,33 +19,39 @@
     let rolesEditingUser = null;
     function getAuthToken() {
         const auth = window.Auth;
-        if (auth === null || auth === void 0 ? void 0 : auth.getToken) {
+        if (auth?.getToken) {
             return auth.getToken();
         }
         return sessionStorage.getItem('rp_authToken');
     }
     async function apiRequest(endpoint, options = {}) {
-        var _a, _b, _c;
         try {
-            const headers = Object.assign({ 'Content-Type': 'application/json' }, options.headers);
+            const headers = {
+                'Content-Type': 'application/json',
+                ...options.headers,
+            };
             const authToken = getAuthToken();
             if (authToken) {
                 headers['Authorization'] = `Bearer ${authToken}`;
             }
-            const response = await fetch(endpoint, Object.assign(Object.assign({}, options), { headers, credentials: 'include' }));
-            const contentType = (_a = response.headers.get('content-type')) !== null && _a !== void 0 ? _a : '';
+            const response = await fetch(endpoint, {
+                ...options,
+                headers,
+                credentials: 'include',
+            });
+            const contentType = response.headers.get('content-type') ?? '';
             const hasJson = contentType.includes('application/json');
             const data = hasJson ? await response.json() : null;
             if (!response.ok) {
                 return {
                     success: false,
-                    message: (data && ((_b = data.message) !== null && _b !== void 0 ? _b : data.title)) || `Request failed with status ${response.status}`,
+                    message: (data && (data.message ?? data.title)) || `Request failed with status ${response.status}`,
                 };
             }
             return {
-                success: (data === null || data === void 0 ? void 0 : data.success) !== false,
-                data: ((_c = data === null || data === void 0 ? void 0 : data.data) !== null && _c !== void 0 ? _c : data),
-                message: data === null || data === void 0 ? void 0 : data.message,
+                success: data?.success !== false,
+                data: (data?.data ?? data),
+                message: data?.message,
             };
         }
         catch (error) {
@@ -72,24 +77,21 @@
         const raw = response.data;
         const rawItems = Array.isArray(raw)
             ? raw
-            : Array.isArray(raw === null || raw === void 0 ? void 0 : raw.items)
+            : Array.isArray(raw?.items)
                 ? raw.items
-                : Array.isArray(raw === null || raw === void 0 ? void 0 : raw.data)
+                : Array.isArray(raw?.data)
                     ? raw.data
                     : [];
-        allUsers = rawItems.map((item) => {
-            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r;
-            return ({
-                id: (_b = (_a = item.id) !== null && _a !== void 0 ? _a : item.Id) !== null && _b !== void 0 ? _b : 0,
-                customerId: (_d = (_c = item.customerId) !== null && _c !== void 0 ? _c : item.CustomerId) !== null && _d !== void 0 ? _d : null,
-                username: (_f = (_e = item.username) !== null && _e !== void 0 ? _e : item.Username) !== null && _f !== void 0 ? _f : '',
-                email: (_h = (_g = item.email) !== null && _g !== void 0 ? _g : item.Email) !== null && _h !== void 0 ? _h : '',
-                isActive: (_k = (_j = item.isActive) !== null && _j !== void 0 ? _j : item.IsActive) !== null && _k !== void 0 ? _k : false,
-                roles: (_m = (_l = item.roles) !== null && _l !== void 0 ? _l : item.Roles) !== null && _m !== void 0 ? _m : [],
-                createdAt: (_p = (_o = item.createdAt) !== null && _o !== void 0 ? _o : item.CreatedAt) !== null && _p !== void 0 ? _p : null,
-                updatedAt: (_r = (_q = item.updatedAt) !== null && _q !== void 0 ? _q : item.UpdatedAt) !== null && _r !== void 0 ? _r : null,
-            });
-        });
+        allUsers = rawItems.map((item) => ({
+            id: item.id ?? item.Id ?? 0,
+            customerId: item.customerId ?? item.CustomerId ?? null,
+            username: item.username ?? item.Username ?? '',
+            email: item.email ?? item.Email ?? '',
+            isActive: item.isActive ?? item.IsActive ?? false,
+            roles: item.roles ?? item.Roles ?? [],
+            createdAt: item.createdAt ?? item.CreatedAt ?? null,
+            updatedAt: item.updatedAt ?? item.UpdatedAt ?? null,
+        }));
         renderTable();
     }
     function renderTable() {
@@ -141,7 +143,6 @@
         alert.classList.remove('d-none');
     }
     async function loadAvailableRoles() {
-        var _a;
         if (rolesLoaded) {
             return;
         }
@@ -154,18 +155,15 @@
         }
         const rawItems = Array.isArray(response.data)
             ? response.data
-            : Array.isArray((_a = response.data) === null || _a === void 0 ? void 0 : _a.data)
+            : Array.isArray(response.data?.data)
                 ? response.data.data
                 : [];
-        availableRoles = rawItems.map((item) => {
-            var _a, _b, _c, _d, _e, _f, _g, _h;
-            return ({
-                id: (_b = (_a = item.id) !== null && _a !== void 0 ? _a : item.Id) !== null && _b !== void 0 ? _b : 0,
-                name: (_d = (_c = item.name) !== null && _c !== void 0 ? _c : item.Name) !== null && _d !== void 0 ? _d : '',
-                description: (_f = (_e = item.description) !== null && _e !== void 0 ? _e : item.Description) !== null && _f !== void 0 ? _f : '',
-                code: (_h = (_g = item.code) !== null && _g !== void 0 ? _g : item.Code) !== null && _h !== void 0 ? _h : '',
-            });
-        }).filter((r) => !!r.name);
+        availableRoles = rawItems.map((item) => ({
+            id: item.id ?? item.Id ?? 0,
+            name: item.name ?? item.Name ?? '',
+            description: item.description ?? item.Description ?? '',
+            code: item.code ?? item.Code ?? '',
+        })).filter((r) => !!r.name);
         rolesLoaded = true;
     }
     function renderRolesList(selectedRoles) {
@@ -211,7 +209,6 @@
         renderRolesList(user.roles || []);
     }
     async function saveUserRoles() {
-        var _a;
         if (!rolesEditingUser) {
             return;
         }
@@ -219,10 +216,10 @@
         const inputs = Array.from(document.querySelectorAll('#users-roles-list input[type="checkbox"][data-role-name]'));
         const roles = inputs
             .filter((input) => input.checked)
-            .map((input) => { var _a; return ((_a = input.getAttribute('data-role-name')) !== null && _a !== void 0 ? _a : '').trim(); })
+            .map((input) => (input.getAttribute('data-role-name') ?? '').trim())
             .filter((name) => !!name);
         const payload = {
-            customerId: (_a = rolesEditingUser.customerId) !== null && _a !== void 0 ? _a : null,
+            customerId: rolesEditingUser.customerId ?? null,
             username: rolesEditingUser.username,
             email: rolesEditingUser.email,
             isActive: rolesEditingUser.isActive,
@@ -249,7 +246,7 @@
             modalTitle.textContent = 'New User';
         }
         const form = document.getElementById('users-form');
-        form === null || form === void 0 ? void 0 : form.reset();
+        form?.reset();
         const isActiveInput = document.getElementById('users-is-active');
         if (isActiveInput) {
             isActiveInput.checked = true;
@@ -301,19 +298,18 @@
         showModal('users-edit-modal');
     }
     async function saveUser() {
-        var _a, _b, _c, _d, _e, _f;
         const usernameInput = document.getElementById('users-username');
         const emailInput = document.getElementById('users-email');
         const passwordInput = document.getElementById('users-password');
         const roleInput = document.getElementById('users-role');
         const customerInput = document.getElementById('users-customer-id');
         const isActiveInput = document.getElementById('users-is-active');
-        const username = (_a = usernameInput === null || usernameInput === void 0 ? void 0 : usernameInput.value.trim()) !== null && _a !== void 0 ? _a : '';
-        const email = (_b = emailInput === null || emailInput === void 0 ? void 0 : emailInput.value.trim()) !== null && _b !== void 0 ? _b : '';
-        const password = (_c = passwordInput === null || passwordInput === void 0 ? void 0 : passwordInput.value.trim()) !== null && _c !== void 0 ? _c : '';
-        const role = (_d = roleInput === null || roleInput === void 0 ? void 0 : roleInput.value.trim()) !== null && _d !== void 0 ? _d : '';
-        const customerIdValue = (_e = customerInput === null || customerInput === void 0 ? void 0 : customerInput.value.trim()) !== null && _e !== void 0 ? _e : '';
-        const isActive = (_f = isActiveInput === null || isActiveInput === void 0 ? void 0 : isActiveInput.checked) !== null && _f !== void 0 ? _f : false;
+        const username = usernameInput?.value.trim() ?? '';
+        const email = emailInput?.value.trim() ?? '';
+        const password = passwordInput?.value.trim() ?? '';
+        const role = roleInput?.value.trim() ?? '';
+        const customerIdValue = customerInput?.value.trim() ?? '';
+        const isActive = isActiveInput?.checked ?? false;
         if (!username) {
             showError('Username is required');
             return;
@@ -412,7 +408,7 @@
             }
             return date.toLocaleString();
         }
-        catch (_a) {
+        catch {
             return value;
         }
     }
@@ -424,7 +420,7 @@
         alert.textContent = message;
         alert.classList.remove('d-none');
         const errorAlert = document.getElementById('users-alert-error');
-        errorAlert === null || errorAlert === void 0 ? void 0 : errorAlert.classList.add('d-none');
+        errorAlert?.classList.add('d-none');
         setTimeout(() => alert.classList.add('d-none'), 5000);
     }
     function showError(message) {
@@ -435,7 +431,7 @@
         alert.textContent = message;
         alert.classList.remove('d-none');
         const successAlert = document.getElementById('users-alert-success');
-        successAlert === null || successAlert === void 0 ? void 0 : successAlert.classList.add('d-none');
+        successAlert?.classList.add('d-none');
     }
     function showModal(id) {
         const element = document.getElementById(id);
@@ -451,7 +447,7 @@
             return;
         }
         const modal = window.bootstrap.Modal.getInstance(element);
-        modal === null || modal === void 0 ? void 0 : modal.hide();
+        modal?.hide();
     }
     function bindTableActions() {
         const tableBody = document.getElementById('users-table-body');
@@ -459,7 +455,6 @@
             return;
         }
         tableBody.addEventListener('click', (event) => {
-            var _a;
             const target = event.target;
             const button = target.closest('button[data-action]');
             if (!button) {
@@ -478,21 +473,20 @@
                 return;
             }
             if (button.dataset.action === 'delete') {
-                openDelete(id, (_a = button.dataset.name) !== null && _a !== void 0 ? _a : '');
+                openDelete(id, button.dataset.name ?? '');
             }
         });
     }
     function initializeUsersPage() {
-        var _a, _b, _c, _d;
         const page = document.getElementById('users-page');
         if (!page || page.getAttribute('data-initialized') === 'true') {
             return;
         }
         page.setAttribute('data-initialized', 'true');
-        (_a = document.getElementById('users-create')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', openCreate);
-        (_b = document.getElementById('users-save')) === null || _b === void 0 ? void 0 : _b.addEventListener('click', () => { saveUser(); });
-        (_c = document.getElementById('users-confirm-delete')) === null || _c === void 0 ? void 0 : _c.addEventListener('click', () => { doDelete(); });
-        (_d = document.getElementById('users-roles-save')) === null || _d === void 0 ? void 0 : _d.addEventListener('click', () => { saveUserRoles(); });
+        document.getElementById('users-create')?.addEventListener('click', openCreate);
+        document.getElementById('users-save')?.addEventListener('click', () => { saveUser(); });
+        document.getElementById('users-confirm-delete')?.addEventListener('click', () => { doDelete(); });
+        document.getElementById('users-roles-save')?.addEventListener('click', () => { saveUserRoles(); });
         bindTableActions();
         loadUsers();
     }

@@ -4,9 +4,8 @@
  * Calls the Auth API, stores credentials in sessionStorage via Auth, and redirects on success.
  */
 document.addEventListener('DOMContentLoaded', () => {
-    var _a;
     // Redirect immediately if already authenticated
-    if ((_a = window.Auth) === null || _a === void 0 ? void 0 : _a.isLoggedIn()) {
+    if (window.Auth?.isLoggedIn()) {
         window.location.href = '/';
         return;
     }
@@ -30,7 +29,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!loginForm)
         return;
     loginForm.addEventListener('submit', async (e) => {
-        var _a, _b, _c, _d, _e, _f, _g;
         e.preventDefault();
         loginHideMessage('loginError');
         loginHideMessage('loginSuccess');
@@ -52,16 +50,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ username, password }),
                 credentials: 'include',
             });
-            const contentType = (_a = response.headers.get('content-type')) !== null && _a !== void 0 ? _a : '';
+            const contentType = response.headers.get('content-type') ?? '';
             const data = contentType.includes('application/json') ? await response.json() : null;
-            if (response.ok && (data === null || data === void 0 ? void 0 : data.success) !== false) {
-                const payload = (_b = data === null || data === void 0 ? void 0 : data.data) !== null && _b !== void 0 ? _b : data;
-                const resolvedUsername = (_c = payload === null || payload === void 0 ? void 0 : payload.username) !== null && _c !== void 0 ? _c : username;
-                const token = (_d = payload === null || payload === void 0 ? void 0 : payload.accessToken) !== null && _d !== void 0 ? _d : '';
-                const refreshToken = (_e = payload === null || payload === void 0 ? void 0 : payload.refreshToken) !== null && _e !== void 0 ? _e : null;
-                const roles = Array.isArray(payload === null || payload === void 0 ? void 0 : payload.roles) ? payload.roles : [];
-                const expiresAt = (_f = payload === null || payload === void 0 ? void 0 : payload.expiresAt) !== null && _f !== void 0 ? _f : null;
-                (_g = window.Auth) === null || _g === void 0 ? void 0 : _g.setData(resolvedUsername, token, refreshToken, roles, expiresAt);
+            if (response.ok && data?.success !== false) {
+                const payload = data?.data ?? data;
+                const resolvedUsername = payload?.username ?? username;
+                const token = payload?.accessToken ?? '';
+                const refreshToken = payload?.refreshToken ?? null;
+                const roles = Array.isArray(payload?.roles) ? payload.roles : [];
+                const expiresAt = payload?.expiresAt ?? null;
+                window.Auth?.setData(resolvedUsername, token, refreshToken, roles, expiresAt);
                 loginShowMessage('loginSuccess', 'Login successful! Redirecting...');
                 setTimeout(() => { window.location.href = '/'; }, 1000);
             }

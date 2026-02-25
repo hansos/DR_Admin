@@ -2,41 +2,46 @@
 // @ts-nocheck
 (function () {
     function getApiBaseUrl() {
-        var _a, _b;
-        return (_b = (_a = window.AppSettings) === null || _a === void 0 ? void 0 : _a.apiBaseUrl) !== null && _b !== void 0 ? _b : '';
+        return window.AppSettings?.apiBaseUrl ?? '';
     }
     let allOperatingSystems = [];
     let editingId = null;
     let pendingDeleteId = null;
     function getAuthToken() {
         const auth = window.Auth;
-        if (auth === null || auth === void 0 ? void 0 : auth.getToken) {
+        if (auth?.getToken) {
             return auth.getToken();
         }
         return sessionStorage.getItem('rp_authToken');
     }
     async function apiRequest(endpoint, options = {}) {
-        var _a, _b, _c;
         try {
-            const headers = Object.assign({ 'Content-Type': 'application/json' }, options.headers);
+            const headers = {
+                'Content-Type': 'application/json',
+                ...options.headers,
+            };
             const authToken = getAuthToken();
             if (authToken) {
                 headers['Authorization'] = `Bearer ${authToken}`;
             }
-            const response = await fetch(endpoint, Object.assign(Object.assign({}, options), { headers, credentials: 'include' }));
-            const contentType = (_a = response.headers.get('content-type')) !== null && _a !== void 0 ? _a : '';
+            const response = await fetch(endpoint, {
+                ...options,
+                headers,
+                credentials: 'include',
+            });
+            const contentType = response.headers.get('content-type') ?? '';
             const hasJson = contentType.includes('application/json');
             const data = hasJson ? await response.json() : null;
             if (!response.ok) {
                 return {
                     success: false,
-                    message: (data && ((_b = data.message) !== null && _b !== void 0 ? _b : data.title)) || `Request failed with status ${response.status}`,
+                    message: (data && (data.message ?? data.title)) || `Request failed with status ${response.status}`,
                 };
             }
             return {
-                success: (data === null || data === void 0 ? void 0 : data.success) !== false,
-                data: (_c = data === null || data === void 0 ? void 0 : data.data) !== null && _c !== void 0 ? _c : data,
-                message: data === null || data === void 0 ? void 0 : data.message,
+                success: data?.success !== false,
+                data: data?.data ?? data,
+                message: data?.message,
             };
         }
         catch (error) {
@@ -48,7 +53,6 @@
         }
     }
     async function loadOperatingSystems() {
-        var _a;
         const tableBody = document.getElementById('operating-systems-table-body');
         if (!tableBody) {
             return;
@@ -62,20 +66,17 @@
         }
         const rawItems = Array.isArray(response.data)
             ? response.data
-            : Array.isArray((_a = response.data) === null || _a === void 0 ? void 0 : _a.data)
+            : Array.isArray(response.data?.data)
                 ? response.data.data
                 : [];
-        allOperatingSystems = rawItems.map((item) => {
-            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
-            return ({
-                id: (_b = (_a = item.id) !== null && _a !== void 0 ? _a : item.Id) !== null && _b !== void 0 ? _b : 0,
-                name: (_d = (_c = item.name) !== null && _c !== void 0 ? _c : item.Name) !== null && _d !== void 0 ? _d : '',
-                displayName: (_f = (_e = item.displayName) !== null && _e !== void 0 ? _e : item.DisplayName) !== null && _f !== void 0 ? _f : '',
-                version: (_h = (_g = item.version) !== null && _g !== void 0 ? _g : item.Version) !== null && _h !== void 0 ? _h : null,
-                description: (_k = (_j = item.description) !== null && _j !== void 0 ? _j : item.Description) !== null && _k !== void 0 ? _k : null,
-                isActive: (_m = (_l = item.isActive) !== null && _l !== void 0 ? _l : item.IsActive) !== null && _m !== void 0 ? _m : false,
-            });
-        });
+        allOperatingSystems = rawItems.map((item) => ({
+            id: item.id ?? item.Id ?? 0,
+            name: item.name ?? item.Name ?? '',
+            displayName: item.displayName ?? item.DisplayName ?? '',
+            version: item.version ?? item.Version ?? null,
+            description: item.description ?? item.Description ?? null,
+            isActive: item.isActive ?? item.IsActive ?? false,
+        }));
         renderTable();
     }
     function renderTable() {
@@ -111,7 +112,7 @@
             modalTitle.textContent = 'New Operating System';
         }
         const form = document.getElementById('operating-systems-form');
-        form === null || form === void 0 ? void 0 : form.reset();
+        form?.reset();
         const isActiveInput = document.getElementById('operating-systems-is-active');
         if (isActiveInput) {
             isActiveInput.checked = true;
@@ -151,14 +152,13 @@
         showModal('operating-systems-edit-modal');
     }
     async function saveOperatingSystem() {
-        var _a, _b, _c;
         const nameInput = document.getElementById('operating-systems-name');
         const displayNameInput = document.getElementById('operating-systems-display-name');
         const versionInput = document.getElementById('operating-systems-version');
         const descriptionInput = document.getElementById('operating-systems-description');
         const isActiveInput = document.getElementById('operating-systems-is-active');
-        const name = (_a = nameInput === null || nameInput === void 0 ? void 0 : nameInput.value.trim()) !== null && _a !== void 0 ? _a : '';
-        const displayName = (_b = displayNameInput === null || displayNameInput === void 0 ? void 0 : displayNameInput.value.trim()) !== null && _b !== void 0 ? _b : '';
+        const name = nameInput?.value.trim() ?? '';
+        const displayName = displayNameInput?.value.trim() ?? '';
         if (!name || !displayName) {
             showError('Internal Name and Display Name are required');
             return;
@@ -166,9 +166,9 @@
         const payload = {
             name,
             displayName,
-            version: (versionInput === null || versionInput === void 0 ? void 0 : versionInput.value.trim()) || null,
-            description: (descriptionInput === null || descriptionInput === void 0 ? void 0 : descriptionInput.value.trim()) || null,
-            isActive: (_c = isActiveInput === null || isActiveInput === void 0 ? void 0 : isActiveInput.checked) !== null && _c !== void 0 ? _c : false,
+            version: versionInput?.value.trim() || null,
+            description: descriptionInput?.value.trim() || null,
+            isActive: isActiveInput?.checked ?? false,
         };
         const response = editingId
             ? await apiRequest(`${getApiBaseUrl()}/OperatingSystems/${editingId}`, { method: 'PUT', body: JSON.stringify(payload) })
@@ -217,7 +217,7 @@
         alert.textContent = message;
         alert.classList.remove('d-none');
         const errorAlert = document.getElementById('operating-systems-alert-error');
-        errorAlert === null || errorAlert === void 0 ? void 0 : errorAlert.classList.add('d-none');
+        errorAlert?.classList.add('d-none');
         setTimeout(() => alert.classList.add('d-none'), 5000);
     }
     function showError(message) {
@@ -228,7 +228,7 @@
         alert.textContent = message;
         alert.classList.remove('d-none');
         const successAlert = document.getElementById('operating-systems-alert-success');
-        successAlert === null || successAlert === void 0 ? void 0 : successAlert.classList.add('d-none');
+        successAlert?.classList.add('d-none');
     }
     function showModal(id) {
         const element = document.getElementById(id);
@@ -244,7 +244,7 @@
             return;
         }
         const modal = window.bootstrap.Modal.getInstance(element);
-        modal === null || modal === void 0 ? void 0 : modal.hide();
+        modal?.hide();
     }
     function bindTableActions() {
         const tableBody = document.getElementById('operating-systems-table-body');
@@ -252,7 +252,6 @@
             return;
         }
         tableBody.addEventListener('click', (event) => {
-            var _a;
             const target = event.target;
             const button = target.closest('button[data-action]');
             if (!button) {
@@ -267,20 +266,19 @@
                 return;
             }
             if (button.dataset.action === 'delete') {
-                openDelete(id, (_a = button.dataset.name) !== null && _a !== void 0 ? _a : '');
+                openDelete(id, button.dataset.name ?? '');
             }
         });
     }
     function initializeOperatingSystemsPage() {
-        var _a, _b, _c;
         const page = document.getElementById('operating-systems-page');
         if (!page || page.dataset.initialized === 'true') {
             return;
         }
         page.dataset.initialized = 'true';
-        (_a = document.getElementById('operating-systems-create')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', openCreate);
-        (_b = document.getElementById('operating-systems-save')) === null || _b === void 0 ? void 0 : _b.addEventListener('click', saveOperatingSystem);
-        (_c = document.getElementById('operating-systems-confirm-delete')) === null || _c === void 0 ? void 0 : _c.addEventListener('click', doDelete);
+        document.getElementById('operating-systems-create')?.addEventListener('click', openCreate);
+        document.getElementById('operating-systems-save')?.addEventListener('click', saveOperatingSystem);
+        document.getElementById('operating-systems-confirm-delete')?.addEventListener('click', doDelete);
         bindTableActions();
         loadOperatingSystems();
     }

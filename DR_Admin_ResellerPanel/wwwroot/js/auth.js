@@ -12,8 +12,7 @@ function authIsLoggedIn() {
     return !!sessionStorage.getItem(AUTH_TOKEN_KEY);
 }
 function authGetUsername() {
-    var _a;
-    return (_a = sessionStorage.getItem(AUTH_USERNAME_KEY)) !== null && _a !== void 0 ? _a : '';
+    return sessionStorage.getItem(AUTH_USERNAME_KEY) ?? '';
 }
 function authGetRoles() {
     const raw = sessionStorage.getItem(AUTH_ROLES_KEY);
@@ -22,7 +21,7 @@ function authGetRoles() {
     try {
         return JSON.parse(raw);
     }
-    catch (_a) {
+    catch {
         return [];
     }
 }
@@ -101,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function setupBlazorNavigationListener() {
     // Check if Blazor object exists and has addEventListener
     const blazor = window.Blazor;
-    if (blazor === null || blazor === void 0 ? void 0 : blazor.addEventListener) {
+    if (blazor?.addEventListener) {
         blazor.addEventListener('enhancedload', () => {
             authEnforce();
             authUpdateTopRow();

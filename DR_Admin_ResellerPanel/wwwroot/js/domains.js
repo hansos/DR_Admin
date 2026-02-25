@@ -2,8 +2,7 @@
 // @ts-nocheck
 (function () {
     function getApiBaseUrl() {
-        var _a, _b;
-        return (_b = (_a = window.AppSettings) === null || _a === void 0 ? void 0 : _a.apiBaseUrl) !== null && _b !== void 0 ? _b : '';
+        return window.AppSettings?.apiBaseUrl ?? '';
     }
     function setImportBusy(isBusy) {
         const progress = document.getElementById('domains-import-progress');
@@ -34,33 +33,39 @@
     }
     function getAuthToken() {
         const auth = window.Auth;
-        if (auth === null || auth === void 0 ? void 0 : auth.getToken) {
+        if (auth?.getToken) {
             return auth.getToken();
         }
         return sessionStorage.getItem('rp_authToken');
     }
     async function apiRequest(endpoint, options = {}) {
-        var _a, _b, _c;
         try {
-            const headers = Object.assign({ 'Content-Type': 'application/json' }, options.headers);
+            const headers = {
+                'Content-Type': 'application/json',
+                ...options.headers,
+            };
             const authToken = getAuthToken();
             if (authToken) {
                 headers['Authorization'] = `Bearer ${authToken}`;
             }
-            const response = await fetch(endpoint, Object.assign(Object.assign({}, options), { headers, credentials: 'include' }));
-            const contentType = (_a = response.headers.get('content-type')) !== null && _a !== void 0 ? _a : '';
+            const response = await fetch(endpoint, {
+                ...options,
+                headers,
+                credentials: 'include',
+            });
+            const contentType = response.headers.get('content-type') ?? '';
             const hasJson = contentType.includes('application/json');
             const data = hasJson ? await response.json() : null;
             if (!response.ok) {
                 return {
                     success: false,
-                    message: (data && ((_b = data.message) !== null && _b !== void 0 ? _b : data.title)) || `Request failed with status ${response.status}`,
+                    message: (data && (data.message ?? data.title)) || `Request failed with status ${response.status}`,
                 };
             }
             return {
-                success: (data === null || data === void 0 ? void 0 : data.success) !== false,
-                data: (_c = data === null || data === void 0 ? void 0 : data.data) !== null && _c !== void 0 ? _c : data,
-                message: data === null || data === void 0 ? void 0 : data.message,
+                success: data?.success !== false,
+                data: data?.data ?? data,
+                message: data?.message,
             };
         }
         catch (error) {
@@ -72,21 +77,20 @@
         }
     }
     function extractItems(raw) {
-        var _a, _b, _c, _d, _e, _f;
         if (Array.isArray(raw)) {
             return { items: raw, meta: null };
         }
-        const candidates = [raw, raw === null || raw === void 0 ? void 0 : raw.data, raw === null || raw === void 0 ? void 0 : raw.Data, (_a = raw === null || raw === void 0 ? void 0 : raw.data) === null || _a === void 0 ? void 0 : _a.data, (_b = raw === null || raw === void 0 ? void 0 : raw.data) === null || _b === void 0 ? void 0 : _b.Data];
-        const items = (Array.isArray(raw === null || raw === void 0 ? void 0 : raw.Data) && raw.Data) ||
-            (Array.isArray(raw === null || raw === void 0 ? void 0 : raw.data) && raw.data) ||
-            (Array.isArray((_c = raw === null || raw === void 0 ? void 0 : raw.data) === null || _c === void 0 ? void 0 : _c.Data) && raw.data.Data) ||
-            (Array.isArray((_d = raw === null || raw === void 0 ? void 0 : raw.data) === null || _d === void 0 ? void 0 : _d.data) && raw.data.data) ||
-            (Array.isArray((_e = raw === null || raw === void 0 ? void 0 : raw.Data) === null || _e === void 0 ? void 0 : _e.Data) && raw.Data.Data) ||
+        const candidates = [raw, raw?.data, raw?.Data, raw?.data?.data, raw?.data?.Data];
+        const items = (Array.isArray(raw?.Data) && raw.Data) ||
+            (Array.isArray(raw?.data) && raw.data) ||
+            (Array.isArray(raw?.data?.Data) && raw.data.Data) ||
+            (Array.isArray(raw?.data?.data) && raw.data.data) ||
+            (Array.isArray(raw?.Data?.Data) && raw.Data.Data) ||
             [];
-        const meta = (_f = candidates.find((c) => c && typeof c === 'object' && (c.totalCount !== undefined || c.TotalCount !== undefined ||
+        const meta = candidates.find((c) => c && typeof c === 'object' && (c.totalCount !== undefined || c.TotalCount !== undefined ||
             c.totalPages !== undefined || c.TotalPages !== undefined ||
             c.currentPage !== undefined || c.CurrentPage !== undefined ||
-            c.pageSize !== undefined || c.PageSize !== undefined))) !== null && _f !== void 0 ? _f : null;
+            c.pageSize !== undefined || c.PageSize !== undefined)) ?? null;
         return { items, meta };
     }
     let allDomains = [];
@@ -98,9 +102,8 @@
     let totalCount = 0;
     let totalPages = 1;
     function loadPageSizeFromUi() {
-        var _a;
         const el = document.getElementById('domains-page-size');
-        const parsed = Number(((_a = el === null || el === void 0 ? void 0 : el.value) !== null && _a !== void 0 ? _a : '').trim());
+        const parsed = Number((el?.value ?? '').trim());
         if (Number.isFinite(parsed) && parsed > 0) {
             pageSize = parsed;
         }
@@ -112,32 +115,29 @@
         return `${getApiBaseUrl()}/RegisteredDomains?${params.toString()}`;
     }
     function normalizeItem(item) {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z;
         return {
-            id: (_b = (_a = item.id) !== null && _a !== void 0 ? _a : item.Id) !== null && _b !== void 0 ? _b : 0,
-            customerId: (_d = (_c = item.customerId) !== null && _c !== void 0 ? _c : item.CustomerId) !== null && _d !== void 0 ? _d : 0,
-            serviceId: (_f = (_e = item.serviceId) !== null && _e !== void 0 ? _e : item.ServiceId) !== null && _f !== void 0 ? _f : 0,
-            name: (_h = (_g = item.name) !== null && _g !== void 0 ? _g : item.Name) !== null && _h !== void 0 ? _h : '',
-            providerId: (_k = (_j = item.providerId) !== null && _j !== void 0 ? _j : item.ProviderId) !== null && _k !== void 0 ? _k : 0,
-            status: (_m = (_l = item.status) !== null && _l !== void 0 ? _l : item.Status) !== null && _m !== void 0 ? _m : '',
-            registrationDate: (_p = (_o = item.registrationDate) !== null && _o !== void 0 ? _o : item.RegistrationDate) !== null && _p !== void 0 ? _p : '',
-            expirationDate: (_r = (_q = item.expirationDate) !== null && _q !== void 0 ? _q : item.ExpirationDate) !== null && _r !== void 0 ? _r : '',
-            createdAt: (_t = (_s = item.createdAt) !== null && _s !== void 0 ? _s : item.CreatedAt) !== null && _t !== void 0 ? _t : null,
-            updatedAt: (_v = (_u = item.updatedAt) !== null && _u !== void 0 ? _u : item.UpdatedAt) !== null && _v !== void 0 ? _v : null,
-            customer: (_x = (_w = item.customer) !== null && _w !== void 0 ? _w : item.Customer) !== null && _x !== void 0 ? _x : null,
-            registrar: (_z = (_y = item.registrar) !== null && _y !== void 0 ? _y : item.Registrar) !== null && _z !== void 0 ? _z : null,
+            id: item.id ?? item.Id ?? 0,
+            customerId: item.customerId ?? item.CustomerId ?? 0,
+            serviceId: item.serviceId ?? item.ServiceId ?? 0,
+            name: item.name ?? item.Name ?? '',
+            providerId: item.providerId ?? item.ProviderId ?? 0,
+            status: item.status ?? item.Status ?? '',
+            registrationDate: item.registrationDate ?? item.RegistrationDate ?? '',
+            expirationDate: item.expirationDate ?? item.ExpirationDate ?? '',
+            createdAt: item.createdAt ?? item.CreatedAt ?? null,
+            updatedAt: item.updatedAt ?? item.UpdatedAt ?? null,
+            customer: item.customer ?? item.Customer ?? null,
+            registrar: item.registrar ?? item.Registrar ?? null,
         };
     }
     function normalizeRegistrarOption(item) {
-        var _a, _b, _c, _d, _e, _f;
         return {
-            id: (_b = (_a = item.id) !== null && _a !== void 0 ? _a : item.Id) !== null && _b !== void 0 ? _b : 0,
-            name: (_d = (_c = item.name) !== null && _c !== void 0 ? _c : item.Name) !== null && _d !== void 0 ? _d : '',
-            code: (_f = (_e = item.code) !== null && _e !== void 0 ? _e : item.Code) !== null && _f !== void 0 ? _f : null,
+            id: item.id ?? item.Id ?? 0,
+            name: item.name ?? item.Name ?? '',
+            code: item.code ?? item.Code ?? null,
         };
     }
     async function loadDomains() {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s;
         const tableBody = document.getElementById('domains-table-body');
         if (!tableBody) {
             return;
@@ -152,17 +152,16 @@
         }
         const raw = response.data;
         const extracted = extractItems(raw);
-        const meta = (_a = extracted.meta) !== null && _a !== void 0 ? _a : raw;
+        const meta = extracted.meta ?? raw;
         allDomains = extracted.items.map(normalizeItem);
-        pageSize = (_e = (_d = (_c = (_b = meta === null || meta === void 0 ? void 0 : meta.pageSize) !== null && _b !== void 0 ? _b : meta === null || meta === void 0 ? void 0 : meta.PageSize) !== null && _c !== void 0 ? _c : raw === null || raw === void 0 ? void 0 : raw.pageSize) !== null && _d !== void 0 ? _d : raw === null || raw === void 0 ? void 0 : raw.PageSize) !== null && _e !== void 0 ? _e : pageSize;
-        totalCount = (_j = (_h = (_g = (_f = meta === null || meta === void 0 ? void 0 : meta.totalCount) !== null && _f !== void 0 ? _f : meta === null || meta === void 0 ? void 0 : meta.TotalCount) !== null && _g !== void 0 ? _g : raw === null || raw === void 0 ? void 0 : raw.totalCount) !== null && _h !== void 0 ? _h : raw === null || raw === void 0 ? void 0 : raw.TotalCount) !== null && _j !== void 0 ? _j : allDomains.length;
-        totalPages = (_o = (_m = (_l = (_k = meta === null || meta === void 0 ? void 0 : meta.totalPages) !== null && _k !== void 0 ? _k : meta === null || meta === void 0 ? void 0 : meta.TotalPages) !== null && _l !== void 0 ? _l : raw === null || raw === void 0 ? void 0 : raw.totalPages) !== null && _m !== void 0 ? _m : raw === null || raw === void 0 ? void 0 : raw.TotalPages) !== null && _o !== void 0 ? _o : Math.max(1, Math.ceil(totalCount / pageSize));
-        currentPage = (_s = (_r = (_q = (_p = meta === null || meta === void 0 ? void 0 : meta.currentPage) !== null && _p !== void 0 ? _p : meta === null || meta === void 0 ? void 0 : meta.CurrentPage) !== null && _q !== void 0 ? _q : raw === null || raw === void 0 ? void 0 : raw.currentPage) !== null && _r !== void 0 ? _r : raw === null || raw === void 0 ? void 0 : raw.CurrentPage) !== null && _s !== void 0 ? _s : currentPage;
+        pageSize = meta?.pageSize ?? meta?.PageSize ?? raw?.pageSize ?? raw?.PageSize ?? pageSize;
+        totalCount = meta?.totalCount ?? meta?.TotalCount ?? raw?.totalCount ?? raw?.TotalCount ?? allDomains.length;
+        totalPages = meta?.totalPages ?? meta?.TotalPages ?? raw?.totalPages ?? raw?.TotalPages ?? Math.max(1, Math.ceil(totalCount / pageSize));
+        currentPage = meta?.currentPage ?? meta?.CurrentPage ?? raw?.currentPage ?? raw?.CurrentPage ?? currentPage;
         renderTable();
         renderPagination();
     }
     async function loadRegistrarsForImport() {
-        var _a;
         const select = document.getElementById('domains-import-registrar');
         if (!select) {
             return;
@@ -176,7 +175,7 @@
         }
         const rawItems = Array.isArray(response.data)
             ? response.data
-            : Array.isArray((_a = response.data) === null || _a === void 0 ? void 0 : _a.data)
+            : Array.isArray(response.data?.data)
                 ? response.data.data
                 : [];
         registrarOptions = rawItems.map(normalizeRegistrarOption);
@@ -198,17 +197,14 @@
         showModal('domains-import-modal');
     }
     function getSelectValue(id) {
-        var _a;
         const el = document.getElementById(id);
-        return ((_a = el === null || el === void 0 ? void 0 : el.value) !== null && _a !== void 0 ? _a : '').trim();
+        return (el?.value ?? '').trim();
     }
     function getCustomerName(domain) {
-        var _a, _b;
         const cust = domain.customer;
-        return (_b = (_a = cust === null || cust === void 0 ? void 0 : cust.name) !== null && _a !== void 0 ? _a : cust === null || cust === void 0 ? void 0 : cust.Name) !== null && _b !== void 0 ? _b : '';
+        return cust?.name ?? cust?.Name ?? '';
     }
     async function importDomains() {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o;
         const registrarValue = getSelectValue('domains-import-registrar');
         const registrarId = Number(registrarValue);
         if (!registrarValue || !Number.isFinite(registrarId) || registrarId <= 0) {
@@ -221,15 +217,15 @@
         const existingResponse = await apiRequest(`${getApiBaseUrl()}/Registrars/${registrarId}/domains`, { method: 'GET' });
         if (existingResponse.success) {
             const existingData = existingResponse.data;
-            totalExisting = (_f = (_d = (_b = (_a = existingData === null || existingData === void 0 ? void 0 : existingData.totalCount) !== null && _a !== void 0 ? _a : existingData === null || existingData === void 0 ? void 0 : existingData.TotalCount) !== null && _b !== void 0 ? _b : (_c = existingData === null || existingData === void 0 ? void 0 : existingData.domains) === null || _c === void 0 ? void 0 : _c.length) !== null && _d !== void 0 ? _d : (_e = existingData === null || existingData === void 0 ? void 0 : existingData.Domains) === null || _e === void 0 ? void 0 : _e.length) !== null && _f !== void 0 ? _f : null;
+            totalExisting = existingData?.totalCount ?? existingData?.TotalCount ?? existingData?.domains?.length ?? existingData?.Domains?.length ?? null;
         }
         const response = await apiRequest(`${getApiBaseUrl()}/Registrars/${registrarId}/domains/download`, { method: 'POST' });
         setImportBusy(false);
         if (response.success) {
             const resultData = response.data;
-            const importedCount = (_m = (_k = (_h = (_g = resultData === null || resultData === void 0 ? void 0 : resultData.count) !== null && _g !== void 0 ? _g : resultData === null || resultData === void 0 ? void 0 : resultData.Count) !== null && _h !== void 0 ? _h : (_j = resultData === null || resultData === void 0 ? void 0 : resultData.data) === null || _j === void 0 ? void 0 : _j.count) !== null && _k !== void 0 ? _k : (_l = resultData === null || resultData === void 0 ? void 0 : resultData.data) === null || _l === void 0 ? void 0 : _l.Count) !== null && _m !== void 0 ? _m : null;
-            const totalLabel = (_o = totalExisting !== null && totalExisting !== void 0 ? totalExisting : importedCount) !== null && _o !== void 0 ? _o : 0;
-            const importedLabel = importedCount !== null && importedCount !== void 0 ? importedCount : 0;
+            const importedCount = resultData?.count ?? resultData?.Count ?? resultData?.data?.count ?? resultData?.data?.Count ?? null;
+            const totalLabel = totalExisting ?? importedCount ?? 0;
+            const importedLabel = importedCount ?? 0;
             const summaryMessage = `Imported ${importedLabel} of ${totalLabel} domains.`;
             setImportSummary(summaryMessage);
             showSuccess(summaryMessage);
@@ -240,9 +236,8 @@
         }
     }
     function getRegistrarName(domain) {
-        var _a, _b;
         const reg = domain.registrar;
-        return (_b = (_a = reg === null || reg === void 0 ? void 0 : reg.name) !== null && _a !== void 0 ? _a : reg === null || reg === void 0 ? void 0 : reg.Name) !== null && _b !== void 0 ? _b : '';
+        return reg?.name ?? reg?.Name ?? '';
     }
     function renderTable() {
         const tableBody = document.getElementById('domains-table-body');
@@ -384,13 +379,12 @@
             info.textContent = '';
         }
         const form = document.getElementById('domains-form');
-        form === null || form === void 0 ? void 0 : form.reset();
+        form?.reset();
         setInputValue('domains-status', 'Active');
         setDateTimeLocalValue('domains-registration-date', new Date());
         showModal('domains-edit-modal');
     }
     function openEdit(id) {
-        var _a, _b, _c;
         const domain = allDomains.find((d) => d.id === id);
         if (!domain) {
             return;
@@ -407,9 +401,9 @@
         }
         setInputValue('domains-name', domain.name);
         setInputValue('domains-status', domain.status || '');
-        setInputValue('domains-provider-id', String((_a = domain.providerId) !== null && _a !== void 0 ? _a : 0));
-        setInputValue('domains-customer-id', String((_b = domain.customerId) !== null && _b !== void 0 ? _b : 0));
-        setInputValue('domains-service-id', String((_c = domain.serviceId) !== null && _c !== void 0 ? _c : 0));
+        setInputValue('domains-provider-id', String(domain.providerId ?? 0));
+        setInputValue('domains-customer-id', String(domain.customerId ?? 0));
+        setInputValue('domains-service-id', String(domain.serviceId ?? 0));
         setDateTimeLocalValue('domains-registration-date', domain.registrationDate ? new Date(domain.registrationDate) : null);
         setDateTimeLocalValue('domains-expiration-date', domain.expirationDate ? new Date(domain.expirationDate) : null);
         showModal('domains-edit-modal');
@@ -417,13 +411,12 @@
     function setInputValue(id, value) {
         const el = document.getElementById(id);
         if (el) {
-            el.value = value !== null && value !== void 0 ? value : '';
+            el.value = value ?? '';
         }
     }
     function getInputValue(id) {
-        var _a;
         const el = document.getElementById(id);
-        return ((_a = el === null || el === void 0 ? void 0 : el.value) !== null && _a !== void 0 ? _a : '').trim();
+        return (el?.value ?? '').trim();
     }
     function getNumberValue(id) {
         const raw = getInputValue(id);
@@ -518,7 +511,6 @@
             return;
         }
         tableBody.addEventListener('click', (event) => {
-            var _a;
             const target = event.target;
             const button = target.closest('button[data-action]');
             if (!button) {
@@ -537,7 +529,7 @@
                 return;
             }
             if (button.dataset.action === 'delete') {
-                openDelete(id, (_a = button.dataset.name) !== null && _a !== void 0 ? _a : '');
+                openDelete(id, button.dataset.name ?? '');
             }
         });
     }
@@ -563,7 +555,7 @@
         alert.textContent = message;
         alert.classList.remove('d-none');
         const errorAlert = document.getElementById('domains-alert-error');
-        errorAlert === null || errorAlert === void 0 ? void 0 : errorAlert.classList.add('d-none');
+        errorAlert?.classList.add('d-none');
         setTimeout(() => alert.classList.add('d-none'), 5000);
     }
     function showError(message) {
@@ -574,7 +566,7 @@
         alert.textContent = message;
         alert.classList.remove('d-none');
         const successAlert = document.getElementById('domains-alert-success');
-        successAlert === null || successAlert === void 0 ? void 0 : successAlert.classList.add('d-none');
+        successAlert?.classList.add('d-none');
     }
     function showModal(id) {
         const element = document.getElementById(id);
@@ -590,23 +582,22 @@
             return;
         }
         const modal = window.bootstrap.Modal.getInstance(element);
-        modal === null || modal === void 0 ? void 0 : modal.hide();
+        modal?.hide();
     }
     function initializeDomainsPage() {
-        var _a, _b, _c, _d, _e, _f;
         const page = document.getElementById('domains-page');
         if (!page || page.dataset.initialized === 'true') {
             return;
         }
         page.dataset.initialized = 'true';
-        (_a = document.getElementById('domains-create')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', openCreate);
-        (_b = document.getElementById('domains-save')) === null || _b === void 0 ? void 0 : _b.addEventListener('click', saveDomain);
-        (_c = document.getElementById('domains-import')) === null || _c === void 0 ? void 0 : _c.addEventListener('click', openImport);
-        (_d = document.getElementById('domains-import-confirm')) === null || _d === void 0 ? void 0 : _d.addEventListener('click', importDomains);
-        (_e = document.getElementById('domains-confirm-delete')) === null || _e === void 0 ? void 0 : _e.addEventListener('click', doDelete);
+        document.getElementById('domains-create')?.addEventListener('click', openCreate);
+        document.getElementById('domains-save')?.addEventListener('click', saveDomain);
+        document.getElementById('domains-import')?.addEventListener('click', openImport);
+        document.getElementById('domains-import-confirm')?.addEventListener('click', importDomains);
+        document.getElementById('domains-confirm-delete')?.addEventListener('click', doDelete);
         bindTableActions();
         bindPagingControlsActions();
-        (_f = document.getElementById('domains-page-size')) === null || _f === void 0 ? void 0 : _f.addEventListener('change', () => {
+        document.getElementById('domains-page-size')?.addEventListener('change', () => {
             currentPage = 1;
             loadDomains();
         });

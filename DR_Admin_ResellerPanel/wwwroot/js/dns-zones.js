@@ -2,38 +2,43 @@
 // @ts-nocheck
 (function () {
     function getApiBaseUrl() {
-        var _a, _b;
-        return (_b = (_a = window.AppSettings) === null || _a === void 0 ? void 0 : _a.apiBaseUrl) !== null && _b !== void 0 ? _b : '';
+        return window.AppSettings?.apiBaseUrl ?? '';
     }
     function getAuthToken() {
         const auth = window.Auth;
-        if (auth === null || auth === void 0 ? void 0 : auth.getToken) {
+        if (auth?.getToken) {
             return auth.getToken();
         }
         return sessionStorage.getItem('rp_authToken');
     }
     async function apiRequest(endpoint, options = {}) {
-        var _a, _b, _c;
         try {
-            const headers = Object.assign({ 'Content-Type': 'application/json' }, options.headers);
+            const headers = {
+                'Content-Type': 'application/json',
+                ...options.headers,
+            };
             const authToken = getAuthToken();
             if (authToken) {
                 headers['Authorization'] = `Bearer ${authToken}`;
             }
-            const response = await fetch(endpoint, Object.assign(Object.assign({}, options), { headers, credentials: 'include' }));
-            const contentType = (_a = response.headers.get('content-type')) !== null && _a !== void 0 ? _a : '';
+            const response = await fetch(endpoint, {
+                ...options,
+                headers,
+                credentials: 'include',
+            });
+            const contentType = response.headers.get('content-type') ?? '';
             const hasJson = contentType.includes('application/json');
             const data = hasJson ? await response.json() : null;
             if (!response.ok) {
                 return {
                     success: false,
-                    message: (data && ((_b = data.message) !== null && _b !== void 0 ? _b : data.title)) || `Request failed with status ${response.status}`,
+                    message: (data && (data.message ?? data.title)) || `Request failed with status ${response.status}`,
                 };
             }
             return {
-                success: (data === null || data === void 0 ? void 0 : data.success) !== false,
-                data: (_c = data === null || data === void 0 ? void 0 : data.data) !== null && _c !== void 0 ? _c : data,
-                message: data === null || data === void 0 ? void 0 : data.message,
+                success: data?.success !== false,
+                data: data?.data ?? data,
+                message: data?.message,
             };
         }
         catch (error) {
@@ -52,22 +57,21 @@
     let editingRecordId = null;
     let pendingDeleteId = null;
     function initializePage() {
-        var _a, _b, _c, _d, _e, _f, _g, _h;
         const page = document.getElementById('dns-zones-page');
         if (!page || page.dataset.initialized === 'true') {
             return;
         }
         page.dataset.initialized = 'true';
-        (_a = document.getElementById('dns-zones-select')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', openSelectDomainModal);
-        (_b = document.getElementById('dns-zones-domain-load')) === null || _b === void 0 ? void 0 : _b.addEventListener('click', loadDomainFromModal);
-        (_c = document.getElementById('dns-zones-add')) === null || _c === void 0 ? void 0 : _c.addEventListener('click', openCreate);
-        (_d = document.getElementById('dns-zones-save')) === null || _d === void 0 ? void 0 : _d.addEventListener('click', saveRecord);
-        (_e = document.getElementById('dns-zones-confirm-delete')) === null || _e === void 0 ? void 0 : _e.addEventListener('click', deleteRecord);
-        (_f = document.getElementById('dns-zones-record-type')) === null || _f === void 0 ? void 0 : _f.addEventListener('change', updateFieldVisibility);
-        (_g = document.getElementById('dns-zones-sync')) === null || _g === void 0 ? void 0 : _g.addEventListener('click', openSyncModal);
-        (_h = document.getElementById('dns-zones-sync-confirm')) === null || _h === void 0 ? void 0 : _h.addEventListener('click', performSync);
+        document.getElementById('dns-zones-select')?.addEventListener('click', openSelectDomainModal);
+        document.getElementById('dns-zones-domain-load')?.addEventListener('click', loadDomainFromModal);
+        document.getElementById('dns-zones-add')?.addEventListener('click', openCreate);
+        document.getElementById('dns-zones-save')?.addEventListener('click', saveRecord);
+        document.getElementById('dns-zones-confirm-delete')?.addEventListener('click', deleteRecord);
+        document.getElementById('dns-zones-record-type')?.addEventListener('change', updateFieldVisibility);
+        document.getElementById('dns-zones-sync')?.addEventListener('click', openSyncModal);
+        document.getElementById('dns-zones-sync-confirm')?.addEventListener('click', performSync);
         const input = document.getElementById('dns-zones-domain-name');
-        input === null || input === void 0 ? void 0 : input.addEventListener('keydown', (event) => {
+        input?.addEventListener('keydown', (event) => {
             if (event.key === 'Enter') {
                 event.preventDefault();
                 loadDomainFromModal();
@@ -95,25 +99,22 @@
         const raw = response.data;
         const items = Array.isArray(raw)
             ? raw
-            : Array.isArray(raw === null || raw === void 0 ? void 0 : raw.data)
+            : Array.isArray(raw?.data)
                 ? raw.data
-                : Array.isArray(raw === null || raw === void 0 ? void 0 : raw.Data)
+                : Array.isArray(raw?.Data)
                     ? raw.Data
                     : [];
-        recordTypes = items.map((item) => {
-            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t;
-            return ({
-                id: (_b = (_a = item.id) !== null && _a !== void 0 ? _a : item.Id) !== null && _b !== void 0 ? _b : 0,
-                type: (_d = (_c = item.type) !== null && _c !== void 0 ? _c : item.Type) !== null && _d !== void 0 ? _d : '',
-                description: (_f = (_e = item.description) !== null && _e !== void 0 ? _e : item.Description) !== null && _f !== void 0 ? _f : '',
-                hasPriority: (_h = (_g = item.hasPriority) !== null && _g !== void 0 ? _g : item.HasPriority) !== null && _h !== void 0 ? _h : false,
-                hasWeight: (_k = (_j = item.hasWeight) !== null && _j !== void 0 ? _j : item.HasWeight) !== null && _k !== void 0 ? _k : false,
-                hasPort: (_m = (_l = item.hasPort) !== null && _l !== void 0 ? _l : item.HasPort) !== null && _m !== void 0 ? _m : false,
-                isEditableByUser: (_p = (_o = item.isEditableByUser) !== null && _o !== void 0 ? _o : item.IsEditableByUser) !== null && _p !== void 0 ? _p : true,
-                isActive: (_r = (_q = item.isActive) !== null && _q !== void 0 ? _q : item.IsActive) !== null && _r !== void 0 ? _r : true,
-                defaultTTL: (_t = (_s = item.defaultTTL) !== null && _s !== void 0 ? _s : item.DefaultTTL) !== null && _t !== void 0 ? _t : undefined,
-            });
-        });
+        recordTypes = items.map((item) => ({
+            id: item.id ?? item.Id ?? 0,
+            type: item.type ?? item.Type ?? '',
+            description: item.description ?? item.Description ?? '',
+            hasPriority: item.hasPriority ?? item.HasPriority ?? false,
+            hasWeight: item.hasWeight ?? item.HasWeight ?? false,
+            hasPort: item.hasPort ?? item.HasPort ?? false,
+            isEditableByUser: item.isEditableByUser ?? item.IsEditableByUser ?? true,
+            isActive: item.isActive ?? item.IsActive ?? true,
+            defaultTTL: item.defaultTTL ?? item.DefaultTTL ?? undefined,
+        }));
         renderRecordTypeOptions();
     }
     function renderRecordTypeOptions() {
@@ -167,9 +168,8 @@
         await loadRecords();
     }
     async function loadDomainFromModal() {
-        var _a;
         const input = document.getElementById('dns-zones-domain-name');
-        const name = ((_a = input === null || input === void 0 ? void 0 : input.value) !== null && _a !== void 0 ? _a : '').trim();
+        const name = (input?.value ?? '').trim();
         if (!name) {
             showError('Enter a domain name to load.');
             return;
@@ -198,10 +198,9 @@
         updateDomainSuffix();
     }
     function normalizeDomain(raw) {
-        var _a, _b, _c, _d, _e;
         return {
-            id: (_b = (_a = raw.id) !== null && _a !== void 0 ? _a : raw.Id) !== null && _b !== void 0 ? _b : 0,
-            name: (_e = (_d = (_c = raw.name) !== null && _c !== void 0 ? _c : raw.Name) !== null && _d !== void 0 ? _d : raw.domainName) !== null && _e !== void 0 ? _e : '',
+            id: raw.id ?? raw.Id ?? 0,
+            name: raw.name ?? raw.Name ?? raw.domainName ?? '',
         };
     }
     async function loadRecords() {
@@ -222,17 +221,17 @@
         const activeRaw = activeResponse.data;
         const activeRecords = Array.isArray(activeRaw)
             ? activeRaw
-            : Array.isArray(activeRaw === null || activeRaw === void 0 ? void 0 : activeRaw.data)
+            : Array.isArray(activeRaw?.data)
                 ? activeRaw.data
-                : Array.isArray(activeRaw === null || activeRaw === void 0 ? void 0 : activeRaw.Data)
+                : Array.isArray(activeRaw?.Data)
                     ? activeRaw.Data
                     : [];
         const deletedRaw = deletedResponse.success ? deletedResponse.data : [];
         const deletedRecords = Array.isArray(deletedRaw)
             ? deletedRaw
-            : Array.isArray(deletedRaw === null || deletedRaw === void 0 ? void 0 : deletedRaw.data)
+            : Array.isArray(deletedRaw?.data)
                 ? deletedRaw.data
-                : Array.isArray(deletedRaw === null || deletedRaw === void 0 ? void 0 : deletedRaw.Data)
+                : Array.isArray(deletedRaw?.Data)
                     ? deletedRaw.Data
                     : [];
         records = [...activeRecords, ...deletedRecords];
@@ -254,7 +253,6 @@
             return;
         }
         tableBody.innerHTML = records.map((record) => {
-            var _a, _b, _c, _d;
             const isDeleted = record.isDeleted === true;
             const editable = record.isEditableByUser !== false && !isDeleted;
             const rowClass = isDeleted ? 'table-danger' : editable ? '' : 'table-warning';
@@ -265,10 +263,10 @@
             <td>${esc(record.type || '-')}${lockBadge}${pendingBadge}</td>
             <td>${esc(record.name || '-')}</td>
             <td>${esc(record.value || '-')}</td>
-            <td>${(_a = record.ttl) !== null && _a !== void 0 ? _a : '-'}</td>
-            <td>${(_b = record.priority) !== null && _b !== void 0 ? _b : '-'}</td>
-            <td>${(_c = record.weight) !== null && _c !== void 0 ? _c : '-'}</td>
-            <td>${(_d = record.port) !== null && _d !== void 0 ? _d : '-'}</td>
+            <td>${record.ttl ?? '-'}</td>
+            <td>${record.priority ?? '-'}</td>
+            <td>${record.weight ?? '-'}</td>
+            <td>${record.port ?? '-'}</td>
             <td class="text-end">
                 <div class="btn-group btn-group-sm">
                     <button class="btn btn-outline-primary" type="button" data-action="edit" data-id="${record.id}" title="Edit" ${editable ? '' : 'disabled'}>
@@ -284,14 +282,13 @@
         showTable();
     }
     function openCreate() {
-        var _a, _b, _c, _d, _e, _f;
         if (!selectedDomainId) {
             showError('Select a domain before adding DNS records.');
             return;
         }
         editingRecordId = null;
-        const defaultTypeId = (_c = (_b = (_a = recordTypes[0]) === null || _a === void 0 ? void 0 : _a.id) === null || _b === void 0 ? void 0 : _b.toString()) !== null && _c !== void 0 ? _c : '';
-        const defaultTtl = (_f = (_e = (_d = recordTypes[0]) === null || _d === void 0 ? void 0 : _d.defaultTTL) === null || _e === void 0 ? void 0 : _e.toString()) !== null && _f !== void 0 ? _f : '3600';
+        const defaultTypeId = recordTypes[0]?.id?.toString() ?? '';
+        const defaultTtl = recordTypes[0]?.defaultTTL?.toString() ?? '3600';
         setSelectValue('dns-zones-record-type', defaultTypeId);
         setInputValue('dns-zones-record-name', '');
         setInputValue('dns-zones-record-value', '');
@@ -304,7 +301,6 @@
         showModal('dns-zones-edit-modal');
     }
     function openEdit(id) {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
         const record = records.find((item) => item.id === id);
         if (!record) {
             return;
@@ -314,13 +310,13 @@
             return;
         }
         editingRecordId = id;
-        setSelectValue('dns-zones-record-type', (_d = (_b = (_a = record.dnsRecordTypeId) === null || _a === void 0 ? void 0 : _a.toString()) !== null && _b !== void 0 ? _b : (_c = getRecordTypeIdByName(record.type)) === null || _c === void 0 ? void 0 : _c.toString()) !== null && _d !== void 0 ? _d : '');
+        setSelectValue('dns-zones-record-type', record.dnsRecordTypeId?.toString() ?? getRecordTypeIdByName(record.type)?.toString() ?? '');
         setInputValue('dns-zones-record-name', toRelativeName(record.name));
         setInputValue('dns-zones-record-value', record.value);
-        setInputValue('dns-zones-record-ttl', (_f = (_e = record.ttl) === null || _e === void 0 ? void 0 : _e.toString()) !== null && _f !== void 0 ? _f : '');
-        setInputValue('dns-zones-record-priority', (_h = (_g = record.priority) === null || _g === void 0 ? void 0 : _g.toString()) !== null && _h !== void 0 ? _h : '');
-        setInputValue('dns-zones-record-weight', (_k = (_j = record.weight) === null || _j === void 0 ? void 0 : _j.toString()) !== null && _k !== void 0 ? _k : '');
-        setInputValue('dns-zones-record-port', (_m = (_l = record.port) === null || _l === void 0 ? void 0 : _l.toString()) !== null && _m !== void 0 ? _m : '');
+        setInputValue('dns-zones-record-ttl', record.ttl?.toString() ?? '');
+        setInputValue('dns-zones-record-priority', record.priority?.toString() ?? '');
+        setInputValue('dns-zones-record-weight', record.weight?.toString() ?? '');
+        setInputValue('dns-zones-record-port', record.port?.toString() ?? '');
         updateDomainSuffix();
         updateFieldVisibility();
         showModal('dns-zones-edit-modal');
@@ -365,7 +361,7 @@
             suffix.textContent = selectedDomainName ? `.${selectedDomainName}` : '';
         }
         function toAbsoluteName(name) {
-            const trimmed = (name !== null && name !== void 0 ? name : '').trim();
+            const trimmed = (name ?? '').trim();
             if (!trimmed || !selectedDomainName) {
                 return trimmed;
             }
@@ -378,7 +374,7 @@
             return `${trimmed}.${selectedDomainName}`;
         }
         function toRelativeName(name) {
-            const trimmed = (name !== null && name !== void 0 ? name : '').trim();
+            const trimmed = (name ?? '').trim();
             if (!trimmed || !selectedDomainName) {
                 return trimmed;
             }
@@ -432,15 +428,14 @@
             loading.classList.toggle('d-none', !isLoading);
         }
         if (isLoading) {
-            tableWrapper === null || tableWrapper === void 0 ? void 0 : tableWrapper.classList.add('d-none');
-            empty === null || empty === void 0 ? void 0 : empty.classList.add('d-none');
-            noSelection === null || noSelection === void 0 ? void 0 : noSelection.classList.add('d-none');
+            tableWrapper?.classList.add('d-none');
+            empty?.classList.add('d-none');
+            noSelection?.classList.add('d-none');
         }
     }
     function showNoSelection() {
-        var _a;
         setLoading(false);
-        (_a = document.getElementById('dns-zones-no-selection')) === null || _a === void 0 ? void 0 : _a.classList.remove('d-none');
+        document.getElementById('dns-zones-no-selection')?.classList.remove('d-none');
         setText('dns-zones-selected-domain', 'No domain selected');
         setText('dns-zones-selected-id', '-');
         setSelectButtonLabel(null);
@@ -481,11 +476,11 @@
         const summary = document.getElementById('dns-zones-sync-summary');
         const confirmBtn = document.getElementById('dns-zones-sync-confirm');
         const cancelBtn = document.getElementById('dns-zones-sync-cancel');
-        loading === null || loading === void 0 ? void 0 : loading.classList.remove('d-none');
-        empty === null || empty === void 0 ? void 0 : empty.classList.add('d-none');
-        content === null || content === void 0 ? void 0 : content.classList.add('d-none');
-        progress === null || progress === void 0 ? void 0 : progress.classList.add('d-none');
-        summary === null || summary === void 0 ? void 0 : summary.classList.add('d-none');
+        loading?.classList.remove('d-none');
+        empty?.classList.add('d-none');
+        content?.classList.add('d-none');
+        progress?.classList.add('d-none');
+        summary?.classList.add('d-none');
         if (confirmBtn) {
             confirmBtn.disabled = true;
             confirmBtn.innerHTML = '<i class="bi bi-arrow-repeat"></i> Sync All to DNS Server';
@@ -509,20 +504,20 @@
             const raw = response.data;
             pendingRecords = Array.isArray(raw)
                 ? raw
-                : Array.isArray(raw === null || raw === void 0 ? void 0 : raw.data)
+                : Array.isArray(raw?.data)
                     ? raw.data
-                    : Array.isArray(raw === null || raw === void 0 ? void 0 : raw.Data)
+                    : Array.isArray(raw?.Data)
                         ? raw.Data
                         : [];
         }
-        loading === null || loading === void 0 ? void 0 : loading.classList.add('d-none');
+        loading?.classList.add('d-none');
         if (!pendingRecords.length) {
-            empty === null || empty === void 0 ? void 0 : empty.classList.remove('d-none');
+            empty?.classList.remove('d-none');
             return;
         }
         setText('dns-zones-sync-count', String(pendingRecords.length));
         renderSyncTable();
-        content === null || content === void 0 ? void 0 : content.classList.remove('d-none');
+        content?.classList.remove('d-none');
         if (confirmBtn) {
             confirmBtn.disabled = false;
         }
@@ -533,19 +528,17 @@
             return;
         }
         body.innerHTML = pendingRecords.map((record) => {
-            var _a;
             return `
         <tr id="dns-zones-sync-row-${record.id}">
             <td>${esc(record.type || '-')}</td>
-            <td><code>${esc(getFullDnsName(record.name, selectedDomainName !== null && selectedDomainName !== void 0 ? selectedDomainName : ''))}</code></td>
+            <td><code>${esc(getFullDnsName(record.name, selectedDomainName ?? ''))}</code></td>
             <td class="text-break"><code class="small">${esc(record.value || '-')}</code></td>
-            <td>${(_a = record.ttl) !== null && _a !== void 0 ? _a : '-'}</td>
+            <td>${record.ttl ?? '-'}</td>
             <td><span class="badge bg-warning text-dark"><i class="bi bi-clock"></i> Pending</span></td>
         </tr>`;
         }).join('');
     }
     async function performSync() {
-        var _a, _b, _c;
         const confirmBtn = document.getElementById('dns-zones-sync-confirm');
         const cancelBtn = document.getElementById('dns-zones-sync-cancel');
         const progress = document.getElementById('dns-zones-sync-progress');
@@ -559,8 +552,8 @@
         if (cancelBtn) {
             cancelBtn.disabled = true;
         }
-        progress === null || progress === void 0 ? void 0 : progress.classList.remove('d-none');
-        summary === null || summary === void 0 ? void 0 : summary.classList.add('d-none');
+        progress?.classList.remove('d-none');
+        summary?.classList.add('d-none');
         let succeeded = 0;
         let failed = 0;
         const total = pendingRecords.length;
@@ -585,7 +578,7 @@
                 }
                 else {
                     failed++;
-                    const errMsg = (_c = (_b = (_a = result.data) === null || _a === void 0 ? void 0 : _a.message) !== null && _b !== void 0 ? _b : result.message) !== null && _c !== void 0 ? _c : 'Failed';
+                    const errMsg = result.data?.message ?? result.message ?? 'Failed';
                     if (row && row.cells[4]) {
                         row.cells[4].innerHTML = `<span class="badge bg-danger" title="${esc(errMsg)}"><i class="bi bi-x"></i> Failed</span>`;
                     }
@@ -642,7 +635,7 @@
         suffix.textContent = selectedDomainName ? `.${selectedDomainName}` : '';
     }
     function toAbsoluteName(name) {
-        const trimmed = (name !== null && name !== void 0 ? name : '').trim();
+        const trimmed = (name ?? '').trim();
         if (!trimmed || !selectedDomainName) {
             return trimmed;
         }
@@ -655,7 +648,7 @@
         return `${trimmed}.${selectedDomainName}`;
     }
     function toRelativeName(name) {
-        const trimmed = (name !== null && name !== void 0 ? name : '').trim();
+        const trimmed = (name ?? '').trim();
         if (!trimmed || !selectedDomainName) {
             return trimmed;
         }
@@ -671,23 +664,21 @@
         return trimmed;
     }
     function showEmpty() {
-        var _a, _b;
-        (_a = document.getElementById('dns-zones-empty')) === null || _a === void 0 ? void 0 : _a.classList.remove('d-none');
-        (_b = document.getElementById('dns-zones-table-wrapper')) === null || _b === void 0 ? void 0 : _b.classList.add('d-none');
+        document.getElementById('dns-zones-empty')?.classList.remove('d-none');
+        document.getElementById('dns-zones-table-wrapper')?.classList.add('d-none');
     }
     function showTable() {
-        var _a, _b, _c;
-        (_a = document.getElementById('dns-zones-table-wrapper')) === null || _a === void 0 ? void 0 : _a.classList.remove('d-none');
-        (_b = document.getElementById('dns-zones-empty')) === null || _b === void 0 ? void 0 : _b.classList.add('d-none');
-        (_c = document.getElementById('dns-zones-no-selection')) === null || _c === void 0 ? void 0 : _c.classList.add('d-none');
+        document.getElementById('dns-zones-table-wrapper')?.classList.remove('d-none');
+        document.getElementById('dns-zones-empty')?.classList.add('d-none');
+        document.getElementById('dns-zones-no-selection')?.classList.add('d-none');
     }
     function openSelectDomainModal() {
         const input = document.getElementById('dns-zones-domain-name');
         if (input) {
-            input.value = selectedDomainName !== null && selectedDomainName !== void 0 ? selectedDomainName : '';
+            input.value = selectedDomainName ?? '';
         }
         showModal('dns-zones-select-modal');
-        input === null || input === void 0 ? void 0 : input.focus();
+        input?.focus();
     }
     function setSelectButtonLabel(domainName) {
         const button = document.getElementById('dns-zones-select');
@@ -707,24 +698,22 @@
     function setInputValue(id, value) {
         const el = document.getElementById(id);
         if (el) {
-            el.value = value !== null && value !== void 0 ? value : '';
+            el.value = value ?? '';
         }
     }
     function setSelectValue(id, value) {
         const el = document.getElementById(id);
         if (el) {
-            el.value = value !== null && value !== void 0 ? value : '';
+            el.value = value ?? '';
         }
     }
     function getInputValue(id) {
-        var _a;
         const el = document.getElementById(id);
-        return ((_a = el === null || el === void 0 ? void 0 : el.value) !== null && _a !== void 0 ? _a : '').trim();
+        return (el?.value ?? '').trim();
     }
     function getSelectNumberValue(id) {
-        var _a;
         const el = document.getElementById(id);
-        const raw = ((_a = el === null || el === void 0 ? void 0 : el.value) !== null && _a !== void 0 ? _a : '').trim();
+        const raw = (el?.value ?? '').trim();
         const parsed = Number(raw);
         return Number.isFinite(parsed) ? parsed : 0;
     }
@@ -734,12 +723,11 @@
         return Number.isFinite(parsed) ? parsed : 0;
     }
     function updateFieldVisibility() {
-        var _a, _b, _c;
         const dnsRecordTypeId = getSelectNumberValue('dns-zones-record-type');
         const type = recordTypes.find((item) => item.id === dnsRecordTypeId);
-        toggleField('dns-zones-field-priority', (_a = type === null || type === void 0 ? void 0 : type.hasPriority) !== null && _a !== void 0 ? _a : false);
-        toggleField('dns-zones-field-weight', (_b = type === null || type === void 0 ? void 0 : type.hasWeight) !== null && _b !== void 0 ? _b : false);
-        toggleField('dns-zones-field-port', (_c = type === null || type === void 0 ? void 0 : type.hasPort) !== null && _c !== void 0 ? _c : false);
+        toggleField('dns-zones-field-priority', type?.hasPriority ?? false);
+        toggleField('dns-zones-field-weight', type?.hasWeight ?? false);
+        toggleField('dns-zones-field-port', type?.hasPort ?? false);
     }
     function toggleField(id, visible) {
         const field = document.getElementById(id);
@@ -749,12 +737,11 @@
         field.classList.toggle('d-none', !visible);
     }
     function getRecordTypeIdByName(typeName) {
-        var _a;
         if (!typeName) {
             return null;
         }
         const match = recordTypes.find((item) => item.type.toLowerCase() === typeName.toLowerCase());
-        return (_a = match === null || match === void 0 ? void 0 : match.id) !== null && _a !== void 0 ? _a : null;
+        return match?.id ?? null;
     }
     function getNullableNumberValue(id) {
         const value = getInputValue(id);
@@ -765,29 +752,26 @@
         return Number.isFinite(parsed) ? parsed : null;
     }
     function showSuccess(message) {
-        var _a;
         const alert = document.getElementById('dns-zones-alert-success');
         if (!alert) {
             return;
         }
         alert.textContent = message;
         alert.classList.remove('d-none');
-        (_a = document.getElementById('dns-zones-alert-error')) === null || _a === void 0 ? void 0 : _a.classList.add('d-none');
+        document.getElementById('dns-zones-alert-error')?.classList.add('d-none');
     }
     function showError(message) {
-        var _a;
         const alert = document.getElementById('dns-zones-alert-error');
         if (!alert) {
             return;
         }
         alert.textContent = message;
         alert.classList.remove('d-none');
-        (_a = document.getElementById('dns-zones-alert-success')) === null || _a === void 0 ? void 0 : _a.classList.add('d-none');
+        document.getElementById('dns-zones-alert-success')?.classList.add('d-none');
     }
     function clearAlerts() {
-        var _a, _b;
-        (_a = document.getElementById('dns-zones-alert-success')) === null || _a === void 0 ? void 0 : _a.classList.add('d-none');
-        (_b = document.getElementById('dns-zones-alert-error')) === null || _b === void 0 ? void 0 : _b.classList.add('d-none');
+        document.getElementById('dns-zones-alert-success')?.classList.add('d-none');
+        document.getElementById('dns-zones-alert-error')?.classList.add('d-none');
     }
     function esc(text) {
         const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
@@ -807,7 +791,7 @@
             return;
         }
         const modal = window.bootstrap.Modal.getInstance(element);
-        modal === null || modal === void 0 ? void 0 : modal.hide();
+        modal?.hide();
     }
     function setupPageObserver() {
         initializePage();

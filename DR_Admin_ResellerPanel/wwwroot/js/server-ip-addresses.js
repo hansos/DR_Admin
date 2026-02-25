@@ -2,8 +2,7 @@
 // @ts-nocheck
 (function () {
     function getApiBaseUrl() {
-        var _a, _b;
-        return (_b = (_a = window.AppSettings) === null || _a === void 0 ? void 0 : _a.apiBaseUrl) !== null && _b !== void 0 ? _b : '';
+        return window.AppSettings?.apiBaseUrl ?? '';
     }
     let allServerIpAddresses = [];
     let servers = [];
@@ -12,33 +11,39 @@
     let pendingDeleteId = null;
     function getAuthToken() {
         const auth = window.Auth;
-        if (auth === null || auth === void 0 ? void 0 : auth.getToken) {
+        if (auth?.getToken) {
             return auth.getToken();
         }
         return sessionStorage.getItem('rp_authToken');
     }
     async function apiRequest(endpoint, options = {}) {
-        var _a, _b, _c;
         try {
-            const headers = Object.assign({ 'Content-Type': 'application/json' }, options.headers);
+            const headers = {
+                'Content-Type': 'application/json',
+                ...options.headers,
+            };
             const authToken = getAuthToken();
             if (authToken) {
                 headers['Authorization'] = `Bearer ${authToken}`;
             }
-            const response = await fetch(endpoint, Object.assign(Object.assign({}, options), { headers, credentials: 'include' }));
-            const contentType = (_a = response.headers.get('content-type')) !== null && _a !== void 0 ? _a : '';
+            const response = await fetch(endpoint, {
+                ...options,
+                headers,
+                credentials: 'include',
+            });
+            const contentType = response.headers.get('content-type') ?? '';
             const hasJson = contentType.includes('application/json');
             const data = hasJson ? await response.json() : null;
             if (!response.ok) {
                 return {
                     success: false,
-                    message: (data && ((_b = data.message) !== null && _b !== void 0 ? _b : data.title)) || `Request failed with status ${response.status}`,
+                    message: (data && (data.message ?? data.title)) || `Request failed with status ${response.status}`,
                 };
             }
             return {
-                success: (data === null || data === void 0 ? void 0 : data.success) !== false,
-                data: (_c = data === null || data === void 0 ? void 0 : data.data) !== null && _c !== void 0 ? _c : data,
-                message: data === null || data === void 0 ? void 0 : data.message,
+                success: data?.success !== false,
+                data: data?.data ?? data,
+                message: data?.message,
             };
         }
         catch (error) {
@@ -50,20 +55,16 @@
         }
     }
     async function loadServers() {
-        var _a;
         const response = await apiRequest(`${getApiBaseUrl()}/Servers`, { method: 'GET' });
         const rawItems = Array.isArray(response.data)
             ? response.data
-            : Array.isArray((_a = response.data) === null || _a === void 0 ? void 0 : _a.data)
+            : Array.isArray(response.data?.data)
                 ? response.data.data
                 : [];
-        servers = rawItems.map((item) => {
-            var _a, _b, _c, _d;
-            return ({
-                id: (_b = (_a = item.id) !== null && _a !== void 0 ? _a : item.Id) !== null && _b !== void 0 ? _b : 0,
-                name: (_d = (_c = item.name) !== null && _c !== void 0 ? _c : item.Name) !== null && _d !== void 0 ? _d : '',
-            });
-        });
+        servers = rawItems.map((item) => ({
+            id: item.id ?? item.Id ?? 0,
+            name: item.name ?? item.Name ?? '',
+        }));
         Object.keys(serverNameLookup).forEach((key) => delete serverNameLookup[Number(key)]);
         servers.forEach((srv) => {
             if (srv.id) {
@@ -84,7 +85,6 @@
         }
     }
     async function loadServerIpAddresses() {
-        var _a;
         const tableBody = document.getElementById('server-ip-addresses-table-body');
         if (!tableBody) {
             return;
@@ -98,22 +98,21 @@
         }
         const rawItems = Array.isArray(response.data)
             ? response.data
-            : Array.isArray((_a = response.data) === null || _a === void 0 ? void 0 : _a.data)
+            : Array.isArray(response.data?.data)
                 ? response.data.data
                 : [];
         allServerIpAddresses = rawItems.map((item) => {
-            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u;
-            const serverId = (_b = (_a = item.serverId) !== null && _a !== void 0 ? _a : item.ServerId) !== null && _b !== void 0 ? _b : 0;
+            const serverId = item.serverId ?? item.ServerId ?? 0;
             return {
-                id: (_d = (_c = item.id) !== null && _c !== void 0 ? _c : item.Id) !== null && _d !== void 0 ? _d : 0,
+                id: item.id ?? item.Id ?? 0,
                 serverId,
-                serverName: (_g = (_f = (_e = item.serverName) !== null && _e !== void 0 ? _e : item.ServerName) !== null && _f !== void 0 ? _f : serverNameLookup[serverId]) !== null && _g !== void 0 ? _g : null,
-                ipAddress: (_j = (_h = item.ipAddress) !== null && _h !== void 0 ? _h : item.IpAddress) !== null && _j !== void 0 ? _j : '',
-                ipVersion: (_l = (_k = item.ipVersion) !== null && _k !== void 0 ? _k : item.IpVersion) !== null && _l !== void 0 ? _l : 'IPv4',
-                isPrimary: (_o = (_m = item.isPrimary) !== null && _m !== void 0 ? _m : item.IsPrimary) !== null && _o !== void 0 ? _o : false,
-                status: (_q = (_p = item.status) !== null && _p !== void 0 ? _p : item.Status) !== null && _q !== void 0 ? _q : 'Active',
-                assignedTo: (_s = (_r = item.assignedTo) !== null && _r !== void 0 ? _r : item.AssignedTo) !== null && _s !== void 0 ? _s : null,
-                notes: (_u = (_t = item.notes) !== null && _t !== void 0 ? _t : item.Notes) !== null && _u !== void 0 ? _u : null,
+                serverName: item.serverName ?? item.ServerName ?? serverNameLookup[serverId] ?? null,
+                ipAddress: item.ipAddress ?? item.IpAddress ?? '',
+                ipVersion: item.ipVersion ?? item.IpVersion ?? 'IPv4',
+                isPrimary: item.isPrimary ?? item.IsPrimary ?? false,
+                status: item.status ?? item.Status ?? 'Active',
+                assignedTo: item.assignedTo ?? item.AssignedTo ?? null,
+                notes: item.notes ?? item.Notes ?? null,
             };
         });
         renderTable();
@@ -146,7 +145,7 @@
     `).join('');
     }
     function getStatusBadgeColor(status) {
-        switch (status === null || status === void 0 ? void 0 : status.toLowerCase()) {
+        switch (status?.toLowerCase()) {
             case 'active': return 'success';
             case 'reserved': return 'warning';
             case 'blocked': return 'danger';
@@ -160,7 +159,7 @@
             modalTitle.textContent = 'New IP Address';
         }
         const form = document.getElementById('server-ip-addresses-form');
-        form === null || form === void 0 ? void 0 : form.reset();
+        form?.reset();
         const ipVersionSelect = document.getElementById('server-ip-addresses-ip-version');
         if (ipVersionSelect) {
             ipVersionSelect.value = 'IPv4';
@@ -218,7 +217,6 @@
         showModal('server-ip-addresses-edit-modal');
     }
     async function saveServerIpAddress() {
-        var _a, _b, _c, _d, _e, _f;
         const ipAddressInput = document.getElementById('server-ip-addresses-ip-address');
         const ipVersionInput = document.getElementById('server-ip-addresses-ip-version');
         const serverIdInput = document.getElementById('server-ip-addresses-server-id');
@@ -226,10 +224,10 @@
         const isPrimaryInput = document.getElementById('server-ip-addresses-is-primary');
         const assignedToInput = document.getElementById('server-ip-addresses-assigned-to');
         const notesInput = document.getElementById('server-ip-addresses-notes');
-        const ipAddress = (_a = ipAddressInput === null || ipAddressInput === void 0 ? void 0 : ipAddressInput.value.trim()) !== null && _a !== void 0 ? _a : '';
-        const ipVersion = (_c = (_b = ipVersionInput === null || ipVersionInput === void 0 ? void 0 : ipVersionInput.value) === null || _b === void 0 ? void 0 : _b.trim()) !== null && _c !== void 0 ? _c : '';
-        const serverId = (serverIdInput === null || serverIdInput === void 0 ? void 0 : serverIdInput.value) ? Number(serverIdInput.value) : null;
-        const status = (_e = (_d = statusInput === null || statusInput === void 0 ? void 0 : statusInput.value) === null || _d === void 0 ? void 0 : _d.trim()) !== null && _e !== void 0 ? _e : 'Active';
+        const ipAddress = ipAddressInput?.value.trim() ?? '';
+        const ipVersion = ipVersionInput?.value?.trim() ?? '';
+        const serverId = serverIdInput?.value ? Number(serverIdInput.value) : null;
+        const status = statusInput?.value?.trim() ?? 'Active';
         if (!ipAddress || !ipVersion || !serverId || !status) {
             showError('IP Address, IP Version, Server, and Status are required');
             return;
@@ -239,9 +237,9 @@
             ipAddress,
             ipVersion,
             status,
-            isPrimary: (_f = isPrimaryInput === null || isPrimaryInput === void 0 ? void 0 : isPrimaryInput.checked) !== null && _f !== void 0 ? _f : false,
-            assignedTo: (assignedToInput === null || assignedToInput === void 0 ? void 0 : assignedToInput.value.trim()) || null,
-            notes: (notesInput === null || notesInput === void 0 ? void 0 : notesInput.value.trim()) || null,
+            isPrimary: isPrimaryInput?.checked ?? false,
+            assignedTo: assignedToInput?.value.trim() || null,
+            notes: notesInput?.value.trim() || null,
         };
         const response = editingId
             ? await apiRequest(`${getApiBaseUrl()}/ServerIpAddresses/${editingId}`, { method: 'PUT', body: JSON.stringify(payload) })
@@ -290,7 +288,7 @@
         alert.textContent = message;
         alert.classList.remove('d-none');
         const errorAlert = document.getElementById('server-ip-addresses-alert-error');
-        errorAlert === null || errorAlert === void 0 ? void 0 : errorAlert.classList.add('d-none');
+        errorAlert?.classList.add('d-none');
         setTimeout(() => alert.classList.add('d-none'), 5000);
     }
     function showError(message) {
@@ -301,7 +299,7 @@
         alert.textContent = message;
         alert.classList.remove('d-none');
         const successAlert = document.getElementById('server-ip-addresses-alert-success');
-        successAlert === null || successAlert === void 0 ? void 0 : successAlert.classList.add('d-none');
+        successAlert?.classList.add('d-none');
     }
     function showModal(id) {
         const element = document.getElementById(id);
@@ -317,7 +315,7 @@
             return;
         }
         const modal = window.bootstrap.Modal.getInstance(element);
-        modal === null || modal === void 0 ? void 0 : modal.hide();
+        modal?.hide();
     }
     function bindTableActions() {
         const tableBody = document.getElementById('server-ip-addresses-table-body');
@@ -325,7 +323,6 @@
             return;
         }
         tableBody.addEventListener('click', (event) => {
-            var _a;
             const target = event.target;
             const button = target.closest('button[data-action]');
             if (!button) {
@@ -340,20 +337,19 @@
                 return;
             }
             if (button.dataset.action === 'delete') {
-                openDelete(id, (_a = button.dataset.name) !== null && _a !== void 0 ? _a : '');
+                openDelete(id, button.dataset.name ?? '');
             }
         });
     }
     function initializeServerIpAddressesPage() {
-        var _a, _b, _c;
         const page = document.getElementById('server-ip-addresses-page');
         if (!page || page.dataset.initialized === 'true') {
             return;
         }
         page.dataset.initialized = 'true';
-        (_a = document.getElementById('server-ip-addresses-create')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', openCreate);
-        (_b = document.getElementById('server-ip-addresses-save')) === null || _b === void 0 ? void 0 : _b.addEventListener('click', saveServerIpAddress);
-        (_c = document.getElementById('server-ip-addresses-confirm-delete')) === null || _c === void 0 ? void 0 : _c.addEventListener('click', doDelete);
+        document.getElementById('server-ip-addresses-create')?.addEventListener('click', openCreate);
+        document.getElementById('server-ip-addresses-save')?.addEventListener('click', saveServerIpAddress);
+        document.getElementById('server-ip-addresses-confirm-delete')?.addEventListener('click', doDelete);
         bindTableActions();
         loadServers()
             .catch((error) => {

@@ -2,8 +2,7 @@
 // @ts-nocheck
 (function () {
     function getApiBaseUrl() {
-        var _a, _b;
-        return (_b = (_a = window.AppSettings) === null || _a === void 0 ? void 0 : _a.apiBaseUrl) !== null && _b !== void 0 ? _b : '';
+        return window.AppSettings?.apiBaseUrl ?? '';
     }
     let allServers = [];
     let serverTypes = [];
@@ -13,33 +12,39 @@
     let pendingDeleteId = null;
     function getAuthToken() {
         const auth = window.Auth;
-        if (auth === null || auth === void 0 ? void 0 : auth.getToken) {
+        if (auth?.getToken) {
             return auth.getToken();
         }
         return sessionStorage.getItem('rp_authToken');
     }
     async function apiRequest(endpoint, options = {}) {
-        var _a, _b, _c;
         try {
-            const headers = Object.assign({ 'Content-Type': 'application/json' }, options.headers);
+            const headers = {
+                'Content-Type': 'application/json',
+                ...options.headers,
+            };
             const authToken = getAuthToken();
             if (authToken) {
                 headers['Authorization'] = `Bearer ${authToken}`;
             }
-            const response = await fetch(endpoint, Object.assign(Object.assign({}, options), { headers, credentials: 'include' }));
-            const contentType = (_a = response.headers.get('content-type')) !== null && _a !== void 0 ? _a : '';
+            const response = await fetch(endpoint, {
+                ...options,
+                headers,
+                credentials: 'include',
+            });
+            const contentType = response.headers.get('content-type') ?? '';
             const hasJson = contentType.includes('application/json');
             const data = hasJson ? await response.json() : null;
             if (!response.ok) {
                 return {
                     success: false,
-                    message: (data && ((_b = data.message) !== null && _b !== void 0 ? _b : data.title)) || `Request failed with status ${response.status}`,
+                    message: (data && (data.message ?? data.title)) || `Request failed with status ${response.status}`,
                 };
             }
             return {
-                success: (data === null || data === void 0 ? void 0 : data.success) !== false,
-                data: (_c = data === null || data === void 0 ? void 0 : data.data) !== null && _c !== void 0 ? _c : data,
-                message: data === null || data === void 0 ? void 0 : data.message,
+                success: data?.success !== false,
+                data: data?.data ?? data,
+                message: data?.message,
             };
         }
         catch (error) {
@@ -64,17 +69,14 @@
     function extractArray(data) {
         const rawItems = Array.isArray(data)
             ? data
-            : Array.isArray(data === null || data === void 0 ? void 0 : data.data)
+            : Array.isArray(data?.data)
                 ? data.data
                 : [];
-        return rawItems.map((item) => {
-            var _a, _b, _c, _d, _e, _f, _g, _h;
-            return ({
-                id: (_b = (_a = item.id) !== null && _a !== void 0 ? _a : item.Id) !== null && _b !== void 0 ? _b : 0,
-                name: (_d = (_c = item.name) !== null && _c !== void 0 ? _c : item.Name) !== null && _d !== void 0 ? _d : '',
-                displayName: (_h = (_g = (_f = (_e = item.displayName) !== null && _e !== void 0 ? _e : item.DisplayName) !== null && _f !== void 0 ? _f : item.name) !== null && _g !== void 0 ? _g : item.Name) !== null && _h !== void 0 ? _h : '',
-            });
-        });
+        return rawItems.map((item) => ({
+            id: item.id ?? item.Id ?? 0,
+            name: item.name ?? item.Name ?? '',
+            displayName: item.displayName ?? item.DisplayName ?? item.name ?? item.Name ?? '',
+        }));
     }
     function populateDropdowns() {
         const serverTypeSelect = document.getElementById('servers-server-type-id');
@@ -109,7 +111,7 @@
         if (Array.isArray(data)) {
             return data;
         }
-        if (Array.isArray(data === null || data === void 0 ? void 0 : data.data)) {
+        if (Array.isArray(data?.data)) {
             return data.data;
         }
         return [];
@@ -136,8 +138,7 @@
             console.log('First raw item from API:', rawItems[0]);
         }
         allServers = rawItems.map((item) => {
-            var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _0, _1, _2, _3, _4;
-            const rawStatus = (_a = item.status) !== null && _a !== void 0 ? _a : item.Status;
+            const rawStatus = item.status ?? item.Status;
             let statusValue = null;
             if (typeof rawStatus === 'boolean') {
                 statusValue = rawStatus;
@@ -146,20 +147,20 @@
                 statusValue = rawStatus.toLowerCase() === 'active' ? true : rawStatus.toLowerCase() === 'inactive' ? false : null;
             }
             const server = {
-                id: (_c = (_b = item.id) !== null && _b !== void 0 ? _b : item.Id) !== null && _c !== void 0 ? _c : 0,
-                name: (_e = (_d = item.name) !== null && _d !== void 0 ? _d : item.Name) !== null && _e !== void 0 ? _e : '',
-                location: (_g = (_f = item.location) !== null && _f !== void 0 ? _f : item.Location) !== null && _g !== void 0 ? _g : null,
-                serverTypeId: (_j = (_h = item.serverTypeId) !== null && _h !== void 0 ? _h : item.ServerTypeId) !== null && _j !== void 0 ? _j : 0,
-                serverTypeName: (_l = (_k = item.serverTypeName) !== null && _k !== void 0 ? _k : item.ServerTypeName) !== null && _l !== void 0 ? _l : '',
-                operatingSystemId: (_o = (_m = item.operatingSystemId) !== null && _m !== void 0 ? _m : item.OperatingSystemId) !== null && _o !== void 0 ? _o : 0,
-                operatingSystemName: (_q = (_p = item.operatingSystemName) !== null && _p !== void 0 ? _p : item.OperatingSystemName) !== null && _q !== void 0 ? _q : '',
-                hostProviderId: (_s = (_r = item.hostProviderId) !== null && _r !== void 0 ? _r : item.HostProviderId) !== null && _s !== void 0 ? _s : null,
-                hostProviderName: (_u = (_t = item.hostProviderName) !== null && _t !== void 0 ? _t : item.HostProviderName) !== null && _u !== void 0 ? _u : null,
+                id: item.id ?? item.Id ?? 0,
+                name: item.name ?? item.Name ?? '',
+                location: item.location ?? item.Location ?? null,
+                serverTypeId: item.serverTypeId ?? item.ServerTypeId ?? 0,
+                serverTypeName: item.serverTypeName ?? item.ServerTypeName ?? '',
+                operatingSystemId: item.operatingSystemId ?? item.OperatingSystemId ?? 0,
+                operatingSystemName: item.operatingSystemName ?? item.OperatingSystemName ?? '',
+                hostProviderId: item.hostProviderId ?? item.HostProviderId ?? null,
+                hostProviderName: item.hostProviderName ?? item.HostProviderName ?? null,
                 status: statusValue,
-                cpuCores: (_w = (_v = item.cpuCores) !== null && _v !== void 0 ? _v : item.CpuCores) !== null && _w !== void 0 ? _w : null,
-                ramMB: (_z = (_y = (_x = item.ramMB) !== null && _x !== void 0 ? _x : item.RamMB) !== null && _y !== void 0 ? _y : item.ramMb) !== null && _z !== void 0 ? _z : null,
-                diskSpaceGB: (_2 = (_1 = (_0 = item.diskSpaceGB) !== null && _0 !== void 0 ? _0 : item.DiskSpaceGB) !== null && _1 !== void 0 ? _1 : item.diskSpaceGb) !== null && _2 !== void 0 ? _2 : null,
-                notes: (_4 = (_3 = item.notes) !== null && _3 !== void 0 ? _3 : item.Notes) !== null && _4 !== void 0 ? _4 : null,
+                cpuCores: item.cpuCores ?? item.CpuCores ?? null,
+                ramMB: item.ramMB ?? item.RamMB ?? item.ramMb ?? null,
+                diskSpaceGB: item.diskSpaceGB ?? item.DiskSpaceGB ?? item.diskSpaceGb ?? null,
+                notes: item.notes ?? item.Notes ?? null,
             };
             // Debug log for first item to verify data structure
             if (rawItems.indexOf(item) === 0) {
@@ -222,7 +223,7 @@
             modalTitle.textContent = 'New Server';
         }
         const form = document.getElementById('servers-form');
-        form === null || form === void 0 ? void 0 : form.reset();
+        form?.reset();
         const statusCheckbox = document.getElementById('servers-status');
         if (statusCheckbox) {
             statusCheckbox.checked = true;
@@ -297,7 +298,6 @@
         showModal('servers-edit-modal');
     }
     async function saveServer() {
-        var _a, _b;
         const nameInput = document.getElementById('servers-name');
         const locationInput = document.getElementById('servers-location');
         const serverTypeInput = document.getElementById('servers-server-type-id');
@@ -308,10 +308,10 @@
         const ramMBInput = document.getElementById('servers-ram-mb');
         const diskSpaceGBInput = document.getElementById('servers-disk-space-gb');
         const notesInput = document.getElementById('servers-notes');
-        const name = (_a = nameInput === null || nameInput === void 0 ? void 0 : nameInput.value.trim()) !== null && _a !== void 0 ? _a : '';
-        const serverTypeId = (serverTypeInput === null || serverTypeInput === void 0 ? void 0 : serverTypeInput.value) ? Number(serverTypeInput.value) : null;
-        const operatingSystemId = (osInput === null || osInput === void 0 ? void 0 : osInput.value) ? Number(osInput.value) : null;
-        const status = (_b = statusInput === null || statusInput === void 0 ? void 0 : statusInput.checked) !== null && _b !== void 0 ? _b : true;
+        const name = nameInput?.value.trim() ?? '';
+        const serverTypeId = serverTypeInput?.value ? Number(serverTypeInput.value) : null;
+        const operatingSystemId = osInput?.value ? Number(osInput.value) : null;
+        const status = statusInput?.checked ?? true;
         if (!name || !serverTypeId || !operatingSystemId) {
             showError('Server Name, Server Type, and Operating System are required');
             return;
@@ -321,12 +321,12 @@
             serverTypeId,
             operatingSystemId,
             status,
-            location: (locationInput === null || locationInput === void 0 ? void 0 : locationInput.value.trim()) || null,
-            hostProviderId: (providerInput === null || providerInput === void 0 ? void 0 : providerInput.value) ? Number(providerInput.value) : null,
-            cpuCores: (cpuCoresInput === null || cpuCoresInput === void 0 ? void 0 : cpuCoresInput.value) ? Number(cpuCoresInput.value) : null,
-            ramMB: (ramMBInput === null || ramMBInput === void 0 ? void 0 : ramMBInput.value) ? Number(ramMBInput.value) : null,
-            diskSpaceGB: (diskSpaceGBInput === null || diskSpaceGBInput === void 0 ? void 0 : diskSpaceGBInput.value) ? Number(diskSpaceGBInput.value) : null,
-            notes: (notesInput === null || notesInput === void 0 ? void 0 : notesInput.value.trim()) || null,
+            location: locationInput?.value.trim() || null,
+            hostProviderId: providerInput?.value ? Number(providerInput.value) : null,
+            cpuCores: cpuCoresInput?.value ? Number(cpuCoresInput.value) : null,
+            ramMB: ramMBInput?.value ? Number(ramMBInput.value) : null,
+            diskSpaceGB: diskSpaceGBInput?.value ? Number(diskSpaceGBInput.value) : null,
+            notes: notesInput?.value.trim() || null,
         };
         const response = editingId
             ? await apiRequest(`${getApiBaseUrl()}/Servers/${editingId}`, { method: 'PUT', body: JSON.stringify(payload) })
@@ -375,7 +375,7 @@
         alert.textContent = message;
         alert.classList.remove('d-none');
         const errorAlert = document.getElementById('servers-alert-error');
-        errorAlert === null || errorAlert === void 0 ? void 0 : errorAlert.classList.add('d-none');
+        errorAlert?.classList.add('d-none');
         setTimeout(() => alert.classList.add('d-none'), 5000);
     }
     function showError(message) {
@@ -386,7 +386,7 @@
         alert.textContent = message;
         alert.classList.remove('d-none');
         const successAlert = document.getElementById('servers-alert-success');
-        successAlert === null || successAlert === void 0 ? void 0 : successAlert.classList.add('d-none');
+        successAlert?.classList.add('d-none');
     }
     function showModal(id) {
         const element = document.getElementById(id);
@@ -402,7 +402,7 @@
             return;
         }
         const modal = window.bootstrap.Modal.getInstance(element);
-        modal === null || modal === void 0 ? void 0 : modal.hide();
+        modal?.hide();
     }
     function bindTableActions() {
         const tableBody = document.getElementById('servers-table-body');
@@ -410,7 +410,6 @@
             return;
         }
         tableBody.addEventListener('click', (event) => {
-            var _a;
             const target = event.target;
             const button = target.closest('button[data-action]');
             if (!button) {
@@ -425,20 +424,19 @@
                 return;
             }
             if (button.dataset.action === 'delete') {
-                openDelete(id, (_a = button.dataset.name) !== null && _a !== void 0 ? _a : '');
+                openDelete(id, button.dataset.name ?? '');
             }
         });
     }
     function initializeServersPage() {
-        var _a, _b, _c;
         const page = document.getElementById('servers-page');
         if (!page || page.dataset.initialized === 'true') {
             return;
         }
         page.dataset.initialized = 'true';
-        (_a = document.getElementById('servers-create')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', openCreate);
-        (_b = document.getElementById('servers-save')) === null || _b === void 0 ? void 0 : _b.addEventListener('click', saveServer);
-        (_c = document.getElementById('servers-confirm-delete')) === null || _c === void 0 ? void 0 : _c.addEventListener('click', doDelete);
+        document.getElementById('servers-create')?.addEventListener('click', openCreate);
+        document.getElementById('servers-save')?.addEventListener('click', saveServer);
+        document.getElementById('servers-confirm-delete')?.addEventListener('click', doDelete);
         bindTableActions();
         loadLookupData();
         loadServers();
