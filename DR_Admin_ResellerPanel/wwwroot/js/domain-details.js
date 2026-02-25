@@ -49,7 +49,7 @@
     let currentRegistrarCode = null;
     let currentDomainName = null;
     function initializePage() {
-        var _a, _b;
+        var _a, _b, _c, _d;
         const page = document.getElementById('domain-details-page');
         if (!page || page.dataset.initialized === 'true') {
             return;
@@ -60,6 +60,8 @@
         const parsed = Number(idParam);
         (_a = document.getElementById('domain-dns-sync')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', openDnsSyncModal);
         (_b = document.getElementById('domain-dns-sync-confirm')) === null || _b === void 0 ? void 0 : _b.addEventListener('click', syncDnsRecords);
+        (_c = document.getElementById('domain-details-select')) === null || _c === void 0 ? void 0 : _c.addEventListener('click', openSelectDomainModal);
+        (_d = document.getElementById('domain-details-manual-load')) === null || _d === void 0 ? void 0 : _d.addEventListener('click', loadDomainFromManualInput);
         if (!idParam || !Number.isFinite(parsed) || parsed <= 0) {
             showManualEntry();
             return;
@@ -68,24 +70,32 @@
         loadDomainDetails();
     }
     function showManualEntry() {
-        const manualCard = document.getElementById('domain-details-empty');
+        var _a;
         setLoading(false);
+        const manualCard = document.getElementById('domain-details-empty');
         manualCard === null || manualCard === void 0 ? void 0 : manualCard.classList.remove('d-none');
-        document.getElementById('domain-details-content') === null || document.getElementById('domain-details-content') === void 0 ? void 0 : document.getElementById('domain-details-content').classList.add('d-none');
-        const loadButton = document.getElementById('domain-details-manual-load');
-        loadButton === null || loadButton === void 0 ? void 0 : loadButton.addEventListener('click', loadDomainFromManualInput);
+        (_a = document.getElementById('domain-details-content')) === null || _a === void 0 ? void 0 : _a.classList.add('d-none');
+        setSelectedDomainLabel(null);
+        openSelectDomainModal();
+    }
+    function openSelectDomainModal() {
         const input = document.getElementById('domain-details-manual-name');
+        if (input) {
+            input.value = currentDomainName !== null && currentDomainName !== void 0 ? currentDomainName : '';
+        }
+        showModal('domain-details-select-modal');
+        input === null || input === void 0 ? void 0 : input.focus();
         input === null || input === void 0 ? void 0 : input.addEventListener('keydown', (event) => {
             if (event.key === 'Enter') {
                 event.preventDefault();
                 loadDomainFromManualInput();
             }
         });
-        input === null || input === void 0 ? void 0 : input.focus();
     }
     async function loadDomainFromManualInput() {
+        var _a, _b;
         const input = document.getElementById('domain-details-manual-name');
-        const name = (input === null || input === void 0 ? void 0 : input.value) ? input.value.trim() : '';
+        const name = ((_a = input === null || input === void 0 ? void 0 : input.value) !== null && _a !== void 0 ? _a : '').trim();
         if (!name) {
             showError('Enter a domain name to load.');
             return;
@@ -102,8 +112,10 @@
         domainId = currentDomain.id;
         updateDomainFields(currentDomain);
         setLoading(false);
-        document.getElementById('domain-details-empty') === null || document.getElementById('domain-details-empty') === void 0 ? void 0 : document.getElementById('domain-details-empty').classList.add('d-none');
+        (_b = document.getElementById('domain-details-empty')) === null || _b === void 0 ? void 0 : _b.classList.add('d-none');
+        hideModal('domain-details-select-modal');
         await loadDnsRecords();
+        await loadDomainContacts();
     }
     function setLoading(isLoading) {
         const loading = document.getElementById('domain-details-loading');
@@ -204,6 +216,16 @@
         if (downloadButton) {
             downloadButton.disabled = !currentRegistrarCode || !currentDomainName;
         }
+        setSelectedDomainLabel(currentDomainName);
+    }
+    function setSelectedDomainLabel(domainName) {
+        const selectButton = document.getElementById('domain-details-select');
+        if (!selectButton) {
+            return;
+        }
+        selectButton.innerHTML = domainName
+            ? `<i class="bi bi-search"></i> ${esc(domainName)}`
+            : '<i class="bi bi-search"></i> Select domain';
     }
     async function loadDnsRecords() {
         const loading = document.getElementById('domain-dns-records-loading');
@@ -342,6 +364,14 @@
         }
         const modal = new window.bootstrap.Modal(element);
         modal.show();
+    }
+    function hideModal(id) {
+        const element = document.getElementById(id);
+        if (!element || !window.bootstrap) {
+            return;
+        }
+        const modal = window.bootstrap.Modal.getInstance(element);
+        modal === null || modal === void 0 ? void 0 : modal.hide();
     }
     function setupPageObserver() {
         initializePage();

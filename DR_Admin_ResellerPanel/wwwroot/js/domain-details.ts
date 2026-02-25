@@ -15,6 +15,22 @@ interface Domain {
     registrar?: { id?: number; Id?: number; name?: string; Name?: string; code?: string; Code?: string } | null;
 }
 
+interface DomainContact {
+    contactType?: string | null;
+    firstName?: string | null;
+    lastName?: string | null;
+    organization?: string | null;
+    email?: string | null;
+    phone?: string | null;
+    fax?: string | null;
+    addressLine1?: string | null;
+    addressLine2?: string | null;
+    city?: string | null;
+    stateProvince?: string | null;
+    postalCode?: string | null;
+    country?: string | null;
+}
+
 interface DnsRecord {
     id: number;
     domainId: number;
@@ -108,6 +124,8 @@ function initializePage(): void {
 
     document.getElementById('domain-dns-sync')?.addEventListener('click', openDnsSyncModal);
     document.getElementById('domain-dns-sync-confirm')?.addEventListener('click', syncDnsRecords);
+    document.getElementById('domain-details-select')?.addEventListener('click', openSelectDomainModal);
+    document.getElementById('domain-details-manual-load')?.addEventListener('click', loadDomainFromManualInput);
 
     if (!idParam || !Number.isFinite(parsed) || parsed <= 0) {
         showManualEntry();
@@ -127,18 +145,26 @@ function showManualEntry(): void {
 
     document.getElementById('domain-details-content')?.classList.add('d-none');
 
-    const loadButton = document.getElementById('domain-details-manual-load') as HTMLButtonElement | null;
-    loadButton?.addEventListener('click', loadDomainFromManualInput);
+    setSelectedDomainLabel(null);
+    openSelectDomainModal();
+}
 
+function openSelectDomainModal(): void {
     const input = document.getElementById('domain-details-manual-name') as HTMLInputElement | null;
+    if (input) {
+        input.value = currentDomainName ?? '';
+    }
+
+    showModal('domain-details-select-modal');
+
+    input?.focus();
+
     input?.addEventListener('keydown', (event) => {
         if (event.key === 'Enter') {
             event.preventDefault();
             loadDomainFromManualInput();
         }
     });
-
-    input?.focus();
 }
 
 async function loadDomainFromManualInput(): Promise<void> {
@@ -166,7 +192,9 @@ async function loadDomainFromManualInput(): Promise<void> {
     setLoading(false);
 
     document.getElementById('domain-details-empty')?.classList.add('d-none');
+    hideModal('domain-details-select-modal');
     await loadDnsRecords();
+    await loadDomainContacts();
 }
 
 function setLoading(isLoading: boolean): void {
@@ -286,6 +314,19 @@ function updateDomainFields(domain: Domain): void {
     if (downloadButton) {
         downloadButton.disabled = !currentRegistrarCode || !currentDomainName;
     }
+
+    setSelectedDomainLabel(currentDomainName);
+}
+
+function setSelectedDomainLabel(domainName: string | null): void {
+    const selectButton = document.getElementById('domain-details-select') as HTMLButtonElement | null;
+    if (!selectButton) {
+        return;
+    }
+
+    selectButton.innerHTML = domainName
+        ? `<i class="bi bi-search"></i> ${esc(domainName)}`
+        : '<i class="bi bi-search"></i> Select domain';
 }
 
 async function loadDnsRecords(): Promise<void> {
@@ -457,6 +498,16 @@ function showModal(id: string): void {
 
     const modal = new (window as any).bootstrap.Modal(element);
     modal.show();
+}
+
+function hideModal(id: string): void {
+    const element = document.getElementById(id);
+    if (!element || !(window as any).bootstrap) {
+        return;
+    }
+
+    const modal = (window as any).bootstrap.Modal.getInstance(element);
+    modal?.hide();
 }
 
 function setupPageObserver(): void {

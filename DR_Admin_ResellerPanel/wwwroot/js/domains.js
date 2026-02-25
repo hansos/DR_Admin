@@ -532,10 +532,17 @@
                 openEdit(id);
                 return;
             }
+            if (button.dataset.action === 'details') {
+                openDetails(id);
+                return;
+            }
             if (button.dataset.action === 'delete') {
                 openDelete(id, (_a = button.dataset.name) !== null && _a !== void 0 ? _a : '');
             }
         });
+    }
+    function openDetails(id) {
+        window.location.href = `/domains/details?id=${encodeURIComponent(String(id))}`;
     }
     function esc(text) {
         const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };

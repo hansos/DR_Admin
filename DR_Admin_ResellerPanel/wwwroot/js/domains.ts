@@ -686,10 +686,19 @@ function bindTableActions(): void {
             return;
         }
 
+        if (button.dataset.action === 'details') {
+            openDetails(id);
+            return;
+        }
+
         if (button.dataset.action === 'delete') {
             openDelete(id, button.dataset.name ?? '');
         }
     });
+}
+
+function openDetails(id: number): void {
+    window.location.href = `/domains/details?id=${encodeURIComponent(String(id))}`;
 }
 
 function esc(text: string): string {
