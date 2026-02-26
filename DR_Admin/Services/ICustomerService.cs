@@ -72,4 +72,12 @@ public interface ICustomerService
     /// <param name="customerId">The customer's unique identifier</param>
     /// <returns>The customer's CustomerNumber (existing or newly assigned)</returns>
     Task<long> EnsureCustomerNumberAsync(int customerId);
+
+    /// <summary>
+    /// Searches customers by a free-text query across name, customer name, email, phone,
+    /// reference number, customer number, and associated contact person names, emails and phones.
+    /// </summary>
+    /// <param name="query">The search term</param>
+    /// <returns>A list of matching customers</returns>
+    Task<List<CustomerDto>> SearchCustomersAsync(string query);
 }

@@ -1,5 +1,5 @@
 "use strict";
-(function () {
+(() => {
     const storageKey = 'new-sale-state';
     const getBootstrap = () => {
         const maybeBootstrap = window.bootstrap;
@@ -7,7 +7,7 @@
     };
     const getApiBaseUrl = () => {
         const settings = window.AppSettings;
-        return settings?.apiBaseUrl ?? settings?.ApiBaseUrl ?? '';
+        return settings?.apiBaseUrl ?? '';
     };
     const getAuthToken = () => {
         const auth = window.Auth;
@@ -18,7 +18,10 @@
     };
     const apiRequest = async (endpoint, options = {}) => {
         try {
-            const headers = { 'Content-Type': 'application/json', ...options.headers };
+            const headers = {
+                'Content-Type': 'application/json',
+                ...options.headers,
+            };
             const authToken = getAuthToken();
             if (authToken) {
                 headers['Authorization'] = `Bearer ${authToken}`;
@@ -30,18 +33,20 @@
             });
             const contentType = response.headers.get('content-type') ?? '';
             const hasJson = contentType.includes('application/json');
-            const data = hasJson ? await response.json() : null;
+            const data = hasJson ? (await response.json()) : null;
             if (!response.ok) {
-                const message = (data && (data.message ?? data.title)) || `Request failed with status ${response.status}`;
+                const message = (data && (data.message ?? data.title)) ||
+                    `Request failed with status ${response.status}`;
                 return {
                     success: false,
                     message,
                 };
             }
+            const parsed = data;
             return {
-                success: data?.success !== false,
-                data: data?.data || data,
-                message: data?.message,
+                success: parsed?.success !== false,
+                data: parsed?.data ?? data,
+                message: parsed?.message,
             };
         }
         catch (error) {
@@ -51,39 +56,6 @@
                 message: 'Network error. Please try again.',
             };
         }
-    };
-    const extractItems = (raw) => {
-        if (Array.isArray(raw)) {
-            return { items: raw, meta: null };
-        }
-        if (!raw || typeof raw !== 'object') {
-            return { items: [], meta: null };
-        }
-        const typed = raw;
-        const nested = typed.data;
-        const nestedData = nested?.data;
-        const nestedDataAlt = nested?.Data;
-        const typedData = typed.Data;
-        const items = (Array.isArray(typed.Data) && typed.Data) ||
-            (Array.isArray(typed.data) && typed.data) ||
-            (Array.isArray(nested?.Data) && nested.Data) ||
-            (Array.isArray(nested?.data) && nested.data) ||
-            (Array.isArray(typedData?.Data) && typedData.Data) ||
-            (Array.isArray(nestedData?.Data) && nestedData.Data) ||
-            (Array.isArray(nestedDataAlt?.Data) && nestedDataAlt.Data) ||
-            [];
-        const metaCandidates = [raw, typed.data, typed.Data, nested, nestedData];
-        const meta = metaCandidates.find((candidate) => {
-            if (!candidate || typeof candidate !== 'object') {
-                return false;
-            }
-            const typedCandidate = candidate;
-            return typedCandidate.totalCount !== undefined || typedCandidate.TotalCount !== undefined ||
-                typedCandidate.totalPages !== undefined || typedCandidate.TotalPages !== undefined ||
-                typedCandidate.currentPage !== undefined || typedCandidate.CurrentPage !== undefined ||
-                typedCandidate.pageSize !== undefined || typedCandidate.PageSize !== undefined;
-        }) || null;
-        return { items, meta };
     };
     const esc = (text) => {
         const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
@@ -126,8 +98,8 @@
                 selectedRegistrarId: typed.selectedRegistrarId,
                 selectedRegistrarLabel: typed.selectedRegistrarLabel,
                 selectedDomain: typed.selectedDomain,
-                customerMode: typed.customerMode,
-                selectedCustomerId: typed.selectedCustomerId,
+                customerSearchQuery: typed.customerSearchQuery,
+                selectedCustomer: typed.selectedCustomer,
             };
         }
         catch {
@@ -138,16 +110,18 @@
         sessionStorage.setItem(storageKey, JSON.stringify(state));
     };
     const getCurrentState = () => ({
-        domainName: document.getElementById('new-sale-domain-name')?.value?.trim(),
-        selectedRegistrarId,
+        domainName: document.getElementById('new-sale-domain-name')?.value?.trim() ?? '',
+        selectedRegistrarId: selectedRegistrarId ?? undefined,
         selectedRegistrarLabel,
         selectedDomain: document.getElementById('new-sale-selected-domain')?.textContent ?? undefined,
-        customerMode: document.getElementById('new-sale-customer-new')?.checked ? 'new' : 'existing',
-        selectedCustomerId: document.getElementById('new-sale-customer-select')?.value ?? undefined,
+        customerSearchQuery: document.getElementById('new-sale-customer-search')?.value?.trim() ?? undefined,
+        selectedCustomer: selectedCustomer ?? undefined,
     });
     let registrarOptions = [];
     let selectedRegistrarId = null;
     let selectedRegistrarLabel = '';
+    let selectedCustomer = null;
+    let customerSearchTimer = null;
     let restoredState = null;
     const setRegistrarSelection = (registrarId, registrarLabel) => {
         selectedRegistrarId = registrarId ? String(registrarId) : null;
@@ -193,7 +167,7 @@
             return;
         }
         const raw = response.data;
-        const registrars = Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : [];
+        const registrars = Array.isArray(raw) ? raw : Array.isArray(raw.data) ? raw.data ?? [] : [];
         if (!registrars.length) {
             select.innerHTML = '<option value="">No registrars available</option>';
             setRegistrarSelection(null, 'Not selected');
@@ -219,70 +193,136 @@
         const restoredRegistrar = restoredState?.selectedRegistrarId
             ? registrarOptions.find((registrar) => registrar.id === restoredState?.selectedRegistrarId)
             : null;
-        const defaultRegistrar = restoredRegistrar || registrarOptions.find((registrar) => registrar.isDefault) || registrarOptions[0];
+        const defaultRegistrar = restoredRegistrar ?? registrarOptions.find((registrar) => registrar.isDefault) ?? registrarOptions[0];
         if (defaultRegistrar) {
             select.value = defaultRegistrar.id;
             setRegistrarSelection(defaultRegistrar.id, defaultRegistrar.label);
         }
     };
-    const loadCustomers = async () => {
-        const select = document.getElementById('new-sale-customer-select');
-        if (!select) {
+    const normalizeCustomer = (raw) => ({
+        id: (raw.id ?? raw.Id ?? 0),
+        name: (raw.name ?? raw.Name ?? ''),
+        customerName: (raw.customerName ?? raw.CustomerName ?? ''),
+        email: (raw.email ?? raw.Email ?? ''),
+        phone: (raw.phone ?? raw.Phone ?? ''),
+        formattedReferenceNumber: (raw.formattedReferenceNumber ?? raw.FormattedReferenceNumber ?? ''),
+        formattedCustomerNumber: (raw.formattedCustomerNumber ?? raw.FormattedCustomerNumber ?? ''),
+        status: (raw.status ?? raw.Status ?? ''),
+    });
+    const showCustomerDetail = (customer) => {
+        selectedCustomer = customer;
+        const detail = document.getElementById('new-sale-customer-detail');
+        const searchInput = document.getElementById('new-sale-customer-search');
+        if (!detail) {
             return;
         }
-        select.innerHTML = '<option value="">Loading customers...</option>';
-        const params = new URLSearchParams({ pageNumber: '1', pageSize: '100' });
-        const response = await apiRequest(`${getApiBaseUrl()}/Customers?${params.toString()}`, { method: 'GET' });
-        if (!response.success) {
-            select.innerHTML = '<option value="">Select customer</option>';
-            showError(response.message || 'Failed to load customers');
-            return;
+        const setField = (id, value) => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.textContent = value || '-';
+            }
+        };
+        setField('new-sale-customer-detail-name', customer.name);
+        setField('new-sale-customer-detail-contact', customer.customerName);
+        setField('new-sale-customer-detail-email', customer.email);
+        setField('new-sale-customer-detail-phone', customer.phone);
+        setField('new-sale-customer-detail-ref', customer.formattedReferenceNumber);
+        setField('new-sale-customer-detail-custno', customer.formattedCustomerNumber);
+        setField('new-sale-customer-detail-status', customer.status);
+        detail.classList.remove('d-none');
+        if (searchInput) {
+            searchInput.value = customer.name;
         }
-        const extracted = extractItems(response.data || null);
-        const customers = extracted.items;
-        if (!customers.length) {
-            select.innerHTML = '<option value="">No customers available</option>';
-            return;
+        const statusEl = document.getElementById('new-sale-customer-search-status');
+        if (statusEl) {
+            statusEl.innerHTML = '';
         }
-        const options = customers
-            .map((customer) => {
-            const typed = customer;
-            const id = typed.id ?? typed.Id ?? 0;
-            const name = typed.name ?? typed.Name ?? '';
-            const email = typed.email ?? typed.Email ?? '';
-            const label = email ? `${name} (${email})` : name;
-            return { id: String(id), label };
-        })
-            .sort((a, b) => a.label.localeCompare(b.label))
-            .map((customer) => `<option value="${customer.id}">${esc(customer.label)}</option>`)
-            .join('');
-        select.innerHTML = `<option value="">Select customer</option>${options}`;
-        if (restoredState?.selectedCustomerId) {
-            select.value = restoredState.selectedCustomerId;
-        }
-    };
-    const toggleCustomerOption = () => {
-        const existing = document.getElementById('new-sale-existing-customer');
-        const newCustomer = document.getElementById('new-sale-new-customer');
-        const existingRadio = document.getElementById('new-sale-customer-existing');
-        if (!existing || !newCustomer || !existingRadio) {
-            return;
-        }
-        const showExisting = existingRadio.checked;
-        existing.classList.toggle('d-none', !showExisting);
-        newCustomer.classList.toggle('d-none', showExisting);
         saveState(getCurrentState());
+    };
+    const clearCustomerSelection = () => {
+        selectedCustomer = null;
+        const detail = document.getElementById('new-sale-customer-detail');
+        detail?.classList.add('d-none');
+        const searchInput = document.getElementById('new-sale-customer-search');
+        if (searchInput) {
+            searchInput.value = '';
+            searchInput.focus();
+        }
+        const statusEl = document.getElementById('new-sale-customer-search-status');
+        if (statusEl) {
+            statusEl.innerHTML = '';
+        }
+        saveState(getCurrentState());
+    };
+    const showCustomerSelectModal = (customers) => {
+        const body = document.getElementById('new-sale-customer-select-body');
+        if (!body) {
+            return;
+        }
+        body.innerHTML = customers.map((c) => `
+            <tr>
+                <td>${esc(c.name)}</td>
+                <td>${esc(c.customerName)}</td>
+                <td>${esc(c.email)}</td>
+                <td>${esc(c.phone)}</td>
+                <td>${esc(c.formattedReferenceNumber)}</td>
+                <td class="text-end">
+                    <button type="button" class="btn btn-sm btn-primary new-sale-pick-customer" data-customer-id="${c.id}">
+                        <i class="bi bi-check-lg"></i> Select
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+        body.querySelectorAll('.new-sale-pick-customer').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const id = Number(btn.dataset.customerId);
+                const match = customers.find((c) => c.id === id);
+                if (match) {
+                    showCustomerDetail(match);
+                    hideModal('new-sale-customer-select-modal');
+                }
+            });
+        });
+        showModal('new-sale-customer-select-modal');
+    };
+    const searchCustomers = async (query) => {
+        const statusEl = document.getElementById('new-sale-customer-search-status');
+        if (!statusEl) {
+            return;
+        }
+        if (query.length < 2) {
+            statusEl.innerHTML = '';
+            return;
+        }
+        statusEl.innerHTML = '<div class="text-muted small"><div class="spinner-border spinner-border-sm me-1"></div> Searching...</div>';
+        const params = new URLSearchParams({ query });
+        const response = await apiRequest(`${getApiBaseUrl()}/Customers/search?${params.toString()}`, { method: 'GET' });
+        if (!response.success) {
+            statusEl.innerHTML = `<div class="text-danger small"><i class="bi bi-exclamation-triangle"></i> ${esc(response.message || 'Search failed')}</div>`;
+            return;
+        }
+        const raw = response.data;
+        const items = Array.isArray(raw) ? raw : Array.isArray(raw.data) ? raw.data ?? [] : [];
+        if (items.length === 0) {
+            statusEl.innerHTML = '<div class="text-warning small"><i class="bi bi-info-circle"></i> No customers found. You can create a new customer.</div>';
+            return;
+        }
+        const customers = items.map((item) => normalizeCustomer(item));
+        if (customers.length === 1) {
+            statusEl.innerHTML = '';
+            showCustomerDetail(customers[0]);
+            return;
+        }
+        statusEl.innerHTML = `<div class="text-info small"><i class="bi bi-list"></i> ${customers.length} customers found. Select one from the list.</div>`;
+        showCustomerSelectModal(customers);
     };
     const showCustomerSelection = (domainName) => {
         const card = document.getElementById('new-sale-customer-card');
         const selectedDomain = document.getElementById('new-sale-selected-domain');
-        const existingRadio = document.getElementById('new-sale-customer-existing');
-        if (!card || !selectedDomain || !existingRadio) {
+        if (!card || !selectedDomain) {
             return;
         }
         selectedDomain.textContent = domainName;
-        existingRadio.checked = true;
-        toggleCustomerOption();
         card.classList.remove('d-none');
         card.scrollIntoView({ behavior: 'smooth', block: 'start' });
         saveState(getCurrentState());
@@ -333,7 +373,7 @@
             `);
             return;
         }
-        const data = response.data || {};
+        const data = response.data ?? {};
         const isTldSupported = (data.isTldSupported ?? data.IsTldSupported) ?? true;
         const isAvailable = (data.isAvailable ?? data.IsAvailable) === true;
         if (!isTldSupported) {
@@ -371,13 +411,12 @@
     const bindEvents = () => {
         const form = document.getElementById('new-sale-search-form');
         const searchResult = document.getElementById('new-sale-search-result');
-        const existingRadio = document.getElementById('new-sale-customer-existing');
-        const newRadio = document.getElementById('new-sale-customer-new');
         const openSettings = document.getElementById('new-sale-settings-open');
         const settingsSave = document.getElementById('new-sale-settings-save');
         const settingsSelect = document.getElementById('new-sale-settings-registrar');
         const domainInput = document.getElementById('new-sale-domain-name');
-        const customerSelect = document.getElementById('new-sale-customer-select');
+        const customerSearchInput = document.getElementById('new-sale-customer-search');
+        const customerClearBtn = document.getElementById('new-sale-customer-clear');
         const createCustomerButton = document.getElementById('new-sale-create-customer');
         form?.addEventListener('submit', (event) => {
             event.preventDefault();
@@ -386,8 +425,29 @@
         domainInput?.addEventListener('input', () => {
             saveState(getCurrentState());
         });
-        customerSelect?.addEventListener('change', () => {
-            saveState(getCurrentState());
+        customerSearchInput?.addEventListener('input', () => {
+            if (selectedCustomer) {
+                selectedCustomer = null;
+                const detail = document.getElementById('new-sale-customer-detail');
+                detail?.classList.add('d-none');
+            }
+            if (customerSearchTimer !== null) {
+                clearTimeout(customerSearchTimer);
+            }
+            const query = customerSearchInput.value.trim();
+            if (query.length < 2) {
+                const statusEl = document.getElementById('new-sale-customer-search-status');
+                if (statusEl) {
+                    statusEl.innerHTML = '';
+                }
+                return;
+            }
+            customerSearchTimer = setTimeout(() => {
+                void searchCustomers(query);
+            }, 400);
+        });
+        customerClearBtn?.addEventListener('click', () => {
+            clearCustomerSelection();
         });
         searchResult?.addEventListener('click', (event) => {
             const target = event.target;
@@ -401,8 +461,6 @@
                 showSuccess(`Ready to register ${domainName}. Select a customer to continue.`);
             }
         });
-        existingRadio?.addEventListener('change', toggleCustomerOption);
-        newRadio?.addEventListener('change', toggleCustomerOption);
         openSettings?.addEventListener('click', () => {
             showModal('new-sale-settings-modal');
         });
@@ -424,7 +482,7 @@
             document.dispatchEvent(new CustomEvent('customers:open-create'));
         });
         document.addEventListener('customers:saved', () => {
-            void loadCustomers();
+            clearCustomerSelection();
         });
     };
     const applyRestoredState = () => {
@@ -435,16 +493,17 @@
         if (domainInput && restoredState.domainName) {
             domainInput.value = restoredState.domainName;
         }
-        const customerMode = restoredState.customerMode || 'existing';
-        const existingRadio = document.getElementById('new-sale-customer-existing');
-        const newRadio = document.getElementById('new-sale-customer-new');
-        if (existingRadio && newRadio) {
-            existingRadio.checked = customerMode === 'existing';
-            newRadio.checked = customerMode === 'new';
-            toggleCustomerOption();
-        }
         if (restoredState.selectedDomain) {
             showCustomerSelection(restoredState.selectedDomain);
+        }
+        if (restoredState.selectedCustomer) {
+            showCustomerDetail(restoredState.selectedCustomer);
+        }
+        else if (restoredState.customerSearchQuery) {
+            const searchInput = document.getElementById('new-sale-customer-search');
+            if (searchInput) {
+                searchInput.value = restoredState.customerSearchQuery;
+            }
         }
         if (restoredState.selectedRegistrarId && restoredState.selectedRegistrarLabel) {
             setRegistrarSelection(restoredState.selectedRegistrarId, restoredState.selectedRegistrarLabel);
@@ -460,7 +519,6 @@
         bindEvents();
         applyRestoredState();
         await loadRegistrars();
-        await loadCustomers();
     };
     const setupPageObserver = () => {
         void initializeNewSalePage();
@@ -481,3 +539,4 @@
         setupPageObserver();
     }
 })();
+//# sourceMappingURL=new-sale.js.map

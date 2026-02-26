@@ -243,6 +243,46 @@ public class CustomersController : ControllerBase
     }
 
     /// <summary>
+    /// Searches customers by a free-text query across name, customer name, email, phone,
+    /// reference number, customer number, and associated contact person details
+    /// </summary>
+    /// <param name="query">The search term (minimum 2 characters)</param>
+    /// <returns>A list of matching customers (max 50)</returns>
+    /// <response code="200">Returns the matching customers</response>
+    /// <response code="400">If the query parameter is missing or too short</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have required role (Admin, Support, or Sales)</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpGet("search")]
+    [Authorize(Policy = "Customer.Read")]
+    [ProducesResponseType(typeof(List<CustomerDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<List<CustomerDto>>> SearchCustomers([FromQuery] string query)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(query) || query.Trim().Length < 2)
+            {
+                _log.Warning("API: SearchCustomers called with insufficient query: '{Query}'", query);
+                return BadRequest("Search query must be at least 2 characters");
+            }
+
+            _log.Information("API: SearchCustomers called with query '{Query}' by user {User}", query, User.Identity?.Name);
+
+            var results = await _customerService.SearchCustomersAsync(query);
+            return Ok(results);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in SearchCustomers for query '{Query}'", query);
+            return StatusCode(500, "An error occurred while searching customers");
+        }
+    }
+
+    /// <summary>
     /// Checks if an email address exists in the customer database
     /// </summary>
     /// <param name="email">The email address to check</param>

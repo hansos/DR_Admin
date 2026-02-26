@@ -514,6 +514,54 @@ public class CustomerService : ICustomerService
     }
 
     /// <inheritdoc />
+    public async Task<List<CustomerDto>> SearchCustomersAsync(string query)
+    {
+        try
+        {
+            _log.Information("Searching customers with query: {Query}", query);
+
+            var normalizedQuery = query.Trim().ToUpperInvariant();
+
+            // Find customer IDs matched via contact persons
+            var contactCustomerIds = await _context.ContactPersons
+                .AsNoTracking()
+                .Where(cp => cp.CustomerId != null &&
+                    (cp.NormalizedFirstName.Contains(normalizedQuery) ||
+                     cp.NormalizedLastName.Contains(normalizedQuery) ||
+                     cp.Email.Contains(query) ||
+                     cp.Phone.Contains(query)))
+                .Select(cp => cp.CustomerId!.Value)
+                .Distinct()
+                .ToListAsync();
+
+            var customers = await _context.Customers
+                .AsNoTracking()
+                .Where(c =>
+                    c.NormalizedName.Contains(normalizedQuery) ||
+                    (c.NormalizedCustomerName != null && c.NormalizedCustomerName.Contains(normalizedQuery)) ||
+                    c.Email.Contains(query) ||
+                    (c.BillingEmail != null && c.BillingEmail.Contains(query)) ||
+                    c.Phone.Contains(query) ||
+                    c.ReferenceNumber.ToString().Contains(query) ||
+                    (c.CustomerNumber != null && c.CustomerNumber.ToString()!.Contains(query)) ||
+                    contactCustomerIds.Contains(c.Id))
+                .OrderBy(c => c.Name)
+                .Take(50)
+                .ToListAsync();
+
+            var customerDtos = await MapToDtosAsync(customers);
+
+            _log.Information("Customer search for '{Query}' returned {Count} results", query, customerDtos.Count);
+            return customerDtos;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while searching customers with query: {Query}", query);
+            throw;
+        }
+    }
+
+    /// <inheritdoc />
     public async Task<long> EnsureCustomerNumberAsync(int customerId)
     {
         var customer = await _context.Customers.FindAsync(customerId);
