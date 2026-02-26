@@ -36,6 +36,7 @@
         isDefaultAdministrator: boolean;
         isDefaultTech: boolean;
         isDefaultBilling: boolean;
+        isDomainGlobal: boolean;
     }
 
     interface NewSaleState {
@@ -77,6 +78,7 @@
     let customerResults: Customer[] = [];
     let selectedCustomer: Customer | null = null;
     let customerContacts: ContactPerson[] = [];
+    let globalDomainContacts: ContactPerson[] = [];
 
     const getBootstrap = (): BootstrapNamespace | null => {
         const maybeBootstrap = (window as Window & { bootstrap?: BootstrapNamespace }).bootstrap;
@@ -236,7 +238,26 @@
             isDefaultAdministrator: (typed.isDefaultAdministrator ?? typed.IsDefaultAdministrator ?? false) === true,
             isDefaultTech: (typed.isDefaultTech ?? typed.IsDefaultTech ?? false) === true,
             isDefaultBilling: (typed.isDefaultBilling ?? typed.IsDefaultBilling ?? false) === true,
+            isDomainGlobal: (typed.isDomainGlobal ?? typed.IsDomainGlobal ?? false) === true,
         };
+    };
+
+    const getSelectableContacts = (): ContactPerson[] => {
+        const byId = new Map<number, ContactPerson>();
+
+        customerContacts.forEach((contact) => {
+            byId.set(contact.id, contact);
+        });
+
+        globalDomainContacts
+            .filter((contact) => contact.isDomainGlobal)
+            .forEach((contact) => {
+                if (!byId.has(contact.id)) {
+                    byId.set(contact.id, contact);
+                }
+            });
+
+        return Array.from(byId.values());
     };
 
     const showModal = (id: string): void => {
@@ -472,25 +493,32 @@
         return labels.length ? labels.join(', ') : '—';
     };
 
-    const setRoleSelectOptions = (id: string, selectedId: number | undefined, preferenceSelector: (contact: ContactPerson) => boolean): void => {
+    const setRoleSelectOptions = (id: string, contacts: ContactPerson[], selectedId: number | undefined, preferenceSelector: (contact: ContactPerson) => boolean): void => {
         const select = document.getElementById(id) as HTMLSelectElement | null;
         if (!select) {
             return;
         }
 
-        const options = customerContacts.map((contact) => {
+        const customerContactIds = new Set<number>(customerContacts.map((contact) => contact.id));
+
+        const options = contacts.map((contact) => {
             const fullName = `${contact.firstName} ${contact.lastName}`.trim();
-            return `<option value="${contact.id}">${esc(fullName || contact.email)}</option>`;
+            const isGlobalOnlyContact = contact.isDomainGlobal && !customerContactIds.has(contact.id);
+            const label = isGlobalOnlyContact
+                ? `${fullName || contact.email} (Global)`
+                : (fullName || contact.email);
+
+            return `<option value="${contact.id}">${esc(label)}</option>`;
         }).join('');
 
         select.innerHTML = `<option value="">Select contact</option>${options}`;
 
-        if (selectedId && customerContacts.some((c) => c.id === selectedId)) {
+        if (selectedId && contacts.some((c) => c.id === selectedId)) {
             select.value = String(selectedId);
             return;
         }
 
-        const preferred = customerContacts.find(preferenceSelector) ?? customerContacts.find((c) => c.isPrimary) ?? customerContacts[0];
+        const preferred = contacts.find(preferenceSelector) ?? contacts.find((c) => c.isPrimary) ?? contacts[0];
         if (preferred) {
             select.value = String(preferred.id);
         }
@@ -519,13 +547,33 @@
             }).join('');
         }
 
+        const selectableContacts = getSelectableContacts();
         const saved = currentState?.domainContacts;
-        setRoleSelectOptions('new-sale-contact-registrant', saved?.registrantContactId, (c) => c.isDefaultOwner);
-        setRoleSelectOptions('new-sale-contact-admin', saved?.adminContactId, (c) => c.isDefaultAdministrator);
-        setRoleSelectOptions('new-sale-contact-tech', saved?.techContactId, (c) => c.isDefaultTech);
-        setRoleSelectOptions('new-sale-contact-billing', saved?.billingContactId, (c) => c.isDefaultBilling);
+        setRoleSelectOptions('new-sale-contact-registrant', selectableContacts, saved?.registrantContactId, (c) => c.isDefaultOwner);
+        setRoleSelectOptions('new-sale-contact-admin', selectableContacts, saved?.adminContactId, (c) => c.isDefaultAdministrator);
+        setRoleSelectOptions('new-sale-contact-tech', selectableContacts, saved?.techContactId, (c) => c.isDefaultTech);
+        setRoleSelectOptions('new-sale-contact-billing', selectableContacts, saved?.billingContactId, (c) => c.isDefaultBilling);
 
         saveState();
+    };
+
+    const loadGlobalDomainContacts = async (): Promise<void> => {
+        const response = await apiRequest<unknown>(`${getApiBaseUrl()}/ContactPersons/domain-global`, { method: 'GET' });
+        if (!response.success) {
+            globalDomainContacts = [];
+            return;
+        }
+
+        const raw = response.data;
+        const list = Array.isArray(raw)
+            ? raw
+            : Array.isArray((raw as { data?: unknown[] } | null)?.data)
+                ? ((raw as { data?: unknown[] }).data ?? [])
+                : Array.isArray((raw as { Data?: unknown[] } | null)?.Data)
+                    ? ((raw as { Data?: unknown[] }).Data ?? [])
+                    : [];
+
+        globalDomainContacts = list.map((item) => normalizeContactPerson(item));
     };
 
     const loadContactPersons = async (customerId: number): Promise<void> => {
@@ -545,6 +593,7 @@
         const raw = response.data;
         const list = Array.isArray(raw) ? raw : Array.isArray((raw as { data?: unknown[] } | null)?.data) ? ((raw as { data?: unknown[] }).data ?? []) : [];
         customerContacts = list.map((item) => normalizeContactPerson(item));
+        await loadGlobalDomainContacts();
         renderContacts();
     };
 

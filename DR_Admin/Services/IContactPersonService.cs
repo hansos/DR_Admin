@@ -13,6 +13,12 @@ public interface IContactPersonService
     /// </summary>
     /// <returns>A collection of contact person DTOs</returns>
     Task<IEnumerable<ContactPersonDto>> GetAllContactPersonsAsync();
+
+    /// <summary>
+    /// Retrieves all contact persons marked as domain global
+    /// </summary>
+    /// <returns>A collection of domain global contact person DTOs</returns>
+    Task<IEnumerable<ContactPersonDto>> GetDomainGlobalContactPersonsAsync();
     
     Task<PagedResult<ContactPersonDto>> GetAllContactPersonsPagedAsync(PaginationParameters parameters);
     

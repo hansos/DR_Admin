@@ -72,6 +72,36 @@ public class ContactPersonsController : ControllerBase
     }
 
     /// <summary>
+    /// Retrieves all contact persons that are available globally for domains
+    /// </summary>
+    /// <returns>List of contact persons with IsDomainGlobal set to true</returns>
+    /// <response code="200">Returns the list of domain global contact persons</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have required role (Admin, Support, or Sales)</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpGet("domain-global")]
+    [Authorize(Policy = "Customer.Read")]
+    [ProducesResponseType(typeof(IEnumerable<ContactPersonDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<IEnumerable<ContactPersonDto>>> GetDomainGlobalContactPersons()
+    {
+        try
+        {
+            _log.Information("API: GetDomainGlobalContactPersons called by user {User}", User.Identity?.Name);
+
+            var contactPersons = await _contactPersonService.GetDomainGlobalContactPersonsAsync();
+            return Ok(contactPersons);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in GetDomainGlobalContactPersons");
+            return StatusCode(500, "An error occurred while retrieving domain global contact persons");
+        }
+    }
+
+    /// <summary>
     /// Retrieves all contact persons for a specific customer
     /// </summary>
     /// <param name="customerId">The unique identifier of the customer</param>

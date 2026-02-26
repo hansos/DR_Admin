@@ -45,6 +45,35 @@ public class ContactPersonService : IContactPersonService
         }
     }
 
+    /// <summary>
+    /// Retrieves all contact persons marked as domain global
+    /// </summary>
+    /// <returns>A collection of domain global contact person DTOs</returns>
+    public async Task<IEnumerable<ContactPersonDto>> GetDomainGlobalContactPersonsAsync()
+    {
+        try
+        {
+            _log.Information("Fetching all domain global contact persons");
+
+            var contactPersons = await _context.ContactPersons
+                .AsNoTracking()
+                .Where(cp => cp.IsDomainGlobal)
+                .OrderBy(cp => cp.LastName)
+                .ThenBy(cp => cp.FirstName)
+                .ToListAsync();
+
+            var contactPersonDtos = contactPersons.Select(MapToDto);
+
+            _log.Information("Successfully fetched {Count} domain global contact persons", contactPersons.Count);
+            return contactPersonDtos;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while fetching domain global contact persons");
+            throw;
+        }
+    }
+
     public async Task<PagedResult<ContactPersonDto>> GetAllContactPersonsPagedAsync(PaginationParameters parameters)
     {
         try
