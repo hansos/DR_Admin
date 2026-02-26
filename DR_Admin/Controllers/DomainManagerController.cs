@@ -198,6 +198,68 @@ public class DomainManagerController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Generates alternative domain name suggestions based on active TLDs and variations of the provided name.
+    /// </summary>
+    /// <param name="domainName">The source domain name or label used to generate alternatives.</param>
+    /// <param name="count">Maximum number of suggestions to return. Allowed range is 1 to 200.</param>
+    /// <returns>List of alternative domain names.</returns>
+    /// <response code="200">Returns the generated list of alternative domain names</response>
+    /// <response code="400">If the request is invalid</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have required permissions</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpGet("domain/name/{domainName}/alternatives")]
+    [Authorize(Policy = "Domain.Read")]
+    [ProducesResponseType(typeof(DomainNameAlternativesResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<DomainNameAlternativesResponseDto>> GetAlternativeDomainNames(
+        string domainName,
+        [FromQuery] int count = 25)
+    {
+        try
+        {
+            _log.Information("API: GetAlternativeDomainNames called for domain {DomainName} by user {User}",
+                domainName, User.Identity?.Name);
+
+            if (string.IsNullOrWhiteSpace(domainName))
+            {
+                _log.Warning("API: GetAlternativeDomainNames called with empty domain name");
+                return BadRequest("Domain name is required");
+            }
+
+            if (count is < 1 or > 200)
+            {
+                _log.Warning("API: GetAlternativeDomainNames called with invalid count {Count}", count);
+                return BadRequest("Count must be between 1 and 200");
+            }
+
+            var suggestions = await _domainManagerService.GetAlternativeDomainNamesAsync(domainName, count);
+
+            var response = new DomainNameAlternativesResponseDto
+            {
+                InputDomainName = domainName,
+                Suggestions = suggestions.ToList(),
+                Count = suggestions.Count
+            };
+
+            return Ok(response);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _log.Warning(ex, "API: Invalid operation in GetAlternativeDomainNames for domain {DomainName}", domainName);
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in GetAlternativeDomainNames for domain {DomainName}", domainName);
+            return StatusCode(500, "An error occurred while generating alternative domain names");
+        }
+    }
+
 
     /// <summary>
     /// Downloads DNS records from the registrar for a single domain and merges them into the local database

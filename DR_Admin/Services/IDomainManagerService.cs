@@ -33,6 +33,14 @@ public interface IDomainManagerService
     Task<DomainAvailabilityResult> CheckDomainAvailabilityByNameAsync(string registrarCode, string domainName);
 
     /// <summary>
+    /// Generates alternative domain name suggestions based on active TLDs and name variations.
+    /// </summary>
+    /// <param name="domainName">The source domain name or label used for generating suggestions.</param>
+    /// <param name="maxResults">Maximum number of suggestions to return.</param>
+    /// <returns>Suggested domain names.</returns>
+    Task<IReadOnlyList<string>> GetAlternativeDomainNamesAsync(string domainName, int maxResults);
+
+    /// <summary>
     /// Downloads DNS records from the registrar for all domains assigned to that registrar
     /// and merges them into the local DnsRecord table
     /// </summary>

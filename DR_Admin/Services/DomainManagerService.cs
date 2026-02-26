@@ -7,6 +7,7 @@ using ISPAdmin.DTOs;
 using ISPAdmin.Utilities;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using System.Text;
 
 namespace ISPAdmin.Services;
 
@@ -193,6 +194,208 @@ public class DomainManagerService : IDomainManagerService
                 domainName, registrarCode);
             throw;
         }
+    }
+
+    /// <summary>
+    /// Generates alternative domain name suggestions based on active TLDs and name variations.
+    /// </summary>
+    /// <param name="domainName">The source domain name or label used for generating suggestions.</param>
+    /// <param name="maxResults">Maximum number of suggestions to return.</param>
+    /// <returns>Suggested domain names.</returns>
+    public async Task<IReadOnlyList<string>> GetAlternativeDomainNamesAsync(string domainName, int maxResults)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(domainName))
+            {
+                throw new InvalidOperationException("Domain name is required");
+            }
+
+            var clampedMaxResults = Math.Clamp(maxResults, 1, 200);
+            var baseLabel = ExtractBaseLabel(domainName);
+
+            if (string.IsNullOrWhiteSpace(baseLabel))
+            {
+                throw new InvalidOperationException("Unable to generate variations from the provided domain name");
+            }
+
+            var activeTlds = await _context.Tlds
+                .AsNoTracking()
+                .Where(t => t.IsActive)
+                .Select(t => t.Extension)
+                .ToListAsync();
+
+            var normalizedTlds = activeTlds
+                .Select(NormalizeTld)
+                .Where(t => !string.IsNullOrWhiteSpace(t))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(t => t)
+                .ToList();
+
+            if (normalizedTlds.Count == 0)
+            {
+                return Array.Empty<string>();
+            }
+
+            var normalizedInputDomain = NormalizeDomainName(domainName);
+            var labelVariations = BuildLabelVariations(baseLabel);
+
+            var suggestions = new List<string>();
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var label in labelVariations)
+            {
+                foreach (var tld in normalizedTlds)
+                {
+                    var candidate = $"{label}.{tld}";
+
+                    if (candidate.Equals(normalizedInputDomain, StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    if (seen.Add(candidate))
+                    {
+                        suggestions.Add(candidate);
+                    }
+
+                    if (suggestions.Count >= clampedMaxResults)
+                    {
+                        return suggestions;
+                    }
+                }
+            }
+
+            return suggestions;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error generating alternative domain names for input {DomainName}", domainName);
+            throw;
+        }
+    }
+
+    private static string ExtractBaseLabel(string domainName)
+    {
+        var normalized = domainName.Trim().ToLowerInvariant();
+
+        if (normalized.Contains("//", StringComparison.Ordinal))
+        {
+            if (Uri.TryCreate(normalized, UriKind.Absolute, out var uri))
+            {
+                normalized = uri.Host;
+            }
+        }
+
+        var firstSeparatorIndex = normalized.IndexOfAny(new[] { '/', '?', '#' });
+        if (firstSeparatorIndex >= 0)
+        {
+            normalized = normalized[..firstSeparatorIndex];
+        }
+
+        normalized = normalized.Trim('.');
+
+        if (normalized.StartsWith("www.", StringComparison.OrdinalIgnoreCase))
+        {
+            normalized = normalized[4..];
+        }
+
+        var firstDotIndex = normalized.IndexOf('.');
+        if (firstDotIndex > 0)
+        {
+            normalized = normalized[..firstDotIndex];
+        }
+
+        var builder = new StringBuilder();
+        foreach (var c in normalized)
+        {
+            if (char.IsLetterOrDigit(c) || c == '-')
+            {
+                builder.Append(c);
+            }
+            else
+            {
+                builder.Append('-');
+            }
+        }
+
+        var cleaned = builder.ToString();
+        while (cleaned.Contains("--", StringComparison.Ordinal))
+        {
+            cleaned = cleaned.Replace("--", "-", StringComparison.Ordinal);
+        }
+
+        cleaned = cleaned.Trim('-');
+        return cleaned.Length > 63 ? cleaned[..63] : cleaned;
+    }
+
+    private static List<string> BuildLabelVariations(string baseLabel)
+    {
+        var variations = new List<string>();
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        AddVariation(baseLabel, seen, variations);
+        AddVariation(baseLabel.Replace("-", string.Empty, StringComparison.Ordinal), seen, variations);
+        AddVariation($"{baseLabel}online", seen, variations);
+        AddVariation($"{baseLabel}app", seen, variations);
+        AddVariation($"{baseLabel}hq", seen, variations);
+        AddVariation($"get{baseLabel}", seen, variations);
+
+        if (baseLabel.EndsWith('s') && baseLabel.Length > 1)
+        {
+            AddVariation(baseLabel[..^1], seen, variations);
+        }
+        else
+        {
+            AddVariation($"{baseLabel}s", seen, variations);
+        }
+
+        return variations;
+    }
+
+    private static void AddVariation(string label, HashSet<string> seen, List<string> variations)
+    {
+        if (string.IsNullOrWhiteSpace(label))
+        {
+            return;
+        }
+
+        var candidate = label.Trim('-').ToLowerInvariant();
+
+        if (candidate.Length is < 2 or > 63)
+        {
+            return;
+        }
+
+        if (seen.Add(candidate))
+        {
+            variations.Add(candidate);
+        }
+    }
+
+    private static string NormalizeTld(string extension)
+    {
+        var normalized = extension.Trim().Trim('.').ToLowerInvariant();
+        return normalized;
+    }
+
+    private static string NormalizeDomainName(string domainName)
+    {
+        var normalized = domainName.Trim().ToLowerInvariant();
+
+        if (normalized.Contains("//", StringComparison.Ordinal) &&
+            Uri.TryCreate(normalized, UriKind.Absolute, out var uri))
+        {
+            normalized = uri.Host;
+        }
+
+        var firstSeparatorIndex = normalized.IndexOfAny(new[] { '/', '?', '#' });
+        if (firstSeparatorIndex >= 0)
+        {
+            normalized = normalized[..firstSeparatorIndex];
+        }
+
+        return normalized.Trim('.');
     }
 
     private int CalculateYears(Data.Entities.RegisteredDomain domain)
