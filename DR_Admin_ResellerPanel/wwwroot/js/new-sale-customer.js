@@ -193,6 +193,51 @@
         const value = Number(el?.value ?? '');
         return Number.isFinite(value) && value > 0 ? value : null;
     };
+    const setInputValue = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.value = value;
+        }
+    };
+    const setCheckboxValue = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.checked = value;
+        }
+    };
+    const getCustomerSelectionState = () => {
+        const advancedSection = document.getElementById('new-sale-customer-advanced');
+        return {
+            query: getInput('new-sale-customer-query'),
+            name: getInput('new-sale-customer-name'),
+            email: getInput('new-sale-customer-email'),
+            phone: getInput('new-sale-customer-phone'),
+            status: getInput('new-sale-customer-status'),
+            customerNumber: getInput('new-sale-customer-customer-number'),
+            referenceNumber: getInput('new-sale-customer-reference-number'),
+            onlyActive: getCheckbox('new-sale-customer-only-active'),
+            onlyCompany: getCheckbox('new-sale-customer-only-company'),
+            advancedVisible: !advancedSection?.classList.contains('d-none'),
+        };
+    };
+    const restoreCustomerSelectionState = () => {
+        const saved = currentState?.customerSelection;
+        if (!saved) {
+            return;
+        }
+        setInputValue('new-sale-customer-query', saved.query ?? '');
+        setInputValue('new-sale-customer-name', saved.name ?? '');
+        setInputValue('new-sale-customer-email', saved.email ?? '');
+        setInputValue('new-sale-customer-phone', saved.phone ?? '');
+        setInputValue('new-sale-customer-status', saved.status ?? '');
+        setInputValue('new-sale-customer-customer-number', saved.customerNumber ?? '');
+        setInputValue('new-sale-customer-reference-number', saved.referenceNumber ?? '');
+        setCheckboxValue('new-sale-customer-only-active', saved.onlyActive === true);
+        setCheckboxValue('new-sale-customer-only-company', saved.onlyCompany === true);
+        if (saved.advancedVisible) {
+            document.getElementById('new-sale-customer-advanced')?.classList.remove('d-none');
+        }
+    };
     const setContextHeader = () => {
         if (!currentState) {
             return;
@@ -486,6 +531,7 @@
         if (status) {
             status.innerHTML = '';
         }
+        saveState();
     };
     const openAddContactModal = () => {
         if (!selectedCustomer) {
@@ -557,9 +603,25 @@
         const toggleAdvanced = document.getElementById('new-sale-customer-advanced-toggle');
         const nextButton = document.getElementById('new-sale-customer-next');
         const clearSelection = document.getElementById('new-sale-customer-clear-selection');
+        const stateInputIds = [
+            'new-sale-customer-query',
+            'new-sale-customer-name',
+            'new-sale-customer-email',
+            'new-sale-customer-phone',
+            'new-sale-customer-status',
+            'new-sale-customer-customer-number',
+            'new-sale-customer-reference-number',
+        ];
+        const stateCheckboxIds = ['new-sale-customer-only-active', 'new-sale-customer-only-company'];
         form?.addEventListener('submit', (event) => {
             event.preventDefault();
             void runCustomerSearch();
+        });
+        stateInputIds.forEach((id) => {
+            document.getElementById(id)?.addEventListener('input', saveState);
+        });
+        stateCheckboxIds.forEach((id) => {
+            document.getElementById(id)?.addEventListener('change', saveState);
         });
         tableBody?.addEventListener('click', (event) => {
             const target = event.target;
@@ -583,6 +645,7 @@
         toggleAdvanced?.addEventListener('click', () => {
             const section = document.getElementById('new-sale-customer-advanced');
             section?.classList.toggle('d-none');
+            saveState();
         });
         clearSelection?.addEventListener('click', () => {
             selectedCustomer = null;
@@ -620,6 +683,7 @@
             return;
         }
         setContextHeader();
+        restoreCustomerSelectionState();
         bindEvents();
         await restoreSelectedCustomer();
     };
