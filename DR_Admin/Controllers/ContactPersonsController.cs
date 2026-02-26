@@ -235,6 +235,55 @@ public class ContactPersonsController : ControllerBase
     }
 
     /// <summary>
+    /// Updates the IsDomainGlobal flag for an existing contact person
+    /// </summary>
+    /// <param name="id">The unique identifier of the contact person to update</param>
+    /// <param name="updateDto">The new IsDomainGlobal value</param>
+    /// <returns>The updated contact person</returns>
+    /// <response code="200">Returns the updated contact person</response>
+    /// <response code="400">If the request body is invalid</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have Admin role</response>
+    /// <response code="404">If contact person is not found</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpPatch("{id}/domain-global")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ContactPersonDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<ContactPersonDto>> PatchContactPersonIsDomainGlobal(int id, [FromBody] UpdateContactPersonIsDomainGlobalDto updateDto)
+    {
+        try
+        {
+            _log.Information("API: PatchContactPersonIsDomainGlobal called for ID {ContactPersonId} by user {User}", id, User.Identity?.Name);
+
+            if (!ModelState.IsValid)
+            {
+                _log.Warning("API: Invalid model state for PatchContactPersonIsDomainGlobal");
+                return BadRequest(ModelState);
+            }
+
+            var contactPerson = await _contactPersonService.UpdateContactPersonIsDomainGlobalAsync(id, updateDto.IsDomainGlobal);
+
+            if (contactPerson == null)
+            {
+                _log.Information("API: Contact person with ID {ContactPersonId} not found for IsDomainGlobal patch", id);
+                return NotFound($"Contact person with ID {id} not found");
+            }
+
+            return Ok(contactPerson);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in PatchContactPersonIsDomainGlobal for ID {ContactPersonId}", id);
+            return StatusCode(500, "An error occurred while updating contact person IsDomainGlobal");
+        }
+    }
+
+    /// <summary>
     /// Deletes a contact person from the system
     /// </summary>
     /// <param name="id">The unique identifier of the contact person to delete</param>

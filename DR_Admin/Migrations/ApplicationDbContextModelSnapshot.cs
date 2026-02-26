@@ -245,6 +245,9 @@ namespace ISPAdmin.Migrations
                     b.Property<bool>("IsDefaultTech")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("IsDomainGlobal")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("IsPrimary")
                         .HasColumnType("INTEGER");
 

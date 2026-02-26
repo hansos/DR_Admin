@@ -19,6 +19,7 @@
         "registry-apis.ts",
         "expiring-domains.ts",
         "new-sale.ts",
+        "new-sale-customer.ts",
         "domains.ts",
         "tlds.ts",
         "dns-zones.ts",

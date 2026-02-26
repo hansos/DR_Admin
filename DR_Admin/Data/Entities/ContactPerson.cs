@@ -69,6 +69,11 @@ public class ContactPerson : EntityBase
     /// Gets or sets whether this contact person is the default administrative contact for domain registrations
     /// </summary>
     public bool IsDefaultAdministrator { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether this contact person can be used globally across domains
+    /// </summary>
+    public bool IsDomainGlobal { get; set; }
     
     /// <summary>
     /// Gets or sets the normalized version of the first name for case-insensitive searches

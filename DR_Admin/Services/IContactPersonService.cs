@@ -44,6 +44,14 @@ public interface IContactPersonService
     /// <param name="updateDto">The contact person update data</param>
     /// <returns>The updated contact person DTO if found, otherwise null</returns>
     Task<ContactPersonDto?> UpdateContactPersonAsync(int id, UpdateContactPersonDto updateDto);
+
+    /// <summary>
+    /// Updates the domain global flag for an existing contact person
+    /// </summary>
+    /// <param name="id">The contact person ID</param>
+    /// <param name="isDomainGlobal">The new domain global value</param>
+    /// <returns>The updated contact person DTO if found, otherwise null</returns>
+    Task<ContactPersonDto?> UpdateContactPersonIsDomainGlobalAsync(int id, bool isDomainGlobal);
     
     /// <summary>
     /// Deletes a contact person

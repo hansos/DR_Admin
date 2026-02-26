@@ -89,6 +89,11 @@ public class ContactPersonDto
     /// Gets or sets whether this contact person is the default administrative contact for domain registrations
     /// </summary>
     public bool IsDefaultAdministrator { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether this contact person can be used globally across domains
+    /// </summary>
+    public bool IsDomainGlobal { get; set; }
 }
 
 /// <summary>
@@ -165,6 +170,22 @@ public class CreateContactPersonDto
     /// Whether this contact person is the default administrative contact for domain registrations
     /// </summary>
     public bool IsDefaultAdministrator { get; set; }
+
+    /// <summary>
+    /// Whether this contact person can be used globally across domains
+    /// </summary>
+    public bool IsDomainGlobal { get; set; }
+}
+
+/// <summary>
+/// Data transfer object for updating the domain global flag for an existing contact person
+/// </summary>
+public class UpdateContactPersonIsDomainGlobalDto
+{
+    /// <summary>
+    /// Whether this contact person can be used globally across domains
+    /// </summary>
+    public bool IsDomainGlobal { get; set; }
 }
 
 /// <summary>
@@ -241,4 +262,9 @@ public class UpdateContactPersonDto
     /// Whether this contact person is the default administrative contact for domain registrations
     /// </summary>
     public bool IsDefaultAdministrator { get; set; }
+
+    /// <summary>
+    /// Whether this contact person can be used globally across domains
+    /// </summary>
+    public bool IsDomainGlobal { get; set; }
 }

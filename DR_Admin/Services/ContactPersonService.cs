@@ -170,6 +170,7 @@ public class ContactPersonService : IContactPersonService
                 IsDefaultBilling = createDto.IsDefaultBilling,
                 IsDefaultTech = createDto.IsDefaultTech,
                 IsDefaultAdministrator = createDto.IsDefaultAdministrator,
+                IsDomainGlobal = false,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -231,6 +232,41 @@ public class ContactPersonService : IContactPersonService
         catch (Exception ex)
         {
             _log.Error(ex, "Error occurred while updating contact person with ID: {ContactPersonId}", id);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Updates only the domain global flag for an existing contact person
+    /// </summary>
+    /// <param name="id">The contact person ID</param>
+    /// <param name="isDomainGlobal">The new domain global value</param>
+    /// <returns>The updated contact person DTO if found, otherwise null</returns>
+    public async Task<ContactPersonDto?> UpdateContactPersonIsDomainGlobalAsync(int id, bool isDomainGlobal)
+    {
+        try
+        {
+            _log.Information("Updating IsDomainGlobal for contact person with ID: {ContactPersonId} to {IsDomainGlobal}", id, isDomainGlobal);
+
+            var contactPerson = await _context.ContactPersons.FindAsync(id);
+
+            if (contactPerson == null)
+            {
+                _log.Warning("Contact person with ID {ContactPersonId} not found for IsDomainGlobal update", id);
+                return null;
+            }
+
+            contactPerson.IsDomainGlobal = isDomainGlobal;
+            contactPerson.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            _log.Information("Successfully updated IsDomainGlobal for contact person with ID: {ContactPersonId}", id);
+            return MapToDto(contactPerson);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while updating IsDomainGlobal for contact person with ID: {ContactPersonId}", id);
             throw;
         }
     }
@@ -405,6 +441,7 @@ public class ContactPersonService : IContactPersonService
             IsDefaultBilling = contactPerson.IsDefaultBilling,
             IsDefaultTech = contactPerson.IsDefaultTech,
             IsDefaultAdministrator = contactPerson.IsDefaultAdministrator,
+            IsDomainGlobal = contactPerson.IsDomainGlobal,
             CreatedAt = contactPerson.CreatedAt,
             UpdatedAt = contactPerson.UpdatedAt
         };

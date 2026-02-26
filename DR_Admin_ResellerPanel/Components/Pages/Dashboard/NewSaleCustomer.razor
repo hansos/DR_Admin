@@ -1,0 +1,263 @@
+@page "/dashboard/new-sale/customer"
+
+<div id="dashboard-new-sale-customer-page" class="container-fluid">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+        <div>
+            <h2 class="h4 mb-1"><i class="bi bi-people"></i> New sale</h2>
+            <p class="text-muted mb-0">Page 2 of 7: Select or create customer.</p>
+        </div>
+    </div>
+
+    <div id="new-sale-customer-alert-success" class="alert alert-success d-none" role="alert"></div>
+    <div id="new-sale-customer-alert-error" class="alert alert-danger d-none" role="alert"></div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0"><i class="bi bi-info-circle"></i> Domain context</h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-12 col-md-4">
+                    <div class="text-muted small">Domain</div>
+                    <div class="fw-semibold" id="new-sale-customer-domain">-</div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <div class="text-muted small">Flow type</div>
+                    <div class="fw-semibold" id="new-sale-customer-flow">-</div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <div class="text-muted small">Registrar</div>
+                    <div class="fw-semibold" id="new-sale-customer-registrar">-</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <h5 class="mb-0"><i class="bi bi-search"></i> Customer search</h5>
+            <button class="btn btn-outline-primary btn-sm" type="button" id="new-sale-customer-create">
+                <i class="bi bi-person-plus"></i> Create customer
+            </button>
+        </div>
+        <div class="card-body">
+            <form id="new-sale-customer-search-form" novalidate>
+                <div class="row g-2 align-items-end">
+                    <div class="col-12 col-lg-9">
+                        <label class="form-label" for="new-sale-customer-query">Search query</label>
+                        <input class="form-control" id="new-sale-customer-query" type="text" placeholder="Name, email, phone, customer #, reference #" autocomplete="off" />
+                    </div>
+                    <div class="col-12 col-lg-3 d-grid">
+                        <button class="btn btn-primary" type="submit"><i class="bi bi-search"></i> Search</button>
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <button class="btn btn-sm btn-outline-secondary" type="button" id="new-sale-customer-advanced-toggle">
+                        <i class="bi bi-sliders"></i> Advanced search
+                    </button>
+                </div>
+
+                <div id="new-sale-customer-advanced" class="row g-2 mt-2 d-none">
+                    <div class="col-12 col-md-4">
+                        <label class="form-label" for="new-sale-customer-name">Name</label>
+                        <input class="form-control" id="new-sale-customer-name" type="text" />
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label" for="new-sale-customer-email">Email</label>
+                        <input class="form-control" id="new-sale-customer-email" type="text" />
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label" for="new-sale-customer-phone">Phone</label>
+                        <input class="form-control" id="new-sale-customer-phone" type="text" />
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label" for="new-sale-customer-status">Status</label>
+                        <input class="form-control" id="new-sale-customer-status" type="text" placeholder="Active" />
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label" for="new-sale-customer-customer-number">Customer #</label>
+                        <input class="form-control" id="new-sale-customer-customer-number" type="text" />
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label" for="new-sale-customer-reference-number">Reference #</label>
+                        <input class="form-control" id="new-sale-customer-reference-number" type="text" />
+                    </div>
+                    <div class="col-12 d-flex flex-wrap gap-3 mt-1">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="new-sale-customer-only-active" />
+                            <label class="form-check-label" for="new-sale-customer-only-active">Only active</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="new-sale-customer-only-company" />
+                            <label class="form-check-label" for="new-sale-customer-only-company">Only company</label>
+                        </div>
+                        <button class="btn btn-sm btn-outline-secondary ms-auto" type="button" id="new-sale-customer-reset">Reset filters</button>
+                    </div>
+                </div>
+            </form>
+
+            <div id="new-sale-customer-search-status" class="mt-3"></div>
+
+            <div class="table-responsive mt-3">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Status</th>
+                            <th>Customer #</th>
+                            <th>Reference #</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="new-sale-customer-results-body">
+                        <tr><td colspan="8" class="text-center text-muted">Run a search to list customers.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4 d-none" id="new-sale-customer-selected-card">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-person-check"></i> Selected customer</h5>
+            <button class="btn btn-sm btn-outline-secondary" type="button" id="new-sale-customer-clear-selection"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="card-body">
+            <div id="new-sale-customer-selected-summary"></div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4 d-none" id="new-sale-contact-persons-card">
+        <div class="card-header bg-light d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <h5 class="mb-0"><i class="bi bi-person-lines-fill"></i> Domain contacts</h5>
+            <button class="btn btn-outline-primary btn-sm" type="button" id="new-sale-contact-add">
+                <i class="bi bi-plus-circle"></i> Add contact person
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="row g-2 mb-3">
+                <div class="col-12 col-md-6 col-lg-3">
+                    <label class="form-label" for="new-sale-contact-registrant">Registrant</label>
+                    <select class="form-select" id="new-sale-contact-registrant"><option value="">Select contact</option></select>
+                </div>
+                <div class="col-12 col-md-6 col-lg-3">
+                    <label class="form-label" for="new-sale-contact-admin">Administrative</label>
+                    <select class="form-select" id="new-sale-contact-admin"><option value="">Select contact</option></select>
+                </div>
+                <div class="col-12 col-md-6 col-lg-3">
+                    <label class="form-label" for="new-sale-contact-tech">Technical</label>
+                    <select class="form-select" id="new-sale-contact-tech"><option value="">Select contact</option></select>
+                </div>
+                <div class="col-12 col-md-6 col-lg-3">
+                    <label class="form-label" for="new-sale-contact-billing">Billing</label>
+                    <select class="form-select" id="new-sale-contact-billing"><option value="">Select contact</option></select>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Defaults</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="new-sale-contact-persons-body">
+                        <tr><td colspan="5" class="text-center text-muted">No contact persons found for selected customer.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between gap-2 mb-4">
+        <a class="btn btn-outline-secondary" href="/dashboard/new-sale"><i class="bi bi-arrow-left"></i> Back</a>
+        <button class="btn btn-primary" id="new-sale-customer-next" type="button">
+            Continue to Page 3 <i class="bi bi-arrow-right"></i>
+        </button>
+    </div>
+</div>
+
+<CustomerModal />
+
+<div class="modal fade" id="new-sale-contact-add-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add contact person</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="new-sale-contact-add-form" novalidate>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="form-label" for="new-sale-contact-first-name">First name</label>
+                            <input class="form-control" id="new-sale-contact-first-name" type="text" />
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label" for="new-sale-contact-last-name">Last name</label>
+                            <input class="form-control" id="new-sale-contact-last-name" type="text" />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="new-sale-contact-email">Email</label>
+                            <input class="form-control" id="new-sale-contact-email" type="email" />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="new-sale-contact-phone">Phone</label>
+                            <input class="form-control" id="new-sale-contact-phone" type="text" />
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label" for="new-sale-contact-position">Position</label>
+                            <input class="form-control" id="new-sale-contact-position" type="text" />
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label" for="new-sale-contact-department">Department</label>
+                            <input class="form-control" id="new-sale-contact-department" type="text" />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="new-sale-contact-notes">Notes</label>
+                            <textarea class="form-control" id="new-sale-contact-notes" rows="2"></textarea>
+                        </div>
+                        <div class="col-12 d-flex flex-wrap gap-3 mt-1">
+                            <div class="form-check">
+                                <input class="form-check-input" id="new-sale-contact-primary" type="checkbox" />
+                                <label class="form-check-label" for="new-sale-contact-primary">Primary</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" id="new-sale-contact-active" type="checkbox" checked />
+                                <label class="form-check-label" for="new-sale-contact-active">Active</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" id="new-sale-contact-default-owner" type="checkbox" />
+                                <label class="form-check-label" for="new-sale-contact-default-owner">Default owner</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" id="new-sale-contact-default-admin" type="checkbox" />
+                                <label class="form-check-label" for="new-sale-contact-default-admin">Default admin</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" id="new-sale-contact-default-tech" type="checkbox" />
+                                <label class="form-check-label" for="new-sale-contact-default-tech">Default tech</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" id="new-sale-contact-default-billing" type="checkbox" />
+                                <label class="form-check-label" for="new-sale-contact-default-billing">Default billing</label>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="new-sale-contact-add-save"><i class="bi bi-check-lg"></i> Save</button>
+            </div>
+        </div>
+    </div>
+</div>
