@@ -23,6 +23,7 @@
         "new-sale.ts",
         "new-sale-customer.ts",
         "new-sale-hosting.ts",
+        "new-sale-services.ts",
         "domains.ts",
         "tlds.ts",
         "dns-zones.ts",
