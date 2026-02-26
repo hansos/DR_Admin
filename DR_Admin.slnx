@@ -6,6 +6,9 @@
     <File Path="ai-prompts/main_instructions.md" />
     <File Path="ai-prompts/reseller-panel.md" />
   </Folder>
+  <Folder Name="/Documentation/">
+    <File Path="Documentation/SalesWorkflow.md" />
+  </Folder>
   <Project Path="DomainRegistrationLib/DomainRegistrationLib.csproj" />
   <Project Path="DR_Admin.IntegrationTests/DR_Admin.IntegrationTests.csproj" />
   <Project Path="DR_Admin/DR_Admin.csproj" />

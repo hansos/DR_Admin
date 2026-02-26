@@ -6,51 +6,110 @@ This document describes the end-to-end workflow a reseller follows when selling 
 
 ## Overview
 
-The sales process is a linear, step-by-step flow. Each step must complete before proceeding to the next. The reseller starts by checking domain availability, identifies or creates a customer, configures the order (domain and/or hosting), reviews a quote, and finalises the sale.
+The sales process is split across seven pages. Each page handles one concern and must complete before the reseller can proceed. Page 1 determines what is being sold and how (registration, transfer, or existing-domain action) through a set of sub-outcomes. Pages 2–4 build the order. Page 5 presents the offer. Pages 6–7 handle payment, provisioning, and delivery.
 
 ```mermaid
 flowchart TD
-    A["1 · Check Domain Availability"] --> B["2 · Select or Create Customer"]
-    B --> C["3 · Configure Order Items"]
-    C --> D["4 · Review Quote"]
-    D --> E["5 · Place Order"]
-    E --> F["6 · Process Payment"]
-    F --> G["7 · Provision Services"]
-    G --> H["8 · Send Invoice & Credentials"]
+    P1["Page 1 · Domain & Registrar"] --> P1A{"Outcome?"}
+    P1A -->|1A · TLD unsupported| P1X["Change registrar"]
+    P1X --> P1
+    P1A -->|1B · Available| P2R["Page 2 — Registration flow"]
+    P1A -->|1C · Transferable| P2T["Page 2 — Transfer flow"]
+    P1A -->|1D · In our system| P1D["Inform and choose action"]
+    P1D --> P2E["Page 2 — Existing-domain flow"]
+    P1A -->|1E · TLD supported, other results| P1E["Select alternative domain"]
+    P1E --> P1
+    P2R --> P3["Page 3 · Add Hosting"]
+    P2T --> P3
+    P2E --> P3
+    P3 --> P4["Page 4 · Add Other Services"]
+    P4 --> P5["Page 5 · Present Offer"]
+    P5 --> P6["Page 6 · Process Payment"]
+    P6 --> P7["Page 7 · Invoice & Credentials"]
 ```
+
+### Page map
+
+| Page | Route                          | Responsibility                                                                  |
+| ---- | ------------------------------ | ------------------------------------------------------------------------------- |
+| 1    | `/dashboard/new-sale`          | Domain name input, registrar selection, availability check, sub-outcome routing |
+| 2    | `/dashboard/new-sale/customer` | Search / create customer, associate with sale                                   |
+| 3    | `/dashboard/new-sale/hosting`  | Optional hosting package and billing cycle                                      |
+| 4    | `/dashboard/new-sale/services` | Optional add-ons (email, SSL, DNS, custom)                                      |
+| 5    | `/dashboard/new-sale/offer`    | Quote summary, send to customer or accept                                       |
+| 6    | `/dashboard/new-sale/payment`  | Payment gateway selection and processing                                        |
+| 7    | `/dashboard/new-sale/complete` | Provisioning status, invoice delivery, credentials                              |
 
 ---
 
-## Step 1 — Check Domain Availability
+## Page 1 — Domain & Registrar
 
-The reseller enters a domain name and selects a registrar. The system checks availability via the registrar API (`DomainManagerService.CheckDomainAvailabilityByNameAsync`) and queries the internal database through `RegisteredDomainService` to confirm the domain is not already managed.
-
-### Possible outcomes
-
-| Result                                      | Next Action                                     |
-| ------------------------------------------- | ----------------------------------------------- |
-| Available for registration                  | Proceed to Step 2 — **Registration** flow       |
-| Already registered elsewhere (transferable) | Proceed to Step 2 — **Transfer** flow           |
-| Already in our system                       | Show error — domain cannot be sold again        |
-| TLD not supported by selected registrar     | Prompt reseller to choose a different registrar |
-
-The availability response includes pricing, premium status, and suggested alternatives when the exact domain is taken.
+The reseller enters a domain name and selects a registrar. The system checks availability via the registrar API (`DomainManagerService.CheckDomainAvailabilityByNameAsync`) and queries the internal database through `RegisteredDomainService` to confirm the domain is not already managed. The result determines which sub-outcome is shown.
 
 ```mermaid
 flowchart TD
-    A["Reseller enters domain name"] --> B["Select registrar"]
+    A["Enter domain name"] --> B["Select registrar"]
     B --> C{"Check availability"}
-    C -->|Available| D["Continue — Registration"]
-    C -->|Taken but transferable| E["Continue — Transfer"]
-    C -->|In our system| F["Show error"]
-    C -->|TLD unsupported| G["Prompt registrar change"]
+    C -->|1A| D["TLD unsupported"]
+    C -->|1B| E["Available — register"]
+    C -->|1C| F["Taken — transferable"]
+    C -->|1D| G["In our system"]
+    C -->|1E| H["TLD supported, other alternatives"]
+    D --> I["Change registrar → re-check"]
+    I --> C
+    E --> J["Page 2"]
+    F --> J
+    G --> K["Inform reseller, choose action"]
+    K --> J
+    H --> L["Select alternative domain"]
+    L --> C
+```
+
+### 1A — TLD unsupported
+
+The selected registrar does not support the TLD. The reseller is prompted to choose a different registrar. The page stays on Page 1 and re-runs the availability check after the change.
+
+### 1B — Available for registration
+
+The domain is available. The availability response includes pricing and premium status. The reseller clicks **Register domain** and proceeds to Page 2 with `flowType = register`.
+
+### 1C — Taken but transferable
+
+The domain is registered at another registrar but can be transferred. The reseller clicks **Transfer domain** and proceeds to Page 2 with `flowType = transfer`. The transfer flow will require an authorisation / EPP code on a later page.
+
+### 1D — Already in our system
+
+The domain is already managed internally. The system shows the existing domain record (owner, status, expiry). The reseller is presented with options appropriate to the situation:
+
+- **Renew** — extend the registration period
+- **Add services** — attach hosting or other products to the existing domain
+- **Contact owner** — if the domain belongs to a different customer
+
+The chosen action determines the `flowType` passed to Page 2.
+
+### 1E — TLD supported, select alternative
+
+The exact domain is not available but the TLD is supported. The system returns suggested alternatives (different TLDs or name variations). The reseller can select an alternative and re-run the check, or enter a new domain name entirely. The page stays on Page 1 until a domain is confirmed.
+
+### State handoff
+
+When leaving Page 1 the following state is saved to `sessionStorage` under the key `new-sale-state`:
+
+```json
+{
+  "domainName": "example.com",
+  "selectedRegistrarId": "3",
+  "selectedRegistrarLabel": "Namecheap (namecheap)",
+  "flowType": "register | transfer | renew | add-services",
+  "pricing": { "registration": 12.99, "currency": "EUR" }
+}
 ```
 
 ---
 
-## Step 2 — Select or Create Customer
+## Page 2 — Select or Create Customer
 
-Once a domain and flow type (registration or transfer) are determined, the reseller must associate the sale with a customer.
+The reseller must associate the sale with a customer. The `flowType` from Page 1 is displayed as context (e.g. “Registering example.com” or “Transferring example.com”).
 
 ### Existing Customer
 
@@ -66,41 +125,18 @@ flowchart TD
     B -->|Single match| C["Auto-select customer"]
     B -->|Multiple matches| D["Show selection modal"]
     B -->|No match| E["Create new customer"]
-    C --> F["Proceed to Step 3"]
+    C --> F["Proceed to Page 3"]
     D --> F
     E --> F
 ```
 
 ---
 
-## Step 3 — Configure Order Items
+## Page 3 — Add Hosting
 
-With a customer selected and a domain identified the reseller configures what is being sold. A single sale can include multiple items.
+The reseller optionally adds a hosting package to the order. This page is always shown but can be skipped.
 
-### 3a · Domain Registration
-
-Applicable when the domain is available. The reseller configures:
-
-- **Registration period** — 1 to 10 years
-- **Auto-renew** preference
-- **Privacy protection** (WHOIS guard)
-- **Registrar** — pre-selected from Step 1
-
-Pricing is resolved from `DomainPricingDto` based on TLD and registrar. Contact details (Registrant, Admin, Tech, Billing) are populated from the customer record.
-
-### 3b · Domain Transfer
-
-Applicable when the customer owns a domain registered at another registrar. The reseller provides:
-
-- **Authorisation / EPP code** obtained from the current registrar
-- **Target registrar** in our system
-- **Auto-renew** and **privacy protection** preferences
-
-The system validates the auth code and initiates the transfer through the registrar API. Transfers are asynchronous — the domain enters a **Transfer Pending** state and is confirmed once the losing registrar approves.
-
-### 3c · Hosting Package Selection
-
-Optionally the reseller adds a hosting package to the same order. Available packages are loaded via `IHostingPackageService.GetActiveHostingPackagesAsync`. Each package defines:
+Available packages are loaded via `IHostingPackageService.GetActiveHostingPackagesAsync`. Each package defines:
 
 | Attribute      | Description                          |
 | -------------- | ------------------------------------ |
@@ -111,44 +147,67 @@ Optionally the reseller adds a hosting package to the same order. Available pack
 | Domains        | Number of domains that can be hosted |
 | Subdomains     | Number of subdomains allowed         |
 
-The reseller selects a package and a billing cycle (monthly, yearly, etc.) retrieved from the Billing Cycles API.
+The reseller selects a package and a billing cycle (monthly, yearly, etc.) retrieved from the Billing Cycles API. If hosting is not needed the reseller clicks **Skip** to proceed to Page 4.
 
-### 3d · Additional Add-ons
+```mermaid
+flowchart TD
+    A["Page 3 — Add Hosting"] --> B{"Add hosting?"}
+    B -->|Yes| C["Select package + billing cycle"]
+    B -->|Skip| D["Page 4"]
+    C --> D
+```
 
-Other items that may be bundled into the order:
+---
+
+## Page 4 — Add Other Services
+
+The reseller optionally adds additional services to the order. This page is always shown but can be skipped.
+
+Available add-ons:
 
 - **Email hosting** — standalone or bundled with a hosting package
 - **SSL certificates**
 - **DNS zone packages**
 - **Custom services** — consulting, migration assistance
 
+If the `flowType` is `transfer`, this page also collects the **authorisation / EPP code** required by the registrar API. The auth code is validated before the reseller can proceed.
+
+If the `flowType` is `register`, domain-specific settings are configured here:
+
+- **Registration period** — 1 to 10 years
+- **Auto-renew** preference
+- **Privacy protection** (WHOIS guard)
+
+Pricing is resolved from `DomainPricingDto` based on TLD and registrar. Contact details (Registrant, Admin, Tech, Billing) are populated from the customer record.
+
+When no additional services are needed the reseller clicks **Skip** to proceed to Page 5.
+
 ```mermaid
 flowchart TD
-    A["Domain identified + Customer selected"] --> B{"What to sell?"}
-    B --> C["Domain Registration"]
-    B --> D["Domain Transfer"]
-    B --> E["Hosting Package"]
-    B --> F["Add-ons — Email, SSL, DNS"]
-    C --> G["Configure period, auto-renew, privacy"]
-    D --> H["Enter auth code, select registrar"]
-    E --> I["Select package + billing cycle"]
-    F --> J["Select add-on services"]
-    G --> K["Add to order"]
-    H --> K
-    I --> K
-    J --> K
+    A["Page 4 — Add Other Services"] --> T{"flowType?"}
+    T -->|transfer| F["Collect auth / EPP code"]
+    T -->|register| R["Configure period, auto-renew, privacy"]
+    T -->|renew / add-services| B
+    F --> B{"Add services?"}
+    R --> B
+    B -->|Yes| C["Select add-ons"]
+    B -->|Skip| D["Page 5"]
+    C --> D
 ```
 
 ---
 
-## Step 4 — Review Quote
+## Page 5 — Present Offer
 
-Before placing the order a quote is generated summarising all line items, pricing, taxes, and totals. The quote is created via `IQuoteService.CreateQuoteAsync`.
+A quote is generated summarising everything selected across Pages 1–4. The quote is created via `IQuoteService.CreateQuoteAsync`.
 
 The quote includes:
 
-- Customer information
-- All line items with unit price, quantity, and subtotal
+- Customer information (from Page 2)
+- Domain operation line item — registration, transfer, or renewal (from Page 1)
+- Hosting package and billing cycle (from Page 3, if selected)
+- Add-on services (from Page 4, if selected)
+- Unit prices, quantities, and subtotals per line
 - Applicable tax rules
 - Setup fees (one-time) versus recurring amounts
 - Coupon or discount codes if applicable
@@ -156,17 +215,13 @@ The quote includes:
 
 The reseller can:
 
-| Action                  | Effect                                      |
-| ----------------------- | ------------------------------------------- |
-| **Edit**                | Return to Step 3 and change items           |
-| **Send to customer**    | Email the quote for the customer's approval |
-| **Accept and continue** | Proceed directly to order placement         |
+| Action                  | Effect                                             |
+| ----------------------- | -------------------------------------------------- |
+| **Edit**                | Navigate back to the relevant page to change items |
+| **Send to customer**    | Email the quote for the customer's approval        |
+| **Accept and continue** | Create the order and proceed to payment            |
 
----
-
-## Step 5 — Place Order
-
-Once the quote is accepted the order is created via `IOrderService.CreateOrderAsync`. The order captures:
+When the reseller accepts, the order is created via `IOrderService.CreateOrderAsync` in **Pending** status. `EnsureCustomerNumberAsync` is called to assign a customer number if this is the customer's first purchase. The order captures:
 
 - `CustomerId`, `ServiceId`, `OrderType`
 - `SetupFee`, `RecurringAmount`
@@ -174,11 +229,21 @@ Once the quote is accepted the order is created via `IOrderService.CreateOrderAs
 - `AutoRenew` flag
 - Reference to the originating `QuoteId`
 
-The order is created in **Pending** status. `EnsureCustomerNumberAsync` is called here to assign a customer number if this is the customer's first purchase.
+```mermaid
+flowchart TD
+    A["Page 5 — Present Offer"] --> B{"Reseller action?"}
+    B -->|Edit| C["Navigate back"]
+    B -->|Send to customer| D["Email quote"]
+    B -->|Accept| E["Create order — Pending"]
+    E --> F["Page 6"]
+    D --> G{"Customer response?"}
+    G -->|Accepted| E
+    G -->|Rejected| C
+```
 
 ---
 
-## Step 6 — Process Payment
+## Page 6 — Process Payment
 
 Payment is handled through the configured payment gateway.
 
@@ -196,7 +261,7 @@ sequenceDiagram
     participant S as System
     participant PG as Payment Gateway
 
-    R->>S: Place order
+    R->>S: Accept offer
     S->>S: Create order (Pending)
     S->>R: Show payment options
     R->>S: Select payment method
@@ -206,12 +271,12 @@ sequenceDiagram
     PG->>S: Payment confirmed
     S->>S: Mark order Paid
     S->>S: Generate invoice
-    S->>R: Order confirmation
+    S->>R: Redirect to Page 7
 ```
 
 ---
 
-## Step 7 — Provision Services
+## Page 7 — Invoice & Credentials
 
 After payment the `OrderProvisioningWorkflow` inspects the order's service type and delegates to the appropriate provisioning path.
 
@@ -223,6 +288,13 @@ After payment the `OrderProvisioningWorkflow` inspects the order's service type 
 | **Email**               | Create mailboxes, configure SMTP/IMAP access                               |
 
 The order transitions to **Active** via the `OrderStateMachine` and an `OrderActivatedEvent` is published for downstream processing (notifications, audit log).
+
+Once provisioning completes the page displays a summary and triggers delivery:
+
+1. The finalised **invoice** is emailed to the customer
+2. **Service credentials** are sent (hosting login, email passwords, control panel URL)
+3. A **welcome email** summarises everything purchased and how to get started
+4. Recurring billing entries are created if the order includes subscriptions
 
 ```mermaid
 flowchart TD
@@ -239,19 +311,9 @@ flowchart TD
     H --> K
     I --> K
     J --> K
-    K --> L["Publish OrderActivatedEvent"]
+    K --> L["Send invoice + credentials"]
+    L --> M["Publish OrderActivatedEvent"]
 ```
-
----
-
-## Step 8 — Send Invoice & Credentials
-
-Once provisioning completes:
-
-1. The finalised **invoice** is emailed to the customer
-2. **Service credentials** are sent (hosting login, email passwords, control panel URL)
-3. A **welcome email** summarises everything purchased and how to get started
-4. Recurring billing entries are created if the order includes subscriptions
 
 ---
 
@@ -259,57 +321,108 @@ Once provisioning completes:
 
 ```mermaid
 flowchart TD
-    Start(["Reseller opens New Sale page"]) --> CheckDomain["Enter domain name + select registrar"]
-    CheckDomain --> Availability{"Domain available?"}
+    Start(["Reseller opens New Sale"]) --> P1["Page 1 — Enter domain + registrar"]
+    P1 --> Check{"Availability check"}
 
-    Availability -->|Yes| RegFlow["Registration flow"]
-    Availability -->|Transferable| TransFlow["Transfer flow"]
-    Availability -->|Unavailable| TryAgain["Try different domain"]
-    TryAgain --> CheckDomain
+    Check -->|1A · TLD unsupported| ChangeReg["Change registrar"]
+    ChangeReg --> P1
+    Check -->|1B · Available| SetReg["flowType = register"]
+    Check -->|1C · Transferable| SetTrans["flowType = transfer"]
+    Check -->|1D · In our system| Inform["Show record, choose action"]
+    Inform --> SetExist["flowType = renew / add-services"]
+    Check -->|1E · Alternatives| SelectAlt["Select alternative domain"]
+    SelectAlt --> P1
 
-    RegFlow --> Customer{"Existing customer?"}
-    TransFlow --> Customer
+    SetReg --> P2["Page 2 — Select / create customer"]
+    SetTrans --> P2
+    SetExist --> P2
 
-    Customer -->|Yes| Search["Search + select customer"]
-    Customer -->|No| Create["Create new customer"]
+    P2 --> P3["Page 3 — Add hosting?"]
+    P3 -->|Yes| SelectPkg["Select package + billing cycle"]
+    P3 -->|Skip| P4
+    SelectPkg --> P4["Page 4 — Add other services?"]
+    P4 -->|Yes| SelectSvc["Select add-ons"]
+    P4 -->|Skip| P5
+    SelectSvc --> P5["Page 5 — Present offer"]
 
-    Search --> Configure["Configure order items"]
-    Create --> Configure
+    P5 -->|Edit| P3
+    P5 -->|Send to customer| EmailQuote["Email quote"]
+    EmailQuote -->|Accepted| Accept
+    EmailQuote -->|Rejected| P3
+    P5 -->|Accept| Accept["Create order — Pending"]
 
-    Configure --> AddHosting{"Add hosting?"}
-    AddHosting -->|Yes| SelectPkg["Select hosting package"]
-    AddHosting -->|No| AddOns{"Add other services?"}
-    SelectPkg --> AddOns
-    AddOns -->|Yes| SelectAddOn["Select add-ons"]
-    AddOns -->|No| Quote["Generate quote"]
-    SelectAddOn --> Quote
-
-    Quote --> ReviewQuote{"Quote accepted?"}
-    ReviewQuote -->|Edit| Configure
-    ReviewQuote -->|Accept| PlaceOrder["Create order — Pending"]
-
-    PlaceOrder --> Payment["Process payment"]
-    Payment --> PayResult{"Payment successful?"}
-    PayResult -->|Yes| Provision["Provision services"]
-    PayResult -->|No| RetryPay["Retry or cancel"]
-    RetryPay --> Payment
-
-    Provision --> Notify["Send invoice + credentials"]
-    Notify --> Done(["Sale complete"])
+    Accept --> P6["Page 6 — Process payment"]
+    P6 -->|Success| P7["Page 7 — Provision + invoice + credentials"]
+    P6 -->|Failure| Retry["Retry or cancel"]
+    Retry --> P6
+    P7 --> Done(["Sale complete"])
 ```
 
 ---
 
 ## Error Handling & Edge Cases
 
-| Scenario                                     | Handling                                                                                              |
-| -------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| Registrar API unavailable                    | Show error, allow retry. Do not create the order until availability is confirmed.                     |
-| Domain transfer rejected by losing registrar | Keep order in **Transfer Pending**. Notify reseller. Allow re-initiation with a corrected auth code.  |
-| Payment fails                                | Order remains **Pending**. Reseller can retry with a different method or cancel.                      |
-| Customer already owns the domain             | Block duplicate registration. Show existing domain record.                                            |
-| Provisioning failure after payment           | Order moves to **Provisioning Failed**. Trigger alert for manual intervention. Refund flow available. |
-| Quote expires                                | Quote marked **Expired**. Reseller must create a new quote with refreshed pricing.                    |
+| Scenario                                     | Page | Handling                                                                                              |
+| -------------------------------------------- | ---- | ----------------------------------------------------------------------------------------------------- |
+| Registrar API unavailable                    | 1    | Show error, allow retry. Do not proceed until availability is confirmed.                              |
+| TLD not supported                            | 1    | Sub-outcome 1A — prompt registrar change, stay on Page 1.                                             |
+| Domain already in our system                 | 1    | Sub-outcome 1D — show existing record, let reseller choose renew / add-services / contact owner.      |
+| Domain transfer rejected by losing registrar | 7    | Keep order in **Transfer Pending**. Notify reseller. Allow re-initiation with a corrected auth code.  |
+| Payment fails                                | 6    | Order remains **Pending**. Reseller can retry with a different method or cancel.                      |
+| Customer already owns the domain             | 2    | Block duplicate registration. Show existing domain record.                                            |
+| Provisioning failure after payment           | 7    | Order moves to **Provisioning Failed**. Trigger alert for manual intervention. Refund flow available. |
+| Quote expires                                | 5    | Quote marked **Expired**. Reseller must create a new quote with refreshed pricing.                    |
+
+---
+
+## UI Architecture
+
+### Page and file structure
+
+Each page has a `.razor` file (HTML only, per project conventions) and a matching `.ts` file that owns all logic for that page.
+
+| Page | Razor file                                         | TypeScript file                   |
+| ---- | -------------------------------------------------- | --------------------------------- |
+| 1    | `Components/Pages/Dashboard/NewSale.razor`         | `wwwroot/js/new-sale.ts`          |
+| 2    | `Components/Pages/Dashboard/NewSaleCustomer.razor` | `wwwroot/js/new-sale-customer.ts` |
+| 3    | `Components/Pages/Dashboard/NewSaleHosting.razor`  | `wwwroot/js/new-sale-hosting.ts`  |
+| 4    | `Components/Pages/Dashboard/NewSaleServices.razor` | `wwwroot/js/new-sale-services.ts` |
+| 5    | `Components/Pages/Dashboard/NewSaleOffer.razor`    | `wwwroot/js/new-sale-offer.ts`    |
+| 6    | `Components/Pages/Dashboard/NewSalePayment.razor`  | `wwwroot/js/new-sale-payment.ts`  |
+| 7    | `Components/Pages/Dashboard/NewSaleComplete.razor` | `wwwroot/js/new-sale-complete.ts` |
+
+### State management
+
+All pages share state through `sessionStorage` under the key `new-sale-state`. Each page reads the state on init, updates its own section, and writes the full state back before navigating forward. The state shape grows as the reseller progresses:
+
+```json
+{
+  "domainName": "example.com",
+  "selectedRegistrarId": "3",
+  "selectedRegistrarLabel": "Namecheap (namecheap)",
+  "flowType": "register",
+  "pricing": { "registration": 12.99, "currency": "EUR" },
+  "selectedCustomer": { "id": 42, "name": "Acme Corp" },
+  "hostingPackageId": 5,
+  "billingCycleId": 2,
+  "addOns": [{ "type": "ssl", "id": 1 }],
+  "quoteId": 101,
+  "orderId": null
+}
+```
+
+### Shared components
+
+Reusable HTML fragments used across multiple pages:
+
+| Component                     | File                                      | Used on    |
+| ----------------------------- | ----------------------------------------- | ---------- |
+| Customer create/edit modal    | `Components/Shared/CustomerModal.razor`   | Pages 1, 2 |
+| Alert banners (success/error) | Inline per page (consistent `id` pattern) | All pages  |
+
+### Navigation guard
+
+Each page checks on init that the required previous-page state exists in `sessionStorage`. If a reseller navigates directly to Page 5 without completing Pages 1–4, they are redirected back to Page 1.
 
 ---
 
