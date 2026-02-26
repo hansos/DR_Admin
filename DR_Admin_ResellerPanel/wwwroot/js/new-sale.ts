@@ -207,6 +207,25 @@
         sessionStorage.setItem(storageKey, JSON.stringify(state));
     };
 
+    const canProceedToPage2 = (state: NewSaleState | null): state is NewSaleState => {
+        return !!state?.domainName && !!state.flowType;
+    };
+
+    const renderNextStepButton = (): void => {
+        const container = document.getElementById('new-sale-next-step-container');
+        if (!container) {
+            return;
+        }
+
+        const state = loadState();
+        if (canProceedToPage2(state)) {
+            container.classList.remove('d-none');
+            return;
+        }
+
+        container.classList.add('d-none');
+    };
+
     const showModal = (id: string): void => {
         const element = document.getElementById(id);
         const bootstrap = getBootstrap();
@@ -266,13 +285,21 @@
 
     const saveDraftDomain = (): void => {
         const current = loadState() ?? {};
+        const nextDomainName = getDomainInputValue();
+        const currentDomainName = current.domainName ?? '';
+        const domainChanged = currentDomainName !== nextDomainName;
+
         saveState({
             ...current,
-            domainName: getDomainInputValue() || undefined,
+            domainName: nextDomainName || undefined,
             selectedRegistrarId: selectedRegistrarId ?? undefined,
             selectedRegistrarCode: selectedRegistrarCode ?? undefined,
             selectedRegistrarLabel: selectedRegistrarLabel || undefined,
+            flowType: domainChanged ? undefined : current.flowType,
+            pricing: domainChanged ? undefined : current.pricing,
         });
+
+        renderNextStepButton();
     };
 
     const goToPage2 = (flowType: string, domainName: string, premiumPrice: number | null = null): void => {
@@ -287,6 +314,16 @@
                 currency: 'USD',
             },
         });
+        renderNextStepButton();
+        showSuccess('Domain selected. Continue to the next page when ready.');
+    };
+
+    const navigateToPage2 = (): void => {
+        const state = loadState();
+        if (!canProceedToPage2(state)) {
+            showError('Select a domain action before continuing.');
+            return;
+        }
 
         window.location.href = '/dashboard/new-sale/customer';
     };
@@ -637,6 +674,7 @@
         const settingsSelect = document.getElementById('new-sale-settings-registrar') as HTMLSelectElement | null;
         const domainInput = document.getElementById('new-sale-domain-name') as HTMLInputElement | null;
         const searchResult = document.getElementById('new-sale-search-result');
+        const nextStepButton = document.getElementById('new-sale-next-step-btn');
 
         form?.addEventListener('submit', (event) => {
             event.preventDefault();
@@ -646,6 +684,8 @@
         domainInput?.addEventListener('input', () => {
             saveDraftDomain();
         });
+
+        nextStepButton?.addEventListener('click', navigateToPage2);
 
         openSettings?.addEventListener('click', () => {
             showModal('new-sale-settings-modal');
@@ -744,6 +784,7 @@
     const applyRestoredState = (): void => {
         const state = loadState();
         if (!state) {
+            renderNextStepButton();
             return;
         }
 
@@ -751,6 +792,8 @@
         if (domainInput && state.domainName) {
             domainInput.value = state.domainName;
         }
+
+        renderNextStepButton();
     };
 
     const initializeNewSalePage = async (): Promise<void> => {

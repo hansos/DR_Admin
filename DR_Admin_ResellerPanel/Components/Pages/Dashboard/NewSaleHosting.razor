@@ -1,0 +1,78 @@
+@page "/dashboard/new-sale/hosting"
+
+<div id="dashboard-new-sale-hosting-page" class="container-fluid">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+        <div>
+            <h2 class="h4 mb-1"><i class="bi bi-hdd-rack"></i> New sale</h2>
+            <p class="text-muted mb-0">Page 3 of 7: Add optional hosting package.</p>
+        </div>
+    </div>
+
+    <div id="new-sale-hosting-alert-success" class="alert alert-success d-none" role="alert"></div>
+    <div id="new-sale-hosting-alert-error" class="alert alert-danger d-none" role="alert"></div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0"><i class="bi bi-info-circle"></i> Sale context</h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-12 col-md-4">
+                    <div class="text-muted small">Domain</div>
+                    <div class="fw-semibold" id="new-sale-hosting-domain">-</div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <div class="text-muted small">Flow type</div>
+                    <div class="fw-semibold" id="new-sale-hosting-flow">-</div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <div class="text-muted small">Customer</div>
+                    <div class="fw-semibold" id="new-sale-hosting-customer">-</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <h5 class="mb-0"><i class="bi bi-box-seam"></i> Hosting packages</h5>
+            <span class="badge text-bg-secondary" id="new-sale-hosting-package-count">0 packages</span>
+        </div>
+        <div class="card-body">
+            <div id="new-sale-hosting-packages-status" class="mb-3 text-muted small"></div>
+            <div id="new-sale-hosting-packages" class="row g-3">
+                <div class="col-12 text-center text-muted">Loading hosting packages...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0"><i class="bi bi-arrow-repeat"></i> Billing cycle</h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-12 col-lg-8">
+                    <label class="form-label" for="new-sale-hosting-billing-cycle">Select billing cycle</label>
+                    <select class="form-select" id="new-sale-hosting-billing-cycle">
+                        <option value="">Loading billing cycles...</option>
+                    </select>
+                </div>
+                <div class="col-12 col-lg-4">
+                    <div class="small text-muted">Estimated recurring price</div>
+                    <div class="fw-semibold" id="new-sale-hosting-price-preview">-</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between gap-2 mb-4">
+        <a class="btn btn-outline-secondary" href="/dashboard/new-sale/customer"><i class="bi bi-arrow-left"></i> Back</a>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary" id="new-sale-hosting-skip" type="button">Skip hosting</button>
+            <button class="btn btn-primary" id="new-sale-hosting-next" type="button">
+                Continue to Page 4 <i class="bi bi-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+</div>

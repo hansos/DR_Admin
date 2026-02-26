@@ -104,6 +104,21 @@
     const saveState = (state) => {
         sessionStorage.setItem(storageKey, JSON.stringify(state));
     };
+    const canProceedToPage2 = (state) => {
+        return !!state?.domainName && !!state.flowType;
+    };
+    const renderNextStepButton = () => {
+        const container = document.getElementById('new-sale-next-step-container');
+        if (!container) {
+            return;
+        }
+        const state = loadState();
+        if (canProceedToPage2(state)) {
+            container.classList.remove('d-none');
+            return;
+        }
+        container.classList.add('d-none');
+    };
     const showModal = (id) => {
         const element = document.getElementById(id);
         const bootstrap = getBootstrap();
@@ -153,13 +168,19 @@
     };
     const saveDraftDomain = () => {
         const current = loadState() ?? {};
+        const nextDomainName = getDomainInputValue();
+        const currentDomainName = current.domainName ?? '';
+        const domainChanged = currentDomainName !== nextDomainName;
         saveState({
             ...current,
-            domainName: getDomainInputValue() || undefined,
+            domainName: nextDomainName || undefined,
             selectedRegistrarId: selectedRegistrarId ?? undefined,
             selectedRegistrarCode: selectedRegistrarCode ?? undefined,
             selectedRegistrarLabel: selectedRegistrarLabel || undefined,
+            flowType: domainChanged ? undefined : current.flowType,
+            pricing: domainChanged ? undefined : current.pricing,
         });
+        renderNextStepButton();
     };
     const goToPage2 = (flowType, domainName, premiumPrice = null) => {
         saveState({
@@ -173,6 +194,15 @@
                 currency: 'USD',
             },
         });
+        renderNextStepButton();
+        showSuccess('Domain selected. Continue to the next page when ready.');
+    };
+    const navigateToPage2 = () => {
+        const state = loadState();
+        if (!canProceedToPage2(state)) {
+            showError('Select a domain action before continuing.');
+            return;
+        }
         window.location.href = '/dashboard/new-sale/customer';
     };
     const parseAvailability = (data) => {
@@ -445,6 +475,7 @@
         const settingsSelect = document.getElementById('new-sale-settings-registrar');
         const domainInput = document.getElementById('new-sale-domain-name');
         const searchResult = document.getElementById('new-sale-search-result');
+        const nextStepButton = document.getElementById('new-sale-next-step-btn');
         form?.addEventListener('submit', (event) => {
             event.preventDefault();
             void checkDomainAvailability();
@@ -452,6 +483,7 @@
         domainInput?.addEventListener('input', () => {
             saveDraftDomain();
         });
+        nextStepButton?.addEventListener('click', navigateToPage2);
         openSettings?.addEventListener('click', () => {
             showModal('new-sale-settings-modal');
         });
@@ -534,12 +566,14 @@
     const applyRestoredState = () => {
         const state = loadState();
         if (!state) {
+            renderNextStepButton();
             return;
         }
         const domainInput = document.getElementById('new-sale-domain-name');
         if (domainInput && state.domainName) {
             domainInput.value = state.domainName;
         }
+        renderNextStepButton();
     };
     const initializeNewSalePage = async () => {
         const page = document.getElementById('dashboard-new-sale-page');
