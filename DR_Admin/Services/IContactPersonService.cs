@@ -20,7 +20,14 @@ public interface IContactPersonService
     /// <returns>A collection of domain global contact person DTOs</returns>
     Task<IEnumerable<ContactPersonDto>> GetDomainGlobalContactPersonsAsync();
     
-    Task<PagedResult<ContactPersonDto>> GetAllContactPersonsPagedAsync(PaginationParameters parameters);
+    /// <summary>
+    /// Retrieves paginated contact persons with optional filtering by customer and search text.
+    /// </summary>
+    /// <param name="parameters">Paging parameters.</param>
+    /// <param name="customerId">Optional customer identifier filter.</param>
+    /// <param name="search">Optional search term for name, email, or phone.</param>
+    /// <returns>A paged result containing matching contact persons.</returns>
+    Task<PagedResult<ContactPersonDto>> GetAllContactPersonsPagedAsync(PaginationParameters parameters, int? customerId = null, string? search = null);
     
     /// <summary>
     /// Retrieves all contact persons for a specific customer

@@ -17,6 +17,21 @@
     <div class="card shadow-sm mb-3">
         <div class="card-header bg-light">
             <div class="row g-2 align-items-end">
+                <div class="col-12 col-md-3">
+                    <label class="form-label mb-1" for="contact-persons-filter-customer">Customer</label>
+                    <select class="form-select" id="contact-persons-filter-customer">
+                        <option value="">All customers</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-4">
+                    <label class="form-label mb-1" for="contact-persons-filter-search">Name, email or phone</label>
+                    <input type="text" class="form-control" id="contact-persons-filter-search" placeholder="Search..." />
+                </div>
+                <div class="col-12 col-md-auto">
+                    <button class="btn btn-outline-secondary w-100" id="contact-persons-filter-reset" type="button">
+                        <i class="bi bi-x-circle"></i> Reset
+                    </button>
+                </div>
                 <div class="col-12 col-md-2 ms-auto">
                     <label class="form-label mb-1" for="contact-persons-page-size">Page size</label>
                     <select class="form-select" id="contact-persons-page-size">

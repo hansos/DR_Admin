@@ -74,19 +74,42 @@ public class ContactPersonService : IContactPersonService
         }
     }
 
-    public async Task<PagedResult<ContactPersonDto>> GetAllContactPersonsPagedAsync(PaginationParameters parameters)
+    /// <summary>
+    /// Retrieves paginated contact persons with optional filtering by customer and search text.
+    /// </summary>
+    /// <param name="parameters">Paging parameters.</param>
+    /// <param name="customerId">Optional customer ID filter.</param>
+    /// <param name="search">Optional free-text search term for name, email, or phone.</param>
+    /// <returns>A paged result containing matching contact persons.</returns>
+    public async Task<PagedResult<ContactPersonDto>> GetAllContactPersonsPagedAsync(PaginationParameters parameters, int? customerId = null, string? search = null)
     {
         try
         {
-            _log.Information("Fetching paginated contact persons - Page: {PageNumber}, PageSize: {PageSize}", 
-                parameters.PageNumber, parameters.PageSize);
-            
-            var totalCount = await _context.ContactPersons
-                .AsNoTracking()
-                .CountAsync();
+            _log.Information("Fetching paginated contact persons - Page: {PageNumber}, PageSize: {PageSize}, CustomerId: {CustomerId}, Search: {Search}", 
+                parameters.PageNumber, parameters.PageSize, customerId, search);
 
-            var contactPersons = await _context.ContactPersons
+            var query = _context.ContactPersons
                 .AsNoTracking()
+                .AsQueryable();
+
+            if (customerId.HasValue)
+            {
+                query = query.Where(cp => cp.CustomerId == customerId.Value);
+            }
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var searchTerm = search.Trim().ToLower();
+                query = query.Where(cp =>
+                    cp.FirstName.ToLower().Contains(searchTerm) ||
+                    cp.LastName.ToLower().Contains(searchTerm) ||
+                    cp.Email.ToLower().Contains(searchTerm) ||
+                    cp.Phone.ToLower().Contains(searchTerm));
+            }
+
+            var totalCount = await query.CountAsync();
+
+            var contactPersons = await query
                 .OrderBy(cp => cp.LastName)
                 .ThenBy(cp => cp.FirstName)
                 .Skip((parameters.PageNumber - 1) * parameters.PageSize)

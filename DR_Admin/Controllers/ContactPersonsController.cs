@@ -28,6 +28,8 @@ public class ContactPersonsController : ControllerBase
     /// </summary>
     /// <param name="pageNumber">Optional: Page number for pagination (default: returns all)</param>
     /// <param name="pageSize">Optional: Number of items per page (default: 10, max: 100)</param>
+    /// <param name="customerId">Optional: Filter by customer ID</param>
+    /// <param name="search">Optional: Search in name, email or phone</param>
     /// <returns>List of all contact persons or paginated result if pagination parameters provided</returns>
     /// <response code="200">Returns the list of contact persons or paginated result</response>
     /// <response code="401">If user is not authenticated</response>
@@ -40,11 +42,11 @@ public class ContactPersonsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult> GetAllContactPersons([FromQuery] int? pageNumber = null, [FromQuery] int? pageSize = null)
+    public async Task<ActionResult> GetAllContactPersons([FromQuery] int? pageNumber = null, [FromQuery] int? pageSize = null, [FromQuery] int? customerId = null, [FromQuery] string? search = null)
     {
         try
         {
-            if (pageNumber.HasValue || pageSize.HasValue)
+            if (pageNumber.HasValue || pageSize.HasValue || customerId.HasValue || !string.IsNullOrWhiteSpace(search))
             {
                 var paginationParams = new PaginationParameters
                 {
@@ -52,10 +54,10 @@ public class ContactPersonsController : ControllerBase
                     PageSize = pageSize ?? 10
                 };
 
-                _log.Information("API: GetAllContactPersons (paginated) called with PageNumber: {PageNumber}, PageSize: {PageSize} by user {User}", 
-                    paginationParams.PageNumber, paginationParams.PageSize, User.Identity?.Name);
+                _log.Information("API: GetAllContactPersons (paginated) called with PageNumber: {PageNumber}, PageSize: {PageSize}, CustomerId: {CustomerId}, Search: {Search} by user {User}", 
+                    paginationParams.PageNumber, paginationParams.PageSize, customerId, search, User.Identity?.Name);
 
-                var pagedResult = await _contactPersonService.GetAllContactPersonsPagedAsync(paginationParams);
+                var pagedResult = await _contactPersonService.GetAllContactPersonsPagedAsync(paginationParams, customerId, search);
                 return Ok(pagedResult);
             }
 

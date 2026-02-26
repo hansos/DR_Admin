@@ -137,6 +137,8 @@ let currentPage = 1;
 let pageSize = 25;
 let totalCount = 0;
 let totalPages = 1;
+let filterCustomerId: number | null = null;
+let filterSearch = '';
 
 function isAdminUser(): boolean {
     const raw = sessionStorage.getItem('rp_roles');
@@ -164,6 +166,12 @@ function buildPagedUrl(): string {
     const params = new URLSearchParams();
     params.set('pageNumber', String(currentPage));
     params.set('pageSize', String(pageSize));
+    if (filterCustomerId !== null) {
+        params.set('customerId', String(filterCustomerId));
+    }
+    if (filterSearch) {
+        params.set('search', filterSearch);
+    }
     return `${getApiBaseUrl()}/ContactPersons?${params.toString()}`;
 }
 
@@ -198,11 +206,13 @@ function normalizeCustomerOption(item: any): CustomerOption {
 
 async function loadCustomersForSelect(): Promise<void> {
     const select = document.getElementById('contact-persons-customer') as HTMLSelectElement | null;
-    if (!select) {
+    const filterSelect = document.getElementById('contact-persons-filter-customer') as HTMLSelectElement | null;
+    if (!select || !filterSelect) {
         return;
     }
 
     select.innerHTML = '<option value="">Unassigned</option>';
+    filterSelect.innerHTML = '<option value="">All customers</option>';
 
     const params = new URLSearchParams();
     params.set('pageNumber', '1');
@@ -220,9 +230,46 @@ async function loadCustomersForSelect(): Promise<void> {
 
     customerLookup = new Map(customerOptions.map((option) => [option.id, option.name]));
 
-    select.insertAdjacentHTML('beforeend', customerOptions.map((option) => (
+    const optionsHtml = customerOptions.map((option) => (
         `<option value="${option.id}">${esc(option.name)}</option>`
-    )).join(''));
+    )).join('');
+
+    select.insertAdjacentHTML('beforeend', optionsHtml);
+    filterSelect.insertAdjacentHTML('beforeend', optionsHtml);
+}
+
+function loadFiltersFromUi(): void {
+    const customerFilterEl = document.getElementById('contact-persons-filter-customer') as HTMLSelectElement | null;
+    const customerRaw = (customerFilterEl?.value ?? '').trim();
+    if (!customerRaw) {
+        filterCustomerId = null;
+    } else {
+        const parsedCustomerId = Number(customerRaw);
+        filterCustomerId = Number.isFinite(parsedCustomerId) ? parsedCustomerId : null;
+    }
+
+    const searchFilterEl = document.getElementById('contact-persons-filter-search') as HTMLInputElement | null;
+    filterSearch = (searchFilterEl?.value ?? '').trim();
+}
+
+function applyFilters(): void {
+    loadFiltersFromUi();
+    currentPage = 1;
+    loadContactPersons();
+}
+
+function resetFilters(): void {
+    const customerFilterEl = document.getElementById('contact-persons-filter-customer') as HTMLSelectElement | null;
+    if (customerFilterEl) {
+        customerFilterEl.value = '';
+    }
+
+    const searchFilterEl = document.getElementById('contact-persons-filter-search') as HTMLInputElement | null;
+    if (searchFilterEl) {
+        searchFilterEl.value = '';
+    }
+
+    applyFilters();
 }
 
 async function loadContactPersons(): Promise<void> {
@@ -748,6 +795,17 @@ function initializeContactPersonsPage(): void {
         currentPage = 1;
         loadContactPersons();
     });
+
+    document.getElementById('contact-persons-filter-customer')?.addEventListener('change', applyFilters);
+    document.getElementById('contact-persons-filter-reset')?.addEventListener('click', resetFilters);
+    document.getElementById('contact-persons-filter-search')?.addEventListener('keydown', (event) => {
+        const keyboardEvent = event as KeyboardEvent;
+        if (keyboardEvent.key === 'Enter') {
+            event.preventDefault();
+            applyFilters();
+        }
+    });
+    document.getElementById('contact-persons-filter-search')?.addEventListener('blur', applyFilters);
 
     loadCustomersForSelect().then(loadContactPersons);
 }
