@@ -28,7 +28,7 @@ flowchart TD
     P6 --> P7["Page 7 · Invoice & Credentials"]
 ```
 
-### Page map
+### Page mapPAge
 
 | Page | Route                          | Responsibility                                                                  |
 | ---- | ------------------------------ | ------------------------------------------------------------------------------- |

@@ -20,6 +20,7 @@
         "expiring-domains.ts",
         "new-sale.ts",
         "domains.ts",
+        "tlds.ts",
         "dns-zones.ts",
         "domain-details.ts",
         "operating-systems.ts",
