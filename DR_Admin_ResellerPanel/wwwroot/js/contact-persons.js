@@ -75,6 +75,19 @@
     let pageSize = 25;
     let totalCount = 0;
     let totalPages = 1;
+    function isAdminUser() {
+        const raw = sessionStorage.getItem('rp_roles');
+        if (!raw) {
+            return false;
+        }
+        try {
+            const roles = JSON.parse(raw);
+            return Array.isArray(roles) && roles.some((role) => String(role).toLowerCase() === 'admin');
+        }
+        catch {
+            return false;
+        }
+    }
     function loadPageSizeFromUi() {
         const el = document.getElementById('contact-persons-page-size');
         const parsed = Number((el?.value ?? '').trim());
@@ -107,6 +120,7 @@
             isDefaultBilling: item.isDefaultBilling ?? item.IsDefaultBilling ?? false,
             isDefaultTech: item.isDefaultTech ?? item.IsDefaultTech ?? false,
             isDefaultAdministrator: item.isDefaultAdministrator ?? item.IsDefaultAdministrator ?? false,
+            isDomainGlobal: item.isDomainGlobal ?? item.IsDomainGlobal ?? false,
         };
     }
     function normalizeCustomerOption(item) {
@@ -167,6 +181,7 @@
             tableBody.innerHTML = '<tr><td colspan="10" class="text-center text-muted">No contact persons found.</td></tr>';
             return;
         }
+        const adminUser = isAdminUser();
         tableBody.innerHTML = allContactPersons.map((contact) => {
             const fullName = `${contact.firstName} ${contact.lastName}`.trim();
             const customerName = contact.customerId ? customerLookup.get(contact.customerId) || `Customer ${contact.customerId}` : 'Unassigned';
@@ -190,12 +205,25 @@
             <td>${defaults}</td>
             <td class="text-end">
                 <div class="btn-group btn-group-sm">
+                    ${adminUser ? `<button class="btn ${contact.isDomainGlobal ? 'btn-success' : 'btn-outline-warning'}" type="button" data-action="toggle-domain-global" data-id="${contact.id}" data-value="${contact.isDomainGlobal ? 'false' : 'true'}" title="${contact.isDomainGlobal ? 'Unset domain global' : 'Set domain global'}"><i class="bi ${contact.isDomainGlobal ? 'bi-globe2' : 'bi-globe'}"></i></button>` : ''}
                     <button class="btn btn-outline-primary" type="button" data-action="edit" data-id="${contact.id}" title="Edit"><i class="bi bi-pencil"></i></button>
                     <button class="btn btn-outline-danger" type="button" data-action="delete" data-id="${contact.id}" data-name="${esc(fullName)}" title="Delete"><i class="bi bi-trash"></i></button>
                 </div>
             </td>
         </tr>`;
         }).join('');
+    }
+    async function patchIsDomainGlobal(id, isDomainGlobal) {
+        const response = await apiRequest(`${getApiBaseUrl()}/ContactPersons/${id}/domain-global`, {
+            method: 'PATCH',
+            body: JSON.stringify({ isDomainGlobal }),
+        });
+        if (response.success) {
+            showSuccess(`Domain global ${isDomainGlobal ? 'enabled' : 'disabled'} for contact person #${id}`);
+            loadContactPersons();
+            return;
+        }
+        showError(response.message || 'Failed to update domain global setting');
     }
     function buildDefaultsBadges(contact) {
         const badges = [];
@@ -528,6 +556,11 @@
             }
             if (button.dataset.action === 'delete') {
                 openDelete(id, button.dataset.name ?? '');
+                return;
+            }
+            if (button.dataset.action === 'toggle-domain-global') {
+                const value = (button.dataset.value ?? '').toLowerCase() === 'true';
+                void patchIsDomainGlobal(id, value);
             }
         });
     }
