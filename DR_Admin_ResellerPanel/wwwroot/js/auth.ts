@@ -68,6 +68,7 @@ function authLogout(): void {
 }
 
 function authUpdateTopRow(): void {
+    const newSaleLinkEl = document.getElementById('top-row-new-sale');
     const userInfoEl  = document.getElementById('top-row-userinfo');
     const usernameEl  = document.getElementById('top-row-username');
     const loginLinkEl = document.getElementById('top-row-login');
@@ -76,6 +77,7 @@ function authUpdateTopRow(): void {
     const loggedIn = authIsLoggedIn();
     const username = authGetUsername();
 
+    if (newSaleLinkEl) newSaleLinkEl.style.display    = loggedIn ? 'inline-flex' : 'none';
     if (usernameEl)  usernameEl.textContent          = username;
     if (userInfoEl)  userInfoEl.style.display         = loggedIn ? 'inline-flex' : 'none';
     if (loginLinkEl) loginLinkEl.style.display        = loggedIn ? 'none'        : 'inline-flex';

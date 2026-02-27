@@ -528,6 +528,7 @@
                 const rawPrice = registerButton.dataset.price ?? '';
                 const parsedPrice = rawPrice ? Number(rawPrice) : null;
                 goToPage2('register', domain, Number.isFinite(parsedPrice) ? parsedPrice : null);
+                navigateToPage2();
                 return;
             }
             const transferButton = target.closest('#new-sale-transfer-btn');

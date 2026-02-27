@@ -61,12 +61,15 @@ function authLogout() {
     window.location.href = '/login';
 }
 function authUpdateTopRow() {
+    const newSaleLinkEl = document.getElementById('top-row-new-sale');
     const userInfoEl = document.getElementById('top-row-userinfo');
     const usernameEl = document.getElementById('top-row-username');
     const loginLinkEl = document.getElementById('top-row-login');
     const logoutBtnEl = document.getElementById('top-row-logout');
     const loggedIn = authIsLoggedIn();
     const username = authGetUsername();
+    if (newSaleLinkEl)
+        newSaleLinkEl.style.display = loggedIn ? 'inline-flex' : 'none';
     if (usernameEl)
         usernameEl.textContent = username;
     if (userInfoEl)

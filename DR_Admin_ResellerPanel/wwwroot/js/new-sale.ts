@@ -740,6 +740,7 @@
                 const rawPrice = registerButton.dataset.price ?? '';
                 const parsedPrice = rawPrice ? Number(rawPrice) : null;
                 goToPage2('register', domain, Number.isFinite(parsedPrice as number) ? parsedPrice : null);
+                navigateToPage2();
                 return;
             }
 

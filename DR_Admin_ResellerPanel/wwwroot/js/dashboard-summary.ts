@@ -5,6 +5,8 @@ interface Domain {
     name: string;
 }
 
+let hasOngoingWorkflowWarning = false;
+
 interface PagedResult<T> {
     data?: T[];
     Data?: T[];
@@ -22,6 +24,15 @@ interface ApiResponse<T> {
     success: boolean;
     data?: T;
     message?: string;
+}
+
+interface NewSaleState {
+    domainName?: string;
+    selectedCustomer?: {
+        id?: number;
+        name?: string;
+        customerName?: string;
+    };
 }
 
 function getApiBaseUrl(): string {
@@ -88,10 +99,51 @@ function initializePage(): void {
 
     (page as any).dataset.initialized = 'true';
 
+    renderOngoingWorkflowPanel();
     loadPendingSummary();
 }
+
+function renderOngoingWorkflowPanel(): void {
+    const card = document.getElementById('dashboard-summary-workflow-card');
+    if (!card) {
+        return;
+    }
+
+    const state = loadNewSaleState();
+    const domainName = state?.domainName?.trim() ?? '';
+    const customer = state?.selectedCustomer;
+    const hasCustomer = !!customer && Number(customer.id ?? 0) > 0;
+
+    if (!domainName || !hasCustomer) {
+        hasOngoingWorkflowWarning = false;
+        card.classList.add('d-none');
+        return;
+    }
+
+    const customerName = customer?.name?.trim() || customer?.customerName?.trim() || `#${customer?.id}`;
+    setText('dashboard-summary-workflow-domain', domainName);
+    setText('dashboard-summary-workflow-customer', customerName);
+    hasOngoingWorkflowWarning = true;
+    card.classList.remove('d-none');
+}
+
+function loadNewSaleState(): NewSaleState | null {
+    const raw = sessionStorage.getItem('new-sale-state');
+    if (!raw) {
+        return null;
+    }
+
+    try {
+        return JSON.parse(raw) as NewSaleState;
+    } catch {
+        return null;
+    }
+}
+
 async function loadPendingSummary(): Promise<void> {
     clearError();
+    setAllClearVisible(false);
+    setPendingCardVisible(true);
     setPendingLoading(true);
 
     try {
@@ -111,6 +163,8 @@ async function loadPendingSummary(): Promise<void> {
             .sort((a, b) => (b.count ?? 0) - (a.count ?? 0));
 
         renderPendingTable(pending);
+        setPendingCardVisible(pending.length > 0);
+        setAllClearVisible(pending.length === 0 && !hasOngoingWorkflowWarning);
 
         if (!pending.length) {
             setText('dashboard-summary-pending-note', 'No domains have pending DNS records.');
@@ -118,6 +172,8 @@ async function loadPendingSummary(): Promise<void> {
             setText('dashboard-summary-pending-note', `${pending.length} domain(s) require registrar sync.`);
         }
     } catch (error: any) {
+        setPendingCardVisible(true);
+        setAllClearVisible(false);
         showError(error?.message || 'Failed to load pending DNS records.');
         renderPendingTable([]);
         setText('dashboard-summary-pending-note', 'Unable to load pending DNS records.');
@@ -199,6 +255,20 @@ function setPendingLoading(isLoading: boolean): void {
     }
 }
 
+function setPendingCardVisible(isVisible: boolean): void {
+    const card = document.getElementById('dashboard-summary-pending-card');
+    if (card) {
+        card.classList.toggle('d-none', !isVisible);
+    }
+}
+
+function setAllClearVisible(isVisible: boolean): void {
+    const card = document.getElementById('dashboard-summary-all-clear-card');
+    if (card) {
+        card.classList.toggle('d-none', !isVisible);
+    }
+}
+
 function renderPendingTable(rows: { domain: Domain; count: number | null }[]): void {
     const tbody = document.getElementById('dashboard-summary-pending-table');
     if (!tbody) {
@@ -206,7 +276,7 @@ function renderPendingTable(rows: { domain: Domain; count: number | null }[]): v
     }
 
     if (!rows.length) {
-        tbody.innerHTML = '<tr><td colspan="2" class="text-center text-muted">No pending DNS records.</td></tr>';
+        tbody.innerHTML = '';
         return;
     }
 

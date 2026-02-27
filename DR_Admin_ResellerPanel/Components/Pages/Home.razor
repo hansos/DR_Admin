@@ -10,7 +10,23 @@
 
     <div id="dashboard-summary-alert-error" class="alert alert-danger d-none" role="alert"></div>
 
-    <div class="card shadow-sm">
+    <div id="dashboard-summary-workflow-card" class="card shadow-sm mb-3 d-none">
+        <div class="card-header bg-light">
+            <h5 class="mb-0"><i class="bi bi-diagram-3-fill"></i> Ongoing Sales Workflow</h5>
+        </div>
+        <div class="card-body">
+            <p class="mb-2 text-muted small">A sale workflow is currently in progress.</p>
+            <div class="small mb-3">
+                <div><span class="fw-semibold">Domain:</span> <span id="dashboard-summary-workflow-domain">-</span></div>
+                <div><span class="fw-semibold">Customer:</span> <span id="dashboard-summary-workflow-customer">-</span></div>
+            </div>
+            <a id="dashboard-summary-workflow-link" class="btn btn-outline-primary btn-sm" href="/dashboard/new-sale/customer">
+                Continue Sales Workflow
+            </a>
+        </div>
+    </div>
+
+    <div id="dashboard-summary-pending-card" class="card shadow-sm mb-3">
         <div class="card-header bg-light">
             <h5 class="mb-0"><i class="bi bi-exclamation-triangle-fill"></i> Pending DNS Sync</h5>
         </div>
@@ -35,6 +51,18 @@
                     </div>
                     <span class="ms-2 text-muted small">Loading pending DNS records...</span>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="dashboard-summary-all-clear-card" class="card shadow-sm d-none">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0"><i class="bi bi-check-circle-fill"></i> Everything fine</h5>
+        </div>
+        <div class="card-body">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-check-circle-fill text-success"></i>
+                <span class="fw-semibold">No warnings are currently present.</span>
             </div>
         </div>
     </div>
