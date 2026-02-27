@@ -17,16 +17,19 @@ public class DomainRegistrationService : IRegisteredDomainService
     private readonly ApplicationDbContext _context;
     private readonly IDomainRegistrationWorkflow _domainRegistrationWorkflow;
     private readonly DomainRegistrationSettings _domainRegistrationSettings;
+    private readonly ITldPricingService _tldPricingService;
     private static readonly Serilog.ILogger _log = Log.ForContext<DomainRegistrationService>();
 
     public DomainRegistrationService(
         ApplicationDbContext context,
         IDomainRegistrationWorkflow domainRegistrationWorkflow,
-        IOptions<DomainRegistrationSettings> domainRegistrationSettings)
+        IOptions<DomainRegistrationSettings> domainRegistrationSettings,
+        ITldPricingService tldPricingService)
     {
         _context = context;
         _domainRegistrationWorkflow = domainRegistrationWorkflow;
         _domainRegistrationSettings = domainRegistrationSettings.Value;
+        _tldPricingService = tldPricingService;
     }
 
     public async Task<PagedResult<RegisteredDomainDto>> GetAllDomainsPagedAsync(PaginationParameters parameters)
@@ -742,24 +745,41 @@ public class DomainRegistrationService : IRegisteredDomainService
             // Normalize TLD (remove leading dot if present)
             var normalizedTld = tld.TrimStart('.').ToLowerInvariant();
 
-            // Build query
+            var tldEntity = await _context.Tlds
+                .AsNoTracking()
+                .FirstOrDefaultAsync(t => t.Extension.ToLower() == normalizedTld && t.IsActive);
+
+            if (tldEntity == null)
+            {
+                _log.Warning("No active TLD found for extension: {Tld}", normalizedTld);
+                return null;
+            }
+
+            var currentSalesPricing = await _tldPricingService.GetCurrentSalesPricingAsync(tldEntity.Id);
+            if (currentSalesPricing == null)
+            {
+                _log.Warning("No current sales pricing found for TLD: {Tld}", normalizedTld);
+                return null;
+            }
+
             var query = _context.RegistrarTlds
+                .AsNoTracking()
                 .Include(rt => rt.Registrar)
                 .Include(rt => rt.Tld)
-                .Where(rt => rt.Tld.Extension.ToLower() == normalizedTld && rt.IsActive && rt.Tld.IsActive);
+                .Where(rt => rt.TldId == tldEntity.Id && rt.IsActive && rt.Tld.IsActive && rt.Registrar.IsActive);
 
-            // Filter by registrar if specified
             if (registrarId.HasValue)
             {
                 query = query.Where(rt => rt.RegistrarId == registrarId.Value);
             }
             else
             {
-                // Use default registrar from database
                 query = query.Where(rt => rt.Registrar.IsDefault);
             }
 
-            var registrarTld = await query.FirstOrDefaultAsync();
+            var registrarTld = await query
+                .OrderByDescending(rt => rt.Registrar.IsDefault)
+                .FirstOrDefaultAsync();
 
             if (registrarTld == null)
             {
@@ -767,18 +787,15 @@ public class DomainRegistrationService : IRegisteredDomainService
                 return null;
             }
 
-            // NOTE: Pricing has been moved to temporal pricing tables
-            // This method should be updated to use ITldPricingService.CalculatePricingAsync()
-            // For now, return a basic structure with placeholder values
             var pricingDto = new DomainPricingDto
             {
                 Tld = registrarTld.Tld.Extension,
                 RegistrarId = registrarTld.RegistrarId,
                 RegistrarName = registrarTld.Registrar.Name,
-                RegistrationPrice = 0, // TODO: Get from TldSalesPricing
-                RenewalPrice = 0, // TODO: Get from TldSalesPricing
-                TransferPrice = 0, // TODO: Get from TldSalesPricing
-                Currency = "USD", // TODO: Get from TldSalesPricing
+                RegistrationPrice = currentSalesPricing.RegistrationPrice,
+                RenewalPrice = currentSalesPricing.RenewalPrice,
+                TransferPrice = currentSalesPricing.TransferPrice,
+                Currency = currentSalesPricing.Currency,
                 PriceByYears = new Dictionary<int, decimal>()
             };
 
@@ -786,10 +803,12 @@ public class DomainRegistrationService : IRegisteredDomainService
             var maxYears = registrarTld.MaxRegistrationYears ?? 10;
             for (int years = 1; years <= maxYears; years++)
             {
-                pricingDto.PriceByYears[years] = 0; // TODO: Calculate using TldSalesPricing
+                var baseFirstYear = currentSalesPricing.FirstYearRegistrationPrice ?? currentSalesPricing.RegistrationPrice;
+                pricingDto.PriceByYears[years] = years == 1
+                    ? baseFirstYear
+                    : baseFirstYear + (currentSalesPricing.RenewalPrice * (years - 1));
             }
 
-            _log.Warning("GetPricingForTld is using placeholder pricing. Update to use ITldPricingService.");
             return pricingDto;
         }
         catch (Exception ex)
@@ -812,22 +831,36 @@ public class DomainRegistrationService : IRegisteredDomainService
                 .OrderBy(rt => rt.Tld.Extension)
                 .ToListAsync();
 
-            // NOTE: Pricing has been moved to temporal pricing tables
-            // This method should be updated to use ITldPricingService
-            var tldDtos = tlds.Select(rt => new AvailableTldDto
-            {
-                Id = rt.Id,
-                Tld = rt.Tld.Extension,
-                RegistrarId = rt.RegistrarId,
-                RegistrarName = rt.Registrar.Name,
-                RegistrationPrice = 0, // TODO: Get from TldSalesPricing
-                RenewalPrice = 0, // TODO: Get from TldSalesPricing
-                Currency = "USD", // TODO: Get from TldSalesPricing
-                IsActive = rt.IsActive
-            });
+            var defaultRegistrarTlds = tlds
+                .GroupBy(rt => rt.TldId)
+                .Select(g => g.OrderByDescending(rt => rt.Registrar.IsDefault).First())
+                .OrderBy(rt => rt.Tld.Extension)
+                .ToList();
 
-            _log.Warning("GetAvailableTldsAsync is using placeholder pricing. Update to use ITldPricingService.");
-            _log.Information("Successfully fetched {Count} available TLDs", tlds.Count);
+            var tldDtos = new List<AvailableTldDto>();
+
+            foreach (var registrarTld in defaultRegistrarTlds)
+            {
+                var currentSalesPricing = await _tldPricingService.GetCurrentSalesPricingAsync(registrarTld.TldId);
+                if (currentSalesPricing == null)
+                {
+                    continue;
+                }
+
+                tldDtos.Add(new AvailableTldDto
+                {
+                    Id = registrarTld.Id,
+                    Tld = registrarTld.Tld.Extension,
+                    RegistrarId = registrarTld.RegistrarId,
+                    RegistrarName = registrarTld.Registrar.Name,
+                    RegistrationPrice = currentSalesPricing.RegistrationPrice,
+                    RenewalPrice = currentSalesPricing.RenewalPrice,
+                    Currency = currentSalesPricing.Currency,
+                    IsActive = registrarTld.IsActive
+                });
+            }
+
+            _log.Information("Successfully fetched {Count} available TLDs", tldDtos.Count);
             return tldDtos;
         }
         catch (Exception ex)
