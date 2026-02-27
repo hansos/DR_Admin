@@ -91,6 +91,7 @@
     let selectedCustomer: Customer | null = null;
     let customerContacts: ContactPerson[] = [];
     let globalDomainContacts: ContactPerson[] = [];
+    let customerSearchDebounceHandle: number | null = null;
 
     const getBootstrap = (): BootstrapNamespace | null => {
         const maybeBootstrap = (window as Window & { bootstrap?: BootstrapNamespace }).bootstrap;
@@ -512,6 +513,22 @@
         renderCustomerResults();
     };
 
+    const scheduleAutoSearch = (): void => {
+        if (customerSearchDebounceHandle !== null) {
+            window.clearTimeout(customerSearchDebounceHandle);
+            customerSearchDebounceHandle = null;
+        }
+
+        const query = getInput('new-sale-customer-query');
+        if (query.length < 3) {
+            return;
+        }
+
+        customerSearchDebounceHandle = window.setTimeout(() => {
+            void runCustomerSearch();
+        }, 300);
+    };
+
     const renderSelectedCustomer = (): void => {
         const card = document.getElementById('new-sale-customer-selected-card');
         const summary = document.getElementById('new-sale-customer-selected-summary');
@@ -784,6 +801,7 @@
 
     const bindEvents = (): void => {
         const form = document.getElementById('new-sale-customer-search-form') as HTMLFormElement | null;
+        const queryInput = document.getElementById('new-sale-customer-query') as HTMLInputElement | null;
         const tableBody = document.getElementById('new-sale-customer-results-body');
         const createButton = document.getElementById('new-sale-customer-create');
         const resetButton = document.getElementById('new-sale-customer-reset');
@@ -792,7 +810,6 @@
         const clearSelection = document.getElementById('new-sale-customer-clear-selection');
 
         const stateInputIds = [
-            'new-sale-customer-query',
             'new-sale-customer-name',
             'new-sale-customer-email',
             'new-sale-customer-phone',
@@ -806,6 +823,11 @@
         form?.addEventListener('submit', (event) => {
             event.preventDefault();
             void runCustomerSearch();
+        });
+
+        queryInput?.addEventListener('input', () => {
+            saveState();
+            scheduleAutoSearch();
         });
 
         stateInputIds.forEach((id) => {

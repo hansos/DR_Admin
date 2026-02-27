@@ -6,6 +6,7 @@
     let selectedCustomer = null;
     let customerContacts = [];
     let globalDomainContacts = [];
+    let customerSearchDebounceHandle = null;
     const getBootstrap = () => {
         const maybeBootstrap = window.bootstrap;
         return maybeBootstrap ?? null;
@@ -365,6 +366,19 @@
         }
         renderCustomerResults();
     };
+    const scheduleAutoSearch = () => {
+        if (customerSearchDebounceHandle !== null) {
+            window.clearTimeout(customerSearchDebounceHandle);
+            customerSearchDebounceHandle = null;
+        }
+        const query = getInput('new-sale-customer-query');
+        if (query.length < 3) {
+            return;
+        }
+        customerSearchDebounceHandle = window.setTimeout(() => {
+            void runCustomerSearch();
+        }, 300);
+    };
     const renderSelectedCustomer = () => {
         const card = document.getElementById('new-sale-customer-selected-card');
         const summary = document.getElementById('new-sale-customer-selected-summary');
@@ -597,6 +611,7 @@
     };
     const bindEvents = () => {
         const form = document.getElementById('new-sale-customer-search-form');
+        const queryInput = document.getElementById('new-sale-customer-query');
         const tableBody = document.getElementById('new-sale-customer-results-body');
         const createButton = document.getElementById('new-sale-customer-create');
         const resetButton = document.getElementById('new-sale-customer-reset');
@@ -604,7 +619,6 @@
         const nextButton = document.getElementById('new-sale-customer-next');
         const clearSelection = document.getElementById('new-sale-customer-clear-selection');
         const stateInputIds = [
-            'new-sale-customer-query',
             'new-sale-customer-name',
             'new-sale-customer-email',
             'new-sale-customer-phone',
@@ -616,6 +630,10 @@
         form?.addEventListener('submit', (event) => {
             event.preventDefault();
             void runCustomerSearch();
+        });
+        queryInput?.addEventListener('input', () => {
+            saveState();
+            scheduleAutoSearch();
         });
         stateInputIds.forEach((id) => {
             document.getElementById(id)?.addEventListener('input', saveState);

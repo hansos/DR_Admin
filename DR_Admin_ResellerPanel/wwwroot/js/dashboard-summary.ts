@@ -143,7 +143,6 @@ function loadNewSaleState(): NewSaleState | null {
 async function loadPendingSummary(): Promise<void> {
     clearError();
     setAllClearVisible(false);
-    setPendingCardVisible(true);
     setPendingLoading(true);
 
     try {

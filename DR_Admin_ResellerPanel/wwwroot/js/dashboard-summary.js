@@ -94,7 +94,6 @@
     async function loadPendingSummary() {
         clearError();
         setAllClearVisible(false);
-        setPendingCardVisible(true);
         setPendingLoading(true);
         try {
             const domains = await loadAllDomains();
