@@ -18,9 +18,9 @@ public class SubscriptionDto
     public int CustomerId { get; set; }
 
     /// <summary>
-    /// Service identifier being subscribed to
+    /// Service identifier being subscribed to (null for domain-only subscriptions)
     /// </summary>
-    public int ServiceId { get; set; }
+    public int? ServiceId { get; set; }
 
     /// <summary>
     /// Billing cycle identifier
@@ -179,9 +179,9 @@ public class CreateSubscriptionDto
     public int CustomerId { get; set; }
 
     /// <summary>
-    /// Service identifier to subscribe to
+    /// Service identifier to subscribe to (null for domain-only subscriptions)
     /// </summary>
-    public int ServiceId { get; set; }
+    public int? ServiceId { get; set; }
 
     /// <summary>
     /// Billing cycle identifier

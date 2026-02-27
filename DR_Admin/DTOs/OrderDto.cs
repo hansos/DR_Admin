@@ -23,9 +23,9 @@ public class OrderDto
     public int CustomerId { get; set; }
 
     /// <summary>
-    /// Service ID
+    /// Service ID (null for domain-only orders)
     /// </summary>
-    public int ServiceId { get; set; }
+    public int? ServiceId { get; set; }
 
     /// <summary>
     /// Quote ID (if applicable)
@@ -125,9 +125,9 @@ public class CreateOrderDto
     public int CustomerId { get; set; }
 
     /// <summary>
-    /// Service ID
+    /// Service ID (null for domain-only orders)
     /// </summary>
-    public int ServiceId { get; set; }
+    public int? ServiceId { get; set; }
 
     /// <summary>
     /// Quote ID (if applicable)
@@ -182,9 +182,9 @@ public class CreateOrderDto
 public class UpdateOrderDto
 {
     /// <summary>
-    /// Service ID
+    /// Service ID (null for domain-only orders)
     /// </summary>
-    public int ServiceId { get; set; }
+    public int? ServiceId { get; set; }
 
     /// <summary>
     /// Order status

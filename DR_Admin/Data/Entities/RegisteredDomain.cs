@@ -3,7 +3,7 @@ namespace ISPAdmin.Data.Entities;
 public class RegisteredDomain : EntityBase
 {
     public int CustomerId { get; set; }
-    public int ServiceId { get; set; }
+    public int? ServiceId { get; set; }
     public required string Name { get; set; }
     public int RegistrarId { get; set; }
     public int? RegistrarTldId { get; set; }
@@ -22,7 +22,7 @@ public class RegisteredDomain : EntityBase
     public string NormalizedName { get; set; } = string.Empty;
 
     public Customer Customer { get; set; } = null!;
-    public Service Service { get; set; } = null!;
+    public Service? Service { get; set; }
     public Registrar Registrar { get; set; } = null!;
     public RegistrarTld? RegistrarTld { get; set; }
     public ICollection<DnsRecord> DnsRecords { get; set; } = new List<DnsRecord>();

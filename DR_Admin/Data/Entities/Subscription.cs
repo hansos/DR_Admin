@@ -13,9 +13,9 @@ public class Subscription : EntityBase
     public int CustomerId { get; set; }
 
     /// <summary>
-    /// Foreign key to the service being subscribed to
+    /// Foreign key to the service being subscribed to (null for domain-only subscriptions)
     /// </summary>
-    public int ServiceId { get; set; }
+    public int? ServiceId { get; set; }
 
     /// <summary>
     /// Foreign key to the billing cycle
@@ -162,7 +162,7 @@ public class Subscription : EntityBase
     /// <summary>
     /// Navigation property to the service
     /// </summary>
-    public Service Service { get; set; } = null!;
+    public Service? Service { get; set; }
 
     /// <summary>
     /// Navigation property to the billing cycle

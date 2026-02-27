@@ -18,9 +18,9 @@ public class Order : EntityBase
     public int CustomerId { get; set; }
 
     /// <summary>
-    /// Foreign key to the service
+    /// Foreign key to the service (null for domain-only orders)
     /// </summary>
-    public int ServiceId { get; set; }
+    public int? ServiceId { get; set; }
 
     /// <summary>
     /// Foreign key to the originating quote (if applicable)
@@ -146,7 +146,7 @@ public class Order : EntityBase
     /// <summary>
     /// Navigation property to the service
     /// </summary>
-    public Service Service { get; set; } = null!;
+    public Service? Service { get; set; }
 
     /// <summary>
     /// Navigation property to the originating quote

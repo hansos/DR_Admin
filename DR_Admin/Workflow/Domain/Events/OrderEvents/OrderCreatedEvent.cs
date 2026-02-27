@@ -12,7 +12,7 @@ public class OrderCreatedEvent : DomainEventBase
     
     public string OrderNumber { get; set; } = string.Empty;
     public int CustomerId { get; set; }
-    public int ServiceId { get; set; }
+    public int? ServiceId { get; set; }
     public int? InvoiceId { get; set; }
     public OrderType OrderType { get; set; }
     public decimal TotalAmount { get; set; }

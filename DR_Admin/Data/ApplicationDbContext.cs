@@ -497,7 +497,8 @@ public class ApplicationDbContext : DbContext
             entity.HasOne(e => e.Service)
                 .WithMany(s => s.Orders)
                 .HasForeignKey(e => e.ServiceId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         // Invoice configuration
@@ -584,12 +585,13 @@ public class ApplicationDbContext : DbContext
                 .WithMany(c => c.RegisteredDomains)
                 .HasForeignKey(e => e.CustomerId)
                 .OnDelete(DeleteBehavior.Restrict);
-            
+
             entity.HasOne(e => e.Service)
                 .WithMany()
                 .HasForeignKey(e => e.ServiceId)
-                .OnDelete(DeleteBehavior.Restrict);
-            
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.SetNull);
+
             entity.HasOne(e => e.Registrar)
                 .WithMany(r => r.RegisteredDomains)
                 .HasForeignKey(e => e.RegistrarId)

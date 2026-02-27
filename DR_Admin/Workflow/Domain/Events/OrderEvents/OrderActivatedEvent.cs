@@ -11,6 +11,6 @@ public class OrderActivatedEvent : DomainEventBase
     
     public string OrderNumber { get; set; } = string.Empty;
     public int CustomerId { get; set; }
-    public int ServiceId { get; set; }
+    public int? ServiceId { get; set; }
     public DateTime ActivatedAt { get; set; }
 }

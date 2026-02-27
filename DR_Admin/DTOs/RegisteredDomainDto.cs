@@ -4,7 +4,7 @@ public class RegisteredDomainDto
 {
     public int Id { get; set; }
     public int CustomerId { get; set; }
-    public int ServiceId { get; set; }
+    public int? ServiceId { get; set; }
     public string Name { get; set; } = string.Empty;
     public int ProviderId { get; set; }
     public string Status { get; set; } = string.Empty;
@@ -20,7 +20,7 @@ public class RegisteredDomainDto
 public class CreateRegisteredDomainDto
 {
     public int CustomerId { get; set; }
-    public int ServiceId { get; set; }
+    public int? ServiceId { get; set; }
     public string Name { get; set; } = string.Empty;
     public int ProviderId { get; set; }
     public string Status { get; set; } = string.Empty;
@@ -31,7 +31,7 @@ public class CreateRegisteredDomainDto
 public class UpdateRegisteredDomainDto
 {
     public int CustomerId { get; set; }
-    public int ServiceId { get; set; }
+    public int? ServiceId { get; set; }
     public string Name { get; set; } = string.Empty;
     public int ProviderId { get; set; }
     public string Status { get; set; } = string.Empty;

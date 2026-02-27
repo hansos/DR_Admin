@@ -154,8 +154,13 @@ public class DomainRegistrationWorkflow : IDomainRegistrationWorkflow
                 return WorkflowResult.Failed($"Order with ID {orderId} not found");
             }
 
+            if (!order.ServiceId.HasValue)
+            {
+                return WorkflowResult.Failed("Order does not have an associated service");
+            }
+
             var registrar = await _context.Registrars.FindAsync(
-                await GetRegistrarIdFromServiceAsync(order.ServiceId));
+                await GetRegistrarIdFromServiceAsync(order.ServiceId.Value));
 
             if (registrar == null)
             {
@@ -416,3 +421,4 @@ public class DomainRegistrationWorkflow : IDomainRegistrationWorkflow
         return $"INV-{DateTime.UtcNow.Year}-{nextNumber:D5}";
     }
 }
+

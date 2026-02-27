@@ -11,9 +11,9 @@ public class QuoteLine : EntityBase
     public int QuoteId { get; set; }
 
     /// <summary>
-    /// Foreign key to the service being quoted
+    /// Foreign key to the service being quoted (null for domain-only lines)
     /// </summary>
-    public int ServiceId { get; set; }
+    public int? ServiceId { get; set; }
 
     /// <summary>
     /// Foreign key to the billing cycle
@@ -103,7 +103,7 @@ public class QuoteLine : EntityBase
     /// <summary>
     /// Navigation property to the service
     /// </summary>
-    public Service Service { get; set; } = null!;
+    public Service? Service { get; set; }
 
     /// <summary>
     /// Navigation property to the billing cycle
