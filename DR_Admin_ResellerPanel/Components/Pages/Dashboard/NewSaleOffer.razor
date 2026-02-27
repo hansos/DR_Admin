@@ -1,7 +1,7 @@
 @page "/dashboard/new-sale/offer"
 
 <div id="dashboard-new-sale-offer-page" class="container-fluid">
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+    <div id="new-sale-offer-page-progress" class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
         <div>
             <h2 class="h4 mb-1"><i class="bi bi-receipt"></i> New sale</h2>
             <p class="text-muted mb-0">Page 5 of 7: Present offer.</p>
@@ -10,6 +10,15 @@
 
     <div id="new-sale-offer-alert-success" class="alert alert-success d-none" role="alert"></div>
     <div id="new-sale-offer-alert-error" class="alert alert-danger d-none" role="alert"></div>
+
+    <div id="new-sale-offer-print-header" class="d-none mb-4">
+        <div class="border-bottom pb-3">
+            <h4 class="mb-1" id="new-sale-offer-seller-name">Seller</h4>
+            <div class="small text-muted" id="new-sale-offer-seller-contact">-</div>
+            <div class="small text-muted" id="new-sale-offer-seller-address">-</div>
+            <div class="small text-muted" id="new-sale-offer-seller-registration">-</div>
+        </div>
+    </div>
 
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-light">
@@ -110,7 +119,7 @@
         </div>
     </div>
 
-    <div class="d-flex flex-wrap justify-content-between gap-2 mb-4">
+    <div id="new-sale-offer-bottom-actions" class="d-flex flex-wrap justify-content-between gap-2 mb-4">
         <div class="d-flex flex-wrap gap-2">
             <a class="btn btn-outline-secondary" href="/dashboard/new-sale"><i class="bi bi-pencil"></i> Edit Page 1</a>
             <a class="btn btn-outline-secondary" href="/dashboard/new-sale/customer"><i class="bi bi-pencil"></i> Edit Page 2</a>
@@ -118,6 +127,7 @@
             <a class="btn btn-outline-secondary" href="/dashboard/new-sale/services"><i class="bi bi-pencil"></i> Edit Page 4</a>
         </div>
         <div class="d-flex flex-wrap gap-2">
+            <button class="btn btn-outline-secondary" id="new-sale-offer-print" type="button"><i class="bi bi-printer"></i> Print</button>
             <button class="btn btn-outline-primary" id="new-sale-offer-send" type="button"><i class="bi bi-envelope"></i> Send to customer</button>
             <button class="btn btn-primary" id="new-sale-offer-accept" type="button">Accept and continue <i class="bi bi-arrow-right"></i></button>
         </div>

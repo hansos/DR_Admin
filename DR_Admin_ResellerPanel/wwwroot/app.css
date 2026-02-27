@@ -2,6 +2,25 @@ html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
+@media print {
+    body.print-new-sale-offer .sidebar,
+    body.print-new-sale-offer .top-row,
+    body.print-new-sale-offer #new-sale-offer-page-progress,
+    body.print-new-sale-offer #new-sale-offer-bottom-actions,
+    body.print-new-sale-offer #new-sale-offer-alert-success,
+    body.print-new-sale-offer #new-sale-offer-alert-error {
+        display: none !important;
+    }
+
+    body.print-new-sale-offer #new-sale-offer-print-header {
+        display: block !important;
+    }
+
+    body.print-new-sale-offer .content {
+        padding-top: 0 !important;
+    }
+}
+
 .login-page {
     min-height: 100vh;
     background: linear-gradient(135deg, #052767 0%, #3a0647 100%);

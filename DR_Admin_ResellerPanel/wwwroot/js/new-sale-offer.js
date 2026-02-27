@@ -144,6 +144,23 @@
             price: Number.isFinite(price) ? price : null,
         };
     };
+    const normalizeResellerCompany = (item) => {
+        const typed = (item ?? {});
+        return {
+            id: Number(typed.id ?? typed.Id ?? 0),
+            name: String(typed.name ?? typed.Name ?? ''),
+            contactPerson: String(typed.contactPerson ?? typed.ContactPerson ?? ''),
+            email: String(typed.email ?? typed.Email ?? ''),
+            phone: String(typed.phone ?? typed.Phone ?? ''),
+            address: String(typed.address ?? typed.Address ?? ''),
+            city: String(typed.city ?? typed.City ?? ''),
+            state: String(typed.state ?? typed.State ?? ''),
+            postalCode: String(typed.postalCode ?? typed.PostalCode ?? ''),
+            countryCode: String(typed.countryCode ?? typed.CountryCode ?? ''),
+            companyRegistrationNumber: String(typed.companyRegistrationNumber ?? typed.CompanyRegistrationNumber ?? ''),
+            vatNumber: String(typed.vatNumber ?? typed.VatNumber ?? ''),
+        };
+    };
     const parseList = (raw) => {
         if (Array.isArray(raw)) {
             return raw;
@@ -156,6 +173,51 @@
             return wrapped.Data;
         }
         return [];
+    };
+    const renderSellerHeader = (company) => {
+        const nameElement = document.getElementById('new-sale-offer-seller-name');
+        const contactElement = document.getElementById('new-sale-offer-seller-contact');
+        const addressElement = document.getElementById('new-sale-offer-seller-address');
+        const registrationElement = document.getElementById('new-sale-offer-seller-registration');
+        if (!nameElement || !contactElement || !addressElement || !registrationElement) {
+            return;
+        }
+        if (!company) {
+            nameElement.textContent = 'Seller';
+            contactElement.textContent = '-';
+            addressElement.textContent = '-';
+            registrationElement.textContent = '-';
+            return;
+        }
+        const locationParts = [company.postalCode, company.city, company.state, company.countryCode]
+            .map((value) => value.trim())
+            .filter((value) => value.length > 0);
+        const addressText = [company.address.trim(), locationParts.join(' ')].filter((value) => value.length > 0).join(', ');
+        const contactParts = [
+            company.contactPerson.trim(),
+            company.email.trim(),
+            company.phone.trim(),
+        ].filter((value) => value.length > 0);
+        const registrationParts = [
+            company.companyRegistrationNumber.trim() ? `Org no: ${company.companyRegistrationNumber.trim()}` : '',
+            company.vatNumber.trim() ? `VAT: ${company.vatNumber.trim()}` : '',
+        ].filter((value) => value.length > 0);
+        nameElement.textContent = company.name.trim() || 'Seller';
+        contactElement.textContent = contactParts.join(' · ') || '-';
+        addressElement.textContent = addressText || '-';
+        registrationElement.textContent = registrationParts.join(' · ') || '-';
+    };
+    const loadSellerCompanyInfo = async () => {
+        const defaultResponse = await apiRequest(`${getApiBaseUrl()}/ResellerCompanies/default`, { method: 'GET' });
+        if (defaultResponse.success && defaultResponse.data) {
+            renderSellerHeader(normalizeResellerCompany(defaultResponse.data));
+            return;
+        }
+        const activeResponse = await apiRequest(`${getApiBaseUrl()}/ResellerCompanies/active`, { method: 'GET' });
+        const activeCompanies = parseList(activeResponse.data)
+            .map((item) => normalizeResellerCompany(item))
+            .filter((item) => item.id > 0);
+        renderSellerHeader(activeCompanies.length > 0 ? activeCompanies[0] : null);
     };
     const formatMoney = (amount) => `${amount.toFixed(2)} ${currencyCode}`;
     const toTitle = (value) => {
@@ -434,6 +496,11 @@
         sessionStorage.setItem(storageKey, JSON.stringify(currentState));
         window.location.href = '/dashboard/new-sale/payment';
     };
+    const printOffer = () => {
+        saveState();
+        document.body.classList.add('print-new-sale-offer');
+        window.print();
+    };
     const bindEvents = () => {
         ['new-sale-offer-valid-until', 'new-sale-offer-coupon', 'new-sale-offer-discount', 'new-sale-offer-notes']
             .forEach((id) => {
@@ -443,7 +510,11 @@
             });
         });
         document.getElementById('new-sale-offer-send')?.addEventListener('click', sendToCustomer);
+        document.getElementById('new-sale-offer-print')?.addEventListener('click', printOffer);
         document.getElementById('new-sale-offer-accept')?.addEventListener('click', acceptAndContinue);
+        window.addEventListener('afterprint', () => {
+            document.body.classList.remove('print-new-sale-offer');
+        });
     };
     const initializePage = async () => {
         const page = document.getElementById('dashboard-new-sale-offer-page');
@@ -460,7 +531,10 @@
         setContextHeader();
         restoreOfferSettings();
         bindEvents();
-        await loadSupportData();
+        await Promise.all([
+            loadSupportData(),
+            loadSellerCompanyInfo(),
+        ]);
         renderLines();
     };
     const setupObserver = () => {
