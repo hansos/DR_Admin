@@ -18,4 +18,5 @@ public class RegistrarTld : EntityBase
     public Tld Tld { get; set; } = null!;
     public ICollection<RegisteredDomain> RegisteredDomains { get; set; } = new List<RegisteredDomain>();
     public ICollection<RegistrarTldCostPricing> CostPricingHistory { get; set; } = new List<RegistrarTldCostPricing>();
+    public ICollection<RegistrarTldPriceChangeLog> PriceChangeLogs { get; set; } = new List<RegistrarTldPriceChangeLog>();
 }

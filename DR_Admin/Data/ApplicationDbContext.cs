@@ -211,6 +211,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<TldSalesPricing> TldSalesPricing { get; set; }
     public DbSet<ResellerTldDiscount> ResellerTldDiscounts { get; set; }
     public DbSet<RegistrarSelectionPreference> RegistrarSelectionPreferences { get; set; }
+    public DbSet<RegistrarTldPriceDownloadSession> RegistrarTldPriceDownloadSessions { get; set; }
+    public DbSet<RegistrarTldPriceChangeLog> RegistrarTldPriceChangeLogs { get; set; }
     
     // Financial tracking entities
     public DbSet<CustomerTaxProfile> CustomerTaxProfiles { get; set; }
@@ -1421,6 +1423,56 @@ public class ApplicationDbContext : DbContext
             
             entity.HasIndex(e => new { e.VendorId, e.VendorType }).IsUnique();
             entity.HasIndex(e => e.Require1099);
+        });
+
+        // RegistrarTldPriceDownloadSession configuration
+        modelBuilder.Entity<RegistrarTldPriceDownloadSession>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.TriggerSource).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Message).HasMaxLength(1000);
+            entity.Property(e => e.ErrorMessage).HasMaxLength(2000);
+
+            entity.HasIndex(e => new { e.RegistrarId, e.StartedAtUtc });
+            entity.HasIndex(e => e.Success);
+
+            entity.HasOne(e => e.Registrar)
+                .WithMany(r => r.PriceDownloadSessions)
+                .HasForeignKey(e => e.RegistrarId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // RegistrarTldPriceChangeLog configuration
+        modelBuilder.Entity<RegistrarTldPriceChangeLog>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.ChangeSource).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.ChangedBy).HasMaxLength(100);
+            entity.Property(e => e.OldCurrency).HasMaxLength(3);
+            entity.Property(e => e.NewCurrency).HasMaxLength(3);
+            entity.Property(e => e.Notes).HasMaxLength(1000);
+
+            entity.Property(e => e.OldRegistrationCost).HasPrecision(18, 4);
+            entity.Property(e => e.NewRegistrationCost).HasPrecision(18, 4);
+            entity.Property(e => e.OldRenewalCost).HasPrecision(18, 4);
+            entity.Property(e => e.NewRenewalCost).HasPrecision(18, 4);
+            entity.Property(e => e.OldTransferCost).HasPrecision(18, 4);
+            entity.Property(e => e.NewTransferCost).HasPrecision(18, 4);
+
+            entity.HasIndex(e => e.RegistrarTldId);
+            entity.HasIndex(e => e.DownloadSessionId);
+            entity.HasIndex(e => e.ChangedAtUtc);
+            entity.HasIndex(e => e.ChangeSource);
+
+            entity.HasOne(e => e.RegistrarTld)
+                .WithMany(rt => rt.PriceChangeLogs)
+                .HasForeignKey(e => e.RegistrarTldId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.DownloadSession)
+                .WithMany(s => s.PriceChangeLogs)
+                .HasForeignKey(e => e.DownloadSessionId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         // Invoice configuration update for SelectedPaymentGatewayId

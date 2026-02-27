@@ -133,6 +133,7 @@ builder.Services.AddTransient<ICountryService, CountryService>();
 builder.Services.AddTransient<IPostalCodeService, PostalCodeService>();
 builder.Services.AddTransient<ITldService, TldService>();
 builder.Services.AddTransient<IRegistrarService, RegistrarService>();
+builder.Services.AddTransient<IRegistrarTldPriceSyncService, RegistrarTldPriceSyncService>();
 builder.Services.AddTransient<IRegistrarTldService, RegistrarTldService>();
 builder.Services.AddTransient<IDomainContactService, DomainContactService>();
 builder.Services.AddTransient<IDnsRecordTypeService, DnsRecordTypeService>();
@@ -266,6 +267,7 @@ builder.Services.AddHostedService<EmailQueueBackgroundService>();
 builder.Services.AddHostedService<DomainExpirationMonitorService>();
 builder.Services.AddHostedService<OutboxProcessorService>();
 builder.Services.AddHostedService<ExchangeRateUpdateService>();
+builder.Services.AddHostedService<RegistrarTldPriceSyncBackgroundService>();
 builder.Services.AddHostedService<DatabaseBackupService>();
 
 // Configure CORS from appsettings

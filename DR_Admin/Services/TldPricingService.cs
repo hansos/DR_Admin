@@ -188,6 +188,13 @@ public partial class TldPricingService : ITldPricingService
             _context.RegistrarTldCostPricing.Add(costPricing);
             await _context.SaveChangesAsync();
 
+            await CreateManualPriceChangeLogAsync(
+                createDto.RegistrarTldId,
+                null,
+                costPricing,
+                createdBy,
+                "Manual cost pricing created");
+
             _log.Information("Successfully created cost pricing {CostPricingId} for RegistrarTld {RegistrarTldId}",
                 costPricing.Id, createDto.RegistrarTldId);
 
@@ -237,6 +244,15 @@ public partial class TldPricingService : ITldPricingService
             }
 
             // Update fields
+            var previousSnapshot = new RegistrarTldCostPricing
+            {
+                RegistrarTldId = costPricing.RegistrarTldId,
+                RegistrationCost = costPricing.RegistrationCost,
+                RenewalCost = costPricing.RenewalCost,
+                TransferCost = costPricing.TransferCost,
+                Currency = costPricing.Currency
+            };
+
             costPricing.EffectiveFrom = updateDto.EffectiveFrom;
             costPricing.EffectiveTo = updateDto.EffectiveTo;
             costPricing.RegistrationCost = updateDto.RegistrationCost;
@@ -249,6 +265,13 @@ public partial class TldPricingService : ITldPricingService
             costPricing.Notes = updateDto.Notes;
 
             await _context.SaveChangesAsync();
+
+            await CreateManualPriceChangeLogAsync(
+                costPricing.RegistrarTldId,
+                previousSnapshot,
+                costPricing,
+                modifiedBy,
+                "Manual cost pricing updated");
 
             _log.Information("Successfully updated cost pricing {CostPricingId}", id);
 
@@ -303,6 +326,33 @@ public partial class TldPricingService : ITldPricingService
     }
 
     // ==================== TldSalesPricing Methods ====================
+
+    private async Task CreateManualPriceChangeLogAsync(
+        int registrarTldId,
+        RegistrarTldCostPricing? previous,
+        RegistrarTldCostPricing current,
+        string? changedBy,
+        string notes)
+    {
+        _context.RegistrarTldPriceChangeLogs.Add(new RegistrarTldPriceChangeLog
+        {
+            RegistrarTldId = registrarTldId,
+            ChangeSource = "Manual",
+            ChangedBy = string.IsNullOrWhiteSpace(changedBy) ? "manual" : changedBy,
+            ChangedAtUtc = DateTime.UtcNow,
+            OldRegistrationCost = previous?.RegistrationCost,
+            NewRegistrationCost = current.RegistrationCost,
+            OldRenewalCost = previous?.RenewalCost,
+            NewRenewalCost = current.RenewalCost,
+            OldTransferCost = previous?.TransferCost,
+            NewTransferCost = current.TransferCost,
+            OldCurrency = previous?.Currency,
+            NewCurrency = current.Currency,
+            Notes = notes
+        });
+
+        await _context.SaveChangesAsync();
+    }
 
     public async Task<List<TldSalesPricingDto>> GetSalesPricingHistoryAsync(int tldId, bool includeArchived = false)
     {

@@ -1,0 +1,485 @@
+"use strict";
+(() => {
+    const storageKey = 'new-sale-state';
+    let currentState = null;
+    let currencyCode = 'USD';
+    let hostingPackages = new Map();
+    let billingCycles = new Map();
+    let services = new Map();
+    const getApiBaseUrl = () => {
+        const settings = window.AppSettings;
+        return settings?.apiBaseUrl ?? '';
+    };
+    const getAuthToken = () => {
+        const auth = window.Auth;
+        if (auth?.getToken) {
+            return auth.getToken();
+        }
+        return sessionStorage.getItem('rp_authToken');
+    };
+    const apiRequest = async (endpoint, options = {}) => {
+        try {
+            const headers = {
+                'Content-Type': 'application/json',
+                ...options.headers,
+            };
+            const authToken = getAuthToken();
+            if (authToken) {
+                headers.Authorization = `Bearer ${authToken}`;
+            }
+            const response = await fetch(endpoint, {
+                ...options,
+                headers,
+                credentials: 'include',
+            });
+            const contentType = response.headers.get('content-type') ?? '';
+            const hasJson = contentType.includes('application/json');
+            const data = hasJson ? await response.json() : null;
+            if (!response.ok) {
+                return {
+                    success: false,
+                    message: (data && (data.message ?? data.title)) ||
+                        `Request failed with status ${response.status}`,
+                };
+            }
+            const parsed = data;
+            return {
+                success: parsed?.success !== false,
+                data: parsed?.data ?? data,
+                message: parsed?.message,
+            };
+        }
+        catch (error) {
+            console.error('New sale offer request failed', error);
+            return {
+                success: false,
+                message: 'Network error. Please try again.',
+            };
+        }
+    };
+    const esc = (text) => {
+        const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+        return (text || '').replace(/[&<>"']/g, (char) => map[char] ?? char);
+    };
+    const loadState = () => {
+        const raw = sessionStorage.getItem(storageKey);
+        if (!raw) {
+            return null;
+        }
+        try {
+            return JSON.parse(raw);
+        }
+        catch {
+            return null;
+        }
+    };
+    const saveState = () => {
+        if (!currentState) {
+            return;
+        }
+        const validUntil = document.getElementById('new-sale-offer-valid-until')?.value ?? '';
+        const couponCode = document.getElementById('new-sale-offer-coupon')?.value.trim() ?? '';
+        const notes = document.getElementById('new-sale-offer-notes')?.value.trim() ?? '';
+        const discountRaw = document.getElementById('new-sale-offer-discount')?.value ?? '';
+        const discountParsed = Number(discountRaw);
+        const discountPercent = Number.isFinite(discountParsed) && discountParsed >= 0 ? Math.min(100, discountParsed) : 0;
+        const totals = calculateTotals(buildLineItems());
+        currentState.offer = {
+            ...currentState.offer,
+            validUntil: validUntil || undefined,
+            couponCode: couponCode || undefined,
+            discountPercent,
+            notes: notes || undefined,
+            lineCount: totals.lineCount,
+            oneTimeSubtotal: totals.oneTime,
+            recurringSubtotal: totals.recurring,
+            grandTotal: totals.grand,
+        };
+        sessionStorage.setItem(storageKey, JSON.stringify(currentState));
+    };
+    const showSuccess = (message) => {
+        const alert = document.getElementById('new-sale-offer-alert-success');
+        if (!alert) {
+            return;
+        }
+        alert.textContent = message;
+        alert.classList.remove('d-none');
+        document.getElementById('new-sale-offer-alert-error')?.classList.add('d-none');
+        setTimeout(() => alert.classList.add('d-none'), 4000);
+    };
+    const showError = (message) => {
+        const alert = document.getElementById('new-sale-offer-alert-error');
+        if (!alert) {
+            return;
+        }
+        alert.textContent = message;
+        alert.classList.remove('d-none');
+        document.getElementById('new-sale-offer-alert-success')?.classList.add('d-none');
+    };
+    const normalizeHostingPackage = (item) => {
+        const typed = (item ?? {});
+        return {
+            id: Number(typed.id ?? typed.Id ?? 0),
+            name: String(typed.name ?? typed.Name ?? ''),
+            monthlyPrice: Number(typed.monthlyPrice ?? typed.MonthlyPrice ?? 0),
+            yearlyPrice: Number(typed.yearlyPrice ?? typed.YearlyPrice ?? 0),
+        };
+    };
+    const normalizeBillingCycle = (item) => {
+        const typed = (item ?? {});
+        return {
+            id: Number(typed.id ?? typed.Id ?? 0),
+            code: String(typed.code ?? typed.Code ?? ''),
+            name: String(typed.name ?? typed.Name ?? ''),
+            durationInDays: Number(typed.durationInDays ?? typed.DurationInDays ?? 0),
+        };
+    };
+    const normalizeService = (item) => {
+        const typed = (item ?? {});
+        const price = Number(typed.price ?? typed.Price);
+        return {
+            id: Number(typed.id ?? typed.Id ?? 0),
+            name: String(typed.name ?? typed.Name ?? ''),
+            description: String(typed.description ?? typed.Description ?? ''),
+            price: Number.isFinite(price) ? price : null,
+        };
+    };
+    const parseList = (raw) => {
+        if (Array.isArray(raw)) {
+            return raw;
+        }
+        const wrapped = raw;
+        if (Array.isArray(wrapped?.data)) {
+            return wrapped.data;
+        }
+        if (Array.isArray(wrapped?.Data)) {
+            return wrapped.Data;
+        }
+        return [];
+    };
+    const formatMoney = (amount) => `${amount.toFixed(2)} ${currencyCode}`;
+    const toTitle = (value) => {
+        if (!value) {
+            return '-';
+        }
+        return value
+            .split('-')
+            .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+            .join(' ');
+    };
+    const setContextHeader = () => {
+        if (!currentState) {
+            return;
+        }
+        const domain = document.getElementById('new-sale-offer-domain');
+        const flow = document.getElementById('new-sale-offer-flow');
+        const customer = document.getElementById('new-sale-offer-customer');
+        const currency = document.getElementById('new-sale-offer-currency');
+        if (domain) {
+            domain.textContent = currentState.domainName || '-';
+        }
+        if (flow) {
+            flow.textContent = toTitle(currentState.flowType ?? '');
+        }
+        if (customer) {
+            customer.textContent = currentState.selectedCustomer?.name || currentState.selectedCustomer?.customerName || '-';
+        }
+        if (currency) {
+            currency.textContent = currencyCode;
+        }
+    };
+    const resolveHostingRecurringPrice = (pkg, cycle) => {
+        if (!cycle) {
+            return pkg.monthlyPrice;
+        }
+        const code = cycle.code.toLowerCase();
+        const name = cycle.name.toLowerCase();
+        if (code.includes('year') || name.includes('year') || cycle.durationInDays >= 360) {
+            return pkg.yearlyPrice;
+        }
+        return pkg.monthlyPrice;
+    };
+    const buildDomainOperationLine = () => {
+        if (!currentState?.domainName || !currentState.flowType) {
+            return null;
+        }
+        const flowType = currentState.flowType.toLowerCase();
+        const details = [];
+        if (flowType === 'register') {
+            const years = currentState.otherServices?.registrationPeriodYears ?? 1;
+            details.push(`${years} year(s)`);
+            details.push(currentState.otherServices?.autoRenew === false ? 'Manual renewal' : 'Auto-renew');
+            if (currentState.otherServices?.privacyProtection) {
+                details.push('Privacy protection');
+            }
+        }
+        if (flowType === 'transfer' && currentState.otherServices?.transferAuthCode) {
+            details.push('Auth code provided');
+        }
+        const detailText = details.length ? ` (${details.join(', ')})` : '';
+        const configuredPrice = currentState.otherServices?.domainOperationPrice;
+        const fallbackPrice = currentState.pricing?.registration;
+        const rawPrice = configuredPrice ?? fallbackPrice ?? 0;
+        const price = Number.isFinite(rawPrice) ? rawPrice : 0;
+        const lineType = flowType === 'register' || flowType === 'renew'
+            ? 'Recurring'
+            : 'One-time';
+        return {
+            description: `${toTitle(flowType)} ${currentState.domainName}${detailText}`,
+            quantity: 1,
+            unitPrice: price,
+            subtotal: price,
+            type: lineType,
+        };
+    };
+    const buildHostingLine = () => {
+        if (!currentState?.hostingPackageId) {
+            return null;
+        }
+        const pkg = hostingPackages.get(currentState.hostingPackageId);
+        if (!pkg) {
+            return {
+                description: `Hosting package #${currentState.hostingPackageId}`,
+                quantity: 1,
+                unitPrice: 0,
+                subtotal: 0,
+                type: 'Recurring',
+            };
+        }
+        const cycle = currentState.billingCycleId ? (billingCycles.get(currentState.billingCycleId) ?? null) : null;
+        const cycleName = cycle?.name || 'Default billing';
+        const price = resolveHostingRecurringPrice(pkg, cycle);
+        return {
+            description: `${pkg.name} (${cycleName})`,
+            quantity: 1,
+            unitPrice: price,
+            subtotal: price,
+            type: 'Recurring',
+        };
+    };
+    const buildServiceLines = () => {
+        const selectedIds = currentState?.otherServices?.selectedServiceIds ?? [];
+        return selectedIds
+            .map((serviceId) => {
+            const service = services.get(serviceId);
+            if (!service) {
+                return {
+                    description: `Service #${serviceId}`,
+                    quantity: 1,
+                    unitPrice: 0,
+                    subtotal: 0,
+                    type: 'Recurring',
+                };
+            }
+            const price = Number.isFinite(service.price ?? Number.NaN) ? (service.price ?? 0) : 0;
+            return {
+                description: service.name,
+                quantity: 1,
+                unitPrice: price,
+                subtotal: price,
+                type: 'Recurring',
+            };
+        });
+    };
+    const buildLineItems = () => {
+        const lines = [];
+        const domainLine = buildDomainOperationLine();
+        if (domainLine) {
+            lines.push(domainLine);
+        }
+        const hostingLine = buildHostingLine();
+        if (hostingLine) {
+            lines.push(hostingLine);
+        }
+        lines.push(...buildServiceLines());
+        return lines;
+    };
+    const calculateTotals = (lines) => {
+        const discountRaw = Number(document.getElementById('new-sale-offer-discount')?.value ?? '0');
+        const discountPercent = Number.isFinite(discountRaw) && discountRaw > 0 ? Math.min(100, discountRaw) : 0;
+        const oneTime = lines
+            .filter((line) => line.type === 'One-time')
+            .reduce((sum, line) => sum + line.subtotal, 0);
+        const recurring = lines
+            .filter((line) => line.type === 'Recurring')
+            .reduce((sum, line) => sum + line.subtotal, 0);
+        const gross = oneTime + recurring;
+        const discountAmount = gross * (discountPercent / 100);
+        const grand = Math.max(0, gross - discountAmount);
+        return {
+            lineCount: lines.length,
+            oneTime,
+            recurring,
+            grand,
+        };
+    };
+    const renderLines = () => {
+        const body = document.getElementById('new-sale-offer-lines-body');
+        const lineCount = document.getElementById('new-sale-offer-line-count');
+        if (!body || !lineCount) {
+            return;
+        }
+        const lines = buildLineItems();
+        if (!lines.length) {
+            body.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No quote lines available. Go back and add at least one item.</td></tr>';
+            lineCount.textContent = '0 lines';
+            renderTotals(lines);
+            return;
+        }
+        body.innerHTML = lines.map((line) => `
+            <tr>
+                <td>${esc(line.description)}</td>
+                <td class="text-center">${line.quantity}</td>
+                <td class="text-end">${esc(formatMoney(line.unitPrice))}</td>
+                <td class="text-end">${esc(formatMoney(line.subtotal))}</td>
+                <td class="text-end">${esc(line.type)}</td>
+            </tr>
+        `).join('');
+        lineCount.textContent = `${lines.length} line${lines.length === 1 ? '' : 's'}`;
+        renderTotals(lines);
+    };
+    const renderTotals = (lines) => {
+        const totalOneTime = document.getElementById('new-sale-offer-total-onetime');
+        const totalRecurring = document.getElementById('new-sale-offer-total-recurring');
+        const totalGrand = document.getElementById('new-sale-offer-total-grand');
+        if (!totalOneTime || !totalRecurring || !totalGrand) {
+            return;
+        }
+        const totals = calculateTotals(lines);
+        totalOneTime.textContent = formatMoney(totals.oneTime);
+        totalRecurring.textContent = formatMoney(totals.recurring);
+        totalGrand.textContent = formatMoney(totals.grand);
+        saveState();
+    };
+    const restoreOfferSettings = () => {
+        const offer = currentState?.offer;
+        const validUntilInput = document.getElementById('new-sale-offer-valid-until');
+        const couponInput = document.getElementById('new-sale-offer-coupon');
+        const discountInput = document.getElementById('new-sale-offer-discount');
+        const notesInput = document.getElementById('new-sale-offer-notes');
+        if (validUntilInput) {
+            if (offer?.validUntil) {
+                validUntilInput.value = offer.validUntil;
+            }
+            else {
+                const defaultDate = new Date();
+                defaultDate.setDate(defaultDate.getDate() + 14);
+                validUntilInput.value = defaultDate.toISOString().slice(0, 10);
+            }
+        }
+        if (couponInput) {
+            couponInput.value = offer?.couponCode ?? '';
+        }
+        if (discountInput) {
+            discountInput.value = offer?.discountPercent ? String(offer.discountPercent) : '';
+        }
+        if (notesInput) {
+            notesInput.value = offer?.notes ?? currentState?.otherServices?.customServiceNotes ?? '';
+        }
+    };
+    const loadSupportData = async () => {
+        const [hostingResponse, cyclesResponse, servicesResponse] = await Promise.all([
+            apiRequest(`${getApiBaseUrl()}/HostingPackages/active`, { method: 'GET' }),
+            apiRequest(`${getApiBaseUrl()}/BillingCycles`, { method: 'GET' }),
+            apiRequest(`${getApiBaseUrl()}/Services`, { method: 'GET' }),
+        ]);
+        hostingPackages = new Map();
+        parseList(hostingResponse.data)
+            .map((item) => normalizeHostingPackage(item))
+            .filter((item) => item.id > 0)
+            .forEach((item) => {
+            hostingPackages.set(item.id, item);
+        });
+        billingCycles = new Map();
+        parseList(cyclesResponse.data)
+            .map((item) => normalizeBillingCycle(item))
+            .filter((item) => item.id > 0)
+            .forEach((item) => {
+            billingCycles.set(item.id, item);
+        });
+        services = new Map();
+        parseList(servicesResponse.data)
+            .map((item) => normalizeService(item))
+            .filter((item) => item.id > 0)
+            .forEach((item) => {
+            services.set(item.id, item);
+        });
+    };
+    const sendToCustomer = () => {
+        if (!currentState) {
+            return;
+        }
+        saveState();
+        currentState.offer = {
+            ...currentState.offer,
+            sentAt: new Date().toISOString(),
+        };
+        sessionStorage.setItem(storageKey, JSON.stringify(currentState));
+        showSuccess('Offer marked as sent. You can continue when ready.');
+    };
+    const acceptAndContinue = () => {
+        if (!currentState) {
+            return;
+        }
+        const lines = buildLineItems();
+        if (!lines.length) {
+            showError('No offer lines available. Add products before continuing.');
+            return;
+        }
+        saveState();
+        currentState.offer = {
+            ...currentState.offer,
+            acceptedAt: new Date().toISOString(),
+        };
+        sessionStorage.setItem(storageKey, JSON.stringify(currentState));
+        window.location.href = '/dashboard/new-sale/payment';
+    };
+    const bindEvents = () => {
+        ['new-sale-offer-valid-until', 'new-sale-offer-coupon', 'new-sale-offer-discount', 'new-sale-offer-notes']
+            .forEach((id) => {
+            const eventName = id === 'new-sale-offer-notes' ? 'input' : 'change';
+            document.getElementById(id)?.addEventListener(eventName, () => {
+                renderLines();
+            });
+        });
+        document.getElementById('new-sale-offer-send')?.addEventListener('click', sendToCustomer);
+        document.getElementById('new-sale-offer-accept')?.addEventListener('click', acceptAndContinue);
+    };
+    const initializePage = async () => {
+        const page = document.getElementById('dashboard-new-sale-offer-page');
+        if (!page || page.dataset.initialized === 'true') {
+            return;
+        }
+        page.dataset.initialized = 'true';
+        currentState = loadState();
+        if (!currentState?.domainName || !currentState?.flowType || !currentState?.selectedCustomer) {
+            window.location.href = '/dashboard/new-sale';
+            return;
+        }
+        currencyCode = currentState.otherServices?.currency || currentState.pricing?.currency || 'USD';
+        setContextHeader();
+        restoreOfferSettings();
+        bindEvents();
+        await loadSupportData();
+        renderLines();
+    };
+    const setupObserver = () => {
+        void initializePage();
+        if (document.body) {
+            const observer = new MutationObserver(() => {
+                const page = document.getElementById('dashboard-new-sale-offer-page');
+                if (page && page.dataset.initialized !== 'true') {
+                    void initializePage();
+                }
+            });
+            observer.observe(document.body, { childList: true, subtree: true });
+        }
+    };
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', setupObserver);
+    }
+    else {
+        setupObserver();
+    }
+})();
+//# sourceMappingURL=new-sale-offer.js.map
