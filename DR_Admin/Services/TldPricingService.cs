@@ -74,6 +74,81 @@ public partial class TldPricingService : ITldPricingService
         }
     }
 
+    public async Task<List<RegistrarCurrentCostByTldDto>> GetCurrentRegistrarCostsByTldAsync(int tldId, DateTime? effectiveDate = null)
+    {
+        try
+        {
+            var checkDate = effectiveDate ?? DateTime.UtcNow;
+            _log.Information("Fetching current registrar costs for TLD {TldId} at {EffectiveDate}", tldId, checkDate);
+
+            var registrarTlds = await _context.RegistrarTlds
+                .AsNoTracking()
+                .Include(rt => rt.Registrar)
+                .Where(rt => rt.TldId == tldId && rt.IsActive && rt.Registrar.IsActive)
+                .ToListAsync();
+
+            var rows = new List<RegistrarCurrentCostByTldDto>(registrarTlds.Count);
+
+            foreach (var registrarTld in registrarTlds)
+            {
+                var currentPricing = await _context.RegistrarTldCostPricing
+                    .AsNoTracking()
+                    .Where(c => c.RegistrarTldId == registrarTld.Id &&
+                                c.IsActive &&
+                                c.EffectiveFrom <= checkDate &&
+                                (c.EffectiveTo == null || c.EffectiveTo > checkDate))
+                    .OrderByDescending(c => c.EffectiveFrom)
+                    .FirstOrDefaultAsync();
+
+                rows.Add(new RegistrarCurrentCostByTldDto
+                {
+                    RegistrarTldId = registrarTld.Id,
+                    RegistrarId = registrarTld.RegistrarId,
+                    RegistrarName = registrarTld.Registrar.Name,
+                    RegistrationCost = currentPricing?.RegistrationCost,
+                    RenewalCost = currentPricing?.RenewalCost,
+                    TransferCost = currentPricing?.TransferCost,
+                    Currency = currentPricing?.Currency
+                });
+            }
+
+            return rows
+                .OrderBy(r => r.RegistrarName)
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error fetching current registrar costs for TLD {TldId}", tldId);
+            throw;
+        }
+    }
+
+    public async Task<List<RegistrarTldCostPricingDto>> GetCostPricingByTldAsync(int tldId)
+    {
+        try
+        {
+            _log.Information("Fetching all cost pricing for TLD {TldId}", tldId);
+
+            var costPricing = await _context.RegistrarTldCostPricing
+                .AsNoTracking()
+                .Include(c => c.RegistrarTld)
+                    .ThenInclude(rt => rt.Registrar)
+                .Include(c => c.RegistrarTld)
+                    .ThenInclude(rt => rt.Tld)
+                .Where(c => c.RegistrarTld.TldId == tldId)
+                .OrderBy(c => c.RegistrarTld.Registrar.Name)
+                .ThenByDescending(c => c.EffectiveFrom)
+                .ToListAsync();
+
+            return costPricing.Select(MapCostPricingToDto).ToList();
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error fetching all cost pricing for TLD {TldId}", tldId);
+            throw;
+        }
+    }
+
     public async Task<RegistrarTldCostPricingDto?> GetCurrentCostPricingAsync(int registrarTldId, DateTime? effectiveDate = null)
     {
         try
@@ -407,8 +482,19 @@ public partial class TldPricingService : ITldPricingService
 
             if (salesPricing == null)
             {
-                _log.Warning("No current sales pricing found for TLD {TldId}", tldId);
-                return null;
+                _log.Warning("No current sales pricing found for TLD {TldId}. Falling back to latest active pricing.", tldId);
+
+                salesPricing = await _context.TldSalesPricing
+                    .AsNoTracking()
+                    .Include(s => s.Tld)
+                    .Where(s => s.TldId == tldId && s.IsActive)
+                    .OrderByDescending(s => s.EffectiveFrom)
+                    .FirstOrDefaultAsync();
+
+                if (salesPricing == null)
+                {
+                    return null;
+                }
             }
 
             return MapSalesPricingToDto(salesPricing);

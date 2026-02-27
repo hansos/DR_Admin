@@ -4,10 +4,27 @@ interface Tld {
     extension: string;
     description: string;
     isActive: boolean;
+    registrationPrice: number | null;
+    renewalPrice: number | null;
+    transferPrice: number | null;
+    priceCurrency: string | null;
     defaultRegistrationYears: number | null;
     maxRegistrationYears: number | null;
     requiresPrivacy: boolean;
     notes: string | null;
+}
+
+interface TldSalesPricing {
+    id: number;
+    tldId: number;
+    effectiveFrom: string;
+    effectiveTo: string | null;
+    registrationPrice: number;
+    renewalPrice: number;
+    transferPrice: number;
+    privacyPrice: number | null;
+    firstYearRegistrationPrice: number | null;
+    currency: string;
 }
 
 interface Registrar {
@@ -23,6 +40,14 @@ interface RegistrarTld {
     tldId: number;
     tldExtension: string;
     isActive: boolean;
+}
+
+interface RegistrarCostPriceRow {
+    registrarName: string;
+    registrationCost: number | null;
+    renewalCost: number | null;
+    transferCost: number | null;
+    currency: string;
 }
 
 interface ApiResponse<T> {
@@ -83,6 +108,8 @@ let currentPage = 1;
 let pageSize = 25;
 let totalCount = 0;
 let totalPages = 1;
+let modalCurrentSalesPricing: TldSalesPricing | null = null;
+let createPreviewRegistrarCostRows: RegistrarCostPriceRow[] = [];
 
 function getApiBaseUrl(): string {
     const baseUrl = w.AppSettings?.apiBaseUrl;
@@ -91,8 +118,46 @@ function getApiBaseUrl(): string {
             ? 'https://localhost:7201/api/v1'
             : 'http://localhost:5133/api/v1';
     }
-
     return baseUrl;
+}
+
+async function previewRegistrarPricesForCreate(extension: string): Promise<void> {
+    const normalized = extension.trim().replace(/^\./, '').toLowerCase();
+    if (!normalized) {
+        createPreviewRegistrarCostRows = [];
+        renderRegistrarCostRows([]);
+        return;
+    }
+
+    setRegistrarPricesLoading(true);
+    try {
+        const response = await apiRequest<unknown>(`${getApiBaseUrl()}/RegistrarTldCostPricing/preview/extension/${encodeURIComponent(normalized)}`, {
+            method: 'GET',
+        });
+
+        if (!response.success) {
+            createPreviewRegistrarCostRows = [];
+            renderRegistrarCostRows([]);
+            return;
+        }
+
+        createPreviewRegistrarCostRows = getListFromUnknown(response.data)
+            .filter(isRecord)
+            .map((item) => ({
+                registrarName: getString(item.registrarName ?? item.RegistrarName),
+                registrationCost: getDecimal(item.registrationCost ?? item.RegistrationCost),
+                renewalCost: getDecimal(item.renewalCost ?? item.RenewalCost),
+                transferCost: getDecimal(item.transferCost ?? item.TransferCost),
+                currency: getString(item.currency ?? item.Currency) || '-',
+            }))
+            .filter((row) => row.registrarName.trim().length > 0)
+            .sort((a, b) => a.registrarName.localeCompare(b.registrarName));
+
+        renderRegistrarCostRows(createPreviewRegistrarCostRows);
+    }
+    finally {
+        setRegistrarPricesLoading(false);
+    }
 }
 
 function getAuthToken(): string | null {
@@ -120,11 +185,25 @@ function getNumber(value: unknown): number | null {
     return typeof value === 'number' && Number.isFinite(value) ? value : null;
 }
 
+function getDecimal(value: unknown): number | null {
+    if (typeof value === 'number' && Number.isFinite(value)) {
+        return value;
+    }
+
+    if (typeof value === 'string') {
+        const parsed = Number(value);
+        if (Number.isFinite(parsed)) {
+            return parsed;
+        }
+    }
+
+    return null;
+}
+
 function getListFromUnknown(raw: unknown): unknown[] {
     if (Array.isArray(raw)) {
         return raw;
     }
-
     if (!isRecord(raw)) {
         return [];
     }
@@ -137,6 +216,100 @@ function getListFromUnknown(raw: unknown): unknown[] {
     }
 
     return [];
+}
+
+function normalizeSalesPricing(item: unknown): TldSalesPricing {
+    if (!isRecord(item)) {
+        return {
+            id: 0,
+            tldId: 0,
+            effectiveFrom: '',
+            effectiveTo: null,
+            registrationPrice: 0,
+            renewalPrice: 0,
+            transferPrice: 0,
+            privacyPrice: null,
+            firstYearRegistrationPrice: null,
+            currency: 'USD',
+        };
+    }
+    return {
+        id: getNumber(item.id) ?? getNumber(item.Id) ?? 0,
+        tldId: getNumber(item.tldId ?? item.TldId) ?? 0,
+        effectiveFrom: getString(item.effectiveFrom ?? item.EffectiveFrom),
+        effectiveTo: getString(item.effectiveTo ?? item.EffectiveTo) || null,
+        registrationPrice: getDecimal(item.registrationPrice ?? item.RegistrationPrice) ?? 0,
+        renewalPrice: getDecimal(item.renewalPrice ?? item.RenewalPrice) ?? 0,
+        transferPrice: getDecimal(item.transferPrice ?? item.TransferPrice) ?? 0,
+        privacyPrice: getDecimal(item.privacyPrice ?? item.PrivacyPrice),
+        firstYearRegistrationPrice: getDecimal(item.firstYearRegistrationPrice ?? item.FirstYearRegistrationPrice),
+        currency: getString(item.currency ?? item.Currency) || 'USD',
+    };
+}
+
+function pickBestPricingFromHistory(items: TldSalesPricing[]): TldSalesPricing | null {
+    if (!items.length) {
+        return null;
+    }
+
+    const now = Date.now();
+    const activeNow = items
+        .filter((item) => {
+            const from = Date.parse(item.effectiveFrom);
+            if (!Number.isFinite(from) || from > now) {
+                return false;
+            }
+
+            if (!item.effectiveTo) {
+                return true;
+            }
+
+            const to = Date.parse(item.effectiveTo);
+            return !Number.isFinite(to) || to > now;
+        })
+        .sort((a, b) => Date.parse(b.effectiveFrom) - Date.parse(a.effectiveFrom));
+
+    if (activeNow.length > 0) {
+        return activeNow[0];
+    }
+
+    return items
+        .slice()
+        .sort((a, b) => Date.parse(b.effectiveFrom) - Date.parse(a.effectiveFrom))[0] ?? null;
+}
+
+function toDateTimeLocalValue(iso: string | null): string {
+    if (!iso) {
+        return '';
+    }
+
+    const parsed = new Date(iso);
+    if (Number.isNaN(parsed.getTime())) {
+        return '';
+    }
+
+    const offsetMs = parsed.getTimezoneOffset() * 60000;
+    const local = new Date(parsed.getTime() - offsetMs);
+    return local.toISOString().slice(0, 16);
+}
+
+function readDateTimeLocalAsIso(id: string): string | null {
+    const input = document.getElementById(id) as HTMLInputElement | null;
+    const raw = input?.value.trim() ?? '';
+    if (!raw) {
+        return null;
+    }
+
+    const parsed = new Date(raw);
+    return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
+}
+
+function formatPrice(value: number | null): string {
+    if (value === null || !Number.isFinite(value)) {
+        return '-';
+    }
+
+    return value.toFixed(2);
 }
 
 async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
@@ -211,6 +384,10 @@ function normalizeTld(item: unknown): Tld {
             extension: '',
             description: '',
             isActive: true,
+            registrationPrice: null,
+            renewalPrice: null,
+            transferPrice: null,
+            priceCurrency: null,
             defaultRegistrationYears: null,
             maxRegistrationYears: null,
             requiresPrivacy: false,
@@ -223,6 +400,10 @@ function normalizeTld(item: unknown): Tld {
         extension: getString(item.extension ?? item.Extension).replace(/^\./, ''),
         description: getString(item.description ?? item.Description),
         isActive: getBoolean(item.isActive ?? item.IsActive, true),
+        registrationPrice: null,
+        renewalPrice: null,
+        transferPrice: null,
+        priceCurrency: null,
         defaultRegistrationYears: getNumber(item.defaultRegistrationYears ?? item.DefaultRegistrationYears),
         maxRegistrationYears: getNumber(item.maxRegistrationYears ?? item.MaxRegistrationYears),
         requiresPrivacy: getBoolean(item.requiresPrivacy ?? item.RequiresPrivacy),
@@ -478,7 +659,7 @@ function renderTable(): void {
     }
 
     if (!allTlds.length) {
-        tableBody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No active TLDs found.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="11" class="text-center text-muted">No active TLDs found.</td></tr>';
         return;
     }
 
@@ -489,6 +670,10 @@ function renderTable(): void {
             <td>${item.id}</td>
             <td><code>${esc(extension)}</code></td>
             <td>${esc(item.description || '-')}</td>
+            <td>${formatPrice(item.registrationPrice)}</td>
+            <td>${formatPrice(item.renewalPrice)}</td>
+            <td>${formatPrice(item.transferPrice)}</td>
+            <td>${esc(item.priceCurrency || '-')}</td>
             <td>${item.defaultRegistrationYears ?? '-'}</td>
             <td>${item.maxRegistrationYears ?? '-'}</td>
             <td><span class="badge bg-${item.requiresPrivacy ? 'warning text-dark' : 'secondary'}">${item.requiresPrivacy ? 'Required' : 'Optional'}</span></td>
@@ -597,14 +782,14 @@ async function loadTlds(): Promise<void> {
         return;
     }
 
-    tableBody.innerHTML = '<tr><td colspan="7" class="text-center"><div class="spinner-border text-primary"></div></td></tr>';
+    tableBody.innerHTML = '<tr><td colspan="11" class="text-center"><div class="spinner-border text-primary"></div></td></tr>';
 
     readPageSize();
     const response = await apiRequest<unknown>(buildTldsUrl(), { method: 'GET' });
 
     if (!response.success) {
         showError(response.message || 'Failed to load active TLDs');
-        tableBody.innerHTML = '<tr><td colspan="7" class="text-center text-danger">Failed to load data</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="11" class="text-center text-danger">Failed to load data</td></tr>';
         return;
     }
 
@@ -615,6 +800,10 @@ async function loadTlds(): Promise<void> {
             extension: item.tldExtension.replace(/^\./, ''),
             description: '',
             isActive: item.isActive,
+            registrationPrice: null,
+            renewalPrice: null,
+            transferPrice: null,
+            priceCurrency: null,
             defaultRegistrationYears: null,
             maxRegistrationYears: null,
             requiresPrivacy: false,
@@ -637,6 +826,42 @@ async function loadTlds(): Promise<void> {
     renderTable();
     renderPaginationInfo();
     renderPagingControls();
+
+    void loadSalesPricingForCurrentRows();
+}
+
+async function loadSalesPricingForCurrentRows(): Promise<void> {
+    const pricingByTldId = new Map<number, TldSalesPricing>();
+
+    await Promise.all(allTlds.map(async (tld) => {
+        const response = await apiRequest<unknown>(`${getApiBaseUrl()}/tld-pricing/sales/tld/${tld.id}/current`, { method: 'GET' });
+        if (!response.success || !response.data) {
+            return;
+        }
+
+        const pricing = normalizeSalesPricing(response.data);
+        if (pricing.tldId > 0) {
+            pricingByTldId.set(pricing.tldId, pricing);
+        }
+    }));
+
+    for (const tld of allTlds) {
+        const pricing = pricingByTldId.get(tld.id);
+        if (!pricing) {
+            tld.registrationPrice = null;
+            tld.renewalPrice = null;
+            tld.transferPrice = null;
+            tld.priceCurrency = null;
+            continue;
+        }
+
+        tld.registrationPrice = pricing.registrationPrice;
+        tld.renewalPrice = pricing.renewalPrice;
+        tld.transferPrice = pricing.transferPrice;
+        tld.priceCurrency = pricing.currency;
+    }
+
+    renderTable();
 }
 
 async function getAssignedRegistrarIds(tldId: number): Promise<number[]> {
@@ -651,6 +876,166 @@ async function getAssignedRegistrarIds(tldId: number): Promise<number[]> {
         .filter((id) => id > 0);
 
     return Array.from(new Set(ids));
+}
+
+async function getAssignedRegistrarTlds(tldId: number): Promise<RegistrarTld[]> {
+    const response = await apiRequest<unknown>(`${getApiBaseUrl()}/RegistrarTlds/tld/${tldId}`, { method: 'GET' });
+    if (!response.success) {
+        return [];
+    }
+
+    return getListFromUnknown(response.data)
+        .map(normalizeRegistrarTld)
+        .filter((item) => item.id > 0 && item.isActive);
+}
+
+function setSalesPricingInputs(pricing: TldSalesPricing | null): void {
+    const registrationInput = document.getElementById('tlds-registration-price') as HTMLInputElement | null;
+    const renewalInput = document.getElementById('tlds-renewal-price') as HTMLInputElement | null;
+    const transferInput = document.getElementById('tlds-transfer-price') as HTMLInputElement | null;
+    const privacyInput = document.getElementById('tlds-privacy-price') as HTMLInputElement | null;
+    const firstYearInput = document.getElementById('tlds-first-year-price') as HTMLInputElement | null;
+    const currencyInput = document.getElementById('tlds-price-currency') as HTMLInputElement | null;
+    const effectiveFromInput = document.getElementById('tlds-price-effective-from') as HTMLInputElement | null;
+    const effectiveToInput = document.getElementById('tlds-price-effective-to') as HTMLInputElement | null;
+
+    if (registrationInput) {
+        registrationInput.value = pricing ? String(pricing.registrationPrice) : '';
+    }
+
+    if (renewalInput) {
+        renewalInput.value = pricing ? String(pricing.renewalPrice) : '';
+    }
+
+    if (transferInput) {
+        transferInput.value = pricing ? String(pricing.transferPrice) : '';
+    }
+
+    if (privacyInput) {
+        privacyInput.value = pricing?.privacyPrice !== null && pricing?.privacyPrice !== undefined
+            ? String(pricing.privacyPrice)
+            : '';
+    }
+
+    if (firstYearInput) {
+        firstYearInput.value = pricing?.firstYearRegistrationPrice !== null && pricing?.firstYearRegistrationPrice !== undefined
+            ? String(pricing.firstYearRegistrationPrice)
+            : '';
+    }
+
+    if (currencyInput) {
+        currencyInput.value = pricing?.currency || 'USD';
+    }
+
+    if (effectiveFromInput) {
+        effectiveFromInput.value = toDateTimeLocalValue(pricing?.effectiveFrom ?? null);
+    }
+
+    if (effectiveToInput) {
+        effectiveToInput.value = toDateTimeLocalValue(pricing?.effectiveTo ?? null);
+    }
+}
+
+function setRegistrarPricesLoading(isLoading: boolean): void {
+    const loading = document.getElementById('tlds-registrar-prices-loading');
+    loading?.classList.toggle('d-none', !isLoading);
+}
+
+function renderRegistrarCostRows(rows: RegistrarCostPriceRow[]): void {
+    const empty = document.getElementById('tlds-registrar-prices-empty');
+    const tableWrap = document.getElementById('tlds-registrar-prices-table-wrap');
+    const body = document.getElementById('tlds-registrar-prices-body');
+
+    if (!empty || !tableWrap || !body) {
+        return;
+    }
+
+    if (!rows.length) {
+        empty.classList.remove('d-none');
+        tableWrap.classList.add('d-none');
+        body.innerHTML = '';
+        return;
+    }
+
+    empty.classList.add('d-none');
+    tableWrap.classList.remove('d-none');
+
+    body.innerHTML = rows.map((row) => `
+        <tr>
+            <td>${esc(row.registrarName)}</td>
+            <td>${formatPrice(row.registrationCost)}</td>
+            <td>${formatPrice(row.renewalCost)}</td>
+            <td>${formatPrice(row.transferCost)}</td>
+            <td>${esc(row.currency)}</td>
+        </tr>
+    `).join('');
+}
+
+async function loadRegistrarPricesForModal(tldId: number | null): Promise<void> {
+    if (tldId === null) {
+        renderRegistrarCostRows([]);
+        return;
+    }
+
+    setRegistrarPricesLoading(true);
+
+    try {
+        const response = await apiRequest<unknown>(`${getApiBaseUrl()}/RegistrarTldCostPricing/tld/${tldId}/current/ensure`, {
+            method: 'POST',
+        });
+
+        if (!response.success) {
+            renderRegistrarCostRows([]);
+            return;
+        }
+
+        const rows: RegistrarCostPriceRow[] = getListFromUnknown(response.data)
+            .filter(isRecord)
+            .map((item) => ({
+                registrarName: getString(item.registrarName ?? item.RegistrarName),
+                registrationCost: getDecimal(item.registrationCost ?? item.RegistrationCost),
+                renewalCost: getDecimal(item.renewalCost ?? item.RenewalCost),
+                transferCost: getDecimal(item.transferCost ?? item.TransferCost),
+                currency: getString(item.currency ?? item.Currency) || '-',
+            }))
+            .filter((row) => row.registrarName.trim().length > 0)
+            .sort((a, b) => a.registrarName.localeCompare(b.registrarName));
+
+        renderRegistrarCostRows(rows);
+    }
+    finally {
+        setRegistrarPricesLoading(false);
+    }
+}
+
+async function loadSalesPricingForModal(tldId: number | null): Promise<void> {
+    modalCurrentSalesPricing = null;
+    setSalesPricingInputs(null);
+
+    if (tldId === null) {
+        return;
+    }
+
+    const response = await apiRequest<unknown>(`${getApiBaseUrl()}/tld-pricing/sales/tld/${tldId}?includeArchived=true`, {
+        method: 'GET',
+    });
+
+    if (!response.success) {
+        return;
+    }
+
+    const history = getListFromUnknown(response.data)
+        .map(normalizeSalesPricing)
+        .filter((item) => item.tldId === tldId)
+        .filter((item) => item.effectiveFrom.length > 0);
+
+    const selected = pickBestPricingFromHistory(history);
+    if (!selected) {
+        return;
+    }
+
+    modalCurrentSalesPricing = selected;
+    setSalesPricingInputs(selected);
 }
 
 async function assignRegistrarToTld(registrarId: number, tldId: number): Promise<void> {
@@ -685,6 +1070,8 @@ async function syncSelectedRegistrars(tldId: number, selectedRegistrarIds: numbe
 
 function openCreate(): void {
     editingId = null;
+    modalCurrentSalesPricing = null;
+    createPreviewRegistrarCostRows = [];
 
     const modalTitle = document.getElementById('tlds-modal-title');
     if (modalTitle) {
@@ -703,6 +1090,8 @@ function openCreate(): void {
     secondLevelContainer?.classList.remove('d-none');
 
     renderRegistrarMultiSelect([]);
+    setSalesPricingInputs(null);
+    renderRegistrarCostRows([]);
     showModal('tlds-edit-modal');
 }
 
@@ -713,10 +1102,6 @@ async function openEdit(id: number): Promise<void> {
     }
 
     let tld = currentItem;
-    const tldResponse = await apiRequest<unknown>(`${getApiBaseUrl()}/Tlds/${id}`, { method: 'GET' });
-    if (tldResponse.success && tldResponse.data) {
-        tld = normalizeTld(tldResponse.data);
-    }
 
     editingId = id;
 
@@ -761,11 +1146,40 @@ async function openEdit(id: number): Promise<void> {
 
     const secondLevelContainer = document.getElementById('tlds-is-second-level-container');
     secondLevelContainer?.classList.add('d-none');
+    renderRegistrarMultiSelect([]);
+    setSalesPricingInputs(null);
+    renderRegistrarCostRows([]);
+    showModal('tlds-edit-modal');
+
+    void loadRegistrarPricesForModal(id);
+    void loadSalesPricingForModal(id);
+
+    const tldResponse = await apiRequest<unknown>(`${getApiBaseUrl()}/Tlds/${id}`, { method: 'GET' });
+    if (tldResponse.success && tldResponse.data) {
+        tld = normalizeTld(tldResponse.data);
+
+        if (description) {
+            description.value = tld.description || '';
+        }
+        if (defaultYears) {
+            defaultYears.value = tld.defaultRegistrationYears !== null ? String(tld.defaultRegistrationYears) : '';
+        }
+        if (maxYears) {
+            maxYears.value = tld.maxRegistrationYears !== null ? String(tld.maxRegistrationYears) : '';
+        }
+        if (requiresPrivacy) {
+            requiresPrivacy.checked = tld.requiresPrivacy;
+        }
+        if (isActive) {
+            isActive.checked = tld.isActive;
+        }
+        if (notes) {
+            notes.value = tld.notes || '';
+        }
+    }
 
     const selectedRegistrarIds = await getAssignedRegistrarIds(id);
     renderRegistrarMultiSelect(selectedRegistrarIds);
-
-    showModal('tlds-edit-modal');
 }
 
 function getOptionalNumber(id: string): number | null {
@@ -777,6 +1191,103 @@ function getOptionalNumber(id: string): number | null {
 
     const parsed = Number(raw);
     return Number.isFinite(parsed) ? parsed : null;
+}
+
+async function upsertSalesPricingForTld(tldId: number): Promise<void> {
+    const registrationPrice = getOptionalNumber('tlds-registration-price');
+    const renewalPrice = getOptionalNumber('tlds-renewal-price');
+    const transferPrice = getOptionalNumber('tlds-transfer-price');
+    const privacyPrice = getOptionalNumber('tlds-privacy-price');
+    const firstYearRegistrationPrice = getOptionalNumber('tlds-first-year-price');
+    const currencyInput = document.getElementById('tlds-price-currency') as HTMLInputElement | null;
+    const currency = (currencyInput?.value ?? '').trim().toUpperCase() || 'USD';
+    const effectiveFromIso = readDateTimeLocalAsIso('tlds-price-effective-from');
+    const effectiveToIso = readDateTimeLocalAsIso('tlds-price-effective-to');
+
+    const hasAnyPriceInput =
+        registrationPrice !== null ||
+        renewalPrice !== null ||
+        transferPrice !== null ||
+        privacyPrice !== null ||
+        firstYearRegistrationPrice !== null;
+
+    if (!hasAnyPriceInput) {
+        return;
+    }
+
+    if (registrationPrice === null || renewalPrice === null || transferPrice === null) {
+        throw new Error('Registration, renewal and transfer prices are required when setting sales pricing.');
+    }
+
+    if (registrationPrice < 0 || renewalPrice < 0 || transferPrice < 0 ||
+        (privacyPrice !== null && privacyPrice < 0) ||
+        (firstYearRegistrationPrice !== null && firstYearRegistrationPrice < 0)) {
+        throw new Error('Prices cannot be negative.');
+    }
+
+    const currentEffectiveFromIso = modalCurrentSalesPricing?.effectiveFrom ?? null;
+    const currentEffectiveToIso = modalCurrentSalesPricing?.effectiveTo ?? null;
+
+    const isSameAsCurrent =
+        modalCurrentSalesPricing !== null &&
+        currentEffectiveFromIso === effectiveFromIso &&
+        currentEffectiveToIso === effectiveToIso &&
+        modalCurrentSalesPricing.registrationPrice === registrationPrice &&
+        modalCurrentSalesPricing.renewalPrice === renewalPrice &&
+        modalCurrentSalesPricing.transferPrice === transferPrice &&
+        modalCurrentSalesPricing.privacyPrice === privacyPrice &&
+        modalCurrentSalesPricing.firstYearRegistrationPrice === firstYearRegistrationPrice &&
+        modalCurrentSalesPricing.currency.toUpperCase() === currency;
+
+    if (isSameAsCurrent) {
+        return;
+    }
+
+    const minEffectiveFromDate = new Date(Date.now() + 60 * 1000);
+    const effectiveFromDate = effectiveFromIso
+        ? new Date(Math.max(new Date(effectiveFromIso).getTime(), minEffectiveFromDate.getTime()))
+        : minEffectiveFromDate;
+    const effectiveToDate = effectiveToIso ? new Date(effectiveToIso) : null;
+
+    if (effectiveToDate !== null && effectiveToDate <= effectiveFromDate) {
+        throw new Error('Effective to must be later than effective from.');
+    }
+
+    const payload = {
+        tldId,
+        effectiveFrom: effectiveFromDate.toISOString(),
+        effectiveTo: effectiveToDate ? effectiveToDate.toISOString() : null,
+        registrationPrice,
+        renewalPrice,
+        transferPrice,
+        privacyPrice,
+        firstYearRegistrationPrice,
+        currency,
+        isPromotional: false,
+        promotionName: null,
+        isActive: true,
+        notes: 'Updated from reseller panel /tld/list',
+    };
+
+    const response = await apiRequest<unknown>(`${getApiBaseUrl()}/tld-pricing/sales`, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+    });
+
+    if (!response.success || !response.data) {
+        throw new Error(response.message || 'Failed to save TLD sales pricing.');
+    }
+
+    const pricing = normalizeSalesPricing(response.data);
+    modalCurrentSalesPricing = pricing;
+
+    const target = allTlds.find((item) => item.id === tldId);
+    if (target) {
+        target.registrationPrice = pricing.registrationPrice;
+        target.renewalPrice = pricing.renewalPrice;
+        target.transferPrice = pricing.transferPrice;
+        target.priceCurrency = pricing.currency;
+    }
 }
 
 async function saveTld(): Promise<void> {
@@ -849,8 +1360,20 @@ async function saveTld(): Promise<void> {
     const selectedRegistrarIds = getSelectedRegistrarIdsFromModal();
     try {
         await syncSelectedRegistrars(effectiveTldId, selectedRegistrarIds);
+
+        if (editingId === null && createPreviewRegistrarCostRows.length > 0) {
+            const ensureResponse = await apiRequest<unknown>(`${getApiBaseUrl()}/RegistrarTldCostPricing/tld/${effectiveTldId}/current/ensure`, {
+                method: 'POST',
+            });
+
+            if (!ensureResponse.success) {
+                throw new Error(ensureResponse.message || 'Failed to store registrar cost prices for the new TLD.');
+            }
+        }
+
+        await upsertSalesPricingForTld(effectiveTldId);
     } catch (error) {
-        const message = error instanceof Error ? error.message : 'Failed to assign selected registrars';
+        const message = error instanceof Error ? error.message : 'Failed to save TLD pricing data';
         showError(message);
         return;
     }
@@ -976,6 +1499,15 @@ function initializeTldsPage(): void {
     document.getElementById('tlds-page-size')?.addEventListener('change', () => {
         currentPage = 1;
         void loadTlds();
+    });
+    document.getElementById('tlds-extension')?.addEventListener('blur', () => {
+        if (editingId !== null) {
+            return;
+        }
+
+        const extensionInput = document.getElementById('tlds-extension') as HTMLInputElement | null;
+        const extension = extensionInput?.value ?? '';
+        void previewRegistrarPricesForCreate(extension);
     });
 
     bindPagingControlsActions();

@@ -15,11 +15,15 @@ namespace ISPAdmin.Controllers;
 public class RegistrarTldCostPricingController : ControllerBase
 {
     private readonly ITldPricingService _pricingService;
+    private readonly IRegistrarTldPriceSyncService _priceSyncService;
     private static readonly Serilog.ILogger _log = Log.ForContext<RegistrarTldCostPricingController>();
 
-    public RegistrarTldCostPricingController(ITldPricingService pricingService)
+    public RegistrarTldCostPricingController(
+        ITldPricingService pricingService,
+        IRegistrarTldPriceSyncService priceSyncService)
     {
         _pricingService = pricingService;
+        _priceSyncService = priceSyncService;
     }
 
     /// <summary>
@@ -52,6 +56,138 @@ public class RegistrarTldCostPricingController : ControllerBase
         {
             _log.Error(ex, "API: Error in GetCostPricingHistory for RegistrarTld {RegistrarTldId}", registrarTldId);
             return StatusCode(500, "An error occurred while retrieving cost pricing history");
+        }
+    }
+
+    /// <summary>
+    /// Retrieves current registrar cost pricing rows for a TLD, and triggers registrar API download if no prices exist.
+    /// </summary>
+    /// <param name="tldId">The TLD ID</param>
+    /// <param name="effectiveDate">Optional date to check (default: now)</param>
+    /// <returns>List of current registrar cost pricing rows</returns>
+    /// <response code="200">Returns current registrar cost pricing rows, including rows populated after sync</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpPost("tld/{tldId}/current/ensure")]
+    [Authorize(Policy = "Pricing.Write")]
+    [ProducesResponseType(typeof(List<RegistrarCurrentCostByTldDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<List<RegistrarCurrentCostByTldDto>>> EnsureCurrentRegistrarCostsByTld(
+        int tldId,
+        [FromQuery] DateTime? effectiveDate = null)
+    {
+        try
+        {
+            var rows = await _pricingService.GetCurrentRegistrarCostsByTldAsync(tldId, effectiveDate);
+            var hasAnyPrice = rows.Any(r => r.RegistrationCost.HasValue || r.RenewalCost.HasValue || r.TransferCost.HasValue);
+
+            if (!hasAnyPrice)
+            {
+                _log.Information("API: No registrar cost prices found for TLD {TldId}. Triggering sync by user {User}",
+                    tldId, User.Identity?.Name);
+
+                await _priceSyncService.SyncRegistrarsForTldAsync(
+                    tldId,
+                    $"ManualEnsureFromTldList:{User.Identity?.Name ?? "unknown"}");
+
+                rows = await _pricingService.GetCurrentRegistrarCostsByTldAsync(tldId, effectiveDate);
+            }
+
+            return Ok(rows);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in EnsureCurrentRegistrarCostsByTld for TLD {TldId}", tldId);
+            return StatusCode(500, "An error occurred while ensuring current registrar cost pricing");
+        }
+    }
+
+    /// <summary>
+    /// Downloads registrar price preview for a TLD extension without persisting to database.
+    /// </summary>
+    /// <param name="extension">The TLD extension</param>
+    /// <returns>List of registrar cost pricing preview rows</returns>
+    /// <response code="200">Returns registrar price preview rows</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpGet("preview/extension/{extension}")]
+    [Authorize(Policy = "Pricing.Read")]
+    [ProducesResponseType(typeof(List<RegistrarCurrentCostByTldDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<List<RegistrarCurrentCostByTldDto>>> PreviewRegistrarCostsByExtension(string extension)
+    {
+        try
+        {
+            var rows = await _priceSyncService.PreviewRegistrarCostsByExtensionAsync(extension);
+            return Ok(rows);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in PreviewRegistrarCostsByExtension for extension {Extension}", extension);
+            return StatusCode(500, "An error occurred while previewing registrar cost pricing");
+        }
+    }
+
+    /// <summary>
+    /// Retrieves current registrar cost pricing rows for all active registrar-TLD relationships linked to a TLD.
+    /// </summary>
+    /// <param name="tldId">The TLD ID</param>
+    /// <param name="effectiveDate">Optional date to check (default: now)</param>
+    /// <returns>List of current registrar cost pricing rows</returns>
+    /// <response code="200">Returns the current registrar cost pricing rows</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpGet("tld/{tldId}/current")]
+    [Authorize(Policy = "Pricing.Read")]
+    [ProducesResponseType(typeof(List<RegistrarCurrentCostByTldDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<List<RegistrarCurrentCostByTldDto>>> GetCurrentRegistrarCostsByTld(
+        int tldId,
+        [FromQuery] DateTime? effectiveDate = null)
+    {
+        try
+        {
+            _log.Information("API: GetCurrentRegistrarCostsByTld called for TLD {TldId} by user {User}", tldId, User.Identity?.Name);
+
+            var rows = await _pricingService.GetCurrentRegistrarCostsByTldAsync(tldId, effectiveDate);
+            return Ok(rows);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in GetCurrentRegistrarCostsByTld for TLD {TldId}", tldId);
+            return StatusCode(500, "An error occurred while retrieving current registrar cost pricing");
+        }
+    }
+
+    /// <summary>
+    /// Retrieves all registrar TLD cost pricing records for a specific TLD.
+    /// </summary>
+    /// <param name="tldId">The TLD ID</param>
+    /// <returns>List of all registrar TLD cost pricing records for the TLD</returns>
+    /// <response code="200">Returns all registrar TLD cost pricing records for the TLD</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpGet("tld/{tldId}")]
+    [Authorize(Policy = "Pricing.Read")]
+    [ProducesResponseType(typeof(List<RegistrarTldCostPricingDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<List<RegistrarTldCostPricingDto>>> GetCostPricingByTld(int tldId)
+    {
+        try
+        {
+            _log.Information("API: GetCostPricingByTld called for TLD {TldId} by user {User}", tldId, User.Identity?.Name);
+
+            var rows = await _pricingService.GetCostPricingByTldAsync(tldId);
+            return Ok(rows);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in GetCostPricingByTld for TLD {TldId}", tldId);
+            return StatusCode(500, "An error occurred while retrieving registrar TLD cost pricing");
         }
     }
 

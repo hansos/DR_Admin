@@ -94,6 +94,47 @@ public class RegistrarTldCostPricingDto
 }
 
 /// <summary>
+/// DTO for displaying current registrar cost pricing rows for a specific TLD.
+/// </summary>
+public class RegistrarCurrentCostByTldDto
+{
+    /// <summary>
+    /// Registrar-TLD relationship identifier.
+    /// </summary>
+    public int RegistrarTldId { get; set; }
+
+    /// <summary>
+    /// Registrar identifier.
+    /// </summary>
+    public int RegistrarId { get; set; }
+
+    /// <summary>
+    /// Registrar display name.
+    /// </summary>
+    public string RegistrarName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Cost for domain registration.
+    /// </summary>
+    public decimal? RegistrationCost { get; set; }
+
+    /// <summary>
+    /// Cost for domain renewal.
+    /// </summary>
+    public decimal? RenewalCost { get; set; }
+
+    /// <summary>
+    /// Cost for domain transfer.
+    /// </summary>
+    public decimal? TransferCost { get; set; }
+
+    /// <summary>
+    /// Currency code for the costs.
+    /// </summary>
+    public string? Currency { get; set; }
+}
+
+/// <summary>
 /// DTO for creating new registrar TLD cost pricing
 /// </summary>
 public class CreateRegistrarTldCostPricingDto

@@ -21,12 +21,27 @@ public interface ITldPricingService
     Task<List<RegistrarTldCostPricingDto>> GetCostPricingHistoryAsync(int registrarTldId, bool includeArchived = false);
 
     /// <summary>
+    /// Gets all cost pricing records for all registrar-TLD relationships linked to a specific TLD
+    /// </summary>
+    /// <param name="tldId">The TLD ID</param>
+    /// <returns>List of cost pricing records for the TLD</returns>
+    Task<List<RegistrarTldCostPricingDto>> GetCostPricingByTldAsync(int tldId);
+
+    /// <summary>
     /// Gets the current effective cost pricing for a registrar-TLD
     /// </summary>
     /// <param name="registrarTldId">The registrar-TLD ID</param>
     /// <param name="effectiveDate">The date to check (default: now)</param>
     /// <returns>Current cost pricing or null if none found</returns>
     Task<RegistrarTldCostPricingDto?> GetCurrentCostPricingAsync(int registrarTldId, DateTime? effectiveDate = null);
+
+    /// <summary>
+    /// Gets current registrar cost pricing rows for all active registrar-TLD relationships linked to a TLD.
+    /// </summary>
+    /// <param name="tldId">The TLD ID</param>
+    /// <param name="effectiveDate">The date to check (default: now)</param>
+    /// <returns>List of current registrar cost rows for the TLD</returns>
+    Task<List<RegistrarCurrentCostByTldDto>> GetCurrentRegistrarCostsByTldAsync(int tldId, DateTime? effectiveDate = null);
 
     /// <summary>
     /// Gets future scheduled cost pricing for a registrar-TLD

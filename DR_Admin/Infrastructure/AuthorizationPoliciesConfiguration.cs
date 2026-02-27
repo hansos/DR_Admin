@@ -499,6 +499,16 @@ public static class AuthorizationPoliciesConfiguration
         options.AddPolicy("Tld.Write", policy =>
             policy.RequireRole(ADMIN));
 
+        // Pricing policies
+        options.AddPolicy("Pricing.Read", policy =>
+            policy.RequireRole(ADMIN, SALES));
+
+        options.AddPolicy("Pricing.Write", policy =>
+            policy.RequireRole(ADMIN, SALES));
+
+        options.AddPolicy("Pricing.Delete", policy =>
+            policy.RequireRole(ADMIN, SALES));
+
         // Token policies
         options.AddPolicy("Token.Delete", policy =>
             policy.RequireRole(ADMIN));
