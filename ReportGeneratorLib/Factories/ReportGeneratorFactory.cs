@@ -29,6 +29,14 @@ namespace ReportGeneratorLib.Factories
                     )
                     : throw new InvalidOperationException("FastReport settings are not configured"),
 
+                "questpdf" => _reportSettings.QuestPdf is not null
+                    ? new QuestPdfReportGenerator(
+                        _reportSettings.QuestPdf.OutputPath,
+                        _reportSettings.QuestPdf.DefaultFormat,
+                        _reportSettings.QuestPdf.LicenseType
+                    )
+                    : throw new InvalidOperationException("QuestPdf settings are not configured"),
+
                 _ => throw new NotSupportedException($"Report provider '{_reportSettings.Provider}' is not supported")
             };
         }

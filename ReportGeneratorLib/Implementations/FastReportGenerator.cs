@@ -7,6 +7,7 @@ using System.Data;
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
+using ReportGeneratorLib.Infrastructure.Enums;
 
 namespace ReportGeneratorLib.Implementations
 {
@@ -328,6 +329,16 @@ namespace ReportGeneratorLib.Implementations
 
                 return outputPath;
             });
+        }
+
+        public Task<byte[]> GenerateReportAsync(ReportType type, object data, OutputFormat? outputFormat = OutputFormat.Pdf)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task SaveReportAsync(ReportType type, object data, string outputPath, OutputFormat? outputFormat = OutputFormat.Pdf)
+        {
+            throw new NotImplementedException();
         }
     }
 }
