@@ -1,0 +1,96 @@
+@page "/settings/company"
+
+<div id="settings-company-page" class="container-fluid">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+        <div>
+            <h2 class="h4 mb-1"><i class="bi bi-building"></i> Company Setup</h2>
+            <p class="text-muted mb-0">Configure company details for invoices, letterheads, and email templates.</p>
+        </div>
+        <button class="btn btn-primary" id="settings-company-save" type="button">
+            <i class="bi bi-check-lg"></i> Save
+        </button>
+    </div>
+
+    <div id="settings-company-alert-success" class="alert alert-success d-none" role="alert"></div>
+    <div id="settings-company-alert-error" class="alert alert-danger d-none" role="alert"></div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-gear"></i> My Company</h5>
+        </div>
+        <div class="card-body">
+            <form id="settings-company-form" novalidate>
+                <div class="row g-3">
+                    <div class="col-12 col-lg-6">
+                        <label for="settings-company-name" class="form-label">Company name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="settings-company-name" maxlength="200" />
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        <label for="settings-company-legal-name" class="form-label">Legal name</label>
+                        <input type="text" class="form-control" id="settings-company-legal-name" maxlength="200" />
+                    </div>
+                    <div class="col-12 col-lg-4">
+                        <label for="settings-company-email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="settings-company-email" maxlength="200" />
+                    </div>
+                    <div class="col-12 col-lg-4">
+                        <label for="settings-company-invoice-email" class="form-label">Invoice email</label>
+                        <input type="email" class="form-control" id="settings-company-invoice-email" maxlength="200" />
+                    </div>
+                    <div class="col-12 col-lg-4">
+                        <label for="settings-company-phone" class="form-label">Phone</label>
+                        <input type="text" class="form-control" id="settings-company-phone" maxlength="50" />
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        <label for="settings-company-address1" class="form-label">Address line 1</label>
+                        <input type="text" class="form-control" id="settings-company-address1" maxlength="300" />
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        <label for="settings-company-address2" class="form-label">Address line 2</label>
+                        <input type="text" class="form-control" id="settings-company-address2" maxlength="300" />
+                    </div>
+                    <div class="col-12 col-lg-3">
+                        <label for="settings-company-postal-code" class="form-label">Postal code</label>
+                        <input type="text" class="form-control" id="settings-company-postal-code" maxlength="50" />
+                    </div>
+                    <div class="col-12 col-lg-3">
+                        <label for="settings-company-city" class="form-label">City</label>
+                        <input type="text" class="form-control" id="settings-company-city" maxlength="100" />
+                    </div>
+                    <div class="col-12 col-lg-3">
+                        <label for="settings-company-state" class="form-label">State</label>
+                        <input type="text" class="form-control" id="settings-company-state" maxlength="100" />
+                    </div>
+                    <div class="col-12 col-lg-3">
+                        <label for="settings-company-country-code" class="form-label">Country code</label>
+                        <input type="text" class="form-control" id="settings-company-country-code" maxlength="2" placeholder="US" />
+                    </div>
+                    <div class="col-12 col-lg-4">
+                        <label for="settings-company-org-number" class="form-label">Organization number</label>
+                        <input type="text" class="form-control" id="settings-company-org-number" maxlength="100" />
+                    </div>
+                    <div class="col-12 col-lg-4">
+                        <label for="settings-company-tax-id" class="form-label">Tax ID</label>
+                        <input type="text" class="form-control" id="settings-company-tax-id" maxlength="100" />
+                    </div>
+                    <div class="col-12 col-lg-4">
+                        <label for="settings-company-vat-number" class="form-label">VAT number</label>
+                        <input type="text" class="form-control" id="settings-company-vat-number" maxlength="100" />
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        <label for="settings-company-website" class="form-label">Website</label>
+                        <input type="text" class="form-control" id="settings-company-website" maxlength="300" />
+                    </div>
+                    <div class="col-12 col-lg-6">
+                        <label for="settings-company-logo-url" class="form-label">Logo URL</label>
+                        <input type="text" class="form-control" id="settings-company-logo-url" maxlength="500" />
+                    </div>
+                    <div class="col-12">
+                        <label for="settings-company-letterhead-footer" class="form-label">Letterhead footer</label>
+                        <textarea class="form-control" id="settings-company-letterhead-footer" rows="3" maxlength="2000"></textarea>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

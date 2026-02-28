@@ -445,6 +445,13 @@ public static class AuthorizationPoliciesConfiguration
         options.AddPolicy("SystemSetting.Write", policy =>
             policy.RequireRole(ADMIN));
 
+        // MyCompany policies
+        options.AddPolicy("MyCompany.Read", policy =>
+            policy.RequireRole(ADMIN, SUPPORT));
+
+        options.AddPolicy("MyCompany.Write", policy =>
+            policy.RequireRole(ADMIN));
+
         // Service policies
         options.AddPolicy("Service.Delete", policy =>
             policy.RequireRole(ADMIN));

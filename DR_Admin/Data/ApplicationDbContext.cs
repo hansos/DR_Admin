@@ -177,6 +177,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<AuditLog> AuditLogs { get; set; }
     public DbSet<LoginHistory> LoginHistories { get; set; }
     public DbSet<SystemSetting> SystemSettings { get; set; }
+    public DbSet<MyCompany> MyCompanies { get; set; }
     public DbSet<BackupSchedule> BackupSchedules { get; set; }
     public DbSet<Country> Countries { get; set; }
     public DbSet<PostalCode> PostalCodes { get; set; }
@@ -1032,6 +1033,29 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Description).HasMaxLength(500);
             entity.Property(e => e.IsSystemKey).HasDefaultValue(false);
             entity.HasIndex(e => e.Key).IsUnique();
+        });
+
+        // MyCompany configuration
+        modelBuilder.Entity<MyCompany>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.LegalName).HasMaxLength(200);
+            entity.Property(e => e.Email).HasMaxLength(200);
+            entity.Property(e => e.Phone).HasMaxLength(50);
+            entity.Property(e => e.AddressLine1).HasMaxLength(300);
+            entity.Property(e => e.AddressLine2).HasMaxLength(300);
+            entity.Property(e => e.PostalCode).HasMaxLength(50);
+            entity.Property(e => e.City).HasMaxLength(100);
+            entity.Property(e => e.State).HasMaxLength(100);
+            entity.Property(e => e.CountryCode).HasMaxLength(2);
+            entity.Property(e => e.OrganizationNumber).HasMaxLength(100);
+            entity.Property(e => e.TaxId).HasMaxLength(100);
+            entity.Property(e => e.VatNumber).HasMaxLength(100);
+            entity.Property(e => e.InvoiceEmail).HasMaxLength(200);
+            entity.Property(e => e.Website).HasMaxLength(300);
+            entity.Property(e => e.LogoUrl).HasMaxLength(500);
+            entity.Property(e => e.LetterheadFooter).HasMaxLength(2000);
         });
 
         // BackupSchedule configuration
