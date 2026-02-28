@@ -1,8 +1,10 @@
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
+using ReportGeneratorLib.Helpers;
 using ReportGeneratorLib.Infrastructure.Enums;
 using ReportGeneratorLib.Interfaces;
+using ReportGeneratorLib.Models;
 using Serilog;
 using System;
 using System.IO;
@@ -36,16 +38,14 @@ namespace ReportGeneratorLib.Implementations
         public async Task<byte[]> GenerateReportAsync(ReportType type, object data, OutputFormat? outputFormat = OutputFormat.Pdf)
         {
             ValidateOutputFormat(outputFormat);
-
-            var reportName = $"{type} Report";
-            return await Task.Run(() => GeneratePdfBytes(reportName, data));
+            return await GenerateReportByTypeAsync(type, data);
         }
 
         public async Task SaveReportAsync(ReportType type, object data, string outputPath, OutputFormat? outputFormat = OutputFormat.Pdf)
         {
             ValidateOutputFormat(outputFormat);
 
-            var bytes = await GenerateReportAsync(type, data, outputFormat);
+            var bytes = await GenerateReportByTypeAsync(type, data);
             var outputDirectory = Path.GetDirectoryName(outputPath);
 
             if (!string.IsNullOrWhiteSpace(outputDirectory) && !Directory.Exists(outputDirectory))
@@ -54,6 +54,27 @@ namespace ReportGeneratorLib.Implementations
             }
 
             await File.WriteAllBytesAsync(outputPath, bytes);
+        }
+
+        private static async Task<byte[]> GenerateReportByTypeAsync(ReportType type, object data)
+        {
+            return type switch
+            {
+                ReportType.Offer => await GenerateOfferReportAsync(data),
+                ReportType.Order => await GenerateOrderReportAsync(data),
+                _ => throw new NotSupportedException($"Report type '{type}' is not supported by QuestPDF provider.")
+            };
+        }
+
+        private static Task<byte[]> GenerateOrderReportAsync(object data)
+        {
+            return Task.Run(() => GeneratePdfBytes("Order Report", data));
+        }
+
+        private static Task<byte[]> GenerateOfferReportAsync(object data)
+        {
+            var offer = DeserializeOfferData(data);
+            return Task.Run(() => GenerateOfferPdfBytes.Create(offer));
         }
 
         [Obsolete("Use GenerateReportAsync(ReportType, object, OutputFormat?);")]
@@ -138,6 +159,32 @@ namespace ReportGeneratorLib.Implementations
                         });
                 });
             }).GeneratePdf();
+        }
+
+        private static OfferDocumentDto DeserializeOfferData(object data)
+        {
+            if (data is OfferDocumentDto dto)
+            {
+                return dto;
+            }
+
+            if (data is JsonElement jsonElement)
+            {
+                var parsedFromElement = jsonElement.Deserialize<OfferDocumentDto>();
+                if (parsedFromElement != null)
+                {
+                    return parsedFromElement;
+                }
+            }
+
+            var serialized = JsonSerializer.Serialize(data);
+            var parsed = JsonSerializer.Deserialize<OfferDocumentDto>(serialized);
+            if (parsed == null)
+            {
+                throw new InvalidOperationException("Unable to deserialize offer report data to OfferDocumentDto.");
+            }
+
+            return parsed;
         }
 
         private static string SerializeData(object data)

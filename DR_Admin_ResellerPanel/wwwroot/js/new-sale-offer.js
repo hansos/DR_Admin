@@ -6,6 +6,7 @@
     let hostingPackages = new Map();
     let billingCycles = new Map();
     let services = new Map();
+    let currentSellerCompany = null;
     const getApiBaseUrl = () => {
         const settings = window.AppSettings;
         return settings?.apiBaseUrl ?? '';
@@ -210,14 +211,91 @@
     const loadSellerCompanyInfo = async () => {
         const defaultResponse = await apiRequest(`${getApiBaseUrl()}/ResellerCompanies/default`, { method: 'GET' });
         if (defaultResponse.success && defaultResponse.data) {
-            renderSellerHeader(normalizeResellerCompany(defaultResponse.data));
+            currentSellerCompany = normalizeResellerCompany(defaultResponse.data);
+            renderSellerHeader(currentSellerCompany);
             return;
         }
         const activeResponse = await apiRequest(`${getApiBaseUrl()}/ResellerCompanies/active`, { method: 'GET' });
         const activeCompanies = parseList(activeResponse.data)
             .map((item) => normalizeResellerCompany(item))
             .filter((item) => item.id > 0);
-        renderSellerHeader(activeCompanies.length > 0 ? activeCompanies[0] : null);
+        currentSellerCompany = activeCompanies.length > 0 ? activeCompanies[0] : null;
+        renderSellerHeader(currentSellerCompany);
+    };
+    const createOfferDocumentPayload = () => {
+        if (!currentState?.selectedCustomer) {
+            return null;
+        }
+        const lines = buildLineItems();
+        const totals = calculateTotals(lines);
+        const offer = currentState.offer;
+        return {
+            seller: currentSellerCompany
+                ? {
+                    id: currentSellerCompany.id,
+                    name: currentSellerCompany.name,
+                    contactPerson: currentSellerCompany.contactPerson,
+                    email: currentSellerCompany.email,
+                    phone: currentSellerCompany.phone,
+                    address: currentSellerCompany.address,
+                    city: currentSellerCompany.city,
+                    state: currentSellerCompany.state,
+                    postalCode: currentSellerCompany.postalCode,
+                    countryCode: currentSellerCompany.countryCode,
+                    companyRegistrationNumber: currentSellerCompany.companyRegistrationNumber,
+                    vatNumber: currentSellerCompany.vatNumber,
+                }
+                : null,
+            saleContext: {
+                domainName: currentState.domainName ?? '',
+                flowType: currentState.flowType ?? '',
+                customer: {
+                    id: currentState.selectedCustomer.id,
+                    name: currentState.selectedCustomer.name,
+                    customerName: currentState.selectedCustomer.customerName ?? '',
+                    email: currentState.selectedCustomer.email ?? '',
+                },
+                currency: currencyCode,
+            },
+            offerSettings: {
+                validUntil: offer?.validUntil,
+                couponCode: offer?.couponCode,
+                discountPercent: offer?.discountPercent,
+                notes: offer?.notes,
+                sentAt: offer?.sentAt,
+                acceptedAt: offer?.acceptedAt,
+            },
+            lineItems: lines.map((line, index) => ({
+                lineNumber: index + 1,
+                description: line.description,
+                quantity: line.quantity,
+                unitPrice: line.unitPrice,
+                subtotal: line.subtotal,
+                type: line.type,
+            })),
+            totals: {
+                lineCount: totals.lineCount,
+                oneTimeSubtotal: totals.oneTime,
+                recurringSubtotal: totals.recurring,
+                grandTotal: totals.grand,
+            },
+        };
+    };
+    const generateServerPdfForVerification = async () => {
+        const payload = createOfferDocumentPayload();
+        if (!payload) {
+            return false;
+        }
+        const response = await apiRequest(`${getApiBaseUrl()}/System/verify-offer-print`, {
+            method: 'POST',
+            body: JSON.stringify(payload),
+        });
+        if (!response.success) {
+            showError(response.message ?? 'Could not generate PDF file on server.');
+            return false;
+        }
+        showSuccess('PDF generated on server in the configured reports folder.');
+        return true;
     };
     const formatMoney = (amount) => `${amount.toFixed(2)} ${currencyCode}`;
     const toTitle = (value) => {
@@ -496,10 +574,9 @@
         sessionStorage.setItem(storageKey, JSON.stringify(currentState));
         window.location.href = '/dashboard/new-sale/payment';
     };
-    const printOffer = () => {
+    const printOffer = async () => {
         saveState();
-        document.body.classList.add('print-new-sale-offer');
-        window.print();
+        await generateServerPdfForVerification();
     };
     const bindEvents = () => {
         ['new-sale-offer-valid-until', 'new-sale-offer-coupon', 'new-sale-offer-discount', 'new-sale-offer-notes']

@@ -1,7 +1,12 @@
 using ISPAdmin.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ReportGeneratorLib.Implementations;
+using ReportGeneratorLib.Infrastructure.Enums;
+using ReportGeneratorLib.Models;
 using Serilog;
+using System.IO;
+using System.Linq;
 
 namespace ISPAdmin.Controllers;
 
@@ -14,11 +19,62 @@ namespace ISPAdmin.Controllers;
 public class SystemController : ControllerBase
 {
     private readonly ISystemService _systemService;
+    private readonly IConfiguration _configuration;
     private static readonly Serilog.ILogger _log = Log.ForContext<SystemController>();
 
-    public SystemController(ISystemService systemService)
+    public SystemController(ISystemService systemService, IConfiguration configuration)
     {
         _systemService = systemService;
+        _configuration = configuration;
+    }
+
+    /// <summary>
+    /// Generates an offer PDF on the server for print verification
+    /// </summary>
+    /// <param name="offer">Offer document data used to generate the PDF</param>
+    /// <returns>Information about the generated verification PDF file</returns>
+    /// <response code="200">Returns metadata for the generated file</response>
+    /// <response code="400">If the request body is missing or invalid</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpPost("verify-offer-print")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult> VerifyOfferPrint([FromBody] OfferDocumentDto offer)
+    {
+        try
+        {
+            if (offer == null)
+            {
+                return BadRequest("Offer payload is required");
+            }
+
+            var configuredOutputDirectory = _configuration["ReportSettings:QuestPdf:OutputPath"];
+            var outputDirectory = string.IsNullOrWhiteSpace(configuredOutputDirectory)
+                ? Path.Combine(AppContext.BaseDirectory, "GeneratedReports", "OfferVerification")
+                : configuredOutputDirectory;
+            var reportGenerator = new QuestPdfReportGenerator(outputDirectory);
+            var safeDomain = SanitizeFileName(offer.SaleContext?.DomainName);
+            var fileName = $"Offer-Verification-{safeDomain}-{DateTime.UtcNow:yyyyMMddHHmmssfff}.pdf";
+            var outputPath = Path.Combine(outputDirectory, fileName);
+
+            await reportGenerator.SaveReportAsync(ReportType.Offer, offer, outputPath, OutputFormat.Pdf);
+
+            _log.Information("API: VerifyOfferPrint generated report at {OutputPath} for user {User}", outputPath, User.Identity?.Name);
+            return Ok(new
+            {
+                success = true,
+                fileName,
+                outputPath
+            });
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in VerifyOfferPrint");
+            return StatusCode(500, "An error occurred while generating verification PDF");
+        }
     }
 
     /// <summary>
@@ -239,5 +295,17 @@ public class SystemController : ControllerBase
                 ErrorMessage = "An error occurred while restoring from backup: " + ex.Message
             });
         }
+    }
+
+    private static string SanitizeFileName(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return "offer";
+        }
+
+        var invalidChars = Path.GetInvalidFileNameChars();
+        var sanitized = new string(value.Select(ch => invalidChars.Contains(ch) ? '-' : ch).ToArray()).Trim();
+        return string.IsNullOrWhiteSpace(sanitized) ? "offer" : sanitized;
     }
 }

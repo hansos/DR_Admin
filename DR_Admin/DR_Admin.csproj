@@ -44,6 +44,7 @@
     <ProjectReference Include="..\ExchangeRateLib\ExchangeRateLib.csproj" />
     <ProjectReference Include="..\HostingPanelLib\HostingPanelLib.csproj" />
     <ProjectReference Include="..\PaymentGatewayLib\PaymentGatewayLib.csproj" />
+    <ProjectReference Include="..\ReportGeneratorLib\ReportGeneratorLib.csproj" />
     <ProjectReference Include="..\SMSSenderLib\SMSSenderLib.csproj" />
   </ItemGroup>
 

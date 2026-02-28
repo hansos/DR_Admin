@@ -7,8 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Models\" />
     <Folder Include="Extensions\" />
+    <Folder Include="Implementations\Helpers\" />
   </ItemGroup>
 
   <ItemGroup>

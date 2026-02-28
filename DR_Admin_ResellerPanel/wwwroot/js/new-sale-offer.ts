@@ -95,6 +95,66 @@
         type: 'One-time' | 'Recurring';
     }
 
+    interface OfferDocumentPayload {
+        seller: SellerInfoPayload | null;
+        saleContext: SaleContextPayload;
+        offerSettings: OfferSettingsPayload;
+        lineItems: OfferLineItemPayload[];
+        totals: OfferTotalsPayload;
+    }
+
+    interface SellerInfoPayload {
+        id: number;
+        name: string;
+        contactPerson: string;
+        email: string;
+        phone: string;
+        address: string;
+        city: string;
+        state: string;
+        postalCode: string;
+        countryCode: string;
+        companyRegistrationNumber: string;
+        vatNumber: string;
+    }
+
+    interface SaleContextPayload {
+        domainName: string;
+        flowType: string;
+        customer: {
+            id: number;
+            name: string;
+            customerName: string;
+            email: string;
+        };
+        currency: string;
+    }
+
+    interface OfferSettingsPayload {
+        validUntil?: string;
+        couponCode?: string;
+        discountPercent?: number;
+        notes?: string;
+        sentAt?: string;
+        acceptedAt?: string;
+    }
+
+    interface OfferLineItemPayload {
+        lineNumber: number;
+        description: string;
+        quantity: number;
+        unitPrice: number;
+        subtotal: number;
+        type: string;
+    }
+
+    interface OfferTotalsPayload {
+        lineCount: number;
+        oneTimeSubtotal: number;
+        recurringSubtotal: number;
+        grandTotal: number;
+    }
+
     const storageKey = 'new-sale-state';
 
     let currentState: NewSaleState | null = null;
@@ -102,6 +162,7 @@
     let hostingPackages = new Map<number, HostingPackage>();
     let billingCycles = new Map<number, BillingCycle>();
     let services = new Map<number, ServiceItem>();
+    let currentSellerCompany: ResellerCompany | null = null;
 
     const getApiBaseUrl = (): string => {
         const settings = (window as Window & { AppSettings?: AppSettings }).AppSettings;
@@ -343,7 +404,8 @@
     const loadSellerCompanyInfo = async (): Promise<void> => {
         const defaultResponse = await apiRequest<unknown>(`${getApiBaseUrl()}/ResellerCompanies/default`, { method: 'GET' });
         if (defaultResponse.success && defaultResponse.data) {
-            renderSellerHeader(normalizeResellerCompany(defaultResponse.data));
+            currentSellerCompany = normalizeResellerCompany(defaultResponse.data);
+            renderSellerHeader(currentSellerCompany);
             return;
         }
 
@@ -352,7 +414,90 @@
             .map((item) => normalizeResellerCompany(item))
             .filter((item) => item.id > 0);
 
-        renderSellerHeader(activeCompanies.length > 0 ? activeCompanies[0] : null);
+        currentSellerCompany = activeCompanies.length > 0 ? activeCompanies[0] : null;
+        renderSellerHeader(currentSellerCompany);
+    };
+
+    const createOfferDocumentPayload = (): OfferDocumentPayload | null => {
+        if (!currentState?.selectedCustomer) {
+            return null;
+        }
+
+        const lines = buildLineItems();
+        const totals = calculateTotals(lines);
+        const offer = currentState.offer;
+
+        return {
+            seller: currentSellerCompany
+                ? {
+                    id: currentSellerCompany.id,
+                    name: currentSellerCompany.name,
+                    contactPerson: currentSellerCompany.contactPerson,
+                    email: currentSellerCompany.email,
+                    phone: currentSellerCompany.phone,
+                    address: currentSellerCompany.address,
+                    city: currentSellerCompany.city,
+                    state: currentSellerCompany.state,
+                    postalCode: currentSellerCompany.postalCode,
+                    countryCode: currentSellerCompany.countryCode,
+                    companyRegistrationNumber: currentSellerCompany.companyRegistrationNumber,
+                    vatNumber: currentSellerCompany.vatNumber,
+                }
+                : null,
+            saleContext: {
+                domainName: currentState.domainName ?? '',
+                flowType: currentState.flowType ?? '',
+                customer: {
+                    id: currentState.selectedCustomer.id,
+                    name: currentState.selectedCustomer.name,
+                    customerName: currentState.selectedCustomer.customerName ?? '',
+                    email: currentState.selectedCustomer.email ?? '',
+                },
+                currency: currencyCode,
+            },
+            offerSettings: {
+                validUntil: offer?.validUntil,
+                couponCode: offer?.couponCode,
+                discountPercent: offer?.discountPercent,
+                notes: offer?.notes,
+                sentAt: offer?.sentAt,
+                acceptedAt: offer?.acceptedAt,
+            },
+            lineItems: lines.map((line, index) => ({
+                lineNumber: index + 1,
+                description: line.description,
+                quantity: line.quantity,
+                unitPrice: line.unitPrice,
+                subtotal: line.subtotal,
+                type: line.type,
+            })),
+            totals: {
+                lineCount: totals.lineCount,
+                oneTimeSubtotal: totals.oneTime,
+                recurringSubtotal: totals.recurring,
+                grandTotal: totals.grand,
+            },
+        };
+    };
+
+    const generateServerPdfForVerification = async (): Promise<boolean> => {
+        const payload = createOfferDocumentPayload();
+        if (!payload) {
+            return false;
+        }
+
+        const response = await apiRequest<unknown>(`${getApiBaseUrl()}/System/verify-offer-print`, {
+            method: 'POST',
+            body: JSON.stringify(payload),
+        });
+
+        if (!response.success) {
+            showError(response.message ?? 'Could not generate PDF file on server.');
+            return false;
+        }
+
+        showSuccess('PDF generated on server in the configured reports folder.');
+        return true;
     };
 
     const formatMoney = (amount: number): string => `${amount.toFixed(2)} ${currencyCode}`;
@@ -690,10 +835,9 @@
         window.location.href = '/dashboard/new-sale/payment';
     };
 
-    const printOffer = (): void => {
+    const printOffer = async (): Promise<void> => {
         saveState();
-        document.body.classList.add('print-new-sale-offer');
-        window.print();
+        await generateServerPdfForVerification();
     };
 
     const bindEvents = (): void => {
