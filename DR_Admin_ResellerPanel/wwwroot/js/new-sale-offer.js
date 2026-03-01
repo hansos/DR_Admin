@@ -58,6 +58,71 @@
             };
         }
     };
+    const getRequestedQuoteId = () => {
+        const params = new URLSearchParams(window.location.search);
+        const raw = params.get('quoteId') ?? '';
+        const value = Number(raw);
+        return Number.isInteger(value) && value > 0 ? value : null;
+    };
+    const mapOfferSnapshotToState = (snapshot, quoteStatus, lastAction, lastRevisionNumber) => {
+        const offerLines = Array.isArray(snapshot?.lineItems)
+            ? snapshot.lineItems.map((line) => ({
+                description: String(line?.description ?? ''),
+                quantity: Number(line?.quantity ?? 1),
+                unitPrice: Number(line?.unitPrice ?? 0),
+                subtotal: Number(line?.subtotal ?? 0),
+                type: String(line?.type ?? '').toLowerCase() === 'one-time' ? 'One-time' : 'Recurring',
+            }))
+            : [];
+        const validUntil = snapshot?.offerSettings?.validUntil
+            ? String(snapshot.offerSettings.validUntil).slice(0, 10)
+            : undefined;
+        return {
+            domainName: String(snapshot?.saleContext?.domainName ?? ''),
+            flowType: String(snapshot?.saleContext?.flowType ?? 'register'),
+            pricing: {
+                registration: null,
+                currency: String(snapshot?.saleContext?.currency ?? 'USD'),
+            },
+            selectedCustomer: {
+                id: Number(snapshot?.saleContext?.customer?.id ?? 0),
+                name: String(snapshot?.saleContext?.customer?.name ?? ''),
+                customerName: String(snapshot?.saleContext?.customer?.customerName ?? ''),
+                email: String(snapshot?.saleContext?.customer?.email ?? ''),
+            },
+            offer: {
+                quoteId: Number(snapshot?.quoteId ?? 0) || undefined,
+                status: quoteStatus || 'Draft',
+                lastAction: lastAction ?? '-',
+                lastRevisionNumber: Number(lastRevisionNumber ?? 0) || undefined,
+                validUntil,
+                couponCode: String(snapshot?.offerSettings?.couponCode ?? '') || undefined,
+                discountPercent: Number(snapshot?.offerSettings?.discountPercent ?? 0),
+                notes: String(snapshot?.offerSettings?.notes ?? '') || undefined,
+                lineCount: Number(snapshot?.totals?.lineCount ?? offerLines.length),
+                oneTimeSubtotal: Number(snapshot?.totals?.oneTimeSubtotal ?? 0),
+                recurringSubtotal: Number(snapshot?.totals?.recurringSubtotal ?? 0),
+                grandTotal: Number(snapshot?.totals?.grandTotal ?? 0),
+                sentAt: snapshot?.offerSettings?.sentAt ? String(snapshot.offerSettings.sentAt) : undefined,
+                acceptedAt: snapshot?.offerSettings?.acceptedAt ? String(snapshot.offerSettings.acceptedAt) : undefined,
+                loadedLineItems: offerLines,
+            },
+            otherServices: {
+                selectedServiceIds: [],
+                currency: String(snapshot?.saleContext?.currency ?? 'USD'),
+            },
+        };
+    };
+    const loadRequestedQuoteState = async (quoteId) => {
+        const response = await apiRequest(`${getApiBaseUrl()}/System/offer-editor/${quoteId}`, { method: 'GET' });
+        if (!response.success || !response.data?.offer) {
+            showError(response.message ?? 'Could not load quote details.');
+            return false;
+        }
+        currentState = mapOfferSnapshotToState(response.data.offer, response.data.quoteStatus, response.data.lastAction, response.data.lastRevisionNumber);
+        sessionStorage.setItem(storageKey, JSON.stringify(currentState));
+        return true;
+    };
     const esc = (text) => {
         const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
         return (text || '').replace(/[&<>"']/g, (char) => map[char] ?? char);
@@ -455,6 +520,16 @@
         });
     };
     const buildLineItems = () => {
+        const persistedLines = currentState?.offer?.loadedLineItems;
+        if (Array.isArray(persistedLines) && persistedLines.length > 0) {
+            return persistedLines.map((line) => ({
+                description: line.description,
+                quantity: Number.isFinite(line.quantity) && line.quantity > 0 ? line.quantity : 1,
+                unitPrice: Number.isFinite(line.unitPrice) ? line.unitPrice : 0,
+                subtotal: Number.isFinite(line.subtotal) ? line.subtotal : 0,
+                type: line.type === 'One-time' ? 'One-time' : 'Recurring',
+            }));
+        }
         const lines = [];
         const domainLine = buildDomainOperationLine();
         if (domainLine) {
@@ -642,6 +717,13 @@
         }
         page.dataset.initialized = 'true';
         currentState = loadState();
+        const requestedQuoteId = getRequestedQuoteId();
+        if (requestedQuoteId) {
+            const loaded = await loadRequestedQuoteState(requestedQuoteId);
+            if (!loaded) {
+                return;
+            }
+        }
         if (!currentState?.domainName || !currentState?.flowType || !currentState?.selectedCustomer) {
             window.location.href = '/dashboard/new-sale';
             return;

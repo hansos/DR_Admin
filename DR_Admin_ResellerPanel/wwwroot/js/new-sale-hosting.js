@@ -169,6 +169,38 @@
         const parsed = Number(select?.value ?? '');
         return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
     };
+    const getPersistedHostingHint = () => {
+        const loadedLines = currentState?.offer?.loadedLineItems;
+        if (!Array.isArray(loadedLines) || !loadedLines.length) {
+            return null;
+        }
+        const hostingLikeLine = loadedLines.find((line) => {
+            const description = String(line?.description ?? '').trim();
+            if (!description || !description.includes('(') || !description.includes(')')) {
+                return false;
+            }
+            const lower = description.toLowerCase();
+            if (lower.startsWith('register ') || lower.startsWith('transfer ') || lower.startsWith('renew ')) {
+                return false;
+            }
+            return true;
+        });
+        if (!hostingLikeLine) {
+            return null;
+        }
+        const description = String(hostingLikeLine.description ?? '').trim();
+        const match = /^(.+?)\s*\(([^)]+)\)\s*$/.exec(description);
+        if (!match) {
+            return {
+                packageName: description,
+                cycleName: null,
+            };
+        }
+        return {
+            packageName: match[1].trim(),
+            cycleName: match[2].trim(),
+        };
+    };
     const getSelectedHostingPackage = () => {
         if (selectedHostingPackageId === null) {
             return null;
@@ -296,6 +328,18 @@
         if (savedPackageId && hostingPackages.some((item) => item.id === savedPackageId)) {
             selectedHostingPackageId = savedPackageId;
         }
+        else {
+            const hint = getPersistedHostingHint();
+            if (hint?.packageName) {
+                const matched = hostingPackages.find((item) => item.name.trim().toLowerCase() === hint.packageName.toLowerCase());
+                if (matched) {
+                    selectedHostingPackageId = matched.id;
+                    if (currentState) {
+                        currentState.hostingPackageId = matched.id;
+                    }
+                }
+            }
+        }
         renderPackages();
         if (status) {
             status.innerHTML = `${hostingPackages.length} active hosting package(s) available.`;
@@ -317,6 +361,22 @@
                 : [];
         billingCycles = list.map((item) => normalizeBillingCycle(item)).filter((item) => item.id > 0);
         renderBillingCycles();
+        if (!currentState?.billingCycleId) {
+            const hint = getPersistedHostingHint();
+            const cycleHintName = hint?.cycleName?.toLowerCase();
+            if (cycleHintName) {
+                const matched = billingCycles.find((cycle) => cycle.name.trim().toLowerCase() === cycleHintName);
+                if (matched) {
+                    const select = document.getElementById('new-sale-hosting-billing-cycle');
+                    if (select) {
+                        select.value = String(matched.id);
+                    }
+                    if (currentState) {
+                        currentState.billingCycleId = matched.id;
+                    }
+                }
+            }
+        }
     };
     const selectPackage = (packageId) => {
         if (!hostingPackages.some((item) => item.id === packageId)) {

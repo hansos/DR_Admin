@@ -161,6 +161,66 @@ public class SystemController : ControllerBase
     }
 
     /// <summary>
+    /// Retrieves the latest persisted offer snapshot for a quote so it can be reopened in the offer editor
+    /// </summary>
+    /// <param name="quoteId">The quote ID</param>
+    /// <returns>Latest persisted offer snapshot and quote metadata</returns>
+    /// <response code="200">Returns the offer snapshot for editing</response>
+    /// <response code="404">If quote or snapshot is not found</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpGet("offer-editor/{quoteId:int}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult> GetOfferEditorSnapshot(int quoteId)
+    {
+        try
+        {
+            var quote = await _context.Quotes
+                .AsNoTracking()
+                .FirstOrDefaultAsync(q => q.Id == quoteId && q.DeletedAt == null);
+
+            if (quote == null)
+            {
+                return NotFound($"Quote with ID {quoteId} was not found.");
+            }
+
+            var latestRevision = await _context.QuoteRevisions
+                .AsNoTracking()
+                .Where(r => r.QuoteId == quoteId)
+                .OrderByDescending(r => r.RevisionNumber)
+                .FirstOrDefaultAsync();
+
+            if (latestRevision == null || string.IsNullOrWhiteSpace(latestRevision.SnapshotJson))
+            {
+                return NotFound($"No persisted offer snapshot was found for quote ID {quoteId}.");
+            }
+
+            var snapshot = JsonSerializer.Deserialize<OfferDocumentDto>(latestRevision.SnapshotJson);
+            if (snapshot == null)
+            {
+                return NotFound($"Persisted snapshot for quote ID {quoteId} is invalid.");
+            }
+
+            return Ok(new
+            {
+                quoteId = quote.Id,
+                quoteStatus = quote.Status.ToString(),
+                lastAction = latestRevision.ActionType,
+                lastRevisionNumber = latestRevision.RevisionNumber,
+                offer = snapshot
+            });
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in GetOfferEditorSnapshot for QuoteId {QuoteId}", quoteId);
+            return StatusCode(500, "An error occurred while retrieving offer snapshot");
+        }
+    }
+
+    /// <summary>
     /// Persists and marks an offer as sent while generating a server-side PDF snapshot
     /// </summary>
     /// <param name="offer">Offer document data used to persist and send the offer</param>

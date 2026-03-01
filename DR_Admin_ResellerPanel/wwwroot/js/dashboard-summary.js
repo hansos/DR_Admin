@@ -111,6 +111,7 @@
             identifier: item.quoteNumber || `#${item.id}`,
             status: resolveOfferStatus(item.status),
             amount: formatMoney(item.totalAmount, item.currencyCode),
+            linkUrl: `/dashboard/new-sale/offer?quoteId=${encodeURIComponent(String(item.id))}`,
         })), 'No offers found');
         renderSummaryTable('dashboard-summary-orders-body', orders.map((item) => ({
             identifier: item.orderNumber || `#${item.id}`,
@@ -269,13 +270,18 @@
             body.innerHTML = `<tr><td colspan="3" class="text-center text-muted">${esc(emptyMessage)}</td></tr>`;
             return;
         }
-        body.innerHTML = rows.map((row) => `
+        body.innerHTML = rows.map((row) => {
+            const identifierHtml = row.linkUrl
+                ? `<a href="${esc(row.linkUrl)}"${row.openInNewTab ? ' target="_blank" rel="noopener noreferrer"' : ''}>${esc(row.identifier)}</a>`
+                : esc(row.identifier);
+            return `
         <tr>
-            <td>${esc(row.identifier)}</td>
+            <td>${identifierHtml}</td>
             <td>${esc(row.status)}</td>
             <td class="text-end">${esc(row.amount)}</td>
         </tr>
-    `).join('');
+    `;
+        }).join('');
     }
     function normalizeDomain(raw) {
         return {
