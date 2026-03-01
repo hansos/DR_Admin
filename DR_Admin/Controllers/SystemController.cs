@@ -1,12 +1,18 @@
+using ISPAdmin.Data;
+using ISPAdmin.Data.Entities;
+using ISPAdmin.Data.Enums;
 using ISPAdmin.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using ReportGeneratorLib.Implementations;
 using ReportGeneratorLib.Infrastructure.Enums;
 using ReportGeneratorLib.Models;
 using Serilog;
+using System.Security.Cryptography;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 
 namespace ISPAdmin.Controllers;
 
@@ -18,12 +24,17 @@ namespace ISPAdmin.Controllers;
 [Authorize]
 public class SystemController : ControllerBase
 {
+    private readonly ApplicationDbContext _context;
     private readonly ISystemService _systemService;
     private readonly IConfiguration _configuration;
     private static readonly Serilog.ILogger _log = Log.ForContext<SystemController>();
 
-    public SystemController(ISystemService systemService, IConfiguration configuration)
+    public SystemController(
+        ApplicationDbContext context,
+        ISystemService systemService,
+        IConfiguration configuration)
     {
+        _context = context;
         _systemService = systemService;
         _configuration = configuration;
     }
@@ -51,21 +62,20 @@ public class SystemController : ControllerBase
                 return BadRequest("Offer payload is required");
             }
 
-            var configuredOutputDirectory = _configuration["ReportSettings:QuestPdf:OutputPath"];
-            var outputDirectory = string.IsNullOrWhiteSpace(configuredOutputDirectory)
-                ? Path.Combine(AppContext.BaseDirectory, "GeneratedReports", "OfferVerification")
-                : configuredOutputDirectory;
-            var reportGenerator = new QuestPdfReportGenerator(outputDirectory);
-            var safeDomain = SanitizeFileName(offer.SaleContext?.DomainName);
-            var fileName = $"Offer-Verification-{safeDomain}-{DateTime.UtcNow:yyyyMMddHHmmssfff}.pdf";
-            var outputPath = Path.Combine(outputDirectory, fileName);
+            var quote = await UpsertQuoteFromOfferAsync(offer, markAsSent: false);
+            offer.QuoteId = quote.Id;
 
-            await reportGenerator.SaveReportAsync(ReportType.Offer, offer, outputPath, OutputFormat.Pdf);
+            var (fileName, outputPath) = await GenerateOfferPdfAsync(offer, "Printed");
+            var revision = await SaveQuoteRevisionAsync(quote, offer, "Printed", fileName, outputPath);
 
             _log.Information("API: VerifyOfferPrint generated report at {OutputPath} for user {User}", outputPath, User.Identity?.Name);
             return Ok(new
             {
                 success = true,
+                quoteId = quote.Id,
+                status = quote.Status.ToString(),
+                revisionNumber = revision.RevisionNumber,
+                actionType = revision.ActionType,
                 fileName,
                 outputPath
             });
@@ -74,6 +84,56 @@ public class SystemController : ControllerBase
         {
             _log.Error(ex, "API: Error in VerifyOfferPrint");
             return StatusCode(500, "An error occurred while generating verification PDF");
+        }
+    }
+
+    /// <summary>
+    /// Persists and marks an offer as sent while generating a server-side PDF snapshot
+    /// </summary>
+    /// <param name="offer">Offer document data used to persist and send the offer</param>
+    /// <returns>Persisted quote and revision details</returns>
+    /// <response code="200">Returns persisted quote and revision metadata</response>
+    /// <response code="400">If the request body is missing or invalid</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpPost("send-offer")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult> SendOffer([FromBody] OfferDocumentDto offer)
+    {
+        try
+        {
+            if (offer == null)
+            {
+                return BadRequest("Offer payload is required");
+            }
+
+            var quote = await UpsertQuoteFromOfferAsync(offer, markAsSent: true);
+            offer.QuoteId = quote.Id;
+
+            var (fileName, outputPath) = await GenerateOfferPdfAsync(offer, "Sent");
+            var revision = await SaveQuoteRevisionAsync(quote, offer, "Sent", fileName, outputPath);
+
+            _log.Information("API: SendOffer persisted quote {QuoteId}, revision {RevisionNumber} and PDF {OutputPath}", quote.Id, revision.RevisionNumber, outputPath);
+
+            return Ok(new
+            {
+                success = true,
+                quoteId = quote.Id,
+                status = quote.Status.ToString(),
+                sentAt = quote.SentAt,
+                revisionNumber = revision.RevisionNumber,
+                actionType = revision.ActionType,
+                fileName,
+                outputPath
+            });
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in SendOffer");
+            return StatusCode(500, "An error occurred while sending and persisting offer");
         }
     }
 
@@ -295,6 +355,195 @@ public class SystemController : ControllerBase
                 ErrorMessage = "An error occurred while restoring from backup: " + ex.Message
             });
         }
+    }
+
+    private async Task<Quote> UpsertQuoteFromOfferAsync(OfferDocumentDto offer, bool markAsSent)
+    {
+        var customerId = offer.SaleContext?.Customer?.Id ?? 0;
+        if (customerId <= 0)
+        {
+            throw new InvalidOperationException("Offer customer is required for persistence.");
+        }
+
+        var customer = await _context.Customers.FindAsync(customerId)
+            ?? throw new InvalidOperationException($"Customer with ID {customerId} was not found.");
+
+        var now = DateTime.UtcNow;
+        var oneTimeSubtotal = offer.Totals?.OneTimeSubtotal ?? 0;
+        var recurringSubtotal = offer.Totals?.RecurringSubtotal ?? 0;
+        var grandTotal = offer.Totals?.GrandTotal ?? (oneTimeSubtotal + recurringSubtotal);
+
+        Quote quote;
+        if (offer.QuoteId.HasValue)
+        {
+            quote = await _context.Quotes.FirstOrDefaultAsync(q => q.Id == offer.QuoteId.Value && q.DeletedAt == null)
+                ?? CreateNewQuote(customer, now, offer);
+            if (quote.Id == 0)
+            {
+                _context.Quotes.Add(quote);
+            }
+        }
+        else
+        {
+            quote = CreateNewQuote(customer, now, offer);
+            _context.Quotes.Add(quote);
+        }
+
+        quote.CustomerId = customer.Id;
+        quote.CustomerName = customer.Name;
+        quote.CurrencyCode = offer.SaleContext?.Currency ?? "USD";
+        quote.ValidUntil = ParseValidUntil(offer) ?? now.AddDays(14);
+        quote.Notes = offer.OfferSettings?.Notes ?? string.Empty;
+        quote.SubTotal = oneTimeSubtotal + recurringSubtotal;
+        quote.TotalSetupFee = oneTimeSubtotal;
+        quote.TotalRecurring = recurringSubtotal;
+        quote.TotalAmount = grandTotal;
+        quote.DiscountAmount = CalculateDiscountAmount(oneTimeSubtotal + recurringSubtotal, grandTotal);
+
+        if (markAsSent)
+        {
+            quote.Status = QuoteStatus.Sent;
+            quote.SentAt ??= now;
+        }
+
+        await _context.SaveChangesAsync();
+
+        var existingLines = _context.QuoteLines.Where(line => line.QuoteId == quote.Id);
+        _context.QuoteLines.RemoveRange(existingLines);
+
+        var defaultBillingCycle = await _context.BillingCycles
+            .OrderBy(c => c.Id)
+            .Select(c => new { c.Id, c.Name })
+            .FirstOrDefaultAsync();
+        if (defaultBillingCycle == null)
+        {
+            throw new InvalidOperationException("At least one billing cycle must exist before persisting offer lines.");
+        }
+
+        var quoteLines = offer.LineItems.Select(item =>
+        {
+            var isRecurring = string.Equals(item.Type, "Recurring", StringComparison.OrdinalIgnoreCase);
+            var quantity = item.Quantity <= 0 ? 1 : (int)Math.Ceiling(item.Quantity);
+
+            return new QuoteLine
+            {
+                QuoteId = quote.Id,
+                BillingCycleId = defaultBillingCycle.Id,
+                LineNumber = item.LineNumber > 0 ? item.LineNumber : 1,
+                Description = item.Description ?? string.Empty,
+                Quantity = quantity,
+                SetupFee = isRecurring ? 0 : item.UnitPrice,
+                RecurringPrice = isRecurring ? item.UnitPrice : 0,
+                Discount = 0,
+                TotalSetupFee = isRecurring ? 0 : item.Subtotal,
+                TotalRecurringPrice = isRecurring ? item.Subtotal : 0,
+                TaxRate = 0,
+                TaxAmount = 0,
+                TotalWithTax = item.Subtotal,
+                ServiceNameSnapshot = item.Description ?? string.Empty,
+                BillingCycleNameSnapshot = defaultBillingCycle.Name,
+                Notes = string.Empty
+            };
+        }).ToList();
+
+        _context.QuoteLines.AddRange(quoteLines);
+        await _context.SaveChangesAsync();
+
+        return quote;
+    }
+
+    private Quote CreateNewQuote(Customer customer, DateTime now, OfferDocumentDto offer)
+    {
+        return new Quote
+        {
+            QuoteNumber = $"Q-{now:yyyyMMddHHmmssfff}",
+            CustomerId = customer.Id,
+            Status = QuoteStatus.Draft,
+            ValidUntil = ParseValidUntil(offer) ?? now.AddDays(14),
+            CurrencyCode = offer.SaleContext?.Currency ?? "USD",
+            TaxRate = 0,
+            TaxName = "VAT",
+            CustomerName = customer.Name,
+            CustomerAddress = string.Empty,
+            CustomerTaxId = customer.TaxId ?? string.Empty,
+            Notes = offer.OfferSettings?.Notes ?? string.Empty,
+            TermsAndConditions = string.Empty,
+            InternalComment = string.Empty,
+            RejectionReason = string.Empty,
+            AcceptanceToken = Guid.NewGuid().ToString("N")
+        };
+    }
+
+    private static DateTime? ParseValidUntil(OfferDocumentDto offer)
+    {
+        return offer.OfferSettings?.ValidUntil?.ToDateTime(TimeOnly.MinValue);
+    }
+
+    private static decimal CalculateDiscountAmount(decimal gross, decimal grandTotal)
+    {
+        var discount = gross - grandTotal;
+        return discount > 0 ? discount : 0;
+    }
+
+    private async Task<(string fileName, string outputPath)> GenerateOfferPdfAsync(OfferDocumentDto offer, string actionPrefix)
+    {
+        var outputDirectory = ResolveOutputDirectory();
+        var reportGenerator = new QuestPdfReportGenerator(outputDirectory);
+        var safeDomain = SanitizeFileName(offer.SaleContext?.DomainName);
+        var fileName = $"Offer-{actionPrefix}-{safeDomain}-{DateTime.UtcNow:yyyyMMddHHmmssfff}.pdf";
+        var outputPath = Path.Combine(outputDirectory, fileName);
+
+        await reportGenerator.SaveReportAsync(ReportType.Offer, offer, outputPath, OutputFormat.Pdf);
+        return (fileName, outputPath);
+    }
+
+    private async Task<QuoteRevision> SaveQuoteRevisionAsync(
+        Quote quote,
+        OfferDocumentDto offer,
+        string actionType,
+        string fileName,
+        string outputPath)
+    {
+        var nextRevisionNumber = await _context.QuoteRevisions
+            .Where(r => r.QuoteId == quote.Id)
+            .Select(r => (int?)r.RevisionNumber)
+            .MaxAsync() ?? 0;
+
+        var snapshotJson = JsonSerializer.Serialize(offer, new JsonSerializerOptions { WriteIndented = true });
+        var contentHash = string.Empty;
+        if (System.IO.File.Exists(outputPath))
+        {
+            var bytes = await System.IO.File.ReadAllBytesAsync(outputPath);
+            contentHash = Convert.ToHexString(SHA256.HashData(bytes));
+        }
+
+        var revision = new QuoteRevision
+        {
+            QuoteId = quote.Id,
+            RevisionNumber = nextRevisionNumber + 1,
+            QuoteStatus = quote.Status,
+            ActionType = actionType,
+            SnapshotJson = snapshotJson,
+            PdfFileName = fileName,
+            PdfFilePath = outputPath,
+            ContentHash = contentHash,
+            Notes = "Generated from dashboard/new-sale/offer"
+        };
+
+        _context.QuoteRevisions.Add(revision);
+        await _context.SaveChangesAsync();
+        return revision;
+    }
+
+    private string ResolveOutputDirectory()
+    {
+        var configuredOutputDirectory = _configuration["ReportSettings:QuestPdf:OutputPath"];
+        if (!string.IsNullOrWhiteSpace(configuredOutputDirectory))
+        {
+            return configuredOutputDirectory;
+        }
+
+        return Path.Combine(AppContext.BaseDirectory, "GeneratedReports", "OfferVerification");
     }
 
     private static string SanitizeFileName(string? value)

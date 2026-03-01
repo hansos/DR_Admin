@@ -74,6 +74,10 @@
             currency?: string;
         };
         offer?: {
+            quoteId?: number;
+            status?: string;
+            lastAction?: string;
+            lastRevisionNumber?: number;
             validUntil?: string;
             couponCode?: string;
             discountPercent?: number;
@@ -96,11 +100,22 @@
     }
 
     interface OfferDocumentPayload {
+        quoteId?: number;
         seller: SellerInfoPayload | null;
         saleContext: SaleContextPayload;
         offerSettings: OfferSettingsPayload;
         lineItems: OfferLineItemPayload[];
         totals: OfferTotalsPayload;
+    }
+
+    interface OfferPersistenceResponse {
+        quoteId: number;
+        status: string;
+        revisionNumber: number;
+        actionType: string;
+        fileName: string;
+        outputPath: string;
+        sentAt?: string;
     }
 
     interface SellerInfoPayload {
@@ -428,6 +443,7 @@
         const offer = currentState.offer;
 
         return {
+            quoteId: offer?.quoteId,
             seller: currentSellerCompany
                 ? {
                     id: currentSellerCompany.id,
@@ -480,13 +496,31 @@
         };
     };
 
+    const applyPersistenceResponse = (responseData: OfferPersistenceResponse): void => {
+        if (!currentState) {
+            return;
+        }
+
+        currentState.offer = {
+            ...currentState.offer,
+            quoteId: responseData.quoteId,
+            status: responseData.status,
+            lastAction: responseData.actionType,
+            lastRevisionNumber: responseData.revisionNumber,
+            sentAt: responseData.sentAt ?? currentState.offer?.sentAt,
+        };
+
+        sessionStorage.setItem(storageKey, JSON.stringify(currentState));
+        renderPersistenceState();
+    };
+
     const generateServerPdfForVerification = async (): Promise<boolean> => {
         const payload = createOfferDocumentPayload();
         if (!payload) {
             return false;
         }
 
-        const response = await apiRequest<unknown>(`${getApiBaseUrl()}/System/verify-offer-print`, {
+        const response = await apiRequest<OfferPersistenceResponse>(`${getApiBaseUrl()}/System/verify-offer-print`, {
             method: 'POST',
             body: JSON.stringify(payload),
         });
@@ -494,6 +528,10 @@
         if (!response.success) {
             showError(response.message ?? 'Could not generate PDF file on server.');
             return false;
+        }
+
+        if (response.data) {
+            applyPersistenceResponse(response.data);
         }
 
         showSuccess('PDF generated on server in the configured reports folder.');
@@ -538,6 +576,23 @@
         if (currency) {
             currency.textContent = currencyCode;
         }
+    };
+
+    const renderPersistenceState = (): void => {
+        const quoteId = document.getElementById('new-sale-offer-quote-id');
+        const status = document.getElementById('new-sale-offer-status');
+        const lastAction = document.getElementById('new-sale-offer-last-action');
+        const lastRevision = document.getElementById('new-sale-offer-last-revision');
+
+        if (!quoteId || !status || !lastAction || !lastRevision) {
+            return;
+        }
+
+        const offer = currentState?.offer;
+        quoteId.textContent = offer?.quoteId ? String(offer.quoteId) : '-';
+        status.textContent = offer?.status || 'Draft';
+        lastAction.textContent = offer?.lastAction || '-';
+        lastRevision.textContent = offer?.lastRevisionNumber ? String(offer.lastRevisionNumber) : '-';
     };
 
     const resolveHostingRecurringPrice = (pkg: HostingPackage, cycle: BillingCycle | null): number => {
@@ -801,18 +856,31 @@
             });
     };
 
-    const sendToCustomer = (): void => {
+    const sendToCustomer = async (): Promise<void> => {
         if (!currentState) {
             return;
         }
 
         saveState();
-        currentState.offer = {
-            ...currentState.offer,
-            sentAt: new Date().toISOString(),
-        };
-        sessionStorage.setItem(storageKey, JSON.stringify(currentState));
-        showSuccess('Offer marked as sent. You can continue when ready.');
+
+        const payload = createOfferDocumentPayload();
+        if (!payload) {
+            showError('Offer payload is incomplete.');
+            return;
+        }
+
+        const response = await apiRequest<OfferPersistenceResponse>(`${getApiBaseUrl()}/System/send-offer`, {
+            method: 'POST',
+            body: JSON.stringify(payload),
+        });
+
+        if (!response.success || !response.data) {
+            showError(response.message ?? 'Could not send and persist offer.');
+            return;
+        }
+
+        applyPersistenceResponse(response.data);
+        showSuccess('Offer persisted and marked as sent.');
     };
 
     const acceptAndContinue = (): void => {
@@ -876,6 +944,7 @@
 
         setContextHeader();
         restoreOfferSettings();
+        renderPersistenceState();
         bindEvents();
 
         await Promise.all([

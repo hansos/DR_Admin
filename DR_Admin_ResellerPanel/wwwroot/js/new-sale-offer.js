@@ -230,6 +230,7 @@
         const totals = calculateTotals(lines);
         const offer = currentState.offer;
         return {
+            quoteId: offer?.quoteId,
             seller: currentSellerCompany
                 ? {
                     id: currentSellerCompany.id,
@@ -281,6 +282,21 @@
             },
         };
     };
+    const applyPersistenceResponse = (responseData) => {
+        if (!currentState) {
+            return;
+        }
+        currentState.offer = {
+            ...currentState.offer,
+            quoteId: responseData.quoteId,
+            status: responseData.status,
+            lastAction: responseData.actionType,
+            lastRevisionNumber: responseData.revisionNumber,
+            sentAt: responseData.sentAt ?? currentState.offer?.sentAt,
+        };
+        sessionStorage.setItem(storageKey, JSON.stringify(currentState));
+        renderPersistenceState();
+    };
     const generateServerPdfForVerification = async () => {
         const payload = createOfferDocumentPayload();
         if (!payload) {
@@ -293,6 +309,9 @@
         if (!response.success) {
             showError(response.message ?? 'Could not generate PDF file on server.');
             return false;
+        }
+        if (response.data) {
+            applyPersistenceResponse(response.data);
         }
         showSuccess('PDF generated on server in the configured reports folder.');
         return true;
@@ -327,6 +346,20 @@
         if (currency) {
             currency.textContent = currencyCode;
         }
+    };
+    const renderPersistenceState = () => {
+        const quoteId = document.getElementById('new-sale-offer-quote-id');
+        const status = document.getElementById('new-sale-offer-status');
+        const lastAction = document.getElementById('new-sale-offer-last-action');
+        const lastRevision = document.getElementById('new-sale-offer-last-revision');
+        if (!quoteId || !status || !lastAction || !lastRevision) {
+            return;
+        }
+        const offer = currentState?.offer;
+        quoteId.textContent = offer?.quoteId ? String(offer.quoteId) : '-';
+        status.textContent = offer?.status || 'Draft';
+        lastAction.textContent = offer?.lastAction || '-';
+        lastRevision.textContent = offer?.lastRevisionNumber ? String(offer.lastRevisionNumber) : '-';
     };
     const resolveHostingRecurringPrice = (pkg, cycle) => {
         if (!cycle) {
@@ -545,17 +578,26 @@
             services.set(item.id, item);
         });
     };
-    const sendToCustomer = () => {
+    const sendToCustomer = async () => {
         if (!currentState) {
             return;
         }
         saveState();
-        currentState.offer = {
-            ...currentState.offer,
-            sentAt: new Date().toISOString(),
-        };
-        sessionStorage.setItem(storageKey, JSON.stringify(currentState));
-        showSuccess('Offer marked as sent. You can continue when ready.');
+        const payload = createOfferDocumentPayload();
+        if (!payload) {
+            showError('Offer payload is incomplete.');
+            return;
+        }
+        const response = await apiRequest(`${getApiBaseUrl()}/System/send-offer`, {
+            method: 'POST',
+            body: JSON.stringify(payload),
+        });
+        if (!response.success || !response.data) {
+            showError(response.message ?? 'Could not send and persist offer.');
+            return;
+        }
+        applyPersistenceResponse(response.data);
+        showSuccess('Offer persisted and marked as sent.');
     };
     const acceptAndContinue = () => {
         if (!currentState) {
@@ -607,6 +649,7 @@
         currencyCode = currentState.otherServices?.currency || currentState.pricing?.currency || 'USD';
         setContextHeader();
         restoreOfferSettings();
+        renderPersistenceState();
         bindEvents();
         await Promise.all([
             loadSupportData(),

@@ -5,6 +5,8 @@ namespace ReportGeneratorLib.Models
 {
     public class OfferDocumentDto
     {
+        public int? QuoteId { get; set; }
+
         public SellerInfoDto? Seller { get; set; }
 
         public SaleContextDto? SaleContext { get; set; }
