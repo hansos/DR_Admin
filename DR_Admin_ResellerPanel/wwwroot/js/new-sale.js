@@ -119,6 +119,26 @@
         }
         container.classList.add('d-none');
     };
+    const renderFlowStatus = () => {
+        const state = loadState();
+        const offer = state?.offer;
+        const quoteId = document.getElementById('new-sale-flow-quote-id');
+        const status = document.getElementById('new-sale-flow-status');
+        const lastAction = document.getElementById('new-sale-flow-last-action');
+        const lastRevision = document.getElementById('new-sale-flow-last-revision');
+        if (quoteId) {
+            quoteId.textContent = offer?.quoteId ? String(offer.quoteId) : '-';
+        }
+        if (status) {
+            status.textContent = offer?.status || 'Draft';
+        }
+        if (lastAction) {
+            lastAction.textContent = offer?.lastAction || '-';
+        }
+        if (lastRevision) {
+            lastRevision.textContent = offer?.lastRevisionNumber ? String(offer.lastRevisionNumber) : '-';
+        }
+    };
     const showModal = (id) => {
         const element = document.getElementById(id);
         const bootstrap = getBootstrap();
@@ -568,6 +588,7 @@
         const state = loadState();
         if (!state) {
             renderNextStepButton();
+            renderFlowStatus();
             return;
         }
         const domainInput = document.getElementById('new-sale-domain-name');
@@ -575,6 +596,7 @@
             domainInput.value = state.domainName;
         }
         renderNextStepButton();
+        renderFlowStatus();
     };
     const initializeNewSalePage = async () => {
         const page = document.getElementById('dashboard-new-sale-page');

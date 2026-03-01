@@ -66,6 +66,12 @@
             registration: number | null;
             currency: string;
         };
+        offer?: {
+            quoteId?: number;
+            status?: string;
+            lastAction?: string;
+            lastRevisionNumber?: number;
+        };
     }
 
     interface BootstrapModalInstance {
@@ -224,6 +230,32 @@
         }
 
         container.classList.add('d-none');
+    };
+
+    const renderFlowStatus = (): void => {
+        const state = loadState();
+        const offer = state?.offer;
+
+        const quoteId = document.getElementById('new-sale-flow-quote-id');
+        const status = document.getElementById('new-sale-flow-status');
+        const lastAction = document.getElementById('new-sale-flow-last-action');
+        const lastRevision = document.getElementById('new-sale-flow-last-revision');
+
+        if (quoteId) {
+            quoteId.textContent = offer?.quoteId ? String(offer.quoteId) : '-';
+        }
+
+        if (status) {
+            status.textContent = offer?.status || 'Draft';
+        }
+
+        if (lastAction) {
+            lastAction.textContent = offer?.lastAction || '-';
+        }
+
+        if (lastRevision) {
+            lastRevision.textContent = offer?.lastRevisionNumber ? String(offer.lastRevisionNumber) : '-';
+        }
     };
 
     const showModal = (id: string): void => {
@@ -786,6 +818,7 @@
         const state = loadState();
         if (!state) {
             renderNextStepButton();
+            renderFlowStatus();
             return;
         }
 
@@ -795,6 +828,7 @@
         }
 
         renderNextStepButton();
+        renderFlowStatus();
     };
 
     const initializeNewSalePage = async (): Promise<void> => {

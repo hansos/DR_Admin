@@ -48,6 +48,12 @@
             registration: number | null;
             currency: string;
         };
+        offer?: {
+            quoteId?: number;
+            status?: string;
+            lastAction?: string;
+            lastRevisionNumber?: number;
+        };
         selectedCustomer?: CustomerSummary;
         hostingPackageId?: number;
         billingCycleId?: number;
@@ -225,6 +231,30 @@
 
         if (customer) {
             customer.textContent = currentState.selectedCustomer?.name || currentState.selectedCustomer?.customerName || '-';
+        }
+    };
+
+    const renderFlowStatus = (): void => {
+        const offer = currentState?.offer;
+        const quoteId = document.getElementById('new-sale-hosting-flow-quote-id');
+        const status = document.getElementById('new-sale-hosting-flow-status');
+        const lastAction = document.getElementById('new-sale-hosting-flow-last-action');
+        const lastRevision = document.getElementById('new-sale-hosting-flow-last-revision');
+
+        if (quoteId) {
+            quoteId.textContent = offer?.quoteId ? String(offer.quoteId) : '-';
+        }
+
+        if (status) {
+            status.textContent = offer?.status || 'Draft';
+        }
+
+        if (lastAction) {
+            lastAction.textContent = offer?.lastAction || '-';
+        }
+
+        if (lastRevision) {
+            lastRevision.textContent = offer?.lastRevisionNumber ? String(offer.lastRevisionNumber) : '-';
         }
     };
 
@@ -495,6 +525,7 @@
         selectedHostingPackageId = currentState.hostingPackageId ?? null;
 
         setContextHeader();
+        renderFlowStatus();
         bindEvents();
         await Promise.all([loadHostingPackages(), loadBillingCycles()]);
         renderPricePreview();

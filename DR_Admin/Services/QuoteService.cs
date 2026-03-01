@@ -1,5 +1,8 @@
+using ISPAdmin.Data;
+using ISPAdmin.Data.Entities;
 using ISPAdmin.Data.Enums;
 using ISPAdmin.DTOs;
+using Microsoft.EntityFrameworkCore;
 
 namespace ISPAdmin.Services;
 
@@ -8,24 +11,53 @@ namespace ISPAdmin.Services;
 /// </summary>
 public class QuoteService : IQuoteService
 {
-    public Task<IEnumerable<QuoteDto>> GetAllQuotesAsync()
+    private readonly ApplicationDbContext _context;
+
+    public QuoteService(ApplicationDbContext context)
     {
-        return Task.FromResult(Enumerable.Empty<QuoteDto>());
+        _context = context;
     }
 
-    public Task<IEnumerable<QuoteDto>> GetQuotesByCustomerIdAsync(int customerId)
+    public async Task<IEnumerable<QuoteDto>> GetAllQuotesAsync()
     {
-        return Task.FromResult(Enumerable.Empty<QuoteDto>());
+        var quotes = await _context.Quotes
+            .AsNoTracking()
+            .Where(q => q.DeletedAt == null)
+            .OrderByDescending(q => q.CreatedAt)
+            .ToListAsync();
+
+        return quotes.Select(MapToDto);
     }
 
-    public Task<IEnumerable<QuoteDto>> GetQuotesByStatusAsync(QuoteStatus status)
+    public async Task<IEnumerable<QuoteDto>> GetQuotesByCustomerIdAsync(int customerId)
     {
-        return Task.FromResult(Enumerable.Empty<QuoteDto>());
+        var quotes = await _context.Quotes
+            .AsNoTracking()
+            .Where(q => q.DeletedAt == null && q.CustomerId == customerId)
+            .OrderByDescending(q => q.CreatedAt)
+            .ToListAsync();
+
+        return quotes.Select(MapToDto);
     }
 
-    public Task<QuoteDto?> GetQuoteByIdAsync(int id)
+    public async Task<IEnumerable<QuoteDto>> GetQuotesByStatusAsync(QuoteStatus status)
     {
-        return Task.FromResult<QuoteDto?>(null);
+        var quotes = await _context.Quotes
+            .AsNoTracking()
+            .Where(q => q.DeletedAt == null && q.Status == status)
+            .OrderByDescending(q => q.CreatedAt)
+            .ToListAsync();
+
+        return quotes.Select(MapToDto);
+    }
+
+    public async Task<QuoteDto?> GetQuoteByIdAsync(int id)
+    {
+        var quote = await _context.Quotes
+            .AsNoTracking()
+            .FirstOrDefaultAsync(q => q.DeletedAt == null && q.Id == id);
+
+        return quote == null ? null : MapToDto(quote);
     }
 
     public Task<QuoteDto> CreateQuoteAsync(CreateQuoteDto createDto, int userId)
@@ -66,6 +98,41 @@ public class QuoteService : IQuoteService
     public Task<byte[]> GenerateQuotePdfAsync(int id)
     {
         throw new NotImplementedException("QuoteService.GenerateQuotePdfAsync not yet implemented");
+    }
+
+    private static QuoteDto MapToDto(Quote quote)
+    {
+        return new QuoteDto
+        {
+            Id = quote.Id,
+            QuoteNumber = quote.QuoteNumber,
+            CustomerId = quote.CustomerId,
+            CustomerName = quote.CustomerName,
+            Status = quote.Status,
+            ValidUntil = quote.ValidUntil,
+            SubTotal = quote.SubTotal,
+            TotalSetupFee = quote.TotalSetupFee,
+            TotalRecurring = quote.TotalRecurring,
+            TaxAmount = quote.TaxAmount,
+            TotalAmount = quote.TotalAmount,
+            CurrencyCode = quote.CurrencyCode,
+            TaxRate = quote.TaxRate,
+            TaxName = quote.TaxName,
+            CustomerAddress = quote.CustomerAddress,
+            CustomerTaxId = quote.CustomerTaxId,
+            Notes = quote.Notes,
+            TermsAndConditions = quote.TermsAndConditions,
+            InternalComment = quote.InternalComment,
+            SentAt = quote.SentAt,
+            AcceptedAt = quote.AcceptedAt,
+            RejectedAt = quote.RejectedAt,
+            RejectionReason = quote.RejectionReason,
+            PreparedByUserId = quote.PreparedByUserId,
+            CouponId = quote.CouponId,
+            DiscountAmount = quote.DiscountAmount,
+            CreatedAt = quote.CreatedAt,
+            UpdatedAt = quote.UpdatedAt
+        };
     }
 }
 

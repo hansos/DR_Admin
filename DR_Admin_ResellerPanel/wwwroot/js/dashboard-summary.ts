@@ -33,6 +33,36 @@ interface NewSaleState {
         name?: string;
         customerName?: string;
     };
+    offer?: {
+        quoteId?: number;
+        status?: string;
+        lastAction?: string;
+        lastRevisionNumber?: number;
+    };
+}
+
+interface QuoteSummaryItem {
+    id: number;
+    quoteNumber: string;
+    status: string;
+    totalAmount: number;
+    currencyCode: string;
+}
+
+interface OrderSummaryItem {
+    id: number;
+    orderNumber: string;
+    status: string;
+    totalAmount: number;
+    currencyCode: string;
+}
+
+interface InvoiceSummaryItem {
+    id: number;
+    invoiceNumber: string;
+    status: string;
+    totalAmount: number;
+    currencyCode: string;
 }
 
 function getApiBaseUrl(): string {
@@ -101,6 +131,7 @@ function initializePage(): void {
 
     renderOngoingWorkflowPanel();
     loadPendingSummary();
+    loadSalesSummary();
 }
 
 function renderOngoingWorkflowPanel(): void {
@@ -123,8 +154,155 @@ function renderOngoingWorkflowPanel(): void {
     const customerName = customer?.name?.trim() || customer?.customerName?.trim() || `#${customer?.id}`;
     setText('dashboard-summary-workflow-domain', domainName);
     setText('dashboard-summary-workflow-customer', customerName);
+    setText('dashboard-summary-workflow-status', state?.offer?.status ?? 'Draft');
     hasOngoingWorkflowWarning = true;
     card.classList.remove('d-none');
+}
+
+async function loadSalesSummary(): Promise<void> {
+    const response = await apiRequest<any>(`${getApiBaseUrl()}/System/sales-summary`, { method: 'GET' });
+    if (!response.success || !response.data) {
+        renderSummaryTable('dashboard-summary-offers-body', [], 'Could not load offers');
+        renderSummaryTable('dashboard-summary-orders-body', [], 'Could not load orders');
+        renderSummaryTable('dashboard-summary-open-invoices-body', [], 'Could not load open invoices');
+        setText('dashboard-summary-offers-count', '0');
+        setText('dashboard-summary-orders-count', '0');
+        setText('dashboard-summary-open-invoices-count', '0');
+        return;
+    }
+
+    const offers = extractItems(response.data?.offers).items
+        .map(normalizeQuote)
+        .slice(0, 8);
+    const orders = extractItems(response.data?.orders).items
+        .map(normalizeOrder)
+        .slice(0, 8);
+    const openInvoices = extractItems(response.data?.openInvoices).items
+        .map(normalizeInvoice)
+        .slice(0, 8);
+
+    setText('dashboard-summary-offers-count', String(offers.length));
+    setText('dashboard-summary-orders-count', String(orders.length));
+    setText('dashboard-summary-open-invoices-count', String(openInvoices.length));
+
+    renderSummaryTable(
+        'dashboard-summary-offers-body',
+        offers.map((item) => ({
+            identifier: item.quoteNumber || `#${item.id}`,
+            status: item.status,
+            amount: formatMoney(item.totalAmount, item.currencyCode),
+        })),
+        'No offers found'
+    );
+
+    renderSummaryTable(
+        'dashboard-summary-orders-body',
+        orders.map((item) => ({
+            identifier: item.orderNumber || `#${item.id}`,
+            status: item.status,
+            amount: formatMoney(item.totalAmount, item.currencyCode),
+        })),
+        'No orders found'
+    );
+
+    renderSummaryTable(
+        'dashboard-summary-open-invoices-body',
+        openInvoices.map((item) => ({
+            identifier: item.invoiceNumber || `#${item.id}`,
+            status: item.status,
+            amount: formatMoney(item.totalAmount, item.currencyCode),
+        })),
+        'No open invoices found'
+    );
+}
+
+async function loadOffersSummary(): Promise<void> {
+    const response = await apiRequest<any[]>(`${getApiBaseUrl()}/Quotes`, { method: 'GET' });
+    if (!response.success) {
+        renderSummaryTable('dashboard-summary-offers-body', [], 'Could not load offers');
+        setText('dashboard-summary-offers-count', '0');
+        return;
+    }
+
+    const rawItems = extractItems(response.data).items;
+    const offers = rawItems
+        .map(normalizeQuote)
+        .sort((a, b) => b.id - a.id)
+        .slice(0, 8);
+
+    setText('dashboard-summary-offers-count', String(offers.length));
+    renderSummaryTable(
+        'dashboard-summary-offers-body',
+        offers.map((item) => ({
+            identifier: item.quoteNumber || `#${item.id}`,
+            status: item.status,
+            amount: formatMoney(item.totalAmount, item.currencyCode),
+        })),
+        'No offers found'
+    );
+}
+
+async function loadOrdersSummary(): Promise<void> {
+    const response = await apiRequest<any[]>(`${getApiBaseUrl()}/Orders`, { method: 'GET' });
+    if (!response.success) {
+        renderSummaryTable('dashboard-summary-orders-body', [], 'Could not load orders');
+        setText('dashboard-summary-orders-count', '0');
+        return;
+    }
+
+    const rawItems = extractItems(response.data).items;
+    const orders = rawItems
+        .map(normalizeOrder)
+        .sort((a, b) => b.id - a.id)
+        .slice(0, 8);
+
+    setText('dashboard-summary-orders-count', String(orders.length));
+    renderSummaryTable(
+        'dashboard-summary-orders-body',
+        orders.map((item) => ({
+            identifier: item.orderNumber || `#${item.id}`,
+            status: item.status,
+            amount: formatMoney(item.totalAmount, item.currencyCode),
+        })),
+        'No orders found'
+    );
+}
+
+async function loadOpenInvoicesSummary(): Promise<void> {
+    const [issuedResponse, overdueResponse, draftResponse] = await Promise.all([
+        apiRequest<any[]>(`${getApiBaseUrl()}/Invoices/status/Issued`, { method: 'GET' }),
+        apiRequest<any[]>(`${getApiBaseUrl()}/Invoices/status/Overdue`, { method: 'GET' }),
+        apiRequest<any[]>(`${getApiBaseUrl()}/Invoices/status/Draft`, { method: 'GET' }),
+    ]);
+
+    const responses = [issuedResponse, overdueResponse, draftResponse].filter((res) => res.success);
+    const failedAll = responses.length === 0;
+    if (failedAll) {
+        renderSummaryTable('dashboard-summary-open-invoices-body', [], 'Could not load open invoices');
+        setText('dashboard-summary-open-invoices-count', '0');
+        return;
+    }
+
+    const allRawInvoices = responses.flatMap((res) => extractItems(res.data).items);
+    const unique = new Map<number, InvoiceSummaryItem>();
+    allRawInvoices.map(normalizeInvoice).forEach((item) => {
+        unique.set(item.id, item);
+    });
+
+    const openInvoices = Array.from(unique.values())
+        .sort((a, b) => b.id - a.id)
+        .slice(0, 8);
+
+    setText('dashboard-summary-open-invoices-count', String(openInvoices.length));
+    renderSummaryTable(
+        'dashboard-summary-open-invoices-body',
+        openInvoices.map((item) => ({
+            identifier: item.invoiceNumber || `#${item.id}`,
+            status: item.status,
+            amount: formatMoney(item.totalAmount, item.currencyCode),
+        })),
+        'No open invoices found'
+    );
 }
 
 function loadNewSaleState(): NewSaleState | null {
@@ -132,6 +310,104 @@ function loadNewSaleState(): NewSaleState | null {
     if (!raw) {
         return null;
     }
+
+function normalizeQuote(raw: any): QuoteSummaryItem {
+    return {
+        id: Number(raw.id ?? raw.Id ?? 0),
+        quoteNumber: String(raw.quoteNumber ?? raw.QuoteNumber ?? ''),
+        status: resolveQuoteStatus(raw.status ?? raw.Status),
+        totalAmount: Number(raw.totalAmount ?? raw.TotalAmount ?? 0),
+        currencyCode: String(raw.currencyCode ?? raw.CurrencyCode ?? 'USD'),
+    };
+}
+
+function normalizeOrder(raw: any): OrderSummaryItem {
+    return {
+        id: Number(raw.id ?? raw.Id ?? 0),
+        orderNumber: String(raw.orderNumber ?? raw.OrderNumber ?? ''),
+        status: resolveOrderStatus(raw.status ?? raw.Status),
+        totalAmount: Number(raw.totalAmount ?? raw.TotalAmount ?? 0),
+        currencyCode: String(raw.currencyCode ?? raw.CurrencyCode ?? 'USD'),
+    };
+}
+
+function normalizeInvoice(raw: any): InvoiceSummaryItem {
+    return {
+        id: Number(raw.id ?? raw.Id ?? 0),
+        invoiceNumber: String(raw.invoiceNumber ?? raw.InvoiceNumber ?? ''),
+        status: resolveInvoiceStatus(raw.status ?? raw.Status),
+        totalAmount: Number(raw.totalAmount ?? raw.TotalAmount ?? 0),
+        currencyCode: String(raw.currencyCode ?? raw.CurrencyCode ?? 'USD'),
+    };
+}
+
+function resolveQuoteStatus(status: any): string {
+    const value = Number(status);
+    switch (value) {
+        case 0: return 'Draft';
+        case 1: return 'Sent';
+        case 2: return 'Accepted';
+        case 3: return 'Rejected';
+        case 4: return 'Expired';
+        case 5: return 'Converted';
+        default: return String(status ?? '-');
+    }
+}
+
+function resolveOrderStatus(status: any): string {
+    const value = Number(status);
+    switch (value) {
+        case 0: return 'Pending';
+        case 1: return 'Active';
+        case 2: return 'Suspended';
+        case 3: return 'Cancelled';
+        case 4: return 'Expired';
+        case 5: return 'Trial';
+        default: return String(status ?? '-');
+    }
+}
+
+function resolveInvoiceStatus(status: any): string {
+    const value = Number(status);
+    switch (value) {
+        case 0: return 'Draft';
+        case 1: return 'Issued';
+        case 2: return 'Paid';
+        case 3: return 'Overdue';
+        case 4: return 'Cancelled';
+        case 5: return 'Credited';
+        default: return String(status ?? '-');
+    }
+}
+
+function formatMoney(amount: number, currency: string): string {
+    const normalizedAmount = Number.isFinite(amount) ? amount : 0;
+    return `${normalizedAmount.toFixed(2)} ${currency || 'USD'}`;
+}
+
+function renderSummaryTable(
+    bodyId: string,
+    rows: { identifier: string; status: string; amount: string }[],
+    emptyMessage: string
+): void {
+    const body = document.getElementById(bodyId);
+    if (!body) {
+        return;
+    }
+
+    if (!rows.length) {
+        body.innerHTML = `<tr><td colspan="3" class="text-center text-muted">${esc(emptyMessage)}</td></tr>`;
+        return;
+    }
+
+    body.innerHTML = rows.map((row) => `
+        <tr>
+            <td>${esc(row.identifier)}</td>
+            <td>${esc(row.status)}</td>
+            <td class="text-end">${esc(row.amount)}</td>
+        </tr>
+    `).join('');
+}
 
     try {
         return JSON.parse(raw) as NewSaleState;

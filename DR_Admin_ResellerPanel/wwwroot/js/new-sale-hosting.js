@@ -145,6 +145,25 @@
             customer.textContent = currentState.selectedCustomer?.name || currentState.selectedCustomer?.customerName || '-';
         }
     };
+    const renderFlowStatus = () => {
+        const offer = currentState?.offer;
+        const quoteId = document.getElementById('new-sale-hosting-flow-quote-id');
+        const status = document.getElementById('new-sale-hosting-flow-status');
+        const lastAction = document.getElementById('new-sale-hosting-flow-last-action');
+        const lastRevision = document.getElementById('new-sale-hosting-flow-last-revision');
+        if (quoteId) {
+            quoteId.textContent = offer?.quoteId ? String(offer.quoteId) : '-';
+        }
+        if (status) {
+            status.textContent = offer?.status || 'Draft';
+        }
+        if (lastAction) {
+            lastAction.textContent = offer?.lastAction || '-';
+        }
+        if (lastRevision) {
+            lastRevision.textContent = offer?.lastRevisionNumber ? String(offer.lastRevisionNumber) : '-';
+        }
+    };
     const getSelectedBillingCycleId = () => {
         const select = document.getElementById('new-sale-hosting-billing-cycle');
         const parsed = Number(select?.value ?? '');
@@ -364,6 +383,7 @@
         }
         selectedHostingPackageId = currentState.hostingPackageId ?? null;
         setContextHeader();
+        renderFlowStatus();
         bindEvents();
         await Promise.all([loadHostingPackages(), loadBillingCycles()]);
         renderPricePreview();

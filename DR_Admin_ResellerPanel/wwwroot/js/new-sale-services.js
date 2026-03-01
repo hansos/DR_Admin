@@ -171,6 +171,25 @@
             hosting.textContent = currentState.hostingPackageId ? `Package #${currentState.hostingPackageId}` : 'Skipped';
         }
     };
+    const renderFlowStatus = () => {
+        const offer = currentState?.offer;
+        const quoteId = document.getElementById('new-sale-services-flow-quote-id');
+        const status = document.getElementById('new-sale-services-flow-status');
+        const lastAction = document.getElementById('new-sale-services-flow-last-action');
+        const lastRevision = document.getElementById('new-sale-services-flow-last-revision');
+        if (quoteId) {
+            quoteId.textContent = offer?.quoteId ? String(offer.quoteId) : '-';
+        }
+        if (status) {
+            status.textContent = offer?.status || 'Draft';
+        }
+        if (lastAction) {
+            lastAction.textContent = offer?.lastAction || '-';
+        }
+        if (lastRevision) {
+            lastRevision.textContent = offer?.lastRevisionNumber ? String(offer.lastRevisionNumber) : '-';
+        }
+    };
     const parseListData = (raw) => {
         if (Array.isArray(raw)) {
             return raw;
@@ -574,6 +593,7 @@
             return;
         }
         setContextHeader();
+        renderFlowStatus();
         restoreOtherServicesState();
         bindEvents();
         await Promise.all([

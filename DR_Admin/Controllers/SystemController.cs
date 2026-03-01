@@ -88,6 +88,79 @@ public class SystemController : ControllerBase
     }
 
     /// <summary>
+    /// Retrieves dashboard sales summary with offers, orders and open invoices
+    /// </summary>
+    /// <returns>Latest offers, orders and open invoices</returns>
+    /// <response code="200">Returns sales summary collections</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpGet("sales-summary")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult> GetSalesSummary()
+    {
+        try
+        {
+            var offers = await _context.Quotes
+                .AsNoTracking()
+                .Where(q => q.DeletedAt == null)
+                .OrderByDescending(q => q.CreatedAt)
+                .Take(50)
+                .Select(q => new
+                {
+                    id = q.Id,
+                    quoteNumber = q.QuoteNumber,
+                    status = q.Status.ToString(),
+                    totalAmount = q.TotalAmount,
+                    currencyCode = q.CurrencyCode
+                })
+                .ToListAsync();
+
+            var orders = await _context.Orders
+                .AsNoTracking()
+                .OrderByDescending(o => o.CreatedAt)
+                .Take(50)
+                .Select(o => new
+                {
+                    id = o.Id,
+                    orderNumber = o.OrderNumber,
+                    status = o.Status.ToString(),
+                    totalAmount = o.SetupFee + o.RecurringAmount,
+                    currencyCode = o.CurrencyCode
+                })
+                .ToListAsync();
+
+            var openInvoices = await _context.Invoices
+                .AsNoTracking()
+                .Where(i => i.DeletedAt == null && i.Status != InvoiceStatus.Paid && i.Status != InvoiceStatus.Cancelled && i.Status != InvoiceStatus.Credited)
+                .OrderByDescending(i => i.CreatedAt)
+                .Take(50)
+                .Select(i => new
+                {
+                    id = i.Id,
+                    invoiceNumber = i.InvoiceNumber,
+                    status = i.Status.ToString(),
+                    totalAmount = i.AmountDue,
+                    currencyCode = i.CurrencyCode
+                })
+                .ToListAsync();
+
+            return Ok(new
+            {
+                offers,
+                orders,
+                openInvoices
+            });
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in GetSalesSummary");
+            return StatusCode(500, "An error occurred while retrieving sales summary");
+        }
+    }
+
+    /// <summary>
     /// Persists and marks an offer as sent while generating a server-side PDF snapshot
     /// </summary>
     /// <param name="offer">Offer document data used to persist and send the offer</param>
@@ -428,6 +501,7 @@ public class SystemController : ControllerBase
             return new QuoteLine
             {
                 QuoteId = quote.Id,
+                ServiceId = item.ServiceId,
                 BillingCycleId = defaultBillingCycle.Id,
                 LineNumber = item.LineNumber > 0 ? item.LineNumber : 1,
                 Description = item.Description ?? string.Empty,

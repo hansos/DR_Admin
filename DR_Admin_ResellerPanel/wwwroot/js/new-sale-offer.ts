@@ -92,6 +92,7 @@
     }
 
     interface LineItem {
+        serviceId?: number;
         description: string;
         quantity: number;
         unitPrice: number;
@@ -156,6 +157,7 @@
 
     interface OfferLineItemPayload {
         lineNumber: number;
+        serviceId?: number;
         description: string;
         quantity: number;
         unitPrice: number;
@@ -696,6 +698,7 @@
 
                 const price = Number.isFinite(service.price ?? Number.NaN) ? (service.price ?? 0) : 0;
                 return {
+                    serviceId,
                     description: service.name,
                     quantity: 1,
                     unitPrice: price,

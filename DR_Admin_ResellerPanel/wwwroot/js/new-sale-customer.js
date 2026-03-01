@@ -110,6 +110,25 @@
         };
         sessionStorage.setItem(storageKey, JSON.stringify(currentState));
     };
+    const renderFlowStatus = () => {
+        const offer = currentState?.offer;
+        const quoteId = document.getElementById('new-sale-customer-flow-quote-id');
+        const status = document.getElementById('new-sale-customer-flow-status');
+        const lastAction = document.getElementById('new-sale-customer-flow-last-action');
+        const lastRevision = document.getElementById('new-sale-customer-flow-last-revision');
+        if (quoteId) {
+            quoteId.textContent = offer?.quoteId ? String(offer.quoteId) : '-';
+        }
+        if (status) {
+            status.textContent = offer?.status || 'Draft';
+        }
+        if (lastAction) {
+            lastAction.textContent = offer?.lastAction || '-';
+        }
+        if (lastRevision) {
+            lastRevision.textContent = offer?.lastRevisionNumber ? String(offer.lastRevisionNumber) : '-';
+        }
+    };
     const normalizeCustomer = (item) => {
         const typed = (item ?? {});
         const customerNumber = Number(typed.customerNumber ?? typed.CustomerNumber);
@@ -701,6 +720,7 @@
             return;
         }
         setContextHeader();
+        renderFlowStatus();
         restoreCustomerSelectionState();
         bindEvents();
         await restoreSelectedCustomer();
