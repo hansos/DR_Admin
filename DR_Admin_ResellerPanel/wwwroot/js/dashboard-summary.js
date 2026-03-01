@@ -62,6 +62,7 @@
     }
     function renderOngoingWorkflowPanel() {
         const card = document.getElementById('dashboard-summary-workflow-card');
+        const draftLink = document.getElementById('dashboard-summary-workflow-link');
         if (!card) {
             return;
         }
@@ -78,6 +79,12 @@
         setText('dashboard-summary-workflow-domain', domainName);
         setText('dashboard-summary-workflow-customer', customerName);
         setText('dashboard-summary-workflow-status', state?.offer?.status ?? 'Draft');
+        const lastAction = String(state?.offer?.lastAction ?? '').trim().toLowerCase();
+        const status = String(state?.offer?.status ?? '').trim().toLowerCase();
+        const hideDraftButton = lastAction === 'sent' || lastAction === 'printed' || status === 'sent';
+        if (draftLink) {
+            draftLink.classList.toggle('d-none', hideDraftButton);
+        }
         hasOngoingWorkflowWarning = true;
         card.classList.remove('d-none');
     }
