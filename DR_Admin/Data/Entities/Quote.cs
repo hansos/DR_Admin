@@ -163,6 +163,11 @@ public class Quote : EntityBase
     public ICollection<QuoteLine> QuoteLines { get; set; } = new List<QuoteLine>();
 
     /// <summary>
+    /// Collection of immutable revisions generated from quote actions
+    /// </summary>
+    public ICollection<QuoteRevision> Revisions { get; set; } = new List<QuoteRevision>();
+
+    /// <summary>
     /// Collection of orders created from this quote
     /// </summary>
     public ICollection<Order> Orders { get; set; } = new List<Order>();

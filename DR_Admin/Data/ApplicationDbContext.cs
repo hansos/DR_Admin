@@ -190,6 +190,7 @@ public class ApplicationDbContext : DbContext
     // Sales and Payment Flow entities
     public DbSet<Quote> Quotes { get; set; }
     public DbSet<QuoteLine> QuoteLines { get; set; }
+    public DbSet<QuoteRevision> QuoteRevisions { get; set; }
     public DbSet<PaymentIntent> PaymentIntents { get; set; }
     public DbSet<CustomerPaymentMethod> CustomerPaymentMethods { get; set; }
     public DbSet<Refund> Refunds { get; set; }
@@ -1497,6 +1498,27 @@ public class ApplicationDbContext : DbContext
                 .WithMany(s => s.PriceChangeLogs)
                 .HasForeignKey(e => e.DownloadSessionId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // QuoteRevision configuration
+        modelBuilder.Entity<QuoteRevision>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.ActionType).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.SnapshotJson).IsRequired().HasMaxLength(int.MaxValue);
+            entity.Property(e => e.PdfFileName).HasMaxLength(255);
+            entity.Property(e => e.PdfFilePath).HasMaxLength(1000);
+            entity.Property(e => e.ContentHash).HasMaxLength(256);
+            entity.Property(e => e.Notes).HasMaxLength(2000);
+
+            entity.HasIndex(e => e.QuoteId);
+            entity.HasIndex(e => new { e.QuoteId, e.RevisionNumber }).IsUnique();
+            entity.HasIndex(e => e.ActionType);
+
+            entity.HasOne(e => e.Quote)
+                .WithMany(q => q.Revisions)
+                .HasForeignKey(e => e.QuoteId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         // Invoice configuration update for SelectedPaymentGatewayId
