@@ -40,6 +40,102 @@ public class SystemController : ControllerBase
     }
 
     /// <summary>
+    /// Accepts an offer, persists quote acceptance and creates an order record
+    /// </summary>
+    /// <param name="offer">Offer document data used to accept and convert the quote</param>
+    /// <returns>Persisted quote acceptance and created/existing order metadata</returns>
+    /// <response code="200">Returns accepted quote and order metadata</response>
+    /// <response code="400">If the request body is missing or invalid</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpPost("accept-offer")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult> AcceptOffer([FromBody] OfferDocumentDto offer)
+    {
+        try
+        {
+            if (offer == null)
+            {
+                return BadRequest("Offer payload is required");
+            }
+
+            var quote = await UpsertQuoteFromOfferAsync(offer, markAsSent: false);
+            offer.QuoteId = quote.Id;
+
+            var now = DateTime.UtcNow;
+            quote.Status = QuoteStatus.Accepted;
+            quote.AcceptedAt ??= offer.OfferSettings?.AcceptedAt ?? now;
+            quote.SentAt ??= offer.OfferSettings?.SentAt;
+            await _context.SaveChangesAsync();
+
+            var revision = await SaveQuoteRevisionAsync(quote, offer, "Accepted", string.Empty, string.Empty);
+
+            var existingOrder = await _context.Orders
+                .FirstOrDefaultAsync(o => o.QuoteId == quote.Id);
+
+            Order order;
+            if (existingOrder != null)
+            {
+                order = existingOrder;
+            }
+            else
+            {
+                order = await CreateOrderFromQuoteAsync(quote, offer, now);
+                _context.Orders.Add(order);
+
+                quote.Status = QuoteStatus.Converted;
+                try
+                {
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateException dbEx) when (IsOrdersServiceIdConstraintFailure(dbEx))
+                {
+                    _log.Warning(dbEx, "API: AcceptOffer fallback for legacy NOT NULL Orders.ServiceId constraint");
+
+                    var fallbackServiceId = await _context.Services
+                        .AsNoTracking()
+                        .OrderBy(service => service.Id)
+                        .Select(service => (int?)service.Id)
+                        .FirstOrDefaultAsync();
+
+                    if (!fallbackServiceId.HasValue)
+                    {
+                        throw new InvalidOperationException("Cannot create order because Orders.ServiceId is required by database schema and no service exists.", dbEx);
+                    }
+
+                    order.ServiceId = fallbackServiceId.Value;
+                    await _context.SaveChangesAsync();
+                }
+            }
+
+            _log.Information("API: AcceptOffer persisted quote {QuoteId} and order {OrderId}", quote.Id, order.Id);
+
+            return Ok(new
+            {
+                success = true,
+                quoteId = quote.Id,
+                status = quote.Status.ToString(),
+                acceptedAt = quote.AcceptedAt,
+                revisionNumber = revision.RevisionNumber,
+                actionType = revision.ActionType,
+                fileName = revision.PdfFileName,
+                outputPath = revision.PdfFilePath,
+                orderId = order.Id,
+                orderNumber = order.OrderNumber,
+                orderStatus = order.Status.ToString()
+            });
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in AcceptOffer");
+            return StatusCode(500, "An error occurred while accepting and converting offer");
+        }
+    }
+
+    /// <summary>
     /// Generates an offer PDF on the server for print verification
     /// </summary>
     /// <param name="offer">Offer document data used to generate the PDF</param>
@@ -667,6 +763,83 @@ public class SystemController : ControllerBase
         _context.QuoteRevisions.Add(revision);
         await _context.SaveChangesAsync();
         return revision;
+    }
+
+    private async Task<Order> CreateOrderFromQuoteAsync(Quote quote, OfferDocumentDto offer, DateTime now)
+    {
+        var quoteLines = await _context.QuoteLines
+            .AsNoTracking()
+            .Where(line => line.QuoteId == quote.Id && line.DeletedAt == null)
+            .OrderBy(line => line.LineNumber)
+            .ToListAsync();
+
+        var firstRecurringLine = quoteLines.FirstOrDefault(line => line.TotalRecurringPrice > 0 || line.RecurringPrice > 0);
+        var billingCycleDays = 30;
+        if (firstRecurringLine != null)
+        {
+            var duration = await _context.BillingCycles
+                .AsNoTracking()
+                .Where(c => c.Id == firstRecurringLine.BillingCycleId)
+                .Select(c => (int?)c.DurationInDays)
+                .FirstOrDefaultAsync();
+
+            if (duration.HasValue && duration.Value > 0)
+            {
+                billingCycleDays = duration.Value;
+            }
+        }
+
+        var primaryServiceId = quoteLines
+            .Where(line => line.ServiceId.HasValue)
+            .Select(line => line.ServiceId)
+            .FirstOrDefault();
+
+        var flowType = offer.SaleContext?.FlowType?.Trim().ToLowerInvariant();
+        var orderType = flowType == "renew" || flowType == "renewal"
+            ? OrderType.Renewal
+            : OrderType.New;
+
+        var nextBillingDate = quote.TotalRecurring > 0 ? now.AddDays(billingCycleDays) : now;
+
+        return new Order
+        {
+            OrderNumber = await GenerateOrderNumberAsync(now),
+            CustomerId = quote.CustomerId,
+            ServiceId = primaryServiceId,
+            QuoteId = quote.Id,
+            CouponId = quote.CouponId,
+            OrderType = orderType,
+            Status = OrderStatus.Pending,
+            StartDate = now,
+            EndDate = nextBillingDate,
+            NextBillingDate = nextBillingDate,
+            SetupFee = quote.TotalSetupFee,
+            RecurringAmount = quote.TotalRecurring,
+            DiscountAmount = quote.DiscountAmount,
+            CurrencyCode = quote.CurrencyCode,
+            BaseCurrencyCode = quote.CurrencyCode,
+            ExchangeRate = null,
+            ExchangeRateDate = null,
+            AutoRenew = true,
+            Notes = "Generated from accepted offer"
+        };
+    }
+
+    private async Task<string> GenerateOrderNumberAsync(DateTime now)
+    {
+        var lastOrder = await _context.Orders
+            .AsNoTracking()
+            .OrderByDescending(o => o.Id)
+            .FirstOrDefaultAsync();
+
+        var nextNumber = (lastOrder?.Id ?? 0) + 1;
+        return $"ORD-{now.Year}-{nextNumber:D5}";
+    }
+
+    private static bool IsOrdersServiceIdConstraintFailure(DbUpdateException exception)
+    {
+        var message = exception.InnerException?.Message ?? exception.Message;
+        return message.Contains("NOT NULL constraint failed: Orders.ServiceId", StringComparison.OrdinalIgnoreCase);
     }
 
     private string ResolveOutputDirectory()

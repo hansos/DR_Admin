@@ -33,11 +33,19 @@ interface NewSaleState {
         name?: string;
         customerName?: string;
     };
+    pricing?: {
+        currency?: string;
+    };
+    otherServices?: {
+        currency?: string;
+    };
     offer?: {
         quoteId?: number;
         status?: string;
         lastAction?: string;
         lastRevisionNumber?: number;
+        acceptedAt?: string;
+        grandTotal?: number;
     };
 }
 
@@ -55,6 +63,7 @@ interface OrderSummaryItem {
     status: string;
     totalAmount: number;
     currencyCode: string;
+    quoteId?: number;
 }
 
 interface InvoiceSummaryItem {
@@ -144,21 +153,22 @@ function renderOngoingWorkflowPanel(): void {
     const state = loadNewSaleState();
     const domainName = state?.domainName?.trim() ?? '';
     const customer = state?.selectedCustomer;
-    const hasCustomer = !!customer && Number(customer.id ?? 0) > 0;
+    const lastAction = String(state?.offer?.lastAction ?? '').trim().toLowerCase();
+    const status = String(state?.offer?.status ?? '').trim().toLowerCase();
+    const hideWorkflowPanel = lastAction === 'sent' || lastAction === 'printed' || status === 'sent';
 
-    if (!domainName || !hasCustomer) {
+    if (!domainName || hideWorkflowPanel) {
         hasOngoingWorkflowWarning = false;
         card.classList.add('d-none');
         return;
     }
 
-    const customerName = customer?.name?.trim() || customer?.customerName?.trim() || `#${customer?.id}`;
+    const customerId = Number(customer?.id ?? 0);
+    const customerName = customer?.name?.trim() || customer?.customerName?.trim() || (customerId > 0 ? `#${customerId}` : '-');
     setText('dashboard-summary-workflow-domain', domainName);
     setText('dashboard-summary-workflow-customer', customerName);
     setText('dashboard-summary-workflow-status', state?.offer?.status ?? 'Draft');
 
-    const lastAction = String(state?.offer?.lastAction ?? '').trim().toLowerCase();
-    const status = String(state?.offer?.status ?? '').trim().toLowerCase();
     const hideDraftButton = lastAction === 'sent' || lastAction === 'printed' || status === 'sent';
     if (draftLink) {
         draftLink.classList.toggle('d-none', hideDraftButton);
@@ -186,12 +196,13 @@ async function loadSalesSummary(): Promise<void> {
     const orders = extractItems(response.data?.orders).items
         .map(normalizeOrder)
         .slice(0, 8);
+    const ordersWithAcceptedDraft = appendAcceptedDraftOrder(orders);
     const openInvoices = extractItems(response.data?.openInvoices).items
         .map(normalizeInvoice)
         .slice(0, 8);
 
     setText('dashboard-summary-offers-count', String(offers.length));
-    setText('dashboard-summary-orders-count', String(orders.length));
+    setText('dashboard-summary-orders-count', String(ordersWithAcceptedDraft.length));
     setText('dashboard-summary-open-invoices-count', String(openInvoices.length));
 
     renderSummaryTable(
@@ -206,7 +217,7 @@ async function loadSalesSummary(): Promise<void> {
 
     renderSummaryTable(
         'dashboard-summary-orders-body',
-        orders.map((item) => ({
+        ordersWithAcceptedDraft.map((item) => ({
             identifier: item.orderNumber || `#${item.id}`,
             status: item.status,
             amount: formatMoney(item.totalAmount, item.currencyCode),
@@ -223,6 +234,31 @@ async function loadSalesSummary(): Promise<void> {
         })),
         'No open invoices found'
     );
+}
+
+function appendAcceptedDraftOrder(existingOrders: OrderSummaryItem[]): OrderSummaryItem[] {
+    const state = loadNewSaleState();
+    const offer = state?.offer;
+    if (!offer?.acceptedAt) {
+        return existingOrders;
+    }
+
+    const quoteId = Number(offer.quoteId ?? 0);
+    if (quoteId > 0 && existingOrders.some((order) => Number(order.quoteId ?? 0) === quoteId)) {
+        return existingOrders;
+    }
+
+    const currencyCode = state?.otherServices?.currency || state?.pricing?.currency || 'USD';
+    const draftOrder: OrderSummaryItem = {
+        id: quoteId > 0 ? quoteId : -1,
+        quoteId: quoteId > 0 ? quoteId : undefined,
+        orderNumber: quoteId > 0 ? `Draft from quote #${quoteId}` : 'Draft order',
+        status: 'Pending',
+        totalAmount: Number(offer.grandTotal ?? 0),
+        currencyCode,
+    };
+
+    return [draftOrder, ...existingOrders].slice(0, 8);
 }
 
 async function loadOffersSummary(): Promise<void> {
@@ -337,6 +373,7 @@ function normalizeOrder(raw: any): OrderSummaryItem {
         status: resolveOrderStatus(raw.status ?? raw.Status),
         totalAmount: Number(raw.totalAmount ?? raw.TotalAmount ?? 0),
         currencyCode: String(raw.currencyCode ?? raw.CurrencyCode ?? 'USD'),
+        quoteId: Number(raw.quoteId ?? raw.QuoteId ?? 0) || undefined,
     };
 }
 

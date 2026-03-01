@@ -8,6 +8,40 @@ const AUTH_USERNAME_KEY = 'rp_username';
 const AUTH_ROLES_KEY = 'rp_roles';
 const AUTH_REFRESH_TOKEN_KEY = 'rp_refreshToken';
 const AUTH_EXPIRES_KEY = 'rp_tokenExpiresAt';
+const NEW_SALE_STATE_KEY = 'new-sale-state';
+function clearNewSaleState() {
+    sessionStorage.removeItem(NEW_SALE_STATE_KEY);
+}
+function isNewSaleLink(anchor) {
+    const href = anchor.getAttribute('href');
+    if (!href || href.startsWith('#') || href.startsWith('javascript:')) {
+        return false;
+    }
+    try {
+        const url = new URL(href, window.location.origin);
+        return url.pathname.toLowerCase() === '/dashboard/new-sale';
+    }
+    catch {
+        return false;
+    }
+}
+let newSaleResetBound = false;
+function bindNewSaleResetOnNavigation() {
+    if (newSaleResetBound) {
+        return;
+    }
+    newSaleResetBound = true;
+    document.addEventListener('click', (event) => {
+        const target = event.target;
+        const anchor = target?.closest('a');
+        if (!anchor) {
+            return;
+        }
+        if (isNewSaleLink(anchor)) {
+            clearNewSaleState();
+        }
+    });
+}
 function authIsLoggedIn() {
     return !!sessionStorage.getItem(AUTH_TOKEN_KEY);
 }
@@ -95,6 +129,7 @@ function authEnforce() {
     }
 }
 document.addEventListener('DOMContentLoaded', () => {
+    bindNewSaleResetOnNavigation();
     authEnforce();
     authUpdateTopRow();
 });
@@ -120,6 +155,7 @@ if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', setupBlazorNavigationListener);
 }
 else {
+    bindNewSaleResetOnNavigation();
     setupBlazorNavigationListener();
 }
 setInterval(() => { authEnforce(); }, 60000);

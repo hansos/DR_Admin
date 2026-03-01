@@ -7,6 +7,7 @@
     let billingCycles = new Map();
     let services = new Map();
     let currentSellerCompany = null;
+    let restoredLineItems = null;
     const getApiBaseUrl = () => {
         const settings = window.AppSettings;
         return settings?.apiBaseUrl ?? '';
@@ -57,71 +58,6 @@
                 message: 'Network error. Please try again.',
             };
         }
-    };
-    const getRequestedQuoteId = () => {
-        const params = new URLSearchParams(window.location.search);
-        const raw = params.get('quoteId') ?? '';
-        const value = Number(raw);
-        return Number.isInteger(value) && value > 0 ? value : null;
-    };
-    const mapOfferSnapshotToState = (snapshot, quoteStatus, lastAction, lastRevisionNumber) => {
-        const offerLines = Array.isArray(snapshot?.lineItems)
-            ? snapshot.lineItems.map((line) => ({
-                description: String(line?.description ?? ''),
-                quantity: Number(line?.quantity ?? 1),
-                unitPrice: Number(line?.unitPrice ?? 0),
-                subtotal: Number(line?.subtotal ?? 0),
-                type: String(line?.type ?? '').toLowerCase() === 'one-time' ? 'One-time' : 'Recurring',
-            }))
-            : [];
-        const validUntil = snapshot?.offerSettings?.validUntil
-            ? String(snapshot.offerSettings.validUntil).slice(0, 10)
-            : undefined;
-        return {
-            domainName: String(snapshot?.saleContext?.domainName ?? ''),
-            flowType: String(snapshot?.saleContext?.flowType ?? 'register'),
-            pricing: {
-                registration: null,
-                currency: String(snapshot?.saleContext?.currency ?? 'USD'),
-            },
-            selectedCustomer: {
-                id: Number(snapshot?.saleContext?.customer?.id ?? 0),
-                name: String(snapshot?.saleContext?.customer?.name ?? ''),
-                customerName: String(snapshot?.saleContext?.customer?.customerName ?? ''),
-                email: String(snapshot?.saleContext?.customer?.email ?? ''),
-            },
-            offer: {
-                quoteId: Number(snapshot?.quoteId ?? 0) || undefined,
-                status: quoteStatus || 'Draft',
-                lastAction: lastAction ?? '-',
-                lastRevisionNumber: Number(lastRevisionNumber ?? 0) || undefined,
-                validUntil,
-                couponCode: String(snapshot?.offerSettings?.couponCode ?? '') || undefined,
-                discountPercent: Number(snapshot?.offerSettings?.discountPercent ?? 0),
-                notes: String(snapshot?.offerSettings?.notes ?? '') || undefined,
-                lineCount: Number(snapshot?.totals?.lineCount ?? offerLines.length),
-                oneTimeSubtotal: Number(snapshot?.totals?.oneTimeSubtotal ?? 0),
-                recurringSubtotal: Number(snapshot?.totals?.recurringSubtotal ?? 0),
-                grandTotal: Number(snapshot?.totals?.grandTotal ?? 0),
-                sentAt: snapshot?.offerSettings?.sentAt ? String(snapshot.offerSettings.sentAt) : undefined,
-                acceptedAt: snapshot?.offerSettings?.acceptedAt ? String(snapshot.offerSettings.acceptedAt) : undefined,
-                loadedLineItems: offerLines,
-            },
-            otherServices: {
-                selectedServiceIds: [],
-                currency: String(snapshot?.saleContext?.currency ?? 'USD'),
-            },
-        };
-    };
-    const loadRequestedQuoteState = async (quoteId) => {
-        const response = await apiRequest(`${getApiBaseUrl()}/System/offer-editor/${quoteId}`, { method: 'GET' });
-        if (!response.success || !response.data?.offer) {
-            showError(response.message ?? 'Could not load quote details.');
-            return false;
-        }
-        currentState = mapOfferSnapshotToState(response.data.offer, response.data.quoteStatus, response.data.lastAction, response.data.lastRevisionNumber);
-        sessionStorage.setItem(storageKey, JSON.stringify(currentState));
-        return true;
     };
     const esc = (text) => {
         const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
@@ -240,6 +176,101 @@
         }
         return [];
     };
+    const getRequestedQuoteId = () => {
+        const params = new URLSearchParams(window.location.search);
+        const raw = params.get('quoteId');
+        if (!raw) {
+            return null;
+        }
+        const parsed = Number(raw);
+        return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+    };
+    const normalizeSnapshotLineItem = (item) => {
+        const typed = (item ?? {});
+        const description = String(typed.description ?? typed.Description ?? '').trim();
+        if (!description) {
+            return null;
+        }
+        const quantityRaw = Number(typed.quantity ?? typed.Quantity ?? 1);
+        const quantity = Number.isFinite(quantityRaw) && quantityRaw > 0 ? quantityRaw : 1;
+        const unitPriceRaw = Number(typed.unitPrice ?? typed.UnitPrice ?? 0);
+        const unitPrice = Number.isFinite(unitPriceRaw) ? unitPriceRaw : 0;
+        const subtotalRaw = Number(typed.subtotal ?? typed.Subtotal ?? unitPrice * quantity);
+        const subtotal = Number.isFinite(subtotalRaw) ? subtotalRaw : unitPrice * quantity;
+        const typeRaw = String(typed.type ?? typed.Type ?? 'One-time').trim().toLowerCase();
+        const type = typeRaw === 'recurring' ? 'Recurring' : 'One-time';
+        const serviceIdRaw = Number(typed.serviceId ?? typed.ServiceId ?? 0);
+        const serviceId = Number.isInteger(serviceIdRaw) && serviceIdRaw > 0 ? serviceIdRaw : undefined;
+        return {
+            serviceId,
+            description,
+            quantity,
+            unitPrice,
+            subtotal,
+            type,
+        };
+    };
+    const loadRequestedQuoteState = async (quoteId) => {
+        const response = await apiRequest(`${getApiBaseUrl()}/System/offer-editor/${quoteId}`, { method: 'GET' });
+        if (!response.success || !response.data) {
+            showError(response.message ?? `Could not load quote #${quoteId}.`);
+            return false;
+        }
+        const payload = response.data;
+        const snapshotRaw = (payload.offer ?? payload.Offer ?? null);
+        if (!snapshotRaw) {
+            showError(`Quote #${quoteId} has no saved offer snapshot.`);
+            return false;
+        }
+        const saleContext = (snapshotRaw.saleContext ?? snapshotRaw.SaleContext ?? {});
+        const customer = (saleContext.customer ?? saleContext.Customer ?? {});
+        const offerSettings = (snapshotRaw.offerSettings ?? snapshotRaw.OfferSettings ?? {});
+        const totals = (snapshotRaw.totals ?? snapshotRaw.Totals ?? {});
+        const validUntilRaw = String(offerSettings.validUntil ?? offerSettings.ValidUntil ?? '').trim();
+        const couponCodeRaw = String(offerSettings.couponCode ?? offerSettings.CouponCode ?? '').trim();
+        const notesRaw = String(offerSettings.notes ?? offerSettings.Notes ?? '').trim();
+        const sentAtRaw = String(offerSettings.sentAt ?? offerSettings.SentAt ?? '').trim();
+        const acceptedAtRaw = String(offerSettings.acceptedAt ?? offerSettings.AcceptedAt ?? '').trim();
+        restoredLineItems = parseList(snapshotRaw.lineItems ?? snapshotRaw.LineItems)
+            .map((item) => normalizeSnapshotLineItem(item))
+            .filter((item) => item !== null);
+        const currency = String(saleContext.currency ?? saleContext.Currency ?? 'USD');
+        currentState = {
+            domainName: String(saleContext.domainName ?? saleContext.DomainName ?? ''),
+            flowType: String(saleContext.flowType ?? saleContext.FlowType ?? ''),
+            selectedCustomer: {
+                id: Number(customer.id ?? customer.Id ?? 0),
+                name: String(customer.name ?? customer.Name ?? ''),
+                customerName: String(customer.customerName ?? customer.CustomerName ?? ''),
+                email: String(customer.email ?? customer.Email ?? ''),
+            },
+            pricing: {
+                registration: null,
+                currency,
+            },
+            otherServices: {
+                currency,
+            },
+            offer: {
+                quoteId: Number(payload.quoteId ?? payload.QuoteId ?? quoteId),
+                status: String(payload.quoteStatus ?? payload.QuoteStatus ?? ''),
+                lastAction: String(payload.lastAction ?? payload.LastAction ?? ''),
+                lastRevisionNumber: Number(payload.lastRevisionNumber ?? payload.LastRevisionNumber ?? 0) || undefined,
+                validUntil: validUntilRaw || undefined,
+                couponCode: couponCodeRaw || undefined,
+                discountPercent: Number(offerSettings.discountPercent ?? offerSettings.DiscountPercent ?? 0) || undefined,
+                notes: notesRaw || undefined,
+                lineCount: Number(totals.lineCount ?? totals.LineCount ?? restoredLineItems.length) || restoredLineItems.length,
+                oneTimeSubtotal: Number(totals.oneTimeSubtotal ?? totals.OneTimeSubtotal ?? 0),
+                recurringSubtotal: Number(totals.recurringSubtotal ?? totals.RecurringSubtotal ?? 0),
+                grandTotal: Number(totals.grandTotal ?? totals.GrandTotal ?? 0),
+                sentAt: sentAtRaw || undefined,
+                acceptedAt: acceptedAtRaw || undefined,
+            },
+        };
+        sessionStorage.setItem(storageKey, JSON.stringify(currentState));
+        return true;
+    };
     const renderSellerHeader = (company) => {
         const nameElement = document.getElementById('new-sale-offer-seller-name');
         const contactElement = document.getElementById('new-sale-offer-seller-contact');
@@ -333,6 +364,7 @@
             },
             lineItems: lines.map((line, index) => ({
                 lineNumber: index + 1,
+                serviceId: line.serviceId,
                 description: line.description,
                 quantity: line.quantity,
                 unitPrice: line.unitPrice,
@@ -358,6 +390,7 @@
             lastAction: responseData.actionType,
             lastRevisionNumber: responseData.revisionNumber,
             sentAt: responseData.sentAt ?? currentState.offer?.sentAt,
+            acceptedAt: responseData.acceptedAt ?? currentState.offer?.acceptedAt,
         };
         sessionStorage.setItem(storageKey, JSON.stringify(currentState));
         renderPersistenceState();
@@ -511,6 +544,7 @@
             }
             const price = Number.isFinite(service.price ?? Number.NaN) ? (service.price ?? 0) : 0;
             return {
+                serviceId,
                 description: service.name,
                 quantity: 1,
                 unitPrice: price,
@@ -520,15 +554,8 @@
         });
     };
     const buildLineItems = () => {
-        const persistedLines = currentState?.offer?.loadedLineItems;
-        if (Array.isArray(persistedLines) && persistedLines.length > 0) {
-            return persistedLines.map((line) => ({
-                description: line.description,
-                quantity: Number.isFinite(line.quantity) && line.quantity > 0 ? line.quantity : 1,
-                unitPrice: Number.isFinite(line.unitPrice) ? line.unitPrice : 0,
-                subtotal: Number.isFinite(line.subtotal) ? line.subtotal : 0,
-                type: line.type === 'One-time' ? 'One-time' : 'Recurring',
-            }));
+        if (restoredLineItems && restoredLineItems.length > 0) {
+            return restoredLineItems;
         }
         const lines = [];
         const domainLine = buildDomainOperationLine();
@@ -674,7 +701,7 @@
         applyPersistenceResponse(response.data);
         showSuccess('Offer persisted and marked as sent.');
     };
-    const acceptAndContinue = () => {
+    const acceptAndContinue = async () => {
         if (!currentState) {
             return;
         }
@@ -684,11 +711,20 @@
             return;
         }
         saveState();
-        currentState.offer = {
-            ...currentState.offer,
-            acceptedAt: new Date().toISOString(),
-        };
-        sessionStorage.setItem(storageKey, JSON.stringify(currentState));
+        const payload = createOfferDocumentPayload();
+        if (!payload) {
+            showError('Offer payload is incomplete.');
+            return;
+        }
+        const response = await apiRequest(`${getApiBaseUrl()}/System/accept-offer`, {
+            method: 'POST',
+            body: JSON.stringify(payload),
+        });
+        if (!response.success || !response.data) {
+            showError(response.message ?? 'Could not accept and convert offer.');
+            return;
+        }
+        applyPersistenceResponse(response.data);
         window.location.href = '/dashboard/new-sale/payment';
     };
     const printOffer = async () => {
@@ -717,6 +753,7 @@
         }
         page.dataset.initialized = 'true';
         currentState = loadState();
+        restoredLineItems = null;
         const requestedQuoteId = getRequestedQuoteId();
         if (requestedQuoteId) {
             const loaded = await loadRequestedQuoteState(requestedQuoteId);

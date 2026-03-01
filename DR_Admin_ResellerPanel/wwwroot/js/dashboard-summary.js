@@ -107,12 +107,13 @@
             .map(normalizeOrder)
             .sort((a, b) => b.id - a.id)
             .slice(0, 8);
+        const ordersWithAcceptedDraft = appendAcceptedDraftOrder(orders);
         const openInvoices = extractItems(response.data?.openInvoices).items
             .map(normalizeInvoice)
             .sort((a, b) => b.id - a.id)
             .slice(0, 8);
         setText('dashboard-summary-offers-count', String(offers.length));
-        setText('dashboard-summary-orders-count', String(orders.length));
+        setText('dashboard-summary-orders-count', String(ordersWithAcceptedDraft.length));
         setText('dashboard-summary-open-invoices-count', String(openInvoices.length));
         renderSummaryTable('dashboard-summary-offers-body', offers.map((item) => ({
             identifier: item.quoteNumber || `#${item.id}`,
@@ -120,7 +121,7 @@
             amount: formatMoney(item.totalAmount, item.currencyCode),
             linkUrl: `/dashboard/new-sale/offer?quoteId=${encodeURIComponent(String(item.id))}`,
         })), 'No offers found');
-        renderSummaryTable('dashboard-summary-orders-body', orders.map((item) => ({
+        renderSummaryTable('dashboard-summary-orders-body', ordersWithAcceptedDraft.map((item) => ({
             identifier: item.orderNumber || `#${item.id}`,
             status: resolveOrderStatus(item.status),
             amount: formatMoney(item.totalAmount, item.currencyCode),
@@ -130,6 +131,27 @@
             status: resolveInvoiceStatus(item.status),
             amount: formatMoney(item.totalAmount, item.currencyCode),
         })), 'No open invoices found');
+    }
+    function appendAcceptedDraftOrder(existingOrders) {
+        const state = loadNewSaleState();
+        const offer = state?.offer;
+        if (!offer?.acceptedAt) {
+            return existingOrders;
+        }
+        const quoteId = Number(offer.quoteId ?? 0);
+        if (quoteId > 0 && existingOrders.some((order) => Number(order.quoteId ?? 0) === quoteId)) {
+            return existingOrders;
+        }
+        const currencyCode = state?.otherServices?.currency || state?.pricing?.currency || 'USD';
+        const draftOrder = {
+            id: quoteId > 0 ? quoteId : -1,
+            quoteId: quoteId > 0 ? quoteId : undefined,
+            orderNumber: quoteId > 0 ? `Draft from quote #${quoteId}` : 'Draft order',
+            status: 'Pending',
+            totalAmount: Number(offer.grandTotal ?? 0),
+            currencyCode,
+        };
+        return [draftOrder, ...existingOrders].slice(0, 8);
     }
     function loadNewSaleState() {
         const raw = sessionStorage.getItem('new-sale-state');
@@ -240,6 +262,7 @@
             status: String(raw?.status ?? raw?.Status ?? ''),
             totalAmount: Number(raw?.totalAmount ?? raw?.TotalAmount ?? 0),
             currencyCode: String(raw?.currencyCode ?? raw?.CurrencyCode ?? 'USD'),
+            quoteId: Number(raw?.quoteId ?? raw?.QuoteId ?? 0) || undefined,
         };
     }
     function normalizeInvoice(raw) {

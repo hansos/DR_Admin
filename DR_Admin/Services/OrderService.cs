@@ -73,11 +73,13 @@ public class OrderService : IOrderService
         {
             _log.Information("Creating new order for customer: {CustomerId}", createDto.CustomerId);
 
-            // Fetch service to get default prices if not provided
-            var service = await _context.Services.FindAsync(createDto.ServiceId);
-            if (service == null)
+            if (createDto.ServiceId.HasValue)
             {
-                throw new InvalidOperationException($"Service with ID {createDto.ServiceId} not found");
+                var service = await _context.Services.FindAsync(createDto.ServiceId.Value);
+                if (service == null)
+                {
+                    throw new InvalidOperationException($"Service with ID {createDto.ServiceId.Value} not found");
+                }
             }
 
             var order = new Order
