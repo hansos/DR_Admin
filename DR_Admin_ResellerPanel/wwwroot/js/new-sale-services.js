@@ -171,6 +171,16 @@
             hosting.textContent = currentState.hostingPackageId ? `Package #${currentState.hostingPackageId}` : 'Skipped';
         }
     };
+    const updatePageTitle = () => {
+        const title = document.getElementById('new-sale-services-page-title');
+        if (!title) {
+            return;
+        }
+        const quoteId = Number(currentState?.offer?.quoteId ?? 0);
+        const status = String(currentState?.offer?.status ?? '').trim();
+        const label = quoteId > 0 || status.length > 0 ? 'Edit Quote' : 'New Quote';
+        title.innerHTML = `<i class="bi bi-puzzle"></i> ${label}`;
+    };
     const renderFlowStatus = () => {
         const offer = currentState?.offer;
         const quoteId = document.getElementById('new-sale-services-flow-quote-id');
@@ -548,7 +558,7 @@
             return;
         }
         saveState();
-        window.location.href = '/dashboard/new-sale/offer';
+        window.location.href = '/dashboard/quote/offer';
     };
     const skipAddOns = () => {
         if (!validateBeforeContinue()) {
@@ -560,7 +570,7 @@
         updateSelectedCount();
         saveState();
         showSuccess('Additional services skipped.');
-        window.location.href = '/dashboard/new-sale/offer';
+        window.location.href = '/dashboard/quote/offer';
     };
     const bindEvents = () => {
         document.getElementById('new-sale-services-groups')?.addEventListener('change', (event) => {
@@ -589,9 +599,10 @@
         page.dataset.initialized = 'true';
         currentState = loadState();
         if (!currentState?.domainName || !currentState?.flowType || !currentState?.selectedCustomer) {
-            window.location.href = '/dashboard/new-sale';
+            window.location.href = '/dashboard/quote';
             return;
         }
+        updatePageTitle();
         setContextHeader();
         renderFlowStatus();
         restoreOtherServicesState();

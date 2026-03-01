@@ -57,6 +57,7 @@
     }
 
     interface NewSaleState {
+        showOngoingCard?: boolean;
         domainName?: string;
         selectedRegistrarId?: string;
         selectedRegistrarCode?: string;
@@ -161,6 +162,19 @@
                 status: 0,
             };
         }
+    };
+
+    const updatePageTitle = (): void => {
+        const title = document.getElementById('new-sale-page-title');
+        if (!title) {
+            return;
+        }
+
+        const state = loadState();
+        const quoteId = Number(state?.offer?.quoteId ?? 0);
+        const status = String(state?.offer?.status ?? '').trim();
+        const label = quoteId > 0 || status.length > 0 ? 'Edit Quote' : 'New Quote';
+        title.innerHTML = `<i class="bi bi-bag-plus"></i> ${label}`;
     };
 
     const esc = (text: string): string => {
@@ -297,6 +311,7 @@
         const current = loadState() ?? {};
         saveState({
             ...current,
+            showOngoingCard: true,
             selectedRegistrarId: selectedRegistrarId ?? undefined,
             selectedRegistrarCode: selectedRegistrarCode ?? undefined,
             selectedRegistrarLabel: selectedRegistrarLabel || undefined,
@@ -323,6 +338,7 @@
 
         saveState({
             ...current,
+            showOngoingCard: true,
             domainName: nextDomainName || undefined,
             selectedRegistrarId: selectedRegistrarId ?? undefined,
             selectedRegistrarCode: selectedRegistrarCode ?? undefined,
@@ -336,6 +352,7 @@
 
     const goToPage2 = (flowType: string, domainName: string, premiumPrice: number | null = null): void => {
         saveState({
+            showOngoingCard: true,
             domainName,
             selectedRegistrarId: selectedRegistrarId ?? undefined,
             selectedRegistrarCode: selectedRegistrarCode ?? undefined,
@@ -357,7 +374,7 @@
             return;
         }
 
-        window.location.href = '/dashboard/new-sale/customer';
+        window.location.href = '/dashboard/quote/customer';
     };
 
     const parseAvailability = (data: DomainAvailabilityResult | undefined): {
@@ -817,6 +834,7 @@
     const applyRestoredState = (): void => {
         const state = loadState();
         if (!state) {
+            updatePageTitle();
             renderNextStepButton();
             renderFlowStatus();
             return;
@@ -827,6 +845,7 @@
             domainInput.value = state.domainName;
         }
 
+        updatePageTitle();
         renderNextStepButton();
         renderFlowStatus();
     };

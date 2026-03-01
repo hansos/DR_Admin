@@ -27,6 +27,8 @@ interface ApiResponse<T> {
 }
 
 interface NewSaleState {
+    showOngoingCard?: boolean;
+    isOfferListContext?: boolean;
     domainName?: string;
     selectedCustomer?: {
         id?: number;
@@ -153,9 +155,8 @@ function renderOngoingWorkflowPanel(): void {
     const state = loadNewSaleState();
     const domainName = state?.domainName?.trim() ?? '';
     const customer = state?.selectedCustomer;
-    const lastAction = String(state?.offer?.lastAction ?? '').trim().toLowerCase();
-    const status = String(state?.offer?.status ?? '').trim().toLowerCase();
-    const hideWorkflowPanel = lastAction === 'sent' || lastAction === 'printed' || status === 'sent';
+    const showOngoingCard = state?.showOngoingCard === true;
+    const hideWorkflowPanel = state?.isOfferListContext === true || !showOngoingCard;
 
     if (!domainName || hideWorkflowPanel) {
         hasOngoingWorkflowWarning = false;
@@ -169,9 +170,8 @@ function renderOngoingWorkflowPanel(): void {
     setText('dashboard-summary-workflow-customer', customerName);
     setText('dashboard-summary-workflow-status', state?.offer?.status ?? 'Draft');
 
-    const hideDraftButton = lastAction === 'sent' || lastAction === 'printed' || status === 'sent';
     if (draftLink) {
-        draftLink.classList.toggle('d-none', hideDraftButton);
+        draftLink.classList.remove('d-none');
     }
 
     hasOngoingWorkflowWarning = true;
@@ -211,6 +211,7 @@ async function loadSalesSummary(): Promise<void> {
             identifier: item.quoteNumber || `#${item.id}`,
             status: item.status,
             amount: formatMoney(item.totalAmount, item.currencyCode),
+            linkUrl: `/dashboard/quote/offer?quoteId=${encodeURIComponent(String(item.id))}`,
         })),
         'No offers found'
     );
@@ -355,6 +356,12 @@ function loadNewSaleState(): NewSaleState | null {
     if (!raw) {
         return null;
     }
+    try {
+        return JSON.parse(raw) as NewSaleState;
+    } catch {
+        return null;
+    }
+}
 
 function normalizeQuote(raw: any): QuoteSummaryItem {
     return {
@@ -433,7 +440,7 @@ function formatMoney(amount: number, currency: string): string {
 
 function renderSummaryTable(
     bodyId: string,
-    rows: { identifier: string; status: string; amount: string }[],
+    rows: { identifier: string; status: string; amount: string; linkUrl?: string; openInNewTab?: boolean }[],
     emptyMessage: string
 ): void {
     const body = document.getElementById(bodyId);
@@ -446,20 +453,19 @@ function renderSummaryTable(
         return;
     }
 
-    body.innerHTML = rows.map((row) => `
+    body.innerHTML = rows.map((row) => {
+        const identifierHtml = row.linkUrl
+            ? `<a href="${esc(row.linkUrl)}"${row.openInNewTab ? ' target="_blank" rel="noopener noreferrer"' : ''}>${esc(row.identifier)}</a>`
+            : esc(row.identifier);
+
+        return `
         <tr>
-            <td>${esc(row.identifier)}</td>
+            <td>${identifierHtml}</td>
             <td>${esc(row.status)}</td>
             <td class="text-end">${esc(row.amount)}</td>
         </tr>
-    `).join('');
-}
-
-    try {
-        return JSON.parse(raw) as NewSaleState;
-    } catch {
-        return null;
-    }
+    `;
+    }).join('');
 }
 
 async function loadPendingSummary(): Promise<void> {

@@ -64,6 +64,17 @@
             };
         }
     };
+    const updatePageTitle = () => {
+        const title = document.getElementById('new-sale-page-title');
+        if (!title) {
+            return;
+        }
+        const state = loadState();
+        const quoteId = Number(state?.offer?.quoteId ?? 0);
+        const status = String(state?.offer?.status ?? '').trim();
+        const label = quoteId > 0 || status.length > 0 ? 'Edit Quote' : 'New Quote';
+        title.innerHTML = `<i class="bi bi-bag-plus"></i> ${label}`;
+    };
     const esc = (text) => {
         const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
         return (text || '').replace(/[&<>"']/g, (char) => map[char] ?? char);
@@ -171,6 +182,7 @@
         const current = loadState() ?? {};
         saveState({
             ...current,
+            showOngoingCard: true,
             selectedRegistrarId: selectedRegistrarId ?? undefined,
             selectedRegistrarCode: selectedRegistrarCode ?? undefined,
             selectedRegistrarLabel: selectedRegistrarLabel || undefined,
@@ -193,6 +205,7 @@
         const domainChanged = currentDomainName !== nextDomainName;
         saveState({
             ...current,
+            showOngoingCard: true,
             domainName: nextDomainName || undefined,
             selectedRegistrarId: selectedRegistrarId ?? undefined,
             selectedRegistrarCode: selectedRegistrarCode ?? undefined,
@@ -204,6 +217,7 @@
     };
     const goToPage2 = (flowType, domainName, premiumPrice = null) => {
         saveState({
+            showOngoingCard: true,
             domainName,
             selectedRegistrarId: selectedRegistrarId ?? undefined,
             selectedRegistrarCode: selectedRegistrarCode ?? undefined,
@@ -223,7 +237,7 @@
             showError('Select a domain action before continuing.');
             return;
         }
-        window.location.href = '/dashboard/new-sale/customer';
+        window.location.href = '/dashboard/quote/customer';
     };
     const parseAvailability = (data) => {
         return {
@@ -587,6 +601,7 @@
     const applyRestoredState = () => {
         const state = loadState();
         if (!state) {
+            updatePageTitle();
             renderNextStepButton();
             renderFlowStatus();
             return;
@@ -595,6 +610,7 @@
         if (domainInput && state.domainName) {
             domainInput.value = state.domainName;
         }
+        updatePageTitle();
         renderNextStepButton();
         renderFlowStatus();
     };

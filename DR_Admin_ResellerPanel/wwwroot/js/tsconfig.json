@@ -25,6 +25,7 @@
         "new-sale-hosting.ts",
         "new-sale-services.ts",
         "new-sale-offer.ts",
+        "dashboard-summary.ts",
         "domains.ts",
         "tlds.ts",
         "dns-zones.ts",

@@ -22,7 +22,7 @@ function isNewSaleLink(anchor: HTMLAnchorElement): boolean {
 
     try {
         const url = new URL(href, window.location.origin);
-        return url.pathname.toLowerCase() === '/dashboard/new-sale';
+        return url.pathname.toLowerCase() === '/dashboard/quote';
     } catch {
         return false;
     }

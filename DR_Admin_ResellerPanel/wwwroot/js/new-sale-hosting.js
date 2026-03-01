@@ -145,6 +145,16 @@
             customer.textContent = currentState.selectedCustomer?.name || currentState.selectedCustomer?.customerName || '-';
         }
     };
+    const updatePageTitle = () => {
+        const title = document.getElementById('new-sale-hosting-page-title');
+        if (!title) {
+            return;
+        }
+        const quoteId = Number(currentState?.offer?.quoteId ?? 0);
+        const status = String(currentState?.offer?.status ?? '').trim();
+        const label = quoteId > 0 || status.length > 0 ? 'Edit Quote' : 'New Quote';
+        title.innerHTML = `<i class="bi bi-hdd-rack"></i> ${label}`;
+    };
     const renderFlowStatus = () => {
         const offer = currentState?.offer;
         const quoteId = document.getElementById('new-sale-hosting-flow-quote-id');
@@ -338,7 +348,7 @@
             return;
         }
         saveState();
-        window.location.href = '/dashboard/new-sale/services';
+        window.location.href = '/dashboard/quote/services';
     };
     const skipHosting = () => {
         selectedHostingPackageId = null;
@@ -349,7 +359,7 @@
             sessionStorage.setItem(storageKey, JSON.stringify(currentState));
         }
         showSuccess('Hosting skipped.');
-        window.location.href = '/dashboard/new-sale/services';
+        window.location.href = '/dashboard/quote/services';
     };
     const bindEvents = () => {
         document.getElementById('new-sale-hosting-packages')?.addEventListener('change', (event) => {
@@ -378,10 +388,11 @@
         page.dataset.initialized = 'true';
         currentState = loadState();
         if (!currentState?.domainName || !currentState?.flowType || !currentState?.selectedCustomer) {
-            window.location.href = '/dashboard/new-sale';
+            window.location.href = '/dashboard/quote';
             return;
         }
         selectedHostingPackageId = currentState.hostingPackageId ?? null;
+        updatePageTitle();
         setContextHeader();
         renderFlowStatus();
         bindEvents();

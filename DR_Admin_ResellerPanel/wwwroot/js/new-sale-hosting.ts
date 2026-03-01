@@ -234,6 +234,18 @@
         }
     };
 
+    const updatePageTitle = (): void => {
+        const title = document.getElementById('new-sale-hosting-page-title');
+        if (!title) {
+            return;
+        }
+
+        const quoteId = Number(currentState?.offer?.quoteId ?? 0);
+        const status = String(currentState?.offer?.status ?? '').trim();
+        const label = quoteId > 0 || status.length > 0 ? 'Edit Quote' : 'New Quote';
+        title.innerHTML = `<i class="bi bi-hdd-rack"></i> ${label}`;
+    };
+
     const renderFlowStatus = (): void => {
         const offer = currentState?.offer;
         const quoteId = document.getElementById('new-sale-hosting-flow-quote-id');
@@ -468,7 +480,7 @@
         }
 
         saveState();
-        window.location.href = '/dashboard/new-sale/services';
+        window.location.href = '/dashboard/quote/services';
     };
 
     const skipHosting = (): void => {
@@ -482,7 +494,7 @@
         }
 
         showSuccess('Hosting skipped.');
-        window.location.href = '/dashboard/new-sale/services';
+        window.location.href = '/dashboard/quote/services';
     };
 
     const bindEvents = (): void => {
@@ -518,12 +530,13 @@
 
         currentState = loadState();
         if (!currentState?.domainName || !currentState?.flowType || !currentState?.selectedCustomer) {
-            window.location.href = '/dashboard/new-sale';
+            window.location.href = '/dashboard/quote';
             return;
         }
 
         selectedHostingPackageId = currentState.hostingPackageId ?? null;
 
+        updatePageTitle();
         setContextHeader();
         renderFlowStatus();
         bindEvents();

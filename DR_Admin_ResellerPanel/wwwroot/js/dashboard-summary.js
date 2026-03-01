@@ -69,21 +69,20 @@
         const state = loadNewSaleState();
         const domainName = state?.domainName?.trim() ?? '';
         const customer = state?.selectedCustomer;
-        const hasCustomer = !!customer && Number(customer.id ?? 0) > 0;
-        if (!domainName || !hasCustomer) {
+        const showOngoingCard = state?.showOngoingCard === true;
+        const hideWorkflowPanel = state?.isOfferListContext === true || !showOngoingCard;
+        if (!domainName || hideWorkflowPanel) {
             hasOngoingWorkflowWarning = false;
             card.classList.add('d-none');
             return;
         }
-        const customerName = customer?.name?.trim() || customer?.customerName?.trim() || `#${customer?.id}`;
+        const customerId = Number(customer?.id ?? 0);
+        const customerName = customer?.name?.trim() || customer?.customerName?.trim() || (customerId > 0 ? `#${customerId}` : '-');
         setText('dashboard-summary-workflow-domain', domainName);
         setText('dashboard-summary-workflow-customer', customerName);
         setText('dashboard-summary-workflow-status', state?.offer?.status ?? 'Draft');
-        const lastAction = String(state?.offer?.lastAction ?? '').trim().toLowerCase();
-        const status = String(state?.offer?.status ?? '').trim().toLowerCase();
-        const hideDraftButton = lastAction === 'sent' || lastAction === 'printed' || status === 'sent';
         if (draftLink) {
-            draftLink.classList.toggle('d-none', hideDraftButton);
+            draftLink.classList.remove('d-none');
         }
         hasOngoingWorkflowWarning = true;
         card.classList.remove('d-none');
@@ -101,34 +100,31 @@
         }
         const offers = extractItems(response.data?.offers).items
             .map(normalizeQuote)
-            .sort((a, b) => b.id - a.id)
             .slice(0, 8);
         const orders = extractItems(response.data?.orders).items
             .map(normalizeOrder)
-            .sort((a, b) => b.id - a.id)
             .slice(0, 8);
         const ordersWithAcceptedDraft = appendAcceptedDraftOrder(orders);
         const openInvoices = extractItems(response.data?.openInvoices).items
             .map(normalizeInvoice)
-            .sort((a, b) => b.id - a.id)
             .slice(0, 8);
         setText('dashboard-summary-offers-count', String(offers.length));
         setText('dashboard-summary-orders-count', String(ordersWithAcceptedDraft.length));
         setText('dashboard-summary-open-invoices-count', String(openInvoices.length));
         renderSummaryTable('dashboard-summary-offers-body', offers.map((item) => ({
             identifier: item.quoteNumber || `#${item.id}`,
-            status: resolveOfferStatus(item.status),
+            status: item.status,
             amount: formatMoney(item.totalAmount, item.currencyCode),
-            linkUrl: `/dashboard/new-sale/offer?quoteId=${encodeURIComponent(String(item.id))}`,
+            linkUrl: `/dashboard/quote/offer?quoteId=${encodeURIComponent(String(item.id))}`,
         })), 'No offers found');
         renderSummaryTable('dashboard-summary-orders-body', ordersWithAcceptedDraft.map((item) => ({
             identifier: item.orderNumber || `#${item.id}`,
-            status: resolveOrderStatus(item.status),
+            status: item.status,
             amount: formatMoney(item.totalAmount, item.currencyCode),
         })), 'No orders found');
         renderSummaryTable('dashboard-summary-open-invoices-body', openInvoices.map((item) => ({
             identifier: item.invoiceNumber || `#${item.id}`,
-            status: resolveInvoiceStatus(item.status),
+            status: item.status,
             amount: formatMoney(item.totalAmount, item.currencyCode),
         })), 'No open invoices found');
     }
@@ -153,6 +149,72 @@
         };
         return [draftOrder, ...existingOrders].slice(0, 8);
     }
+    async function loadOffersSummary() {
+        const response = await apiRequest(`${getApiBaseUrl()}/Quotes`, { method: 'GET' });
+        if (!response.success) {
+            renderSummaryTable('dashboard-summary-offers-body', [], 'Could not load offers');
+            setText('dashboard-summary-offers-count', '0');
+            return;
+        }
+        const rawItems = extractItems(response.data).items;
+        const offers = rawItems
+            .map(normalizeQuote)
+            .sort((a, b) => b.id - a.id)
+            .slice(0, 8);
+        setText('dashboard-summary-offers-count', String(offers.length));
+        renderSummaryTable('dashboard-summary-offers-body', offers.map((item) => ({
+            identifier: item.quoteNumber || `#${item.id}`,
+            status: item.status,
+            amount: formatMoney(item.totalAmount, item.currencyCode),
+        })), 'No offers found');
+    }
+    async function loadOrdersSummary() {
+        const response = await apiRequest(`${getApiBaseUrl()}/Orders`, { method: 'GET' });
+        if (!response.success) {
+            renderSummaryTable('dashboard-summary-orders-body', [], 'Could not load orders');
+            setText('dashboard-summary-orders-count', '0');
+            return;
+        }
+        const rawItems = extractItems(response.data).items;
+        const orders = rawItems
+            .map(normalizeOrder)
+            .sort((a, b) => b.id - a.id)
+            .slice(0, 8);
+        setText('dashboard-summary-orders-count', String(orders.length));
+        renderSummaryTable('dashboard-summary-orders-body', orders.map((item) => ({
+            identifier: item.orderNumber || `#${item.id}`,
+            status: item.status,
+            amount: formatMoney(item.totalAmount, item.currencyCode),
+        })), 'No orders found');
+    }
+    async function loadOpenInvoicesSummary() {
+        const [issuedResponse, overdueResponse, draftResponse] = await Promise.all([
+            apiRequest(`${getApiBaseUrl()}/Invoices/status/Issued`, { method: 'GET' }),
+            apiRequest(`${getApiBaseUrl()}/Invoices/status/Overdue`, { method: 'GET' }),
+            apiRequest(`${getApiBaseUrl()}/Invoices/status/Draft`, { method: 'GET' }),
+        ]);
+        const responses = [issuedResponse, overdueResponse, draftResponse].filter((res) => res.success);
+        const failedAll = responses.length === 0;
+        if (failedAll) {
+            renderSummaryTable('dashboard-summary-open-invoices-body', [], 'Could not load open invoices');
+            setText('dashboard-summary-open-invoices-count', '0');
+            return;
+        }
+        const allRawInvoices = responses.flatMap((res) => extractItems(res.data).items);
+        const unique = new Map();
+        allRawInvoices.map(normalizeInvoice).forEach((item) => {
+            unique.set(item.id, item);
+        });
+        const openInvoices = Array.from(unique.values())
+            .sort((a, b) => b.id - a.id)
+            .slice(0, 8);
+        setText('dashboard-summary-open-invoices-count', String(openInvoices.length));
+        renderSummaryTable('dashboard-summary-open-invoices-body', openInvoices.map((item) => ({
+            identifier: item.invoiceNumber || `#${item.id}`,
+            status: item.status,
+            amount: formatMoney(item.totalAmount, item.currencyCode),
+        })), 'No open invoices found');
+    }
     function loadNewSaleState() {
         const raw = sessionStorage.getItem('new-sale-state');
         if (!raw) {
@@ -164,6 +226,96 @@
         catch {
             return null;
         }
+    }
+    function normalizeQuote(raw) {
+        return {
+            id: Number(raw.id ?? raw.Id ?? 0),
+            quoteNumber: String(raw.quoteNumber ?? raw.QuoteNumber ?? ''),
+            status: resolveQuoteStatus(raw.status ?? raw.Status),
+            totalAmount: Number(raw.totalAmount ?? raw.TotalAmount ?? 0),
+            currencyCode: String(raw.currencyCode ?? raw.CurrencyCode ?? 'USD'),
+        };
+    }
+    function normalizeOrder(raw) {
+        return {
+            id: Number(raw.id ?? raw.Id ?? 0),
+            orderNumber: String(raw.orderNumber ?? raw.OrderNumber ?? ''),
+            status: resolveOrderStatus(raw.status ?? raw.Status),
+            totalAmount: Number(raw.totalAmount ?? raw.TotalAmount ?? 0),
+            currencyCode: String(raw.currencyCode ?? raw.CurrencyCode ?? 'USD'),
+            quoteId: Number(raw.quoteId ?? raw.QuoteId ?? 0) || undefined,
+        };
+    }
+    function normalizeInvoice(raw) {
+        return {
+            id: Number(raw.id ?? raw.Id ?? 0),
+            invoiceNumber: String(raw.invoiceNumber ?? raw.InvoiceNumber ?? ''),
+            status: resolveInvoiceStatus(raw.status ?? raw.Status),
+            totalAmount: Number(raw.totalAmount ?? raw.TotalAmount ?? 0),
+            currencyCode: String(raw.currencyCode ?? raw.CurrencyCode ?? 'USD'),
+        };
+    }
+    function resolveQuoteStatus(status) {
+        const value = Number(status);
+        switch (value) {
+            case 0: return 'Draft';
+            case 1: return 'Sent';
+            case 2: return 'Accepted';
+            case 3: return 'Rejected';
+            case 4: return 'Expired';
+            case 5: return 'Converted';
+            default: return String(status ?? '-');
+        }
+    }
+    function resolveOrderStatus(status) {
+        const value = Number(status);
+        switch (value) {
+            case 0: return 'Pending';
+            case 1: return 'Active';
+            case 2: return 'Suspended';
+            case 3: return 'Cancelled';
+            case 4: return 'Expired';
+            case 5: return 'Trial';
+            default: return String(status ?? '-');
+        }
+    }
+    function resolveInvoiceStatus(status) {
+        const value = Number(status);
+        switch (value) {
+            case 0: return 'Draft';
+            case 1: return 'Issued';
+            case 2: return 'Paid';
+            case 3: return 'Overdue';
+            case 4: return 'Cancelled';
+            case 5: return 'Credited';
+            default: return String(status ?? '-');
+        }
+    }
+    function formatMoney(amount, currency) {
+        const normalizedAmount = Number.isFinite(amount) ? amount : 0;
+        return `${normalizedAmount.toFixed(2)} ${currency || 'USD'}`;
+    }
+    function renderSummaryTable(bodyId, rows, emptyMessage) {
+        const body = document.getElementById(bodyId);
+        if (!body) {
+            return;
+        }
+        if (!rows.length) {
+            body.innerHTML = `<tr><td colspan="3" class="text-center text-muted">${esc(emptyMessage)}</td></tr>`;
+            return;
+        }
+        body.innerHTML = rows.map((row) => {
+            const identifierHtml = row.linkUrl
+                ? `<a href="${esc(row.linkUrl)}"${row.openInNewTab ? ' target="_blank" rel="noopener noreferrer"' : ''}>${esc(row.identifier)}</a>`
+                : esc(row.identifier);
+            return `
+        <tr>
+            <td>${identifierHtml}</td>
+            <td>${esc(row.status)}</td>
+            <td class="text-end">${esc(row.amount)}</td>
+        </tr>
+    `;
+        }).join('');
     }
     async function loadPendingSummary() {
         clearError();
@@ -245,73 +397,6 @@
             c.currentPage !== undefined || c.CurrentPage !== undefined ||
             c.pageSize !== undefined || c.PageSize !== undefined));
         return { items, meta };
-    }
-    function normalizeQuote(raw) {
-        return {
-            id: Number(raw?.id ?? raw?.Id ?? 0),
-            quoteNumber: String(raw?.quoteNumber ?? raw?.QuoteNumber ?? ''),
-            status: String(raw?.status ?? raw?.Status ?? ''),
-            totalAmount: Number(raw?.totalAmount ?? raw?.TotalAmount ?? 0),
-            currencyCode: String(raw?.currencyCode ?? raw?.CurrencyCode ?? 'USD'),
-        };
-    }
-    function normalizeOrder(raw) {
-        return {
-            id: Number(raw?.id ?? raw?.Id ?? 0),
-            orderNumber: String(raw?.orderNumber ?? raw?.OrderNumber ?? ''),
-            status: String(raw?.status ?? raw?.Status ?? ''),
-            totalAmount: Number(raw?.totalAmount ?? raw?.TotalAmount ?? 0),
-            currencyCode: String(raw?.currencyCode ?? raw?.CurrencyCode ?? 'USD'),
-            quoteId: Number(raw?.quoteId ?? raw?.QuoteId ?? 0) || undefined,
-        };
-    }
-    function normalizeInvoice(raw) {
-        return {
-            id: Number(raw?.id ?? raw?.Id ?? 0),
-            invoiceNumber: String(raw?.invoiceNumber ?? raw?.InvoiceNumber ?? ''),
-            status: String(raw?.status ?? raw?.Status ?? ''),
-            totalAmount: Number(raw?.totalAmount ?? raw?.TotalAmount ?? 0),
-            currencyCode: String(raw?.currencyCode ?? raw?.CurrencyCode ?? 'USD'),
-        };
-    }
-    function resolveOfferStatus(status) {
-        const normalized = String(status ?? '').trim().toLowerCase();
-        if (normalized === 'sent') {
-            return 'Offer';
-        }
-        return status ? String(status) : '-';
-    }
-    function resolveOrderStatus(status) {
-        return status ? String(status) : '-';
-    }
-    function resolveInvoiceStatus(status) {
-        return status ? String(status) : '-';
-    }
-    function formatMoney(amount, currency) {
-        const normalizedAmount = Number.isFinite(amount) ? amount : 0;
-        return `${normalizedAmount.toFixed(2)} ${currency || 'USD'}`;
-    }
-    function renderSummaryTable(bodyId, rows, emptyMessage) {
-        const body = document.getElementById(bodyId);
-        if (!body) {
-            return;
-        }
-        if (!rows.length) {
-            body.innerHTML = `<tr><td colspan="3" class="text-center text-muted">${esc(emptyMessage)}</td></tr>`;
-            return;
-        }
-        body.innerHTML = rows.map((row) => {
-            const identifierHtml = row.linkUrl
-                ? `<a href="${esc(row.linkUrl)}"${row.openInNewTab ? ' target="_blank" rel="noopener noreferrer"' : ''}>${esc(row.identifier)}</a>`
-                : esc(row.identifier);
-            return `
-        <tr>
-            <td>${identifierHtml}</td>
-            <td>${esc(row.status)}</td>
-            <td class="text-end">${esc(row.amount)}</td>
-        </tr>
-    `;
-        }).join('');
     }
     function normalizeDomain(raw) {
         return {

@@ -416,6 +416,18 @@
         }
     };
 
+    const updatePageTitle = (): void => {
+        const title = document.getElementById('new-sale-customer-page-title');
+        if (!title) {
+            return;
+        }
+
+        const quoteId = Number(currentState?.offer?.quoteId ?? 0);
+        const status = String(currentState?.offer?.status ?? '').trim();
+        const label = quoteId > 0 || status.length > 0 ? 'Edit Quote' : 'New Quote';
+        title.innerHTML = `<i class="bi bi-people"></i> ${label}`;
+    };
+
     const renderCustomerResults = (): void => {
         const body = document.getElementById('new-sale-customer-results-body');
         if (!body) {
@@ -826,7 +838,7 @@
         }
 
         saveState();
-        window.location.href = '/dashboard/new-sale/hosting';
+        window.location.href = '/dashboard/quote/hosting';
     };
 
     const bindEvents = (): void => {
@@ -938,10 +950,11 @@
 
         currentState = loadState();
         if (!currentState?.domainName || !currentState?.flowType) {
-            window.location.href = '/dashboard/new-sale';
+            window.location.href = '/dashboard/quote';
             return;
         }
 
+        updatePageTitle();
         setContextHeader();
         renderFlowStatus();
         restoreCustomerSelectionState();

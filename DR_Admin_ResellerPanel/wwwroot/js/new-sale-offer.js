@@ -236,6 +236,8 @@
             .filter((item) => item !== null);
         const currency = String(saleContext.currency ?? saleContext.Currency ?? 'USD');
         currentState = {
+            showOngoingCard: false,
+            isOfferListContext: true,
             domainName: String(saleContext.domainName ?? saleContext.DomainName ?? ''),
             flowType: String(saleContext.flowType ?? saleContext.FlowType ?? ''),
             selectedCustomer: {
@@ -444,6 +446,16 @@
         if (currency) {
             currency.textContent = currencyCode;
         }
+    };
+    const updatePageTitle = () => {
+        const title = document.getElementById('new-sale-offer-page-title');
+        if (!title) {
+            return;
+        }
+        const quoteId = Number(currentState?.offer?.quoteId ?? 0);
+        const status = String(currentState?.offer?.status ?? '').trim();
+        const label = quoteId > 0 || status.length > 0 ? 'Edit Quote' : 'New Quote';
+        title.innerHTML = `<i class="bi bi-receipt"></i> ${label}`;
     };
     const renderPersistenceState = () => {
         const quoteId = document.getElementById('new-sale-offer-quote-id');
@@ -725,7 +737,7 @@
             return;
         }
         applyPersistenceResponse(response.data);
-        window.location.href = '/dashboard/new-sale/payment';
+        window.location.href = '/dashboard/quote/payment';
     };
     const printOffer = async () => {
         saveState();
@@ -762,10 +774,11 @@
             }
         }
         if (!currentState?.domainName || !currentState?.flowType || !currentState?.selectedCustomer) {
-            window.location.href = '/dashboard/new-sale';
+            window.location.href = '/dashboard/quote';
             return;
         }
         currencyCode = currentState.otherServices?.currency || currentState.pricing?.currency || 'USD';
+        updatePageTitle();
         setContextHeader();
         restoreOfferSettings();
         renderPersistenceState();
