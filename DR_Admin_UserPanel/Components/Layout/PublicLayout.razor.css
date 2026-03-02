@@ -1,0 +1,36 @@
+.public-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #052767 0%, #3a0647 100%);
+}
+
+.public-top-row {
+    min-height: 3.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    display: flex;
+    align-items: center;
+}
+
+.public-brand {
+    color: #fff;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.public-brand:hover {
+    color: #fff;
+}
+
+.public-link {
+    color: rgba(255, 255, 255, 0.9);
+    text-decoration: none;
+}
+
+.public-link:hover {
+    color: #fff;
+    text-decoration: underline;
+}
+
+.public-content {
+    padding: 1.5rem 0;
+}

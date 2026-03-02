@@ -10,6 +10,7 @@
   },
   "files": [
     "app-settings.ts",
+    "main-menu.ts",
     "auth.ts",
     "api-client.ts",
     "alerts.ts",

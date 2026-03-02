@@ -1,0 +1,23 @@
+@inherits LayoutComponentBase
+
+<div class="public-page">
+    <header class="public-top-row">
+        <div class="container d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <a class="public-brand" href="/">DR User Panel</a>
+            <nav class="d-flex flex-wrap align-items-center gap-3 small">
+                <a href="/account/login" class="public-link">Sign in</a>
+                <a href="/account/register" class="public-link">Create account</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="public-content">
+        @Body
+    </main>
+</div>
+
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">🗙</span>
+</div>
