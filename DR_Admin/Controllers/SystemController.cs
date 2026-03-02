@@ -26,16 +26,19 @@ public class SystemController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
     private readonly ISystemService _systemService;
+    private readonly IQuoteService _quoteService;
     private readonly IConfiguration _configuration;
     private static readonly Serilog.ILogger _log = Log.ForContext<SystemController>();
 
     public SystemController(
         ApplicationDbContext context,
         ISystemService systemService,
+        IQuoteService quoteService,
         IConfiguration configuration)
     {
         _context = context;
         _systemService = systemService;
+        _quoteService = quoteService;
         _configuration = configuration;
     }
 
@@ -73,43 +76,18 @@ public class SystemController : ControllerBase
 
             var revision = await SaveQuoteRevisionAsync(quote, offer, "Accepted", string.Empty, string.Empty);
 
-            var existingOrder = await _context.Orders
-                .FirstOrDefaultAsync(o => o.QuoteId == quote.Id);
+            var orderId = await _quoteService.ConvertQuoteToOrderAsync(quote.Id)
+                ?? throw new InvalidOperationException($"Could not convert quote {quote.Id} to order.");
 
-            Order order;
-            if (existingOrder != null)
-            {
-                order = existingOrder;
-            }
-            else
-            {
-                order = await CreateOrderFromQuoteAsync(quote, offer, now);
-                _context.Orders.Add(order);
+            var order = await _context.Orders
+                .AsNoTracking()
+                .FirstOrDefaultAsync(o => o.Id == orderId)
+                ?? throw new InvalidOperationException($"Order {orderId} was created but could not be loaded.");
 
-                quote.Status = QuoteStatus.Converted;
-                try
-                {
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateException dbEx) when (IsOrdersServiceIdConstraintFailure(dbEx))
-                {
-                    _log.Warning(dbEx, "API: AcceptOffer fallback for legacy NOT NULL Orders.ServiceId constraint");
-
-                    var fallbackServiceId = await _context.Services
-                        .AsNoTracking()
-                        .OrderBy(service => service.Id)
-                        .Select(service => (int?)service.Id)
-                        .FirstOrDefaultAsync();
-
-                    if (!fallbackServiceId.HasValue)
-                    {
-                        throw new InvalidOperationException("Cannot create order because Orders.ServiceId is required by database schema and no service exists.", dbEx);
-                    }
-
-                    order.ServiceId = fallbackServiceId.Value;
-                    await _context.SaveChangesAsync();
-                }
-            }
+            quote = await _context.Quotes
+                .AsNoTracking()
+                .FirstOrDefaultAsync(q => q.Id == quote.Id)
+                ?? quote;
 
             _log.Information("API: AcceptOffer persisted quote {QuoteId} and order {OrderId}", quote.Id, order.Id);
 
@@ -200,13 +178,20 @@ public class SystemController : ControllerBase
         {
             var offers = await _context.Quotes
                 .AsNoTracking()
-                .Where(q => q.DeletedAt == null)
+                .Where(q => q.DeletedAt == null && q.Status != QuoteStatus.Converted && !q.Orders.Any())
                 .OrderByDescending(q => q.CreatedAt)
                 .Take(50)
                 .Select(q => new
                 {
                     id = q.Id,
                     quoteNumber = q.QuoteNumber,
+                    domainName = q.QuoteLines
+                        .Where(l => l.DeletedAt == null)
+                        .OrderBy(l => l.LineNumber)
+                        .Select(l => l.Description)
+                        .FirstOrDefault(),
+                    customerName = q.CustomerName,
+                    createdAt = q.CreatedAt,
                     status = q.Status.ToString(),
                     totalAmount = q.TotalAmount,
                     currencyCode = q.CurrencyCode
@@ -221,6 +206,7 @@ public class SystemController : ControllerBase
                 {
                     id = o.Id,
                     orderNumber = o.OrderNumber,
+                    quoteId = o.QuoteId,
                     status = o.Status.ToString(),
                     totalAmount = o.SetupFee + o.RecurringAmount,
                     currencyCode = o.CurrencyCode

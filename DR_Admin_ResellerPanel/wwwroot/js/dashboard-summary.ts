@@ -6,6 +6,8 @@ interface Domain {
 }
 
 let hasOngoingWorkflowWarning = false;
+let pendingAcceptQuoteId: number | null = null;
+let pendingAcceptQuoteNumber = '';
 
 interface PagedResult<T> {
     data?: T[];
@@ -54,6 +56,9 @@ interface NewSaleState {
 interface QuoteSummaryItem {
     id: number;
     quoteNumber: string;
+    domainName: string;
+    customerName: string;
+    createdAt: string;
     status: string;
     totalAmount: number;
     currencyCode: string;
@@ -78,6 +83,10 @@ interface InvoiceSummaryItem {
 
 function getApiBaseUrl(): string {
     return (window as any).AppSettings?.apiBaseUrl ?? '';
+}
+
+function getBootstrap(): any | null {
+    return (window as any).bootstrap ?? null;
 }
 
 function getAuthToken(): string | null {
@@ -140,9 +149,42 @@ function initializePage(): void {
 
     (page as any).dataset.initialized = 'true';
 
+    bindQuoteActions();
+
     renderOngoingWorkflowPanel();
     loadPendingSummary();
     loadSalesSummary();
+}
+
+function updateSalesCardLayout(quoteCount: number, orderCount: number, invoiceCount: number): void {
+    const cards = [
+        { id: 'dashboard-summary-quotes-card-wrap', count: quoteCount },
+        { id: 'dashboard-summary-orders-card-wrap', count: orderCount },
+        { id: 'dashboard-summary-open-invoices-card-wrap', count: invoiceCount },
+    ];
+
+    const filled = cards.filter((card) => card.count > 0);
+    const empty = cards.filter((card) => card.count <= 0);
+
+    filled.forEach((card, index) => {
+        const element = document.getElementById(card.id);
+        if (!element) {
+            return;
+        }
+
+        element.className = 'col-12';
+        element.style.order = String(index + 1);
+    });
+
+    empty.forEach((card, index) => {
+        const element = document.getElementById(card.id);
+        if (!element) {
+            return;
+        }
+
+        element.className = 'col-12 col-xl-4';
+        element.style.order = String(filled.length + index + 1);
+    });
 }
 
 function renderOngoingWorkflowPanel(): void {
@@ -187,6 +229,7 @@ async function loadSalesSummary(): Promise<void> {
         setText('dashboard-summary-offers-count', '0');
         setText('dashboard-summary-orders-count', '0');
         setText('dashboard-summary-open-invoices-count', '0');
+        updateSalesCardLayout(0, 0, 0);
         return;
     }
 
@@ -205,17 +248,9 @@ async function loadSalesSummary(): Promise<void> {
     setText('dashboard-summary-offers-count', String(offers.length));
     setText('dashboard-summary-orders-count', String(ordersWithAcceptedDraft.length));
     setText('dashboard-summary-open-invoices-count', String(openInvoices.length));
+    updateSalesCardLayout(offers.length, ordersWithAcceptedDraft.length, openInvoices.length);
 
-    renderSummaryTable(
-        'dashboard-summary-offers-body',
-        offers.map((item) => ({
-            identifier: item.quoteNumber || `#${item.id}`,
-            status: item.status,
-            amount: formatMoney(item.totalAmount, item.currencyCode),
-            linkUrl: `/dashboard/quote/offer?quoteId=${encodeURIComponent(String(item.id))}`,
-        })),
-        'No quotes found'
-    );
+    renderQuoteTable(offers);
 
     renderSummaryTable(
         'dashboard-summary-orders-body',
@@ -344,10 +379,133 @@ function normalizeQuote(raw: any): QuoteSummaryItem {
     return {
         id: Number(raw.id ?? raw.Id ?? 0),
         quoteNumber: String(raw.quoteNumber ?? raw.QuoteNumber ?? ''),
+        domainName: String(raw.domainName ?? raw.DomainName ?? ''),
+        customerName: String(raw.customerName ?? raw.CustomerName ?? ''),
+        createdAt: String(raw.createdAt ?? raw.CreatedAt ?? ''),
         status: resolveQuoteStatus(raw.status ?? raw.Status),
         totalAmount: Number(raw.totalAmount ?? raw.TotalAmount ?? 0),
         currencyCode: String(raw.currencyCode ?? raw.CurrencyCode ?? 'USD'),
     };
+}
+
+function extractDomainName(value: string): string {
+    const text = (value || '').trim();
+    if (!text) {
+        return '-';
+    }
+
+    const match = text.match(/[a-z0-9][a-z0-9\-]*\.[a-z0-9][a-z0-9\-.]*/i);
+    return (match ? match[0] : text).toLowerCase();
+}
+
+function formatDate(value: string): string {
+    const parsed = new Date(value);
+    if (!value || Number.isNaN(parsed.getTime())) {
+        return '-';
+    }
+
+    return parsed.toLocaleDateString();
+}
+
+function renderQuoteTable(rows: QuoteSummaryItem[]): void {
+    const body = document.getElementById('dashboard-summary-offers-body');
+    if (!body) {
+        return;
+    }
+
+    if (!rows.length) {
+        body.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No quotes found</td></tr>';
+        return;
+    }
+
+    body.innerHTML = rows.map((item) => {
+        const quoteNumber = item.quoteNumber || `#${item.id}`;
+        const domainName = extractDomainName(item.domainName);
+        const customerName = item.customerName || '-';
+        const dateText = formatDate(item.createdAt);
+
+        return `
+        <tr>
+            <td><a href="/dashboard/quote/offer?quoteId=${encodeURIComponent(String(item.id))}">${esc(quoteNumber)}</a></td>
+            <td>${esc(domainName)}</td>
+            <td>${esc(customerName)}</td>
+            <td>${esc(dateText)}</td>
+            <td>${esc(item.status)}</td>
+            <td class="text-end">
+                <button class="btn btn-sm btn-primary" type="button" data-action="accept-quote" data-id="${item.id}" data-quote-number="${esc(quoteNumber)}">Accept</button>
+            </td>
+        </tr>
+    `;
+    }).join('');
+}
+
+function openAcceptQuoteModal(quoteId: number, quoteNumber: string): void {
+    pendingAcceptQuoteId = quoteId;
+    pendingAcceptQuoteNumber = quoteNumber;
+
+    setText('dashboard-summary-accept-quote-number', quoteNumber || `#${quoteId}`);
+
+    const modalElement = document.getElementById('dashboard-summary-accept-quote-modal');
+    const bootstrap = getBootstrap();
+    if (!modalElement || !bootstrap?.Modal) {
+        return;
+    }
+
+    const modal = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
+    modal.show();
+}
+
+function closeAcceptQuoteModal(): void {
+    const modalElement = document.getElementById('dashboard-summary-accept-quote-modal');
+    const bootstrap = getBootstrap();
+    if (!modalElement || !bootstrap?.Modal) {
+        return;
+    }
+
+    const modal = bootstrap.Modal.getInstance(modalElement);
+    modal?.hide();
+}
+
+async function acceptQuoteFromDashboard(): Promise<void> {
+    if (!pendingAcceptQuoteId) {
+        return;
+    }
+
+    clearError();
+
+    const response = await apiRequest<any>(`${getApiBaseUrl()}/Quotes/${pendingAcceptQuoteId}/convert`, { method: 'POST' });
+    if (!response.success) {
+        showError(response.message || `Could not accept quote ${pendingAcceptQuoteNumber || `#${pendingAcceptQuoteId}`}.`);
+        return;
+    }
+
+    closeAcceptQuoteModal();
+    pendingAcceptQuoteId = null;
+    pendingAcceptQuoteNumber = '';
+    await loadSalesSummary();
+}
+
+function bindQuoteActions(): void {
+    const tableBody = document.getElementById('dashboard-summary-offers-body');
+    tableBody?.addEventListener('click', (event) => {
+        const target = event.target as HTMLElement;
+        const button = target.closest('button[data-action="accept-quote"]') as HTMLButtonElement | null;
+        if (!button) {
+            return;
+        }
+
+        const quoteId = Number(button.dataset.id ?? 0);
+        if (!quoteId) {
+            return;
+        }
+
+        const quoteNumber = button.dataset.quoteNumber || `#${quoteId}`;
+        openAcceptQuoteModal(quoteId, quoteNumber);
+    });
+
+    document.getElementById('dashboard-summary-accept-quote-confirm')?.addEventListener('click', () => {
+        void acceptQuoteFromDashboard();
+    });
 }
 
 function normalizeOrder(raw: any): OrderSummaryItem {

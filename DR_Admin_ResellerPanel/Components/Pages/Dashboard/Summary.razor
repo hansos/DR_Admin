@@ -58,11 +58,11 @@
         </div>
     </div>
 
-    <div class="row g-4 mb-4">
-        <div class="col-12 col-xl-4">
+    <div class="row g-4 mb-4" id="dashboard-summary-sales-cards-row">
+        <div class="col-12 col-xl-4" id="dashboard-summary-quotes-card-wrap">
             <div class="card shadow-sm h-100">
                 <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="bi bi-receipt"></i> Quote list</h5>
+                    <h5 class="mb-0"><i class="bi bi-receipt"></i> Quotes</h5>
                     <span class="badge text-bg-secondary" id="dashboard-summary-offers-count">0</span>
                 </div>
                 <div class="card-body">
@@ -71,12 +71,15 @@
                             <thead>
                                 <tr>
                                     <th>Quote</th>
+                                    <th>Domain</th>
+                                    <th>Customer</th>
+                                    <th>Date</th>
                                     <th>Status</th>
-                                    <th class="text-end">Total</th>
+                                    <th class="text-end">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="dashboard-summary-offers-body">
-                                <tr><td colspan="3" class="text-center text-muted">Loading quotes...</td></tr>
+                                <tr><td colspan="6" class="text-center text-muted">Loading quotes...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -84,7 +87,7 @@
             </div>
         </div>
 
-        <div class="col-12 col-xl-4">
+        <div class="col-12 col-xl-4" id="dashboard-summary-orders-card-wrap">
             <div class="card shadow-sm h-100">
                 <div class="card-header bg-light d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-bag-check"></i> Orders</h5>
@@ -109,7 +112,7 @@
             </div>
         </div>
 
-        <div class="col-12 col-xl-4">
+        <div class="col-12 col-xl-4" id="dashboard-summary-open-invoices-card-wrap">
             <div class="card shadow-sm h-100">
                 <div class="card-header bg-light d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-cash-stack"></i> Open invoices</h5>
@@ -137,5 +140,23 @@
 
     <div id="dashboard-summary-all-clear-card" class="alert alert-success d-none" role="alert">
         <i class="bi bi-check-circle"></i> All clear. No pending DNS sync records and no ongoing new sale workflow in this session.
+    </div>
+</div>
+
+<div class="modal fade" id="dashboard-summary-accept-quote-modal" tabindex="-1" aria-labelledby="dashboard-summary-accept-quote-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="dashboard-summary-accept-quote-title">Accept quote</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Accept quote <strong id="dashboard-summary-accept-quote-number">-</strong> and convert it to an order?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="dashboard-summary-accept-quote-confirm">Accept quote</button>
+            </div>
+        </div>
     </div>
 </div>

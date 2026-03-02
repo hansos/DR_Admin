@@ -2,8 +2,13 @@
 // @ts-nocheck
 (function () {
     let hasOngoingWorkflowWarning = false;
+    let pendingAcceptQuoteId = null;
+    let pendingAcceptQuoteNumber = '';
     function getApiBaseUrl() {
         return window.AppSettings?.apiBaseUrl ?? '';
+    }
+    function getBootstrap() {
+        return window.bootstrap ?? null;
     }
     function getAuthToken() {
         const auth = window.Auth;
@@ -56,9 +61,35 @@
             return;
         }
         page.dataset.initialized = 'true';
+        bindQuoteActions();
         renderOngoingWorkflowPanel();
         loadPendingSummary();
         loadSalesSummary();
+    }
+    function updateSalesCardLayout(quoteCount, orderCount, invoiceCount) {
+        const cards = [
+            { id: 'dashboard-summary-quotes-card-wrap', count: quoteCount },
+            { id: 'dashboard-summary-orders-card-wrap', count: orderCount },
+            { id: 'dashboard-summary-open-invoices-card-wrap', count: invoiceCount },
+        ];
+        const filled = cards.filter((card) => card.count > 0);
+        const empty = cards.filter((card) => card.count <= 0);
+        filled.forEach((card, index) => {
+            const element = document.getElementById(card.id);
+            if (!element) {
+                return;
+            }
+            element.className = 'col-12';
+            element.style.order = String(index + 1);
+        });
+        empty.forEach((card, index) => {
+            const element = document.getElementById(card.id);
+            if (!element) {
+                return;
+            }
+            element.className = 'col-12 col-xl-4';
+            element.style.order = String(filled.length + index + 1);
+        });
     }
     function renderOngoingWorkflowPanel() {
         const card = document.getElementById('dashboard-summary-workflow-card');
@@ -96,6 +127,7 @@
             setText('dashboard-summary-offers-count', '0');
             setText('dashboard-summary-orders-count', '0');
             setText('dashboard-summary-open-invoices-count', '0');
+            updateSalesCardLayout(0, 0, 0);
             return;
         }
         const offers = extractItems(response.data?.offers).items
@@ -112,12 +144,8 @@
         setText('dashboard-summary-offers-count', String(offers.length));
         setText('dashboard-summary-orders-count', String(ordersWithAcceptedDraft.length));
         setText('dashboard-summary-open-invoices-count', String(openInvoices.length));
-        renderSummaryTable('dashboard-summary-offers-body', offers.map((item) => ({
-            identifier: item.quoteNumber || `#${item.id}`,
-            status: item.status,
-            amount: formatMoney(item.totalAmount, item.currencyCode),
-            linkUrl: `/dashboard/quote/offer?quoteId=${encodeURIComponent(String(item.id))}`,
-        })), 'No quotes found');
+        updateSalesCardLayout(offers.length, ordersWithAcceptedDraft.length, openInvoices.length);
+        renderQuoteTable(offers);
         renderSummaryTable('dashboard-summary-orders-body', ordersWithAcceptedDraft.map((item) => ({
             identifier: item.orderNumber || `#${item.id}`,
             status: item.status,
@@ -212,10 +240,111 @@
         return {
             id: Number(raw.id ?? raw.Id ?? 0),
             quoteNumber: String(raw.quoteNumber ?? raw.QuoteNumber ?? ''),
+            domainName: String(raw.domainName ?? raw.DomainName ?? ''),
+            customerName: String(raw.customerName ?? raw.CustomerName ?? ''),
+            createdAt: String(raw.createdAt ?? raw.CreatedAt ?? ''),
             status: resolveQuoteStatus(raw.status ?? raw.Status),
             totalAmount: Number(raw.totalAmount ?? raw.TotalAmount ?? 0),
             currencyCode: String(raw.currencyCode ?? raw.CurrencyCode ?? 'USD'),
         };
+    }
+    function extractDomainName(value) {
+        const text = (value || '').trim();
+        if (!text) {
+            return '-';
+        }
+        const match = text.match(/[a-z0-9][a-z0-9\-]*\.[a-z0-9][a-z0-9\-.]*/i);
+        return (match ? match[0] : text).toLowerCase();
+    }
+    function formatDate(value) {
+        const parsed = new Date(value);
+        if (!value || Number.isNaN(parsed.getTime())) {
+            return '-';
+        }
+        return parsed.toLocaleDateString();
+    }
+    function renderQuoteTable(rows) {
+        const body = document.getElementById('dashboard-summary-offers-body');
+        if (!body) {
+            return;
+        }
+        if (!rows.length) {
+            body.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No quotes found</td></tr>';
+            return;
+        }
+        body.innerHTML = rows.map((item) => {
+            const quoteNumber = item.quoteNumber || `#${item.id}`;
+            const domainName = extractDomainName(item.domainName);
+            const customerName = item.customerName || '-';
+            const dateText = formatDate(item.createdAt);
+            return `
+        <tr>
+            <td><a href="/dashboard/quote/offer?quoteId=${encodeURIComponent(String(item.id))}">${esc(quoteNumber)}</a></td>
+            <td>${esc(domainName)}</td>
+            <td>${esc(customerName)}</td>
+            <td>${esc(dateText)}</td>
+            <td>${esc(item.status)}</td>
+            <td class="text-end">
+                <button class="btn btn-sm btn-primary" type="button" data-action="accept-quote" data-id="${item.id}" data-quote-number="${esc(quoteNumber)}">Accept</button>
+            </td>
+        </tr>
+    `;
+        }).join('');
+    }
+    function openAcceptQuoteModal(quoteId, quoteNumber) {
+        pendingAcceptQuoteId = quoteId;
+        pendingAcceptQuoteNumber = quoteNumber;
+        setText('dashboard-summary-accept-quote-number', quoteNumber || `#${quoteId}`);
+        const modalElement = document.getElementById('dashboard-summary-accept-quote-modal');
+        const bootstrap = getBootstrap();
+        if (!modalElement || !bootstrap?.Modal) {
+            return;
+        }
+        const modal = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
+        modal.show();
+    }
+    function closeAcceptQuoteModal() {
+        const modalElement = document.getElementById('dashboard-summary-accept-quote-modal');
+        const bootstrap = getBootstrap();
+        if (!modalElement || !bootstrap?.Modal) {
+            return;
+        }
+        const modal = bootstrap.Modal.getInstance(modalElement);
+        modal?.hide();
+    }
+    async function acceptQuoteFromDashboard() {
+        if (!pendingAcceptQuoteId) {
+            return;
+        }
+        clearError();
+        const response = await apiRequest(`${getApiBaseUrl()}/Quotes/${pendingAcceptQuoteId}/convert`, { method: 'POST' });
+        if (!response.success) {
+            showError(response.message || `Could not accept quote ${pendingAcceptQuoteNumber || `#${pendingAcceptQuoteId}`}.`);
+            return;
+        }
+        closeAcceptQuoteModal();
+        pendingAcceptQuoteId = null;
+        pendingAcceptQuoteNumber = '';
+        await loadSalesSummary();
+    }
+    function bindQuoteActions() {
+        const tableBody = document.getElementById('dashboard-summary-offers-body');
+        tableBody?.addEventListener('click', (event) => {
+            const target = event.target;
+            const button = target.closest('button[data-action="accept-quote"]');
+            if (!button) {
+                return;
+            }
+            const quoteId = Number(button.dataset.id ?? 0);
+            if (!quoteId) {
+                return;
+            }
+            const quoteNumber = button.dataset.quoteNumber || `#${quoteId}`;
+            openAcceptQuoteModal(quoteId, quoteNumber);
+        });
+        document.getElementById('dashboard-summary-accept-quote-confirm')?.addEventListener('click', () => {
+            void acceptQuoteFromDashboard();
+        });
     }
     function normalizeOrder(raw) {
         return {

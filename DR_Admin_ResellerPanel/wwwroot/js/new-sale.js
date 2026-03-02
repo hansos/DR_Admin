@@ -515,6 +515,14 @@
             void checkDomainAvailability();
         });
         domainInput?.addEventListener('input', () => {
+            if (domainInput) {
+                const normalized = domainInput.value.toLowerCase();
+                if (domainInput.value !== normalized) {
+                    const cursor = domainInput.selectionStart ?? normalized.length;
+                    domainInput.value = normalized;
+                    domainInput.setSelectionRange(cursor, cursor);
+                }
+            }
             saveDraftDomain();
         });
         nextStepButton?.addEventListener('click', navigateToPage2);

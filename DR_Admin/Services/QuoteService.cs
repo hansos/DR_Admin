@@ -92,7 +92,91 @@ public class QuoteService : IQuoteService
 
     public Task<int?> ConvertQuoteToOrderAsync(int id)
     {
-        throw new NotImplementedException("QuoteService.ConvertQuoteToOrderAsync not yet implemented");
+        return ConvertQuoteToOrderInternalAsync(id);
+    }
+
+    private async Task<int?> ConvertQuoteToOrderInternalAsync(int id)
+    {
+        var quote = await _context.Quotes
+            .Include(q => q.QuoteLines)
+            .FirstOrDefaultAsync(q => q.DeletedAt == null && q.Id == id);
+
+        if (quote == null)
+        {
+            return null;
+        }
+
+        var existingOrder = await _context.Orders
+            .FirstOrDefaultAsync(o => o.QuoteId == quote.Id);
+
+        if (existingOrder != null)
+        {
+            if (quote.Status != QuoteStatus.Converted)
+            {
+                quote.Status = QuoteStatus.Converted;
+                quote.AcceptedAt ??= DateTime.UtcNow;
+                quote.UpdatedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+            }
+
+            return existingOrder.Id;
+        }
+
+        var now = DateTime.UtcNow;
+        var serviceId = quote.QuoteLines
+            .Where(line => line.DeletedAt == null && line.ServiceId.HasValue)
+            .Select(line => line.ServiceId)
+            .FirstOrDefault();
+
+        var fallbackServiceId = await _context.Services
+            .AsNoTracking()
+            .OrderBy(service => service.Id)
+            .Select(service => (int?)service.Id)
+            .FirstOrDefaultAsync();
+
+        var order = new Order
+        {
+            OrderNumber = await GenerateOrderNumberAsync(),
+            CustomerId = quote.CustomerId,
+            ServiceId = serviceId ?? fallbackServiceId,
+            QuoteId = quote.Id,
+            CouponId = quote.CouponId,
+            OrderType = OrderType.New,
+            Status = OrderStatus.Pending,
+            StartDate = now,
+            EndDate = now.AddYears(1),
+            NextBillingDate = now.AddMonths(1),
+            SetupFee = quote.TotalSetupFee,
+            RecurringAmount = quote.TotalRecurring,
+            DiscountAmount = quote.DiscountAmount,
+            CurrencyCode = quote.CurrencyCode,
+            BaseCurrencyCode = quote.CurrencyCode,
+            AutoRenew = true,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+
+        _context.Orders.Add(order);
+
+        quote.Status = QuoteStatus.Converted;
+        quote.AcceptedAt ??= now;
+        quote.UpdatedAt = now;
+
+        await _context.SaveChangesAsync();
+
+        return order.Id;
+    }
+
+    private async Task<string> GenerateOrderNumberAsync()
+    {
+        var lastOrderId = await _context.Orders
+            .AsNoTracking()
+            .OrderByDescending(order => order.Id)
+            .Select(order => order.Id)
+            .FirstOrDefaultAsync();
+
+        var nextNumber = lastOrderId + 1;
+        return $"ORD-{DateTime.UtcNow.Year}-{nextNumber:D5}";
     }
 
     public Task<byte[]> GenerateQuotePdfAsync(int id)
