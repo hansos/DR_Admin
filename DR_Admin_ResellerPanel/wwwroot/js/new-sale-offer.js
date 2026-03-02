@@ -1,6 +1,7 @@
 "use strict";
 (() => {
     const storageKey = 'new-sale-state';
+    const originalOfferSignatureStorageKey = 'new-sale-offer-original-signature';
     let currentState = null;
     let currencyCode = 'USD';
     let hostingPackages = new Map();
@@ -8,6 +9,7 @@
     let services = new Map();
     let currentSellerCompany = null;
     let restoredLineItems = null;
+    let initialOfferChangeSignature = null;
     const getBootstrap = () => {
         const maybeBootstrap = window.bootstrap;
         return maybeBootstrap ?? null;
@@ -131,6 +133,51 @@
             yearlyPrice: Number(typed.yearlyPrice ?? typed.YearlyPrice ?? 0),
         };
     };
+    const isEditingExistingQuote = () => {
+        const quoteId = Number(currentState?.offer?.quoteId ?? 0);
+        return currentState?.isOfferListContext === true && quoteId > 0;
+    };
+    const createOfferChangeSignature = (validUntil, couponCode, discountPercent, notes, lines, totals) => {
+        return JSON.stringify({
+            validUntil,
+            couponCode,
+            discountPercent,
+            notes,
+            lines,
+            totals,
+        });
+    };
+    const buildOfferChangeSignature = () => {
+        const validUntil = document.getElementById('new-sale-offer-valid-until')?.value ?? '';
+        const couponCode = document.getElementById('new-sale-offer-coupon')?.value.trim() ?? '';
+        const notes = document.getElementById('new-sale-offer-notes')?.value.trim() ?? '';
+        const discountRaw = Number(document.getElementById('new-sale-offer-discount')?.value ?? '0');
+        const discountPercent = Number.isFinite(discountRaw) && discountRaw >= 0 ? Math.min(100, discountRaw) : 0;
+        const lines = buildLineItems();
+        const totals = calculateTotals(lines);
+        return createOfferChangeSignature(validUntil, couponCode, discountPercent, notes, lines, totals);
+    };
+    const updateAcceptActionState = () => {
+        const acceptButton = document.getElementById('new-sale-offer-accept');
+        const confirmButton = document.getElementById('new-sale-offer-accept-confirm');
+        if (!acceptButton) {
+            return;
+        }
+        if (isEditingExistingQuote()) {
+            const hasChanges = initialOfferChangeSignature !== null && buildOfferChangeSignature() !== initialOfferChangeSignature;
+            acceptButton.innerHTML = 'Save changes and continue <i class="bi bi-arrow-right"></i>';
+            acceptButton.disabled = !hasChanges;
+            if (confirmButton) {
+                confirmButton.textContent = 'Save changes and continue';
+            }
+            return;
+        }
+        acceptButton.innerHTML = 'Accept and continue <i class="bi bi-arrow-right"></i>';
+        acceptButton.disabled = false;
+        if (confirmButton) {
+            confirmButton.textContent = 'Yes, accept and continue';
+        }
+    };
     const normalizeBillingCycle = (item) => {
         const typed = (item ?? {});
         return {
@@ -238,6 +285,18 @@
         restoredLineItems = parseList(snapshotRaw.lineItems ?? snapshotRaw.LineItems)
             .map((item) => normalizeSnapshotLineItem(item))
             .filter((item) => item !== null);
+        const snapshotDiscountPercentRaw = Number(offerSettings.discountPercent ?? offerSettings.DiscountPercent ?? 0);
+        const snapshotDiscountPercent = Number.isFinite(snapshotDiscountPercentRaw) && snapshotDiscountPercentRaw >= 0
+            ? Math.min(100, snapshotDiscountPercentRaw)
+            : 0;
+        const snapshotTotals = {
+            lineCount: Number(totals.lineCount ?? totals.LineCount ?? restoredLineItems.length) || restoredLineItems.length,
+            oneTime: Number(totals.oneTimeSubtotal ?? totals.OneTimeSubtotal ?? 0),
+            recurring: Number(totals.recurringSubtotal ?? totals.RecurringSubtotal ?? 0),
+            grand: Number(totals.grandTotal ?? totals.GrandTotal ?? 0),
+        };
+        const snapshotSignature = createOfferChangeSignature(validUntilRaw, couponCodeRaw, snapshotDiscountPercent, notesRaw, restoredLineItems, snapshotTotals);
+        sessionStorage.setItem(originalOfferSignatureStorageKey, snapshotSignature);
         const currency = String(saleContext.currency ?? saleContext.Currency ?? 'USD');
         currentState = {
             showOngoingCard: false,
@@ -266,10 +325,10 @@
                 couponCode: couponCodeRaw || undefined,
                 discountPercent: Number(offerSettings.discountPercent ?? offerSettings.DiscountPercent ?? 0) || undefined,
                 notes: notesRaw || undefined,
-                lineCount: Number(totals.lineCount ?? totals.LineCount ?? restoredLineItems.length) || restoredLineItems.length,
-                oneTimeSubtotal: Number(totals.oneTimeSubtotal ?? totals.OneTimeSubtotal ?? 0),
-                recurringSubtotal: Number(totals.recurringSubtotal ?? totals.RecurringSubtotal ?? 0),
-                grandTotal: Number(totals.grandTotal ?? totals.GrandTotal ?? 0),
+                lineCount: snapshotTotals.lineCount,
+                oneTimeSubtotal: snapshotTotals.oneTime,
+                recurringSubtotal: snapshotTotals.recurring,
+                grandTotal: snapshotTotals.grand,
                 sentAt: sentAtRaw || undefined,
                 acceptedAt: acceptedAtRaw || undefined,
             },
@@ -641,6 +700,7 @@
         totalRecurring.textContent = formatMoney(totals.recurring);
         totalGrand.textContent = formatMoney(totals.grand);
         saveState();
+        updateAcceptActionState();
     };
     const restoreOfferSettings = () => {
         const offer = currentState?.offer;
@@ -826,6 +886,14 @@
             loadSellerCompanyInfo(),
         ]);
         renderLines();
+        if (isEditingExistingQuote()) {
+            initialOfferChangeSignature = sessionStorage.getItem(originalOfferSignatureStorageKey) || buildOfferChangeSignature();
+        }
+        else {
+            initialOfferChangeSignature = null;
+            sessionStorage.removeItem(originalOfferSignatureStorageKey);
+        }
+        updateAcceptActionState();
     };
     const setupObserver = () => {
         void initializePage();
