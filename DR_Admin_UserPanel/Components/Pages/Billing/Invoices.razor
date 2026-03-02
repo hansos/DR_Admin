@@ -1,0 +1,49 @@
+@page "/billing/invoices"
+
+<PageTitle>Invoices</PageTitle>
+
+<div class="container py-4" id="invoices-page">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <h1 class="h4 mb-1">Invoice History</h1>
+            <p class="text-muted mb-0">Review invoices and payment state.</p>
+        </div>
+    </div>
+
+    <div id="invoices-alert-success" class="alert alert-success d-none" role="alert"></div>
+    <div id="invoices-alert-error" class="alert alert-danger d-none" role="alert"></div>
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Invoice</th>
+                            <th>Status</th>
+                            <th>Issue</th>
+                            <th>Due</th>
+                            <th>Total</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="invoices-table-body">
+                        <tr><td colspan="6" class="text-center text-muted">Loading invoices...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <div id="invoices-pagination-info" class="small text-muted"></div>
+                <div class="d-flex gap-2">
+                    <button id="invoices-prev" class="btn btn-sm btn-outline-secondary" type="button">Previous</button>
+                    <button id="invoices-next" class="btn btn-sm btn-outline-secondary" type="button">Next</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm d-none" id="invoices-details-card">
+        <div class="card-header">Invoice details</div>
+        <div class="card-body" id="invoices-details-body"></div>
+    </div>
+</div>

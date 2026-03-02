@@ -1,0 +1,54 @@
+@page "/shop/checkout"
+
+<PageTitle>Checkout</PageTitle>
+
+<div class="container py-4" id="checkout-page">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <h1 class="h4 mb-1">Checkout</h1>
+            <p class="text-muted mb-0">Confirm order and initialize payment.</p>
+        </div>
+        <a href="/shop/cart" class="btn btn-outline-secondary">Back to cart</a>
+    </div>
+
+    <div id="checkout-alert-success" class="alert alert-success d-none" role="alert"></div>
+    <div id="checkout-alert-error" class="alert alert-danger d-none" role="alert"></div>
+
+    <div class="row g-3">
+        <div class="col-12 col-xl-7">
+            <div class="card shadow-sm">
+                <div class="card-header">Final order summary</div>
+                <div class="card-body">
+                    <div id="checkout-summary-lines"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-xl-5">
+            <div class="card shadow-sm mb-3">
+                <div class="card-header">Customer confirmation</div>
+                <div class="card-body">
+                    <form id="checkout-form" novalidate>
+                        <div class="mb-3">
+                            <label for="checkout-customer-id" class="form-label">Customer ID</label>
+                            <input id="checkout-customer-id" class="form-control" type="number" min="1" required />
+                        </div>
+                        <div class="form-check mb-3">
+                            <input id="checkout-confirm" class="form-check-input" type="checkbox" required />
+                            <label for="checkout-confirm" class="form-check-label">I confirm that the order details are correct.</label>
+                        </div>
+                        <div class="d-grid">
+                            <button id="checkout-submit" class="btn btn-primary" type="submit">
+                                <i class="bi bi-credit-card"></i> Place order
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header">Payment status</div>
+                <div class="card-body" id="checkout-payment-status">Pending initialization.</div>
+            </div>
+        </div>
+    </div>
+</div>

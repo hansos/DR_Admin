@@ -1,0 +1,63 @@
+@page "/support/tickets"
+
+<PageTitle>Support Tickets</PageTitle>
+
+<div class="container py-4" id="support-tickets-page">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <h1 class="h4 mb-1">Support Center</h1>
+            <p class="text-muted mb-0">Track support requests and create new tickets.</p>
+        </div>
+        <button id="support-tickets-refresh" class="btn btn-outline-secondary btn-sm" type="button">Refresh</button>
+    </div>
+
+    <div id="support-tickets-alert-success" class="alert alert-success d-none" role="alert"></div>
+    <div id="support-tickets-alert-error" class="alert alert-danger d-none" role="alert"></div>
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-body">
+            <form id="support-tickets-create-form" class="row g-2" novalidate>
+                <div class="col-12 col-md-4">
+                    <label for="support-tickets-subject" class="form-label">Subject</label>
+                    <input id="support-tickets-subject" class="form-control" type="text" maxlength="150" />
+                </div>
+                <div class="col-12 col-md-5">
+                    <label for="support-tickets-message" class="form-label">Message</label>
+                    <input id="support-tickets-message" class="form-control" type="text" maxlength="400" />
+                </div>
+                <div class="col-6 col-md-2">
+                    <label for="support-tickets-priority" class="form-label">Priority</label>
+                    <select id="support-tickets-priority" class="form-select">
+                        <option value="Low">Low</option>
+                        <option value="Normal" selected>Normal</option>
+                        <option value="High">High</option>
+                    </select>
+                </div>
+                <div class="col-6 col-md-1 d-flex align-items-end">
+                    <button id="support-tickets-create" class="btn btn-primary w-100" type="submit">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Subject</th>
+                            <th>Status</th>
+                            <th>Priority</th>
+                            <th>Updated</th>
+                        </tr>
+                    </thead>
+                    <tbody id="support-tickets-table-body">
+                        <tr><td colspan="5" class="text-center text-muted">Loading tickets...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

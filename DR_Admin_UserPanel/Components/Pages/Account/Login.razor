@@ -1,0 +1,40 @@
+@page "/account/login"
+
+<PageTitle>Login</PageTitle>
+
+<div class="container py-4" id="account-login-page">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-6 col-lg-5">
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <h1 class="h4 mb-3">Sign in</h1>
+
+                    <div id="auth-login-alert-success" class="alert alert-success d-none" role="alert"></div>
+                    <div id="auth-login-alert-error" class="alert alert-danger d-none" role="alert"></div>
+
+                    <form id="auth-login-form" novalidate>
+                        <div class="mb-3">
+                            <label for="auth-login-username" class="form-label">Username or email</label>
+                            <input id="auth-login-username" class="form-control" type="text" required />
+                        </div>
+                        <div class="mb-3">
+                            <label for="auth-login-password" class="form-label">Password</label>
+                            <input id="auth-login-password" class="form-control" type="password" required />
+                        </div>
+
+                        <div class="d-grid mb-3">
+                            <button id="auth-login-submit" class="btn btn-primary" type="submit">
+                                <i class="bi bi-box-arrow-in-right"></i> Sign in
+                            </button>
+                        </div>
+
+                        <div class="d-flex justify-content-between small">
+                            <a href="/account/register">Create account</a>
+                            <a href="/account/forgot-password">Forgot password?</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

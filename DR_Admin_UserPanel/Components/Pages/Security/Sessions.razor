@@ -1,0 +1,35 @@
+@page "/security/sessions"
+
+<PageTitle>Sessions</PageTitle>
+
+<div class="container py-4" id="security-sessions-page">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <h1 class="h4 mb-1">Session and Device Activity</h1>
+            <p class="text-muted mb-0">Review successful and failed sign-in attempts.</p>
+        </div>
+        <button id="security-sessions-refresh" class="btn btn-outline-secondary btn-sm" type="button">Refresh</button>
+    </div>
+
+    <div id="security-sessions-alert-error" class="alert alert-danger d-none" role="alert"></div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Result</th>
+                            <th>IP</th>
+                            <th>Device</th>
+                        </tr>
+                    </thead>
+                    <tbody id="security-sessions-table-body">
+                        <tr><td colspan="4" class="text-center text-muted">Loading sessions...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

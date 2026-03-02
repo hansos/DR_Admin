@@ -1,0 +1,43 @@
+@page "/billing/wallet"
+
+<PageTitle>Wallet</PageTitle>
+
+<div class="container py-4" id="wallet-page">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <h1 class="h4 mb-1">Wallet and Credit</h1>
+            <p class="text-muted mb-0">Track customer credit balance and transaction history.</p>
+        </div>
+    </div>
+
+    <div id="wallet-alert-error" class="alert alert-danger d-none" role="alert"></div>
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-header">Current balance</div>
+        <div class="card-body" id="wallet-balance-box">
+            <div class="text-muted">Loading wallet balance...</div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header">Transactions</div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Amount</th>
+                            <th>Balance After</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody id="wallet-transactions-table-body">
+                        <tr><td colspan="5" class="text-center text-muted">Loading transactions...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

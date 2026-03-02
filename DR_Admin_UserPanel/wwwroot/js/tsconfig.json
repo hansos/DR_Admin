@@ -1,0 +1,42 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "None",
+    "strict": true,
+    "noImplicitAny": true,
+    "lib": ["ES2022", "DOM"],
+    "sourceMap": true,
+    "noEmitOnError": true
+  },
+  "files": [
+    "app-settings.ts",
+    "auth.ts",
+    "api-client.ts",
+    "alerts.ts",
+    "cart-state.ts",
+    "auth-register.ts",
+    "auth-login.ts",
+    "auth-forgot-password.ts",
+    "auth-reset-password.ts",
+    "domain-search.ts",
+    "cart.ts",
+    "checkout.ts",
+    "dashboard-summary.ts",
+    "domains.ts",
+    "domain-details.ts",
+    "dns-zones.ts",
+    "hosting.ts",
+    "hosting-details.ts",
+    "contact-persons.ts",
+    "invoices.ts",
+    "renewals.ts",
+    "notifications.ts",
+    "security-2fa.ts",
+    "security-sessions.ts",
+    "privacy.ts",
+    "support-tickets.ts",
+    "activity-timeline.ts",
+    "payment-methods.ts",
+    "wallet.ts"
+  ]
+}

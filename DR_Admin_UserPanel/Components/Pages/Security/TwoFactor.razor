@@ -1,0 +1,46 @@
+@page "/security/2fa"
+
+<PageTitle>Two-Factor Authentication</PageTitle>
+
+<div class="container py-4" id="security-2fa-page">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <h1 class="h4 mb-1">Two-Factor Authentication</h1>
+            <p class="text-muted mb-0">Manage additional sign-in verification and email verification status.</p>
+        </div>
+    </div>
+
+    <div id="security-2fa-alert-success" class="alert alert-success d-none" role="alert"></div>
+    <div id="security-2fa-alert-error" class="alert alert-danger d-none" role="alert"></div>
+
+    <div class="row g-3">
+        <div class="col-12 col-lg-5">
+            <div class="card shadow-sm h-100">
+                <div class="card-header">Account security</div>
+                <div class="card-body">
+                    <div id="security-2fa-account-summary" class="small text-muted">Loading account details...</div>
+                    <hr />
+                    <div id="security-2fa-email-status" class="small"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-7">
+            <div class="card shadow-sm h-100">
+                <div class="card-header">2FA settings</div>
+                <div class="card-body">
+                    <form id="security-2fa-form" novalidate>
+                        <div class="form-check form-switch mb-2">
+                            <input id="security-2fa-enabled" class="form-check-input" type="checkbox" />
+                            <label for="security-2fa-enabled" class="form-check-label">Enable two-factor authentication</label>
+                        </div>
+
+                        <div id="security-2fa-status" class="text-muted small mb-3">Loading 2FA status...</div>
+
+                        <button id="security-2fa-save" class="btn btn-primary" type="submit">Save security setting</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

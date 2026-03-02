@@ -1,0 +1,21 @@
+@page "/activity"
+
+<PageTitle>Activity Timeline</PageTitle>
+
+<div class="container py-4" id="activity-timeline-page">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <h1 class="h4 mb-1">Activity Timeline</h1>
+            <p class="text-muted mb-0">Review order, subscription, and sign-in events in one view.</p>
+        </div>
+        <button id="activity-timeline-refresh" class="btn btn-outline-secondary btn-sm" type="button">Refresh</button>
+    </div>
+
+    <div id="activity-timeline-alert-error" class="alert alert-danger d-none" role="alert"></div>
+
+    <div class="card shadow-sm">
+        <div class="card-body" id="activity-timeline-list">
+            <div class="text-muted">Loading activity...</div>
+        </div>
+    </div>
+</div>

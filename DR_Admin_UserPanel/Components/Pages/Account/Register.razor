@@ -1,0 +1,58 @@
+@page "/account/register"
+
+<PageTitle>Register</PageTitle>
+
+<div class="container py-4" id="account-register-page">
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-8 col-xl-7">
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <h1 class="h4 mb-3">Create your account</h1>
+
+                    <div id="auth-register-alert-success" class="alert alert-success d-none" role="alert"></div>
+                    <div id="auth-register-alert-error" class="alert alert-danger d-none" role="alert"></div>
+
+                    <form id="auth-register-form" novalidate>
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6">
+                                <label for="auth-register-username" class="form-label">Username</label>
+                                <input id="auth-register-username" class="form-control" type="text" required />
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label for="auth-register-email" class="form-label">Email</label>
+                                <input id="auth-register-email" class="form-control" type="email" required />
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label for="auth-register-password" class="form-label">Password</label>
+                                <input id="auth-register-password" class="form-control" type="password" required />
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label for="auth-register-confirm-password" class="form-label">Confirm password</label>
+                                <input id="auth-register-confirm-password" class="form-control" type="password" required />
+                            </div>
+                            <div class="col-12">
+                                <label for="auth-register-customer-name" class="form-label">Customer name</label>
+                                <input id="auth-register-customer-name" class="form-control" type="text" required />
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label for="auth-register-customer-phone" class="form-label">Phone</label>
+                                <input id="auth-register-customer-phone" class="form-control" type="tel" />
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label for="auth-register-customer-address" class="form-label">Address</label>
+                                <input id="auth-register-customer-address" class="form-control" type="text" />
+                            </div>
+                        </div>
+
+                        <div class="mt-4 d-flex flex-wrap gap-2">
+                            <button id="auth-register-submit" class="btn btn-primary" type="submit">
+                                <i class="bi bi-person-plus"></i> Register
+                            </button>
+                            <a href="/account/login" class="btn btn-outline-secondary">Already have an account?</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

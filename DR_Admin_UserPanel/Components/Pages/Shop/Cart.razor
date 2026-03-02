@@ -1,0 +1,57 @@
+@page "/shop/cart"
+
+<PageTitle>Cart</PageTitle>
+
+<div class="container py-4" id="cart-page">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <h1 class="h4 mb-1">Cart</h1>
+            <p class="text-muted mb-0">Select hosting/services and review order lines.</p>
+        </div>
+        <a href="/shop/checkout" class="btn btn-primary">Continue to checkout</a>
+    </div>
+
+    <div id="cart-alert-success" class="alert alert-success d-none" role="alert"></div>
+    <div id="cart-alert-error" class="alert alert-danger d-none" role="alert"></div>
+
+    <div class="row g-3">
+        <div class="col-12 col-xl-7">
+            <div class="card shadow-sm mb-3">
+                <div class="card-header">Domain</div>
+                <div class="card-body" id="cart-domain-summary">No domain selected.</div>
+            </div>
+
+            <div class="card shadow-sm mb-3">
+                <div class="card-header">Hosting packages</div>
+                <div class="card-body">
+                    <div id="cart-hosting-list" class="list-group"></div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-header">Optional services</div>
+                <div class="card-body">
+                    <div id="cart-services-list" class="list-group"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-xl-5">
+            <div class="card shadow-sm">
+                <div class="card-header">Quote summary</div>
+                <div class="card-body">
+                    <div id="cart-order-lines" class="small mb-3"></div>
+
+                    <div class="mb-2">
+                        <label for="cart-discount" class="form-label">Discount</label>
+                        <input id="cart-discount" class="form-control" type="number" min="0" step="0.01" value="0" />
+                    </div>
+
+                    <div class="d-flex justify-content-between"><span>One-time</span><strong id="cart-total-one-time">0.00</strong></div>
+                    <div class="d-flex justify-content-between"><span>Recurring</span><strong id="cart-total-recurring">0.00</strong></div>
+                    <div class="d-flex justify-content-between border-top mt-2 pt-2"><span>Grand total</span><strong id="cart-total-grand">0.00</strong></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

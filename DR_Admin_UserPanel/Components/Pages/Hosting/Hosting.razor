@@ -1,0 +1,37 @@
+@page "/hosting"
+
+<PageTitle>Hosting</PageTitle>
+
+<div class="container py-4" id="hosting-page">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <h1 class="h4 mb-1">Hosting Lifecycle</h1>
+            <p class="text-muted mb-0">Review hosting accounts, status and plan information.</p>
+        </div>
+    </div>
+
+    <div id="hosting-alert-success" class="alert alert-success d-none" role="alert"></div>
+    <div id="hosting-alert-error" class="alert alert-danger d-none" role="alert"></div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>User</th>
+                            <th>Status</th>
+                            <th>Plan</th>
+                            <th>Expires</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="hosting-table-body">
+                        <tr><td colspan="6" class="text-center text-muted">Loading hosting accounts...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

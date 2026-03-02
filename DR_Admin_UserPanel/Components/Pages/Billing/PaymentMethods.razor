@@ -1,0 +1,69 @@
+@page "/billing/payment-methods"
+
+<PageTitle>Payment Methods</PageTitle>
+
+<div class="container py-4" id="payment-methods-page">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <h1 class="h4 mb-1">Saved Payment Methods</h1>
+            <p class="text-muted mb-0">Manage cards and default payment method for auto-pay and retries.</p>
+        </div>
+    </div>
+
+    <div id="payment-methods-alert-success" class="alert alert-success d-none" role="alert"></div>
+    <div id="payment-methods-alert-error" class="alert alert-danger d-none" role="alert"></div>
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-body">
+            <form id="payment-methods-create-form" class="row g-2" novalidate>
+                <div class="col-12 col-md-2">
+                    <label for="payment-methods-gateway-id" class="form-label">Gateway ID</label>
+                    <input id="payment-methods-gateway-id" class="form-control" type="number" min="1" value="1" />
+                </div>
+                <div class="col-12 col-md-2">
+                    <label for="payment-methods-type" class="form-label">Type</label>
+                    <select id="payment-methods-type" class="form-select">
+                        <option value="1" selected>CreditCard</option>
+                        <option value="2">BankAccount</option>
+                        <option value="3">PayPal</option>
+                        <option value="4">Other</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-6">
+                    <label for="payment-methods-token" class="form-label">Token</label>
+                    <input id="payment-methods-token" class="form-control" type="text" maxlength="250" placeholder="Gateway payment method token" />
+                </div>
+                <div class="col-6 col-md-1 d-flex align-items-end">
+                    <div class="form-check">
+                        <input id="payment-methods-default" class="form-check-input" type="checkbox" />
+                        <label for="payment-methods-default" class="form-check-label">Default</label>
+                    </div>
+                </div>
+                <div class="col-6 col-md-1 d-flex align-items-end">
+                    <button id="payment-methods-create" class="btn btn-primary w-100" type="submit">Add</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Gateway</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="payment-methods-table-body">
+                        <tr><td colspan="5" class="text-center text-muted">Loading payment methods...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,76 @@
+@page "/domains/dns"
+
+<PageTitle>DNS Zones</PageTitle>
+
+<div class="container py-4" id="dns-zones-page">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <h1 class="h4 mb-1">DNS Zone Management</h1>
+            <p class="text-muted mb-0">Manage DNS records for the selected domain.</p>
+        </div>
+        <a href="/domains" class="btn btn-outline-secondary btn-sm">Back to domains</a>
+    </div>
+
+    <div id="dns-zones-alert-success" class="alert alert-success d-none" role="alert"></div>
+    <div id="dns-zones-alert-error" class="alert alert-danger d-none" role="alert"></div>
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-body">
+            <form id="dns-zones-form" class="row g-2" novalidate>
+                <div class="col-12 col-md-2">
+                    <label for="dns-zones-type" class="form-label">Type</label>
+                    <select id="dns-zones-type" class="form-select"></select>
+                </div>
+                <div class="col-12 col-md-2">
+                    <label for="dns-zones-name" class="form-label">Name</label>
+                    <input id="dns-zones-name" class="form-control" type="text" placeholder="@@" />
+                </div>
+                <div class="col-12 col-md-3">
+                    <label for="dns-zones-value" class="form-label">Value</label>
+                    <input id="dns-zones-value" class="form-control" type="text" placeholder="Record value" />
+                </div>
+                <div class="col-6 col-md-1">
+                    <label for="dns-zones-ttl" class="form-label">TTL</label>
+                    <input id="dns-zones-ttl" class="form-control" type="number" min="60" value="3600" />
+                </div>
+                <div class="col-6 col-md-1">
+                    <label for="dns-zones-priority" class="form-label">Priority</label>
+                    <input id="dns-zones-priority" class="form-control" type="number" min="0" />
+                </div>
+                <div class="col-6 col-md-1">
+                    <label for="dns-zones-weight" class="form-label">Weight</label>
+                    <input id="dns-zones-weight" class="form-control" type="number" min="0" />
+                </div>
+                <div class="col-6 col-md-1">
+                    <label for="dns-zones-port" class="form-label">Port</label>
+                    <input id="dns-zones-port" class="form-control" type="number" min="0" />
+                </div>
+                <div class="col-12 d-flex justify-content-end">
+                    <button id="dns-zones-add" class="btn btn-primary" type="submit">Add record</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Name</th>
+                            <th>Value</th>
+                            <th>TTL</th>
+                            <th>Priority</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dns-zones-table-body">
+                        <tr><td colspan="6" class="text-center text-muted">Loading DNS records...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

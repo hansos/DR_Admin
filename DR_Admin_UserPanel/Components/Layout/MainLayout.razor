@@ -1,0 +1,40 @@
+﻿@inherits LayoutComponentBase
+
+<div class="min-vh-100 d-flex flex-column">
+    <header class="border-bottom bg-white">
+        <div class="container py-3 d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <a class="text-decoration-none fw-semibold fs-5 text-dark" href="/">DR User Panel</a>
+            <nav class="d-flex flex-wrap align-items-center gap-3 small">
+                <a href="/dashboard" class="text-decoration-none">Dashboard</a>
+                <a href="/shop/domain-search" class="text-decoration-none">Domain Search</a>
+                <a href="/domains" class="text-decoration-none">Domains</a>
+                <a href="/hosting" class="text-decoration-none">Hosting</a>
+                <a href="/contacts" class="text-decoration-none">Contacts</a>
+                <a href="/billing/invoices" class="text-decoration-none">Invoices</a>
+                <a href="/billing/renewals" class="text-decoration-none">Renewals</a>
+                <a href="/billing/payment-methods" class="text-decoration-none">Payment Methods</a>
+                <a href="/billing/wallet" class="text-decoration-none">Wallet</a>
+                <a href="/settings/notifications" class="text-decoration-none">Notifications</a>
+                <a href="/security/2fa" class="text-decoration-none">2FA</a>
+                <a href="/security/sessions" class="text-decoration-none">Sessions</a>
+                <a href="/privacy" class="text-decoration-none">Privacy</a>
+                <a href="/support/tickets" class="text-decoration-none">Support</a>
+                <a href="/activity" class="text-decoration-none">Activity</a>
+                <a href="/shop/cart" class="text-decoration-none">Cart</a>
+                <a href="/shop/checkout" class="text-decoration-none">Checkout</a>
+                <a href="/account/login" class="text-decoration-none">Login</a>
+                <button class="btn btn-sm btn-outline-secondary" id="global-logout" type="button">Logout</button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="flex-grow-1">
+        @Body
+    </main>
+</div>
+
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">🗙</span>
+</div>

@@ -1,0 +1,48 @@
+@page "/privacy"
+
+<PageTitle>Privacy</PageTitle>
+
+<div class="container py-4" id="privacy-page">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <h1 class="h4 mb-1">Privacy and Consent</h1>
+            <p class="text-muted mb-0">Manage export and deletion requests for your account data.</p>
+        </div>
+    </div>
+
+    <div id="privacy-alert-success" class="alert alert-success d-none" role="alert"></div>
+    <div id="privacy-alert-error" class="alert alert-danger d-none" role="alert"></div>
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-header">Account data summary</div>
+        <div class="card-body" id="privacy-account-summary">
+            <div class="text-muted">Loading account details...</div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-12 col-lg-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header">Data export</div>
+                <div class="card-body d-flex flex-column">
+                    <p class="text-muted">Request a downloadable export of your user and customer information.</p>
+                    <div class="mt-auto">
+                        <button id="privacy-export-request" class="btn btn-primary" type="button">Request export</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-6">
+            <div class="card shadow-sm h-100 border-danger-subtle">
+                <div class="card-header">Delete account request</div>
+                <div class="card-body d-flex flex-column">
+                    <p class="text-muted">Submit a self-service account deletion request for compliance processing.</p>
+                    <div class="mt-auto">
+                        <button id="privacy-delete-request" class="btn btn-outline-danger" type="button">Request deletion</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
