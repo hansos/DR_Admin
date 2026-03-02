@@ -186,6 +186,20 @@
         offer?: unknown;
     }
 
+    interface BootstrapModalInstance {
+        show(): void;
+        hide(): void;
+    }
+
+    interface BootstrapModalConstructor {
+        new (element: Element): BootstrapModalInstance;
+        getInstance(element: Element): BootstrapModalInstance | null;
+    }
+
+    interface BootstrapNamespace {
+        Modal: BootstrapModalConstructor;
+    }
+
     const storageKey = 'new-sale-state';
 
     let currentState: NewSaleState | null = null;
@@ -195,6 +209,11 @@
     let services = new Map<number, ServiceItem>();
     let currentSellerCompany: ResellerCompany | null = null;
     let restoredLineItems: LineItem[] | null = null;
+
+    const getBootstrap = (): BootstrapNamespace | null => {
+        const maybeBootstrap = (window as Window & { bootstrap?: BootstrapNamespace }).bootstrap;
+        return maybeBootstrap ?? null;
+    };
 
     const getApiBaseUrl = (): string => {
         const settings = (window as Window & { AppSettings?: AppSettings }).AppSettings;
@@ -1033,6 +1052,29 @@
         showSuccess('Offer persisted and marked as sent.');
     };
 
+    const closeAcceptConfirmationModal = (): void => {
+        const bootstrap = getBootstrap();
+        const modalElement = document.getElementById('new-sale-offer-accept-confirm-modal');
+        if (!bootstrap || !modalElement) {
+            return;
+        }
+
+        const modalInstance = bootstrap.Modal.getInstance(modalElement) ?? new bootstrap.Modal(modalElement);
+        modalInstance.hide();
+    };
+
+    const showAcceptConfirmationModal = (): void => {
+        const bootstrap = getBootstrap();
+        const modalElement = document.getElementById('new-sale-offer-accept-confirm-modal');
+        if (!bootstrap || !modalElement) {
+            void acceptAndContinue();
+            return;
+        }
+
+        const modalInstance = bootstrap.Modal.getInstance(modalElement) ?? new bootstrap.Modal(modalElement);
+        modalInstance.show();
+    };
+
     const acceptAndContinue = async (): Promise<void> => {
         if (!currentState) {
             return;
@@ -1062,6 +1104,7 @@
             return;
         }
 
+        closeAcceptConfirmationModal();
         applyPersistenceResponse(response.data);
         window.location.href = '/dashboard/quote/payment';
     };
@@ -1082,7 +1125,10 @@
 
         document.getElementById('new-sale-offer-send')?.addEventListener('click', sendToCustomer);
         document.getElementById('new-sale-offer-print')?.addEventListener('click', printOffer);
-        document.getElementById('new-sale-offer-accept')?.addEventListener('click', acceptAndContinue);
+        document.getElementById('new-sale-offer-accept')?.addEventListener('click', showAcceptConfirmationModal);
+        document.getElementById('new-sale-offer-accept-confirm')?.addEventListener('click', () => {
+            void acceptAndContinue();
+        });
 
         window.addEventListener('afterprint', () => {
             document.body.classList.remove('print-new-sale-offer');

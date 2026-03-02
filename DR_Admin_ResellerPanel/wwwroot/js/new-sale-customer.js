@@ -298,7 +298,7 @@
             const customerNo = customer.formattedCustomerNumber || (customer.customerNumber !== null ? String(customer.customerNumber) : '-');
             const referenceNo = customer.formattedReferenceNumber || (customer.referenceNumber !== null ? String(customer.referenceNumber) : '-');
             return `
-                <tr>
+                <tr data-customer-id="${customer.id}" style="cursor:pointer">
                     <td>${customer.id}</td>
                     <td>${esc(customer.name)}</td>
                     <td>${esc(customer.email)}</td>
@@ -672,11 +672,11 @@
         });
         tableBody?.addEventListener('click', (event) => {
             const target = event.target;
-            const button = target.closest('button[data-action="select-customer"]');
-            if (!button) {
+            const row = target.closest('tr[data-customer-id]');
+            if (!row) {
                 return;
             }
-            const id = Number(button.dataset.id ?? '0');
+            const id = Number(row.dataset.customerId ?? '0');
             if (Number.isFinite(id) && id > 0) {
                 void selectCustomer(id);
             }

@@ -5,7 +5,6 @@
     let serviceTypes = [];
     let services = [];
     let contactLookup = new Map();
-    const categoryNames = ['Email hosting', 'SSL certificates', 'DNS zone packages', 'Custom services'];
     const getApiBaseUrl = () => {
         const settings = window.AppSettings;
         return settings?.apiBaseUrl ?? '';
@@ -264,18 +263,9 @@
         badge.textContent = `${count} selected`;
     };
     const resolveCategoryName = (service) => {
-        const typeName = serviceTypes.find((item) => item.id === service.serviceTypeId)?.name.toLowerCase() ?? '';
-        const haystack = `${service.name} ${service.description} ${typeName}`.toLowerCase();
-        if (haystack.includes('ssl') || haystack.includes('certificate') || haystack.includes('tls')) {
-            return 'SSL certificates';
-        }
-        if (haystack.includes('dns') || haystack.includes('zone') || haystack.includes('nameserver')) {
-            return 'DNS zone packages';
-        }
-        if (haystack.includes('mail') || haystack.includes('email') || haystack.includes('smtp') || haystack.includes('imap')) {
-            return 'Email hosting';
-        }
-        return 'Custom services';
+        const serviceType = serviceTypes.find((item) => item.id === service.serviceTypeId);
+        const name = (serviceType?.name ?? '').trim();
+        return name.length > 0 ? name : 'Other services';
     };
     const formatMoney = (amount) => {
         if (amount === null) {
@@ -290,30 +280,37 @@
         }
         const selected = new Set(currentState?.otherServices?.selectedServiceIds ?? []);
         const grouped = new Map();
-        categoryNames.forEach((name) => grouped.set(name, []));
+        const categories = [];
         services.forEach((service) => {
             const category = resolveCategoryName(service);
+            if (!grouped.has(category)) {
+                grouped.set(category, []);
+                categories.push(category);
+            }
             const current = grouped.get(category) ?? [];
             current.push(service);
             grouped.set(category, current);
         });
-        wrapper.innerHTML = categoryNames.map((category) => {
+        if (!categories.length) {
+            wrapper.innerHTML = '<div class="col-12 text-center text-muted">No services available.</div>';
+            updateSelectedCount();
+            return;
+        }
+        wrapper.innerHTML = categories.map((category) => {
             const items = grouped.get(category) ?? [];
-            const content = items.length
-                ? items.map((item) => {
-                    const checked = selected.has(item.id) ? 'checked' : '';
-                    return `
-                        <div class="form-check mb-2">
-                            <input class="form-check-input" type="checkbox" name="new-sale-services-item" id="new-sale-service-item-${item.id}" value="${item.id}" ${checked} />
-                            <label class="form-check-label" for="new-sale-service-item-${item.id}">
-                                <span class="fw-semibold">${esc(item.name)}</span>
-                                <span class="text-muted d-block small">${esc(item.description || 'No description')}</span>
-                                <span class="small text-muted">Price: ${esc(formatMoney(item.price))}</span>
-                            </label>
-                        </div>
-                    `;
-                }).join('')
-                : '<div class="text-muted small">No services available.</div>';
+            const content = items.map((item) => {
+                const checked = selected.has(item.id) ? 'checked' : '';
+                return `
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" name="new-sale-services-item" id="new-sale-service-item-${item.id}" value="${item.id}" ${checked} />
+                        <label class="form-check-label" for="new-sale-service-item-${item.id}">
+                            <span class="fw-semibold">${esc(item.name)}</span>
+                            <span class="text-muted d-block small">${esc(item.description || 'No description')}</span>
+                            <span class="small text-muted">Price: ${esc(formatMoney(item.price))}</span>
+                        </label>
+                    </div>
+                `;
+            }).join('');
             return `
                 <div class="col-12 col-lg-6">
                     <div class="border rounded p-3 h-100">

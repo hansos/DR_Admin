@@ -90,7 +90,7 @@
     async function loadSalesSummary() {
         const response = await apiRequest(`${getApiBaseUrl()}/System/sales-summary`, { method: 'GET' });
         if (!response.success || !response.data) {
-            renderSummaryTable('dashboard-summary-offers-body', [], 'Could not load offers');
+            renderSummaryTable('dashboard-summary-offers-body', [], 'Could not load quotes');
             renderSummaryTable('dashboard-summary-orders-body', [], 'Could not load orders');
             renderSummaryTable('dashboard-summary-open-invoices-body', [], 'Could not load open invoices');
             setText('dashboard-summary-offers-count', '0');
@@ -100,11 +100,12 @@
         }
         const offers = extractItems(response.data?.offers).items
             .map(normalizeQuote)
+            .filter((item) => item.status.toLowerCase() !== 'converted')
             .slice(0, 8);
         const orders = extractItems(response.data?.orders).items
             .map(normalizeOrder)
             .slice(0, 8);
-        const ordersWithAcceptedDraft = appendAcceptedDraftOrder(orders);
+        const ordersWithAcceptedDraft = orders;
         const openInvoices = extractItems(response.data?.openInvoices).items
             .map(normalizeInvoice)
             .slice(0, 8);
@@ -116,7 +117,7 @@
             status: item.status,
             amount: formatMoney(item.totalAmount, item.currencyCode),
             linkUrl: `/dashboard/quote/offer?quoteId=${encodeURIComponent(String(item.id))}`,
-        })), 'No offers found');
+        })), 'No quotes found');
         renderSummaryTable('dashboard-summary-orders-body', ordersWithAcceptedDraft.map((item) => ({
             identifier: item.orderNumber || `#${item.id}`,
             status: item.status,
@@ -128,37 +129,17 @@
             amount: formatMoney(item.totalAmount, item.currencyCode),
         })), 'No open invoices found');
     }
-    function appendAcceptedDraftOrder(existingOrders) {
-        const state = loadNewSaleState();
-        const offer = state?.offer;
-        if (!offer?.acceptedAt) {
-            return existingOrders;
-        }
-        const quoteId = Number(offer.quoteId ?? 0);
-        if (quoteId > 0 && existingOrders.some((order) => Number(order.quoteId ?? 0) === quoteId)) {
-            return existingOrders;
-        }
-        const currencyCode = state?.otherServices?.currency || state?.pricing?.currency || 'USD';
-        const draftOrder = {
-            id: quoteId > 0 ? quoteId : -1,
-            quoteId: quoteId > 0 ? quoteId : undefined,
-            orderNumber: quoteId > 0 ? `Draft from quote #${quoteId}` : 'Draft order',
-            status: 'Pending',
-            totalAmount: Number(offer.grandTotal ?? 0),
-            currencyCode,
-        };
-        return [draftOrder, ...existingOrders].slice(0, 8);
-    }
     async function loadOffersSummary() {
         const response = await apiRequest(`${getApiBaseUrl()}/Quotes`, { method: 'GET' });
         if (!response.success) {
-            renderSummaryTable('dashboard-summary-offers-body', [], 'Could not load offers');
+            renderSummaryTable('dashboard-summary-offers-body', [], 'Could not load quotes');
             setText('dashboard-summary-offers-count', '0');
             return;
         }
         const rawItems = extractItems(response.data).items;
         const offers = rawItems
             .map(normalizeQuote)
+            .filter((item) => item.status.toLowerCase() !== 'converted')
             .sort((a, b) => b.id - a.id)
             .slice(0, 8);
         setText('dashboard-summary-offers-count', String(offers.length));
@@ -166,7 +147,7 @@
             identifier: item.quoteNumber || `#${item.id}`,
             status: item.status,
             amount: formatMoney(item.totalAmount, item.currencyCode),
-        })), 'No offers found');
+        })), 'No quotes found');
     }
     async function loadOrdersSummary() {
         const response = await apiRequest(`${getApiBaseUrl()}/Orders`, { method: 'GET' });

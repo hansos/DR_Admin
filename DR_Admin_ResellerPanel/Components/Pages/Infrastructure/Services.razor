@@ -1,0 +1,109 @@
+@page "/infrastructure/services"
+
+<div id="services-page" class="container-fluid">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+        <div>
+            <h2 class="h4 mb-1"><i class="bi bi-tools"></i> Services</h2>
+            <p class="text-muted mb-0">Manage service catalog used in quote page 4 (services).</p>
+        </div>
+        <button class="btn btn-primary" id="services-create" type="button">
+            <i class="bi bi-plus-circle"></i> New Service
+        </button>
+    </div>
+
+    <div id="services-alert-success" class="alert alert-success d-none" role="alert"></div>
+    <div id="services-alert-error" class="alert alert-danger d-none" role="alert"></div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-light">
+            <h5 class="mb-0"><i class="bi bi-list-check"></i> Service Catalog</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Service type</th>
+                            <th>Billing cycle</th>
+                            <th>Price</th>
+                            <th>Description</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="services-table-body">
+                        <tr>
+                            <td colspan="7" class="text-center">
+                                <div class="spinner-border text-primary"></div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="services-edit-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="services-modal-title">New Service</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="services-form" novalidate>
+                    <div class="row g-3">
+                        <div class="col-12 col-lg-6">
+                            <label class="form-label" for="services-name">Name <span class="text-danger">*</span></label>
+                            <input class="form-control" id="services-name" type="text" placeholder="Service name" />
+                        </div>
+                        <div class="col-12 col-lg-6">
+                            <label class="form-label" for="services-price">Price</label>
+                            <input class="form-control" id="services-price" type="number" step="0.01" min="0" placeholder="Optional" />
+                        </div>
+                        <div class="col-12 col-lg-6">
+                            <label class="form-label" for="services-service-type">Service type <span class="text-danger">*</span></label>
+                            <select class="form-select" id="services-service-type"></select>
+                        </div>
+                        <div class="col-12 col-lg-6">
+                            <label class="form-label" for="services-billing-cycle">Billing cycle</label>
+                            <select class="form-select" id="services-billing-cycle"></select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="services-description">Description</label>
+                            <textarea class="form-control" id="services-description" rows="3" placeholder="Optional"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="services-save">
+                    <i class="bi bi-check-lg"></i> Save
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="services-delete-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Delete service <strong id="services-delete-name"></strong>?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="services-confirm-delete">
+                    <i class="bi bi-trash"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -8,6 +8,10 @@
     let services = new Map();
     let currentSellerCompany = null;
     let restoredLineItems = null;
+    const getBootstrap = () => {
+        const maybeBootstrap = window.bootstrap;
+        return maybeBootstrap ?? null;
+    };
     const getApiBaseUrl = () => {
         const settings = window.AppSettings;
         return settings?.apiBaseUrl ?? '';
@@ -713,6 +717,25 @@
         applyPersistenceResponse(response.data);
         showSuccess('Offer persisted and marked as sent.');
     };
+    const closeAcceptConfirmationModal = () => {
+        const bootstrap = getBootstrap();
+        const modalElement = document.getElementById('new-sale-offer-accept-confirm-modal');
+        if (!bootstrap || !modalElement) {
+            return;
+        }
+        const modalInstance = bootstrap.Modal.getInstance(modalElement) ?? new bootstrap.Modal(modalElement);
+        modalInstance.hide();
+    };
+    const showAcceptConfirmationModal = () => {
+        const bootstrap = getBootstrap();
+        const modalElement = document.getElementById('new-sale-offer-accept-confirm-modal');
+        if (!bootstrap || !modalElement) {
+            void acceptAndContinue();
+            return;
+        }
+        const modalInstance = bootstrap.Modal.getInstance(modalElement) ?? new bootstrap.Modal(modalElement);
+        modalInstance.show();
+    };
     const acceptAndContinue = async () => {
         if (!currentState) {
             return;
@@ -736,6 +759,7 @@
             showError(response.message ?? 'Could not accept and convert offer.');
             return;
         }
+        closeAcceptConfirmationModal();
         applyPersistenceResponse(response.data);
         window.location.href = '/dashboard/quote/payment';
     };
@@ -753,7 +777,10 @@
         });
         document.getElementById('new-sale-offer-send')?.addEventListener('click', sendToCustomer);
         document.getElementById('new-sale-offer-print')?.addEventListener('click', printOffer);
-        document.getElementById('new-sale-offer-accept')?.addEventListener('click', acceptAndContinue);
+        document.getElementById('new-sale-offer-accept')?.addEventListener('click', showAcceptConfirmationModal);
+        document.getElementById('new-sale-offer-accept-confirm')?.addEventListener('click', () => {
+            void acceptAndContinue();
+        });
         window.addEventListener('afterprint', () => {
             document.body.classList.remove('print-new-sale-offer');
         });
