@@ -44,6 +44,15 @@ public interface ICustomerPaymentMethodService
     Task<bool> SetAsDefaultAsync(int id, int customerId);
 
     /// <summary>
+    /// Updates an existing payment method
+    /// </summary>
+    /// <param name="id">The payment method ID</param>
+    /// <param name="customerId">The customer ID</param>
+    /// <param name="updateDto">The update data</param>
+    /// <returns>The updated payment method DTO if successful, otherwise null</returns>
+    Task<CustomerPaymentMethodDto?> UpdatePaymentMethodAsync(int id, int customerId, UpdateCustomerPaymentMethodDto updateDto);
+
+    /// <summary>
     /// Deletes a payment method
     /// </summary>
     /// <param name="id">The payment method ID</param>

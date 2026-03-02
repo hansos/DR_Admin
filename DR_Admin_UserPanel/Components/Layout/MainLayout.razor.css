@@ -127,8 +127,24 @@ main {
     display: flex;
     align-items: center;
     justify-content: flex-end;
+    gap: 0.9rem;
     color: #5f6670;
     font-size: 0.9rem;
+}
+
+.top-auth-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.top-auth-logout {
+    color: #0d6efd;
+    text-decoration: none;
+}
+
+.top-auth-logout:hover {
+    text-decoration: underline;
 }
 
 ::deep .content {

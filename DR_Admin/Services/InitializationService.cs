@@ -124,6 +124,28 @@ public class InitializationService : IInitializationService
             response.ServiceTypesAdded = serviceTypesAdded;
             response.TotalServiceTypes = await _context.ServiceTypes.CountAsync();
 
+            // Ensure default payment instruments exist
+            var paymentInstruments = new[]
+            {
+                new PaymentInstrument { Code = "CreditCard", Name = "Credit Card", Description = "Card-based payments", IsActive = true, DisplayOrder = 10, NormalizedCode = "CREDITCARD", NormalizedName = "CREDIT CARD", CreatedAt = now, UpdatedAt = now },
+                new PaymentInstrument { Code = "BankAccount", Name = "Bank Account", Description = "Bank transfer and account debit", IsActive = true, DisplayOrder = 20, NormalizedCode = "BANKACCOUNT", NormalizedName = "BANK ACCOUNT", CreatedAt = now, UpdatedAt = now },
+                new PaymentInstrument { Code = "PayPal", Name = "PayPal", Description = "PayPal wallet payments", IsActive = true, DisplayOrder = 30, NormalizedCode = "PAYPAL", NormalizedName = "PAYPAL", CreatedAt = now, UpdatedAt = now },
+                new PaymentInstrument { Code = "Cash", Name = "Cash", Description = "Cash payments", IsActive = true, DisplayOrder = 40, NormalizedCode = "CASH", NormalizedName = "CASH", CreatedAt = now, UpdatedAt = now },
+                new PaymentInstrument { Code = "Other", Name = "Other", Description = "Other payment methods", IsActive = true, DisplayOrder = 50, NormalizedCode = "OTHER", NormalizedName = "OTHER", CreatedAt = now, UpdatedAt = now }
+            };
+
+            foreach (var instrument in paymentInstruments)
+            {
+                var exists = await _context.PaymentInstruments.FirstOrDefaultAsync(x => x.Code == instrument.Code && x.DeletedAt == null);
+                if (exists == null)
+                {
+                    _context.PaymentInstruments.Add(instrument);
+                    _log.Information("Created payment instrument: {Code}", instrument.Code);
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
             // Ensure address types exist
             var addressTypesAdded = 0;
             var addressTypes = new[]

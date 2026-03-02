@@ -19,6 +19,11 @@ public enum PaymentMethodType
     /// PayPal payment
     /// </summary>
     PayPal = 2,
+
+    /// <summary>
+    /// Cash payment
+    /// </summary>
+    Cash = 3,
     
     /// <summary>
     /// Other payment method

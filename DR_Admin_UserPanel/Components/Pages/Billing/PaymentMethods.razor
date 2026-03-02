@@ -6,45 +6,13 @@
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
         <div>
             <h1 class="h4 mb-1">Saved Payment Methods</h1>
-            <p class="text-muted mb-0">Manage cards and default payment method for auto-pay and retries.</p>
+            <p class="text-muted mb-0">Choose a payment instrument. The system automatically selects the configured default gateway.</p>
         </div>
+        <button id="payment-methods-open-create" class="btn btn-primary" type="button">Add payment instrument</button>
     </div>
 
     <div id="payment-methods-alert-success" class="alert alert-success d-none" role="alert"></div>
     <div id="payment-methods-alert-error" class="alert alert-danger d-none" role="alert"></div>
-
-    <div class="card shadow-sm mb-3">
-        <div class="card-body">
-            <form id="payment-methods-create-form" class="row g-2" novalidate>
-                <div class="col-12 col-md-2">
-                    <label for="payment-methods-gateway-id" class="form-label">Gateway ID</label>
-                    <input id="payment-methods-gateway-id" class="form-control" type="number" min="1" value="1" />
-                </div>
-                <div class="col-12 col-md-2">
-                    <label for="payment-methods-type" class="form-label">Type</label>
-                    <select id="payment-methods-type" class="form-select">
-                        <option value="1" selected>CreditCard</option>
-                        <option value="2">BankAccount</option>
-                        <option value="3">PayPal</option>
-                        <option value="4">Other</option>
-                    </select>
-                </div>
-                <div class="col-12 col-md-6">
-                    <label for="payment-methods-token" class="form-label">Token</label>
-                    <input id="payment-methods-token" class="form-control" type="text" maxlength="250" placeholder="Gateway payment method token" />
-                </div>
-                <div class="col-6 col-md-1 d-flex align-items-end">
-                    <div class="form-check">
-                        <input id="payment-methods-default" class="form-check-input" type="checkbox" />
-                        <label for="payment-methods-default" class="form-check-label">Default</label>
-                    </div>
-                </div>
-                <div class="col-6 col-md-1 d-flex align-items-end">
-                    <button id="payment-methods-create" class="btn btn-primary w-100" type="submit">Add</button>
-                </div>
-            </form>
-        </div>
-    </div>
 
     <div class="card shadow-sm">
         <div class="card-body">
@@ -52,17 +20,44 @@
                 <table class="table table-hover align-middle mb-0">
                     <thead>
                         <tr>
-                            <th>Method</th>
-                            <th>Gateway</th>
-                            <th>Status</th>
+                            <th>Payment instrument</th>
+                            <th>State</th>
                             <th>Created</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody id="payment-methods-table-body">
-                        <tr><td colspan="5" class="text-center text-muted">Loading payment methods...</td></tr>
+                        <tr><td colspan="4" class="text-center text-muted">Loading payment methods...</td></tr>
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="payment-methods-modal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="payment-methods-create-form" novalidate>
+                    <div class="modal-header">
+                        <h2 id="payment-methods-modal-title" class="modal-title fs-5">Add payment instrument</h2>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input id="payment-methods-edit-id" type="hidden" value="" />
+                        <div class="mb-3">
+                            <label for="payment-methods-instrument" class="form-label">Payment instrument</label>
+                            <select id="payment-methods-instrument" class="form-select"></select>
+                        </div>
+                        <div class="form-check">
+                            <input id="payment-methods-default" class="form-check-input" type="checkbox" />
+                            <label for="payment-methods-default" class="form-check-label">Set as default</label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button id="payment-methods-create" class="btn btn-primary" type="submit">Save</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

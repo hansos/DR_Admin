@@ -30,6 +30,7 @@ public class PaymentGatewayService : IPaymentGatewayService
 
             var gateways = await _context.PaymentGateways
                 .AsNoTracking()
+                .Include(g => g.PaymentInstrumentEntity)
                 .Where(g => g.DeletedAt == null)
                 .OrderBy(g => g.DisplayOrder)
                 .ThenBy(g => g.Name)
@@ -58,6 +59,7 @@ public class PaymentGatewayService : IPaymentGatewayService
 
             var gateways = await _context.PaymentGateways
                 .AsNoTracking()
+                .Include(g => g.PaymentInstrumentEntity)
                 .Where(g => g.DeletedAt == null && g.IsActive)
                 .OrderBy(g => g.DisplayOrder)
                 .ThenBy(g => g.Name)
@@ -86,6 +88,7 @@ public class PaymentGatewayService : IPaymentGatewayService
 
             var gateway = await _context.PaymentGateways
                 .AsNoTracking()
+                .Include(g => g.PaymentInstrumentEntity)
                 .FirstOrDefaultAsync(g => g.Id == id && g.DeletedAt == null);
 
             if (gateway == null)
@@ -115,6 +118,7 @@ public class PaymentGatewayService : IPaymentGatewayService
 
             var gateway = await _context.PaymentGateways
                 .AsNoTracking()
+                .Include(g => g.PaymentInstrumentEntity)
                 .FirstOrDefaultAsync(g => g.IsDefault && g.IsActive && g.DeletedAt == null);
 
             if (gateway == null)
@@ -144,6 +148,7 @@ public class PaymentGatewayService : IPaymentGatewayService
 
             var gateway = await _context.PaymentGateways
                 .AsNoTracking()
+                .Include(g => g.PaymentInstrumentEntity)
                 .FirstOrDefaultAsync(g => g.ProviderCode == providerCode && g.DeletedAt == null);
 
             if (gateway == null)
@@ -171,10 +176,14 @@ public class PaymentGatewayService : IPaymentGatewayService
         {
             _log.Information("Creating new payment gateway: {GatewayName}", dto.Name);
 
+            var instrument = await ResolvePaymentInstrumentAsync(dto.PaymentInstrumentId, dto.PaymentInstrument);
+
             var gateway = new PaymentGateway
             {
                 Name = dto.Name,
                 ProviderCode = dto.ProviderCode,
+                PaymentInstrument = instrument.Code,
+                PaymentInstrumentId = instrument.Id,
                 IsActive = dto.IsActive,
                 IsDefault = dto.IsDefault,
                 ApiKey = dto.ApiKey,
@@ -195,7 +204,7 @@ public class PaymentGatewayService : IPaymentGatewayService
             // If this is set as default, unset other defaults
             if (dto.IsDefault)
             {
-                await UnsetAllDefaultsAsync();
+                await UnsetAllDefaultsAsync(gateway.PaymentInstrument);
             }
 
             _context.PaymentGateways.Add(gateway);
@@ -231,6 +240,9 @@ public class PaymentGatewayService : IPaymentGatewayService
 
             gateway.Name = dto.Name;
             gateway.ProviderCode = dto.ProviderCode;
+            var instrument = await ResolvePaymentInstrumentAsync(dto.PaymentInstrumentId, dto.PaymentInstrument);
+            gateway.PaymentInstrument = instrument.Code;
+            gateway.PaymentInstrumentId = instrument.Id;
             gateway.IsActive = dto.IsActive;
             gateway.IsDefault = dto.IsDefault;
             gateway.ConfigurationJson = dto.ConfigurationJson;
@@ -263,7 +275,7 @@ public class PaymentGatewayService : IPaymentGatewayService
             // If this is set as default, unset other defaults
             if (dto.IsDefault)
             {
-                await UnsetAllDefaultsAsync(id);
+                await UnsetAllDefaultsAsync(gateway.PaymentInstrument, id);
             }
 
             await _context.SaveChangesAsync();
@@ -297,7 +309,7 @@ public class PaymentGatewayService : IPaymentGatewayService
             }
 
             // Unset all other defaults
-            await UnsetAllDefaultsAsync(id);
+            await UnsetAllDefaultsAsync(gateway.PaymentInstrument, id);
 
             gateway.IsDefault = true;
             gateway.IsActive = true; // Ensure default gateway is active
@@ -336,7 +348,7 @@ public class PaymentGatewayService : IPaymentGatewayService
             if (!isActive && gateway.IsDefault)
             {
                 var alternateGateway = await _context.PaymentGateways
-                    .FirstOrDefaultAsync(g => g.Id != id && g.IsActive && g.DeletedAt == null);
+                    .FirstOrDefaultAsync(g => g.Id != id && g.IsActive && g.DeletedAt == null && g.PaymentInstrument == gateway.PaymentInstrument);
 
                 if (alternateGateway != null)
                 {
@@ -382,7 +394,7 @@ public class PaymentGatewayService : IPaymentGatewayService
             if (gateway.IsDefault)
             {
                 var alternateGateway = await _context.PaymentGateways
-                    .FirstOrDefaultAsync(g => g.Id != id && g.IsActive && g.DeletedAt == null);
+                    .FirstOrDefaultAsync(g => g.Id != id && g.IsActive && g.DeletedAt == null && g.PaymentInstrument == gateway.PaymentInstrument);
 
                 if (alternateGateway != null)
                 {
@@ -406,10 +418,10 @@ public class PaymentGatewayService : IPaymentGatewayService
         }
     }
 
-    private async Task UnsetAllDefaultsAsync(int? exceptId = null)
+    private async Task UnsetAllDefaultsAsync(string paymentInstrument, int? exceptId = null)
     {
         var defaultGateways = await _context.PaymentGateways
-            .Where(g => g.IsDefault && g.DeletedAt == null && (exceptId == null || g.Id != exceptId))
+            .Where(g => g.IsDefault && g.PaymentInstrument == paymentInstrument && g.DeletedAt == null && (exceptId == null || g.Id != exceptId))
             .ToListAsync();
 
         foreach (var gateway in defaultGateways)
@@ -430,6 +442,8 @@ public class PaymentGatewayService : IPaymentGatewayService
             Id = gateway.Id,
             Name = gateway.Name,
             ProviderCode = gateway.ProviderCode,
+            PaymentInstrument = gateway.PaymentInstrumentEntity?.Code ?? gateway.PaymentInstrument,
+            PaymentInstrumentId = gateway.PaymentInstrumentId,
             IsActive = gateway.IsActive,
             IsDefault = gateway.IsDefault,
             ApiKey = MaskSensitiveData(gateway.ApiKey),
@@ -456,5 +470,44 @@ public class PaymentGatewayService : IPaymentGatewayService
         }
 
         return data.Substring(0, 4) + new string('*', data.Length - 8) + data.Substring(data.Length - 4);
+    }
+
+    private async Task<PaymentInstrument> ResolvePaymentInstrumentAsync(int? instrumentId, string codeOrName)
+    {
+        if (instrumentId.HasValue && instrumentId.Value > 0)
+        {
+            var byId = await _context.PaymentInstruments
+                .FirstOrDefaultAsync(i => i.Id == instrumentId.Value && i.DeletedAt == null);
+
+            if (byId == null)
+            {
+                throw new InvalidOperationException($"Payment instrument id '{instrumentId.Value}' was not found.");
+            }
+
+            if (!byId.IsActive)
+            {
+                throw new InvalidOperationException($"Payment instrument '{byId.Code}' is not active.");
+            }
+
+            return byId;
+        }
+
+        var value = string.IsNullOrWhiteSpace(codeOrName) ? "CreditCard" : codeOrName.Trim();
+        var lookup = value.ToLower();
+
+        var instrument = await _context.PaymentInstruments
+            .FirstOrDefaultAsync(i => i.DeletedAt == null && (i.Code.ToLower() == lookup || i.Name.ToLower() == lookup));
+
+        if (instrument == null)
+        {
+            throw new InvalidOperationException($"Payment instrument '{value}' was not found. Create it first.");
+        }
+
+        if (!instrument.IsActive)
+        {
+            throw new InvalidOperationException($"Payment instrument '{instrument.Code}' is not active.");
+        }
+
+        return instrument;
     }
 }

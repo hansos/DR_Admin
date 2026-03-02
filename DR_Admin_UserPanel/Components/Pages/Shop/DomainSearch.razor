@@ -17,13 +17,9 @@
     <div class="card shadow-sm">
         <div class="card-body">
             <form id="domain-search-form" class="row g-3" novalidate>
-                <div class="col-12 col-lg-5">
+                <div class="col-12 col-lg-7">
                     <label for="domain-search-input" class="form-label">Domain name</label>
                     <input id="domain-search-input" class="form-control" type="text" placeholder="example.com" required />
-                </div>
-                <div class="col-12 col-sm-6 col-lg-3">
-                    <label for="domain-search-registrar" class="form-label">Registrar code</label>
-                    <input id="domain-search-registrar" class="form-control" type="text" value="godaddy" required />
                 </div>
                 <div class="col-12 col-sm-6 col-lg-2">
                     <label for="domain-search-period" class="form-label">Period (years)</label>
@@ -52,9 +48,18 @@
         <div class="card-body">
             <h2 class="h6">Result</h2>
             <p id="domain-search-result-summary" class="mb-3"></p>
-            <button id="domain-search-add-to-cart" class="btn btn-success d-none" type="button">
-                <i class="bi bi-cart-plus"></i> Add to cart
-            </button>
+            <div class="d-flex flex-wrap gap-2 mb-3" id="domain-search-result-actions">
+                <button id="domain-search-add-to-cart" class="btn btn-success d-none" type="button">
+                    <i class="bi bi-cart-plus"></i> Add to cart
+                </button>
+                <button id="domain-search-transfer" class="btn btn-outline-primary d-none" type="button">
+                    <i class="bi bi-arrow-left-right"></i> Initiate transfer
+                </button>
+                <button id="domain-search-alternatives" class="btn btn-outline-secondary d-none" type="button">
+                    <i class="bi bi-lightbulb"></i> Suggest alternatives
+                </button>
+            </div>
+            <div id="domain-search-alternatives-list" class="list-group d-none"></div>
         </div>
     </div>
 </div>

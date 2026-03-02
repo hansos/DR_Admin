@@ -75,6 +75,11 @@ public class ApplicationDbContext : DbContext
                 paymentGateway.NormalizedName = NormalizationHelper.Normalize(paymentGateway.Name) ?? string.Empty;
                 break;
 
+            case PaymentInstrument paymentInstrument:
+                paymentInstrument.NormalizedCode = NormalizationHelper.Normalize(paymentInstrument.Code) ?? string.Empty;
+                paymentInstrument.NormalizedName = NormalizationHelper.Normalize(paymentInstrument.Name) ?? string.Empty;
+                break;
+
             case PostalCode postalCode:
                 postalCode.NormalizedCode = NormalizationHelper.Normalize(postalCode.Code) ?? string.Empty;
                 postalCode.NormalizedCountryCode = NormalizationHelper.Normalize(postalCode.CountryCode) ?? string.Empty;
@@ -147,6 +152,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<InvoiceLine> InvoiceLines { get; set; }
     public DbSet<PaymentTransaction> PaymentTransactions { get; set; }
     public DbSet<PaymentGateway> PaymentGateways { get; set; }
+    public DbSet<PaymentInstrument> PaymentInstruments { get; set; }
     public DbSet<RegisteredDomain> RegisteredDomains { get; set; }
     public DbSet<DomainContact> DomainContacts { get; set; }
     public DbSet<DomainContactAssignment> DomainContactAssignments { get; set; }
@@ -1290,6 +1296,7 @@ public class ApplicationDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
             entity.Property(e => e.ProviderCode).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.PaymentInstrument).IsRequired().HasMaxLength(50);
             entity.Property(e => e.ApiKey).IsRequired().HasMaxLength(500);
             entity.Property(e => e.ApiSecret).IsRequired().HasMaxLength(500);
             entity.Property(e => e.ConfigurationJson).HasMaxLength(4000);
@@ -1298,9 +1305,38 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.NormalizedName).IsRequired().HasMaxLength(200);
             
             entity.HasIndex(e => e.ProviderCode);
+            entity.HasIndex(e => e.PaymentInstrument);
+            entity.HasIndex(e => e.PaymentInstrumentId);
             entity.HasIndex(e => e.IsActive);
             entity.HasIndex(e => e.IsDefault);
             entity.HasIndex(e => e.NormalizedName);
+
+            entity.HasOne(e => e.PaymentInstrumentEntity)
+                .WithMany(i => i.PaymentGateways)
+                .HasForeignKey(e => e.PaymentInstrumentId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // PaymentInstrument configuration
+        modelBuilder.Entity<PaymentInstrument>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Code).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.NormalizedCode).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.NormalizedName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Description).HasMaxLength(500);
+
+            entity.HasIndex(e => e.Code).IsUnique();
+            entity.HasIndex(e => e.NormalizedCode).IsUnique();
+            entity.HasIndex(e => e.IsActive);
+            entity.HasIndex(e => e.DisplayOrder);
+            entity.HasIndex(e => e.DefaultGatewayId);
+
+            entity.HasOne(e => e.DefaultGateway)
+                .WithMany()
+                .HasForeignKey(e => e.DefaultGatewayId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         // Coupon configuration

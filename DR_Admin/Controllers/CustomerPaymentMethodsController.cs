@@ -54,6 +54,55 @@ public class CustomerPaymentMethodsController : ControllerBase
     }
 
     /// <summary>
+    /// Updates an existing payment method for a customer
+    /// </summary>
+    /// <param name="id">The payment method ID</param>
+    /// <param name="customerId">The customer ID</param>
+    /// <param name="updateDto">The payment method update data</param>
+    /// <returns>The updated payment method</returns>
+    /// <response code="200">Returns the updated payment method</response>
+    /// <response code="400">If the update data is invalid</response>
+    /// <response code="404">If the payment method is not found</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpPut("{id}")]
+    [Authorize]
+    [ProducesResponseType(typeof(CustomerPaymentMethodDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<CustomerPaymentMethodDto>> UpdatePaymentMethod(int id, [FromQuery] int customerId, [FromBody] UpdateCustomerPaymentMethodDto updateDto)
+    {
+        try
+        {
+            _log.Information("API: UpdatePaymentMethod called for ID: {PaymentMethodId}, customer: {CustomerId} by user {User}",
+                id, customerId, User.Identity?.Name);
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var paymentMethod = await _paymentMethodService.UpdatePaymentMethodAsync(id, customerId, updateDto);
+
+            if (paymentMethod == null)
+            {
+                _log.Warning("API: Payment method {PaymentMethodId} not found for update", id);
+                return NotFound($"Payment method with ID {id} not found");
+            }
+
+            _log.Information("API: Payment method updated with ID: {PaymentMethodId}", id);
+            return Ok(paymentMethod);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in UpdatePaymentMethod for ID: {PaymentMethodId}", id);
+            return StatusCode(500, "An error occurred while updating the payment method");
+        }
+    }
+
+    /// <summary>
     /// Retrieves a specific payment method by ID
     /// </summary>
     /// <param name="id">The payment method ID</param>
@@ -164,6 +213,11 @@ public class CustomerPaymentMethodsController : ControllerBase
             
             _log.Information("API: Payment method created with ID: {PaymentMethodId}", paymentMethod.Id);
             return CreatedAtAction(nameof(GetPaymentMethodById), new { id = paymentMethod.Id }, paymentMethod);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _log.Warning(ex, "API: Validation error in CreatePaymentMethod");
+            return BadRequest(ex.Message);
         }
         catch (Exception ex)
         {

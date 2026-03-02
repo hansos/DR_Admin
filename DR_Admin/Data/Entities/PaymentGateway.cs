@@ -21,6 +21,16 @@ public class PaymentGateway : EntityBase
     public string ProviderCode { get; set; } = string.Empty;
 
     /// <summary>
+    /// Payment instrument this gateway serves (e.g., CreditCard, PayPal, Cash)
+    /// </summary>
+    public string PaymentInstrument { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Optional reference to payment instrument catalog entry
+    /// </summary>
+    public int? PaymentInstrumentId { get; set; }
+
+    /// <summary>
     /// Whether this gateway is currently active
     /// </summary>
     public bool IsActive { get; set; } = true;
@@ -105,4 +115,9 @@ public class PaymentGateway : EntityBase
     /// Payment transactions processed through this gateway
     /// </summary>
     public ICollection<PaymentTransaction> PaymentTransactions { get; set; } = new List<PaymentTransaction>();
+
+    /// <summary>
+    /// Navigation property to payment instrument catalog entry
+    /// </summary>
+    public PaymentInstrument? PaymentInstrumentEntity { get; set; }
 }

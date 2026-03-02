@@ -21,6 +21,8 @@
         "registry-apis.ts",
         "expiring-domains.ts",
         "billing-cycles.ts",
+        "payment-gateways.ts",
+        "payment-instruments.ts",
         "new-sale.ts",
         "new-sale-customer.ts",
         "new-sale-hosting.ts",

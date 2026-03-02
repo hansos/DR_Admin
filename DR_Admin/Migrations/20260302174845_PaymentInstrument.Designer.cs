@@ -3,6 +3,7 @@ using System;
 using ISPAdmin.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ISPAdmin.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260302174845_PaymentInstrument")]
+    partial class PaymentInstrument
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.2");
@@ -3003,9 +3006,6 @@ namespace ISPAdmin.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<int?>("DefaultGatewayId")
-                        .HasColumnType("INTEGER");
-
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("TEXT");
 
@@ -3042,8 +3042,6 @@ namespace ISPAdmin.Migrations
 
                     b.HasIndex("Code")
                         .IsUnique();
-
-                    b.HasIndex("DefaultGatewayId");
 
                     b.HasIndex("DisplayOrder");
 
@@ -6423,16 +6421,6 @@ namespace ISPAdmin.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("PaymentInstrumentEntity");
-                });
-
-            modelBuilder.Entity("ISPAdmin.Data.Entities.PaymentInstrument", b =>
-                {
-                    b.HasOne("ISPAdmin.Data.Entities.PaymentGateway", "DefaultGateway")
-                        .WithMany()
-                        .HasForeignKey("DefaultGatewayId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("DefaultGateway");
                 });
 
             modelBuilder.Entity("ISPAdmin.Data.Entities.PaymentIntent", b =>

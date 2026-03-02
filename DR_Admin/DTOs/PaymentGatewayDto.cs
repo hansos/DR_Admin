@@ -21,6 +21,16 @@ public class PaymentGatewayDto
     public string ProviderCode { get; set; } = string.Empty;
 
     /// <summary>
+    /// Payment instrument this gateway serves (CreditCard, PayPal, Cash, etc.)
+    /// </summary>
+    public string PaymentInstrument { get; set; } = "CreditCard";
+
+    /// <summary>
+    /// Payment instrument identifier
+    /// </summary>
+    public int? PaymentInstrumentId { get; set; }
+
+    /// <summary>
     /// Whether this gateway is currently active
     /// </summary>
     public bool IsActive { get; set; }
@@ -112,6 +122,16 @@ public class CreatePaymentGatewayDto
     public string ProviderCode { get; set; } = string.Empty;
 
     /// <summary>
+    /// Payment instrument this gateway serves (CreditCard, PayPal, Cash, etc.)
+    /// </summary>
+    public string PaymentInstrument { get; set; } = "CreditCard";
+
+    /// <summary>
+    /// Payment instrument identifier
+    /// </summary>
+    public int? PaymentInstrumentId { get; set; }
+
+    /// <summary>
     /// Whether this gateway is currently active
     /// </summary>
     public bool IsActive { get; set; } = true;
@@ -201,6 +221,16 @@ public class UpdatePaymentGatewayDto
     /// Payment gateway provider code (stripe, paypal, square)
     /// </summary>
     public string ProviderCode { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Payment instrument this gateway serves (CreditCard, PayPal, Cash, etc.)
+    /// </summary>
+    public string PaymentInstrument { get; set; } = "CreditCard";
+
+    /// <summary>
+    /// Payment instrument identifier
+    /// </summary>
+    public int? PaymentInstrumentId { get; set; }
 
     /// <summary>
     /// Whether this gateway is currently active

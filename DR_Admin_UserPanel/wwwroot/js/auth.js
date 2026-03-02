@@ -76,19 +76,42 @@ function logout() {
     window.location.href = '/account/login';
 }
 function syncAuthUi() {
+    const loggedIn = isLoggedIn();
+    const session = getSession();
     const logoutButton = document.getElementById('global-logout');
-    if (!logoutButton) {
-        return;
+    if (logoutButton) {
+        logoutButton.style.display = loggedIn ? 'inline-block' : 'none';
     }
-    logoutButton.style.display = isLoggedIn() ? 'inline-block' : 'none';
+    const topAuthInfo = document.getElementById('top-auth-info');
+    const topAuthUserName = document.getElementById('top-auth-username');
+    if (topAuthInfo && topAuthUserName) {
+        if (loggedIn && session?.username) {
+            topAuthUserName.textContent = session.username;
+            topAuthInfo.classList.remove('d-none');
+        }
+        else {
+            topAuthUserName.textContent = '';
+            topAuthInfo.classList.add('d-none');
+        }
+    }
 }
 function bindLogoutButton() {
     const logoutButton = document.getElementById('global-logout');
     if (!logoutButton || logoutButton.dataset.bound === 'true') {
+    }
+    else {
+        logoutButton.dataset.bound = 'true';
+        logoutButton.addEventListener('click', () => {
+            logout();
+        });
+    }
+    const topLogout = document.getElementById('top-auth-logout');
+    if (!topLogout || topLogout.dataset.bound === 'true') {
         return;
     }
-    logoutButton.dataset.bound = 'true';
-    logoutButton.addEventListener('click', () => {
+    topLogout.dataset.bound = 'true';
+    topLogout.addEventListener('click', (event) => {
+        event.preventDefault();
         logout();
     });
 }

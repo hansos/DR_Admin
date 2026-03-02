@@ -5,6 +5,10 @@ interface UserAccountDto {
     } | null;
 }
 
+interface ActivePaymentGatewayDto {
+    paymentInstrument?: string;
+}
+
 interface CustomerPaymentMethodDto {
     id: number;
     paymentGatewayId: number;
@@ -20,6 +24,24 @@ interface CustomerPaymentMethodDto {
     createdAt: string;
 }
 
+interface PaymentInstrumentDto {
+    id: number;
+    code: string;
+    name: string;
+    isActive: boolean;
+    displayOrder: number;
+}
+
+interface ModalInstance {
+    show: () => void;
+    hide: () => void;
+}
+
+interface BootstrapModalStatic {
+    new(element: Element): ModalInstance;
+    getOrCreateInstance: (element: Element) => ModalInstance;
+}
+
 interface PaymentMethodsWindow extends Window {
     UserPanelApi?: {
         request: <T>(path: string, options?: RequestInit, requiresAuth?: boolean) => Promise<{ success: boolean; data?: T; message?: string }>;
@@ -29,9 +51,16 @@ interface PaymentMethodsWindow extends Window {
         showError: (id: string, message: string) => void;
         hide: (id: string) => void;
     };
+    bootstrap?: {
+        Modal: BootstrapModalStatic;
+    };
 }
 
 let paymentMethodsCustomerId: number | null = null;
+let paymentMethodsCache: CustomerPaymentMethodDto[] = [];
+let instrumentAlternatives: string[] = [];
+const fallbackInstruments: string[] = ['CreditCard', 'BankAccount', 'PayPal', 'Cash', 'Other'];
+const enabledGatewayInstruments = new Set<string>();
 
 function initializePaymentMethodsPage(): void {
     const page = document.getElementById('payment-methods-page');
@@ -41,12 +70,40 @@ function initializePaymentMethodsPage(): void {
 
     page.dataset.initialized = 'true';
 
-    document.getElementById('payment-methods-create-form')?.addEventListener('submit', (event) => {
-        event.preventDefault();
-        void createPaymentMethod();
+    document.getElementById('payment-methods-open-create')?.addEventListener('click', () => {
+        openPaymentMethodModal();
     });
 
-    void loadPaymentMethods();
+    document.getElementById('payment-methods-create-form')?.addEventListener('submit', (event) => {
+        event.preventDefault();
+        void savePaymentMethod();
+    });
+
+    void initializePaymentMethodData();
+}
+
+async function initializePaymentMethodData(): Promise<void> {
+    await loadEnabledGatewayInstruments();
+    await loadGatewayAlternatives();
+    await loadPaymentMethods();
+}
+
+async function loadEnabledGatewayInstruments(): Promise<void> {
+    enabledGatewayInstruments.clear();
+
+    const typedWindow = window as PaymentMethodsWindow;
+    const response = await typedWindow.UserPanelApi?.request<ActivePaymentGatewayDto[]>('/PaymentGateways/active', { method: 'GET' }, true);
+
+    if (!response || !response.success || !response.data) {
+        return;
+    }
+
+    response.data.forEach((gateway) => {
+        const instrument = gateway.paymentInstrument?.trim();
+        if (instrument) {
+            enabledGatewayInstruments.add(normalizeInstrumentKey(instrument));
+        }
+    });
 }
 
 async function loadPaymentMethods(): Promise<void> {
@@ -69,7 +126,56 @@ async function loadPaymentMethods(): Promise<void> {
         return;
     }
 
-    renderPaymentMethods(response.data);
+    paymentMethodsCache = response.data;
+    renderPaymentMethods(paymentMethodsCache);
+}
+
+async function loadGatewayAlternatives(): Promise<void> {
+    const typedWindow = window as PaymentMethodsWindow;
+    const response = await typedWindow.UserPanelApi?.request<PaymentInstrumentDto[]>('/PaymentInstruments/active', { method: 'GET' }, true);
+
+    if (!response || !response.success || !response.data || response.data.length === 0) {
+        instrumentAlternatives = [...fallbackInstruments];
+        renderGatewayAlternatives();
+        return;
+    }
+
+    const ordered = response.data
+        .filter((item) => item.isActive)
+        .sort((a, b) => (a.displayOrder - b.displayOrder) || a.name.localeCompare(b.name));
+
+    const uniqueInstruments: string[] = [];
+    ordered.forEach((gateway) => {
+        const instrument = gateway.code?.trim();
+        if (!instrument) {
+            return;
+        }
+
+        const exists = uniqueInstruments.some((value) => value.toLowerCase() === instrument.toLowerCase());
+        if (!exists) {
+            uniqueInstruments.push(instrument);
+        }
+    });
+
+    instrumentAlternatives = uniqueInstruments.length > 0 ? uniqueInstruments : [...fallbackInstruments];
+
+    renderGatewayAlternatives();
+}
+
+function renderGatewayAlternatives(): void {
+    const instrumentSelect = document.getElementById('payment-methods-instrument') as HTMLSelectElement | null;
+    if (!instrumentSelect) {
+        return;
+    }
+
+    if (instrumentAlternatives.length === 0) {
+        instrumentSelect.innerHTML = '<option value="">No alternatives available</option>';
+        return;
+    }
+
+    instrumentSelect.innerHTML = instrumentAlternatives
+        .map((instrument) => `<option value="${escapePaymentMethodsText(instrument)}">${escapePaymentMethodsText(instrument)}</option>`)
+        .join('');
 }
 
 async function getPaymentMethodsCustomerId(): Promise<number | null> {
@@ -96,30 +202,27 @@ function renderPaymentMethods(items: CustomerPaymentMethodDto[]): void {
     }
 
     if (items.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No payment methods found.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No payment methods found.</td></tr>';
         return;
     }
 
     tableBody.innerHTML = items
         .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt))
         .map((item) => {
-            const methodText = [item.cardBrand, item.last4Digits ? `•••• ${item.last4Digits}` : '', item.expiryMonth && item.expiryYear ? `${item.expiryMonth}/${item.expiryYear}` : '']
-                .filter((value) => value && value.trim().length > 0)
-                .join(' ');
+            const methodText = resolveInstrumentFromPaymentMethod(item) ?? String(item.type);
 
             const status = [
                 item.isDefault ? '<span class="badge bg-primary me-1">Default</span>' : '',
-                item.isVerified ? '<span class="badge bg-success me-1">Verified</span>' : '<span class="badge bg-warning text-dark me-1">Unverified</span>',
                 item.isActive ? '<span class="badge bg-secondary">Active</span>' : '<span class="badge bg-danger">Inactive</span>'
             ].join(' ');
 
             return `<tr>
-                <td>${escapePaymentMethodsText(methodText || String(item.type))}</td>
-                <td>${escapePaymentMethodsText(item.paymentGatewayName || `Gateway #${item.paymentGatewayId}`)}</td>
+                <td>${escapePaymentMethodsText(methodText)}</td>
                 <td>${status}</td>
                 <td>${formatPaymentMethodsDate(item.createdAt)}</td>
                 <td>
                     <div class="btn-group btn-group-sm" role="group">
+                        <button class="btn btn-outline-secondary" type="button" data-action="edit" data-id="${item.id}">Change</button>
                         <button class="btn btn-outline-primary" type="button" data-action="default" data-id="${item.id}">Set default</button>
                         <button class="btn btn-outline-danger" type="button" data-action="delete" data-id="${item.id}">Delete</button>
                     </div>
@@ -127,6 +230,18 @@ function renderPaymentMethods(items: CustomerPaymentMethodDto[]): void {
             </tr>`;
         })
         .join('');
+
+    tableBody.querySelectorAll('button[data-action="edit"]').forEach((button) => {
+        button.addEventListener('click', () => {
+            const id = Number.parseInt((button as HTMLButtonElement).dataset.id ?? '0', 10);
+            if (id > 0) {
+                const item = paymentMethodsCache.find((method) => method.id === id);
+                if (item) {
+                    openPaymentMethodModal(item);
+                }
+            }
+        });
+    });
 
     tableBody.querySelectorAll('button[data-action="default"]').forEach((button) => {
         button.addEventListener('click', () => {
@@ -147,7 +262,53 @@ function renderPaymentMethods(items: CustomerPaymentMethodDto[]): void {
     });
 }
 
-async function createPaymentMethod(): Promise<void> {
+function openPaymentMethodModal(item?: CustomerPaymentMethodDto): void {
+    const modalElement = document.getElementById('payment-methods-modal');
+    if (!modalElement) {
+        return;
+    }
+
+    const modalTitle = document.getElementById('payment-methods-modal-title');
+    const submitButton = document.getElementById('payment-methods-create') as HTMLButtonElement | null;
+    const editIdInput = document.getElementById('payment-methods-edit-id') as HTMLInputElement | null;
+    const isDefault = document.getElementById('payment-methods-default') as HTMLInputElement | null;
+
+    if (editIdInput) {
+        editIdInput.value = item ? String(item.id) : '';
+    }
+
+    if (modalTitle) {
+        modalTitle.textContent = item ? 'Change payment instrument' : 'Add payment instrument';
+    }
+
+    if (submitButton) {
+        submitButton.textContent = item ? 'Save changes' : 'Add instrument';
+    }
+
+    const instrumentSelect = document.getElementById('payment-methods-instrument') as HTMLSelectElement | null;
+    if (instrumentSelect) {
+        const instrument = resolveInstrumentFromPaymentMethod(item) ?? instrumentAlternatives[0] ?? '';
+        instrumentSelect.value = instrument;
+    }
+
+    if (isDefault) {
+        isDefault.checked = item?.isDefault ?? false;
+    }
+
+    getPaymentMethodModalInstance(modalElement)?.show();
+}
+
+function getPaymentMethodModalInstance(modalElement: Element): ModalInstance | null {
+    const typedWindow = window as PaymentMethodsWindow;
+    const modalApi = typedWindow.bootstrap?.Modal;
+    if (!modalApi) {
+        return null;
+    }
+
+    return modalApi.getOrCreateInstance(modalElement);
+}
+
+async function savePaymentMethod(): Promise<void> {
     const typedWindow = window as PaymentMethodsWindow;
     typedWindow.UserPanelAlerts?.hide('payment-methods-alert-success');
     typedWindow.UserPanelAlerts?.hide('payment-methods-alert-error');
@@ -158,34 +319,61 @@ async function createPaymentMethod(): Promise<void> {
         return;
     }
 
-    const gatewayId = Number.parseInt(readPaymentMethodsInputValue('payment-methods-gateway-id'), 10);
-    const type = Number.parseInt(readPaymentMethodsInputValue('payment-methods-type'), 10);
-    const token = readPaymentMethodsInputValue('payment-methods-token');
+    const editId = Number.parseInt(readPaymentMethodsInputValue('payment-methods-edit-id'), 10);
+    const instrument = readPaymentMethodsInputValue('payment-methods-instrument');
     const isDefault = (document.getElementById('payment-methods-default') as HTMLInputElement | null)?.checked ?? false;
 
-    if (Number.isNaN(gatewayId) || gatewayId <= 0 || Number.isNaN(type) || type <= 0 || !token) {
-        typedWindow.UserPanelAlerts?.showError('payment-methods-alert-error', 'Gateway, type, and token are required.');
+    if (!instrument) {
+        typedWindow.UserPanelAlerts?.showError('payment-methods-alert-error', 'Payment instrument is required.');
         return;
     }
 
-    const response = await typedWindow.UserPanelApi?.request('/CustomerPaymentMethods', {
-        method: 'POST',
-        body: JSON.stringify({
-            customerId,
-            paymentGatewayId: gatewayId,
-            type,
-            paymentMethodToken: token,
-            isDefault
-        })
-    }, true);
+    const normalizedInstrument = normalizeInstrumentKey(instrument);
+    if (enabledGatewayInstruments.size > 0 && !enabledGatewayInstruments.has(normalizedInstrument)) {
+        typedWindow.UserPanelAlerts?.showError('payment-methods-alert-error', 'Selected payment instrument is not available yet. Please choose another one or contact support.');
+        return;
+    }
+
+    const type = mapInstrumentToType(instrument);
+
+    const isEdit = !Number.isNaN(editId) && editId > 0;
+    const response = await typedWindow.UserPanelApi?.request(
+        isEdit ? `/CustomerPaymentMethods/${editId}?customerId=${customerId}` : '/CustomerPaymentMethods',
+        {
+            method: isEdit ? 'PUT' : 'POST',
+            body: JSON.stringify(
+                isEdit
+                    ? {
+                        paymentGatewayId: 0,
+                        paymentInstrument: instrument,
+                        type,
+                        isDefault
+                    }
+                    : {
+                        customerId,
+                        paymentGatewayId: 0,
+                        paymentInstrument: instrument,
+                        type,
+                        paymentMethodToken: '',
+                        isDefault
+                    }
+            )
+        },
+        true
+    );
 
     if (!response || !response.success) {
-        typedWindow.UserPanelAlerts?.showError('payment-methods-alert-error', response?.message ?? 'Could not create payment method.');
+        typedWindow.UserPanelAlerts?.showError('payment-methods-alert-error', response?.message ?? 'Could not save payment method.');
         return;
+    }
+
+    const modalElement = document.getElementById('payment-methods-modal');
+    if (modalElement) {
+        getPaymentMethodModalInstance(modalElement)?.hide();
     }
 
     clearPaymentMethodsForm();
-    typedWindow.UserPanelAlerts?.showSuccess('payment-methods-alert-success', response.message ?? 'Payment method added.');
+    typedWindow.UserPanelAlerts?.showSuccess('payment-methods-alert-success', response.message ?? (isEdit ? 'Payment method updated.' : 'Payment method added.'));
     await loadPaymentMethods();
 }
 
@@ -234,11 +422,16 @@ async function deletePaymentMethod(paymentMethodId: number): Promise<void> {
 }
 
 function clearPaymentMethodsForm(): void {
-    const tokenInput = document.getElementById('payment-methods-token') as HTMLInputElement | null;
+    const editIdInput = document.getElementById('payment-methods-edit-id') as HTMLInputElement | null;
     const isDefault = document.getElementById('payment-methods-default') as HTMLInputElement | null;
 
-    if (tokenInput) {
-        tokenInput.value = '';
+    if (editIdInput) {
+        editIdInput.value = '';
+    }
+
+    const instrumentSelect = document.getElementById('payment-methods-instrument') as HTMLSelectElement | null;
+    if (instrumentSelect && instrumentAlternatives.length > 0) {
+        instrumentSelect.value = instrumentAlternatives[0];
     }
 
     if (isDefault) {
@@ -267,6 +460,60 @@ function escapePaymentMethodsText(value: string): string {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+}
+
+function normalizeInstrumentKey(value: string): string {
+    return value
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, '')
+        .replace(/-/g, '')
+        .replace(/_/g, '');
+}
+
+function mapInstrumentToType(instrument: string): number {
+    const normalized = instrument.trim().toLowerCase();
+    if (normalized === 'creditcard' || normalized === 'credit card' || normalized === 'card') {
+        return 0;
+    }
+
+    if (normalized === 'bankaccount' || normalized === 'bank account') {
+        return 1;
+    }
+
+    if (normalized === 'paypal') {
+        return 2;
+    }
+
+    if (normalized === 'cash') {
+        return 3;
+    }
+
+    return 99;
+}
+
+function resolveInstrumentFromPaymentMethod(item?: CustomerPaymentMethodDto): string | null {
+    if (!item) {
+        return null;
+    }
+
+    if (item.type === 0 || item.type === '0') {
+        return 'CreditCard';
+    }
+
+    if (item.type === 1 || item.type === '1') {
+        return 'BankAccount';
+    }
+
+    if (item.type === 2 || item.type === '2') {
+        return 'PayPal';
+    }
+
+    if (item.type === 3 || item.type === '3') {
+        return 'Cash';
+    }
+
+    return 'Other';
 }
 
 function setupPaymentMethodsObserver(): void {
