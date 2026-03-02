@@ -785,6 +785,16 @@
             document.body.classList.remove('print-new-sale-offer');
         });
     };
+    const focusValidUntilInput = () => {
+        const validUntilInput = document.getElementById('new-sale-offer-valid-until');
+        if (!validUntilInput) {
+            return;
+        }
+        requestAnimationFrame(() => {
+            validUntilInput.focus();
+            validUntilInput.select();
+        });
+    };
     const initializePage = async () => {
         const page = document.getElementById('dashboard-new-sale-offer-page');
         if (!page || page.dataset.initialized === 'true') {
@@ -810,6 +820,7 @@
         restoreOfferSettings();
         renderPersistenceState();
         bindEvents();
+        focusValidUntilInput();
         await Promise.all([
             loadSupportData(),
             loadSellerCompanyInfo(),

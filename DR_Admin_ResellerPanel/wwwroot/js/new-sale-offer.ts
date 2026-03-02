@@ -1135,6 +1135,18 @@
         });
     };
 
+    const focusValidUntilInput = (): void => {
+        const validUntilInput = document.getElementById('new-sale-offer-valid-until') as HTMLInputElement | null;
+        if (!validUntilInput) {
+            return;
+        }
+
+        requestAnimationFrame(() => {
+            validUntilInput.focus();
+            validUntilInput.select();
+        });
+    };
+
     const initializePage = async (): Promise<void> => {
         const page = document.getElementById('dashboard-new-sale-offer-page') as HTMLElement | null;
         if (!page || page.dataset.initialized === 'true') {
@@ -1166,6 +1178,7 @@
         restoreOfferSettings();
         renderPersistenceState();
         bindEvents();
+        focusValidUntilInput();
 
         await Promise.all([
             loadSupportData(),

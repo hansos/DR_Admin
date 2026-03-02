@@ -319,6 +319,20 @@
         preview.textContent = `${formatPrice(value)} / ${selectedCycle.name}`;
     };
 
+    const setBillingCycleEnabled = (): void => {
+        const select = document.getElementById('new-sale-hosting-billing-cycle') as HTMLSelectElement | null;
+        if (!select) {
+            return;
+        }
+
+        const hasPackage = selectedHostingPackageId !== null;
+        select.disabled = !hasPackage;
+
+        if (!hasPackage) {
+            select.value = '';
+        }
+    };
+
     const setNextEnabled = (): void => {
         const nextButton = document.getElementById('new-sale-hosting-next') as HTMLButtonElement | null;
         if (!nextButton) {
@@ -463,6 +477,7 @@
 
         selectedHostingPackageId = packageId;
         renderPackages();
+        setBillingCycleEnabled();
         renderPricePreview();
         setNextEnabled();
         saveState();
@@ -520,6 +535,17 @@
         document.getElementById('new-sale-hosting-skip')?.addEventListener('click', skipHosting);
     };
 
+    const focusFirstHostingPackage = (): void => {
+        const firstPackageInput = document.querySelector<HTMLInputElement>('input[name="new-sale-hosting-package"]');
+        if (!firstPackageInput) {
+            return;
+        }
+
+        requestAnimationFrame(() => {
+            firstPackageInput.focus();
+        });
+    };
+
     const initializePage = async (): Promise<void> => {
         const page = document.getElementById('dashboard-new-sale-hosting-page') as HTMLElement | null;
         if (!page || page.dataset.initialized === 'true') {
@@ -541,8 +567,10 @@
         renderFlowStatus();
         bindEvents();
         await Promise.all([loadHostingPackages(), loadBillingCycles()]);
+        setBillingCycleEnabled();
         renderPricePreview();
         setNextEnabled();
+        focusFirstHostingPackage();
     };
 
     const setupObserver = (): void => {

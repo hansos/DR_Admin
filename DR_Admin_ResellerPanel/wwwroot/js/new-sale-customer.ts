@@ -940,6 +940,17 @@
         await loadContactPersons(selectedCustomer.id);
     };
 
+    const focusCustomerQueryInput = (): void => {
+        const queryInput = document.getElementById('new-sale-customer-query') as HTMLInputElement | null;
+        if (!queryInput) {
+            return;
+        }
+
+        requestAnimationFrame(() => {
+            queryInput.focus();
+        });
+    };
+
     const initializePage = async (): Promise<void> => {
         const page = document.getElementById('dashboard-new-sale-customer-page') as HTMLElement | null;
         if (!page || page.dataset.initialized === 'true') {
@@ -959,6 +970,7 @@
         renderFlowStatus();
         restoreCustomerSelectionState();
         bindEvents();
+        focusCustomerQueryInput();
         await restoreSelectedCustomer();
     };
 

@@ -588,6 +588,15 @@
         document.getElementById('new-sale-services-next')?.addEventListener('click', proceedToPage5);
         document.getElementById('new-sale-services-skip')?.addEventListener('click', skipAddOns);
     };
+    const focusFirstCustomService = () => {
+        const firstServiceInput = document.querySelector('input[name="new-sale-services-item"]');
+        if (!firstServiceInput) {
+            return;
+        }
+        requestAnimationFrame(() => {
+            firstServiceInput.focus();
+        });
+    };
     const initializePage = async () => {
         const page = document.getElementById('dashboard-new-sale-services-page');
         if (!page || page.dataset.initialized === 'true') {
@@ -608,6 +617,7 @@
             loadServiceCatalog(),
             loadContactsSummary(),
         ]);
+        focusFirstCustomService();
         await loadRegisterPricing();
     };
     const setupObserver = () => {

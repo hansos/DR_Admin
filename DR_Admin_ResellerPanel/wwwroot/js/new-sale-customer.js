@@ -718,6 +718,15 @@
         renderSelectedCustomer();
         await loadContactPersons(selectedCustomer.id);
     };
+    const focusCustomerQueryInput = () => {
+        const queryInput = document.getElementById('new-sale-customer-query');
+        if (!queryInput) {
+            return;
+        }
+        requestAnimationFrame(() => {
+            queryInput.focus();
+        });
+    };
     const initializePage = async () => {
         const page = document.getElementById('dashboard-new-sale-customer-page');
         if (!page || page.dataset.initialized === 'true') {
@@ -734,6 +743,7 @@
         renderFlowStatus();
         restoreCustomerSelectionState();
         bindEvents();
+        focusCustomerQueryInput();
         await restoreSelectedCustomer();
     };
     const setupObserver = () => {

@@ -797,6 +797,17 @@
         document.getElementById('new-sale-services-skip')?.addEventListener('click', skipAddOns);
     };
 
+    const focusFirstCustomService = (): void => {
+        const firstServiceInput = document.querySelector<HTMLInputElement>('input[name="new-sale-services-item"]');
+        if (!firstServiceInput) {
+            return;
+        }
+
+        requestAnimationFrame(() => {
+            firstServiceInput.focus();
+        });
+    };
+
     const initializePage = async (): Promise<void> => {
         const page = document.getElementById('dashboard-new-sale-services-page') as HTMLElement | null;
         if (!page || page.dataset.initialized === 'true') {
@@ -821,6 +832,8 @@
             loadServiceCatalog(),
             loadContactsSummary(),
         ]);
+
+        focusFirstCustomService();
 
         await loadRegisterPricing();
     };
