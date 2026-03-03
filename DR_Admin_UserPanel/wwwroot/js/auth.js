@@ -74,6 +74,21 @@
             window.location.href = `/account/login?returnUrl=${returnUrl}`;
         }
     }
+    function routeHomeByAuth() {
+        const path = window.location.pathname.toLowerCase();
+        if (path !== '/') {
+            return;
+        }
+        const homePage = document.getElementById('home-page');
+        if (!homePage) {
+            return;
+        }
+        if (isLoggedIn()) {
+            window.location.href = '/dashboard';
+            return;
+        }
+        window.location.href = '/account/login';
+    }
     function logout() {
         clearSession();
         window.location.href = '/account/login';
@@ -120,6 +135,7 @@
     }
     function initializeAuth() {
         enforceGuard();
+        routeHomeByAuth();
         bindLogoutButton();
         syncAuthUi();
     }

@@ -119,6 +119,25 @@ function enforceGuard(): void {
     }
 }
 
+function routeHomeByAuth(): void {
+    const path = window.location.pathname.toLowerCase();
+    if (path !== '/') {
+        return;
+    }
+
+    const homePage = document.getElementById('home-page');
+    if (!homePage) {
+        return;
+    }
+
+    if (isLoggedIn()) {
+        window.location.href = '/dashboard';
+        return;
+    }
+
+    window.location.href = '/account/login';
+}
+
 function logout(): void {
     clearSession();
     window.location.href = '/account/login';
@@ -170,6 +189,7 @@ function bindLogoutButton(): void {
 
 function initializeAuth(): void {
     enforceGuard();
+    routeHomeByAuth();
     bindLogoutButton();
     syncAuthUi();
 }
