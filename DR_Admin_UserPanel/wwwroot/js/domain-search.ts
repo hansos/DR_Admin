@@ -49,6 +49,7 @@ interface CartDomainItem {
     periodYears: number;
     includePrivacy: boolean;
     premiumPrice: number;
+    privacyPriceTotal?: number;
 }
 
 interface CartServiceItem {
@@ -259,6 +260,7 @@ function initializeDomainSearch(): void {
         }
 
         latestCalculatedPrice = await getDomainRegistrationPrice(latestResult.domainName, getSelectedPeriodYears());
+        setPrivacyPriceLabel();
         renderResult(latestResult);
 
         if (isDomainSelectionLocked) {
@@ -464,7 +466,8 @@ function addResultToCart(showMessage: boolean): boolean {
         registrarCode: defaultRegistrarCode,
         periodYears,
         includePrivacy,
-        premiumPrice: getSelectedDomainPrice(latestResult)
+        premiumPrice: getSelectedDomainPrice(latestResult),
+        privacyPriceTotal: includePrivacy && typeof latestPrivacyPrice === 'number' ? latestPrivacyPrice * periodYears : 0
     };
 
     typedWindow.UserPanelCart?.saveState(state);
@@ -577,7 +580,9 @@ function setPrivacyPriceLabel(): void {
     }
 
     if (typeof latestPrivacyPrice === 'number') {
-        priceLabel.textContent = `(${latestPrivacyPrice.toFixed(2)} ${latestCalculatedCurrency})`;
+        const years = getSelectedPeriodYears();
+        const totalPrivacyPrice = latestPrivacyPrice * years;
+        priceLabel.textContent = `(${totalPrivacyPrice.toFixed(2)} ${latestCalculatedCurrency} for ${years} year${years > 1 ? 's' : ''})`;
         return;
     }
 

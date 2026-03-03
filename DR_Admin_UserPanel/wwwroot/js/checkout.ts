@@ -2,18 +2,35 @@ interface CheckoutCartState {
     domain: {
         domainName: string;
         premiumPrice: number;
+        periodYears?: number;
+        includePrivacy?: boolean;
+        privacyPriceTotal?: number;
     } | null;
     hosting: Array<{
         id: number;
+        name?: string;
         billingCycle: 'monthly' | 'yearly';
         monthlyPrice: number;
         yearlyPrice: number;
     }>;
     services: Array<{
         id: number;
+        name?: string;
         price: number;
     }>;
     discount: number;
+}
+
+interface CheckoutAccountDto {
+    id: number;
+    username: string;
+    email: string;
+    customer?: {
+        id: number;
+        referenceNumber?: number;
+        name: string;
+        email: string;
+    };
 }
 
 interface CreateOrderDto {
@@ -59,6 +76,7 @@ function initializeCheckout(): void {
     page.dataset.bound = 'true';
 
     renderSummary();
+    void loadLoggedInCustomer();
     renderPaymentStatusFromQuery();
 
     const form = document.getElementById('checkout-form') as HTMLFormElement | null;
@@ -83,18 +101,29 @@ function renderSummary(): void {
 
     if (state.domain) {
         oneTimeTotal += state.domain.premiumPrice;
-        lines.push(`<div class="d-flex justify-content-between"><span>Domain</span><span>${state.domain.premiumPrice.toFixed(2)}</span></div>`);
+        const periodLabel = typeof state.domain.periodYears === 'number' && state.domain.periodYears > 0
+            ? ` (${state.domain.periodYears} year${state.domain.periodYears > 1 ? 's' : ''})`
+            : '';
+        lines.push(`<div class="d-flex justify-content-between"><span>Domain: ${escapeHtmlCheckout(state.domain.domainName)}${periodLabel}</span><span>${state.domain.premiumPrice.toFixed(2)}</span></div>`);
+
+        if (state.domain.includePrivacy) {
+            const privacyAmount = typeof state.domain.privacyPriceTotal === 'number' ? state.domain.privacyPriceTotal : 0;
+            oneTimeTotal += privacyAmount;
+            lines.push(`<div class="d-flex justify-content-between"><span>WHOIS Privacy</span><span>${privacyAmount.toFixed(2)}</span></div>`);
+        }
     }
 
     state.hosting.forEach((item) => {
         const amount = item.billingCycle === 'yearly' ? item.yearlyPrice : item.monthlyPrice;
         recurringTotal += amount;
-        lines.push(`<div class="d-flex justify-content-between"><span>Hosting #${item.id}</span><span>${amount.toFixed(2)}</span></div>`);
+        const hostingName = item.name?.trim() ? item.name : `Hosting #${item.id}`;
+        lines.push(`<div class="d-flex justify-content-between"><span>Hosting: ${escapeHtmlCheckout(hostingName)} (${item.billingCycle})</span><span>${amount.toFixed(2)}</span></div>`);
     });
 
     state.services.forEach((item) => {
         recurringTotal += item.price;
-        lines.push(`<div class="d-flex justify-content-between"><span>Service #${item.id}</span><span>${item.price.toFixed(2)}</span></div>`);
+        const serviceName = item.name?.trim() ? item.name : `Service #${item.id}`;
+        lines.push(`<div class="d-flex justify-content-between"><span>Service: ${escapeHtmlCheckout(serviceName)}</span><span>${item.price.toFixed(2)}</span></div>`);
     });
 
     lines.push('<hr/>');
@@ -102,6 +131,48 @@ function renderSummary(): void {
     lines.push(`<div class="d-flex justify-content-between fw-semibold"><span>Total now</span><span>${Math.max(0, oneTimeTotal + recurringTotal - state.discount).toFixed(2)}</span></div>`);
 
     container.innerHTML = lines.join('');
+}
+
+async function loadLoggedInCustomer(): Promise<void> {
+    const typedWindow = window as CheckoutWindow;
+    const customerIdEl = document.getElementById('checkout-customer-id') as HTMLInputElement | null;
+    const customerIdDisplay = document.getElementById('checkout-customer-id-display');
+    const customerName = document.getElementById('checkout-customer-name');
+    const customerEmail = document.getElementById('checkout-customer-email');
+
+    if (!customerIdEl || !customerIdDisplay || !customerName || !customerEmail) {
+        return;
+    }
+
+    const response = await typedWindow.UserPanelApi?.request<CheckoutAccountDto>('/MyAccount/me', {
+        method: 'GET'
+    }, true);
+
+    if (!response || !response.success || !response.data) {
+        customerIdEl.value = '';
+        customerIdDisplay.textContent = '-';
+        customerName.textContent = '-';
+        customerEmail.textContent = '-';
+        return;
+    }
+
+    const customerId = response.data.customer?.id ?? 0;
+    const customerReference = response.data.customer?.referenceNumber;
+    customerIdEl.value = customerId > 0 ? customerId.toString() : '';
+    customerIdDisplay.textContent = typeof customerReference === 'number' && customerReference > 0
+        ? `REF${customerReference}`
+        : '-';
+    customerName.textContent = response.data.customer?.name ?? response.data.username;
+    customerEmail.textContent = response.data.customer?.email ?? response.data.email;
+}
+
+function escapeHtmlCheckout(value: string): string {
+    return value
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
 }
 
 async function submitCheckout(): Promise<void> {

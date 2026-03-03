@@ -329,6 +329,7 @@ public class MyAccountService : IMyAccountService
             return new CustomerAccountDto
             {
                 Id = customer.Id,
+                ReferenceNumber = customer.ReferenceNumber,
                 Name = customer.Name,
                 Email = customer.Email,
                 Phone = customer.Phone,
@@ -365,6 +366,7 @@ public class MyAccountService : IMyAccountService
                 Customer = user.Customer != null ? new CustomerAccountDto
                 {
                     Id = user.Customer.Id,
+                    ReferenceNumber = user.Customer.ReferenceNumber,
                     Name = user.Customer.Name,
                     Email = user.Customer.Email,
                     Phone = user.Customer.Phone,
