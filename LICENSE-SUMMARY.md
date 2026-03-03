@@ -68,6 +68,6 @@ A commercial license is required if:
 
 For commercial licensing, please use the contact form at:
 
-- **https://dradmin.net** (Contact Sales section)
+- **https://www.dradmin.net** (Contact Sales section)
 
 We provide full commercial license terms and pricing for each individual case.
