@@ -23,7 +23,6 @@
     "account-change-password.ts",
     "account-customer-page.ts",
     "domain-search.ts",
-    "cart.ts",
     "checkout.ts",
     "dashboard-summary.ts",
     "domains.ts",

@@ -77,6 +77,9 @@ interface DomainSearchWindow extends Window {
         getState: () => CartStateItem;
         saveState: (state: CartStateItem) => void;
     };
+    Blazor?: {
+        addEventListener?: (eventName: string, callback: () => void) => void;
+    };
 }
 
 interface RegistrarLookupDto {
@@ -114,6 +117,7 @@ let latestCalculatedCurrency = 'USD';
 let latestTldId: number | null = null;
 let latestPrivacyPrice: number | null = null;
 let isDomainSelectionLocked = false;
+const basketPositionStorageKey = 'up_domain_search_basket_position';
 
 function initializeDomainSearch(): void {
     const form = document.getElementById('domain-search-form') as HTMLFormElement | null;
@@ -122,6 +126,8 @@ function initializeDomainSearch(): void {
     }
 
     form.dataset.bound = 'true';
+    initializeBasketDragging();
+    renderFloatingBasket();
 
     const addAndBundleButton = document.getElementById('domain-search-add-and-bundle') as HTMLButtonElement | null;
     addAndBundleButton?.addEventListener('click', () => {
@@ -308,6 +314,62 @@ function initializeDomainSearch(): void {
         latestCalculatedPrice = await getDomainRegistrationPrice(response.data.domainName, getSelectedPeriodYears());
         renderResult(response.data);
     });
+
+    void restoreDomainSearchFromCart();
+}
+
+async function restoreDomainSearchFromCart(): Promise<void> {
+    const typedWindow = window as DomainSearchWindow;
+    const state = typedWindow.UserPanelCart?.getState();
+    if (!state?.domain) {
+        return;
+    }
+
+    const domain = state.domain;
+
+    const domainInput = document.getElementById('domain-search-input') as HTMLInputElement | null;
+    if (domainInput) {
+        domainInput.value = domain.domainName;
+    }
+
+    if (domain.registrarCode) {
+        defaultRegistrarCode = domain.registrarCode;
+    }
+
+    latestResult = {
+        success: true,
+        domainName: domain.domainName,
+        isAvailable: true,
+        isTldSupported: true,
+        message: '',
+        premiumPrice: domain.premiumPrice
+    };
+
+    await applyDomainSettings(domain.domainName);
+
+    const periodSelect = document.getElementById('domain-search-period') as HTMLSelectElement | null;
+    if (periodSelect) {
+        const hasStoredPeriod = Array.from(periodSelect.options).some((option: HTMLOptionElement) => option.value === domain.periodYears.toString());
+        if (hasStoredPeriod) {
+            periodSelect.value = domain.periodYears.toString();
+        }
+    }
+
+    const privacyInput = document.getElementById('domain-search-privacy') as HTMLInputElement | null;
+    if (privacyInput && !privacyInput.disabled) {
+        privacyInput.checked = domain.includePrivacy;
+    }
+
+    latestCalculatedPrice = typeof domain.premiumPrice === 'number' && domain.premiumPrice > 0
+        ? domain.premiumPrice
+        : await getDomainRegistrationPrice(domain.domainName, domain.periodYears);
+
+    isDomainSelectionLocked = true;
+    setDomainFormLocked(true);
+    renderResult(latestResult);
+    setUpsellVisibility(true);
+    await renderUpsellOptions();
+    renderFloatingBasket();
 }
 
 function renderResult(result: DomainAvailabilityResult | null): void {
@@ -406,6 +468,7 @@ function addResultToCart(showMessage: boolean): boolean {
     };
 
     typedWindow.UserPanelCart?.saveState(state);
+    renderFloatingBasket();
 
     if (showMessage) {
         typedWindow.UserPanelAlerts?.showSuccess('domain-search-alert-success', 'Domain added to cart. Continue by selecting hosting/services or checkout.');
@@ -519,6 +582,155 @@ function setPrivacyPriceLabel(): void {
     }
 
     priceLabel.textContent = '(price unavailable)';
+}
+
+function renderFloatingBasket(): void {
+    const panel = document.getElementById('domain-search-basket-panel');
+    const linesContainer = document.getElementById('domain-search-basket-lines');
+    const totalContainer = document.getElementById('domain-search-basket-total');
+    if (!panel || !linesContainer || !totalContainer) {
+        return;
+    }
+
+    const typedWindow = window as DomainSearchWindow;
+    const state = typedWindow.UserPanelCart?.getState();
+    if (!state) {
+        panel.classList.add('d-none');
+        return;
+    }
+
+    const lines: string[] = [];
+    let total = 0;
+
+    if (state.domain) {
+        const domainPrice = typeof state.domain.premiumPrice === 'number' ? state.domain.premiumPrice : 0;
+        total += domainPrice;
+        lines.push(`<div class="d-flex justify-content-between"><span>Domain: ${escapeHtml(state.domain.domainName)} (${state.domain.periodYears} year${state.domain.periodYears > 1 ? 's' : ''})</span><span>${domainPrice.toFixed(2)}</span></div>`);
+
+        if (state.domain.includePrivacy && typeof latestPrivacyPrice === 'number') {
+            const privacyPrice = latestPrivacyPrice * state.domain.periodYears;
+            total += privacyPrice;
+            lines.push(`<div class="d-flex justify-content-between"><span>WHOIS Privacy</span><span>${privacyPrice.toFixed(2)}</span></div>`);
+        }
+    }
+
+    state.hosting.forEach((item: CartHostingItem) => {
+        const amount = item.billingCycle === 'yearly' ? item.yearlyPrice : item.monthlyPrice;
+        total += amount;
+        lines.push(`<div class="d-flex justify-content-between"><span>Hosting: ${escapeHtml(item.name)} (${item.billingCycle})</span><span>${amount.toFixed(2)}</span></div>`);
+    });
+
+    state.services.forEach((item: CartServiceItem) => {
+        total += item.price;
+        lines.push(`<div class="d-flex justify-content-between"><span>Service: ${escapeHtml(item.name)}</span><span>${item.price.toFixed(2)}</span></div>`);
+    });
+
+    if (state.discount > 0) {
+        total -= state.discount;
+        lines.push(`<div class="d-flex justify-content-between"><span>Discount</span><span>- ${state.discount.toFixed(2)}</span></div>`);
+    }
+
+    if (lines.length === 0) {
+        panel.classList.add('d-none');
+        linesContainer.innerHTML = '';
+        totalContainer.textContent = '0.00';
+        return;
+    }
+
+    panel.classList.remove('d-none');
+    linesContainer.innerHTML = lines.join('');
+    totalContainer.textContent = Math.max(0, total).toFixed(2);
+}
+
+function initializeBasketDragging(): void {
+    const panel = document.getElementById('domain-search-basket-panel') as HTMLElement | null;
+    const handle = document.getElementById('domain-search-basket-drag-handle') as HTMLButtonElement | null;
+    if (!panel || !handle || panel.dataset.dragBound === 'true') {
+        return;
+    }
+
+    panel.dataset.dragBound = 'true';
+    restoreBasketPosition(panel);
+
+    let isDragging = false;
+    let offsetX = 0;
+    let offsetY = 0;
+
+    const onMouseMove = (event: MouseEvent): void => {
+        if (!isDragging) {
+            return;
+        }
+
+        moveBasketTo(panel, event.clientX - offsetX, event.clientY - offsetY);
+    };
+
+    const onMouseUp = (): void => {
+        if (!isDragging) {
+            return;
+        }
+
+        isDragging = false;
+        handle.classList.remove('active');
+        saveBasketPosition(panel);
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+    };
+
+    handle.addEventListener('mousedown', (event: MouseEvent) => {
+        event.preventDefault();
+        const rect = panel.getBoundingClientRect();
+        offsetX = event.clientX - rect.left;
+        offsetY = event.clientY - rect.top;
+        isDragging = true;
+        handle.classList.add('active');
+        panel.style.bottom = 'auto';
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+    });
+}
+
+function moveBasketTo(panel: HTMLElement, left: number, top: number): void {
+    const maxLeft = Math.max(0, window.innerWidth - panel.offsetWidth);
+    const maxTop = Math.max(0, window.innerHeight - panel.offsetHeight);
+
+    const boundedLeft = Math.min(Math.max(0, left), maxLeft);
+    const boundedTop = Math.min(Math.max(0, top), maxTop);
+
+    panel.style.left = `${boundedLeft}px`;
+    panel.style.top = `${boundedTop}px`;
+    panel.style.right = 'auto';
+    panel.style.bottom = 'auto';
+}
+
+function saveBasketPosition(panel: HTMLElement): void {
+    try {
+        const left = Number.parseFloat(panel.style.left);
+        const top = Number.parseFloat(panel.style.top);
+        if (Number.isNaN(left) || Number.isNaN(top)) {
+            return;
+        }
+
+        localStorage.setItem(basketPositionStorageKey, JSON.stringify({ left, top }));
+    } catch {
+    }
+}
+
+function restoreBasketPosition(panel: HTMLElement): void {
+    try {
+        const raw = localStorage.getItem(basketPositionStorageKey);
+        if (!raw) {
+            return;
+        }
+
+        const parsed = JSON.parse(raw) as { left?: number; top?: number };
+        if (typeof parsed.left !== 'number' || typeof parsed.top !== 'number') {
+            return;
+        }
+
+        moveBasketTo(panel, parsed.left, parsed.top);
+    } catch {
+    }
 }
 
 function getSelectedPeriodYears(): number {
@@ -765,6 +977,7 @@ function toggleServiceSelection(serviceId: number): void {
     if (currentIndex >= 0) {
         state.services.splice(currentIndex, 1);
         typedWindow.UserPanelCart?.saveState(state);
+        renderFloatingBasket();
         void renderServiceUpsell();
         return;
     }
@@ -781,6 +994,7 @@ function toggleServiceSelection(serviceId: number): void {
     });
 
     typedWindow.UserPanelCart?.saveState(state);
+    renderFloatingBasket();
     void renderServiceUpsell();
 }
 
@@ -823,6 +1037,7 @@ function toggleHostingSelection(hostingId: number, billingCycle: 'monthly' | 'ye
     if (existingIndex >= 0) {
         state.hosting.splice(existingIndex, 1);
         typedWindow.UserPanelCart?.saveState(state);
+        renderFloatingBasket();
         void renderHostingUpsell();
         return;
     }
@@ -832,15 +1047,16 @@ function toggleHostingSelection(hostingId: number, billingCycle: 'monthly' | 'ye
         return;
     }
 
-    state.hosting.push({
+    state.hosting = [{
         id: source.id,
         name: source.name,
         monthlyPrice: source.monthlyPrice,
         yearlyPrice: source.yearlyPrice,
         billingCycle
-    });
+    }];
 
     typedWindow.UserPanelCart?.saveState(state);
+    renderFloatingBasket();
     void renderHostingUpsell();
 }
 
@@ -858,6 +1074,7 @@ function updateHostingCycle(hostingId: number, billingCycle: 'monthly' | 'yearly
 
     existing.billingCycle = billingCycle;
     typedWindow.UserPanelCart?.saveState(state);
+    renderFloatingBasket();
 }
 
 function getInputValue(id: string): string {
@@ -1003,3 +1220,17 @@ if (document.readyState === 'loading') {
 } else {
     initializeDomainSearch();
 }
+
+window.addEventListener('popstate', initializeDomainSearch);
+
+const domainSearchWindow = window as DomainSearchWindow;
+function registerDomainSearchEnhancedLoadListener(): void {
+    if (domainSearchWindow.Blazor?.addEventListener) {
+        domainSearchWindow.Blazor.addEventListener('enhancedload', initializeDomainSearch);
+        return;
+    }
+
+    window.setTimeout(registerDomainSearchEnhancedLoadListener, 100);
+}
+
+registerDomainSearchEnhancedLoadListener();

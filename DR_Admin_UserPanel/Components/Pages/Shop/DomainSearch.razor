@@ -8,8 +8,25 @@
             <h1 class="h4 mb-1">Domain Search</h1>
             <p class="text-muted mb-0">Start your purchase by finding a domain, then bundle hosting and services.</p>
         </div>
-        <a href="/shop/cart" class="btn btn-outline-primary">Go to cart</a>
     </div>
+
+<div id="domain-search-basket-panel" class="card shadow border-0 position-fixed d-none" style="left: 1rem; bottom: 1rem; width: min(360px, calc(100vw - 2rem)); z-index: 1030;">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="d-flex align-items-center gap-2">
+                <button id="domain-search-basket-drag-handle" type="button" class="btn btn-sm btn-light" aria-label="Move basket" title="Drag to move basket">
+                    <i class="bi bi-arrows-move"></i>
+                </button>
+                <h2 class="h6 mb-0">Basket</h2>
+            </div>
+        </div>
+        <div id="domain-search-basket-lines" class="small mb-2"></div>
+        <div class="d-flex justify-content-between border-top pt-2 fw-semibold">
+            <span>Total</span>
+            <span id="domain-search-basket-total">0.00</span>
+        </div>
+    </div>
+</div>
 
     <div class="card border-0 bg-light-subtle mb-3">
         <div class="card-body py-3">
@@ -67,10 +84,6 @@
                     <h2 class="h6 mb-1">Configure your domain bundle</h2>
                     <p class="text-muted small mb-0">Selected hosting: <span id="domain-search-upsell-hosting-count">0</span> • Selected services: <span id="domain-search-upsell-service-count">0</span></p>
                 </div>
-                <div class="d-flex gap-2">
-                    <a href="/shop/cart?focus=services" class="btn btn-sm btn-outline-primary">Review bundle</a>
-                    <button id="domain-search-checkout" type="button" class="btn btn-sm btn-primary">Checkout</button>
-                </div>
             </div>
 
             <div class="row g-3 mb-3">
@@ -97,6 +110,10 @@
                     <h3 class="h6">Optional services</h3>
                     <div id="domain-search-upsell-services-list" class="list-group"></div>
                 </div>
+            </div>
+
+            <div class="mt-4">
+                <button id="domain-search-checkout" type="button" class="btn btn-primary btn-lg w-100">Checkout</button>
             </div>
         </div>
     </div>
