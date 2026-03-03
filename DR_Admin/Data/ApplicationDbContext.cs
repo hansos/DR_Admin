@@ -182,6 +182,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<HostingPackage> HostingPackages { get; set; }
     public DbSet<AuditLog> AuditLogs { get; set; }
     public DbSet<LoginHistory> LoginHistories { get; set; }
+    public DbSet<SupportTicket> SupportTickets { get; set; }
+    public DbSet<SupportTicketMessage> SupportTicketMessages { get; set; }
     public DbSet<SystemSetting> SystemSettings { get; set; }
     public DbSet<MyCompany> MyCompanies { get; set; }
     public DbSet<BackupSchedule> BackupSchedules { get; set; }
@@ -1029,6 +1031,57 @@ public class ApplicationDbContext : DbContext
                 .WithMany(u => u.LoginHistories)
                 .HasForeignKey(e => e.UserId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // SupportTicket configuration
+        modelBuilder.Entity<SupportTicket>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Subject).IsRequired().HasMaxLength(150);
+            entity.Property(e => e.Status).IsRequired().HasMaxLength(30);
+            entity.Property(e => e.Priority).IsRequired().HasMaxLength(20);
+
+            entity.HasIndex(e => e.CustomerId);
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.Priority);
+            entity.HasIndex(e => e.LastMessageAt);
+
+            entity.HasOne(e => e.Customer)
+                .WithMany(c => c.SupportTickets)
+                .HasForeignKey(e => e.CustomerId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.CreatedByUser)
+                .WithMany(u => u.CreatedSupportTickets)
+                .HasForeignKey(e => e.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.AssignedToUser)
+                .WithMany(u => u.AssignedSupportTickets)
+                .HasForeignKey(e => e.AssignedToUserId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // SupportTicketMessage configuration
+        modelBuilder.Entity<SupportTicketMessage>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.SenderRole).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.Message).IsRequired().HasMaxLength(4000);
+
+            entity.HasIndex(e => e.SupportTicketId);
+            entity.HasIndex(e => e.SenderUserId);
+            entity.HasIndex(e => e.CreatedAt);
+
+            entity.HasOne(e => e.SupportTicket)
+                .WithMany(t => t.Messages)
+                .HasForeignKey(e => e.SupportTicketId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.SenderUser)
+                .WithMany(u => u.SupportTicketMessages)
+                .HasForeignKey(e => e.SenderUserId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         // SystemSetting configuration

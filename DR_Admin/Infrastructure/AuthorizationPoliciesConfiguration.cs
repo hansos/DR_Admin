@@ -486,6 +486,16 @@ public static class AuthorizationPoliciesConfiguration
         options.AddPolicy("SubscriptionBillingHistory.Read", policy =>
             policy.RequireRole(ADMIN, SUPPORT, SALES));
 
+        // SupportTicket policies
+        options.AddPolicy("SupportTicket.Read", policy =>
+            policy.RequireRole(ADMIN, SUPPORT, CUSTOMER));
+
+        options.AddPolicy("SupportTicket.Write", policy =>
+            policy.RequireRole(ADMIN, SUPPORT, CUSTOMER));
+
+        options.AddPolicy("SupportTicket.Manage", policy =>
+            policy.RequireRole(ADMIN, SUPPORT));
+
         // TaxRule policies
         options.AddPolicy("TaxRule.Delete", policy =>
             policy.RequireRole(ADMIN));

@@ -19,4 +19,7 @@ public class User : EntityBase
     public ICollection<Token> Tokens { get; set; } = new List<Token>();
     public ICollection<AuditLog> AuditLogs { get; set; } = new List<AuditLog>();
     public ICollection<LoginHistory> LoginHistories { get; set; } = new List<LoginHistory>();
+    public ICollection<SupportTicket> CreatedSupportTickets { get; set; } = new List<SupportTicket>();
+    public ICollection<SupportTicket> AssignedSupportTickets { get; set; } = new List<SupportTicket>();
+    public ICollection<SupportTicketMessage> SupportTicketMessages { get; set; } = new List<SupportTicketMessage>();
 }

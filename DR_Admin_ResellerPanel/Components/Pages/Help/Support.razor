@@ -1,0 +1,96 @@
+@page "/help/support"
+
+<div id="reseller-support-tickets-page" class="container-fluid">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+        <div>
+            <h2 class="h4 mb-1"><i class="bi bi-life-preserver"></i> Support Tickets</h2>
+            <p class="text-muted mb-0">Manage customer support conversations.</p>
+        </div>
+        <button id="reseller-support-refresh" class="btn btn-outline-secondary" type="button">
+            <i class="bi bi-arrow-clockwise"></i> Refresh
+        </button>
+    </div>
+
+    <div id="reseller-support-alert-success" class="alert alert-success d-none" role="alert"></div>
+    <div id="reseller-support-alert-error" class="alert alert-danger d-none" role="alert"></div>
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-header bg-light">
+            <div class="row g-2 align-items-end">
+                <div class="col-12 col-md-3">
+                    <label class="form-label mb-1" for="reseller-support-status-filter">Status</label>
+                    <select id="reseller-support-status-filter" class="form-select">
+                        <option value="">All</option>
+                        <option value="Open">Open</option>
+                        <option value="InProgress">In progress</option>
+                        <option value="WaitingForCustomer">Waiting for customer</option>
+                        <option value="Closed">Closed</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-2">
+                    <label class="form-label mb-1" for="reseller-support-page-size">Page size</label>
+                    <select id="reseller-support-page-size" class="form-select">
+                        <option value="10">10</option>
+                        <option value="25" selected>25</option>
+                        <option value="50">50</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-7 d-flex justify-content-md-end gap-2">
+                    <button id="reseller-support-apply" class="btn btn-outline-primary" type="button"><i class="bi bi-funnel"></i> Apply</button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Customer</th>
+                            <th>Subject</th>
+                            <th>Status</th>
+                            <th>Priority</th>
+                            <th>Updated</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="reseller-support-table-body">
+                        <tr><td colspan="7" class="text-center"><div class="spinner-border text-primary"></div></td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="text-muted small" id="reseller-support-pagination-info"></div>
+                <nav aria-label="Support ticket pagination">
+                    <ul class="pagination mb-0" id="reseller-support-pagination-list"></ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <h5 class="mb-0" id="reseller-support-details-title">Ticket details</h5>
+            <select id="reseller-support-status" class="form-select form-select-sm" style="max-width: 220px;" disabled>
+                <option value="Open">Open</option>
+                <option value="InProgress">In progress</option>
+                <option value="WaitingForCustomer">Waiting for customer</option>
+                <option value="Closed">Closed</option>
+            </select>
+        </div>
+        <div class="card-body">
+            <div id="reseller-support-thread" class="border rounded p-3 bg-light-subtle" style="min-height: 200px; max-height: 360px; overflow-y: auto;">
+                <p class="text-muted mb-0">Select a ticket to show conversation.</p>
+            </div>
+            <form id="reseller-support-reply-form" class="mt-3" novalidate>
+                <label for="reseller-support-reply" class="form-label">Reply</label>
+                <textarea id="reseller-support-reply" class="form-control" rows="3" maxlength="4000" disabled></textarea>
+                <div class="mt-2 d-flex justify-content-end">
+                    <button id="reseller-support-send" class="btn btn-primary" type="submit" disabled>
+                        <i class="bi bi-send"></i> Send reply
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

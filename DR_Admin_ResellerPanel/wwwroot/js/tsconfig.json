@@ -43,7 +43,8 @@
         "reset-password.ts",
         "users.ts",
         "roles.ts",
-        "login-histories.ts"
+        "login-histories.ts",
+        "support-tickets.ts"
     ]
 }
 

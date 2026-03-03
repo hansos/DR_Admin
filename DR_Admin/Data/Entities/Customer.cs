@@ -65,4 +65,5 @@ public class Customer : EntityBase
     public ICollection<RegisteredDomain> RegisteredDomains { get; set; } = new List<RegisteredDomain>();
     public ICollection<HostingAccount> HostingAccounts { get; set; } = new List<HostingAccount>();
     public ICollection<CustomerAddress> CustomerAddresses { get; set; } = new List<CustomerAddress>();
+    public ICollection<SupportTicket> SupportTickets { get; set; } = new List<SupportTicket>();
 }
