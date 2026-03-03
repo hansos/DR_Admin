@@ -111,6 +111,98 @@ public class OrderDto
     /// Date updated
     /// </summary>
     public DateTime UpdatedAt { get; set; }
+
+    /// <summary>
+    /// Order lines
+    /// </summary>
+    public List<OrderLineDto> OrderLines { get; set; } = new();
+}
+
+/// <summary>
+/// Data transfer object representing a line item in an order
+/// </summary>
+public class OrderLineDto
+{
+    /// <summary>
+    /// Unique identifier for the line
+    /// </summary>
+    public int Id { get; set; }
+
+    /// <summary>
+    /// Optional service ID
+    /// </summary>
+    public int? ServiceId { get; set; }
+
+    /// <summary>
+    /// Line number
+    /// </summary>
+    public int LineNumber { get; set; }
+
+    /// <summary>
+    /// Description
+    /// </summary>
+    public string Description { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Quantity
+    /// </summary>
+    public int Quantity { get; set; }
+
+    /// <summary>
+    /// Unit price
+    /// </summary>
+    public decimal UnitPrice { get; set; }
+
+    /// <summary>
+    /// Total price
+    /// </summary>
+    public decimal TotalPrice { get; set; }
+
+    /// <summary>
+    /// Whether line is recurring
+    /// </summary>
+    public bool IsRecurring { get; set; }
+
+    /// <summary>
+    /// Notes
+    /// </summary>
+    public string Notes { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Data transfer object for creating a new order line
+/// </summary>
+public class CreateOrderLineDto
+{
+    /// <summary>
+    /// Optional service ID
+    /// </summary>
+    public int? ServiceId { get; set; }
+
+    /// <summary>
+    /// Description
+    /// </summary>
+    public string Description { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Quantity
+    /// </summary>
+    public int Quantity { get; set; } = 1;
+
+    /// <summary>
+    /// Unit price
+    /// </summary>
+    public decimal UnitPrice { get; set; }
+
+    /// <summary>
+    /// Whether line is recurring
+    /// </summary>
+    public bool IsRecurring { get; set; }
+
+    /// <summary>
+    /// Notes
+    /// </summary>
+    public string Notes { get; set; } = string.Empty;
 }
 
 
@@ -173,6 +265,11 @@ public class CreateOrderDto
     /// Auto-renew setting
     /// </summary>
     public bool AutoRenew { get; set; } = true;
+
+    /// <summary>
+    /// Line items for this order
+    /// </summary>
+    public List<CreateOrderLineDto> OrderLines { get; set; } = new();
 }
 
 

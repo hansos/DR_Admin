@@ -37,7 +37,7 @@ interface CreateOrderDto {
     customerId: number;
     serviceId: number | null;
     quoteId: number | null;
-    orderType: string;
+    orderType: number;
     startDate: string;
     endDate: string;
     nextBillingDate: string;
@@ -45,6 +45,16 @@ interface CreateOrderDto {
     recurringAmount: number;
     couponCode: string | null;
     autoRenew: boolean;
+    orderLines: CreateOrderLineDto[];
+}
+
+interface CreateOrderLineDto {
+    serviceId: number | null;
+    description: string;
+    quantity: number;
+    unitPrice: number;
+    isRecurring: boolean;
+    notes: string;
 }
 
 interface OrderDto {
@@ -204,18 +214,65 @@ async function submitCheckout(): Promise<void> {
         + state.services.reduce((sum, item) => sum + item.price, 0)
         - state.discount;
 
+    const orderLines: CreateOrderLineDto[] = [];
+
+    if (state.domain) {
+        orderLines.push({
+            serviceId: null,
+            description: `Domain: ${state.domain.domainName}${typeof state.domain.periodYears === 'number' ? ` (${state.domain.periodYears} year${state.domain.periodYears > 1 ? 's' : ''})` : ''}`,
+            quantity: 1,
+            unitPrice: state.domain.premiumPrice,
+            isRecurring: false,
+            notes: ''
+        });
+
+        if (state.domain.includePrivacy) {
+            orderLines.push({
+                serviceId: null,
+                description: 'WHOIS Privacy',
+                quantity: 1,
+                unitPrice: typeof state.domain.privacyPriceTotal === 'number' ? state.domain.privacyPriceTotal : 0,
+                isRecurring: false,
+                notes: ''
+            });
+        }
+    }
+
+    state.hosting.forEach((item) => {
+        orderLines.push({
+            serviceId: null,
+            description: `Hosting: ${item.name?.trim() ? item.name : `Package #${item.id}`} (${item.billingCycle})`,
+            quantity: 1,
+            unitPrice: item.billingCycle === 'yearly' ? item.yearlyPrice : item.monthlyPrice,
+            isRecurring: true,
+            notes: ''
+        });
+    });
+
+    state.services.forEach((item) => {
+        orderLines.push({
+            serviceId: item.id,
+            description: `Service: ${item.name?.trim() ? item.name : `Service #${item.id}`}`,
+            quantity: 1,
+            unitPrice: item.price,
+            isRecurring: true,
+            notes: ''
+        });
+    });
+
     const payload: CreateOrderDto = {
         customerId,
-        serviceId: state.hosting[0]?.id ?? null,
+        serviceId: null,
         quoteId: null,
-        orderType: 'New',
+        orderType: 0,
         startDate: new Date().toISOString(),
         endDate: new Date(Date.now() + (365 * 24 * 60 * 60 * 1000)).toISOString(),
         nextBillingDate: new Date(Date.now() + (30 * 24 * 60 * 60 * 1000)).toISOString(),
         setupFee: state.domain?.premiumPrice ?? 0,
         recurringAmount: Math.max(0, recurringAmount),
         couponCode: null,
-        autoRenew: true
+        autoRenew: true,
+        orderLines
     };
 
     const response = await typedWindow.UserPanelApi?.request<OrderDto>('/Orders', {

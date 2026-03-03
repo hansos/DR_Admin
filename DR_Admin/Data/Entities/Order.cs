@@ -164,6 +164,11 @@ public class Order : EntityBase
     public ICollection<Invoice> Invoices { get; set; } = new List<Invoice>();
 
     /// <summary>
+    /// Collection of line items for this order
+    /// </summary>
+    public ICollection<OrderLine> OrderLines { get; set; } = new List<OrderLine>();
+
+    /// <summary>
     /// Collection of payment intents for this order
     /// </summary>
     public ICollection<PaymentIntent> PaymentIntents { get; set; } = new List<PaymentIntent>();

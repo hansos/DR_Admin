@@ -25,6 +25,7 @@ public class OrderService : IOrderService
             _log.Information("Fetching all orders");
             
             var orders = await _context.Orders
+                .Include(o => o.OrderLines)
                 .AsNoTracking()
                 .ToListAsync();
 
@@ -47,6 +48,7 @@ public class OrderService : IOrderService
             _log.Information("Fetching order with ID: {OrderId}", id);
             
             var order = await _context.Orders
+                .Include(o => o.OrderLines)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(o => o.Id == id);
 
@@ -82,6 +84,29 @@ public class OrderService : IOrderService
                 }
             }
 
+            if (createDto.OrderLines.Count > 0)
+            {
+                var distinctServiceIds = createDto.OrderLines
+                    .Where(line => line.ServiceId.HasValue)
+                    .Select(line => line.ServiceId!.Value)
+                    .Distinct()
+                    .ToList();
+
+                if (distinctServiceIds.Count > 0)
+                {
+                    var validServiceIds = await _context.Services
+                        .Where(service => distinctServiceIds.Contains(service.Id))
+                        .Select(service => service.Id)
+                        .ToListAsync();
+
+                    var missingServiceId = distinctServiceIds.FirstOrDefault(id => !validServiceIds.Contains(id));
+                    if (missingServiceId > 0)
+                    {
+                        throw new InvalidOperationException($"Service with ID {missingServiceId} not found");
+                    }
+                }
+            }
+
             var order = new Order
             {
                 OrderNumber = await GenerateOrderNumberAsync(),
@@ -102,6 +127,27 @@ public class OrderService : IOrderService
 
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();
+
+            if (createDto.OrderLines.Count > 0)
+            {
+                var lineNumber = 1;
+                var lines = createDto.OrderLines.Select(line => new OrderLine
+                {
+                    OrderId = order.Id,
+                    ServiceId = line.ServiceId,
+                    LineNumber = lineNumber++,
+                    Description = line.Description,
+                    Quantity = line.Quantity <= 0 ? 1 : line.Quantity,
+                    UnitPrice = line.UnitPrice,
+                    TotalPrice = (line.Quantity <= 0 ? 1 : line.Quantity) * line.UnitPrice,
+                    IsRecurring = line.IsRecurring,
+                    Notes = line.Notes
+                }).ToList();
+
+                _context.OrderLines.AddRange(lines);
+                await _context.SaveChangesAsync();
+                order.OrderLines = lines;
+            }
 
             // Assign a CustomerNumber on first sale if the customer doesn't have one yet
             await _customerService.EnsureCustomerNumberAsync(createDto.CustomerId);
@@ -212,7 +258,22 @@ public class OrderService : IOrderService
             TrialEndsAt = order.TrialEndsAt,
             AutoRenew = order.AutoRenew,
             CreatedAt = order.CreatedAt,
-            UpdatedAt = order.UpdatedAt
+            UpdatedAt = order.UpdatedAt,
+            OrderLines = order.OrderLines
+                .OrderBy(line => line.LineNumber)
+                .Select(line => new OrderLineDto
+                {
+                    Id = line.Id,
+                    ServiceId = line.ServiceId,
+                    LineNumber = line.LineNumber,
+                    Description = line.Description,
+                    Quantity = line.Quantity,
+                    UnitPrice = line.UnitPrice,
+                    TotalPrice = line.TotalPrice,
+                    IsRecurring = line.IsRecurring,
+                    Notes = line.Notes
+                })
+                .ToList()
         };
     }
 }

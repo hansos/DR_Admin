@@ -148,6 +148,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<ServiceType> ServiceTypes { get; set; }
     public DbSet<BillingCycle> BillingCycles { get; set; }
     public DbSet<Order> Orders { get; set; }
+    public DbSet<OrderLine> OrderLines { get; set; }
     public DbSet<Invoice> Invoices { get; set; }
     public DbSet<InvoiceLine> InvoiceLines { get; set; }
     public DbSet<PaymentTransaction> PaymentTransactions { get; set; }
@@ -511,6 +512,28 @@ public class ApplicationDbContext : DbContext
                 .HasForeignKey(e => e.ServiceId)
                 .IsRequired(false)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasMany(e => e.OrderLines)
+                .WithOne(ol => ol.Order)
+                .HasForeignKey(ol => ol.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // OrderLine configuration
+        modelBuilder.Entity<OrderLine>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Description).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.UnitPrice).HasPrecision(18, 2);
+            entity.Property(e => e.TotalPrice).HasPrecision(18, 2);
+            entity.Property(e => e.Notes).HasMaxLength(1000);
+
+            entity.HasOne(e => e.Service)
+                .WithMany()
+                .HasForeignKey(e => e.ServiceId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasIndex(e => new { e.OrderId, e.LineNumber });
         });
 
         // Invoice configuration
