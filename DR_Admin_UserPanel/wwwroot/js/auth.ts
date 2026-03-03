@@ -1,3 +1,5 @@
+(() => {
+
 interface AuthSession {
     userId: number;
     username: string;
@@ -86,6 +88,8 @@ function getAccessToken(): string | null {
 function isPublicRoute(path: string): boolean {
     const normalized = path.toLowerCase();
     return normalized === '/' ||
+        normalized === '/about' ||
+        normalized === '/about-public' ||
         normalized === '/account/login' ||
         normalized === '/account/register' ||
         normalized === '/account/forgot-password' ||
@@ -197,3 +201,5 @@ function registerAuthEnhancedLoadListener(): void {
 }
 
 registerAuthEnhancedLoadListener();
+
+})();
