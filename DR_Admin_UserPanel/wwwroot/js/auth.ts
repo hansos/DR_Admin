@@ -187,6 +187,13 @@ if (document.readyState === 'loading') {
     initializeAuth();
 }
 
-if (authWindow.Blazor?.addEventListener) {
-    authWindow.Blazor.addEventListener('enhancedload', initializeAuth);
+function registerAuthEnhancedLoadListener(): void {
+    if (authWindow.Blazor?.addEventListener) {
+        authWindow.Blazor.addEventListener('enhancedload', initializeAuth);
+        return;
+    }
+
+    window.setTimeout(registerAuthEnhancedLoadListener, 100);
 }
+
+registerAuthEnhancedLoadListener();

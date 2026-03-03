@@ -136,7 +136,12 @@ if (document.readyState === 'loading') {
 else {
     initializeAuth();
 }
-if (authWindow.Blazor?.addEventListener) {
-    authWindow.Blazor.addEventListener('enhancedload', initializeAuth);
+function registerAuthEnhancedLoadListener() {
+    if (authWindow.Blazor?.addEventListener) {
+        authWindow.Blazor.addEventListener('enhancedload', initializeAuth);
+        return;
+    }
+    window.setTimeout(registerAuthEnhancedLoadListener, 100);
 }
+registerAuthEnhancedLoadListener();
 //# sourceMappingURL=auth.js.map

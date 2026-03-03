@@ -1,0 +1,41 @@
+@page "/account/settings"
+
+<PageTitle>Account Settings</PageTitle>
+
+<div class="container py-4" id="account-settings-page">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <h1 class="h4 mb-1">Account Settings</h1>
+            <p class="text-muted mb-0">Update your personal contact information.</p>
+        </div>
+    </div>
+
+    <div id="account-settings-alert-success" class="alert alert-success d-none" role="alert"></div>
+    <div id="account-settings-alert-error" class="alert alert-danger d-none" role="alert"></div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form id="account-settings-form" class="row g-3" novalidate>
+                <div class="col-12 col-md-6">
+                    <label for="account-settings-first-name" class="form-label">First name</label>
+                    <input id="account-settings-first-name" class="form-control" type="text" maxlength="80" required />
+                </div>
+                <div class="col-12 col-md-6">
+                    <label for="account-settings-last-name" class="form-label">Last name</label>
+                    <input id="account-settings-last-name" class="form-control" type="text" maxlength="80" required />
+                </div>
+                <div class="col-12 col-md-6">
+                    <label for="account-settings-email" class="form-label">Email</label>
+                    <input id="account-settings-email" class="form-control" type="email" maxlength="160" required />
+                </div>
+                <div class="col-12 col-md-6">
+                    <label for="account-settings-phone" class="form-label">Phone</label>
+                    <input id="account-settings-phone" class="form-control" type="tel" maxlength="40" />
+                </div>
+                <div class="col-12 d-flex justify-content-end">
+                    <button id="account-settings-save" class="btn btn-primary" type="submit">Save settings</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

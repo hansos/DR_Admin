@@ -1,0 +1,41 @@
+@page "/account/customer-page"
+
+<PageTitle>My Customer Page</PageTitle>
+
+<div class="container py-4" id="account-customer-page">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <h1 class="h4 mb-1">My Customer Page</h1>
+            <p class="text-muted mb-0">Review and update your customer profile details.</p>
+        </div>
+    </div>
+
+    <div id="account-customer-alert-success" class="alert alert-success d-none" role="alert"></div>
+    <div id="account-customer-alert-error" class="alert alert-danger d-none" role="alert"></div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form id="account-customer-form" class="row g-3" novalidate>
+                <div class="col-12 col-md-6">
+                    <label for="account-customer-company" class="form-label">Company name</label>
+                    <input id="account-customer-company" class="form-control" type="text" maxlength="150" required />
+                </div>
+                <div class="col-12 col-md-6">
+                    <label for="account-customer-contact-email" class="form-label">Billing email</label>
+                    <input id="account-customer-contact-email" class="form-control" type="email" maxlength="160" required />
+                </div>
+                <div class="col-12 col-md-6">
+                    <label for="account-customer-phone" class="form-label">Contact phone</label>
+                    <input id="account-customer-phone" class="form-control" type="tel" maxlength="40" />
+                </div>
+                <div class="col-12 col-md-6">
+                    <label for="account-customer-address" class="form-label">Address</label>
+                    <input id="account-customer-address" class="form-control" type="text" maxlength="220" />
+                </div>
+                <div class="col-12 d-flex justify-content-end">
+                    <button id="account-customer-save" class="btn btn-primary" type="submit">Save customer page</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
