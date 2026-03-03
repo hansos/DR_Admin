@@ -8,6 +8,8 @@ let hostingCatalog = null;
 let hostingCatalogRequest = null;
 let latestCalculatedPrice = null;
 let latestCalculatedCurrency = 'USD';
+let latestTldId = null;
+let latestPrivacyPrice = null;
 let isDomainSelectionLocked = false;
 function initializeDomainSearch() {
     const form = document.getElementById('domain-search-form');
@@ -113,6 +115,23 @@ function initializeDomainSearch() {
         const billingCycle = cycleSelect.value === 'yearly' ? 'yearly' : 'monthly';
         updateHostingCycle(id, billingCycle);
     });
+    const periodSelect = document.getElementById('domain-search-period');
+    periodSelect?.addEventListener('change', async () => {
+        if (!latestResult || !latestResult.isAvailable) {
+            return;
+        }
+        latestCalculatedPrice = await getDomainRegistrationPrice(latestResult.domainName, getSelectedPeriodYears());
+        renderResult(latestResult);
+        if (isDomainSelectionLocked) {
+            addResultToCart(false);
+        }
+    });
+    const privacyToggle = document.getElementById('domain-search-privacy');
+    privacyToggle?.addEventListener('change', () => {
+        if (isDomainSelectionLocked) {
+            addResultToCart(false);
+        }
+    });
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
         const typedWindow = window;
@@ -142,6 +161,7 @@ function initializeDomainSearch() {
             return;
         }
         latestResult = response.data;
+        await applyDomainSettings(response.data.domainName);
         latestCalculatedPrice = await getDomainRegistrationPrice(response.data.domainName, getSelectedPeriodYears());
         renderResult(response.data);
     });
@@ -180,8 +200,8 @@ function renderResult(result) {
             priceInfo.textContent = `Price (${getSelectedPeriodYears()} year): ${shownPrice.toFixed(2)} ${latestCalculatedCurrency}`;
         }
         else {
-            priceInfo.classList.add('d-none');
-            priceInfo.textContent = '';
+            priceInfo.classList.remove('d-none');
+            priceInfo.textContent = 'Price for the selected TLD is currently unavailable.';
         }
         addAndBundleButton.classList.remove('d-none');
         addAndBundleButton.disabled = isDomainSelectionLocked;
@@ -242,6 +262,86 @@ function getSelectedDomainPrice(result) {
         return result.premiumPrice;
     }
     return latestCalculatedPrice ?? 0;
+}
+async function applyDomainSettings(domainName) {
+    const typedWindow = window;
+    const tldExtension = getTldExtension(domainName);
+    if (!tldExtension) {
+        latestTldId = null;
+        latestPrivacyPrice = null;
+        setPeriodOptions(1, 1, 1);
+        setPrivacyPriceLabel();
+        return;
+    }
+    const tldResponse = await typedWindow.UserPanelApi?.request(`/Tlds/extension/${encodeURIComponent(tldExtension)}`, {
+        method: 'GET'
+    }, true);
+    if (!tldResponse || !tldResponse.success || !tldResponse.data) {
+        latestTldId = null;
+        latestPrivacyPrice = null;
+        setPeriodOptions(1, 1, getSelectedPeriodYears());
+        setPrivacyPriceLabel();
+        return;
+    }
+    const tldData = tldResponse.data;
+    latestTldId = tldData.id;
+    const defaultYears = normalizeYears(tldData.defaultRegistrationYears, 1);
+    const maxYears = normalizeYears(tldData.maxRegistrationYears, Math.max(defaultYears, 1));
+    setPeriodOptions(defaultYears, maxYears, getSelectedPeriodYears());
+    const privacyToggle = document.getElementById('domain-search-privacy');
+    if (privacyToggle) {
+        const requiresPrivacy = tldData.requiresPrivacy === true;
+        privacyToggle.checked = requiresPrivacy ? true : privacyToggle.checked;
+        privacyToggle.disabled = requiresPrivacy;
+    }
+    await loadPrivacyPrice(tldData.id);
+}
+function normalizeYears(value, fallback) {
+    if (typeof value !== 'number' || Number.isNaN(value) || value <= 0) {
+        return fallback;
+    }
+    return Math.max(1, Math.floor(value));
+}
+function setPeriodOptions(defaultYears, maxYears, selectedYears) {
+    const periodSelect = document.getElementById('domain-search-period');
+    if (!periodSelect) {
+        return;
+    }
+    const normalizedMax = Math.max(1, maxYears);
+    const normalizedDefault = Math.min(Math.max(1, defaultYears), normalizedMax);
+    const normalizedSelected = selectedYears >= 1 && selectedYears <= normalizedMax
+        ? selectedYears
+        : normalizedDefault;
+    const options = [];
+    for (let year = 1; year <= normalizedMax; year += 1) {
+        options.push(`<option value="${year}" ${year === normalizedSelected ? 'selected' : ''}>${year} year${year > 1 ? 's' : ''}</option>`);
+    }
+    periodSelect.innerHTML = options.join('');
+}
+async function loadPrivacyPrice(tldId) {
+    const typedWindow = window;
+    const response = await typedWindow.UserPanelApi?.request(`/tld-pricing/sales/tld/${tldId}/current`, {
+        method: 'GET'
+    }, true);
+    if (!response || !response.success || !response.data) {
+        latestPrivacyPrice = null;
+        setPrivacyPriceLabel();
+        return;
+    }
+    latestPrivacyPrice = typeof response.data.privacyPrice === 'number' ? response.data.privacyPrice : null;
+    latestCalculatedCurrency = response.data.currency ?? latestCalculatedCurrency;
+    setPrivacyPriceLabel();
+}
+function setPrivacyPriceLabel() {
+    const priceLabel = document.getElementById('domain-search-privacy-price');
+    if (!priceLabel) {
+        return;
+    }
+    if (typeof latestPrivacyPrice === 'number') {
+        priceLabel.textContent = `(${latestPrivacyPrice.toFixed(2)} ${latestCalculatedCurrency})`;
+        return;
+    }
+    priceLabel.textContent = '(price unavailable)';
 }
 function getSelectedPeriodYears() {
     const periodValue = Number.parseInt(getInputValue('domain-search-period'), 10);

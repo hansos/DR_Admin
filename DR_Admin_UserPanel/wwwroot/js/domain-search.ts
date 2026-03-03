@@ -10,6 +10,15 @@ interface DomainAvailabilityResult {
 interface TldLookupDto {
     id: number;
     extension: string;
+    defaultRegistrationYears?: number;
+    maxRegistrationYears?: number;
+    requiresPrivacy?: boolean;
+}
+
+interface TldSalesPricingDto {
+    registrationPrice?: number;
+    privacyPrice?: number;
+    currency?: string;
 }
 
 interface CalculatePricingRequestDto {
@@ -102,6 +111,8 @@ let hostingCatalog: HostingPackageDto[] | null = null;
 let hostingCatalogRequest: Promise<HostingPackageDto[] | null> | null = null;
 let latestCalculatedPrice: number | null = null;
 let latestCalculatedCurrency = 'USD';
+let latestTldId: number | null = null;
+let latestPrivacyPrice: number | null = null;
 let isDomainSelectionLocked = false;
 
 function initializeDomainSearch(): void {
@@ -235,6 +246,27 @@ function initializeDomainSearch(): void {
         updateHostingCycle(id, billingCycle);
     });
 
+    const periodSelect = document.getElementById('domain-search-period') as HTMLSelectElement | null;
+    periodSelect?.addEventListener('change', async () => {
+        if (!latestResult || !latestResult.isAvailable) {
+            return;
+        }
+
+        latestCalculatedPrice = await getDomainRegistrationPrice(latestResult.domainName, getSelectedPeriodYears());
+        renderResult(latestResult);
+
+        if (isDomainSelectionLocked) {
+            addResultToCart(false);
+        }
+    });
+
+    const privacyToggle = document.getElementById('domain-search-privacy') as HTMLInputElement | null;
+    privacyToggle?.addEventListener('change', () => {
+        if (isDomainSelectionLocked) {
+            addResultToCart(false);
+        }
+    });
+
     form.addEventListener('submit', async (event: Event) => {
         event.preventDefault();
 
@@ -272,6 +304,7 @@ function initializeDomainSearch(): void {
         }
 
         latestResult = response.data;
+        await applyDomainSettings(response.data.domainName);
         latestCalculatedPrice = await getDomainRegistrationPrice(response.data.domainName, getSelectedPeriodYears());
         renderResult(response.data);
     });
@@ -387,6 +420,105 @@ function getSelectedDomainPrice(result: DomainAvailabilityResult): number {
     }
 
     return latestCalculatedPrice ?? 0;
+}
+
+async function applyDomainSettings(domainName: string): Promise<void> {
+    const typedWindow = window as DomainSearchWindow;
+    const tldExtension = getTldExtension(domainName);
+    if (!tldExtension) {
+        latestTldId = null;
+        latestPrivacyPrice = null;
+        setPeriodOptions(1, 1, 1);
+        setPrivacyPriceLabel();
+        return;
+    }
+
+    const tldResponse = await typedWindow.UserPanelApi?.request<TldLookupDto>(`/Tlds/extension/${encodeURIComponent(tldExtension)}`, {
+        method: 'GET'
+    }, true);
+
+    if (!tldResponse || !tldResponse.success || !tldResponse.data) {
+        latestTldId = null;
+        latestPrivacyPrice = null;
+        setPeriodOptions(1, 1, getSelectedPeriodYears());
+        setPrivacyPriceLabel();
+        return;
+    }
+
+    const tldData = tldResponse.data;
+    latestTldId = tldData.id;
+
+    const defaultYears = normalizeYears(tldData.defaultRegistrationYears, 1);
+    const maxYears = normalizeYears(tldData.maxRegistrationYears, Math.max(defaultYears, 1));
+    setPeriodOptions(defaultYears, maxYears, getSelectedPeriodYears());
+
+    const privacyToggle = document.getElementById('domain-search-privacy') as HTMLInputElement | null;
+    if (privacyToggle) {
+        const requiresPrivacy = tldData.requiresPrivacy === true;
+        privacyToggle.checked = requiresPrivacy ? true : privacyToggle.checked;
+        privacyToggle.disabled = requiresPrivacy;
+    }
+
+    await loadPrivacyPrice(tldData.id);
+}
+
+function normalizeYears(value: number | undefined, fallback: number): number {
+    if (typeof value !== 'number' || Number.isNaN(value) || value <= 0) {
+        return fallback;
+    }
+
+    return Math.max(1, Math.floor(value));
+}
+
+function setPeriodOptions(defaultYears: number, maxYears: number, selectedYears: number): void {
+    const periodSelect = document.getElementById('domain-search-period') as HTMLSelectElement | null;
+    if (!periodSelect) {
+        return;
+    }
+
+    const normalizedMax = Math.max(1, maxYears);
+    const normalizedDefault = Math.min(Math.max(1, defaultYears), normalizedMax);
+    const normalizedSelected = selectedYears >= 1 && selectedYears <= normalizedMax
+        ? selectedYears
+        : normalizedDefault;
+
+    const options: string[] = [];
+    for (let year = 1; year <= normalizedMax; year += 1) {
+        options.push(`<option value="${year}" ${year === normalizedSelected ? 'selected' : ''}>${year} year${year > 1 ? 's' : ''}</option>`);
+    }
+
+    periodSelect.innerHTML = options.join('');
+}
+
+async function loadPrivacyPrice(tldId: number): Promise<void> {
+    const typedWindow = window as DomainSearchWindow;
+    const response = await typedWindow.UserPanelApi?.request<TldSalesPricingDto>(`/tld-pricing/sales/tld/${tldId}/current`, {
+        method: 'GET'
+    }, true);
+
+    if (!response || !response.success || !response.data) {
+        latestPrivacyPrice = null;
+        setPrivacyPriceLabel();
+        return;
+    }
+
+    latestPrivacyPrice = typeof response.data.privacyPrice === 'number' ? response.data.privacyPrice : null;
+    latestCalculatedCurrency = response.data.currency ?? latestCalculatedCurrency;
+    setPrivacyPriceLabel();
+}
+
+function setPrivacyPriceLabel(): void {
+    const priceLabel = document.getElementById('domain-search-privacy-price');
+    if (!priceLabel) {
+        return;
+    }
+
+    if (typeof latestPrivacyPrice === 'number') {
+        priceLabel.textContent = `(${latestPrivacyPrice.toFixed(2)} ${latestCalculatedCurrency})`;
+        return;
+    }
+
+    priceLabel.textContent = '(price unavailable)';
 }
 
 function getSelectedPeriodYears(): number {
