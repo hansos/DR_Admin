@@ -39,6 +39,7 @@ interface CartWindow extends Window {
         request: <T>(path: string, options?: RequestInit, requiresAuth?: boolean) => Promise<{ success: boolean; data?: T; message?: string }>;
     };
     UserPanelAlerts?: {
+        showSuccess: (id: string, message: string) => void;
         showError: (id: string, message: string) => void;
         hide: (id: string) => void;
     };
@@ -72,6 +73,28 @@ function initializeCart(): void {
         discountInput.value = initialState.discount.toString();
     }
     renderCart(initialState);
+    applyFlowFocus();
+}
+
+function applyFlowFocus(): void {
+    const focus = new URLSearchParams(window.location.search).get('focus');
+    if (focus !== 'services') {
+        return;
+    }
+
+    const servicesCard = document.getElementById('cart-services-card');
+    if (!servicesCard) {
+        return;
+    }
+
+    servicesCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    servicesCard.classList.add('border', 'border-primary');
+    window.setTimeout(() => {
+        servicesCard.classList.remove('border', 'border-primary');
+    }, 2400);
+
+    const typedWindow = window as CartWindow;
+    typedWindow.UserPanelAlerts?.showSuccess('cart-alert-success', 'Great choice. Add optional services to complete your domain bundle.');
 }
 
 async function loadOptions(): Promise<void> {

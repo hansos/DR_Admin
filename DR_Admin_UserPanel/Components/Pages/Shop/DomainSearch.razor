@@ -6,15 +6,25 @@
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
         <div>
             <h1 class="h4 mb-1">Domain Search</h1>
-            <p class="text-muted mb-0">Find an available domain and add it to cart.</p>
+            <p class="text-muted mb-0">Start your purchase by finding a domain, then bundle hosting and services.</p>
         </div>
         <a href="/shop/cart" class="btn btn-outline-primary">Go to cart</a>
+    </div>
+
+    <div class="card border-0 bg-light-subtle mb-3">
+        <div class="card-body py-3">
+            <div class="row g-2 small text-muted">
+                <div class="col-12 col-md-4"><strong>1.</strong> Search your domain</div>
+                <div class="col-12 col-md-4"><strong>2.</strong> Add services and hosting</div>
+                <div class="col-12 col-md-4"><strong>3.</strong> Complete checkout</div>
+            </div>
+        </div>
     </div>
 
     <div id="domain-search-alert-success" class="alert alert-success d-none" role="alert"></div>
     <div id="domain-search-alert-error" class="alert alert-danger d-none" role="alert"></div>
 
-    <div class="card shadow-sm">
+    <div class="card shadow-sm" id="domain-search-form-card">
         <div class="card-body">
             <form id="domain-search-form" class="row g-3" novalidate>
                 <div class="col-12 col-lg-7">
@@ -48,9 +58,10 @@
         <div class="card-body">
             <h2 class="h6">Result</h2>
             <p id="domain-search-result-summary" class="mb-3"></p>
+            <p id="domain-search-result-price" class="mb-3 text-muted d-none"></p>
             <div class="d-flex flex-wrap gap-2 mb-3" id="domain-search-result-actions">
-                <button id="domain-search-add-to-cart" class="btn btn-success d-none" type="button">
-                    <i class="bi bi-cart-plus"></i> Add to cart
+                <button id="domain-search-add-and-bundle" class="btn btn-primary d-none" type="button">
+                    <i class="bi bi-bag-check"></i> Add domain & choose hosting/services
                 </button>
                 <button id="domain-search-transfer" class="btn btn-outline-primary d-none" type="button">
                     <i class="bi bi-arrow-left-right"></i> Initiate transfer
@@ -60,6 +71,32 @@
                 </button>
             </div>
             <div id="domain-search-alternatives-list" class="list-group d-none"></div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mt-3 d-none" id="domain-search-upsell-card">
+        <div class="card-body">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                <div>
+                    <h2 class="h6 mb-1">Add hosting and services to your domain</h2>
+                    <p class="text-muted small mb-0">Selected hosting: <span id="domain-search-upsell-hosting-count">0</span> • Selected services: <span id="domain-search-upsell-service-count">0</span></p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="/shop/cart?focus=services" class="btn btn-sm btn-outline-primary">Review bundle</a>
+                    <button id="domain-search-checkout" type="button" class="btn btn-sm btn-primary">Checkout</button>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-12 col-xl-6">
+                    <h3 class="h6">Hosting packages</h3>
+                    <div id="domain-search-upsell-hosting-list" class="list-group"></div>
+                </div>
+                <div class="col-12 col-xl-6">
+                    <h3 class="h6">Optional services</h3>
+                    <div id="domain-search-upsell-services-list" class="list-group"></div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
