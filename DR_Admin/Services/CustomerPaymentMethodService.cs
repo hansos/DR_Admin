@@ -65,7 +65,7 @@ public class CustomerPaymentMethodService : ICustomerPaymentMethodService
             throw new InvalidOperationException($"Customer with ID {createDto.CustomerId} was not found.");
         }
 
-        var gateway = await ResolveGatewayAsync(createDto.PaymentGatewayId, createDto.PaymentInstrument);
+        var gateway = await ResolveGatewayAsync(createDto.PaymentInstrument);
         if (gateway == null)
         {
             throw new InvalidOperationException("No active payment gateway found for selected instrument.");
@@ -122,7 +122,7 @@ public class CustomerPaymentMethodService : ICustomerPaymentMethodService
     {
         ArgumentNullException.ThrowIfNull(updateDto);
 
-        var gateway = await ResolveGatewayAsync(updateDto.PaymentGatewayId, updateDto.PaymentInstrument);
+        var gateway = await ResolveGatewayAsync(updateDto.PaymentInstrument);
 
         if (gateway == null)
         {
@@ -191,15 +191,8 @@ public class CustomerPaymentMethodService : ICustomerPaymentMethodService
         return true;
     }
 
-    private async Task<PaymentGateway?> ResolveGatewayAsync(int explicitGatewayId, string paymentInstrument)
+    private async Task<PaymentGateway?> ResolveGatewayAsync(string paymentInstrument)
     {
-        if (explicitGatewayId > 0)
-        {
-            return await _context.PaymentGateways
-                .AsNoTracking()
-                .FirstOrDefaultAsync(g => g.Id == explicitGatewayId && g.DeletedAt == null && g.IsActive);
-        }
-
         if (string.IsNullOrWhiteSpace(paymentInstrument))
         {
             return null;
@@ -207,12 +200,21 @@ public class CustomerPaymentMethodService : ICustomerPaymentMethodService
 
         var normalizedInput = NormalizeInstrumentKey(paymentInstrument);
 
-        var instrument = await _context.PaymentInstruments
+        var activeInstruments = await _context.PaymentInstruments
             .AsNoTracking()
-            .FirstOrDefaultAsync(i => i.DeletedAt == null && i.IsActive &&
-                (NormalizeInstrumentKey(i.Code) == normalizedInput || NormalizeInstrumentKey(i.Name) == normalizedInput));
+            .Where(i => i.DeletedAt == null && i.IsActive)
+            .ToListAsync();
 
-        if (instrument?.DefaultGatewayId is int defaultGatewayId && defaultGatewayId > 0)
+        var instrument = activeInstruments.FirstOrDefault(i =>
+            NormalizeInstrumentKey(i.Code) == normalizedInput ||
+            NormalizeInstrumentKey(i.Name) == normalizedInput);
+
+        if (instrument == null)
+        {
+            return null;
+        }
+
+        if (instrument.DefaultGatewayId is int defaultGatewayId && defaultGatewayId > 0)
         {
             var defaultGateway = await _context.PaymentGateways
                 .AsNoTracking()
@@ -222,31 +224,11 @@ public class CustomerPaymentMethodService : ICustomerPaymentMethodService
             {
                 return defaultGateway;
             }
+
+            throw new InvalidOperationException($"Default gateway for instrument '{instrument.Code}' is missing or inactive.");
         }
 
-        var activeGateways = await _context.PaymentGateways
-            .AsNoTracking()
-            .Include(g => g.PaymentInstrumentEntity)
-            .Where(g => g.IsActive && g.DeletedAt == null)
-            .OrderBy(g => g.DisplayOrder)
-            .ThenBy(g => g.Name)
-            .ToListAsync();
-
-        var matchingGateways = activeGateways
-            .Where(g =>
-            {
-                var code = NormalizeInstrumentKey(g.PaymentInstrumentEntity?.Code ?? g.PaymentInstrument);
-                var name = NormalizeInstrumentKey(g.PaymentInstrumentEntity?.Name ?? string.Empty);
-                return code == normalizedInput || name == normalizedInput;
-            })
-            .ToList();
-
-        if (matchingGateways.Count == 0)
-        {
-            return null;
-        }
-
-        return matchingGateways.FirstOrDefault(g => g.IsDefault) ?? matchingGateways[0];
+        throw new InvalidOperationException($"No default gateway configured for instrument '{instrument.Code}'.");
     }
 
     private static string NormalizeInstrumentKey(string value)

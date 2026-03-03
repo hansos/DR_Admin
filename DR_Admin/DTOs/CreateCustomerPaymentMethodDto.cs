@@ -13,11 +13,6 @@ public class CreateCustomerPaymentMethodDto
     public int CustomerId { get; set; }
 
     /// <summary>
-    /// Payment gateway ID
-    /// </summary>
-    public int PaymentGatewayId { get; set; }
-
-    /// <summary>
     /// Payment instrument selected by user (e.g., CreditCard, PayPal, Cash)
     /// </summary>
     public string PaymentInstrument { get; set; } = string.Empty;

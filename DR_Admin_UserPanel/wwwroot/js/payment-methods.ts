@@ -344,14 +344,12 @@ async function savePaymentMethod(): Promise<void> {
             body: JSON.stringify(
                 isEdit
                     ? {
-                        paymentGatewayId: 0,
                         paymentInstrument: instrument,
                         type,
                         isDefault
                     }
                     : {
                         customerId,
-                        paymentGatewayId: 0,
                         paymentInstrument: instrument,
                         type,
                         paymentMethodToken: '',
