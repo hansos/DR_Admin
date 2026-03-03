@@ -1,45 +1,110 @@
-# DR_Admin Commercial License (Proprietary)
+# DR_Admin Commercial License Agreement
 
-This is a summary of the commercial licensing terms for **DR_Admin**.
+© 2026 Hans Olav Sorteberg
 
-For open source usage, DR_Admin is licensed under the **GNU Affero General Public License v3.0 only (AGPL-3.0-only)**. See `LICENSE.txt` for full terms.
+This Commercial License Agreement ("Agreement") is a legally binding agreement between the Licensor, **Hans Olav Sorteberg** ("Licensor"), and the Licensee ("Licensee").  
 
-For commercial usage where you **do not** want to comply with AGPL-3.0 obligations (for example, you do not want to disclose your source code), you must obtain a separate commercial license from the author.
+By purchasing, downloading, installing, or using DR_Admin under a commercial license, the Licensee agrees to be bound by this Agreement.
 
-## 1. Grant of License
+---
 
-Subject to a signed commercial license agreement and payment of applicable fees, you are granted a non-exclusive, non-transferable, non-sublicensable license to:
+## 1. Copyright and Ownership
 
-- Use DR_Admin in proprietary, closed-source applications
-- Modify DR_Admin and keep your modifications proprietary
-- Host DR_Admin as part of a SaaS or hosting platform without AGPL source disclosure
-- Redistribute DR_Admin as part of your own commercial offering, subject to the agreement
+DR_Admin is copyrighted software.  
 
-## 2. Restrictions
+© 2026 Hans Olav Sorteberg
 
-Unless explicitly permitted in a signed agreement, you may not:
+All right, title, and interest in and to DR_Admin, including all intellectual property rights, are and shall remain the exclusive property of the Licensor, unless explicitly agreed otherwise in writing.
 
-- Remove or obscure copyright notices
-- Misrepresent the origin of DR_Admin
-- Transfer or sublicense the license to third parties (except as permitted in the agreement)
+This Agreement grants a license to use the Software. It does **not** transfer ownership of the Software or any intellectual property rights unless explicitly stated in the negotiated license agreement.
 
-## 3. No Copyleft Obligations
+---
 
-Under the commercial license, you are **not** required to:
+## 2. License Grant (Negotiable Per Individual Case)
 
-- Release your application's source code
-- License your application under AGPL-3.0 or any other copyleft license
+The Licensor grants rights to the Licensee on a **case-by-case basis**, as agreed in writing. The scope of rights may include, but is not limited to:
 
-## 4. Warranty and Support
+- Use of an unmodified copy for internal purposes  
+- Right to modify and use internally or distribute within a SaaS product  
+- Redistribution rights as part of a commercial product  
+- Full transfer of ownership and intellectual property rights (only if explicitly agreed)
 
-Warranty, support, SLAs, and customization services (if any) are defined in the individual commercial contract.
+The **exact rights, limitations, fees, and obligations** are set forth in the **individual commercial license agreement** signed by the Licensor and the Licensee.  
 
-## 5. Contact
+Unless otherwise agreed, the license is:
 
-To obtain a commercial license or discuss terms, please use the contact form at:
+- Non-exclusive  
+- Non-transferable  
+- Non-sublicensable  
 
-- **https://dradmin.net** (Contact Sales section)
+---
 
-You must have a **signed agreement** with the author for the commercial license to be valid.
+## 3. Revenue Threshold Representation
 
-This file is a high-level summary only. The legally binding terms are those in the signed commercial license agreement between you and the author.
+The Licensee represents and warrants that it meets the conditions requiring a commercial license, as defined in the DR_Admin licensing overview:
+
+- Organizations with total consolidated annual revenue of EUR 1,000,000 or more must obtain a commercial license.  
+- Licensee agrees to notify Licensor promptly if circumstances change affecting eligibility.
+
+---
+
+## 4. Warranty Disclaimer (AS IS)
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE LICENSOR DISCLAIMS ALL WARRANTIES, WHETHER EXPRESS, IMPLIED, STATUTORY, OR OTHERWISE, INCLUDING BUT NOT LIMITED TO:
+
+- IMPLIED WARRANTIES OF MERCHANTABILITY  
+- FITNESS FOR A PARTICULAR PURPOSE  
+- NON-INFRINGEMENT  
+- TITLE  
+
+The Licensor does not warrant that:
+
+- The Software will be error-free  
+- The Software will meet specific requirements  
+- The Software will operate without interruption
+
+---
+
+## 5. Limitation of Liability
+
+TO THE MAXIMUM EXTENT PERMITTED BY LAW, IN NO EVENT SHALL THE LICENSOR BE LIABLE FOR:
+
+- INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES  
+- LOSS OF PROFITS, REVENUE, DATA, OR BUSINESS INTERRUPTION  
+
+IN ALL CASES, THE LICENSOR'S TOTAL LIABILITY UNDER THIS AGREEMENT SHALL NOT EXCEED THE AMOUNT PAID BY THE LICENSEE FOR THE LICENSE DURING THE TWELVE (12) MONTHS PRECEDING THE CLAIM.
+
+---
+
+## 6. Termination
+
+This license terminates automatically if the Licensee breaches any provision of this Agreement.
+
+Upon termination, the Licensee must:
+
+- Cease all use of the Software  
+- Destroy all copies of the Software in its possession or control  
+
+Termination does **not** relieve the Licensee of any obligations incurred prior to termination.
+
+---
+
+## 7. Governing Law
+
+This Agreement shall be governed by and construed in accordance with the laws of the Licensor’s jurisdiction, without regard to conflict of law principles. Any disputes arising from this Agreement shall be subject to the exclusive jurisdiction of competent courts in the Licensor’s jurisdiction.
+
+---
+
+## 8. Entire Agreement
+
+This Agreement, together with the **individual commercial license agreement**, constitutes the entire agreement between the parties regarding the commercial use of DR_Admin and supersedes all prior agreements or understandings.
+
+---
+
+## 9. Contact
+
+For commercial licensing inquiries, please use the contact form at:
+
+- **https://www.dradmin.net** (Contact Sales section)
