@@ -4,6 +4,7 @@ using ISPAdmin.Data.Enums;
 using ISPAdmin.DTOs;
 using Microsoft.EntityFrameworkCore;
 using PaymentGatewayLib.Implementations;
+using PaymentGatewayLib.Infrastructure.Settings;
 using PaymentGatewayLib.Interfaces;
 using PaymentGatewayLib.Models;
 using Serilog;
@@ -16,11 +17,13 @@ namespace ISPAdmin.Services;
 public class PaymentIntentService : IPaymentIntentService
 {
     private readonly ApplicationDbContext _context;
+    private readonly StripeSettings _stripeSettings;
     private static readonly Serilog.ILogger _log = Log.ForContext<PaymentIntentService>();
 
-    public PaymentIntentService(ApplicationDbContext context)
+    public PaymentIntentService(ApplicationDbContext context, StripeSettings stripeSettings)
     {
         _context = context;
+        _stripeSettings = stripeSettings;
     }
 
     public async Task<IEnumerable<PaymentIntentDto>> GetAllPaymentIntentsAsync()
@@ -31,7 +34,7 @@ public class PaymentIntentService : IPaymentIntentService
             .OrderByDescending(i => i.CreatedAt)
             .ToListAsync();
 
-        return intents.Select(MapToDto);
+        return intents.Select(intent => MapToDto(intent));
     }
 
     public async Task<PaymentIntentDto?> GetPaymentIntentByIdAsync(int id)
@@ -51,7 +54,7 @@ public class PaymentIntentService : IPaymentIntentService
             .OrderByDescending(i => i.CreatedAt)
             .ToListAsync();
 
-        return intents.Select(MapToDto);
+        return intents.Select(intent => MapToDto(intent));
     }
 
     public async Task<PaymentIntentDto> CreatePaymentIntentAsync(CreatePaymentIntentDto createDto, int customerId)
@@ -127,7 +130,7 @@ public class PaymentIntentService : IPaymentIntentService
 
             await _context.SaveChangesAsync();
 
-            return MapToDto(entity);
+            return MapToDto(entity, gateway);
         }
         catch (Exception ex)
         {
@@ -374,13 +377,16 @@ public class PaymentIntentService : IPaymentIntentService
         throw new InvalidOperationException("No active payment gateway available for payment intent creation.");
     }
 
-    private static IPaymentGateway CreateGatewayClient(Data.Entities.PaymentGateway gateway)
+    private IPaymentGateway CreateGatewayClient(Data.Entities.PaymentGateway gateway)
     {
         var provider = (gateway.ProviderCode ?? string.Empty).Trim().ToLowerInvariant();
 
         return provider switch
         {
-            "stripe" => new StripePaymentGateway(gateway.ApiSecret, gateway.ApiKey),
+            "stripe" => new StripePaymentGateway(
+                string.IsNullOrWhiteSpace(_stripeSettings.SecretKey) ? gateway.ApiSecret : _stripeSettings.SecretKey,
+                string.IsNullOrWhiteSpace(_stripeSettings.PublishableKey) ? gateway.ApiKey : _stripeSettings.PublishableKey,
+                string.IsNullOrWhiteSpace(_stripeSettings.ApiBaseUrl) ? "https://api.stripe.com" : _stripeSettings.ApiBaseUrl),
             "paypal" => new PayPalPaymentGateway(gateway.ApiKey, gateway.ApiSecret, gateway.UseSandbox),
             "square" => new SquarePaymentGateway(gateway.ApiKey, gateway.ApiSecret, gateway.UseSandbox),
             _ => throw new NotSupportedException($"Payment provider '{gateway.ProviderCode}' is not currently supported by PaymentIntentService")
@@ -512,8 +518,16 @@ public class PaymentIntentService : IPaymentIntentService
         _context.InvoicePayments.Add(invoicePayment);
     }
 
-    private static PaymentIntentDto MapToDto(Data.Entities.PaymentIntent entity)
+    private PaymentIntentDto MapToDto(Data.Entities.PaymentIntent entity, Data.Entities.PaymentGateway? gateway = null)
     {
+        var providerCode = gateway?.ProviderCode ?? string.Empty;
+        var publicKey = gateway?.ApiKey ?? string.Empty;
+
+        if (providerCode.Equals("stripe", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(_stripeSettings.PublishableKey))
+        {
+            publicKey = _stripeSettings.PublishableKey;
+        }
+
         return new PaymentIntentDto
         {
             Id = entity.Id,
@@ -524,6 +538,8 @@ public class PaymentIntentService : IPaymentIntentService
             Currency = entity.Currency,
             Status = entity.Status,
             PaymentGatewayId = entity.PaymentGatewayId,
+            PaymentGatewayProviderCode = providerCode,
+            PaymentGatewayPublicKey = publicKey,
             GatewayIntentId = entity.GatewayIntentId,
             ClientSecret = entity.ClientSecret,
             Description = entity.Description,

@@ -76,6 +76,15 @@
                     <div class="d-grid mt-3">
                         <button id="checkout-payment-instrument-submit" type="button" class="btn btn-outline-primary">Continue to payment</button>
                     </div>
+
+                    <div class="card border mt-3 d-none" id="checkout-stripe-form-card">
+                        <div class="card-body">
+                            <h3 class="h6 mb-2">Pay with card (Stripe)</h3>
+                            <div id="checkout-stripe-card-element" class="mb-2"></div>
+                            <div id="checkout-stripe-error" class="text-danger small mb-2 d-none"></div>
+                            <button id="checkout-stripe-pay-button" type="button" class="btn btn-primary w-100">Pay now</button>
+                        </div>
+                    </div>
                 </div>
 
 <div class="modal fade" id="checkout-delete-order-modal" tabindex="-1" aria-hidden="true">

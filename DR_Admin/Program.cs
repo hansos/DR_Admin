@@ -224,6 +224,11 @@ var emailSettings = builder.Configuration.GetSection("EmailSettings").Get<EmailS
 builder.Services.AddSingleton(emailSettings);
 builder.Services.AddSingleton<EmailSenderLib.Factories.EmailSenderFactory>();
 
+// Payment Gateway Library - Stripe settings
+var stripeSettings = builder.Configuration.GetSection("Stripe").Get<PaymentGatewayLib.Infrastructure.Settings.StripeSettings>()
+    ?? new PaymentGatewayLib.Infrastructure.Settings.StripeSettings();
+builder.Services.AddSingleton(stripeSettings);
+
 // Messaging Template System
 builder.Services.AddSingleton(sp => new MessagingTemplateLib.Templating.TemplateLoader(
     sp.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>(),

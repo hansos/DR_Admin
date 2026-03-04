@@ -309,7 +309,15 @@ namespace PaymentGatewayLib.Implementations
 
                 if (!string.IsNullOrWhiteSpace(request.CustomerId))
                 {
-                    parameters.Add("customer", request.CustomerId);
+                    var customerId = request.CustomerId.Trim();
+                    if (customerId.StartsWith("cus_", StringComparison.OrdinalIgnoreCase))
+                    {
+                        parameters.Add("customer", customerId);
+                    }
+                    else
+                    {
+                        parameters.Add("metadata[internal_customer_id]", customerId);
+                    }
                 }
 
                 parameters.Add("capture_method", request.AutomaticCapture ? "automatic" : "manual");
@@ -344,13 +352,21 @@ namespace PaymentGatewayLib.Implementations
                 else
                 {
                     var error = JsonSerializer.Deserialize<JsonElement>(responseBody);
-                    var errorObj = error.GetProperty("error");
+                    var errorObj = error.TryGetProperty("error", out var parsedErrorObj)
+                        ? parsedErrorObj
+                        : error;
+                    var errorMessage = errorObj.TryGetProperty("message", out var messageProperty)
+                        ? messageProperty.GetString() ?? "Unknown error"
+                        : "Unknown error";
+                    var errorCode = errorObj.TryGetProperty("code", out var codeProperty)
+                        ? codeProperty.GetString() ?? string.Empty
+                        : string.Empty;
                     
                     return new PaymentIntentResult
                     {
                         Success = false,
-                        ErrorMessage = errorObj.GetProperty("message").GetString() ?? "Unknown error",
-                        ErrorCode = errorObj.GetProperty("code").GetString() ?? string.Empty,
+                        ErrorMessage = errorMessage,
+                        ErrorCode = errorCode,
                         CreatedAt = DateTime.UtcNow
                     };
                 }

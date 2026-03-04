@@ -75,6 +75,24 @@ interface PaymentIntentDto {
     status: string | number;
     gatewayIntentId: string;
     clientSecret: string;
+    paymentGatewayProviderCode?: string;
+    paymentGatewayPublicKey?: string;
+}
+
+interface StripeCardElement {
+    mount: (selector: string) => void;
+}
+
+interface StripeElements {
+    create: (type: 'card', options?: { hidePostalCode?: boolean }) => StripeCardElement;
+}
+
+interface StripeInstance {
+    elements: () => StripeElements;
+    confirmCardPayment: (clientSecret: string, data: {
+        payment_method: { card: StripeCardElement };
+        return_url?: string;
+    }) => Promise<{ error?: { message?: string } }>;
 }
 
 interface PaymentInstrumentDto {
@@ -121,10 +139,14 @@ interface CheckoutWindow extends Window {
     Blazor?: {
         addEventListener?: (eventName: string, callback: () => void) => void;
     };
+    Stripe?: (publishableKey: string, options?: { locale?: string }) => StripeInstance;
 }
 
 const checkoutOrderMarkerStorageKey = 'up_checkout_last_added_order';
 const checkoutDomainSearchPath = '/shop/domain-search';
+let stripeInstance: StripeInstance | null = null;
+let stripeCardElement: StripeCardElement | null = null;
+let stripeClientSecret: string | null = null;
 
 function initializeCheckout(): void {
     const page = document.getElementById('checkout-page');
@@ -186,6 +208,14 @@ function initializePaymentInstrumentPanel(): void {
     const instrumentSelect = document.getElementById('checkout-payment-instrument') as HTMLSelectElement | null;
     instrumentSelect?.addEventListener('change', () => {
         renderPaymentInstrumentFields();
+        updateCheckoutContinueButtonVisibility();
+
+        if (isCreditCardInstrumentCode(instrumentSelect.value)) {
+            void continueToPayment();
+            return;
+        }
+
+        hideStripePaymentForm();
     });
 
     const continueButton = document.getElementById('checkout-payment-instrument-submit') as HTMLButtonElement | null;
@@ -203,6 +233,21 @@ function initializePaymentInstrumentPanel(): void {
         event.preventDefault();
         void saveCheckoutPaymentMethod();
     });
+}
+
+function isCreditCardInstrumentCode(code: string): boolean {
+    const selected = (code ?? '').trim().toLowerCase();
+    return selected === 'creditcard' || selected === 'credit card' || selected === 'card';
+}
+
+function updateCheckoutContinueButtonVisibility(): void {
+    const select = document.getElementById('checkout-payment-instrument') as HTMLSelectElement | null;
+    const continueButton = document.getElementById('checkout-payment-instrument-submit') as HTMLButtonElement | null;
+    if (!select || !continueButton) {
+        return;
+    }
+
+    continueButton.classList.toggle('d-none', isCreditCardInstrumentCode(select.value));
 }
 
 async function prepareCheckoutPaymentMethodModal(): Promise<void> {
@@ -328,6 +373,8 @@ function clearCheckoutSessionState(): void {
     if (paymentStatus) {
         paymentStatus.textContent = 'Order removed from checkout.';
     }
+
+    hideStripePaymentForm();
 
     renderSummary();
 }
@@ -614,6 +661,7 @@ async function loadPaymentInstruments(): Promise<void> {
     if (items.length === 0) {
         select.innerHTML = '<option value="">No matching active instruments</option>';
         renderPaymentInstrumentFields();
+        updateCheckoutContinueButtonVisibility();
         return;
     }
 
@@ -622,6 +670,11 @@ async function loadPaymentInstruments(): Promise<void> {
         .join('');
 
     renderPaymentInstrumentFields();
+    updateCheckoutContinueButtonVisibility();
+
+    if (isCreditCardInstrumentCode(select.value)) {
+        void continueToPayment();
+    }
 }
 
 async function resolveCheckoutCustomerId(): Promise<number | null> {
@@ -671,13 +724,7 @@ function mapPaymentMethodTypeToInstrumentCode(type: number | string): string {
 function getInstrumentFieldDefinitions(instrumentCode: string): InstrumentFieldDefinition[] {
     const normalized = instrumentCode.trim().toLowerCase();
     if (normalized === 'creditcard' || normalized === 'credit card' || normalized === 'card') {
-        return [
-            { name: 'cardholderName', label: 'Cardholder name', type: 'text', required: true },
-            { name: 'cardNumber', label: 'Card number', type: 'text', required: true },
-            { name: 'expiryMonth', label: 'Expiry month', type: 'number', required: true },
-            { name: 'expiryYear', label: 'Expiry year', type: 'number', required: true },
-            { name: 'cvv', label: 'Security code', type: 'text', required: true }
-        ];
+        return [];
     }
 
     if (normalized === 'bankaccount' || normalized === 'bank account') {
@@ -716,6 +763,11 @@ function renderPaymentInstrumentFields(): void {
 
     const selectedCode = select.value;
     const fields = getInstrumentFieldDefinitions(selectedCode);
+
+    if (fields.length === 0) {
+        fieldsContainer.innerHTML = '';
+        return;
+    }
 
     fieldsContainer.innerHTML = fields.map((field) => `
         <div class="col-12 col-md-6">
@@ -784,7 +836,97 @@ async function continueToPayment(): Promise<void> {
         status.textContent = `Payment initialized. Intent #${response.data.id} (${response.data.status}).`;
     }
 
+    const provider = (response.data.paymentGatewayProviderCode ?? '').trim().toLowerCase();
+    if (provider === 'stripe') {
+        const prepared = prepareStripePaymentForm(response.data);
+        if (!prepared) {
+            typedWindow.UserPanelAlerts?.showError('checkout-alert-error', 'Stripe payment form could not be initialized.');
+            return;
+        }
+
+        typedWindow.UserPanelAlerts?.showSuccess('checkout-alert-success', 'Stripe form is ready. Complete card payment below.');
+        return;
+    }
+
+    hideStripePaymentForm();
+
     typedWindow.UserPanelAlerts?.showSuccess('checkout-alert-success', 'Payment intent created. Continue with provider confirmation flow.');
+}
+
+function prepareStripePaymentForm(intent: PaymentIntentDto): boolean {
+    const typedWindow = window as CheckoutWindow;
+    const publishableKey = (intent.paymentGatewayPublicKey ?? '').trim();
+    const clientSecret = (intent.clientSecret ?? '').trim();
+    if (!publishableKey || !clientSecret || !typedWindow.Stripe) {
+        return false;
+    }
+
+    const cardContainer = document.getElementById('checkout-stripe-card-element');
+    const cardPanel = document.getElementById('checkout-stripe-form-card');
+    const payButton = document.getElementById('checkout-stripe-pay-button') as HTMLButtonElement | null;
+    if (!cardContainer || !cardPanel || !payButton) {
+        return false;
+    }
+
+    cardContainer.innerHTML = '';
+    stripeInstance = typedWindow.Stripe(publishableKey, { locale: 'nb' });
+    stripeCardElement = stripeInstance.elements().create('card', { hidePostalCode: true });
+    stripeCardElement.mount('#checkout-stripe-card-element');
+    stripeClientSecret = clientSecret;
+
+    if (payButton.dataset.bound !== 'true') {
+        payButton.dataset.bound = 'true';
+        payButton.addEventListener('click', () => {
+            void confirmStripePayment();
+        });
+    }
+
+    clearStripeError();
+    cardPanel.classList.remove('d-none');
+    return true;
+}
+
+function hideStripePaymentForm(): void {
+    const cardPanel = document.getElementById('checkout-stripe-form-card');
+    cardPanel?.classList.add('d-none');
+    clearStripeError();
+}
+
+function showStripeError(message: string): void {
+    const errorContainer = document.getElementById('checkout-stripe-error');
+    if (!errorContainer) {
+        return;
+    }
+
+    errorContainer.textContent = message;
+    errorContainer.classList.remove('d-none');
+}
+
+function clearStripeError(): void {
+    const errorContainer = document.getElementById('checkout-stripe-error');
+    if (!errorContainer) {
+        return;
+    }
+
+    errorContainer.textContent = '';
+    errorContainer.classList.add('d-none');
+}
+
+async function confirmStripePayment(): Promise<void> {
+    if (!stripeInstance || !stripeCardElement || !stripeClientSecret) {
+        showStripeError('Stripe session is not initialized.');
+        return;
+    }
+
+    clearStripeError();
+    const result = await stripeInstance.confirmCardPayment(stripeClientSecret, {
+        payment_method: { card: stripeCardElement },
+        return_url: `${window.location.origin}/shop/checkout?paymentStatus=success`
+    });
+
+    if (result.error) {
+        showStripeError(result.error.message ?? 'Payment failed. Please check card details.');
+    }
 }
 
 function calculateCheckoutTotal(state: CheckoutCartState): number {

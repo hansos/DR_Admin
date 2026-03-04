@@ -48,6 +48,16 @@ public class PaymentIntentDto
     public int PaymentGatewayId { get; set; }
 
     /// <summary>
+    /// Payment gateway provider code (for example stripe)
+    /// </summary>
+    public string PaymentGatewayProviderCode { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Publishable/public key for frontend gateway SDK integration (if required)
+    /// </summary>
+    public string PaymentGatewayPublicKey { get; set; } = string.Empty;
+
+    /// <summary>
     /// Gateway payment intent ID
     /// </summary>
     public string GatewayIntentId { get; set; } = string.Empty;

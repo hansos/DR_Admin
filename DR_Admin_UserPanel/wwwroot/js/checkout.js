@@ -1,6 +1,9 @@
 "use strict";
 const checkoutOrderMarkerStorageKey = 'up_checkout_last_added_order';
 const checkoutDomainSearchPath = '/shop/domain-search';
+let stripeInstance = null;
+let stripeCardElement = null;
+let stripeClientSecret = null;
 function initializeCheckout() {
     const page = document.getElementById('checkout-page');
     if (!page || page.dataset.bound === 'true') {
@@ -48,6 +51,12 @@ function initializePaymentInstrumentPanel() {
     const instrumentSelect = document.getElementById('checkout-payment-instrument');
     instrumentSelect?.addEventListener('change', () => {
         renderPaymentInstrumentFields();
+        updateCheckoutContinueButtonVisibility();
+        if (isCreditCardInstrumentCode(instrumentSelect.value)) {
+            void continueToPayment();
+            return;
+        }
+        hideStripePaymentForm();
     });
     const continueButton = document.getElementById('checkout-payment-instrument-submit');
     continueButton?.addEventListener('click', () => {
@@ -62,6 +71,18 @@ function initializePaymentInstrumentPanel() {
         event.preventDefault();
         void saveCheckoutPaymentMethod();
     });
+}
+function isCreditCardInstrumentCode(code) {
+    const selected = (code ?? '').trim().toLowerCase();
+    return selected === 'creditcard' || selected === 'credit card' || selected === 'card';
+}
+function updateCheckoutContinueButtonVisibility() {
+    const select = document.getElementById('checkout-payment-instrument');
+    const continueButton = document.getElementById('checkout-payment-instrument-submit');
+    if (!select || !continueButton) {
+        return;
+    }
+    continueButton.classList.toggle('d-none', isCreditCardInstrumentCode(select.value));
 }
 async function prepareCheckoutPaymentMethodModal() {
     const typedWindow = window;
@@ -162,6 +183,7 @@ function clearCheckoutSessionState() {
     if (paymentStatus) {
         paymentStatus.textContent = 'Order removed from checkout.';
     }
+    hideStripePaymentForm();
     renderSummary();
 }
 function setCheckoutSubmitDisabled(disabled) {
@@ -404,12 +426,17 @@ async function loadPaymentInstruments() {
     if (items.length === 0) {
         select.innerHTML = '<option value="">No matching active instruments</option>';
         renderPaymentInstrumentFields();
+        updateCheckoutContinueButtonVisibility();
         return;
     }
     select.innerHTML = items
         .map((item) => `<option value="${escapeHtmlCheckout(item.code)}">${escapeHtmlCheckout(item.name)}</option>`)
         .join('');
     renderPaymentInstrumentFields();
+    updateCheckoutContinueButtonVisibility();
+    if (isCreditCardInstrumentCode(select.value)) {
+        void continueToPayment();
+    }
 }
 async function resolveCheckoutCustomerId() {
     const customerIdInput = document.getElementById('checkout-customer-id');
@@ -448,13 +475,7 @@ function mapPaymentMethodTypeToInstrumentCode(type) {
 function getInstrumentFieldDefinitions(instrumentCode) {
     const normalized = instrumentCode.trim().toLowerCase();
     if (normalized === 'creditcard' || normalized === 'credit card' || normalized === 'card') {
-        return [
-            { name: 'cardholderName', label: 'Cardholder name', type: 'text', required: true },
-            { name: 'cardNumber', label: 'Card number', type: 'text', required: true },
-            { name: 'expiryMonth', label: 'Expiry month', type: 'number', required: true },
-            { name: 'expiryYear', label: 'Expiry year', type: 'number', required: true },
-            { name: 'cvv', label: 'Security code', type: 'text', required: true }
-        ];
+        return [];
     }
     if (normalized === 'bankaccount' || normalized === 'bank account') {
         return [
@@ -487,6 +508,10 @@ function renderPaymentInstrumentFields() {
     }
     const selectedCode = select.value;
     const fields = getInstrumentFieldDefinitions(selectedCode);
+    if (fields.length === 0) {
+        fieldsContainer.innerHTML = '';
+        return;
+    }
     fieldsContainer.innerHTML = fields.map((field) => `
         <div class="col-12 col-md-6">
             <label for="checkout-pi-${escapeHtmlCheckout(field.name)}" class="form-label">${escapeHtmlCheckout(field.label)}</label>
@@ -544,7 +569,81 @@ async function continueToPayment() {
     if (status) {
         status.textContent = `Payment initialized. Intent #${response.data.id} (${response.data.status}).`;
     }
+    const provider = (response.data.paymentGatewayProviderCode ?? '').trim().toLowerCase();
+    if (provider === 'stripe') {
+        const prepared = prepareStripePaymentForm(response.data);
+        if (!prepared) {
+            typedWindow.UserPanelAlerts?.showError('checkout-alert-error', 'Stripe payment form could not be initialized.');
+            return;
+        }
+        typedWindow.UserPanelAlerts?.showSuccess('checkout-alert-success', 'Stripe form is ready. Complete card payment below.');
+        return;
+    }
+    hideStripePaymentForm();
     typedWindow.UserPanelAlerts?.showSuccess('checkout-alert-success', 'Payment intent created. Continue with provider confirmation flow.');
+}
+function prepareStripePaymentForm(intent) {
+    const typedWindow = window;
+    const publishableKey = (intent.paymentGatewayPublicKey ?? '').trim();
+    const clientSecret = (intent.clientSecret ?? '').trim();
+    if (!publishableKey || !clientSecret || !typedWindow.Stripe) {
+        return false;
+    }
+    const cardContainer = document.getElementById('checkout-stripe-card-element');
+    const cardPanel = document.getElementById('checkout-stripe-form-card');
+    const payButton = document.getElementById('checkout-stripe-pay-button');
+    if (!cardContainer || !cardPanel || !payButton) {
+        return false;
+    }
+    cardContainer.innerHTML = '';
+    stripeInstance = typedWindow.Stripe(publishableKey, { locale: 'nb' });
+    stripeCardElement = stripeInstance.elements().create('card', { hidePostalCode: true });
+    stripeCardElement.mount('#checkout-stripe-card-element');
+    stripeClientSecret = clientSecret;
+    if (payButton.dataset.bound !== 'true') {
+        payButton.dataset.bound = 'true';
+        payButton.addEventListener('click', () => {
+            void confirmStripePayment();
+        });
+    }
+    clearStripeError();
+    cardPanel.classList.remove('d-none');
+    return true;
+}
+function hideStripePaymentForm() {
+    const cardPanel = document.getElementById('checkout-stripe-form-card');
+    cardPanel?.classList.add('d-none');
+    clearStripeError();
+}
+function showStripeError(message) {
+    const errorContainer = document.getElementById('checkout-stripe-error');
+    if (!errorContainer) {
+        return;
+    }
+    errorContainer.textContent = message;
+    errorContainer.classList.remove('d-none');
+}
+function clearStripeError() {
+    const errorContainer = document.getElementById('checkout-stripe-error');
+    if (!errorContainer) {
+        return;
+    }
+    errorContainer.textContent = '';
+    errorContainer.classList.add('d-none');
+}
+async function confirmStripePayment() {
+    if (!stripeInstance || !stripeCardElement || !stripeClientSecret) {
+        showStripeError('Stripe session is not initialized.');
+        return;
+    }
+    clearStripeError();
+    const result = await stripeInstance.confirmCardPayment(stripeClientSecret, {
+        payment_method: { card: stripeCardElement },
+        return_url: `${window.location.origin}/shop/checkout?paymentStatus=success`
+    });
+    if (result.error) {
+        showStripeError(result.error.message ?? 'Payment failed. Please check card details.');
+    }
 }
 function calculateCheckoutTotal(state) {
     let total = 0;
