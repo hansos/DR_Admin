@@ -69,6 +69,9 @@ public class PaymentIntentService : IPaymentIntentService
         }
 
         var gateway = await ResolveGatewayAsync(createDto, resolvedCustomerId);
+        var customer = await _context.Customers
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == resolvedCustomerId);
 
         var entity = new Data.Entities.PaymentIntent
         {
@@ -99,6 +102,7 @@ public class PaymentIntentService : IPaymentIntentService
             {
                 Amount = createDto.Amount,
                 Currency = createDto.Currency,
+                CustomerEmail = customer?.Email ?? string.Empty,
                 CustomerId = resolvedCustomerId.ToString(),
                 PreferredPaymentMethodType = preferredMethodType,
                 PaymentMethodTypes = string.IsNullOrWhiteSpace(preferredMethodType)
@@ -608,7 +612,7 @@ public class PaymentIntentService : IPaymentIntentService
 
         if (existingSubscription != null)
         {
-            await EnsureStripeSubscriptionMirrorAsync(existingSubscription, order, gateway);
+            await EnsureStripeSubscriptionMirrorAsync(existingSubscription, order, gateway, intent.GatewayIntentId);
             return;
         }
 
@@ -648,10 +652,10 @@ public class PaymentIntentService : IPaymentIntentService
         };
 
         _context.Subscriptions.Add(subscription);
-        await EnsureStripeSubscriptionMirrorAsync(subscription, order, gateway);
+        await EnsureStripeSubscriptionMirrorAsync(subscription, order, gateway, intent.GatewayIntentId);
     }
 
-    private async Task EnsureStripeSubscriptionMirrorAsync(Subscription subscription, Order order, Data.Entities.PaymentGateway? gateway)
+    private async Task EnsureStripeSubscriptionMirrorAsync(Subscription subscription, Order order, Data.Entities.PaymentGateway? gateway, string gatewayIntentId)
     {
         if (gateway == null || !string.Equals(gateway.ProviderCode, "stripe", StringComparison.OrdinalIgnoreCase))
         {
@@ -689,7 +693,7 @@ public class PaymentIntentService : IPaymentIntentService
             Currency = string.IsNullOrWhiteSpace(subscription.CurrencyCode) ? "EUR" : subscription.CurrencyCode,
             Interval = MapStripeInterval(subscription.BillingPeriodUnit),
             IntervalCount = Math.Max(1, subscription.BillingPeriodCount),
-            TrialEndUtc = subscription.NextBillingDate > DateTime.UtcNow ? subscription.NextBillingDate : null,
+            TrialEndUtc = null,
             Metadata = new Dictionary<string, string>
             {
                 ["order_id"] = order.Id.ToString(),
@@ -697,6 +701,12 @@ public class PaymentIntentService : IPaymentIntentService
                 ["subscription_id"] = subscription.Id.ToString()
             }
         };
+
+        var ensuredPaymentMethod = await stripeGateway.EnsureCustomerPaymentMethodForOffSessionAsync(gatewayIntentId);
+        if (!ensuredPaymentMethod)
+        {
+            _log.Warning("Unable to set Stripe default payment method from payment intent for order {OrderId}", order.Id);
+        }
 
         var stripeResult = await stripeGateway.CreateRecurringSubscriptionAsync(stripeRequest);
         if (!stripeResult.Success)

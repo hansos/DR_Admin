@@ -307,17 +307,15 @@ namespace PaymentGatewayLib.Implementations
                     parameters.Add("receipt_email", request.CustomerEmail);
                 }
 
-                if (!string.IsNullOrWhiteSpace(request.CustomerId))
+                var customerId = await EnsureCustomerIdForPaymentIntentAsync(request);
+                if (!string.IsNullOrWhiteSpace(customerId))
                 {
-                    var customerId = request.CustomerId.Trim();
-                    if (customerId.StartsWith("cus_", StringComparison.OrdinalIgnoreCase))
-                    {
-                        parameters.Add("customer", customerId);
-                    }
-                    else
-                    {
-                        parameters.Add("metadata[internal_customer_id]", customerId);
-                    }
+                    parameters.Add("customer", customerId);
+                    parameters.Add("setup_future_usage", "off_session");
+                }
+                else if (!string.IsNullOrWhiteSpace(request.CustomerId))
+                {
+                    parameters.Add("metadata[internal_customer_id]", request.CustomerId.Trim());
                 }
 
                 parameters.Add("capture_method", request.AutomaticCapture ? "automatic" : "manual");
@@ -749,6 +747,43 @@ namespace PaymentGatewayLib.Implementations
             }
         }
 
+        public async Task<bool> EnsureCustomerPaymentMethodForOffSessionAsync(string intentId)
+        {
+            if (string.IsNullOrWhiteSpace(intentId))
+            {
+                return false;
+            }
+
+            var response = await _httpClient.GetAsync($"/v1/payment_intents/{intentId}");
+            var body = await response.Content.ReadAsStringAsync();
+            if (!response.IsSuccessStatusCode)
+            {
+                return false;
+            }
+
+            var intent = JsonSerializer.Deserialize<JsonElement>(body);
+            var customerId = intent.TryGetProperty("customer", out var customer) ? customer.GetString() ?? string.Empty : string.Empty;
+            var paymentMethodId = intent.TryGetProperty("payment_method", out var paymentMethod) ? paymentMethod.GetString() ?? string.Empty : string.Empty;
+
+            if (string.IsNullOrWhiteSpace(customerId) || string.IsNullOrWhiteSpace(paymentMethodId))
+            {
+                return false;
+            }
+
+            var attachContent = new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                { "customer", customerId }
+            });
+            await _httpClient.PostAsync($"/v1/payment_methods/{paymentMethodId}/attach", attachContent);
+
+            var updateCustomerContent = new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                { "invoice_settings[default_payment_method]", paymentMethodId }
+            });
+            var updateCustomerResponse = await _httpClient.PostAsync($"/v1/customers/{customerId}", updateCustomerContent);
+            return updateCustomerResponse.IsSuccessStatusCode;
+        }
+
         private async Task<string> EnsureCustomerIdAsync(StripeSubscriptionCreateRequest request)
         {
             if (!string.IsNullOrWhiteSpace(request.CustomerId) && request.CustomerId.StartsWith("cus_", StringComparison.OrdinalIgnoreCase))
@@ -779,6 +814,43 @@ namespace PaymentGatewayLib.Implementations
             });
 
             return createCustomerResult.Success ? createCustomerResult.CustomerId : string.Empty;
+        }
+
+        private async Task<string> EnsureCustomerIdForPaymentIntentAsync(PaymentIntentRequest request)
+        {
+            if (!string.IsNullOrWhiteSpace(request.CustomerId) && request.CustomerId.StartsWith("cus_", StringComparison.OrdinalIgnoreCase))
+            {
+                return request.CustomerId.Trim();
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.CustomerEmail))
+            {
+                var encodedEmail = Uri.EscapeDataString(request.CustomerEmail);
+                var lookup = await _httpClient.GetAsync($"/v1/customers?email={encodedEmail}&limit=1");
+                var lookupBody = await lookup.Content.ReadAsStringAsync();
+                if (lookup.IsSuccessStatusCode)
+                {
+                    var lookupJson = JsonSerializer.Deserialize<JsonElement>(lookupBody);
+                    if (lookupJson.TryGetProperty("data", out var customers) && customers.GetArrayLength() > 0)
+                    {
+                        return customers[0].GetProperty("id").GetString() ?? string.Empty;
+                    }
+                }
+
+                var created = await CreateCustomerProfileAsync(new CustomerProfileRequest
+                {
+                    Email = request.CustomerEmail,
+                    Name = request.CustomerEmail,
+                    Description = "Auto-created for payment intent"
+                });
+
+                if (created.Success)
+                {
+                    return created.CustomerId;
+                }
+            }
+
+            return string.Empty;
         }
 
         private static IEnumerable<string> ResolveStripePaymentMethodTypes(PaymentIntentRequest request)

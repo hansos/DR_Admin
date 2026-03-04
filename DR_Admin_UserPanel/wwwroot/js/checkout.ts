@@ -473,8 +473,10 @@ async function deletePendingOrder(): Promise<void> {
 
         if (!response || !response.success) {
             if (response?.statusCode === 409) {
-                typedWindow.UserPanelAlerts?.showError('checkout-alert-error', response.message ?? 'Order is already paid and cannot be deleted.');
+                clearCheckoutSessionState();
+                typedWindow.UserPanelAlerts?.showError('checkout-alert-error', response.message ?? 'Order is already paid and cannot be deleted. Local checkout session was cleared.');
                 closeCheckoutDeleteModal();
+                redirectToDomainSearch(1800);
                 return;
             }
 
