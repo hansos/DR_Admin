@@ -85,6 +85,7 @@ interface DomainSearchWindow extends Window {
 }
 
 interface RegistrarLookupDto {
+    id: number;
     code: string;
     isDefault: boolean;
 }
@@ -108,6 +109,7 @@ interface HostingPackageDto {
 }
 
 let latestResult: DomainAvailabilityResult | null = null;
+let defaultRegistrarId: number | null = null;
 let defaultRegistrarCode: string | null = null;
 let defaultRegistrarCodeRequest: Promise<string | null> | null = null;
 let serviceCatalog: ServiceDto[] | null = null;
@@ -306,17 +308,17 @@ function initializeDomainSearch(): void {
             return;
         }
 
-        const registrarCode = await getDefaultRegistrarCode();
-        if (!registrarCode) {
+        const registrar = await getDefaultRegistrarSelection();
+        if (!registrar) {
             typedWindow.UserPanelAlerts?.showError('domain-search-alert-error', 'Default registrar is not configured.');
             renderResult(null);
             return;
         }
 
         const encodedDomain = encodeURIComponent(domainName);
-        const encodedRegistrar = encodeURIComponent(registrarCode);
+        const encodedRegistrarId = encodeURIComponent(registrar.id.toString());
 
-        const response = await typedWindow.UserPanelApi?.request<DomainAvailabilityResult>(`/DomainManager/registrar/${encodedRegistrar}/domain/name/${encodedDomain}/is-available`, {
+        const response = await typedWindow.UserPanelApi?.request<DomainAvailabilityResult>(`/Registrars/${encodedRegistrarId}/isavailable/${encodedDomain}`, {
             method: 'GET'
         }, true);
 
@@ -621,7 +623,9 @@ function renderFloatingBasket(): void {
     const typedWindow = window as DomainSearchWindow;
     const state = typedWindow.UserPanelCart?.getState();
     if (!state) {
-        panel.classList.add('d-none');
+        panel.classList.remove('d-none');
+        linesContainer.innerHTML = '<div class="text-muted">Basket is empty.</div>';
+        totalContainer.textContent = '0.00';
         return;
     }
 
@@ -658,8 +662,8 @@ function renderFloatingBasket(): void {
     }
 
     if (lines.length === 0) {
-        panel.classList.add('d-none');
-        linesContainer.innerHTML = '';
+        panel.classList.remove('d-none');
+        linesContainer.innerHTML = '<div class="text-muted">Basket is empty.</div>';
         totalContainer.textContent = '0.00';
         return;
     }
@@ -976,7 +980,7 @@ async function getServiceCatalog(): Promise<ServiceDto[] | null> {
 
     const typedWindow = window as DomainSearchWindow;
     serviceCatalogRequest = (async () => {
-        const response = await typedWindow.UserPanelApi?.request<ServiceDto[]>('/Services', {
+        const response = await typedWindow.UserPanelApi?.request<ServiceDto[]>('/Services/catalog', {
             method: 'GET'
         }, true);
 
@@ -1036,7 +1040,7 @@ async function getHostingCatalog(): Promise<HostingPackageDto[] | null> {
 
     const typedWindow = window as DomainSearchWindow;
     hostingCatalogRequest = (async () => {
-        const response = await typedWindow.UserPanelApi?.request<HostingPackageDto[]>('/HostingPackages/active', {
+        const response = await typedWindow.UserPanelApi?.request<HostingPackageDto[]>('/HostingPackages/catalog/active', {
             method: 'GET'
         }, true);
 
@@ -1110,12 +1114,27 @@ function getInputValue(id: string): string {
 }
 
 async function getDefaultRegistrarCode(): Promise<string | null> {
+    const registrar = await getDefaultRegistrarSelection();
+    return registrar?.code ?? null;
+}
+
+interface DefaultRegistrarSelection {
+    id: number;
+    code: string;
+}
+
+async function getDefaultRegistrarSelection(): Promise<DefaultRegistrarSelection | null> {
     if (defaultRegistrarCode) {
-        return defaultRegistrarCode;
+        return defaultRegistrarId && defaultRegistrarId > 0
+            ? { id: defaultRegistrarId, code: defaultRegistrarCode }
+            : null;
     }
 
     if (defaultRegistrarCodeRequest) {
-        return defaultRegistrarCodeRequest;
+        const code = await defaultRegistrarCodeRequest;
+        return defaultRegistrarId && defaultRegistrarId > 0 && code
+            ? { id: defaultRegistrarId, code }
+            : null;
     }
 
     const typedWindow = window as DomainSearchWindow;
@@ -1129,17 +1148,20 @@ async function getDefaultRegistrarCode(): Promise<string | null> {
         }
 
         const registrar = response.data.find((item: RegistrarLookupDto) => item.isDefault);
-        if (!registrar || !registrar.code) {
+        if (!registrar || !registrar.code || registrar.id <= 0) {
             return null;
         }
 
+        defaultRegistrarId = registrar.id;
         defaultRegistrarCode = registrar.code;
         return defaultRegistrarCode;
     })();
 
-    const result = await defaultRegistrarCodeRequest;
+    const code = await defaultRegistrarCodeRequest;
     defaultRegistrarCodeRequest = null;
-    return result;
+    return defaultRegistrarId && defaultRegistrarId > 0 && code
+        ? { id: defaultRegistrarId, code }
+        : null;
 }
 
 async function renderAlternativeDomains(domainName: string): Promise<void> {

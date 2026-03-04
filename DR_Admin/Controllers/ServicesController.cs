@@ -23,6 +23,30 @@ public class ServicesController : ControllerBase
     }
 
     /// <summary>
+    /// Retrieves service catalog for authenticated end users.
+    /// </summary>
+    /// <returns>List of services available in the storefront catalog</returns>
+    [HttpGet("catalog")]
+    [ProducesResponseType(typeof(IEnumerable<ServiceDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<IEnumerable<ServiceDto>>> GetServiceCatalog()
+    {
+        try
+        {
+            _log.Information("API: GetServiceCatalog called by user {User}", User.Identity?.Name);
+
+            var services = await _serviceService.GetAllServicesAsync();
+            return Ok(services);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in GetServiceCatalog");
+            return StatusCode(500, "An error occurred while retrieving service catalog");
+        }
+    }
+
+    /// <summary>
     /// Retrieves all services in the system
     /// </summary>
     /// <returns>List of all services</returns>

@@ -23,6 +23,30 @@ public class HostingPackagesController : ControllerBase
     }
 
     /// <summary>
+    /// Retrieves active hosting package catalog for authenticated end users.
+    /// </summary>
+    /// <returns>List of active hosting packages available in the storefront catalog</returns>
+    [HttpGet("catalog/active")]
+    [ProducesResponseType(typeof(IEnumerable<HostingPackageDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<IEnumerable<HostingPackageDto>>> GetActiveHostingPackageCatalog()
+    {
+        try
+        {
+            _log.Information("API: GetActiveHostingPackageCatalog called by user {User}", User.Identity?.Name);
+
+            var packages = await _hostingPackageService.GetActiveHostingPackagesAsync();
+            return Ok(packages);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in GetActiveHostingPackageCatalog");
+            return StatusCode(500, "An error occurred while retrieving active hosting package catalog");
+        }
+    }
+
+    /// <summary>
     /// Retrieves all hosting packages in the system
     /// </summary>
     /// <returns>List of all hosting packages</returns>

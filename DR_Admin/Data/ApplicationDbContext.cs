@@ -13,14 +13,112 @@ public class ApplicationDbContext : DbContext
 
     public override int SaveChanges()
     {
+        AssignCustomerReferenceNumbers();
         UpdateTimestamps();
         return base.SaveChanges();
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
+        await AssignCustomerReferenceNumbersAsync(cancellationToken);
         UpdateTimestamps();
         return await base.SaveChangesAsync(cancellationToken);
+    }
+
+    private void AssignCustomerReferenceNumbers()
+    {
+        const string settingKey = "PNR";
+        const long defaultFirstReferenceNumber = 1001;
+
+        var newCustomers = ChangeTracker.Entries<Customer>()
+            .Where(e => e.State == EntityState.Added && e.Entity.ReferenceNumber <= 0)
+            .Select(e => e.Entity)
+            .ToList();
+
+        if (newCustomers.Count == 0)
+            return;
+
+        var setting = SystemSettings.Local.FirstOrDefault(s => s.Key == settingKey)
+            ?? SystemSettings.FirstOrDefault(s => s.Key == settingKey);
+
+        var now = DateTime.UtcNow;
+        long nextReferenceNumber;
+
+        if (setting == null)
+        {
+            nextReferenceNumber = defaultFirstReferenceNumber;
+            setting = new SystemSetting
+            {
+                Key = settingKey,
+                Value = string.Empty,
+                Description = "The next customer reference number (PNR) to assign. Auto-incremented on each new customer creation.",
+                IsSystemKey = true,
+                CreatedAt = now,
+                UpdatedAt = now
+            };
+            SystemSettings.Add(setting);
+        }
+        else if (!long.TryParse(setting.Value, out nextReferenceNumber) || nextReferenceNumber <= 0)
+        {
+            nextReferenceNumber = defaultFirstReferenceNumber;
+        }
+
+        foreach (var customer in newCustomers)
+        {
+            customer.ReferenceNumber = nextReferenceNumber;
+            nextReferenceNumber++;
+        }
+
+        setting.Value = nextReferenceNumber.ToString();
+        setting.UpdatedAt = now;
+    }
+
+    private async Task AssignCustomerReferenceNumbersAsync(CancellationToken cancellationToken)
+    {
+        const string settingKey = "PNR";
+        const long defaultFirstReferenceNumber = 1001;
+
+        var newCustomers = ChangeTracker.Entries<Customer>()
+            .Where(e => e.State == EntityState.Added && e.Entity.ReferenceNumber <= 0)
+            .Select(e => e.Entity)
+            .ToList();
+
+        if (newCustomers.Count == 0)
+            return;
+
+        var setting = SystemSettings.Local.FirstOrDefault(s => s.Key == settingKey)
+            ?? await SystemSettings.FirstOrDefaultAsync(s => s.Key == settingKey, cancellationToken);
+
+        var now = DateTime.UtcNow;
+        long nextReferenceNumber;
+
+        if (setting == null)
+        {
+            nextReferenceNumber = defaultFirstReferenceNumber;
+            setting = new SystemSetting
+            {
+                Key = settingKey,
+                Value = string.Empty,
+                Description = "The next customer reference number (PNR) to assign. Auto-incremented on each new customer creation.",
+                IsSystemKey = true,
+                CreatedAt = now,
+                UpdatedAt = now
+            };
+            SystemSettings.Add(setting);
+        }
+        else if (!long.TryParse(setting.Value, out nextReferenceNumber) || nextReferenceNumber <= 0)
+        {
+            nextReferenceNumber = defaultFirstReferenceNumber;
+        }
+
+        foreach (var customer in newCustomers)
+        {
+            customer.ReferenceNumber = nextReferenceNumber;
+            nextReferenceNumber++;
+        }
+
+        setting.Value = nextReferenceNumber.ToString();
+        setting.UpdatedAt = now;
     }
 
     private void UpdateTimestamps()

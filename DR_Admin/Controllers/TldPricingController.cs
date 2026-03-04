@@ -56,7 +56,7 @@ public class TldPricingController : ControllerBase
     /// <param name="effectiveDate">Optional date to check (default: now)</param>
     /// <returns>Current sales pricing or null</returns>
     [HttpGet("sales/tld/{tldId}/current")]
-    [Authorize(Policy = "Pricing.Read")]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(TldSalesPricingDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<TldSalesPricingDto>> GetCurrentSalesPricing(
