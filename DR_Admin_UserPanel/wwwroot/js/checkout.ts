@@ -101,7 +101,7 @@ interface InstrumentFieldDefinition {
 
 interface CheckoutWindow extends Window {
     UserPanelApi?: {
-        request: <T>(path: string, options?: RequestInit, requiresAuth?: boolean) => Promise<{ success: boolean; data?: T; message?: string }>;
+        request: <T>(path: string, options?: RequestInit, requiresAuth?: boolean) => Promise<{ success: boolean; data?: T; message?: string; statusCode?: number }>;
     };
     UserPanelAlerts?: {
         showSuccess: (id: string, message: string) => void;
@@ -110,10 +110,17 @@ interface CheckoutWindow extends Window {
     };
     UserPanelCart?: {
         getState: () => CheckoutCartState;
+        clear: () => void;
+    };
+    bootstrap?: {
+        Modal?: {
+            getInstance: (element: Element) => { hide: () => void } | null;
+        };
     };
 }
 
 const checkoutOrderMarkerStorageKey = 'up_checkout_last_added_order';
+const checkoutDomainSearchPath = '/shop/domain-search';
 
 function initializeCheckout(): void {
     const page = document.getElementById('checkout-page');
@@ -134,6 +141,41 @@ function initializeCheckout(): void {
         event.preventDefault();
         await submitCheckout();
     });
+
+    bindDeleteOrderActions();
+    updateCheckoutDeleteOrderVisibility();
+}
+
+function bindDeleteOrderActions(): void {
+    const confirmButton = document.getElementById('checkout-delete-order-confirm') as HTMLButtonElement | null;
+    if (!confirmButton || confirmButton.dataset.bound === 'true') {
+        return;
+    }
+
+    confirmButton.dataset.bound = 'true';
+    confirmButton.addEventListener('click', () => {
+        void deletePendingOrder();
+    });
+}
+
+function updateCheckoutDeleteOrderVisibility(): void {
+    const button = document.getElementById('checkout-delete-order-open') as HTMLButtonElement | null;
+    if (!button) {
+        return;
+    }
+
+    const marker = getStoredOrderMarker();
+    const typedWindow = window as CheckoutWindow;
+    const state = typedWindow.UserPanelCart?.getState();
+
+    const hasCartLines = !!state && (
+        state.domain !== null ||
+        state.hosting.length > 0 ||
+        state.services.length > 0
+    );
+
+    const canDelete = (marker?.orderId ?? 0) > 0 || hasCartLines;
+    button.classList.toggle('d-none', !canDelete);
 }
 
 function initializePaymentInstrumentPanel(): void {
@@ -146,6 +188,91 @@ function initializePaymentInstrumentPanel(): void {
     continueButton?.addEventListener('click', () => {
         void continueToPayment();
     });
+}
+
+function closeCheckoutDeleteModal(): void {
+    const typedWindow = window as CheckoutWindow;
+    const modalElement = document.getElementById('checkout-delete-order-modal');
+    if (!modalElement) {
+        return;
+    }
+
+    const instance = typedWindow.bootstrap?.Modal?.getInstance(modalElement);
+    instance?.hide();
+}
+
+function clearCheckoutSessionState(): void {
+    const typedWindow = window as CheckoutWindow;
+    typedWindow.UserPanelCart?.clear();
+    sessionStorage.removeItem(checkoutOrderMarkerStorageKey);
+
+    const form = document.getElementById('checkout-form') as HTMLFormElement | null;
+    if (form) {
+        form.dataset.orderAdded = 'false';
+    }
+
+    const submitButton = document.getElementById('checkout-submit') as HTMLButtonElement | null;
+    if (submitButton) {
+        submitButton.dataset.submitting = 'false';
+        submitButton.disabled = false;
+    }
+
+    const paymentCard = document.getElementById('checkout-payment-instrument-card');
+    paymentCard?.classList.add('d-none');
+
+    const orderNumberEl = document.getElementById('checkout-added-order-number');
+    if (orderNumberEl) {
+        orderNumberEl.textContent = '-';
+    }
+
+    const paymentStatus = document.getElementById('checkout-payment-status');
+    if (paymentStatus) {
+        paymentStatus.textContent = 'Order removed from checkout.';
+    }
+
+    renderSummary();
+}
+
+function redirectToDomainSearch(delayMs: number = 1200): void {
+    window.setTimeout(() => {
+        window.location.href = checkoutDomainSearchPath;
+    }, delayMs);
+}
+
+async function deletePendingOrder(): Promise<void> {
+    const typedWindow = window as CheckoutWindow;
+    typedWindow.UserPanelAlerts?.hide('checkout-alert-success');
+    typedWindow.UserPanelAlerts?.hide('checkout-alert-error');
+
+    const marker = getStoredOrderMarker();
+    if (!marker || marker.orderId <= 0) {
+        clearCheckoutSessionState();
+        closeCheckoutDeleteModal();
+        typedWindow.UserPanelAlerts?.showSuccess('checkout-alert-success', 'Local checkout data removed.');
+        redirectToDomainSearch(1000);
+        return;
+    }
+
+    const response = await typedWindow.UserPanelApi?.request<OrderDto>(`/Orders/checkout/${marker.orderId}/cancel`, {
+        method: 'POST'
+    }, true);
+
+    if (!response || !response.success) {
+        if (response?.statusCode === 409) {
+            typedWindow.UserPanelAlerts?.showError('checkout-alert-error', response.message ?? 'Order is already paid and cannot be deleted.');
+            closeCheckoutDeleteModal();
+            return;
+        }
+
+        typedWindow.UserPanelAlerts?.showError('checkout-alert-error', response?.message ?? 'Could not delete order.');
+        closeCheckoutDeleteModal();
+        return;
+    }
+
+    clearCheckoutSessionState();
+    closeCheckoutDeleteModal();
+    typedWindow.UserPanelAlerts?.showSuccess('checkout-alert-success', 'Order cancelled and removed from your session.');
+    redirectToDomainSearch(1200);
 }
 
 function renderSummary(): void {
@@ -321,6 +448,7 @@ function markOrderAsAdded(orderId: number, orderNumber: string, persist: boolean
     }
 
     void loadPaymentInstruments();
+    updateCheckoutDeleteOrderVisibility();
 }
 
 async function loadPaymentInstruments(): Promise<void> {
@@ -679,6 +807,17 @@ async function submitCheckout(): Promise<void> {
         });
     });
 
+    if (orderLines.length === 0) {
+        typedWindow.UserPanelAlerts?.showError('checkout-alert-error', 'No order lines were added. Returning to domain search...');
+        if (submitButton) {
+            submitButton.dataset.submitting = 'false';
+            submitButton.disabled = false;
+        }
+
+        redirectToDomainSearch(3000);
+        return;
+    }
+
     const payload: CreateOrderDto = {
         customerId,
         serviceId: null,
@@ -696,7 +835,7 @@ async function submitCheckout(): Promise<void> {
 
     payload.setupFee = Math.max(0, domainOneTimeAmount);
 
-    const response = await typedWindow.UserPanelApi?.request<OrderDto>('/Orders', {
+    const response = await typedWindow.UserPanelApi?.request<OrderDto>('/Orders/checkout', {
         method: 'POST',
         body: JSON.stringify(payload)
     }, true);

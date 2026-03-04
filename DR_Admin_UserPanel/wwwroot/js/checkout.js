@@ -1,5 +1,6 @@
 "use strict";
 const checkoutOrderMarkerStorageKey = 'up_checkout_last_added_order';
+const checkoutDomainSearchPath = '/shop/domain-search';
 function initializeCheckout() {
     const page = document.getElementById('checkout-page');
     if (!page || page.dataset.bound === 'true') {
@@ -16,6 +17,32 @@ function initializeCheckout() {
         event.preventDefault();
         await submitCheckout();
     });
+    bindDeleteOrderActions();
+    updateCheckoutDeleteOrderVisibility();
+}
+function bindDeleteOrderActions() {
+    const confirmButton = document.getElementById('checkout-delete-order-confirm');
+    if (!confirmButton || confirmButton.dataset.bound === 'true') {
+        return;
+    }
+    confirmButton.dataset.bound = 'true';
+    confirmButton.addEventListener('click', () => {
+        void deletePendingOrder();
+    });
+}
+function updateCheckoutDeleteOrderVisibility() {
+    const button = document.getElementById('checkout-delete-order-open');
+    if (!button) {
+        return;
+    }
+    const marker = getStoredOrderMarker();
+    const typedWindow = window;
+    const state = typedWindow.UserPanelCart?.getState();
+    const hasCartLines = !!state && (state.domain !== null ||
+        state.hosting.length > 0 ||
+        state.services.length > 0);
+    const canDelete = (marker?.orderId ?? 0) > 0 || hasCartLines;
+    button.classList.toggle('d-none', !canDelete);
 }
 function initializePaymentInstrumentPanel() {
     const instrumentSelect = document.getElementById('checkout-payment-instrument');
@@ -26,6 +53,75 @@ function initializePaymentInstrumentPanel() {
     continueButton?.addEventListener('click', () => {
         void continueToPayment();
     });
+}
+function closeCheckoutDeleteModal() {
+    const typedWindow = window;
+    const modalElement = document.getElementById('checkout-delete-order-modal');
+    if (!modalElement) {
+        return;
+    }
+    const instance = typedWindow.bootstrap?.Modal?.getInstance(modalElement);
+    instance?.hide();
+}
+function clearCheckoutSessionState() {
+    const typedWindow = window;
+    typedWindow.UserPanelCart?.clear();
+    sessionStorage.removeItem(checkoutOrderMarkerStorageKey);
+    const form = document.getElementById('checkout-form');
+    if (form) {
+        form.dataset.orderAdded = 'false';
+    }
+    const submitButton = document.getElementById('checkout-submit');
+    if (submitButton) {
+        submitButton.dataset.submitting = 'false';
+        submitButton.disabled = false;
+    }
+    const paymentCard = document.getElementById('checkout-payment-instrument-card');
+    paymentCard?.classList.add('d-none');
+    const orderNumberEl = document.getElementById('checkout-added-order-number');
+    if (orderNumberEl) {
+        orderNumberEl.textContent = '-';
+    }
+    const paymentStatus = document.getElementById('checkout-payment-status');
+    if (paymentStatus) {
+        paymentStatus.textContent = 'Order removed from checkout.';
+    }
+    renderSummary();
+}
+function redirectToDomainSearch(delayMs = 1200) {
+    window.setTimeout(() => {
+        window.location.href = checkoutDomainSearchPath;
+    }, delayMs);
+}
+async function deletePendingOrder() {
+    const typedWindow = window;
+    typedWindow.UserPanelAlerts?.hide('checkout-alert-success');
+    typedWindow.UserPanelAlerts?.hide('checkout-alert-error');
+    const marker = getStoredOrderMarker();
+    if (!marker || marker.orderId <= 0) {
+        clearCheckoutSessionState();
+        closeCheckoutDeleteModal();
+        typedWindow.UserPanelAlerts?.showSuccess('checkout-alert-success', 'Local checkout data removed.');
+        redirectToDomainSearch(1000);
+        return;
+    }
+    const response = await typedWindow.UserPanelApi?.request(`/Orders/checkout/${marker.orderId}/cancel`, {
+        method: 'POST'
+    }, true);
+    if (!response || !response.success) {
+        if (response?.statusCode === 409) {
+            typedWindow.UserPanelAlerts?.showError('checkout-alert-error', response.message ?? 'Order is already paid and cannot be deleted.');
+            closeCheckoutDeleteModal();
+            return;
+        }
+        typedWindow.UserPanelAlerts?.showError('checkout-alert-error', response?.message ?? 'Could not delete order.');
+        closeCheckoutDeleteModal();
+        return;
+    }
+    clearCheckoutSessionState();
+    closeCheckoutDeleteModal();
+    typedWindow.UserPanelAlerts?.showSuccess('checkout-alert-success', 'Order cancelled and removed from your session.');
+    redirectToDomainSearch(1200);
 }
 function renderSummary() {
     const typedWindow = window;
@@ -175,6 +271,7 @@ function markOrderAsAdded(orderId, orderNumber, persist) {
         paymentCard.classList.remove('d-none');
     }
     void loadPaymentInstruments();
+    updateCheckoutDeleteOrderVisibility();
 }
 async function loadPaymentInstruments() {
     const typedWindow = window;
@@ -473,6 +570,15 @@ async function submitCheckout() {
             notes: ''
         });
     });
+    if (orderLines.length === 0) {
+        typedWindow.UserPanelAlerts?.showError('checkout-alert-error', 'No order lines were added. Returning to domain search...');
+        if (submitButton) {
+            submitButton.dataset.submitting = 'false';
+            submitButton.disabled = false;
+        }
+        redirectToDomainSearch(3000);
+        return;
+    }
     const payload = {
         customerId,
         serviceId: null,
@@ -488,7 +594,7 @@ async function submitCheckout() {
         orderLines
     };
     payload.setupFee = Math.max(0, domainOneTimeAmount);
-    const response = await typedWindow.UserPanelApi?.request('/Orders', {
+    const response = await typedWindow.UserPanelApi?.request('/Orders/checkout', {
         method: 'POST',
         body: JSON.stringify(payload)
     }, true);

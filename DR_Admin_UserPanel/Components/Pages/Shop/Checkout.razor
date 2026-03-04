@@ -8,7 +8,12 @@
             <h1 class="h4 mb-1">Checkout</h1>
             <p class="text-muted mb-0">Confirm order and initialize payment.</p>
         </div>
-        <a href="/shop/domain-search?resumeOrder=true" class="btn btn-outline-secondary">Back to order</a>
+        <div class="d-flex flex-wrap gap-2">
+            <button id="checkout-delete-order-open" type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#checkout-delete-order-modal">
+                <i class="bi bi-trash"></i> Delete order
+            </button>
+            <a href="/shop/domain-search?resumeOrder=true" class="btn btn-outline-secondary">Back to order</a>
+        </div>
     </div>
 
     <div id="checkout-alert-success" class="alert alert-success d-none" role="alert"></div>
@@ -21,6 +26,27 @@
                 <div class="card-body">
                     <div id="checkout-summary-lines"></div>
                 </div>
+
+<div class="modal fade" id="checkout-delete-order-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete order</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-2">Are you sure you want to delete this order?</p>
+                <p class="mb-0 text-muted small">If the order is already paid, deletion will be blocked.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Keep order</button>
+                <button type="button" class="btn btn-danger" id="checkout-delete-order-confirm">
+                    <i class="bi bi-trash"></i> Delete order
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
             </div>
         </div>
         <div class="col-12 col-xl-5">

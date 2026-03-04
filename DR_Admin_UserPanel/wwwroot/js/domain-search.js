@@ -13,6 +13,7 @@ let latestTldId = null;
 let latestPrivacyPrice = null;
 let isDomainSelectionLocked = false;
 const basketPositionStorageKey = 'up_domain_search_basket_position';
+const domainSearchCheckoutOrderMarkerStorageKey = 'up_checkout_last_added_order';
 function initializeDomainSearch() {
     const form = document.getElementById('domain-search-form');
     if (!form || form.dataset.bound === 'true') {
@@ -21,10 +22,26 @@ function initializeDomainSearch() {
     form.dataset.bound = 'true';
     initializeBasketDragging();
     renderFloatingBasket();
+    bindDomainSearchDeleteOrderActions();
+    updateDomainSearchDeleteOrderVisibility();
     const addAndBundleButton = document.getElementById('domain-search-add-and-bundle');
     addAndBundleButton?.addEventListener('click', () => {
         if (!addResultToCart(false)) {
             return;
+        }
+        function updateDomainSearchDeleteOrderVisibility() {
+            const button = document.getElementById('domain-search-delete-order-open');
+            if (!button) {
+                return;
+            }
+            const marker = getStoredCheckoutOrderMarker();
+            const typedWindow = window;
+            const state = typedWindow.UserPanelCart?.getState();
+            const hasCartLines = !!state && (state.domain !== null ||
+                state.hosting.length > 0 ||
+                state.services.length > 0);
+            const canDelete = (marker?.orderId ?? 0) > 0 || hasCartLines;
+            button.classList.toggle('d-none', !canDelete);
         }
         isDomainSelectionLocked = true;
         setDomainFormLocked(true);
@@ -182,6 +199,96 @@ function initializeDomainSearch() {
         renderResult(response.data);
     });
     void restoreDomainSearchFromCart();
+}
+function bindDomainSearchDeleteOrderActions() {
+    const confirmButton = document.getElementById('domain-search-delete-order-confirm');
+    if (!confirmButton || confirmButton.dataset.bound === 'true') {
+        return;
+    }
+    confirmButton.dataset.bound = 'true';
+    confirmButton.addEventListener('click', () => {
+        void deleteOrderFromDomainSearch();
+    });
+}
+function updateDomainSearchDeleteOrderVisibility() {
+    const button = document.getElementById('domain-search-delete-order-open');
+    if (!button) {
+        return;
+    }
+    const marker = getStoredCheckoutOrderMarker();
+    const typedWindow = window;
+    const state = typedWindow.UserPanelCart?.getState();
+    const hasCartLines = !!state && (state.domain !== null ||
+        state.hosting.length > 0 ||
+        state.services.length > 0);
+    const canDelete = (marker?.orderId ?? 0) > 0 || hasCartLines;
+    button.classList.toggle('d-none', !canDelete);
+}
+function getStoredCheckoutOrderMarker() {
+    try {
+        const raw = sessionStorage.getItem(domainSearchCheckoutOrderMarkerStorageKey);
+        if (!raw) {
+            return null;
+        }
+        return JSON.parse(raw);
+    }
+    catch {
+        return null;
+    }
+}
+function closeDomainSearchDeleteOrderModal() {
+    const typedWindow = window;
+    const modalElement = document.getElementById('domain-search-delete-order-modal');
+    if (!modalElement) {
+        return;
+    }
+    const instance = typedWindow.bootstrap?.Modal?.getInstance(modalElement);
+    instance?.hide();
+}
+function clearDomainSearchOrderState() {
+    const typedWindow = window;
+    typedWindow.UserPanelCart?.clear();
+    sessionStorage.removeItem(domainSearchCheckoutOrderMarkerStorageKey);
+    const domainInput = document.getElementById('domain-search-input');
+    if (domainInput) {
+        domainInput.value = '';
+    }
+    latestResult = null;
+    latestCalculatedPrice = null;
+    latestPrivacyPrice = null;
+    isDomainSelectionLocked = false;
+    setDomainFormLocked(false);
+    renderResult(null);
+    renderFloatingBasket();
+    updateDomainSearchDeleteOrderVisibility();
+}
+async function deleteOrderFromDomainSearch() {
+    const typedWindow = window;
+    typedWindow.UserPanelAlerts?.hide('domain-search-alert-success');
+    typedWindow.UserPanelAlerts?.hide('domain-search-alert-error');
+    const marker = getStoredCheckoutOrderMarker();
+    if (!marker || marker.orderId <= 0) {
+        clearDomainSearchOrderState();
+        closeDomainSearchDeleteOrderModal();
+        typedWindow.UserPanelAlerts?.showSuccess('domain-search-alert-success', 'Local order session data removed.');
+        return;
+    }
+    const response = await typedWindow.UserPanelApi?.request(`/Orders/checkout/${marker.orderId}/cancel`, {
+        method: 'POST'
+    }, true);
+    if (!response || !response.success) {
+        if (response?.statusCode === 409) {
+            typedWindow.UserPanelAlerts?.showError('domain-search-alert-error', response.message ?? 'Order is already paid and cannot be deleted.');
+            closeDomainSearchDeleteOrderModal();
+            return;
+        }
+        typedWindow.UserPanelAlerts?.showError('domain-search-alert-error', response?.message ?? 'Could not delete order.');
+        closeDomainSearchDeleteOrderModal();
+        return;
+    }
+    clearDomainSearchOrderState();
+    closeDomainSearchDeleteOrderModal();
+    typedWindow.UserPanelAlerts?.showSuccess('domain-search-alert-success', 'Order cancelled and removed from your session.');
 }
 async function restoreDomainSearchFromCart() {
     const typedWindow = window;
@@ -426,6 +533,8 @@ function renderFloatingBasket() {
         panel.classList.remove('d-none');
         linesContainer.innerHTML = '<div class="text-muted">Basket is empty.</div>';
         totalContainer.textContent = '0.00';
+        ensureBasketVisible(panel);
+        updateDomainSearchDeleteOrderVisibility();
         return;
     }
     const lines = [];
@@ -458,11 +567,15 @@ function renderFloatingBasket() {
         panel.classList.remove('d-none');
         linesContainer.innerHTML = '<div class="text-muted">Basket is empty.</div>';
         totalContainer.textContent = '0.00';
+        ensureBasketVisible(panel);
+        updateDomainSearchDeleteOrderVisibility();
         return;
     }
     panel.classList.remove('d-none');
     linesContainer.innerHTML = lines.join('');
     totalContainer.textContent = Math.max(0, total).toFixed(2);
+    ensureBasketVisible(panel);
+    updateDomainSearchDeleteOrderVisibility();
 }
 function initializeBasketDragging() {
     const panel = document.getElementById('domain-search-basket-panel');
@@ -472,6 +585,10 @@ function initializeBasketDragging() {
     }
     panel.dataset.dragBound = 'true';
     restoreBasketPosition(panel);
+    window.addEventListener('resize', () => {
+        ensureBasketVisible(panel);
+        saveBasketPosition(panel);
+    });
     let isDragging = false;
     let offsetX = 0;
     let offsetY = 0;
@@ -502,6 +619,14 @@ function initializeBasketDragging() {
         document.addEventListener('mousemove', onMouseMove);
         document.addEventListener('mouseup', onMouseUp);
     });
+}
+function ensureBasketVisible(panel) {
+    const left = Number.parseFloat(panel.style.left);
+    const top = Number.parseFloat(panel.style.top);
+    if (Number.isNaN(left) || Number.isNaN(top)) {
+        return;
+    }
+    moveBasketTo(panel, left, top);
 }
 function moveBasketTo(panel, left, top) {
     const maxLeft = Math.max(0, window.innerWidth - panel.offsetWidth);
