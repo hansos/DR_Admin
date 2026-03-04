@@ -25,15 +25,27 @@ function renderSummary() {
     let recurringTotal = 0;
     const lines = [];
     if (state.domain) {
-        oneTimeTotal += state.domain.premiumPrice;
+        const domainIsRecurring = state.domain.isRecurring === true;
+        if (domainIsRecurring) {
+            recurringTotal += state.domain.premiumPrice;
+        }
+        else {
+            oneTimeTotal += state.domain.premiumPrice;
+        }
         const periodLabel = typeof state.domain.periodYears === 'number' && state.domain.periodYears > 0
             ? ` (${state.domain.periodYears} year${state.domain.periodYears > 1 ? 's' : ''})`
             : '';
-        lines.push(`<div class="d-flex justify-content-between"><span>Domain: ${escapeHtmlCheckout(state.domain.domainName)}${periodLabel}</span><span>${state.domain.premiumPrice.toFixed(2)}</span></div>`);
+        const modeLabel = domainIsRecurring ? 'recurring' : 'one-time';
+        lines.push(`<div class="d-flex justify-content-between"><span>Domain: ${escapeHtmlCheckout(state.domain.domainName)}${periodLabel} (${modeLabel})</span><span>${state.domain.premiumPrice.toFixed(2)}</span></div>`);
         if (state.domain.includePrivacy) {
             const privacyAmount = typeof state.domain.privacyPriceTotal === 'number' ? state.domain.privacyPriceTotal : 0;
-            oneTimeTotal += privacyAmount;
-            lines.push(`<div class="d-flex justify-content-between"><span>WHOIS Privacy</span><span>${privacyAmount.toFixed(2)}</span></div>`);
+            if (domainIsRecurring) {
+                recurringTotal += privacyAmount;
+            }
+            else {
+                oneTimeTotal += privacyAmount;
+            }
+            lines.push(`<div class="d-flex justify-content-between"><span>WHOIS Privacy${domainIsRecurring ? ' (recurring)' : ''}</span><span>${privacyAmount.toFixed(2)}</span></div>`);
         }
     }
     state.hosting.forEach((item) => {
@@ -92,33 +104,60 @@ async function submitCheckout() {
     const typedWindow = window;
     typedWindow.UserPanelAlerts?.hide('checkout-alert-success');
     typedWindow.UserPanelAlerts?.hide('checkout-alert-error');
+    const submitButton = document.getElementById('checkout-submit');
+    if (submitButton?.dataset.submitting === 'true') {
+        return;
+    }
+    if (submitButton) {
+        submitButton.dataset.submitting = 'true';
+        submitButton.disabled = true;
+    }
     const customerIdValue = document.getElementById('checkout-customer-id')?.value ?? '';
     const customerId = Number.parseInt(customerIdValue, 10);
     const confirmed = document.getElementById('checkout-confirm')?.checked ?? false;
     if (Number.isNaN(customerId) || customerId <= 0) {
         typedWindow.UserPanelAlerts?.showError('checkout-alert-error', 'Customer ID is required.');
+        if (submitButton) {
+            submitButton.dataset.submitting = 'false';
+            submitButton.disabled = false;
+        }
         return;
     }
     if (!confirmed) {
         typedWindow.UserPanelAlerts?.showError('checkout-alert-error', 'You must confirm the order details before placing the order.');
+        if (submitButton) {
+            submitButton.dataset.submitting = 'false';
+            submitButton.disabled = false;
+        }
         return;
     }
     const state = typedWindow.UserPanelCart?.getState();
     if (!state) {
         typedWindow.UserPanelAlerts?.showError('checkout-alert-error', 'Cart could not be loaded.');
+        if (submitButton) {
+            submitButton.dataset.submitting = 'false';
+            submitButton.disabled = false;
+        }
         return;
     }
     const recurringAmount = state.hosting.reduce((sum, item) => sum + (item.billingCycle === 'yearly' ? item.yearlyPrice : item.monthlyPrice), 0)
         + state.services.reduce((sum, item) => sum + item.price, 0)
         - state.discount;
+    const domainOneTimeAmount = state.domain && state.domain.isRecurring !== true
+        ? state.domain.premiumPrice + (state.domain.includePrivacy ? (state.domain.privacyPriceTotal ?? 0) : 0)
+        : 0;
+    const domainRecurringAmount = state.domain && state.domain.isRecurring === true
+        ? state.domain.premiumPrice + (state.domain.includePrivacy ? (state.domain.privacyPriceTotal ?? 0) : 0)
+        : 0;
     const orderLines = [];
     if (state.domain) {
+        const domainIsRecurring = state.domain.isRecurring === true;
         orderLines.push({
             serviceId: null,
-            description: `Domain: ${state.domain.domainName}${typeof state.domain.periodYears === 'number' ? ` (${state.domain.periodYears} year${state.domain.periodYears > 1 ? 's' : ''})` : ''}`,
+            description: `Domain: ${state.domain.domainName}${typeof state.domain.periodYears === 'number' ? ` (${state.domain.periodYears} year${state.domain.periodYears > 1 ? 's' : ''})` : ''}${domainIsRecurring ? ' recurring' : ''}`,
             quantity: 1,
             unitPrice: state.domain.premiumPrice,
-            isRecurring: false,
+            isRecurring: domainIsRecurring,
             notes: ''
         });
         if (state.domain.includePrivacy) {
@@ -127,7 +166,7 @@ async function submitCheckout() {
                 description: 'WHOIS Privacy',
                 quantity: 1,
                 unitPrice: typeof state.domain.privacyPriceTotal === 'number' ? state.domain.privacyPriceTotal : 0,
-                isRecurring: false,
+                isRecurring: domainIsRecurring,
                 notes: ''
             });
         }
@@ -161,23 +200,32 @@ async function submitCheckout() {
         endDate: new Date(Date.now() + (365 * 24 * 60 * 60 * 1000)).toISOString(),
         nextBillingDate: new Date(Date.now() + (30 * 24 * 60 * 60 * 1000)).toISOString(),
         setupFee: state.domain?.premiumPrice ?? 0,
-        recurringAmount: Math.max(0, recurringAmount),
+        recurringAmount: Math.max(0, recurringAmount + domainRecurringAmount),
         couponCode: null,
         autoRenew: true,
         orderLines
     };
+    payload.setupFee = Math.max(0, domainOneTimeAmount);
     const response = await typedWindow.UserPanelApi?.request('/Orders', {
         method: 'POST',
         body: JSON.stringify(payload)
     }, true);
     if (!response || !response.success || !response.data) {
         typedWindow.UserPanelAlerts?.showError('checkout-alert-error', response?.message ?? 'Could not place order.');
+        if (submitButton) {
+            submitButton.dataset.submitting = 'false';
+            submitButton.disabled = false;
+        }
         return;
     }
     typedWindow.UserPanelAlerts?.showSuccess('checkout-alert-success', `Order created: ${response.data.orderNumber}`);
     const status = document.getElementById('checkout-payment-status');
     if (status) {
         status.textContent = 'Order created. Payment initialization is pending API integration.';
+    }
+    if (submitButton) {
+        submitButton.dataset.submitting = 'false';
+        submitButton.disabled = false;
     }
 }
 function renderPaymentStatusFromQuery() {

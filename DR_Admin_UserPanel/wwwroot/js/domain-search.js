@@ -33,6 +33,17 @@ function initializeDomainSearch() {
         const upsellCard = document.getElementById('domain-search-upsell-card');
         upsellCard?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
+    const recurringSelect = document.getElementById('domain-search-recurring');
+    recurringSelect?.addEventListener('change', () => {
+        if (!latestResult || !latestResult.isAvailable) {
+            return;
+        }
+        if (isDomainSelectionLocked) {
+            addResultToCart(false);
+        }
+        renderResult(latestResult);
+        renderFloatingBasket();
+    });
     const checkoutButton = document.getElementById('domain-search-checkout');
     checkoutButton?.addEventListener('click', () => {
         const typedWindow = window;
@@ -297,6 +308,7 @@ function addResultToCart(showMessage) {
         domainName: latestResult.domainName,
         registrarCode: defaultRegistrarCode,
         periodYears,
+        isRecurring: isDomainRecurring(),
         includePrivacy,
         premiumPrice: getSelectedDomainPrice(latestResult),
         privacyPriceTotal: includePrivacy && typeof latestPrivacyPrice === 'number' ? latestPrivacyPrice * periodYears : 0
@@ -305,6 +317,10 @@ function addResultToCart(showMessage) {
     renderFloatingBasket();
     if (showMessage) {
         typedWindow.UserPanelAlerts?.showSuccess('domain-search-alert-success', 'Domain added to cart. Continue by selecting hosting/services or checkout.');
+    }
+    function isDomainRecurring() {
+        const recurringSelect = document.getElementById('domain-search-recurring');
+        return recurringSelect?.value === 'recurring';
     }
     return true;
 }
@@ -414,7 +430,8 @@ function renderFloatingBasket() {
     if (state.domain) {
         const domainPrice = typeof state.domain.premiumPrice === 'number' ? state.domain.premiumPrice : 0;
         total += domainPrice;
-        lines.push(`<div class="d-flex justify-content-between"><span>Domain: ${escapeHtml(state.domain.domainName)} (${state.domain.periodYears} year${state.domain.periodYears > 1 ? 's' : ''})</span><span>${domainPrice.toFixed(2)}</span></div>`);
+        const paymentMode = state.domain.isRecurring ? 'recurring' : 'one-time';
+        lines.push(`<div class="d-flex justify-content-between"><span>Domain: ${escapeHtml(state.domain.domainName)} (${state.domain.periodYears} year${state.domain.periodYears > 1 ? 's' : ''}, ${paymentMode})</span><span>${domainPrice.toFixed(2)}</span></div>`);
         if (state.domain.includePrivacy && typeof latestPrivacyPrice === 'number') {
             const privacyPrice = latestPrivacyPrice * state.domain.periodYears;
             total += privacyPrice;

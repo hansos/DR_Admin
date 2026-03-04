@@ -75,6 +75,19 @@ public class OrderService : IOrderService
         {
             _log.Information("Creating new order for customer: {CustomerId}", createDto.CustomerId);
 
+            var recentOrders = await _context.Orders
+                .Include(o => o.OrderLines)
+                .Where(o => o.CustomerId == createDto.CustomerId && o.CreatedAt >= DateTime.UtcNow.AddMinutes(-2))
+                .AsNoTracking()
+                .ToListAsync();
+
+            var duplicate = recentOrders.FirstOrDefault(existing => IsDuplicateOrder(existing, createDto));
+            if (duplicate != null)
+            {
+                _log.Warning("Duplicate order request detected for customer {CustomerId}, returning existing order {OrderId}", createDto.CustomerId, duplicate.Id);
+                return MapToDto(duplicate);
+            }
+
             if (createDto.ServiceId.HasValue)
             {
                 var service = await _context.Services.FindAsync(createDto.ServiceId.Value);
@@ -140,7 +153,7 @@ public class OrderService : IOrderService
                     Quantity = line.Quantity <= 0 ? 1 : line.Quantity,
                     UnitPrice = line.UnitPrice,
                     TotalPrice = (line.Quantity <= 0 ? 1 : line.Quantity) * line.UnitPrice,
-                    IsRecurring = line.IsRecurring,
+                    IsRecurring = line.IsRecurring || (line.ServiceId.HasValue && createDto.RecurringAmount.GetValueOrDefault() > 0),
                     Notes = line.Notes
                 }).ToList();
 
@@ -160,6 +173,48 @@ public class OrderService : IOrderService
             _log.Error(ex, "Error occurred while creating order for customer: {CustomerId}", createDto.CustomerId);
             throw;
         }
+    }
+
+    private static bool IsDuplicateOrder(Order existing, CreateOrderDto request)
+    {
+        if (existing.ServiceId != request.ServiceId ||
+            existing.QuoteId != request.QuoteId ||
+            existing.OrderType != request.OrderType ||
+            existing.StartDate != request.StartDate ||
+            existing.EndDate != request.EndDate ||
+            existing.NextBillingDate != request.NextBillingDate ||
+            existing.SetupFee != request.SetupFee.GetValueOrDefault() ||
+            existing.RecurringAmount != request.RecurringAmount.GetValueOrDefault() ||
+            existing.AutoRenew != request.AutoRenew)
+        {
+            return false;
+        }
+
+        var requestLines = request.OrderLines ?? new List<CreateOrderLineDto>();
+        var existingLines = existing.OrderLines.OrderBy(line => line.LineNumber).ToList();
+        if (existingLines.Count != requestLines.Count)
+        {
+            return false;
+        }
+
+        for (var i = 0; i < existingLines.Count; i++)
+        {
+            var existingLine = existingLines[i];
+            var requestLine = requestLines[i];
+            var requestQuantity = requestLine.Quantity <= 0 ? 1 : requestLine.Quantity;
+
+            if (existingLine.ServiceId != requestLine.ServiceId ||
+                existingLine.Description != requestLine.Description ||
+                existingLine.Quantity != requestQuantity ||
+                existingLine.UnitPrice != requestLine.UnitPrice ||
+                existingLine.TotalPrice != requestQuantity * requestLine.UnitPrice ||
+                existingLine.IsRecurring != requestLine.IsRecurring)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private async Task<string> GenerateOrderNumberAsync()

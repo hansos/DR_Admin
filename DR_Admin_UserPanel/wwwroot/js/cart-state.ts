@@ -2,8 +2,10 @@ interface CartDomainItem {
     domainName: string;
     registrarCode: string;
     periodYears: number;
+    isRecurring: boolean;
     includePrivacy: boolean;
     premiumPrice: number;
+    privacyPriceTotal?: number;
 }
 
 interface CartHostingItem {
