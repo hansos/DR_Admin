@@ -23,6 +23,7 @@
         "billing-cycles.ts",
         "payment-gateways.ts",
         "payment-instruments.ts",
+        "orders.ts",
         "new-sale.ts",
         "new-sale-customer.ts",
         "new-sale-hosting.ts",
