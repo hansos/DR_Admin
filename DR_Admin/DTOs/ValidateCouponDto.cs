@@ -16,7 +16,7 @@ public class ValidateCouponDto
     public int CustomerId { get; set; }
 
     /// <summary>
-    /// Total order amount
+    /// Total invoice amount
     /// </summary>
     public decimal TotalAmount { get; set; }
 

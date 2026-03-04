@@ -11,7 +11,6 @@ namespace ISPAdmin.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/v1/[controller]")]
-[Authorize]
 public class CouponsController : ControllerBase
 {
     private readonly ICouponService _couponService;
@@ -129,7 +128,7 @@ public class CouponsController : ControllerBase
     /// <response code="401">If user is not authenticated</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("code/{code}")]
-    [Authorize]
+    [Authorize(Policy = "Coupon.Read")]
     [ProducesResponseType(typeof(CouponDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -296,7 +295,7 @@ public class CouponsController : ControllerBase
     /// <response code="401">If user is not authenticated</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpPost("validate")]
-    [Authorize]
+    [Authorize(Policy = "Coupon.Read")]
     [ProducesResponseType(typeof(CouponValidationResultDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

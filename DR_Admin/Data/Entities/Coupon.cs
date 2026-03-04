@@ -43,6 +43,16 @@ public class Coupon : EntityBase
     public DiscountAppliesTo AppliesTo { get; set; }
 
     /// <summary>
+    /// Recurrence behavior for this coupon
+    /// </summary>
+    public CouponRecurrenceType RecurrenceType { get; set; }
+
+    /// <summary>
+    /// Number of years the coupon can recur when recurrence type is recurring years
+    /// </summary>
+    public int? RecurringYears { get; set; }
+
+    /// <summary>
     /// Minimum order amount required to use this coupon
     /// </summary>
     public decimal? MinimumAmount { get; set; }

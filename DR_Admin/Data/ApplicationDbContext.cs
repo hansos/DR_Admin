@@ -1543,6 +1543,7 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
             entity.Property(e => e.Description).HasMaxLength(1000);
             entity.Property(e => e.Value).IsRequired().HasPrecision(18, 2);
+            entity.Property(e => e.RecurringYears);
             entity.Property(e => e.MinimumAmount).HasPrecision(18, 2);
             entity.Property(e => e.MaximumDiscount).HasPrecision(18, 2);
             entity.Property(e => e.AllowedServiceTypeIdsJson).HasMaxLength(1000);

@@ -16,11 +16,19 @@ public class CouponService : ICouponService
     private readonly ApplicationDbContext _context;
     private static readonly Serilog.ILogger _log = Log.ForContext<CouponService>();
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CouponService"/> class.
+    /// </summary>
+    /// <param name="context">Database context.</param>
     public CouponService(ApplicationDbContext context)
     {
         _context = context;
     }
 
+    /// <summary>
+    /// Retrieves all non-deleted coupons.
+    /// </summary>
+    /// <returns>A collection of coupons.</returns>
     public async Task<IEnumerable<CouponDto>> GetAllCouponsAsync()
     {
         try
@@ -44,6 +52,10 @@ public class CouponService : ICouponService
         }
     }
 
+    /// <summary>
+    /// Retrieves all currently active coupons within validity dates.
+    /// </summary>
+    /// <returns>A collection of active coupons.</returns>
     public async Task<IEnumerable<CouponDto>> GetActiveCouponsAsync()
     {
         try
@@ -71,6 +83,11 @@ public class CouponService : ICouponService
         }
     }
 
+    /// <summary>
+    /// Retrieves a coupon by its identifier.
+    /// </summary>
+    /// <param name="id">Coupon identifier.</param>
+    /// <returns>The coupon if found; otherwise <c>null</c>.</returns>
     public async Task<CouponDto?> GetCouponByIdAsync(int id)
     {
         try
@@ -97,6 +114,11 @@ public class CouponService : ICouponService
         }
     }
 
+    /// <summary>
+    /// Retrieves a coupon by its code.
+    /// </summary>
+    /// <param name="code">Coupon code.</param>
+    /// <returns>The coupon if found; otherwise <c>null</c>.</returns>
     public async Task<CouponDto?> GetCouponByCodeAsync(string code)
     {
         try
@@ -123,11 +145,22 @@ public class CouponService : ICouponService
         }
     }
 
+    /// <summary>
+    /// Creates a new coupon.
+    /// </summary>
+    /// <param name="createDto">Coupon creation payload.</param>
+    /// <returns>The created coupon.</returns>
     public async Task<CouponDto> CreateCouponAsync(CreateCouponDto createDto)
     {
         try
         {
             _log.Information("Creating new coupon with code: {Code}", createDto.Code);
+
+            if (createDto.RecurrenceType == CouponRecurrenceType.RecurringYears
+                && (!createDto.RecurringYears.HasValue || createDto.RecurringYears.Value <= 0))
+            {
+                throw new InvalidOperationException("Recurring years must be greater than zero for recurring coupons");
+            }
 
             var existingCoupon = await _context.Coupons
                 .FirstOrDefaultAsync(c => c.Code == createDto.Code && c.DeletedAt == null);
@@ -146,6 +179,10 @@ public class CouponService : ICouponService
                 Type = createDto.Type,
                 Value = createDto.Value,
                 AppliesTo = createDto.AppliesTo,
+                RecurrenceType = createDto.RecurrenceType,
+                RecurringYears = createDto.RecurrenceType == CouponRecurrenceType.RecurringYears
+                    ? createDto.RecurringYears
+                    : null,
                 MinimumAmount = createDto.MinimumAmount,
                 MaximumDiscount = createDto.MaximumDiscount,
                 ValidFrom = createDto.ValidFrom,
@@ -175,11 +212,23 @@ public class CouponService : ICouponService
         }
     }
 
+    /// <summary>
+    /// Updates an existing coupon.
+    /// </summary>
+    /// <param name="id">Coupon identifier.</param>
+    /// <param name="updateDto">Coupon update payload.</param>
+    /// <returns>The updated coupon if found; otherwise <c>null</c>.</returns>
     public async Task<CouponDto?> UpdateCouponAsync(int id, UpdateCouponDto updateDto)
     {
         try
         {
             _log.Information("Updating coupon with ID: {CouponId}", id);
+
+            if (updateDto.RecurrenceType == CouponRecurrenceType.RecurringYears
+                && (!updateDto.RecurringYears.HasValue || updateDto.RecurringYears.Value <= 0))
+            {
+                throw new InvalidOperationException("Recurring years must be greater than zero for recurring coupons");
+            }
 
             var coupon = await _context.Coupons.FindAsync(id);
 
@@ -204,6 +253,10 @@ public class CouponService : ICouponService
             coupon.Type = updateDto.Type;
             coupon.Value = updateDto.Value;
             coupon.AppliesTo = updateDto.AppliesTo;
+            coupon.RecurrenceType = updateDto.RecurrenceType;
+            coupon.RecurringYears = updateDto.RecurrenceType == CouponRecurrenceType.RecurringYears
+                ? updateDto.RecurringYears
+                : null;
             coupon.MinimumAmount = updateDto.MinimumAmount;
             coupon.MaximumDiscount = updateDto.MaximumDiscount;
             coupon.ValidFrom = updateDto.ValidFrom;
@@ -229,6 +282,11 @@ public class CouponService : ICouponService
         }
     }
 
+    /// <summary>
+    /// Soft deletes a coupon.
+    /// </summary>
+    /// <param name="id">Coupon identifier.</param>
+    /// <returns><c>true</c> when deleted; otherwise <c>false</c>.</returns>
     public async Task<bool> DeleteCouponAsync(int id)
     {
         try
@@ -258,6 +316,11 @@ public class CouponService : ICouponService
         }
     }
 
+    /// <summary>
+    /// Validates coupon applicability for a customer and amount.
+    /// </summary>
+    /// <param name="validateDto">Coupon validation payload.</param>
+    /// <returns>A validation result including discount amount when valid.</returns>
     public async Task<CouponValidationResultDto> ValidateCouponAsync(ValidateCouponDto validateDto)
     {
         try
@@ -320,10 +383,74 @@ public class CouponService : ICouponService
                 };
             }
 
+            var customerUsageDates = await _context.CouponUsages
+                .Where(cu => cu.CouponId == coupon.Id && cu.CustomerId == validateDto.CustomerId)
+                .OrderBy(cu => cu.UsedAt)
+                .Select(cu => cu.UsedAt)
+                .ToListAsync();
+
+            if (coupon.RecurrenceType == CouponRecurrenceType.OneTime && customerUsageDates.Count > 0)
+            {
+                return new CouponValidationResultDto
+                {
+                    IsValid = false,
+                    Message = "Coupon can only be used once per customer",
+                    DiscountAmount = 0
+                };
+            }
+
+            if (coupon.RecurrenceType == CouponRecurrenceType.RecurringYears)
+            {
+                if (!coupon.RecurringYears.HasValue || coupon.RecurringYears.Value <= 0)
+                {
+                    return new CouponValidationResultDto
+                    {
+                        IsValid = false,
+                        Message = "Coupon recurrence configuration is invalid",
+                        DiscountAmount = 0
+                    };
+                }
+
+                if (customerUsageDates.Count > 0)
+                {
+                    var firstUsageDate = customerUsageDates[0];
+                    var recurrenceEnd = firstUsageDate.AddYears(coupon.RecurringYears.Value);
+
+                    if (now >= recurrenceEnd)
+                    {
+                        return new CouponValidationResultDto
+                        {
+                            IsValid = false,
+                            Message = "Coupon recurrence period has ended",
+                            DiscountAmount = 0
+                        };
+                    }
+
+                    var cycleStart = firstUsageDate;
+                    while (cycleStart.AddYears(1) <= now)
+                    {
+                        cycleStart = cycleStart.AddYears(1);
+                    }
+
+                    var cycleEnd = cycleStart.AddYears(1);
+                    var alreadyUsedInCurrentCycle = customerUsageDates.Any(usedAt =>
+                        usedAt >= cycleStart && usedAt < cycleEnd);
+
+                    if (alreadyUsedInCurrentCycle)
+                    {
+                        return new CouponValidationResultDto
+                        {
+                            IsValid = false,
+                            Message = "Coupon has already been used for the current yearly cycle",
+                            DiscountAmount = 0
+                        };
+                    }
+                }
+            }
+
             if (coupon.MaxUsagesPerCustomer.HasValue)
             {
-                var customerUsageCount = await _context.CouponUsages
-                    .CountAsync(cu => cu.CouponId == coupon.Id && cu.CustomerId == validateDto.CustomerId);
+                var customerUsageCount = customerUsageDates.Count;
 
                 if (customerUsageCount >= coupon.MaxUsagesPerCustomer.Value)
                 {
@@ -341,7 +468,7 @@ public class CouponService : ICouponService
                 return new CouponValidationResultDto
                 {
                     IsValid = false,
-                    Message = $"Minimum order amount of {coupon.MinimumAmount.Value:C} required",
+                    Message = $"Minimum invoice amount of {coupon.MinimumAmount.Value:C} required",
                     DiscountAmount = 0
                 };
             }
@@ -384,6 +511,14 @@ public class CouponService : ICouponService
         }
     }
 
+    /// <summary>
+    /// Records coupon usage for a customer.
+    /// </summary>
+    /// <param name="couponId">Coupon identifier.</param>
+    /// <param name="customerId">Customer identifier.</param>
+    /// <param name="orderId">Order identifier.</param>
+    /// <param name="discountAmount">Applied discount amount.</param>
+    /// <returns><c>true</c> when recorded; otherwise <c>false</c>.</returns>
     public async Task<bool> RecordUsageAsync(int couponId, int customerId, int? orderId, decimal discountAmount)
     {
         try
@@ -457,6 +592,8 @@ public class CouponService : ICouponService
             Type = coupon.Type,
             Value = coupon.Value,
             AppliesTo = coupon.AppliesTo,
+            RecurrenceType = coupon.RecurrenceType,
+            RecurringYears = coupon.RecurringYears,
             MinimumAmount = coupon.MinimumAmount,
             MaximumDiscount = coupon.MaximumDiscount,
             ValidFrom = coupon.ValidFrom,

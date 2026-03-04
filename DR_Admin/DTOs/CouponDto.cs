@@ -43,6 +43,16 @@ public class CouponDto
     public DiscountAppliesTo AppliesTo { get; set; }
 
     /// <summary>
+    /// Recurrence behavior for this coupon
+    /// </summary>
+    public CouponRecurrenceType RecurrenceType { get; set; }
+
+    /// <summary>
+    /// Number of years the coupon recurs when recurrence type is recurring years
+    /// </summary>
+    public int? RecurringYears { get; set; }
+
+    /// <summary>
     /// Minimum amount required
     /// </summary>
     public decimal? MinimumAmount { get; set; }
