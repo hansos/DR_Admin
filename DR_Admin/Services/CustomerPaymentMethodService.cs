@@ -254,6 +254,7 @@ public class CustomerPaymentMethodService : ICustomerPaymentMethodService
             "bankaccount" or "bank account" => PaymentMethodType.BankAccount,
             "paypal" => PaymentMethodType.PayPal,
             "cash" => PaymentMethodType.Cash,
+            "invoice" => PaymentMethodType.Invoice,
             _ => fallbackType
         };
     }

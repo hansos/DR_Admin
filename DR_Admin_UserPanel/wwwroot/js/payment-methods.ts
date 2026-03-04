@@ -487,6 +487,10 @@ function mapInstrumentToType(instrument: string): number {
         return 3;
     }
 
+    if (normalized === 'invoice') {
+        return 4;
+    }
+
     return 99;
 }
 
@@ -509,6 +513,10 @@ function resolveInstrumentFromPaymentMethod(item?: CustomerPaymentMethodDto): st
 
     if (item.type === 3 || item.type === '3') {
         return 'Cash';
+    }
+
+    if (item.type === 4 || item.type === '4') {
+        return 'Invoice';
     }
 
     return 'Other';

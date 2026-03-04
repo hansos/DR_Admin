@@ -24,6 +24,11 @@ public enum PaymentMethodType
     /// Cash payment
     /// </summary>
     Cash = 3,
+
+    /// <summary>
+    /// Invoice payment
+    /// </summary>
+    Invoice = 4,
     
     /// <summary>
     /// Other payment method

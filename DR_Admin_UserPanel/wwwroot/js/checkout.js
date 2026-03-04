@@ -258,6 +258,9 @@ function mapPaymentMethodTypeToInstrumentCode(type) {
     if (type === 3 || type === '3') {
         return 'Cash';
     }
+    if (type === 4 || type === '4') {
+        return 'Invoice';
+    }
     return 'Other';
 }
 function getInstrumentFieldDefinitions(instrumentCode) {

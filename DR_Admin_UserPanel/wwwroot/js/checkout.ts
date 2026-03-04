@@ -417,6 +417,10 @@ function mapPaymentMethodTypeToInstrumentCode(type: number | string): string {
         return 'Cash';
     }
 
+    if (type === 4 || type === '4') {
+        return 'Invoice';
+    }
+
     return 'Other';
 }
 
