@@ -1,4 +1,35 @@
 "use strict";
+function getMarkerOrderIds(marker) {
+    const ids = Array.isArray(marker.orderIds) && marker.orderIds.length > 0
+        ? marker.orderIds
+        : [marker.orderId];
+    return ids.filter((id) => Number.isInteger(id) && id > 0);
+}
+function getMarkerPrimaryOrderId(marker) {
+    const ids = getMarkerOrderIds(marker);
+    return ids.length > 0 ? ids[0] : marker.orderId;
+}
+function getRecurringModeIntervalDays(mode) {
+    const normalized = (mode ?? '').trim().toLowerCase();
+    const monthMatch = normalized.match(/(\d+)\s*(month|months|mnd|m|mo)/);
+    if (monthMatch && monthMatch[1]) {
+        return Math.max(1, Number.parseInt(monthMatch[1], 10)) * 30;
+    }
+    const yearMatch = normalized.match(/(\d+)\s*(year|years|yr|y|annual|annually)/);
+    if (yearMatch && yearMatch[1]) {
+        return Math.max(1, Number.parseInt(yearMatch[1], 10)) * 365;
+    }
+    if (normalized.includes('year') || normalized.includes('annual') || normalized.includes('yearly')) {
+        return 365;
+    }
+    if (normalized.includes('quarter')) {
+        return 90;
+    }
+    if (normalized.includes('week')) {
+        return 7;
+    }
+    return 30;
+}
 const checkoutOrderMarkerStorageKey = 'up_checkout_last_added_order';
 const checkoutDomainSearchPath = '/shop/domain-search';
 let stripeInstance = null;
@@ -179,6 +210,10 @@ function clearCheckoutSessionState() {
     if (orderNumberEl) {
         orderNumberEl.textContent = '-';
     }
+    const ordersList = document.getElementById('checkout-added-orders-list');
+    if (ordersList) {
+        ordersList.innerHTML = '';
+    }
     const paymentStatus = document.getElementById('checkout-payment-status');
     if (paymentStatus) {
         paymentStatus.textContent = 'Order removed from checkout.';
@@ -213,18 +248,21 @@ async function deletePendingOrder() {
         redirectToDomainSearch(1000);
         return;
     }
-    const response = await typedWindow.UserPanelApi?.request(`/Orders/checkout/${marker.orderId}/cancel`, {
-        method: 'POST'
-    }, true);
-    if (!response || !response.success) {
-        if (response?.statusCode === 409) {
-            typedWindow.UserPanelAlerts?.showError('checkout-alert-error', response.message ?? 'Order is already paid and cannot be deleted.');
+    const orderIds = getMarkerOrderIds(marker);
+    for (const orderId of orderIds) {
+        const response = await typedWindow.UserPanelApi?.request(`/Orders/checkout/${orderId}/cancel`, {
+            method: 'POST'
+        }, true);
+        if (!response || !response.success) {
+            if (response?.statusCode === 409) {
+                typedWindow.UserPanelAlerts?.showError('checkout-alert-error', response.message ?? 'Order is already paid and cannot be deleted.');
+                closeCheckoutDeleteModal();
+                return;
+            }
+            typedWindow.UserPanelAlerts?.showError('checkout-alert-error', response?.message ?? 'Could not delete order.');
             closeCheckoutDeleteModal();
             return;
         }
-        typedWindow.UserPanelAlerts?.showError('checkout-alert-error', response?.message ?? 'Could not delete order.');
-        closeCheckoutDeleteModal();
-        return;
     }
     clearCheckoutSessionState();
     closeCheckoutDeleteModal();
@@ -345,19 +383,44 @@ function restoreOrderMarkerForCurrentCart() {
     if (!marker || marker.cartSignature !== getCartSignature(state)) {
         return;
     }
-    markOrderAsAdded(marker.orderId, marker.orderNumber, false);
+    const markerIds = getMarkerOrderIds(marker);
+    const markerNumbers = (Array.isArray(marker.orderNumbers) && marker.orderNumbers.length > 0)
+        ? marker.orderNumbers
+        : [marker.orderNumber];
+    const restoredOrders = markerIds.map((id, index) => ({
+        id,
+        orderNumber: markerNumbers[index] ?? marker.orderNumber,
+        recurringMode: 'restored',
+        isRecurring: false
+    }));
+    markOrderAsAdded(restoredOrders, false);
 }
-function markOrderAsAdded(orderId, orderNumber, persist) {
+function markOrderAsAdded(orders, persist) {
     const typedWindow = window;
     const state = typedWindow.UserPanelCart?.getState();
-    if (!state) {
+    if (!state || orders.length === 0) {
         return;
     }
+    const sortedOrders = [...orders].sort((a, b) => {
+        if (a.isRecurring !== b.isRecurring) {
+            return a.isRecurring ? 1 : -1;
+        }
+        const dayDiff = getRecurringModeIntervalDays(a.recurringMode) - getRecurringModeIntervalDays(b.recurringMode);
+        if (dayDiff !== 0) {
+            return dayDiff;
+        }
+        return a.orderNumber.localeCompare(b.orderNumber);
+    });
+    const primary = sortedOrders[0];
+    const orderIds = sortedOrders.map((item) => item.id);
+    const orderNumbers = sortedOrders.map((item) => item.orderNumber);
     if (persist) {
         saveOrderMarker({
             cartSignature: getCartSignature(state),
-            orderId,
-            orderNumber,
+            orderId: primary.id,
+            orderNumber: primary.orderNumber,
+            orderIds,
+            orderNumbers,
             createdAt: new Date().toISOString()
         });
     }
@@ -372,7 +435,18 @@ function markOrderAsAdded(orderId, orderNumber, persist) {
     }
     const orderNumberEl = document.getElementById('checkout-added-order-number');
     if (orderNumberEl) {
-        orderNumberEl.textContent = orderNumber;
+        orderNumberEl.textContent = orderNumbers.join(', ');
+    }
+    const ordersList = document.getElementById('checkout-added-orders-list');
+    if (ordersList) {
+        ordersList.innerHTML = sortedOrders
+            .map((item) => {
+            const typeLabel = item.isRecurring
+                ? `Recurring (${item.recurringMode})`
+                : 'One-time';
+            return `<div>${escapeHtmlCheckout(item.orderNumber)} - ${escapeHtmlCheckout(typeLabel)}</div>`;
+        })
+            .join('');
     }
     const paymentCard = document.getElementById('checkout-payment-instrument-card');
     if (paymentCard) {
@@ -541,6 +615,10 @@ async function continueToPayment() {
         typedWindow.UserPanelAlerts?.showError('checkout-alert-error', 'Order marker could not be resolved. Please place order again.');
         return;
     }
+    const primaryOrderId = getMarkerPrimaryOrderId(marker);
+    const markerOrderLabel = (Array.isArray(marker.orderNumbers) && marker.orderNumbers.length > 0)
+        ? marker.orderNumbers.join(', ')
+        : marker.orderNumber;
     const state = typedWindow.UserPanelCart?.getState();
     if (!state) {
         typedWindow.UserPanelAlerts?.showError('checkout-alert-error', 'Cart state could not be resolved.');
@@ -552,14 +630,14 @@ async function continueToPayment() {
     const response = await typedWindow.UserPanelApi?.request('/PaymentIntents', {
         method: 'POST',
         body: JSON.stringify({
-            orderId: marker.orderId,
+            orderId: primaryOrderId,
             amount: totalAmount,
             currency: 'EUR',
             paymentGatewayId: 0,
             paymentInstrument: selectedInstrument,
             returnUrl: `${baseUrl}/shop/checkout?paymentStatus=success`,
             cancelUrl: `${baseUrl}/shop/checkout?paymentStatus=failed`,
-            description: `Checkout payment for order ${marker.orderNumber}`
+            description: `Checkout payment for order ${markerOrderLabel}`
         })
     }, true);
     if (!response || !response.success || !response.data) {
@@ -596,8 +674,10 @@ function prepareStripePaymentForm(intent) {
         return false;
     }
     cardContainer.innerHTML = '';
-    stripeInstance = typedWindow.Stripe(publishableKey, { locale: 'nb' });
-    stripeCardElement = stripeInstance.elements().create('card', { hidePostalCode: true });
+    const stripeFactory = typedWindow.Stripe;
+    stripeInstance = stripeFactory(publishableKey, { locale: 'nb' });
+    const stripeElements = stripeInstance.elements();
+    stripeCardElement = stripeElements.create('card', { hidePostalCode: true });
     stripeCardElement.mount('#checkout-stripe-card-element');
     stripeClientSecret = clientSecret;
     if (payButton.dataset.bound !== 'true') {
@@ -703,49 +783,77 @@ async function submitCheckout() {
         setCheckoutSubmitDisabled(false);
         return;
     }
-    const recurringAmount = state.hosting.reduce((sum, item) => sum + (item.billingCycle === 'yearly' ? item.yearlyPrice : item.monthlyPrice), 0)
-        + state.services.reduce((sum, item) => sum + item.price, 0)
-        - state.discount;
-    const domainOneTimeAmount = state.domain && state.domain.isRecurring !== true
-        ? state.domain.premiumPrice + (state.domain.includePrivacy ? (state.domain.privacyPriceTotal ?? 0) : 0)
-        : 0;
-    const domainRecurringAmount = state.domain && state.domain.isRecurring === true
-        ? state.domain.premiumPrice + (state.domain.includePrivacy ? (state.domain.privacyPriceTotal ?? 0) : 0)
-        : 0;
-    const orderLines = [];
+    const oneTimeLines = [];
+    const recurringGroups = new Map();
+    const addRecurringLine = (mode, line) => {
+        const normalizedMode = mode.trim().toLowerCase();
+        const existing = recurringGroups.get(normalizedMode);
+        if (existing) {
+            existing.push(line);
+            return;
+        }
+        recurringGroups.set(normalizedMode, [line]);
+    };
+    const resolveRecurringMode = (rawMode, fallback) => {
+        const value = (rawMode ?? '').trim();
+        return value.length > 0 ? value : fallback;
+    };
+    const computeLinesTotal = (lines) => lines
+        .reduce((sum, line) => sum + ((line.quantity > 0 ? line.quantity : 1) * line.unitPrice), 0);
     if (state.domain) {
         const domainIsRecurring = state.domain.isRecurring === true;
-        orderLines.push({
+        const domainLine = {
             serviceId: null,
             description: `Domain: ${state.domain.domainName}${typeof state.domain.periodYears === 'number' ? ` (${state.domain.periodYears} year${state.domain.periodYears > 1 ? 's' : ''})` : ''}${domainIsRecurring ? ' recurring' : ''}`,
             quantity: 1,
             unitPrice: state.domain.premiumPrice,
             isRecurring: domainIsRecurring,
             notes: ''
-        });
+        };
+        if (domainIsRecurring) {
+            const domainMode = resolveRecurringMode(typeof state.domain.periodYears === 'number' && state.domain.periodYears > 0
+                ? `${state.domain.periodYears}year`
+                : 'yearly', 'yearly');
+            addRecurringLine(domainMode, domainLine);
+        }
+        else {
+            oneTimeLines.push(domainLine);
+        }
         if (state.domain.includePrivacy) {
-            orderLines.push({
+            const privacyLine = {
                 serviceId: null,
                 description: 'WHOIS Privacy',
                 quantity: 1,
                 unitPrice: typeof state.domain.privacyPriceTotal === 'number' ? state.domain.privacyPriceTotal : 0,
                 isRecurring: domainIsRecurring,
                 notes: ''
-            });
+            };
+            if (domainIsRecurring) {
+                const privacyMode = resolveRecurringMode(typeof state.domain.periodYears === 'number' && state.domain.periodYears > 0
+                    ? `${state.domain.periodYears}year`
+                    : 'yearly', 'yearly');
+                addRecurringLine(privacyMode, privacyLine);
+            }
+            else {
+                oneTimeLines.push(privacyLine);
+            }
         }
     }
     state.hosting.forEach((item) => {
-        orderLines.push({
+        const hostingLine = {
             serviceId: null,
             description: `Hosting: ${item.name?.trim() ? item.name : `Package #${item.id}`} (${item.billingCycle})`,
             quantity: 1,
             unitPrice: item.billingCycle === 'yearly' ? item.yearlyPrice : item.monthlyPrice,
             isRecurring: true,
             notes: ''
-        });
+        };
+        addRecurringLine(resolveRecurringMode(item.billingCycle, 'monthly'), hostingLine);
     });
     state.services.forEach((item) => {
-        orderLines.push({
+        const maybeBillingCycle = item.billingCycle;
+        const serviceMode = resolveRecurringMode(maybeBillingCycle, 'monthly');
+        addRecurringLine(serviceMode, {
             serviceId: item.id,
             description: `Service: ${item.name?.trim() ? item.name : `Service #${item.id}`}`,
             quantity: 1,
@@ -754,7 +862,7 @@ async function submitCheckout() {
             notes: ''
         });
     });
-    if (orderLines.length === 0) {
+    if (oneTimeLines.length === 0 && recurringGroups.size === 0) {
         typedWindow.UserPanelAlerts?.showError('checkout-alert-error', 'No order lines were added. Returning to domain search...');
         if (submitButton) {
             submitButton.dataset.submitting = 'false';
@@ -763,39 +871,92 @@ async function submitCheckout() {
         redirectToDomainSearch(3000);
         return;
     }
-    const payload = {
-        customerId,
-        serviceId: null,
-        quoteId: null,
-        orderType: 0,
-        startDate: new Date().toISOString(),
-        endDate: new Date(Date.now() + (365 * 24 * 60 * 60 * 1000)).toISOString(),
-        nextBillingDate: new Date(Date.now() + (30 * 24 * 60 * 60 * 1000)).toISOString(),
-        setupFee: state.domain?.premiumPrice ?? 0,
-        recurringAmount: Math.max(0, recurringAmount + domainRecurringAmount),
-        couponCode: null,
-        autoRenew: true,
-        orderLines
-    };
-    payload.setupFee = Math.max(0, domainOneTimeAmount);
-    const response = await typedWindow.UserPanelApi?.request('/Orders/checkout', {
-        method: 'POST',
-        body: JSON.stringify(payload)
-    }, true);
-    if (!response || !response.success || !response.data) {
-        typedWindow.UserPanelAlerts?.showError('checkout-alert-error', response?.message ?? 'Could not place order.');
-        if (submitButton) {
-            submitButton.dataset.submitting = 'false';
+    const createdOrders = [];
+    const now = Date.now();
+    const startDateIso = new Date(now).toISOString();
+    const endDateIso = new Date(now + (365 * 24 * 60 * 60 * 1000)).toISOString();
+    if (oneTimeLines.length > 0) {
+        const oneTimePayload = {
+            customerId,
+            serviceId: null,
+            quoteId: null,
+            orderType: 0,
+            startDate: startDateIso,
+            endDate: endDateIso,
+            nextBillingDate: new Date(now + (30 * 24 * 60 * 60 * 1000)).toISOString(),
+            setupFee: Math.max(0, computeLinesTotal(oneTimeLines) - state.discount),
+            recurringAmount: 0,
+            couponCode: null,
+            autoRenew: false,
+            orderLines: oneTimeLines
+        };
+        const oneTimeResponse = await typedWindow.UserPanelApi?.request('/Orders/checkout', {
+            method: 'POST',
+            body: JSON.stringify(oneTimePayload)
+        }, true);
+        if (!oneTimeResponse || !oneTimeResponse.success || !oneTimeResponse.data) {
+            typedWindow.UserPanelAlerts?.showError('checkout-alert-error', oneTimeResponse?.message ?? 'Could not place one-time order.');
+            if (submitButton) {
+                submitButton.dataset.submitting = 'false';
+            }
+            setCheckoutSubmitDisabled(false);
+            return;
         }
-        setCheckoutSubmitDisabled(false);
-        return;
+        createdOrders.push({
+            id: oneTimeResponse.data.id,
+            orderNumber: oneTimeResponse.data.orderNumber,
+            recurringMode: 'one-time',
+            isRecurring: false
+        });
     }
-    typedWindow.UserPanelAlerts?.showSuccess('checkout-alert-success', `Order created: ${response.data.orderNumber}`);
+    const recurringSegments = Array.from(recurringGroups.entries())
+        .sort((a, b) => {
+        const dayDiff = getRecurringModeIntervalDays(a[0]) - getRecurringModeIntervalDays(b[0]);
+        if (dayDiff !== 0) {
+            return dayDiff;
+        }
+        return a[0].localeCompare(b[0]);
+    });
+    for (const [mode, lines] of recurringSegments) {
+        const recurringPayload = {
+            customerId,
+            serviceId: null,
+            quoteId: null,
+            orderType: 0,
+            startDate: startDateIso,
+            endDate: endDateIso,
+            nextBillingDate: new Date(now + (getRecurringModeIntervalDays(mode) * 24 * 60 * 60 * 1000)).toISOString(),
+            setupFee: 0,
+            recurringAmount: Math.max(0, computeLinesTotal(lines)),
+            couponCode: null,
+            autoRenew: true,
+            orderLines: lines
+        };
+        const recurringResponse = await typedWindow.UserPanelApi?.request('/Orders/checkout', {
+            method: 'POST',
+            body: JSON.stringify(recurringPayload)
+        }, true);
+        if (!recurringResponse || !recurringResponse.success || !recurringResponse.data) {
+            typedWindow.UserPanelAlerts?.showError('checkout-alert-error', recurringResponse?.message ?? `Could not place recurring order (${mode}).`);
+            if (submitButton) {
+                submitButton.dataset.submitting = 'false';
+            }
+            setCheckoutSubmitDisabled(false);
+            return;
+        }
+        createdOrders.push({
+            id: recurringResponse.data.id,
+            orderNumber: recurringResponse.data.orderNumber,
+            recurringMode: mode,
+            isRecurring: true
+        });
+    }
+    typedWindow.UserPanelAlerts?.showSuccess('checkout-alert-success', `Orders created: ${createdOrders.map((item) => item.orderNumber).join(', ')}`);
     const status = document.getElementById('checkout-payment-status');
     if (status) {
-        status.textContent = 'Order created. Payment initialization is pending API integration.';
+        status.textContent = `Orders created (${createdOrders.length}). Payment initialization is pending API integration.`;
     }
-    markOrderAsAdded(response.data.id, response.data.orderNumber, true);
+    markOrderAsAdded(createdOrders, true);
 }
 function renderPaymentStatusFromQuery() {
     const status = new URLSearchParams(window.location.search).get('paymentStatus');

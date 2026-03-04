@@ -22,6 +22,46 @@ interface CheckoutCartState {
     discount: number;
 }
 
+function getMarkerOrderIds(marker: CheckoutOrderMarker): number[] {
+    const ids = Array.isArray(marker.orderIds) && marker.orderIds.length > 0
+        ? marker.orderIds
+        : [marker.orderId];
+
+    return ids.filter((id) => Number.isInteger(id) && id > 0);
+}
+
+function getMarkerPrimaryOrderId(marker: CheckoutOrderMarker): number {
+    const ids = getMarkerOrderIds(marker);
+    return ids.length > 0 ? ids[0] : marker.orderId;
+}
+
+function getRecurringModeIntervalDays(mode: string): number {
+    const normalized = (mode ?? '').trim().toLowerCase();
+    const monthMatch = normalized.match(/(\d+)\s*(month|months|mnd|m|mo)/);
+    if (monthMatch && monthMatch[1]) {
+        return Math.max(1, Number.parseInt(monthMatch[1], 10)) * 30;
+    }
+
+    const yearMatch = normalized.match(/(\d+)\s*(year|years|yr|y|annual|annually)/);
+    if (yearMatch && yearMatch[1]) {
+        return Math.max(1, Number.parseInt(yearMatch[1], 10)) * 365;
+    }
+
+    if (normalized.includes('year') || normalized.includes('annual') || normalized.includes('yearly')) {
+        return 365;
+    }
+
+    if (normalized.includes('quarter')) {
+        return 90;
+    }
+
+    if (normalized.includes('week')) {
+        return 7;
+    }
+
+    return 30;
+}
+
 interface CheckoutCustomerPaymentMethodDto {
     id: number;
     type: number | string;
@@ -107,7 +147,16 @@ interface CheckoutOrderMarker {
     cartSignature: string;
     orderId: number;
     orderNumber: string;
+    orderIds?: number[];
+    orderNumbers?: string[];
     createdAt: string;
+}
+
+interface CheckoutCreatedOrder {
+    id: number;
+    orderNumber: string;
+    recurringMode: string;
+    isRecurring: boolean;
 }
 
 interface InstrumentFieldDefinition {
@@ -368,6 +417,10 @@ function clearCheckoutSessionState(): void {
     if (orderNumberEl) {
         orderNumberEl.textContent = '-';
     }
+    const ordersList = document.getElementById('checkout-added-orders-list');
+    if (ordersList) {
+        ordersList.innerHTML = '';
+    }
 
     const paymentStatus = document.getElementById('checkout-payment-status');
     if (paymentStatus) {
@@ -411,20 +464,23 @@ async function deletePendingOrder(): Promise<void> {
         return;
     }
 
-    const response = await typedWindow.UserPanelApi?.request<OrderDto>(`/Orders/checkout/${marker.orderId}/cancel`, {
-        method: 'POST'
-    }, true);
+    const orderIds = getMarkerOrderIds(marker);
+    for (const orderId of orderIds) {
+        const response = await typedWindow.UserPanelApi?.request<OrderDto>(`/Orders/checkout/${orderId}/cancel`, {
+            method: 'POST'
+        }, true);
 
-    if (!response || !response.success) {
-        if (response?.statusCode === 409) {
-            typedWindow.UserPanelAlerts?.showError('checkout-alert-error', response.message ?? 'Order is already paid and cannot be deleted.');
+        if (!response || !response.success) {
+            if (response?.statusCode === 409) {
+                typedWindow.UserPanelAlerts?.showError('checkout-alert-error', response.message ?? 'Order is already paid and cannot be deleted.');
+                closeCheckoutDeleteModal();
+                return;
+            }
+
+            typedWindow.UserPanelAlerts?.showError('checkout-alert-error', response?.message ?? 'Could not delete order.');
             closeCheckoutDeleteModal();
             return;
         }
-
-        typedWindow.UserPanelAlerts?.showError('checkout-alert-error', response?.message ?? 'Could not delete order.');
-        closeCheckoutDeleteModal();
-        return;
     }
 
     clearCheckoutSessionState();
@@ -565,21 +621,52 @@ function restoreOrderMarkerForCurrentCart(): void {
         return;
     }
 
-    markOrderAsAdded(marker.orderId, marker.orderNumber, false);
+    const markerIds = getMarkerOrderIds(marker);
+    const markerNumbers = (Array.isArray(marker.orderNumbers) && marker.orderNumbers.length > 0)
+        ? marker.orderNumbers
+        : [marker.orderNumber];
+
+    const restoredOrders: CheckoutCreatedOrder[] = markerIds.map((id, index) => ({
+        id,
+        orderNumber: markerNumbers[index] ?? marker.orderNumber,
+        recurringMode: 'restored',
+        isRecurring: false
+    }));
+
+    markOrderAsAdded(restoredOrders, false);
 }
 
-function markOrderAsAdded(orderId: number, orderNumber: string, persist: boolean): void {
+function markOrderAsAdded(orders: CheckoutCreatedOrder[], persist: boolean): void {
     const typedWindow = window as CheckoutWindow;
     const state = typedWindow.UserPanelCart?.getState();
-    if (!state) {
+    if (!state || orders.length === 0) {
         return;
     }
+
+    const sortedOrders = [...orders].sort((a, b) => {
+        if (a.isRecurring !== b.isRecurring) {
+            return a.isRecurring ? 1 : -1;
+        }
+
+        const dayDiff = getRecurringModeIntervalDays(a.recurringMode) - getRecurringModeIntervalDays(b.recurringMode);
+        if (dayDiff !== 0) {
+            return dayDiff;
+        }
+
+        return a.orderNumber.localeCompare(b.orderNumber);
+    });
+
+    const primary = sortedOrders[0];
+    const orderIds = sortedOrders.map((item) => item.id);
+    const orderNumbers = sortedOrders.map((item) => item.orderNumber);
 
     if (persist) {
         saveOrderMarker({
             cartSignature: getCartSignature(state),
-            orderId,
-            orderNumber,
+            orderId: primary.id,
+            orderNumber: primary.orderNumber,
+            orderIds,
+            orderNumbers,
             createdAt: new Date().toISOString()
         });
     }
@@ -597,7 +684,18 @@ function markOrderAsAdded(orderId: number, orderNumber: string, persist: boolean
 
     const orderNumberEl = document.getElementById('checkout-added-order-number');
     if (orderNumberEl) {
-        orderNumberEl.textContent = orderNumber;
+        orderNumberEl.textContent = orderNumbers.join(', ');
+    }
+    const ordersList = document.getElementById('checkout-added-orders-list');
+    if (ordersList) {
+        ordersList.innerHTML = sortedOrders
+            .map((item) => {
+                const typeLabel = item.isRecurring
+                    ? `Recurring (${item.recurringMode})`
+                    : 'One-time';
+                return `<div>${escapeHtmlCheckout(item.orderNumber)} - ${escapeHtmlCheckout(typeLabel)}</div>`;
+            })
+            .join('');
     }
 
     const paymentCard = document.getElementById('checkout-payment-instrument-card');
@@ -802,6 +900,10 @@ async function continueToPayment(): Promise<void> {
         typedWindow.UserPanelAlerts?.showError('checkout-alert-error', 'Order marker could not be resolved. Please place order again.');
         return;
     }
+    const primaryOrderId = getMarkerPrimaryOrderId(marker);
+    const markerOrderLabel = (Array.isArray(marker.orderNumbers) && marker.orderNumbers.length > 0)
+        ? marker.orderNumbers.join(', ')
+        : marker.orderNumber;
 
     const state = typedWindow.UserPanelCart?.getState();
     if (!state) {
@@ -816,14 +918,14 @@ async function continueToPayment(): Promise<void> {
     const response = await typedWindow.UserPanelApi?.request<PaymentIntentDto>('/PaymentIntents', {
         method: 'POST',
         body: JSON.stringify({
-            orderId: marker.orderId,
+            orderId: primaryOrderId,
             amount: totalAmount,
             currency: 'EUR',
             paymentGatewayId: 0,
             paymentInstrument: selectedInstrument,
             returnUrl: `${baseUrl}/shop/checkout?paymentStatus=success`,
             cancelUrl: `${baseUrl}/shop/checkout?paymentStatus=failed`,
-            description: `Checkout payment for order ${marker.orderNumber}`
+            description: `Checkout payment for order ${markerOrderLabel}`
         })
     }, true);
 
@@ -869,8 +971,13 @@ function prepareStripePaymentForm(intent: PaymentIntentDto): boolean {
     }
 
     cardContainer.innerHTML = '';
-    stripeInstance = typedWindow.Stripe(publishableKey, { locale: 'nb' });
-    stripeCardElement = stripeInstance.elements().create('card', { hidePostalCode: true });
+    const stripeFactory = typedWindow.Stripe as unknown as (publishableKey: string, options?: { locale?: string }) => StripeInstance;
+    stripeInstance = stripeFactory(publishableKey, { locale: 'nb' });
+
+    const stripeElements = stripeInstance.elements() as unknown as {
+        create: (type: 'card', options?: { hidePostalCode?: boolean }) => StripeCardElement;
+    };
+    stripeCardElement = stripeElements.create('card', { hidePostalCode: true });
     stripeCardElement.mount('#checkout-stripe-card-element');
     stripeClientSecret = clientSecret;
 
@@ -999,56 +1106,87 @@ async function submitCheckout(): Promise<void> {
         return;
     }
 
-    const recurringAmount = state.hosting.reduce((sum, item) => sum + (item.billingCycle === 'yearly' ? item.yearlyPrice : item.monthlyPrice), 0)
-        + state.services.reduce((sum, item) => sum + item.price, 0)
-        - state.discount;
+    const oneTimeLines: CreateOrderLineDto[] = [];
+    const recurringGroups = new Map<string, CreateOrderLineDto[]>();
 
-    const domainOneTimeAmount = state.domain && state.domain.isRecurring !== true
-        ? state.domain.premiumPrice + (state.domain.includePrivacy ? (state.domain.privacyPriceTotal ?? 0) : 0)
-        : 0;
+    const addRecurringLine = (mode: string, line: CreateOrderLineDto): void => {
+        const normalizedMode = mode.trim().toLowerCase();
+        const existing = recurringGroups.get(normalizedMode);
+        if (existing) {
+            existing.push(line);
+            return;
+        }
 
-    const domainRecurringAmount = state.domain && state.domain.isRecurring === true
-        ? state.domain.premiumPrice + (state.domain.includePrivacy ? (state.domain.privacyPriceTotal ?? 0) : 0)
-        : 0;
+        recurringGroups.set(normalizedMode, [line]);
+    };
 
-    const orderLines: CreateOrderLineDto[] = [];
+    const resolveRecurringMode = (rawMode: string | undefined | null, fallback: string): string => {
+        const value = (rawMode ?? '').trim();
+        return value.length > 0 ? value : fallback;
+    };
+
+    const computeLinesTotal = (lines: CreateOrderLineDto[]): number => lines
+        .reduce((sum, line) => sum + ((line.quantity > 0 ? line.quantity : 1) * line.unitPrice), 0);
 
     if (state.domain) {
         const domainIsRecurring = state.domain.isRecurring === true;
-        orderLines.push({
+        const domainLine: CreateOrderLineDto = {
             serviceId: null,
             description: `Domain: ${state.domain.domainName}${typeof state.domain.periodYears === 'number' ? ` (${state.domain.periodYears} year${state.domain.periodYears > 1 ? 's' : ''})` : ''}${domainIsRecurring ? ' recurring' : ''}`,
             quantity: 1,
             unitPrice: state.domain.premiumPrice,
             isRecurring: domainIsRecurring,
             notes: ''
-        });
+        };
+        if (domainIsRecurring) {
+            const domainMode = resolveRecurringMode(
+                typeof state.domain.periodYears === 'number' && state.domain.periodYears > 0
+                    ? `${state.domain.periodYears}year`
+                    : 'yearly',
+                'yearly');
+            addRecurringLine(domainMode, domainLine);
+        } else {
+            oneTimeLines.push(domainLine);
+        }
 
         if (state.domain.includePrivacy) {
-            orderLines.push({
+            const privacyLine: CreateOrderLineDto = {
                 serviceId: null,
                 description: 'WHOIS Privacy',
                 quantity: 1,
                 unitPrice: typeof state.domain.privacyPriceTotal === 'number' ? state.domain.privacyPriceTotal : 0,
                 isRecurring: domainIsRecurring,
                 notes: ''
-            });
+            };
+            if (domainIsRecurring) {
+                const privacyMode = resolveRecurringMode(
+                    typeof state.domain.periodYears === 'number' && state.domain.periodYears > 0
+                        ? `${state.domain.periodYears}year`
+                        : 'yearly',
+                    'yearly');
+                addRecurringLine(privacyMode, privacyLine);
+            } else {
+                oneTimeLines.push(privacyLine);
+            }
         }
     }
 
     state.hosting.forEach((item) => {
-        orderLines.push({
+        const hostingLine: CreateOrderLineDto = {
             serviceId: null,
             description: `Hosting: ${item.name?.trim() ? item.name : `Package #${item.id}`} (${item.billingCycle})`,
             quantity: 1,
             unitPrice: item.billingCycle === 'yearly' ? item.yearlyPrice : item.monthlyPrice,
             isRecurring: true,
             notes: ''
-        });
+        };
+        addRecurringLine(resolveRecurringMode(item.billingCycle, 'monthly'), hostingLine);
     });
 
     state.services.forEach((item) => {
-        orderLines.push({
+        const maybeBillingCycle = (item as unknown as { billingCycle?: string }).billingCycle;
+        const serviceMode = resolveRecurringMode(maybeBillingCycle, 'monthly');
+        addRecurringLine(serviceMode, {
             serviceId: item.id,
             description: `Service: ${item.name?.trim() ? item.name : `Service #${item.id}`}`,
             quantity: 1,
@@ -1058,7 +1196,7 @@ async function submitCheckout(): Promise<void> {
         });
     });
 
-    if (orderLines.length === 0) {
+    if (oneTimeLines.length === 0 && recurringGroups.size === 0) {
         typedWindow.UserPanelAlerts?.showError('checkout-alert-error', 'No order lines were added. Returning to domain search...');
         if (submitButton) {
             submitButton.dataset.submitting = 'false';
@@ -1069,44 +1207,104 @@ async function submitCheckout(): Promise<void> {
         return;
     }
 
-    const payload: CreateOrderDto = {
-        customerId,
-        serviceId: null,
-        quoteId: null,
-        orderType: 0,
-        startDate: new Date().toISOString(),
-        endDate: new Date(Date.now() + (365 * 24 * 60 * 60 * 1000)).toISOString(),
-        nextBillingDate: new Date(Date.now() + (30 * 24 * 60 * 60 * 1000)).toISOString(),
-        setupFee: state.domain?.premiumPrice ?? 0,
-        recurringAmount: Math.max(0, recurringAmount + domainRecurringAmount),
-        couponCode: null,
-        autoRenew: true,
-        orderLines
-    };
+    const createdOrders: CheckoutCreatedOrder[] = [];
+    const now = Date.now();
+    const startDateIso = new Date(now).toISOString();
+    const endDateIso = new Date(now + (365 * 24 * 60 * 60 * 1000)).toISOString();
 
-    payload.setupFee = Math.max(0, domainOneTimeAmount);
+    if (oneTimeLines.length > 0) {
+        const oneTimePayload: CreateOrderDto = {
+            customerId,
+            serviceId: null,
+            quoteId: null,
+            orderType: 0,
+            startDate: startDateIso,
+            endDate: endDateIso,
+            nextBillingDate: new Date(now + (30 * 24 * 60 * 60 * 1000)).toISOString(),
+            setupFee: Math.max(0, computeLinesTotal(oneTimeLines) - state.discount),
+            recurringAmount: 0,
+            couponCode: null,
+            autoRenew: false,
+            orderLines: oneTimeLines
+        };
 
-    const response = await typedWindow.UserPanelApi?.request<OrderDto>('/Orders/checkout', {
-        method: 'POST',
-        body: JSON.stringify(payload)
-    }, true);
+        const oneTimeResponse = await typedWindow.UserPanelApi?.request<OrderDto>('/Orders/checkout', {
+            method: 'POST',
+            body: JSON.stringify(oneTimePayload)
+        }, true);
 
-    if (!response || !response.success || !response.data) {
-        typedWindow.UserPanelAlerts?.showError('checkout-alert-error', response?.message ?? 'Could not place order.');
-        if (submitButton) {
-            submitButton.dataset.submitting = 'false';
+        if (!oneTimeResponse || !oneTimeResponse.success || !oneTimeResponse.data) {
+            typedWindow.UserPanelAlerts?.showError('checkout-alert-error', oneTimeResponse?.message ?? 'Could not place one-time order.');
+            if (submitButton) {
+                submitButton.dataset.submitting = 'false';
+            }
+            setCheckoutSubmitDisabled(false);
+            return;
         }
-        setCheckoutSubmitDisabled(false);
-        return;
+
+        createdOrders.push({
+            id: oneTimeResponse.data.id,
+            orderNumber: oneTimeResponse.data.orderNumber,
+            recurringMode: 'one-time',
+            isRecurring: false
+        });
     }
 
-    typedWindow.UserPanelAlerts?.showSuccess('checkout-alert-success', `Order created: ${response.data.orderNumber}`);
+    const recurringSegments = Array.from(recurringGroups.entries())
+        .sort((a, b) => {
+            const dayDiff = getRecurringModeIntervalDays(a[0]) - getRecurringModeIntervalDays(b[0]);
+            if (dayDiff !== 0) {
+                return dayDiff;
+            }
+
+            return a[0].localeCompare(b[0]);
+        });
+
+    for (const [mode, lines] of recurringSegments) {
+        const recurringPayload: CreateOrderDto = {
+            customerId,
+            serviceId: null,
+            quoteId: null,
+            orderType: 0,
+            startDate: startDateIso,
+            endDate: endDateIso,
+            nextBillingDate: new Date(now + (getRecurringModeIntervalDays(mode) * 24 * 60 * 60 * 1000)).toISOString(),
+            setupFee: 0,
+            recurringAmount: Math.max(0, computeLinesTotal(lines)),
+            couponCode: null,
+            autoRenew: true,
+            orderLines: lines
+        };
+
+        const recurringResponse = await typedWindow.UserPanelApi?.request<OrderDto>('/Orders/checkout', {
+            method: 'POST',
+            body: JSON.stringify(recurringPayload)
+        }, true);
+
+        if (!recurringResponse || !recurringResponse.success || !recurringResponse.data) {
+            typedWindow.UserPanelAlerts?.showError('checkout-alert-error', recurringResponse?.message ?? `Could not place recurring order (${mode}).`);
+            if (submitButton) {
+                submitButton.dataset.submitting = 'false';
+            }
+            setCheckoutSubmitDisabled(false);
+            return;
+        }
+
+        createdOrders.push({
+            id: recurringResponse.data.id,
+            orderNumber: recurringResponse.data.orderNumber,
+            recurringMode: mode,
+            isRecurring: true
+        });
+    }
+
+    typedWindow.UserPanelAlerts?.showSuccess('checkout-alert-success', `Orders created: ${createdOrders.map((item) => item.orderNumber).join(', ')}`);
     const status = document.getElementById('checkout-payment-status');
     if (status) {
-        status.textContent = 'Order created. Payment initialization is pending API integration.';
+        status.textContent = `Orders created (${createdOrders.length}). Payment initialization is pending API integration.`;
     }
 
-    markOrderAsAdded(response.data.id, response.data.orderNumber, true);
+    markOrderAsAdded(createdOrders, true);
 }
 
 function renderPaymentStatusFromQuery(): void {
