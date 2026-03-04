@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace ISPAdmin.Migrations
 {
     /// <inheritdoc />
-    public partial class initial : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -319,6 +319,37 @@ namespace ISPAdmin.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "MyCompanies",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                    LegalName = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
+                    Email = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
+                    Phone = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
+                    AddressLine1 = table.Column<string>(type: "TEXT", maxLength: 300, nullable: true),
+                    AddressLine2 = table.Column<string>(type: "TEXT", maxLength: 300, nullable: true),
+                    PostalCode = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
+                    City = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
+                    State = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
+                    CountryCode = table.Column<string>(type: "TEXT", maxLength: 2, nullable: true),
+                    OrganizationNumber = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
+                    TaxId = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
+                    VatNumber = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
+                    InvoiceEmail = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
+                    Website = table.Column<string>(type: "TEXT", maxLength: 300, nullable: true),
+                    LogoUrl = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
+                    LetterheadFooter = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_MyCompanies", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "OperatingSystems",
                 columns: table => new
                 {
@@ -357,39 +388,6 @@ namespace ISPAdmin.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_OutboxEvents", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "PaymentGateways",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    Name = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    NormalizedName = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    ProviderCode = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
-                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
-                    IsDefault = table.Column<bool>(type: "INTEGER", nullable: false),
-                    ApiKey = table.Column<string>(type: "TEXT", maxLength: 500, nullable: false),
-                    ApiSecret = table.Column<string>(type: "TEXT", maxLength: 500, nullable: false),
-                    ConfigurationJson = table.Column<string>(type: "TEXT", maxLength: 4000, nullable: false),
-                    UseSandbox = table.Column<bool>(type: "INTEGER", nullable: false),
-                    WebhookUrl = table.Column<string>(type: "TEXT", maxLength: 500, nullable: false),
-                    WebhookSecret = table.Column<string>(type: "TEXT", nullable: false),
-                    DisplayOrder = table.Column<int>(type: "INTEGER", nullable: false),
-                    Description = table.Column<string>(type: "TEXT", nullable: false),
-                    LogoUrl = table.Column<string>(type: "TEXT", nullable: false),
-                    SupportedCurrencies = table.Column<string>(type: "TEXT", nullable: false),
-                    FeePercentage = table.Column<decimal>(type: "TEXT", nullable: false),
-                    FixedFee = table.Column<decimal>(type: "TEXT", nullable: false),
-                    Notes = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: false),
-                    DeletedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_PaymentGateways", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -755,6 +753,35 @@ namespace ISPAdmin.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "RegistrarTldPriceDownloadSessions",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    RegistrarId = table.Column<int>(type: "INTEGER", nullable: false),
+                    StartedAtUtc = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    CompletedAtUtc = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    TriggerSource = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    Success = table.Column<bool>(type: "INTEGER", nullable: false),
+                    TldsProcessed = table.Column<int>(type: "INTEGER", nullable: false),
+                    PriceChangesDetected = table.Column<int>(type: "INTEGER", nullable: false),
+                    Message = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true),
+                    ErrorMessage = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RegistrarTldPriceDownloadSessions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_RegistrarTldPriceDownloadSessions_Registrars_RegistrarId",
+                        column: x => x.RegistrarId,
+                        principalTable: "Registrars",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "SalesAgents",
                 columns: table => new
                 {
@@ -795,7 +822,7 @@ namespace ISPAdmin.Migrations
                     HostProviderId = table.Column<int>(type: "INTEGER", nullable: true),
                     Location = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
                     OperatingSystemId = table.Column<int>(type: "INTEGER", nullable: false),
-                    Status = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    Status = table.Column<bool>(type: "INTEGER", maxLength: 50, nullable: false),
                     CpuCores = table.Column<int>(type: "INTEGER", nullable: true),
                     RamMB = table.Column<int>(type: "INTEGER", nullable: true),
                     DiskSpaceGB = table.Column<int>(type: "INTEGER", nullable: true),
@@ -951,6 +978,7 @@ namespace ISPAdmin.Migrations
                     IsDefaultBilling = table.Column<bool>(type: "INTEGER", nullable: false),
                     IsDefaultTech = table.Column<bool>(type: "INTEGER", nullable: false),
                     IsDefaultAdministrator = table.Column<bool>(type: "INTEGER", nullable: false),
+                    IsDomainGlobal = table.Column<bool>(type: "INTEGER", nullable: false),
                     NormalizedFirstName = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
                     NormalizedLastName = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
                     CustomerId = table.Column<int>(type: "INTEGER", nullable: true),
@@ -1029,47 +1057,6 @@ namespace ISPAdmin.Migrations
                         name: "FK_CustomerCredits_Customers_CustomerId",
                         column: x => x.CustomerId,
                         principalTable: "Customers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "CustomerPaymentMethods",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    CustomerId = table.Column<int>(type: "INTEGER", nullable: false),
-                    PaymentGatewayId = table.Column<int>(type: "INTEGER", nullable: false),
-                    Type = table.Column<int>(type: "INTEGER", nullable: false),
-                    PaymentMethodToken = table.Column<string>(type: "TEXT", nullable: false),
-                    Last4Digits = table.Column<string>(type: "TEXT", nullable: false),
-                    ExpiryMonth = table.Column<int>(type: "INTEGER", nullable: true),
-                    ExpiryYear = table.Column<int>(type: "INTEGER", nullable: true),
-                    CardBrand = table.Column<string>(type: "TEXT", nullable: false),
-                    CardholderName = table.Column<string>(type: "TEXT", nullable: false),
-                    BillingAddressJson = table.Column<string>(type: "TEXT", nullable: false),
-                    IsDefault = table.Column<bool>(type: "INTEGER", nullable: false),
-                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
-                    IsVerified = table.Column<bool>(type: "INTEGER", nullable: false),
-                    VerifiedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    DeletedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_CustomerPaymentMethods", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_CustomerPaymentMethods_Customers_CustomerId",
-                        column: x => x.CustomerId,
-                        principalTable: "Customers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_CustomerPaymentMethods_PaymentGateways_PaymentGatewayId",
-                        column: x => x.PaymentGatewayId,
-                        principalTable: "PaymentGateways",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -1309,33 +1296,41 @@ namespace ISPAdmin.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "PaymentMethodTokens",
+                name: "RegistrarTldPriceChangeLogs",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    CustomerPaymentMethodId = table.Column<int>(type: "INTEGER", nullable: false),
-                    EncryptedToken = table.Column<string>(type: "TEXT", nullable: false),
-                    GatewayCustomerId = table.Column<string>(type: "TEXT", nullable: false),
-                    GatewayPaymentMethodId = table.Column<string>(type: "TEXT", nullable: false),
-                    ExpiresAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    Last4Digits = table.Column<string>(type: "TEXT", nullable: false),
-                    CardBrand = table.Column<string>(type: "TEXT", nullable: false),
-                    ExpiryMonth = table.Column<int>(type: "INTEGER", nullable: true),
-                    ExpiryYear = table.Column<int>(type: "INTEGER", nullable: true),
-                    IsDefault = table.Column<bool>(type: "INTEGER", nullable: false),
-                    IsVerified = table.Column<bool>(type: "INTEGER", nullable: false),
-                    VerifiedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    RegistrarTldId = table.Column<int>(type: "INTEGER", nullable: false),
+                    DownloadSessionId = table.Column<int>(type: "INTEGER", nullable: true),
+                    ChangeSource = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    ChangedBy = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
+                    ChangedAtUtc = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    OldRegistrationCost = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: true),
+                    NewRegistrationCost = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: true),
+                    OldRenewalCost = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: true),
+                    NewRenewalCost = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: true),
+                    OldTransferCost = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: true),
+                    NewTransferCost = table.Column<decimal>(type: "TEXT", precision: 18, scale: 4, nullable: true),
+                    OldCurrency = table.Column<string>(type: "TEXT", maxLength: 3, nullable: true),
+                    NewCurrency = table.Column<string>(type: "TEXT", maxLength: 3, nullable: true),
+                    Notes = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_PaymentMethodTokens", x => x.Id);
+                    table.PrimaryKey("PK_RegistrarTldPriceChangeLogs", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_PaymentMethodTokens_CustomerPaymentMethods_CustomerPaymentMethodId",
-                        column: x => x.CustomerPaymentMethodId,
-                        principalTable: "CustomerPaymentMethods",
+                        name: "FK_RegistrarTldPriceChangeLogs_RegistrarTldPriceDownloadSessions_DownloadSessionId",
+                        column: x => x.DownloadSessionId,
+                        principalTable: "RegistrarTldPriceDownloadSessions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_RegistrarTldPriceChangeLogs_RegistrarTlds_RegistrarTldId",
+                        column: x => x.RegistrarTldId,
+                        principalTable: "RegistrarTlds",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -1365,6 +1360,33 @@ namespace ISPAdmin.Migrations
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "LoginHistories",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    UserId = table.Column<int>(type: "INTEGER", nullable: true),
+                    Identifier = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                    IsSuccessful = table.Column<bool>(type: "INTEGER", nullable: false),
+                    AttemptedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    IPAddress = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    UserAgent = table.Column<string>(type: "TEXT", maxLength: 500, nullable: false),
+                    FailureReason = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_LoginHistories", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_LoginHistories_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
                 });
 
             migrationBuilder.CreateTable(
@@ -1468,6 +1490,46 @@ namespace ISPAdmin.Migrations
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.SetNull);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SupportTickets",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    CustomerId = table.Column<int>(type: "INTEGER", nullable: false),
+                    CreatedByUserId = table.Column<int>(type: "INTEGER", nullable: false),
+                    AssignedToUserId = table.Column<int>(type: "INTEGER", nullable: true),
+                    Subject = table.Column<string>(type: "TEXT", maxLength: 150, nullable: false),
+                    Status = table.Column<string>(type: "TEXT", maxLength: 30, nullable: false),
+                    Priority = table.Column<string>(type: "TEXT", maxLength: 20, nullable: false),
+                    LastMessageAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    ClosedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SupportTickets", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_SupportTickets_Customers_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_SupportTickets_Users_AssignedToUserId",
+                        column: x => x.AssignedToUserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_SupportTickets_Users_CreatedByUserId",
+                        column: x => x.CreatedByUserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -1627,7 +1689,7 @@ namespace ISPAdmin.Migrations
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     CustomerId = table.Column<int>(type: "INTEGER", nullable: false),
-                    ServiceId = table.Column<int>(type: "INTEGER", nullable: false),
+                    ServiceId = table.Column<int>(type: "INTEGER", nullable: true),
                     Name = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false),
                     RegistrarId = table.Column<int>(type: "INTEGER", nullable: false),
                     RegistrarTldId = table.Column<int>(type: "INTEGER", nullable: true),
@@ -1669,73 +1731,7 @@ namespace ISPAdmin.Migrations
                         column: x => x.ServiceId,
                         principalTable: "Services",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Subscriptions",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    CustomerId = table.Column<int>(type: "INTEGER", nullable: false),
-                    ServiceId = table.Column<int>(type: "INTEGER", nullable: false),
-                    BillingCycleId = table.Column<int>(type: "INTEGER", nullable: false),
-                    CustomerPaymentMethodId = table.Column<int>(type: "INTEGER", nullable: true),
-                    Status = table.Column<int>(type: "INTEGER", nullable: false),
-                    StartDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    EndDate = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    NextBillingDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    CurrentPeriodStart = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    CurrentPeriodEnd = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    Amount = table.Column<decimal>(type: "TEXT", nullable: false),
-                    CurrencyCode = table.Column<string>(type: "TEXT", nullable: false),
-                    BillingPeriodCount = table.Column<int>(type: "INTEGER", nullable: false),
-                    BillingPeriodUnit = table.Column<int>(type: "INTEGER", nullable: false),
-                    TrialEndDate = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    IsInTrial = table.Column<bool>(type: "INTEGER", nullable: false),
-                    RetryCount = table.Column<int>(type: "INTEGER", nullable: false),
-                    MaxRetryAttempts = table.Column<int>(type: "INTEGER", nullable: false),
-                    LastBillingAttempt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    LastSuccessfulBilling = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    CancelledAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    CancellationReason = table.Column<string>(type: "TEXT", nullable: false),
-                    PausedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    PauseReason = table.Column<string>(type: "TEXT", nullable: false),
-                    Metadata = table.Column<string>(type: "TEXT", nullable: false),
-                    Notes = table.Column<string>(type: "TEXT", nullable: false),
-                    Quantity = table.Column<int>(type: "INTEGER", nullable: false),
-                    SendEmailNotifications = table.Column<bool>(type: "INTEGER", nullable: false),
-                    AutoRetryFailedPayments = table.Column<bool>(type: "INTEGER", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Subscriptions", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Subscriptions_BillingCycles_BillingCycleId",
-                        column: x => x.BillingCycleId,
-                        principalTable: "BillingCycles",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Subscriptions_CustomerPaymentMethods_CustomerPaymentMethodId",
-                        column: x => x.CustomerPaymentMethodId,
-                        principalTable: "CustomerPaymentMethods",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_Subscriptions_Customers_CustomerId",
-                        column: x => x.CustomerId,
-                        principalTable: "Customers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Subscriptions_Services_ServiceId",
-                        column: x => x.ServiceId,
-                        principalTable: "Services",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.SetNull);
                 });
 
             migrationBuilder.CreateTable(
@@ -1794,7 +1790,7 @@ namespace ISPAdmin.Migrations
                         .Annotation("Sqlite:Autoincrement", true),
                     OrderNumber = table.Column<string>(type: "TEXT", nullable: false),
                     CustomerId = table.Column<int>(type: "INTEGER", nullable: false),
-                    ServiceId = table.Column<int>(type: "INTEGER", nullable: false),
+                    ServiceId = table.Column<int>(type: "INTEGER", nullable: true),
                     QuoteId = table.Column<int>(type: "INTEGER", nullable: true),
                     CouponId = table.Column<int>(type: "INTEGER", nullable: true),
                     OrderType = table.Column<int>(type: "INTEGER", nullable: false),
@@ -1845,7 +1841,7 @@ namespace ISPAdmin.Migrations
                         column: x => x.ServiceId,
                         principalTable: "Services",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.SetNull);
                 });
 
             migrationBuilder.CreateTable(
@@ -1855,7 +1851,7 @@ namespace ISPAdmin.Migrations
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     QuoteId = table.Column<int>(type: "INTEGER", nullable: false),
-                    ServiceId = table.Column<int>(type: "INTEGER", nullable: false),
+                    ServiceId = table.Column<int>(type: "INTEGER", nullable: true),
                     BillingCycleId = table.Column<int>(type: "INTEGER", nullable: false),
                     LineNumber = table.Column<int>(type: "INTEGER", nullable: false),
                     Description = table.Column<string>(type: "TEXT", nullable: false),
@@ -1894,8 +1890,67 @@ namespace ISPAdmin.Migrations
                         name: "FK_QuoteLines_Services_ServiceId",
                         column: x => x.ServiceId,
                         principalTable: "Services",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "QuoteRevisions",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    QuoteId = table.Column<int>(type: "INTEGER", nullable: false),
+                    RevisionNumber = table.Column<int>(type: "INTEGER", nullable: false),
+                    QuoteStatus = table.Column<int>(type: "INTEGER", nullable: false),
+                    ActionType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    SnapshotJson = table.Column<string>(type: "TEXT", maxLength: 2147483647, nullable: false),
+                    PdfFileName = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false),
+                    PdfFilePath = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: false),
+                    ContentHash = table.Column<string>(type: "TEXT", maxLength: 256, nullable: false),
+                    Notes = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: false),
+                    DeletedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_QuoteRevisions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_QuoteRevisions_Quotes_QuoteId",
+                        column: x => x.QuoteId,
+                        principalTable: "Quotes",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SupportTicketMessages",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    SupportTicketId = table.Column<int>(type: "INTEGER", nullable: false),
+                    SenderUserId = table.Column<int>(type: "INTEGER", nullable: false),
+                    SenderRole = table.Column<string>(type: "TEXT", maxLength: 20, nullable: false),
+                    Message = table.Column<string>(type: "TEXT", maxLength: 4000, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SupportTicketMessages", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_SupportTicketMessages_SupportTickets_SupportTicketId",
+                        column: x => x.SupportTicketId,
+                        principalTable: "SupportTickets",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_SupportTicketMessages_Users_SenderUserId",
+                        column: x => x.SenderUserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -2172,63 +2227,38 @@ namespace ISPAdmin.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Invoices",
+                name: "OrderLines",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    InvoiceNumber = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
-                    CustomerId = table.Column<int>(type: "INTEGER", nullable: false),
-                    Status = table.Column<int>(type: "INTEGER", nullable: false),
-                    IssueDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    DueDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    PaidAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    SubTotal = table.Column<decimal>(type: "TEXT", nullable: false),
-                    TaxAmount = table.Column<decimal>(type: "TEXT", nullable: false),
-                    TotalAmount = table.Column<decimal>(type: "TEXT", nullable: false),
-                    AmountPaid = table.Column<decimal>(type: "TEXT", nullable: false),
-                    AmountDue = table.Column<decimal>(type: "TEXT", nullable: false),
-                    CurrencyCode = table.Column<string>(type: "TEXT", maxLength: 3, nullable: false),
-                    TaxRate = table.Column<decimal>(type: "TEXT", nullable: false),
-                    TaxName = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
-                    BaseCurrencyCode = table.Column<string>(type: "TEXT", nullable: false),
-                    DisplayCurrencyCode = table.Column<string>(type: "TEXT", nullable: false),
-                    ExchangeRate = table.Column<decimal>(type: "TEXT", nullable: true),
-                    BaseTotalAmount = table.Column<decimal>(type: "TEXT", nullable: true),
-                    ExchangeRateDate = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    CustomerName = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    CustomerAddress = table.Column<string>(type: "TEXT", nullable: false),
-                    CustomerTaxId = table.Column<string>(type: "TEXT", nullable: false),
-                    PaymentReference = table.Column<string>(type: "TEXT", nullable: false),
-                    PaymentMethod = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-                    Notes = table.Column<string>(type: "TEXT", nullable: false),
-                    InternalComment = table.Column<string>(type: "TEXT", nullable: false),
-                    SelectedPaymentGatewayId = table.Column<int>(type: "INTEGER", nullable: true),
-                    DeletedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    OrderId = table.Column<int>(type: "INTEGER", nullable: true),
+                    OrderId = table.Column<int>(type: "INTEGER", nullable: false),
+                    ServiceId = table.Column<int>(type: "INTEGER", nullable: true),
+                    LineNumber = table.Column<int>(type: "INTEGER", nullable: false),
+                    Description = table.Column<string>(type: "TEXT", maxLength: 500, nullable: false),
+                    Quantity = table.Column<int>(type: "INTEGER", nullable: false),
+                    UnitPrice = table.Column<decimal>(type: "TEXT", precision: 18, scale: 2, nullable: false),
+                    TotalPrice = table.Column<decimal>(type: "TEXT", precision: 18, scale: 2, nullable: false),
+                    IsRecurring = table.Column<bool>(type: "INTEGER", nullable: false),
+                    Notes = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Invoices", x => x.Id);
+                    table.PrimaryKey("PK_OrderLines", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Invoices_Customers_CustomerId",
-                        column: x => x.CustomerId,
-                        principalTable: "Customers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Invoices_Orders_OrderId",
+                        name: "FK_OrderLines_Orders_OrderId",
                         column: x => x.OrderId,
                         principalTable: "Orders",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_Invoices_PaymentGateways_SelectedPaymentGatewayId",
-                        column: x => x.SelectedPaymentGatewayId,
-                        principalTable: "PaymentGateways",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_OrderLines_Services_ServiceId",
+                        column: x => x.ServiceId,
+                        principalTable: "Services",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
                 });
 
             migrationBuilder.CreateTable(
@@ -2366,6 +2396,201 @@ namespace ISPAdmin.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "HostingDatabaseUsers",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    HostingDatabaseId = table.Column<int>(type: "INTEGER", nullable: false),
+                    Username = table.Column<string>(type: "TEXT", nullable: false),
+                    PasswordHash = table.Column<string>(type: "TEXT", nullable: true),
+                    Privileges = table.Column<string>(type: "TEXT", nullable: true),
+                    AllowedHosts = table.Column<string>(type: "TEXT", nullable: true),
+                    ExternalUserId = table.Column<string>(type: "TEXT", nullable: true),
+                    LastSyncedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    SyncStatus = table.Column<string>(type: "TEXT", nullable: true),
+                    Notes = table.Column<string>(type: "TEXT", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_HostingDatabaseUsers", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_HostingDatabaseUsers_HostingDatabases_HostingDatabaseId",
+                        column: x => x.HostingDatabaseId,
+                        principalTable: "HostingDatabases",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "CreditTransactions",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    CustomerCreditId = table.Column<int>(type: "INTEGER", nullable: false),
+                    Type = table.Column<int>(type: "INTEGER", nullable: false),
+                    Amount = table.Column<decimal>(type: "TEXT", nullable: false),
+                    InvoiceId = table.Column<int>(type: "INTEGER", nullable: true),
+                    PaymentTransactionId = table.Column<int>(type: "INTEGER", nullable: true),
+                    Description = table.Column<string>(type: "TEXT", nullable: false),
+                    BalanceAfter = table.Column<decimal>(type: "TEXT", nullable: false),
+                    CreatedByUserId = table.Column<int>(type: "INTEGER", nullable: true),
+                    InternalNotes = table.Column<string>(type: "TEXT", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CreditTransactions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CreditTransactions_CustomerCredits_CustomerCreditId",
+                        column: x => x.CustomerCreditId,
+                        principalTable: "CustomerCredits",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_CreditTransactions_Users_CreatedByUserId",
+                        column: x => x.CreatedByUserId,
+                        principalTable: "Users",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "CustomerPaymentMethods",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    CustomerId = table.Column<int>(type: "INTEGER", nullable: false),
+                    PaymentGatewayId = table.Column<int>(type: "INTEGER", nullable: false),
+                    Type = table.Column<int>(type: "INTEGER", nullable: false),
+                    PaymentMethodToken = table.Column<string>(type: "TEXT", nullable: false),
+                    Last4Digits = table.Column<string>(type: "TEXT", nullable: false),
+                    ExpiryMonth = table.Column<int>(type: "INTEGER", nullable: true),
+                    ExpiryYear = table.Column<int>(type: "INTEGER", nullable: true),
+                    CardBrand = table.Column<string>(type: "TEXT", nullable: false),
+                    CardholderName = table.Column<string>(type: "TEXT", nullable: false),
+                    BillingAddressJson = table.Column<string>(type: "TEXT", nullable: false),
+                    IsDefault = table.Column<bool>(type: "INTEGER", nullable: false),
+                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
+                    IsVerified = table.Column<bool>(type: "INTEGER", nullable: false),
+                    VerifiedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    DeletedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CustomerPaymentMethods", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CustomerPaymentMethods_Customers_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PaymentMethodTokens",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    CustomerPaymentMethodId = table.Column<int>(type: "INTEGER", nullable: false),
+                    EncryptedToken = table.Column<string>(type: "TEXT", nullable: false),
+                    GatewayCustomerId = table.Column<string>(type: "TEXT", nullable: false),
+                    GatewayPaymentMethodId = table.Column<string>(type: "TEXT", nullable: false),
+                    ExpiresAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    Last4Digits = table.Column<string>(type: "TEXT", nullable: false),
+                    CardBrand = table.Column<string>(type: "TEXT", nullable: false),
+                    ExpiryMonth = table.Column<int>(type: "INTEGER", nullable: true),
+                    ExpiryYear = table.Column<int>(type: "INTEGER", nullable: true),
+                    IsDefault = table.Column<bool>(type: "INTEGER", nullable: false),
+                    IsVerified = table.Column<bool>(type: "INTEGER", nullable: false),
+                    VerifiedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PaymentMethodTokens", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_PaymentMethodTokens_CustomerPaymentMethods_CustomerPaymentMethodId",
+                        column: x => x.CustomerPaymentMethodId,
+                        principalTable: "CustomerPaymentMethods",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Subscriptions",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    CustomerId = table.Column<int>(type: "INTEGER", nullable: false),
+                    ServiceId = table.Column<int>(type: "INTEGER", nullable: true),
+                    BillingCycleId = table.Column<int>(type: "INTEGER", nullable: false),
+                    CustomerPaymentMethodId = table.Column<int>(type: "INTEGER", nullable: true),
+                    Status = table.Column<int>(type: "INTEGER", nullable: false),
+                    StartDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    EndDate = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    NextBillingDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    CurrentPeriodStart = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    CurrentPeriodEnd = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    Amount = table.Column<decimal>(type: "TEXT", nullable: false),
+                    CurrencyCode = table.Column<string>(type: "TEXT", nullable: false),
+                    BillingPeriodCount = table.Column<int>(type: "INTEGER", nullable: false),
+                    BillingPeriodUnit = table.Column<int>(type: "INTEGER", nullable: false),
+                    TrialEndDate = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    IsInTrial = table.Column<bool>(type: "INTEGER", nullable: false),
+                    RetryCount = table.Column<int>(type: "INTEGER", nullable: false),
+                    MaxRetryAttempts = table.Column<int>(type: "INTEGER", nullable: false),
+                    LastBillingAttempt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    LastSuccessfulBilling = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    CancelledAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    CancellationReason = table.Column<string>(type: "TEXT", nullable: false),
+                    PausedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    PauseReason = table.Column<string>(type: "TEXT", nullable: false),
+                    Metadata = table.Column<string>(type: "TEXT", nullable: false),
+                    Notes = table.Column<string>(type: "TEXT", nullable: false),
+                    Quantity = table.Column<int>(type: "INTEGER", nullable: false),
+                    SendEmailNotifications = table.Column<bool>(type: "INTEGER", nullable: false),
+                    AutoRetryFailedPayments = table.Column<bool>(type: "INTEGER", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Subscriptions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Subscriptions_BillingCycles_BillingCycleId",
+                        column: x => x.BillingCycleId,
+                        principalTable: "BillingCycles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Subscriptions_CustomerPaymentMethods_CustomerPaymentMethodId",
+                        column: x => x.CustomerPaymentMethodId,
+                        principalTable: "CustomerPaymentMethods",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Subscriptions_Customers_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Subscriptions_Services_ServiceId",
+                        column: x => x.ServiceId,
+                        principalTable: "Services",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
                 name: "InvoiceLines",
                 columns: table => new
                 {
@@ -2396,12 +2621,6 @@ namespace ISPAdmin.Migrations
                 {
                     table.PrimaryKey("PK_InvoiceLines", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_InvoiceLines_Invoices_InvoiceId",
-                        column: x => x.InvoiceId,
-                        principalTable: "Invoices",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
                         name: "FK_InvoiceLines_Services_ServiceId",
                         column: x => x.ServiceId,
                         principalTable: "Services",
@@ -2411,6 +2630,230 @@ namespace ISPAdmin.Migrations
                         name: "FK_InvoiceLines_Units_UnitId",
                         column: x => x.UnitId,
                         principalTable: "Units",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "VendorCosts",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    InvoiceLineId = table.Column<int>(type: "INTEGER", nullable: false),
+                    VendorPayoutId = table.Column<int>(type: "INTEGER", nullable: true),
+                    VendorType = table.Column<int>(type: "INTEGER", nullable: false),
+                    VendorId = table.Column<int>(type: "INTEGER", nullable: true),
+                    VendorName = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                    VendorCurrency = table.Column<string>(type: "TEXT", maxLength: 3, nullable: false),
+                    VendorAmount = table.Column<decimal>(type: "TEXT", precision: 18, scale: 2, nullable: false),
+                    BaseCurrency = table.Column<string>(type: "TEXT", maxLength: 3, nullable: false),
+                    BaseAmount = table.Column<decimal>(type: "TEXT", precision: 18, scale: 2, nullable: false),
+                    ExchangeRate = table.Column<decimal>(type: "TEXT", precision: 18, scale: 6, nullable: false),
+                    ExchangeRateDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    IsRefundable = table.Column<bool>(type: "INTEGER", nullable: false),
+                    RefundPolicy = table.Column<int>(type: "INTEGER", nullable: false),
+                    RefundDeadline = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    Status = table.Column<int>(type: "INTEGER", nullable: false),
+                    Notes = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_VendorCosts", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_VendorCosts_InvoiceLines_InvoiceLineId",
+                        column: x => x.InvoiceLineId,
+                        principalTable: "InvoiceLines",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_VendorCosts_VendorPayouts_VendorPayoutId",
+                        column: x => x.VendorPayoutId,
+                        principalTable: "VendorPayouts",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "InvoicePayments",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    InvoiceId = table.Column<int>(type: "INTEGER", nullable: false),
+                    PaymentTransactionId = table.Column<int>(type: "INTEGER", nullable: false),
+                    AmountApplied = table.Column<decimal>(type: "TEXT", nullable: false),
+                    Currency = table.Column<string>(type: "TEXT", nullable: false),
+                    InvoiceBalance = table.Column<decimal>(type: "TEXT", nullable: false),
+                    InvoiceTotalAmount = table.Column<decimal>(type: "TEXT", nullable: false),
+                    IsFullPayment = table.Column<bool>(type: "INTEGER", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_InvoicePayments", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Invoices",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    InvoiceNumber = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    CustomerId = table.Column<int>(type: "INTEGER", nullable: false),
+                    Status = table.Column<int>(type: "INTEGER", nullable: false),
+                    IssueDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    DueDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    PaidAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    SubTotal = table.Column<decimal>(type: "TEXT", nullable: false),
+                    TaxAmount = table.Column<decimal>(type: "TEXT", nullable: false),
+                    TotalAmount = table.Column<decimal>(type: "TEXT", nullable: false),
+                    AmountPaid = table.Column<decimal>(type: "TEXT", nullable: false),
+                    AmountDue = table.Column<decimal>(type: "TEXT", nullable: false),
+                    CurrencyCode = table.Column<string>(type: "TEXT", maxLength: 3, nullable: false),
+                    TaxRate = table.Column<decimal>(type: "TEXT", nullable: false),
+                    TaxName = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    BaseCurrencyCode = table.Column<string>(type: "TEXT", nullable: false),
+                    DisplayCurrencyCode = table.Column<string>(type: "TEXT", nullable: false),
+                    ExchangeRate = table.Column<decimal>(type: "TEXT", nullable: true),
+                    BaseTotalAmount = table.Column<decimal>(type: "TEXT", nullable: true),
+                    ExchangeRateDate = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    CustomerName = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                    CustomerAddress = table.Column<string>(type: "TEXT", nullable: false),
+                    CustomerTaxId = table.Column<string>(type: "TEXT", nullable: false),
+                    PaymentReference = table.Column<string>(type: "TEXT", nullable: false),
+                    PaymentMethod = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    Notes = table.Column<string>(type: "TEXT", nullable: false),
+                    InternalComment = table.Column<string>(type: "TEXT", nullable: false),
+                    SelectedPaymentGatewayId = table.Column<int>(type: "INTEGER", nullable: true),
+                    DeletedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    OrderId = table.Column<int>(type: "INTEGER", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Invoices", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Invoices_Customers_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Invoices_Orders_OrderId",
+                        column: x => x.OrderId,
+                        principalTable: "Orders",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PaymentAttempts",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    InvoiceId = table.Column<int>(type: "INTEGER", nullable: false),
+                    PaymentTransactionId = table.Column<int>(type: "INTEGER", nullable: true),
+                    CustomerPaymentMethodId = table.Column<int>(type: "INTEGER", nullable: false),
+                    AttemptedAmount = table.Column<decimal>(type: "TEXT", nullable: false),
+                    Currency = table.Column<string>(type: "TEXT", nullable: false),
+                    Status = table.Column<int>(type: "INTEGER", nullable: false),
+                    GatewayResponse = table.Column<string>(type: "TEXT", nullable: false),
+                    GatewayTransactionId = table.Column<string>(type: "TEXT", nullable: false),
+                    ErrorCode = table.Column<string>(type: "TEXT", nullable: false),
+                    ErrorMessage = table.Column<string>(type: "TEXT", nullable: false),
+                    RetryCount = table.Column<int>(type: "INTEGER", nullable: false),
+                    NextRetryAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    RequiresAuthentication = table.Column<bool>(type: "INTEGER", nullable: false),
+                    AuthenticationUrl = table.Column<string>(type: "TEXT", nullable: false),
+                    AuthenticationStatus = table.Column<int>(type: "INTEGER", nullable: false),
+                    IpAddress = table.Column<string>(type: "TEXT", nullable: false),
+                    UserAgent = table.Column<string>(type: "TEXT", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PaymentAttempts", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_PaymentAttempts_CustomerPaymentMethods_CustomerPaymentMethodId",
+                        column: x => x.CustomerPaymentMethodId,
+                        principalTable: "CustomerPaymentMethods",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_PaymentAttempts_Invoices_InvoiceId",
+                        column: x => x.InvoiceId,
+                        principalTable: "Invoices",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PaymentGateways",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                    NormalizedName = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                    ProviderCode = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    PaymentInstrument = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    PaymentInstrumentId = table.Column<int>(type: "INTEGER", nullable: true),
+                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
+                    IsDefault = table.Column<bool>(type: "INTEGER", nullable: false),
+                    ApiKey = table.Column<string>(type: "TEXT", maxLength: 500, nullable: false),
+                    ApiSecret = table.Column<string>(type: "TEXT", maxLength: 500, nullable: false),
+                    ConfigurationJson = table.Column<string>(type: "TEXT", maxLength: 4000, nullable: false),
+                    UseSandbox = table.Column<bool>(type: "INTEGER", nullable: false),
+                    WebhookUrl = table.Column<string>(type: "TEXT", maxLength: 500, nullable: false),
+                    WebhookSecret = table.Column<string>(type: "TEXT", nullable: false),
+                    DisplayOrder = table.Column<int>(type: "INTEGER", nullable: false),
+                    Description = table.Column<string>(type: "TEXT", nullable: false),
+                    LogoUrl = table.Column<string>(type: "TEXT", nullable: false),
+                    SupportedCurrencies = table.Column<string>(type: "TEXT", nullable: false),
+                    FeePercentage = table.Column<decimal>(type: "TEXT", nullable: false),
+                    FixedFee = table.Column<decimal>(type: "TEXT", nullable: false),
+                    Notes = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: false),
+                    DeletedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PaymentGateways", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PaymentInstruments",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    Code = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    NormalizedCode = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    NormalizedName = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    Description = table.Column<string>(type: "TEXT", maxLength: 500, nullable: false),
+                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
+                    DisplayOrder = table.Column<int>(type: "INTEGER", nullable: false),
+                    DefaultGatewayId = table.Column<int>(type: "INTEGER", nullable: true),
+                    DeletedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PaymentInstruments", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_PaymentInstruments_PaymentGateways_DefaultGatewayId",
+                        column: x => x.DefaultGatewayId,
+                        principalTable: "PaymentGateways",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -2471,74 +2914,35 @@ namespace ISPAdmin.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "HostingDatabaseUsers",
+                name: "PaymentInstrumentGateways",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    HostingDatabaseId = table.Column<int>(type: "INTEGER", nullable: false),
-                    Username = table.Column<string>(type: "TEXT", nullable: false),
-                    PasswordHash = table.Column<string>(type: "TEXT", nullable: true),
-                    Privileges = table.Column<string>(type: "TEXT", nullable: true),
-                    AllowedHosts = table.Column<string>(type: "TEXT", nullable: true),
-                    ExternalUserId = table.Column<string>(type: "TEXT", nullable: true),
-                    LastSyncedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    SyncStatus = table.Column<string>(type: "TEXT", nullable: true),
-                    Notes = table.Column<string>(type: "TEXT", nullable: true),
+                    PaymentInstrumentId = table.Column<int>(type: "INTEGER", nullable: false),
+                    PaymentGatewayId = table.Column<int>(type: "INTEGER", nullable: false),
+                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
+                    IsDefault = table.Column<bool>(type: "INTEGER", nullable: false),
+                    Priority = table.Column<int>(type: "INTEGER", nullable: false),
+                    DeletedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_HostingDatabaseUsers", x => x.Id);
+                    table.PrimaryKey("PK_PaymentInstrumentGateways", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_HostingDatabaseUsers_HostingDatabases_HostingDatabaseId",
-                        column: x => x.HostingDatabaseId,
-                        principalTable: "HostingDatabases",
+                        name: "FK_PaymentInstrumentGateways_PaymentGateways_PaymentGatewayId",
+                        column: x => x.PaymentGatewayId,
+                        principalTable: "PaymentGateways",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "VendorCosts",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    InvoiceLineId = table.Column<int>(type: "INTEGER", nullable: false),
-                    VendorPayoutId = table.Column<int>(type: "INTEGER", nullable: true),
-                    VendorType = table.Column<int>(type: "INTEGER", nullable: false),
-                    VendorId = table.Column<int>(type: "INTEGER", nullable: true),
-                    VendorName = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    VendorCurrency = table.Column<string>(type: "TEXT", maxLength: 3, nullable: false),
-                    VendorAmount = table.Column<decimal>(type: "TEXT", precision: 18, scale: 2, nullable: false),
-                    BaseCurrency = table.Column<string>(type: "TEXT", maxLength: 3, nullable: false),
-                    BaseAmount = table.Column<decimal>(type: "TEXT", precision: 18, scale: 2, nullable: false),
-                    ExchangeRate = table.Column<decimal>(type: "TEXT", precision: 18, scale: 6, nullable: false),
-                    ExchangeRateDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    IsRefundable = table.Column<bool>(type: "INTEGER", nullable: false),
-                    RefundPolicy = table.Column<int>(type: "INTEGER", nullable: false),
-                    RefundDeadline = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    Status = table.Column<int>(type: "INTEGER", nullable: false),
-                    Notes = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_VendorCosts", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_VendorCosts_InvoiceLines_InvoiceLineId",
-                        column: x => x.InvoiceLineId,
-                        principalTable: "InvoiceLines",
+                        name: "FK_PaymentInstrumentGateways_PaymentInstruments_PaymentInstrumentId",
+                        column: x => x.PaymentInstrumentId,
+                        principalTable: "PaymentInstruments",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_VendorCosts_VendorPayouts_VendorPayoutId",
-                        column: x => x.VendorPayoutId,
-                        principalTable: "VendorPayouts",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -2588,131 +2992,6 @@ namespace ISPAdmin.Migrations
                         name: "FK_PaymentTransactions_PaymentIntents_PaymentIntentId",
                         column: x => x.PaymentIntentId,
                         principalTable: "PaymentIntents",
-                        principalColumn: "Id");
-                });
-
-            migrationBuilder.CreateTable(
-                name: "CreditTransactions",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    CustomerCreditId = table.Column<int>(type: "INTEGER", nullable: false),
-                    Type = table.Column<int>(type: "INTEGER", nullable: false),
-                    Amount = table.Column<decimal>(type: "TEXT", nullable: false),
-                    InvoiceId = table.Column<int>(type: "INTEGER", nullable: true),
-                    PaymentTransactionId = table.Column<int>(type: "INTEGER", nullable: true),
-                    Description = table.Column<string>(type: "TEXT", nullable: false),
-                    BalanceAfter = table.Column<decimal>(type: "TEXT", nullable: false),
-                    CreatedByUserId = table.Column<int>(type: "INTEGER", nullable: true),
-                    InternalNotes = table.Column<string>(type: "TEXT", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_CreditTransactions", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_CreditTransactions_CustomerCredits_CustomerCreditId",
-                        column: x => x.CustomerCreditId,
-                        principalTable: "CustomerCredits",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_CreditTransactions_Invoices_InvoiceId",
-                        column: x => x.InvoiceId,
-                        principalTable: "Invoices",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_CreditTransactions_PaymentTransactions_PaymentTransactionId",
-                        column: x => x.PaymentTransactionId,
-                        principalTable: "PaymentTransactions",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_CreditTransactions_Users_CreatedByUserId",
-                        column: x => x.CreatedByUserId,
-                        principalTable: "Users",
-                        principalColumn: "Id");
-                });
-
-            migrationBuilder.CreateTable(
-                name: "InvoicePayments",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    InvoiceId = table.Column<int>(type: "INTEGER", nullable: false),
-                    PaymentTransactionId = table.Column<int>(type: "INTEGER", nullable: false),
-                    AmountApplied = table.Column<decimal>(type: "TEXT", nullable: false),
-                    Currency = table.Column<string>(type: "TEXT", nullable: false),
-                    InvoiceBalance = table.Column<decimal>(type: "TEXT", nullable: false),
-                    InvoiceTotalAmount = table.Column<decimal>(type: "TEXT", nullable: false),
-                    IsFullPayment = table.Column<bool>(type: "INTEGER", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_InvoicePayments", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_InvoicePayments_Invoices_InvoiceId",
-                        column: x => x.InvoiceId,
-                        principalTable: "Invoices",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_InvoicePayments_PaymentTransactions_PaymentTransactionId",
-                        column: x => x.PaymentTransactionId,
-                        principalTable: "PaymentTransactions",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "PaymentAttempts",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    InvoiceId = table.Column<int>(type: "INTEGER", nullable: false),
-                    PaymentTransactionId = table.Column<int>(type: "INTEGER", nullable: true),
-                    CustomerPaymentMethodId = table.Column<int>(type: "INTEGER", nullable: false),
-                    AttemptedAmount = table.Column<decimal>(type: "TEXT", nullable: false),
-                    Currency = table.Column<string>(type: "TEXT", nullable: false),
-                    Status = table.Column<int>(type: "INTEGER", nullable: false),
-                    GatewayResponse = table.Column<string>(type: "TEXT", nullable: false),
-                    GatewayTransactionId = table.Column<string>(type: "TEXT", nullable: false),
-                    ErrorCode = table.Column<string>(type: "TEXT", nullable: false),
-                    ErrorMessage = table.Column<string>(type: "TEXT", nullable: false),
-                    RetryCount = table.Column<int>(type: "INTEGER", nullable: false),
-                    NextRetryAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    RequiresAuthentication = table.Column<bool>(type: "INTEGER", nullable: false),
-                    AuthenticationUrl = table.Column<string>(type: "TEXT", nullable: false),
-                    AuthenticationStatus = table.Column<int>(type: "INTEGER", nullable: false),
-                    IpAddress = table.Column<string>(type: "TEXT", nullable: false),
-                    UserAgent = table.Column<string>(type: "TEXT", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_PaymentAttempts", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_PaymentAttempts_CustomerPaymentMethods_CustomerPaymentMethodId",
-                        column: x => x.CustomerPaymentMethodId,
-                        principalTable: "CustomerPaymentMethods",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_PaymentAttempts_Invoices_InvoiceId",
-                        column: x => x.InvoiceId,
-                        principalTable: "Invoices",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_PaymentAttempts_PaymentTransactions_PaymentTransactionId",
-                        column: x => x.PaymentTransactionId,
-                        principalTable: "PaymentTransactions",
                         principalColumn: "Id");
                 });
 
@@ -3429,6 +3708,21 @@ namespace ISPAdmin.Migrations
                 column: "SelectedPaymentGatewayId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_LoginHistories_AttemptedAt",
+                table: "LoginHistories",
+                column: "AttemptedAt");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_LoginHistories_IsSuccessful",
+                table: "LoginHistories",
+                column: "IsSuccessful");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_LoginHistories_UserId",
+                table: "LoginHistories",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_NameServers_DomainId",
                 table: "NameServers",
                 column: "DomainId");
@@ -3448,6 +3742,16 @@ namespace ISPAdmin.Migrations
                 table: "OperatingSystems",
                 column: "Name",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OrderLines_OrderId_LineNumber",
+                table: "OrderLines",
+                columns: new[] { "OrderId", "LineNumber" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OrderLines_ServiceId",
+                table: "OrderLines",
+                column: "ServiceId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Orders_CouponId",
@@ -3500,9 +3804,72 @@ namespace ISPAdmin.Migrations
                 column: "NormalizedName");
 
             migrationBuilder.CreateIndex(
+                name: "IX_PaymentGateways_PaymentInstrument",
+                table: "PaymentGateways",
+                column: "PaymentInstrument");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PaymentGateways_PaymentInstrumentId",
+                table: "PaymentGateways",
+                column: "PaymentInstrumentId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_PaymentGateways_ProviderCode",
                 table: "PaymentGateways",
                 column: "ProviderCode");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PaymentInstrumentGateways_IsActive",
+                table: "PaymentInstrumentGateways",
+                column: "IsActive");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PaymentInstrumentGateways_IsDefault",
+                table: "PaymentInstrumentGateways",
+                column: "IsDefault");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PaymentInstrumentGateways_PaymentGatewayId",
+                table: "PaymentInstrumentGateways",
+                column: "PaymentGatewayId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PaymentInstrumentGateways_PaymentInstrumentId_PaymentGatewayId",
+                table: "PaymentInstrumentGateways",
+                columns: new[] { "PaymentInstrumentId", "PaymentGatewayId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PaymentInstrumentGateways_Priority",
+                table: "PaymentInstrumentGateways",
+                column: "Priority");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PaymentInstruments_Code",
+                table: "PaymentInstruments",
+                column: "Code",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PaymentInstruments_DefaultGatewayId",
+                table: "PaymentInstruments",
+                column: "DefaultGatewayId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PaymentInstruments_DisplayOrder",
+                table: "PaymentInstruments",
+                column: "DisplayOrder");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PaymentInstruments_IsActive",
+                table: "PaymentInstruments",
+                column: "IsActive");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PaymentInstruments_NormalizedCode",
+                table: "PaymentInstruments",
+                column: "NormalizedCode",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_PaymentIntents_CustomerId",
@@ -3583,6 +3950,22 @@ namespace ISPAdmin.Migrations
                 name: "IX_QuoteLines_ServiceId",
                 table: "QuoteLines",
                 column: "ServiceId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_QuoteRevisions_ActionType",
+                table: "QuoteRevisions",
+                column: "ActionType");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_QuoteRevisions_QuoteId",
+                table: "QuoteRevisions",
+                column: "QuoteId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_QuoteRevisions_QuoteId_RevisionNumber",
+                table: "QuoteRevisions",
+                columns: new[] { "QuoteId", "RevisionNumber" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Quotes_CouponId",
@@ -3737,6 +4120,36 @@ namespace ISPAdmin.Migrations
                 name: "IX_RegistrarTldCostPricing_RegistrarTldId",
                 table: "RegistrarTldCostPricing",
                 column: "RegistrarTldId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RegistrarTldPriceChangeLogs_ChangedAtUtc",
+                table: "RegistrarTldPriceChangeLogs",
+                column: "ChangedAtUtc");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RegistrarTldPriceChangeLogs_ChangeSource",
+                table: "RegistrarTldPriceChangeLogs",
+                column: "ChangeSource");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RegistrarTldPriceChangeLogs_DownloadSessionId",
+                table: "RegistrarTldPriceChangeLogs",
+                column: "DownloadSessionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RegistrarTldPriceChangeLogs_RegistrarTldId",
+                table: "RegistrarTldPriceChangeLogs",
+                column: "RegistrarTldId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RegistrarTldPriceDownloadSessions_RegistrarId_StartedAtUtc",
+                table: "RegistrarTldPriceDownloadSessions",
+                columns: new[] { "RegistrarId", "StartedAtUtc" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RegistrarTldPriceDownloadSessions_Success",
+                table: "RegistrarTldPriceDownloadSessions",
+                column: "Success");
 
             migrationBuilder.CreateIndex(
                 name: "IX_RegistrarTlds_IsActive",
@@ -3981,6 +4394,51 @@ namespace ISPAdmin.Migrations
                 column: "ServiceId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_SupportTicketMessages_CreatedAt",
+                table: "SupportTicketMessages",
+                column: "CreatedAt");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SupportTicketMessages_SenderUserId",
+                table: "SupportTicketMessages",
+                column: "SenderUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SupportTicketMessages_SupportTicketId",
+                table: "SupportTicketMessages",
+                column: "SupportTicketId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SupportTickets_AssignedToUserId",
+                table: "SupportTickets",
+                column: "AssignedToUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SupportTickets_CreatedByUserId",
+                table: "SupportTickets",
+                column: "CreatedByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SupportTickets_CustomerId",
+                table: "SupportTickets",
+                column: "CustomerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SupportTickets_LastMessageAt",
+                table: "SupportTickets",
+                column: "LastMessageAt");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SupportTickets_Priority",
+                table: "SupportTickets",
+                column: "Priority");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SupportTickets_Status",
+                table: "SupportTickets",
+                column: "Status");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_SystemSettings_Key",
                 table: "SystemSettings",
                 column: "Key",
@@ -4111,11 +4569,84 @@ namespace ISPAdmin.Migrations
                 table: "VendorTaxProfiles",
                 columns: new[] { "VendorId", "VendorType" },
                 unique: true);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_CreditTransactions_Invoices_InvoiceId",
+                table: "CreditTransactions",
+                column: "InvoiceId",
+                principalTable: "Invoices",
+                principalColumn: "Id");
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_CreditTransactions_PaymentTransactions_PaymentTransactionId",
+                table: "CreditTransactions",
+                column: "PaymentTransactionId",
+                principalTable: "PaymentTransactions",
+                principalColumn: "Id");
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_CustomerPaymentMethods_PaymentGateways_PaymentGatewayId",
+                table: "CustomerPaymentMethods",
+                column: "PaymentGatewayId",
+                principalTable: "PaymentGateways",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_InvoiceLines_Invoices_InvoiceId",
+                table: "InvoiceLines",
+                column: "InvoiceId",
+                principalTable: "Invoices",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_InvoicePayments_Invoices_InvoiceId",
+                table: "InvoicePayments",
+                column: "InvoiceId",
+                principalTable: "Invoices",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_InvoicePayments_PaymentTransactions_PaymentTransactionId",
+                table: "InvoicePayments",
+                column: "PaymentTransactionId",
+                principalTable: "PaymentTransactions",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_Invoices_PaymentGateways_SelectedPaymentGatewayId",
+                table: "Invoices",
+                column: "SelectedPaymentGatewayId",
+                principalTable: "PaymentGateways",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Restrict);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_PaymentAttempts_PaymentTransactions_PaymentTransactionId",
+                table: "PaymentAttempts",
+                column: "PaymentTransactionId",
+                principalTable: "PaymentTransactions",
+                principalColumn: "Id");
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_PaymentGateways_PaymentInstruments_PaymentInstrumentId",
+                table: "PaymentGateways",
+                column: "PaymentInstrumentId",
+                principalTable: "PaymentInstruments",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Restrict);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropForeignKey(
+                name: "FK_PaymentInstruments_PaymentGateways_DefaultGatewayId",
+                table: "PaymentInstruments");
+
             migrationBuilder.DropTable(
                 name: "AuditLogs");
 
@@ -4177,7 +4708,16 @@ namespace ISPAdmin.Migrations
                 name: "InvoicePayments");
 
             migrationBuilder.DropTable(
+                name: "LoginHistories");
+
+            migrationBuilder.DropTable(
+                name: "MyCompanies");
+
+            migrationBuilder.DropTable(
                 name: "NameServers");
+
+            migrationBuilder.DropTable(
+                name: "OrderLines");
 
             migrationBuilder.DropTable(
                 name: "OutboxEvents");
@@ -4186,10 +4726,16 @@ namespace ISPAdmin.Migrations
                 name: "PaymentAttempts");
 
             migrationBuilder.DropTable(
+                name: "PaymentInstrumentGateways");
+
+            migrationBuilder.DropTable(
                 name: "PaymentMethodTokens");
 
             migrationBuilder.DropTable(
                 name: "QuoteLines");
+
+            migrationBuilder.DropTable(
+                name: "QuoteRevisions");
 
             migrationBuilder.DropTable(
                 name: "RefundLossAudits");
@@ -4204,6 +4750,9 @@ namespace ISPAdmin.Migrations
                 name: "RegistrarTldCostPricing");
 
             migrationBuilder.DropTable(
+                name: "RegistrarTldPriceChangeLogs");
+
+            migrationBuilder.DropTable(
                 name: "ReportTemplates");
 
             migrationBuilder.DropTable(
@@ -4214,6 +4763,9 @@ namespace ISPAdmin.Migrations
 
             migrationBuilder.DropTable(
                 name: "SubscriptionBillingHistories");
+
+            migrationBuilder.DropTable(
+                name: "SupportTicketMessages");
 
             migrationBuilder.DropTable(
                 name: "SystemSettings");
@@ -4264,7 +4816,13 @@ namespace ISPAdmin.Migrations
                 name: "Refunds");
 
             migrationBuilder.DropTable(
+                name: "RegistrarTldPriceDownloadSessions");
+
+            migrationBuilder.DropTable(
                 name: "Subscriptions");
+
+            migrationBuilder.DropTable(
+                name: "SupportTickets");
 
             migrationBuilder.DropTable(
                 name: "Roles");
@@ -4318,9 +4876,6 @@ namespace ISPAdmin.Migrations
                 name: "Orders");
 
             migrationBuilder.DropTable(
-                name: "PaymentGateways");
-
-            migrationBuilder.DropTable(
                 name: "HostProviders");
 
             migrationBuilder.DropTable(
@@ -4364,6 +4919,12 @@ namespace ISPAdmin.Migrations
 
             migrationBuilder.DropTable(
                 name: "CustomerStatuses");
+
+            migrationBuilder.DropTable(
+                name: "PaymentGateways");
+
+            migrationBuilder.DropTable(
+                name: "PaymentInstruments");
         }
     }
 }

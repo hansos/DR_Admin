@@ -3109,6 +3109,52 @@ namespace ISPAdmin.Migrations
                     b.ToTable("PaymentInstruments");
                 });
 
+            modelBuilder.Entity("ISPAdmin.Data.Entities.PaymentInstrumentGateway", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("PaymentGatewayId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("PaymentInstrumentId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("IsDefault");
+
+                    b.HasIndex("PaymentGatewayId");
+
+                    b.HasIndex("Priority");
+
+                    b.HasIndex("PaymentInstrumentId", "PaymentGatewayId")
+                        .IsUnique();
+
+                    b.ToTable("PaymentInstrumentGateways");
+                });
+
             modelBuilder.Entity("ISPAdmin.Data.Entities.PaymentIntent", b =>
                 {
                     b.Property<int>("Id")
@@ -6605,6 +6651,25 @@ namespace ISPAdmin.Migrations
                     b.Navigation("DefaultGateway");
                 });
 
+            modelBuilder.Entity("ISPAdmin.Data.Entities.PaymentInstrumentGateway", b =>
+                {
+                    b.HasOne("ISPAdmin.Data.Entities.PaymentGateway", "PaymentGateway")
+                        .WithMany("PaymentInstrumentMappings")
+                        .HasForeignKey("PaymentGatewayId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ISPAdmin.Data.Entities.PaymentInstrument", "PaymentInstrument")
+                        .WithMany("PaymentGatewayMappings")
+                        .HasForeignKey("PaymentInstrumentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PaymentGateway");
+
+                    b.Navigation("PaymentInstrument");
+                });
+
             modelBuilder.Entity("ISPAdmin.Data.Entities.PaymentIntent", b =>
                 {
                     b.HasOne("ISPAdmin.Data.Entities.Customer", "Customer")
@@ -7363,11 +7428,15 @@ namespace ISPAdmin.Migrations
 
             modelBuilder.Entity("ISPAdmin.Data.Entities.PaymentGateway", b =>
                 {
+                    b.Navigation("PaymentInstrumentMappings");
+
                     b.Navigation("PaymentTransactions");
                 });
 
             modelBuilder.Entity("ISPAdmin.Data.Entities.PaymentInstrument", b =>
                 {
+                    b.Navigation("PaymentGatewayMappings");
+
                     b.Navigation("PaymentGateways");
                 });
 

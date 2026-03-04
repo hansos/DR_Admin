@@ -5,9 +5,160 @@ interface Domain {
     name: string;
 }
 
+interface SetupTodoItem {
+    key: string;
+    name: string;
+    description: string;
+    fixUrl: string;
+    endpoint?: string;
+    dependsOn?: string[];
+    checkType: 'list' | 'company' | 'static-not-created';
+}
+
+interface SetupTodoResult extends SetupTodoItem {
+    done: boolean;
+    detail: string;
+}
+
 let hasOngoingWorkflowWarning = false;
 let pendingAcceptQuoteId: number | null = null;
 let pendingAcceptQuoteNumber = '';
+
+const setupTodoItems: SetupTodoItem[] = [
+    {
+        key: 'dns-templates',
+        name: 'DNS Templates',
+        description: 'Create reusable DNS templates for faster and safer zone setup.',
+        fixUrl: '/dns/templates',
+        checkType: 'static-not-created',
+    },
+    {
+        key: 'billing-cycles',
+        name: 'Billing Cycles',
+        description: 'Define billing periods used by subscriptions and services.',
+        fixUrl: '/billing/cycles',
+        endpoint: '/BillingCycles',
+        checkType: 'list',
+    },
+    {
+        key: 'payment-gateways',
+        name: 'Payment Gateways',
+        description: 'Configure active payment providers used for transactions.',
+        fixUrl: '/billing/payment-gateways',
+        endpoint: '/PaymentGateways',
+        dependsOn: ['payment-instruments'],
+        checkType: 'list',
+    },
+    {
+        key: 'payment-instruments',
+        name: 'Payment Instruments',
+        description: 'Define payment instrument options available to customers.',
+        fixUrl: '/billing/payment-instruments',
+        endpoint: '/PaymentInstruments',
+        checkType: 'list',
+    },
+    {
+        key: 'tlds',
+        name: 'TLD List',
+        description: 'Register and maintain supported top-level domains.',
+        fixUrl: '/tld/list',
+        endpoint: '/Tlds',
+        dependsOn: ['registry-apis'],
+        checkType: 'list',
+    },
+    {
+        key: 'registry-apis',
+        name: 'Registry APIs',
+        description: 'Add registrar/registry integrations for domain operations.',
+        fixUrl: '/integrations/registry-apis',
+        endpoint: '/Registrars',
+        checkType: 'list',
+    },
+    {
+        key: 'server-types',
+        name: 'Server Types',
+        description: 'Define server type categories used by infrastructure records.',
+        fixUrl: '/infrastructure/server-types',
+        endpoint: '/ServerTypes',
+        checkType: 'list',
+    },
+    {
+        key: 'operating-systems',
+        name: 'Operating Systems',
+        description: 'Create operating system options used by servers.',
+        fixUrl: '/infrastructure/operating-systems',
+        endpoint: '/OperatingSystems',
+        checkType: 'list',
+    },
+    {
+        key: 'host-providers',
+        name: 'Host Providers',
+        description: 'Register host providers used by server and package setup.',
+        fixUrl: '/infrastructure/host-providers',
+        endpoint: '/HostProviders',
+        checkType: 'list',
+    },
+    {
+        key: 'servers',
+        name: 'Servers',
+        description: 'Add the servers used for hosting and provisioning.',
+        fixUrl: '/infrastructure/servers',
+        endpoint: '/Servers',
+        dependsOn: ['server-types', 'operating-systems', 'host-providers'],
+        checkType: 'list',
+    },
+    {
+        key: 'ip-addresses',
+        name: 'IP Addresses',
+        description: 'Register available IP addresses and assign them to servers.',
+        fixUrl: '/infrastructure/ip-addresses',
+        endpoint: '/ServerIpAddresses',
+        dependsOn: ['servers'],
+        checkType: 'list',
+    },
+    {
+        key: 'services',
+        name: 'Services',
+        description: 'Add additional services to sell to customers.',
+        fixUrl: '/infrastructure/services',
+        endpoint: '/Services',
+        dependsOn: ['billing-cycles'],
+        checkType: 'list',
+    },
+    {
+        key: 'hosting-packages',
+        name: 'Hosting Packages',
+        description: 'Define hosting plans available for sale.',
+        fixUrl: '/infrastructure/hosting-packages',
+        endpoint: '/HostingPackages',
+        dependsOn: ['servers', 'control-panel-types'],
+        checkType: 'list',
+    },
+    {
+        key: 'control-panel-types',
+        name: 'Control Panel Types',
+        description: 'Configure hosting panel types (for example, cPanel, Plesk).',
+        fixUrl: '/infrastructure/control-panel-types',
+        endpoint: '/ControlPanelTypes',
+        checkType: 'list',
+    },
+    {
+        key: 'roles',
+        name: 'User Roles',
+        description: 'Ensure required role definitions and permissions are present.',
+        fixUrl: '/user/roles',
+        endpoint: '/Roles',
+        checkType: 'list',
+    },
+    {
+        key: 'company-settings',
+        name: 'Company Setup',
+        description: 'Fill in legal and contact profile used in invoices and communication.',
+        fixUrl: '/settings/company',
+        endpoint: '/MyCompany',
+        checkType: 'company',
+    },
+];
 
 interface PagedResult<T> {
     data?: T[];
@@ -152,8 +303,116 @@ function initializePage(): void {
     bindQuoteActions();
 
     renderOngoingWorkflowPanel();
+    loadSystemReadinessTodo();
     loadPendingSummary();
     loadSalesSummary();
+}
+
+async function loadSystemReadinessTodo(): Promise<void> {
+    const results = await Promise.all(setupTodoItems.map(async (item) => {
+        if (item.checkType === 'static-not-created') {
+            return {
+                ...item,
+                done: false,
+                detail: 'Not available yet (feature not created).',
+            } as SetupTodoResult;
+        }
+
+        const endpoint = item.endpoint ?? '';
+        const response = await apiRequest<any>(`${getApiBaseUrl()}${endpoint}`, { method: 'GET' });
+        if (!response.success) {
+            return {
+                ...item,
+                done: false,
+                detail: response.message || 'Could not verify this item.',
+            } as SetupTodoResult;
+        }
+
+        if (item.checkType === 'company') {
+            const map = (response.data ?? {}) as any;
+            const hasCompany = Number(map.id ?? map.Id ?? 0) > 0 || String(map.name ?? map.Name ?? '').trim().length > 0;
+            return {
+                ...item,
+                done: hasCompany,
+                detail: hasCompany ? 'Company profile exists.' : 'Company profile is missing.',
+            } as SetupTodoResult;
+        }
+
+        const count = extractItems(response.data).items.length;
+        return {
+            ...item,
+            done: count > 0,
+            detail: count > 0 ? `${count} item(s) found.` : 'No entries found yet.',
+        } as SetupTodoResult;
+    }));
+
+    renderSystemReadinessTodo(results);
+}
+
+function renderSystemReadinessTodo(items: SetupTodoResult[]): void {
+    const tbody = document.getElementById('dashboard-summary-readiness-body');
+    if (!tbody) {
+        return;
+    }
+
+    const order = new Map<string, number>();
+    setupTodoItems.forEach((item, index) => {
+        order.set(item.key, index);
+    });
+
+    const sortedItems = [...items].sort((a, b) => {
+        if (a.done !== b.done) {
+            return Number(a.done) - Number(b.done);
+        }
+
+        return (order.get(a.key) ?? 0) - (order.get(b.key) ?? 0);
+    });
+
+    const completed = items.filter((item) => item.done).length;
+    setText('dashboard-summary-readiness-progress', `${completed} / ${items.length} completed`);
+
+    const doneMap = new Map<string, boolean>();
+    const nameMap = new Map<string, string>();
+    items.forEach((item) => {
+        doneMap.set(item.key, item.done);
+        nameMap.set(item.key, item.name);
+    });
+
+    tbody.innerHTML = sortedItems.map((item) => {
+        const missingDependencies = (item.dependsOn ?? []).filter((dependency) => doneMap.get(dependency) !== true);
+        const isBlocked = !item.done && missingDependencies.length > 0;
+
+        const badge = item.done
+            ? '<span class="badge bg-success">Done</span>'
+            : isBlocked
+                ? '<span class="badge bg-secondary">Waiting</span>'
+                : '<span class="badge bg-warning text-dark">To do</span>';
+        const actionText = item.done ? 'Viev data' : 'Fix now';
+
+        const dependencyNames = missingDependencies.map((key) => nameMap.get(key) ?? key);
+        const dependencyNote = isBlocked
+            ? `<div class="text-muted small mt-1">Waiting for: ${esc(dependencyNames.join(', '))}</div>`
+            : '';
+
+        const actionHtml = isBlocked
+            ? '<button class="btn btn-sm btn-outline-secondary" type="button" disabled>Fix now</button>'
+            : `<a class="btn btn-sm btn-outline-primary" href="${esc(item.fixUrl)}">${actionText}</a>`;
+
+        return `
+        <tr>
+            <td>${badge}</td>
+            <td>
+                <div class="fw-semibold">${esc(item.name)}</div>
+                <div class="text-muted small">${esc(item.detail)}</div>
+                ${dependencyNote}
+            </td>
+            <td>${esc(item.description)}</td>
+            <td class="text-end">
+                ${actionHtml}
+            </td>
+        </tr>
+        `;
+    }).join('');
 }
 
 function updateSalesCardLayout(quoteCount: number, orderCount: number, invoiceCount: number): void {
@@ -726,8 +985,10 @@ function setPendingCardVisible(isVisible: boolean): void {
 
 function setAllClearVisible(isVisible: boolean): void {
     const card = document.getElementById('dashboard-summary-all-clear-card');
+    const readinessCard = document.getElementById('dashboard-summary-readiness-card');
+    const shouldShow = readinessCard ? false : isVisible;
     if (card) {
-        card.classList.toggle('d-none', !isVisible);
+        card.classList.toggle('d-none', !shouldShow);
     }
 }
 

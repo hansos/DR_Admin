@@ -154,6 +154,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<PaymentTransaction> PaymentTransactions { get; set; }
     public DbSet<PaymentGateway> PaymentGateways { get; set; }
     public DbSet<PaymentInstrument> PaymentInstruments { get; set; }
+    public DbSet<PaymentInstrumentGateway> PaymentInstrumentGateways { get; set; }
     public DbSet<RegisteredDomain> RegisteredDomains { get; set; }
     public DbSet<DomainContact> DomainContacts { get; set; }
     public DbSet<DomainContactAssignment> DomainContactAssignments { get; set; }
@@ -1413,6 +1414,27 @@ public class ApplicationDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(e => e.DefaultGatewayId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // PaymentInstrumentGateway configuration
+        modelBuilder.Entity<PaymentInstrumentGateway>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.HasIndex(e => new { e.PaymentInstrumentId, e.PaymentGatewayId }).IsUnique();
+            entity.HasIndex(e => e.IsActive);
+            entity.HasIndex(e => e.IsDefault);
+            entity.HasIndex(e => e.Priority);
+
+            entity.HasOne(e => e.PaymentInstrument)
+                .WithMany(i => i.PaymentGatewayMappings)
+                .HasForeignKey(e => e.PaymentInstrumentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.PaymentGateway)
+                .WithMany(g => g.PaymentInstrumentMappings)
+                .HasForeignKey(e => e.PaymentGatewayId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         // Coupon configuration

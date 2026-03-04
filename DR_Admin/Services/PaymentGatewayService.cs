@@ -204,10 +204,13 @@ public class PaymentGatewayService : IPaymentGatewayService
             // If this is set as default, unset other defaults
             if (dto.IsDefault)
             {
-                await UnsetAllDefaultsAsync(gateway.PaymentInstrument);
+                await UnsetAllDefaultsAsync(instrument.Id);
             }
 
             _context.PaymentGateways.Add(gateway);
+            await _context.SaveChangesAsync();
+
+            await UpsertInstrumentMappingAsync(gateway.Id, instrument.Id, dto.IsDefault, gateway.DisplayOrder);
             await _context.SaveChangesAsync();
 
             _log.Information("Successfully created payment gateway with ID: {GatewayId}", gateway.Id);
@@ -240,6 +243,7 @@ public class PaymentGatewayService : IPaymentGatewayService
 
             gateway.Name = dto.Name;
             gateway.ProviderCode = dto.ProviderCode;
+            var previousInstrumentId = gateway.PaymentInstrumentId;
             var instrument = await ResolvePaymentInstrumentAsync(dto.PaymentInstrumentId, dto.PaymentInstrument);
             gateway.PaymentInstrument = instrument.Code;
             gateway.PaymentInstrumentId = instrument.Id;
@@ -275,7 +279,23 @@ public class PaymentGatewayService : IPaymentGatewayService
             // If this is set as default, unset other defaults
             if (dto.IsDefault)
             {
-                await UnsetAllDefaultsAsync(gateway.PaymentInstrument, id);
+                await UnsetAllDefaultsAsync(instrument.Id, id);
+            }
+
+            await _context.SaveChangesAsync();
+
+            await UpsertInstrumentMappingAsync(gateway.Id, instrument.Id, dto.IsDefault, gateway.DisplayOrder);
+
+            if (previousInstrumentId.HasValue && previousInstrumentId.Value != instrument.Id)
+            {
+                var oldMappings = await _context.PaymentInstrumentGateways
+                    .Where(m => m.PaymentGatewayId == gateway.Id && m.PaymentInstrumentId == previousInstrumentId.Value)
+                    .ToListAsync();
+
+                foreach (var oldMapping in oldMappings)
+                {
+                    _context.PaymentInstrumentGateways.Remove(oldMapping);
+                }
             }
 
             await _context.SaveChangesAsync();
@@ -309,7 +329,7 @@ public class PaymentGatewayService : IPaymentGatewayService
             }
 
             // Unset all other defaults
-            await UnsetAllDefaultsAsync(gateway.PaymentInstrument, id);
+            await UnsetAllDefaultsAsync(gateway.PaymentInstrumentId, id);
 
             gateway.IsDefault = true;
             gateway.IsActive = true; // Ensure default gateway is active
@@ -418,10 +438,19 @@ public class PaymentGatewayService : IPaymentGatewayService
         }
     }
 
-    private async Task UnsetAllDefaultsAsync(string paymentInstrument, int? exceptId = null)
+    private async Task UnsetAllDefaultsAsync(int? paymentInstrumentId, int? exceptId = null)
     {
+        if (!paymentInstrumentId.HasValue || paymentInstrumentId.Value <= 0)
+        {
+            return;
+        }
+
+        var instrumentId = paymentInstrumentId.Value;
+
         var defaultGateways = await _context.PaymentGateways
-            .Where(g => g.IsDefault && g.PaymentInstrument == paymentInstrument && g.DeletedAt == null && (exceptId == null || g.Id != exceptId))
+            .Where(g => g.IsDefault && g.DeletedAt == null && (exceptId == null || g.Id != exceptId) &&
+                        (g.PaymentInstrumentId == instrumentId ||
+                         _context.PaymentInstrumentGateways.Any(m => m.PaymentGatewayId == g.Id && m.PaymentInstrumentId == instrumentId && m.DeletedAt == null)))
             .ToListAsync();
 
         foreach (var gateway in defaultGateways)
@@ -432,6 +461,50 @@ public class PaymentGatewayService : IPaymentGatewayService
         if (defaultGateways.Any())
         {
             await _context.SaveChangesAsync();
+        }
+
+        var defaultMappings = await _context.PaymentInstrumentGateways
+            .Where(m => m.PaymentInstrumentId == instrumentId && m.IsDefault && (exceptId == null || m.PaymentGatewayId != exceptId) && m.DeletedAt == null)
+            .ToListAsync();
+
+        foreach (var mapping in defaultMappings)
+        {
+            mapping.IsDefault = false;
+        }
+
+        if (defaultMappings.Any())
+        {
+            await _context.SaveChangesAsync();
+        }
+    }
+
+    private async Task UpsertInstrumentMappingAsync(int gatewayId, int instrumentId, bool isDefault, int displayOrder)
+    {
+        var mapping = await _context.PaymentInstrumentGateways
+            .FirstOrDefaultAsync(m => m.PaymentGatewayId == gatewayId && m.PaymentInstrumentId == instrumentId);
+
+        if (mapping == null)
+        {
+            mapping = new PaymentInstrumentGateway
+            {
+                PaymentGatewayId = gatewayId,
+                PaymentInstrumentId = instrumentId,
+                IsActive = true,
+                IsDefault = isDefault,
+                Priority = displayOrder,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            _context.PaymentInstrumentGateways.Add(mapping);
+        }
+        else
+        {
+            mapping.IsActive = true;
+            mapping.IsDefault = isDefault;
+            mapping.Priority = displayOrder;
+            mapping.DeletedAt = null;
+            mapping.UpdatedAt = DateTime.UtcNow;
         }
     }
 

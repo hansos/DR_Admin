@@ -116,6 +116,7 @@ function authUpdateTopRow() {
 function authEnforce() {
     const path = window.location.pathname.toLowerCase();
     const isPublicRoute = path === '/login' || path.startsWith('/login/') ||
+        path === '/initialize' || path.startsWith('/initialize/') ||
         path === '/forgot-password' || path.startsWith('/forgot-password/') ||
         path === '/my-account/change-password' || path.startsWith('/my-account/change-password') ||
         path === '/my-account/confirm-email' || path.startsWith('/my-account/confirm-email');

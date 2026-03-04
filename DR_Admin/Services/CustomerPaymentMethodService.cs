@@ -214,6 +214,25 @@ public class CustomerPaymentMethodService : ICustomerPaymentMethodService
             return null;
         }
 
+        var mappedGateway = await _context.PaymentInstrumentGateways
+            .AsNoTracking()
+            .Where(m => m.PaymentInstrumentId == instrument.Id && m.IsActive && m.DeletedAt == null)
+            .Join(
+                _context.PaymentGateways.AsNoTracking().Where(g => g.DeletedAt == null && g.IsActive),
+                m => m.PaymentGatewayId,
+                g => g.Id,
+                (m, g) => new { Mapping = m, Gateway = g })
+            .OrderByDescending(x => x.Mapping.IsDefault)
+            .ThenBy(x => x.Mapping.Priority)
+            .ThenBy(x => x.Gateway.DisplayOrder)
+            .Select(x => x.Gateway)
+            .FirstOrDefaultAsync();
+
+        if (mappedGateway != null)
+        {
+            return mappedGateway;
+        }
+
         if (instrument.DefaultGatewayId is int defaultGatewayId && defaultGatewayId > 0)
         {
             var defaultGateway = await _context.PaymentGateways

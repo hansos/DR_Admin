@@ -85,6 +85,9 @@ public class PaymentInstrumentService : IPaymentInstrumentService
         _context.PaymentInstruments.Add(entity);
         await _context.SaveChangesAsync();
 
+        await EnsureDefaultGatewayMappingAsync(entity.Id, entity.DefaultGatewayId);
+        await _context.SaveChangesAsync();
+
         _log.Information("Created payment instrument {Code} ({Id})", entity.Code, entity.Id);
         return MapToDto(entity);
     }
@@ -115,7 +118,7 @@ public class PaymentInstrumentService : IPaymentInstrumentService
         entity.IsActive = dto.IsActive;
         entity.DisplayOrder = dto.DisplayOrder;
 
-        var resolvedDefaultGatewayId = await ResolveDefaultGatewayIdAsync(dto.DefaultGatewayId, code);
+        var resolvedDefaultGatewayId = await ResolveDefaultGatewayIdAsync(dto.DefaultGatewayId, code, id);
         entity.DefaultGatewayId = resolvedDefaultGatewayId;
 
         if (!string.Equals(oldCode, entity.Code, StringComparison.OrdinalIgnoreCase))
@@ -130,6 +133,7 @@ public class PaymentInstrumentService : IPaymentInstrumentService
             }
         }
 
+        await EnsureDefaultGatewayMappingAsync(entity.Id, entity.DefaultGatewayId);
         await _context.SaveChangesAsync();
         return MapToDto(entity);
     }
@@ -145,7 +149,9 @@ public class PaymentInstrumentService : IPaymentInstrumentService
         }
 
         var inUse = await _context.PaymentGateways
-            .AnyAsync(g => g.DeletedAt == null && g.PaymentInstrumentId == id);
+            .AnyAsync(g => g.DeletedAt == null && g.PaymentInstrumentId == id)
+            || await _context.PaymentInstrumentGateways
+                .AnyAsync(m => m.DeletedAt == null && m.PaymentInstrumentId == id);
 
         if (inUse)
         {
@@ -175,7 +181,7 @@ public class PaymentInstrumentService : IPaymentInstrumentService
         };
     }
 
-    private async Task<int?> ResolveDefaultGatewayIdAsync(int? requestedGatewayId, string instrumentCode)
+    private async Task<int?> ResolveDefaultGatewayIdAsync(int? requestedGatewayId, string instrumentCode, int? instrumentId = null)
     {
         if (!requestedGatewayId.HasValue || requestedGatewayId.Value <= 0)
         {
@@ -191,14 +197,67 @@ public class PaymentInstrumentService : IPaymentInstrumentService
             throw new InvalidOperationException("Selected default gateway was not found or is inactive.");
         }
 
-        var normalizedGatewayInstrument = NormalizeInstrumentKey(gateway.PaymentInstrument);
-        var normalizedTargetInstrument = NormalizeInstrumentKey(instrumentCode);
-        if (normalizedGatewayInstrument != normalizedTargetInstrument)
+        if (instrumentId.HasValue && instrumentId.Value > 0)
         {
-            throw new InvalidOperationException("Selected default gateway does not belong to this payment instrument.");
+            var mappingExists = await _context.PaymentInstrumentGateways
+                .AsNoTracking()
+                .AnyAsync(m => m.DeletedAt == null && m.PaymentInstrumentId == instrumentId.Value && m.PaymentGatewayId == gateway.Id);
+
+            var legacyMatch = gateway.PaymentInstrumentId == instrumentId.Value;
+            var normalizedGatewayInstrument = NormalizeInstrumentKey(gateway.PaymentInstrument);
+            var normalizedTargetInstrument = NormalizeInstrumentKey(instrumentCode);
+            var codeMatch = normalizedGatewayInstrument == normalizedTargetInstrument;
+
+            if (!mappingExists && !legacyMatch && !codeMatch)
+            {
+                throw new InvalidOperationException("Selected default gateway does not belong to this payment instrument.");
+            }
         }
 
         return gateway.Id;
+    }
+
+    private async Task EnsureDefaultGatewayMappingAsync(int instrumentId, int? defaultGatewayId)
+    {
+        if (!defaultGatewayId.HasValue || defaultGatewayId.Value <= 0)
+        {
+            return;
+        }
+
+        var existing = await _context.PaymentInstrumentGateways
+            .FirstOrDefaultAsync(m => m.PaymentInstrumentId == instrumentId && m.PaymentGatewayId == defaultGatewayId.Value);
+
+        if (existing == null)
+        {
+            existing = new PaymentInstrumentGateway
+            {
+                PaymentInstrumentId = instrumentId,
+                PaymentGatewayId = defaultGatewayId.Value,
+                IsActive = true,
+                IsDefault = true,
+                Priority = 0,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            _context.PaymentInstrumentGateways.Add(existing);
+        }
+        else
+        {
+            existing.IsActive = true;
+            existing.IsDefault = true;
+            existing.DeletedAt = null;
+            existing.UpdatedAt = DateTime.UtcNow;
+        }
+
+        var others = await _context.PaymentInstrumentGateways
+            .Where(m => m.PaymentInstrumentId == instrumentId && m.PaymentGatewayId != defaultGatewayId.Value && m.IsDefault && m.DeletedAt == null)
+            .ToListAsync();
+
+        foreach (var other in others)
+        {
+            other.IsDefault = false;
+        }
     }
 
     private static string NormalizeInstrumentKey(string value)

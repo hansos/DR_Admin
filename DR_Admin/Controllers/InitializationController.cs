@@ -24,6 +24,20 @@ public class InitializationController : ControllerBase
     }
 
     /// <summary>
+    /// Gets whether the database has already been initialized.
+    /// </summary>
+    /// <returns>Initialization status</returns>
+    /// <response code="200">Returns the initialization status</response>
+    [HttpGet("status")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(InitializationStatusDto), StatusCodes.Status200OK)]
+    public async Task<ActionResult<InitializationStatusDto>> Status()
+    {
+        var isInitialized = await _initializationService.IsInitializedAsync();
+        return Ok(new InitializationStatusDto { IsInitialized = isInitialized });
+    }
+
+    /// <summary>
     /// Initializes the system with the first admin user (only works if no users exist)
     /// </summary>
     /// <param name="request">Initial admin user credentials and information</param>

@@ -2,8 +2,9 @@ using ISPAdmin.Data;
 using ISPAdmin.Data.Entities;
 using ISPAdmin.Data.Enums;
 using ISPAdmin.DTOs;
-using ISPAdmin.PaymentGateways;
 using Microsoft.EntityFrameworkCore;
+using PaymentGatewayLib.Implementations;
+using PaymentGatewayLib.Interfaces;
 using Serilog;
 
 namespace ISPAdmin.Services;
@@ -14,15 +15,12 @@ namespace ISPAdmin.Services;
 public class PaymentProcessingService : IPaymentProcessingService
 {
     private readonly ApplicationDbContext _context;
-    private readonly IPaymentGatewayService _paymentGatewayService;
     private static readonly Serilog.ILogger _log = Log.ForContext<PaymentProcessingService>();
 
     public PaymentProcessingService(
-        ApplicationDbContext context,
-        IPaymentGatewayService paymentGatewayService)
+        ApplicationDbContext context)
     {
         _context = context;
-        _paymentGatewayService = paymentGatewayService;
     }
 
     public async Task<PaymentResultDto> ProcessInvoicePaymentAsync(ProcessInvoicePaymentDto dto)
@@ -45,6 +43,7 @@ public class PaymentProcessingService : IPaymentProcessingService
             }
 
             var paymentMethod = await _context.CustomerPaymentMethods
+                .Include(pm => pm.PaymentGateway)
                 .FirstOrDefaultAsync(pm => pm.Id == dto.CustomerPaymentMethodId);
 
             if (paymentMethod == null)
@@ -73,9 +72,7 @@ public class PaymentProcessingService : IPaymentProcessingService
             _context.PaymentAttempts.Add(attempt);
             await _context.SaveChangesAsync();
 
-            // Get payment gateway adapter
-            var gateway = await _context.PaymentGateways
-                .FirstOrDefaultAsync(g => g.Id == paymentMethod.PaymentGatewayId);
+            var gateway = paymentMethod.PaymentGateway;
 
             if (gateway == null)
             {
@@ -107,13 +104,23 @@ public class PaymentProcessingService : IPaymentProcessingService
                 };
             }
 
-            // TODO: Get actual gateway adapter based on gateway name
-            // For now, we'll create a placeholder response
-            
-            // Simulate payment processing
-            var isSuccess = true; // This would come from actual gateway
+            var gatewayClient = CreateGatewayClient(gateway);
+            var gatewayResult = await gatewayClient.ProcessPaymentAsync(new PaymentGatewayLib.Models.PaymentRequest
+            {
+                Amount = invoice.TotalAmount,
+                Currency = invoice.CurrencyCode,
+                PaymentMethodToken = token.EncryptedToken,
+                PaymentInstrument = gateway.PaymentInstrument,
+                Description = $"Invoice {invoice.InvoiceNumber}",
+                CustomerEmail = invoice.Customer?.Email ?? string.Empty,
+                ReferenceId = $"INV-{invoice.Id}",
+                CaptureImmediately = true
+            });
 
-            if (isSuccess)
+            attempt.GatewayResponse = gatewayResult.RawResponse;
+            attempt.GatewayTransactionId = gatewayResult.TransactionId;
+
+            if (gatewayResult.Success)
             {
                 // Create payment transaction
                 var transaction = new PaymentTransaction
@@ -122,9 +129,11 @@ public class PaymentProcessingService : IPaymentProcessingService
                     PaymentGatewayId = gateway.Id,
                     Amount = invoice.TotalAmount,
                     CurrencyCode = invoice.CurrencyCode,
-                    TransactionId = $"TXN-{DateTime.UtcNow:yyyyMMddHHmmss}",
+                    TransactionId = gatewayResult.TransactionId,
+                    PaymentMethod = paymentMethod.Type.ToString(),
                     Status = PaymentTransactionStatus.Completed,
                     ProcessedAt = DateTime.UtcNow,
+                    GatewayResponse = gatewayResult.RawResponse,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 };
@@ -135,7 +144,6 @@ public class PaymentProcessingService : IPaymentProcessingService
                 // Update payment attempt
                 attempt.Status = PaymentAttemptStatus.Succeeded;
                 attempt.PaymentTransactionId = transaction.Id;
-                attempt.GatewayTransactionId = transaction.TransactionId;
                 attempt.UpdatedAt = DateTime.UtcNow;
 
                 // Update invoice status
@@ -173,14 +181,18 @@ public class PaymentProcessingService : IPaymentProcessingService
             else
             {
                 attempt.Status = PaymentAttemptStatus.Failed;
-                attempt.ErrorMessage = "Payment declined";
+                attempt.ErrorCode = gatewayResult.ErrorCode;
+                attempt.ErrorMessage = gatewayResult.ErrorMessage;
                 await _context.SaveChangesAsync();
 
                 return new PaymentResultDto
                 {
                     IsSuccess = false,
                     PaymentAttemptId = attempt.Id,
-                    ErrorMessage = "Payment was declined"
+                    ErrorCode = gatewayResult.ErrorCode,
+                    ErrorMessage = string.IsNullOrWhiteSpace(gatewayResult.ErrorMessage)
+                        ? "Payment was declined"
+                        : gatewayResult.ErrorMessage
                 };
             }
         }
@@ -440,6 +452,19 @@ public class PaymentProcessingService : IPaymentProcessingService
             IpAddress = attempt.IpAddress,
             CreatedAt = attempt.CreatedAt,
             UpdatedAt = attempt.UpdatedAt
+        };
+    }
+
+    private static IPaymentGateway CreateGatewayClient(PaymentGateway gateway)
+    {
+        var provider = (gateway.ProviderCode ?? string.Empty).Trim().ToLowerInvariant();
+
+        return provider switch
+        {
+            "stripe" => new StripePaymentGateway(gateway.ApiSecret, gateway.ApiKey),
+            "paypal" => new PayPalPaymentGateway(gateway.ApiKey, gateway.ApiSecret, gateway.UseSandbox),
+            "square" => new SquarePaymentGateway(gateway.ApiKey, gateway.ApiSecret, gateway.UseSandbox),
+            _ => throw new NotSupportedException($"Payment provider '{gateway.ProviderCode}' is not currently supported by PaymentProcessingService")
         };
     }
 }

@@ -18,6 +18,11 @@ public class InitializationService : IInitializationService
         _context = context;
     }
 
+    public async Task<bool> IsInitializedAsync()
+    {
+        return await _context.Users.AnyAsync();
+    }
+
     public async Task<CodeTablesResponseDto> CheckAndUpdateCodeTablesAsync()
     {
         var response = new CodeTablesResponseDto { Success = true, Message = "Code tables checked and updated successfully" };

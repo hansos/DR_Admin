@@ -263,22 +263,42 @@ namespace PaymentGatewayLib.Implementations
                 ValidatePaymentIntentRequest(request);
                 await EnsureAccessTokenAsync();
 
-                var orderRequest = new
+                var purchaseUnit = new Dictionary<string, object>
                 {
-                    intent = request.AutomaticCapture ? "CAPTURE" : "AUTHORIZE",
-                    purchase_units = new[]
+                    ["amount"] = new Dictionary<string, string>
                     {
-                        new
-                        {
-                            amount = new
-                            {
-                                currency_code = request.Currency.ToUpper(),
-                                value = request.Amount.ToString("F2")
-                            },
-                            description = request.Description
-                        }
+                        ["currency_code"] = request.Currency.ToUpper(),
+                        ["value"] = request.Amount.ToString("F2")
                     }
                 };
+
+                if (!string.IsNullOrWhiteSpace(request.Description))
+                {
+                    purchaseUnit["description"] = request.Description;
+                }
+
+                var orderRequest = new Dictionary<string, object>
+                {
+                    ["intent"] = request.AutomaticCapture ? "CAPTURE" : "AUTHORIZE",
+                    ["purchase_units"] = new[] { purchaseUnit }
+                };
+
+                var methodType = ResolvePayPalMethodType(request);
+                if (methodType == "paypal" && !string.IsNullOrWhiteSpace(request.ReturnUrl) && !string.IsNullOrWhiteSpace(request.CancelUrl))
+                {
+                    orderRequest["payment_source"] = new Dictionary<string, object>
+                    {
+                        ["paypal"] = new Dictionary<string, object>
+                        {
+                            ["experience_context"] = new Dictionary<string, string>
+                            {
+                                ["return_url"] = request.ReturnUrl,
+                                ["cancel_url"] = request.CancelUrl,
+                                ["user_action"] = "PAY_NOW"
+                            }
+                        }
+                    };
+                }
 
                 var jsonContent = new StringContent(
                     JsonSerializer.Serialize(orderRequest),
@@ -333,6 +353,25 @@ namespace PaymentGatewayLib.Implementations
             }
         }
 
+        private static string ResolvePayPalMethodType(PaymentIntentRequest request)
+        {
+            if (!string.IsNullOrWhiteSpace(request.PreferredPaymentMethodType))
+            {
+                return request.PreferredPaymentMethodType.Trim().ToLowerInvariant();
+            }
+
+            if (request.PaymentMethodTypes is { Count: > 0 })
+            {
+                var first = request.PaymentMethodTypes.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value));
+                if (!string.IsNullOrWhiteSpace(first))
+                {
+                    return first.Trim().ToLowerInvariant();
+                }
+            }
+
+            return string.Empty;
+        }
+
         /// <summary>
         /// Captures an authorized payment
         /// </summary>
@@ -362,15 +401,19 @@ namespace PaymentGatewayLib.Implementations
                     captureRequest = new { };
                 }
 
-                var jsonContent = new StringContent(
-                    JsonSerializer.Serialize(captureRequest),
-                    Encoding.UTF8,
-                    "application/json"
-                );
+                var captureJson = JsonSerializer.Serialize(captureRequest);
+                var jsonContent = new StringContent(captureJson, Encoding.UTF8, "application/json");
 
                 _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _accessToken);
-                var response = await _httpClient.PostAsync($"/v2/payments/authorizations/{authorizationId}/capture", jsonContent);
+                var response = await _httpClient.PostAsync($"/v2/checkout/orders/{authorizationId}/capture", jsonContent);
                 var responseBody = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    jsonContent = new StringContent(captureJson, Encoding.UTF8, "application/json");
+                    response = await _httpClient.PostAsync($"/v2/payments/authorizations/{authorizationId}/capture", jsonContent);
+                    responseBody = await response.Content.ReadAsStringAsync();
+                }
 
                 if (response.IsSuccessStatusCode)
                 {

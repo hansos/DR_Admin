@@ -31,6 +31,11 @@ public class CreatePaymentIntentDto
     public int PaymentGatewayId { get; set; }
 
     /// <summary>
+    /// Customer selected payment instrument (for example CreditCard, BankAccount, PayPal)
+    /// </summary>
+    public string PaymentInstrument { get; set; } = string.Empty;
+
+    /// <summary>
     /// Return URL after successful payment
     /// </summary>
     public string ReturnUrl { get; set; } = string.Empty;

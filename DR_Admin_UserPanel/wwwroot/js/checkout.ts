@@ -70,6 +70,13 @@ interface OrderDto {
     status: string;
 }
 
+interface PaymentIntentDto {
+    id: number;
+    status: string | number;
+    gatewayIntentId: string;
+    clientSecret: string;
+}
+
 interface PaymentInstrumentDto {
     id: number;
     code: string;
@@ -137,7 +144,7 @@ function initializePaymentInstrumentPanel(): void {
 
     const continueButton = document.getElementById('checkout-payment-instrument-submit') as HTMLButtonElement | null;
     continueButton?.addEventListener('click', () => {
-        continueToPayment();
+        void continueToPayment();
     });
 }
 
@@ -481,7 +488,7 @@ function renderPaymentInstrumentFields(): void {
     `).join('');
 }
 
-function continueToPayment(): void {
+async function continueToPayment(): Promise<void> {
     const typedWindow = window as CheckoutWindow;
     const select = document.getElementById('checkout-payment-instrument') as HTMLSelectElement | null;
     const fieldsContainer = document.getElementById('checkout-payment-instrument-fields');
@@ -501,7 +508,63 @@ function continueToPayment(): void {
         status.textContent = `Order added. Payment instrument selected: ${select.options[select.selectedIndex]?.text ?? select.value}.`;
     }
 
-    typedWindow.UserPanelAlerts?.showSuccess('checkout-alert-success', 'Order already added. Continue with payment details.');
+    const marker = getStoredOrderMarker();
+    if (!marker || marker.orderId <= 0) {
+        typedWindow.UserPanelAlerts?.showError('checkout-alert-error', 'Order marker could not be resolved. Please place order again.');
+        return;
+    }
+
+    const state = typedWindow.UserPanelCart?.getState();
+    if (!state) {
+        typedWindow.UserPanelAlerts?.showError('checkout-alert-error', 'Cart state could not be resolved.');
+        return;
+    }
+
+    const totalAmount = calculateCheckoutTotal(state);
+    const baseUrl = window.location.origin;
+    const selectedInstrument = select.value.trim();
+
+    const response = await typedWindow.UserPanelApi?.request<PaymentIntentDto>('/PaymentIntents', {
+        method: 'POST',
+        body: JSON.stringify({
+            orderId: marker.orderId,
+            amount: totalAmount,
+            currency: 'EUR',
+            paymentGatewayId: 0,
+            paymentInstrument: selectedInstrument,
+            returnUrl: `${baseUrl}/shop/checkout?paymentStatus=success`,
+            cancelUrl: `${baseUrl}/shop/checkout?paymentStatus=failed`,
+            description: `Checkout payment for order ${marker.orderNumber}`
+        })
+    }, true);
+
+    if (!response || !response.success || !response.data) {
+        typedWindow.UserPanelAlerts?.showError('checkout-alert-error', response?.message ?? 'Could not initialize payment intent.');
+        return;
+    }
+
+    if (status) {
+        status.textContent = `Payment initialized. Intent #${response.data.id} (${response.data.status}).`;
+    }
+
+    typedWindow.UserPanelAlerts?.showSuccess('checkout-alert-success', 'Payment intent created. Continue with provider confirmation flow.');
+}
+
+function calculateCheckoutTotal(state: CheckoutCartState): number {
+    let total = 0;
+
+    if (state.domain) {
+        total += state.domain.premiumPrice;
+        if (state.domain.includePrivacy) {
+            total += typeof state.domain.privacyPriceTotal === 'number' ? state.domain.privacyPriceTotal : 0;
+        }
+    }
+
+    total += state.hosting.reduce((sum, item) => sum + (item.billingCycle === 'yearly' ? item.yearlyPrice : item.monthlyPrice), 0);
+    total += state.services.reduce((sum, item) => sum + item.price, 0);
+    total -= state.discount;
+
+    return Math.max(0, total);
 }
 
 async function submitCheckout(): Promise<void> {

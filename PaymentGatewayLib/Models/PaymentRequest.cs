@@ -21,6 +21,18 @@ namespace PaymentGatewayLib.Models
         public string PaymentMethodToken { get; set; } = string.Empty;
 
         /// <summary>
+        /// Customer-facing payment instrument code selected by the user
+        /// (for example: CreditCard, BankAccount, PayPal)
+        /// </summary>
+        public string PaymentInstrument { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Provider-specific payment method type/rail
+        /// (for example: card, us_bank_account, paypal)
+        /// </summary>
+        public string PaymentMethodType { get; set; } = string.Empty;
+
+        /// <summary>
         /// Customer email address
         /// </summary>
         public string CustomerEmail { get; set; } = string.Empty;

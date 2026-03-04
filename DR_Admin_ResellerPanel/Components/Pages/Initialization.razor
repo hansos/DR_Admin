@@ -1,0 +1,71 @@
+@page "/initialize"
+@layout EmptyLayout
+
+<PageTitle>Initialize Database - DR Admin Reseller Panel</PageTitle>
+
+<div id="initialization-page" class="login-page">
+    <div class="container py-4">
+        <div class="row justify-content-center">
+            <div class="col-sm-11 col-md-9 col-lg-7">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-1"><i class="bi bi-database-fill-gear"></i> Initial System Setup</h4>
+                        <p class="mb-0 small opacity-75">Create the first administrator account and seed core data.</p>
+                    </div>
+                    <div class="card-body p-4">
+                        <div id="initialization-alert-info" class="alert alert-info" role="alert">
+                            <div class="fw-semibold mb-1">Why this step is required</div>
+                            <div>This is a first-time setup process. The system needs an initial administrator user and baseline code-table data before normal login can be used.</div>
+                        </div>
+
+                        <div id="initialization-alert-success" class="alert alert-success d-none" role="alert"></div>
+                        <div id="initialization-alert-error" class="alert alert-danger d-none" role="alert"></div>
+
+                        <form id="initialization-form" novalidate>
+                            <div class="mb-3">
+                                <label for="initialization-username" class="form-label">Username</label>
+                                <input id="initialization-username" class="form-control" type="text" value="admin" autocomplete="username" required />
+                                <div class="form-text">Default username is <code>admin</code>.</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="initialization-email" class="form-label">Email</label>
+                                <input id="initialization-email" class="form-control" type="email" placeholder="admin@example.com" autocomplete="email" required />
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="initialization-password" class="form-label">Password</label>
+                                <input id="initialization-password" class="form-control" type="password" autocomplete="new-password" required />
+                                <div class="form-text">Minimum 8 characters and include uppercase, lowercase, number and special character.</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="initialization-password-confirm" class="form-label">Confirm Password</label>
+                                <input id="initialization-password-confirm" class="form-control" type="password" autocomplete="new-password" required />
+                            </div>
+
+                            <button id="initialization-submit" type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-play-circle"></i> Initialize Database
+                            </button>
+                        </form>
+
+                        <div id="initialization-result" class="mt-4 d-none">
+                            <h5 class="mb-2"><i class="bi bi-check2-circle"></i> Setup Result</h5>
+                            <div id="initialization-done-summary" class="small text-muted mb-2"></div>
+                        </div>
+
+                        <div class="mt-4 d-none" id="initialization-login-section">
+                            <a href="/login" class="btn btn-outline-secondary w-100">
+                                <i class="bi bi-box-arrow-in-right"></i> Return to Login
+                            </a>
+                        </div>
+
+                        <div id="initialization-proceed-info" class="mt-3 small text-muted d-none">
+                            Next step: sign in using your new administrator account and continue normal configuration.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -26,6 +26,17 @@ namespace PaymentGatewayLib.Models
         public string CustomerId { get; set; } = string.Empty;
 
         /// <summary>
+        /// Preferred provider-specific payment method type/rail
+        /// (for example: card, us_bank_account, paypal)
+        /// </summary>
+        public string PreferredPaymentMethodType { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Allowed provider-specific payment method types/rails
+        /// </summary>
+        public List<string> PaymentMethodTypes { get; set; } = new List<string>();
+
+        /// <summary>
         /// Description of the payment
         /// </summary>
         public string Description { get; set; } = string.Empty;
@@ -34,6 +45,16 @@ namespace PaymentGatewayLib.Models
         /// Additional metadata for the payment intent
         /// </summary>
         public Dictionary<string, string> Metadata { get; set; } = new Dictionary<string, string>();
+
+        /// <summary>
+        /// Return URL used by redirect-based payment methods
+        /// </summary>
+        public string ReturnUrl { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Cancel URL used by redirect-based payment methods
+        /// </summary>
+        public string CancelUrl { get; set; } = string.Empty;
 
         /// <summary>
         /// Whether to capture the payment automatically

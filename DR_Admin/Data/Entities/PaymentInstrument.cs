@@ -56,6 +56,11 @@ public class PaymentInstrument : EntityBase
     public ICollection<PaymentGateway> PaymentGateways { get; set; } = new List<PaymentGateway>();
 
     /// <summary>
+    /// Gateway mappings associated with this instrument
+    /// </summary>
+    public ICollection<PaymentInstrumentGateway> PaymentGatewayMappings { get; set; } = new List<PaymentInstrumentGateway>();
+
+    /// <summary>
     /// Default gateway navigation
     /// </summary>
     public PaymentGateway? DefaultGateway { get; set; }

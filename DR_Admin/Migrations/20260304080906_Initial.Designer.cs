@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ISPAdmin.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260224091053_BooleanServerStatus")]
-    partial class BooleanServerStatus
+    [Migration("20260304080906_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -246,6 +246,9 @@ namespace ISPAdmin.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsDefaultTech")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsDomainGlobal")
                         .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsPrimary")
@@ -2419,6 +2422,143 @@ namespace ISPAdmin.Migrations
                     b.ToTable("InvoicePayments");
                 });
 
+            modelBuilder.Entity("ISPAdmin.Data.Entities.LoginHistory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("AttemptedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FailureReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("IPAddress")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Identifier")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsSuccessful")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserAgent")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AttemptedAt");
+
+                    b.HasIndex("IsSuccessful");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("LoginHistories");
+                });
+
+            modelBuilder.Entity("ISPAdmin.Data.Entities.MyCompany", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("AddressLine1")
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AddressLine2")
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("City")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CountryCode")
+                        .HasMaxLength(2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("InvoiceEmail")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LegalName")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LetterheadFooter")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LogoUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OrganizationNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PostalCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("State")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TaxId")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("VatNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Website")
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("MyCompanies");
+                });
+
             modelBuilder.Entity("ISPAdmin.Data.Entities.NameServer", b =>
                 {
                     b.Property<int>("Id")
@@ -2573,7 +2713,7 @@ namespace ISPAdmin.Migrations
                     b.Property<bool>("RenewalReminderSent")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("ServiceId")
+                    b.Property<int?>("ServiceId")
                         .HasColumnType("INTEGER");
 
                     b.Property<decimal>("SetupFee")
@@ -2610,6 +2750,60 @@ namespace ISPAdmin.Migrations
                     b.HasIndex("ServiceId");
 
                     b.ToTable("Orders");
+                });
+
+            modelBuilder.Entity("ISPAdmin.Data.Entities.OrderLine", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsRecurring")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("LineNumber")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("ServiceId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("TotalPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ServiceId");
+
+                    b.HasIndex("OrderId", "LineNumber");
+
+                    b.ToTable("OrderLines");
                 });
 
             modelBuilder.Entity("ISPAdmin.Data.Entities.OutboxEvent", b =>
@@ -2803,6 +2997,14 @@ namespace ISPAdmin.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("PaymentInstrument")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("PaymentInstrumentId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("ProviderCode")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -2835,9 +3037,125 @@ namespace ISPAdmin.Migrations
 
                     b.HasIndex("NormalizedName");
 
+                    b.HasIndex("PaymentInstrument");
+
+                    b.HasIndex("PaymentInstrumentId");
+
                     b.HasIndex("ProviderCode");
 
                     b.ToTable("PaymentGateways");
+                });
+
+            modelBuilder.Entity("ISPAdmin.Data.Entities.PaymentInstrument", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("DefaultGatewayId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NormalizedCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NormalizedName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.HasIndex("DefaultGatewayId");
+
+                    b.HasIndex("DisplayOrder");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("NormalizedCode")
+                        .IsUnique();
+
+                    b.ToTable("PaymentInstruments");
+                });
+
+            modelBuilder.Entity("ISPAdmin.Data.Entities.PaymentInstrumentGateway", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("PaymentGatewayId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("PaymentInstrumentId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("IsDefault");
+
+                    b.HasIndex("PaymentGatewayId");
+
+                    b.HasIndex("Priority");
+
+                    b.HasIndex("PaymentInstrumentId", "PaymentGatewayId")
+                        .IsUnique();
+
+                    b.ToTable("PaymentInstrumentGateways");
                 });
 
             modelBuilder.Entity("ISPAdmin.Data.Entities.PaymentIntent", b =>
@@ -3333,7 +3651,7 @@ namespace ISPAdmin.Migrations
                     b.Property<decimal>("RecurringPrice")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("ServiceId")
+                    b.Property<int?>("ServiceId")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("ServiceNameSnapshot")
@@ -3370,6 +3688,72 @@ namespace ISPAdmin.Migrations
                     b.HasIndex("ServiceId");
 
                     b.ToTable("QuoteLines");
+                });
+
+            modelBuilder.Entity("ISPAdmin.Data.Entities.QuoteRevision", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ActionType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ContentHash")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PdfFileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PdfFilePath")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("QuoteId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("QuoteStatus")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("RevisionNumber")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("SnapshotJson")
+                        .IsRequired()
+                        .HasMaxLength(2147483647)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ActionType");
+
+                    b.HasIndex("QuoteId");
+
+                    b.HasIndex("QuoteId", "RevisionNumber")
+                        .IsUnique();
+
+                    b.ToTable("QuoteRevisions");
                 });
 
             modelBuilder.Entity("ISPAdmin.Data.Entities.Refund", b =>
@@ -3568,7 +3952,7 @@ namespace ISPAdmin.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("ServiceId")
+                    b.Property<int?>("ServiceId")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Status")
@@ -3856,6 +4240,137 @@ namespace ISPAdmin.Migrations
                     b.HasIndex("RegistrarTldId");
 
                     b.ToTable("RegistrarTldCostPricing");
+                });
+
+            modelBuilder.Entity("ISPAdmin.Data.Entities.RegistrarTldPriceChangeLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ChangeSource")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("ChangedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ChangedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("DownloadSessionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("NewCurrency")
+                        .HasMaxLength(3)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("NewRegistrationCost")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("NewRenewalCost")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("NewTransferCost")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OldCurrency")
+                        .HasMaxLength(3)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("OldRegistrationCost")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("OldRenewalCost")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("OldTransferCost")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("RegistrarTldId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChangeSource");
+
+                    b.HasIndex("ChangedAtUtc");
+
+                    b.HasIndex("DownloadSessionId");
+
+                    b.HasIndex("RegistrarTldId");
+
+                    b.ToTable("RegistrarTldPriceChangeLogs");
+                });
+
+            modelBuilder.Entity("ISPAdmin.Data.Entities.RegistrarTldPriceDownloadSession", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("CompletedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Message")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("PriceChangesDetected")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("RegistrarId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("StartedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("Success")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TldsProcessed")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("TriggerSource")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Success");
+
+                    b.HasIndex("RegistrarId", "StartedAtUtc");
+
+                    b.ToTable("RegistrarTldPriceDownloadSessions");
                 });
 
             modelBuilder.Entity("ISPAdmin.Data.Entities.ReportTemplate", b =>
@@ -4740,7 +5255,7 @@ namespace ISPAdmin.Migrations
                     b.Property<bool>("SendEmailNotifications")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("ServiceId")
+                    b.Property<int?>("ServiceId")
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("StartDate")
@@ -4840,6 +5355,104 @@ namespace ISPAdmin.Migrations
                     b.HasIndex("SubscriptionId");
 
                     b.ToTable("SubscriptionBillingHistories");
+                });
+
+            modelBuilder.Entity("ISPAdmin.Data.Entities.SupportTicket", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("AssignedToUserId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("ClosedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("CreatedByUserId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("LastMessageAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Priority")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssignedToUserId");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("LastMessageAt");
+
+                    b.HasIndex("Priority");
+
+                    b.HasIndex("Status");
+
+                    b.ToTable("SupportTickets");
+                });
+
+            modelBuilder.Entity("ISPAdmin.Data.Entities.SupportTicketMessage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SenderRole")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("SenderUserId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("SupportTicketId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("SenderUserId");
+
+                    b.HasIndex("SupportTicketId");
+
+                    b.ToTable("SupportTicketMessages");
                 });
 
             modelBuilder.Entity("ISPAdmin.Data.Entities.SystemSetting", b =>
@@ -5927,6 +6540,16 @@ namespace ISPAdmin.Migrations
                     b.Navigation("PaymentTransaction");
                 });
 
+            modelBuilder.Entity("ISPAdmin.Data.Entities.LoginHistory", b =>
+                {
+                    b.HasOne("ISPAdmin.Data.Entities.User", "User")
+                        .WithMany("LoginHistories")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("ISPAdmin.Data.Entities.NameServer", b =>
                 {
                     b.HasOne("ISPAdmin.Data.Entities.RegisteredDomain", "Domain")
@@ -5957,14 +6580,31 @@ namespace ISPAdmin.Migrations
                     b.HasOne("ISPAdmin.Data.Entities.Service", "Service")
                         .WithMany("Orders")
                         .HasForeignKey("ServiceId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Coupon");
 
                     b.Navigation("Customer");
 
                     b.Navigation("Quote");
+
+                    b.Navigation("Service");
+                });
+
+            modelBuilder.Entity("ISPAdmin.Data.Entities.OrderLine", b =>
+                {
+                    b.HasOne("ISPAdmin.Data.Entities.Order", "Order")
+                        .WithMany("OrderLines")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ISPAdmin.Data.Entities.Service", "Service")
+                        .WithMany()
+                        .HasForeignKey("ServiceId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Order");
 
                     b.Navigation("Service");
                 });
@@ -5992,6 +6632,45 @@ namespace ISPAdmin.Migrations
                     b.Navigation("Invoice");
 
                     b.Navigation("PaymentTransaction");
+                });
+
+            modelBuilder.Entity("ISPAdmin.Data.Entities.PaymentGateway", b =>
+                {
+                    b.HasOne("ISPAdmin.Data.Entities.PaymentInstrument", "PaymentInstrumentEntity")
+                        .WithMany("PaymentGateways")
+                        .HasForeignKey("PaymentInstrumentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("PaymentInstrumentEntity");
+                });
+
+            modelBuilder.Entity("ISPAdmin.Data.Entities.PaymentInstrument", b =>
+                {
+                    b.HasOne("ISPAdmin.Data.Entities.PaymentGateway", "DefaultGateway")
+                        .WithMany()
+                        .HasForeignKey("DefaultGatewayId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("DefaultGateway");
+                });
+
+            modelBuilder.Entity("ISPAdmin.Data.Entities.PaymentInstrumentGateway", b =>
+                {
+                    b.HasOne("ISPAdmin.Data.Entities.PaymentGateway", "PaymentGateway")
+                        .WithMany("PaymentInstrumentMappings")
+                        .HasForeignKey("PaymentGatewayId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ISPAdmin.Data.Entities.PaymentInstrument", "PaymentInstrument")
+                        .WithMany("PaymentGatewayMappings")
+                        .HasForeignKey("PaymentInstrumentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PaymentGateway");
+
+                    b.Navigation("PaymentInstrument");
                 });
 
             modelBuilder.Entity("ISPAdmin.Data.Entities.PaymentIntent", b =>
@@ -6110,15 +6789,24 @@ namespace ISPAdmin.Migrations
 
                     b.HasOne("ISPAdmin.Data.Entities.Service", "Service")
                         .WithMany("QuoteLines")
-                        .HasForeignKey("ServiceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ServiceId");
 
                     b.Navigation("BillingCycle");
 
                     b.Navigation("Quote");
 
                     b.Navigation("Service");
+                });
+
+            modelBuilder.Entity("ISPAdmin.Data.Entities.QuoteRevision", b =>
+                {
+                    b.HasOne("ISPAdmin.Data.Entities.Quote", "Quote")
+                        .WithMany("Revisions")
+                        .HasForeignKey("QuoteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Quote");
                 });
 
             modelBuilder.Entity("ISPAdmin.Data.Entities.Refund", b =>
@@ -6194,8 +6882,7 @@ namespace ISPAdmin.Migrations
                     b.HasOne("ISPAdmin.Data.Entities.Service", "Service")
                         .WithMany()
                         .HasForeignKey("ServiceId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Customer");
 
@@ -6256,6 +6943,35 @@ namespace ISPAdmin.Migrations
                         .IsRequired();
 
                     b.Navigation("RegistrarTld");
+                });
+
+            modelBuilder.Entity("ISPAdmin.Data.Entities.RegistrarTldPriceChangeLog", b =>
+                {
+                    b.HasOne("ISPAdmin.Data.Entities.RegistrarTldPriceDownloadSession", "DownloadSession")
+                        .WithMany("PriceChangeLogs")
+                        .HasForeignKey("DownloadSessionId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("ISPAdmin.Data.Entities.RegistrarTld", "RegistrarTld")
+                        .WithMany("PriceChangeLogs")
+                        .HasForeignKey("RegistrarTldId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("DownloadSession");
+
+                    b.Navigation("RegistrarTld");
+                });
+
+            modelBuilder.Entity("ISPAdmin.Data.Entities.RegistrarTldPriceDownloadSession", b =>
+                {
+                    b.HasOne("ISPAdmin.Data.Entities.Registrar", "Registrar")
+                        .WithMany("PriceDownloadSessions")
+                        .HasForeignKey("RegistrarId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Registrar");
                 });
 
             modelBuilder.Entity("ISPAdmin.Data.Entities.ResellerTldDiscount", b =>
@@ -6423,9 +7139,7 @@ namespace ISPAdmin.Migrations
 
                     b.HasOne("ISPAdmin.Data.Entities.Service", "Service")
                         .WithMany()
-                        .HasForeignKey("ServiceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ServiceId");
 
                     b.Navigation("BillingCycle");
 
@@ -6463,6 +7177,51 @@ namespace ISPAdmin.Migrations
                     b.Navigation("ProcessedByUser");
 
                     b.Navigation("Subscription");
+                });
+
+            modelBuilder.Entity("ISPAdmin.Data.Entities.SupportTicket", b =>
+                {
+                    b.HasOne("ISPAdmin.Data.Entities.User", "AssignedToUser")
+                        .WithMany("AssignedSupportTickets")
+                        .HasForeignKey("AssignedToUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("ISPAdmin.Data.Entities.User", "CreatedByUser")
+                        .WithMany("CreatedSupportTickets")
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ISPAdmin.Data.Entities.Customer", "Customer")
+                        .WithMany("SupportTickets")
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AssignedToUser");
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("Customer");
+                });
+
+            modelBuilder.Entity("ISPAdmin.Data.Entities.SupportTicketMessage", b =>
+                {
+                    b.HasOne("ISPAdmin.Data.Entities.User", "SenderUser")
+                        .WithMany("SupportTicketMessages")
+                        .HasForeignKey("SenderUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ISPAdmin.Data.Entities.SupportTicket", "SupportTicket")
+                        .WithMany("Messages")
+                        .HasForeignKey("SupportTicketId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SenderUser");
+
+                    b.Navigation("SupportTicket");
                 });
 
             modelBuilder.Entity("ISPAdmin.Data.Entities.TldSalesPricing", b =>
@@ -6592,6 +7351,8 @@ namespace ISPAdmin.Migrations
 
                     b.Navigation("RegisteredDomains");
 
+                    b.Navigation("SupportTickets");
+
                     b.Navigation("Users");
                 });
 
@@ -6663,12 +7424,23 @@ namespace ISPAdmin.Migrations
 
                     b.Navigation("Invoices");
 
+                    b.Navigation("OrderLines");
+
                     b.Navigation("PaymentIntents");
                 });
 
             modelBuilder.Entity("ISPAdmin.Data.Entities.PaymentGateway", b =>
                 {
+                    b.Navigation("PaymentInstrumentMappings");
+
                     b.Navigation("PaymentTransactions");
+                });
+
+            modelBuilder.Entity("ISPAdmin.Data.Entities.PaymentInstrument", b =>
+                {
+                    b.Navigation("PaymentGatewayMappings");
+
+                    b.Navigation("PaymentGateways");
                 });
 
             modelBuilder.Entity("ISPAdmin.Data.Entities.PaymentIntent", b =>
@@ -6688,6 +7460,8 @@ namespace ISPAdmin.Migrations
                     b.Navigation("Orders");
 
                     b.Navigation("QuoteLines");
+
+                    b.Navigation("Revisions");
                 });
 
             modelBuilder.Entity("ISPAdmin.Data.Entities.RegisteredDomain", b =>
@@ -6703,6 +7477,8 @@ namespace ISPAdmin.Migrations
 
             modelBuilder.Entity("ISPAdmin.Data.Entities.Registrar", b =>
                 {
+                    b.Navigation("PriceDownloadSessions");
+
                     b.Navigation("RegisteredDomains");
 
                     b.Navigation("RegistrarTlds");
@@ -6714,7 +7490,14 @@ namespace ISPAdmin.Migrations
                 {
                     b.Navigation("CostPricingHistory");
 
+                    b.Navigation("PriceChangeLogs");
+
                     b.Navigation("RegisteredDomains");
+                });
+
+            modelBuilder.Entity("ISPAdmin.Data.Entities.RegistrarTldPriceDownloadSession", b =>
+                {
+                    b.Navigation("PriceChangeLogs");
                 });
 
             modelBuilder.Entity("ISPAdmin.Data.Entities.ResellerCompany", b =>
@@ -6783,6 +7566,11 @@ namespace ISPAdmin.Migrations
                     b.Navigation("BillingHistories");
                 });
 
+            modelBuilder.Entity("ISPAdmin.Data.Entities.SupportTicket", b =>
+                {
+                    b.Navigation("Messages");
+                });
+
             modelBuilder.Entity("ISPAdmin.Data.Entities.Tld", b =>
                 {
                     b.Navigation("RegistrarTlds");
@@ -6799,7 +7587,15 @@ namespace ISPAdmin.Migrations
 
             modelBuilder.Entity("ISPAdmin.Data.Entities.User", b =>
                 {
+                    b.Navigation("AssignedSupportTickets");
+
                     b.Navigation("AuditLogs");
+
+                    b.Navigation("CreatedSupportTickets");
+
+                    b.Navigation("LoginHistories");
+
+                    b.Navigation("SupportTicketMessages");
 
                     b.Navigation("Tokens");
 

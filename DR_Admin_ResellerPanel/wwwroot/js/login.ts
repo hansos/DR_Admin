@@ -11,6 +11,13 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
+    checkInitializationStatus().then((isInitialized) => {
+        if (!isInitialized) {
+            window.location.href = '/initialize';
+            return;
+        }
+    });
+
     const loginForm     = document.getElementById('loginForm')     as HTMLFormElement   | null;
     const toggleBtn     = document.getElementById('togglePassword') as HTMLButtonElement | null;
     const passwordInput = document.getElementById('password')       as HTMLInputElement  | null;
@@ -52,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
         submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Signing in...';
 
         try {
-            const response = await fetch('https://localhost:7201/api/v1/Auth/login', {
+            const response = await fetch(`${getApiBaseUrl()}/Auth/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password }),
@@ -88,6 +95,33 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+async function checkInitializationStatus(): Promise<boolean> {
+    try {
+        const response = await fetch(`${getApiBaseUrl()}/Initialization/status`, {
+            method: 'GET',
+            credentials: 'include',
+        });
+
+        if (!response.ok) {
+            return true;
+        }
+
+        const contentType = response.headers.get('content-type') ?? '';
+        if (!contentType.includes('application/json')) {
+            return true;
+        }
+
+        const data = await response.json();
+        return data?.isInitialized ?? data?.IsInitialized ?? true;
+    } catch {
+        return true;
+    }
+}
+
+function getApiBaseUrl(): string {
+    return (window as any).AppSettings?.apiBaseUrl ?? '';
+}
 
 function loginShowMessage(id: string, message: string): void {
     const el = document.getElementById(id);

@@ -120,4 +120,9 @@ public class PaymentGateway : EntityBase
     /// Navigation property to payment instrument catalog entry
     /// </summary>
     public PaymentInstrument? PaymentInstrumentEntity { get; set; }
+
+    /// <summary>
+    /// Instrument mappings associated with this gateway
+    /// </summary>
+    public ICollection<PaymentInstrumentGateway> PaymentInstrumentMappings { get; set; } = new List<PaymentInstrumentGateway>();
 }

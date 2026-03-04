@@ -41,6 +41,7 @@
         "change-password.ts",
         "forgot-password.ts",
         "reset-password.ts",
+        "initialize.ts",
         "users.ts",
         "roles.ts",
         "login-histories.ts",

@@ -199,6 +199,35 @@ namespace PaymentGatewayLib.Implementations
                 if (string.IsNullOrWhiteSpace(transactionId))
                     throw new ArgumentException("Transaction ID is required", nameof(transactionId));
 
+                if (transactionId.StartsWith("pi_", StringComparison.OrdinalIgnoreCase))
+                {
+                    var intentResponse = await _httpClient.GetAsync($"/v1/payment_intents/{transactionId}");
+                    var intentBody = await intentResponse.Content.ReadAsStringAsync();
+
+                    if (!intentResponse.IsSuccessStatusCode)
+                    {
+                        throw new Exception($"Failed to retrieve payment intent status: {intentBody}");
+                    }
+
+                    var intent = JsonSerializer.Deserialize<JsonElement>(intentBody);
+                    var amountValue = intent.TryGetProperty("amount_received", out var amountReceived)
+                        ? amountReceived.GetInt64()
+                        : intent.GetProperty("amount").GetInt64();
+
+                    return new TransactionStatusResult
+                    {
+                        TransactionId = intent.GetProperty("id").GetString() ?? string.Empty,
+                        Status = intent.GetProperty("status").GetString() ?? string.Empty,
+                        Amount = amountValue / 100.0m,
+                        Currency = intent.GetProperty("currency").GetString()?.ToUpper() ?? string.Empty,
+                        CreatedAt = DateTimeOffset.FromUnixTimeSeconds(intent.GetProperty("created").GetInt64()).UtcDateTime,
+                        UpdatedAt = DateTime.UtcNow,
+                        Description = intent.TryGetProperty("description", out var piDesc)
+                            ? piDesc.GetString() ?? string.Empty
+                            : string.Empty
+                    };
+                }
+
                 var response = await _httpClient.GetAsync($"/v1/charges/{transactionId}");
                 var responseBody = await response.Content.ReadAsStringAsync();
 
@@ -252,9 +281,21 @@ namespace PaymentGatewayLib.Implementations
                 var parameters = new Dictionary<string, string>
                 {
                     { "amount", amountInCents.ToString() },
-                    { "currency", request.Currency.ToLower() },
-                    { "automatic_payment_methods[enabled]", "true" }
+                    { "currency", request.Currency.ToLower() }
                 };
+
+                var explicitMethodTypes = ResolveStripePaymentMethodTypes(request).ToList();
+                if (explicitMethodTypes.Count == 0)
+                {
+                    parameters.Add("automatic_payment_methods[enabled]", "true");
+                }
+                else
+                {
+                    for (var i = 0; i < explicitMethodTypes.Count; i++)
+                    {
+                        parameters.Add($"payment_method_types[{i}]", explicitMethodTypes[i]);
+                    }
+                }
 
                 if (!string.IsNullOrWhiteSpace(request.Description))
                 {
@@ -572,6 +613,41 @@ namespace PaymentGatewayLib.Implementations
             {
                 return Enumerable.Empty<TransactionSummary>();
             }
+        }
+
+        private static IEnumerable<string> ResolveStripePaymentMethodTypes(PaymentIntentRequest request)
+        {
+            var values = new List<string>();
+
+            if (!string.IsNullOrWhiteSpace(request.PreferredPaymentMethodType))
+            {
+                values.Add(request.PreferredPaymentMethodType);
+            }
+
+            if (request.PaymentMethodTypes is { Count: > 0 })
+            {
+                values.AddRange(request.PaymentMethodTypes.Where(v => !string.IsNullOrWhiteSpace(v)));
+            }
+
+            return values
+                .Select(MapToStripePaymentMethodType)
+                .Where(v => !string.IsNullOrWhiteSpace(v))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Select(v => v.ToLowerInvariant());
+        }
+
+        private static string MapToStripePaymentMethodType(string value)
+        {
+            return value.Trim().ToLowerInvariant() switch
+            {
+                "creditcard" or "credit card" or "card" => "card",
+                "bankaccount" or "bank account" => "us_bank_account",
+                "paypal" => "paypal",
+                "sepa" or "sepadebit" or "sepa_debit" => "sepa_debit",
+                "ideal" => "ideal",
+                "sofort" => "sofort",
+                _ => value.Trim().ToLowerInvariant()
+            };
         }
 
         private long ConvertToSmallestUnit(decimal amount, string currency)
