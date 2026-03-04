@@ -115,7 +115,11 @@ interface CheckoutWindow extends Window {
     bootstrap?: {
         Modal?: {
             getInstance: (element: Element) => { hide: () => void } | null;
+            getOrCreateInstance: (element: Element) => { show: () => void; hide: () => void };
         };
+    };
+    Blazor?: {
+        addEventListener?: (eventName: string, callback: () => void) => void;
     };
 }
 
@@ -188,6 +192,101 @@ function initializePaymentInstrumentPanel(): void {
     continueButton?.addEventListener('click', () => {
         void continueToPayment();
     });
+
+    const addButton = document.getElementById('checkout-payment-methods-open-create') as HTMLButtonElement | null;
+    addButton?.addEventListener('click', () => {
+        void prepareCheckoutPaymentMethodModal();
+    });
+
+    const addForm = document.getElementById('checkout-payment-methods-create-form') as HTMLFormElement | null;
+    addForm?.addEventListener('submit', (event: Event) => {
+        event.preventDefault();
+        void saveCheckoutPaymentMethod();
+    });
+}
+
+async function prepareCheckoutPaymentMethodModal(): Promise<void> {
+    const typedWindow = window as CheckoutWindow;
+    const select = document.getElementById('checkout-payment-methods-instrument') as HTMLSelectElement | null;
+    if (!select) {
+        return;
+    }
+
+    const response = await typedWindow.UserPanelApi?.request<PaymentInstrumentDto[]>('/PaymentInstruments/active', {
+        method: 'GET'
+    }, true);
+
+    const options = (response?.success && response.data ? response.data : [])
+        .filter((item) => item.isActive)
+        .sort((a, b) => (a.displayOrder - b.displayOrder) || a.name.localeCompare(b.name));
+
+    if (options.length === 0) {
+        select.innerHTML = '<option value="">No active instruments</option>';
+        return;
+    }
+
+    select.innerHTML = options
+        .map((item) => `<option value="${escapeHtmlCheckout(item.code)}">${escapeHtmlCheckout(item.name)}</option>`)
+        .join('');
+}
+
+function mapInstrumentCodeToPaymentMethodType(code: string): number {
+    const normalized = code.trim().toLowerCase();
+    if (normalized === 'creditcard' || normalized === 'credit card' || normalized === 'card') {
+        return 0;
+    }
+
+    if (normalized === 'bankaccount' || normalized === 'bank account') {
+        return 1;
+    }
+
+    if (normalized === 'paypal') {
+        return 2;
+    }
+
+    if (normalized === 'cash') {
+        return 3;
+    }
+
+    if (normalized === 'invoice') {
+        return 4;
+    }
+
+    return 99;
+}
+
+async function saveCheckoutPaymentMethod(): Promise<void> {
+    const typedWindow = window as CheckoutWindow;
+    const instrument = (document.getElementById('checkout-payment-methods-instrument') as HTMLSelectElement | null)?.value.trim() ?? '';
+    const isDefault = (document.getElementById('checkout-payment-methods-default') as HTMLInputElement | null)?.checked ?? true;
+
+    if (!instrument) {
+        typedWindow.UserPanelAlerts?.showError('checkout-alert-error', 'Payment instrument is required.');
+        return;
+    }
+
+    const response = await typedWindow.UserPanelApi?.request('/CustomerPaymentMethods/mine', {
+        method: 'POST',
+        body: JSON.stringify({
+            paymentInstrument: instrument,
+            type: mapInstrumentCodeToPaymentMethodType(instrument),
+            paymentMethodToken: '',
+            isDefault
+        })
+    }, true);
+
+    if (!response || !response.success) {
+        typedWindow.UserPanelAlerts?.showError('checkout-alert-error', response?.message ?? 'Could not add payment instrument.');
+        return;
+    }
+
+    const modalElement = document.getElementById('checkout-payment-methods-modal');
+    if (modalElement) {
+        typedWindow.bootstrap?.Modal?.getInstance(modalElement)?.hide();
+    }
+
+    typedWindow.UserPanelAlerts?.showSuccess('checkout-alert-success', 'Payment instrument added.');
+    await loadPaymentInstruments();
 }
 
 function closeCheckoutDeleteModal(): void {
@@ -214,8 +313,8 @@ function clearCheckoutSessionState(): void {
     const submitButton = document.getElementById('checkout-submit') as HTMLButtonElement | null;
     if (submitButton) {
         submitButton.dataset.submitting = 'false';
-        submitButton.disabled = false;
     }
+    setCheckoutSubmitDisabled(false);
 
     const paymentCard = document.getElementById('checkout-payment-instrument-card');
     paymentCard?.classList.add('d-none');
@@ -231,6 +330,18 @@ function clearCheckoutSessionState(): void {
     }
 
     renderSummary();
+}
+
+function setCheckoutSubmitDisabled(disabled: boolean): void {
+    const submitButton = document.getElementById('checkout-submit') as HTMLButtonElement | null;
+    if (submitButton) {
+        submitButton.disabled = disabled;
+    }
+
+    const confirmInput = document.getElementById('checkout-confirm') as HTMLInputElement | null;
+    if (confirmInput) {
+        confirmInput.disabled = disabled;
+    }
 }
 
 function redirectToDomainSearch(delayMs: number = 1200): void {
@@ -428,9 +539,9 @@ function markOrderAsAdded(orderId: number, orderNumber: string, persist: boolean
 
     const submitButton = document.getElementById('checkout-submit') as HTMLButtonElement | null;
     if (submitButton) {
-        submitButton.disabled = true;
         submitButton.dataset.submitting = 'false';
     }
+    setCheckoutSubmitDisabled(true);
 
     const form = document.getElementById('checkout-form') as HTMLFormElement | null;
     if (form) {
@@ -458,14 +569,7 @@ async function loadPaymentInstruments(): Promise<void> {
         return;
     }
 
-    const customerId = await resolveCheckoutCustomerId();
-    if (!customerId) {
-        select.innerHTML = '<option value="">No customer payment methods found</option>';
-        renderPaymentInstrumentFields();
-        return;
-    }
-
-    const methodsResponse = await typedWindow.UserPanelApi?.request<CheckoutCustomerPaymentMethodDto[]>(`/CustomerPaymentMethods/customer/${customerId}`, {
+    const methodsResponse = await typedWindow.UserPanelApi?.request<CheckoutCustomerPaymentMethodDto[]>('/CustomerPaymentMethods/mine', {
         method: 'GET'
     }, true);
 
@@ -484,6 +588,11 @@ async function loadPaymentInstruments(): Promise<void> {
     if (allowedInstrumentCodes.size === 0) {
         select.innerHTML = '<option value="">No active payment methods available</option>';
         renderPaymentInstrumentFields();
+        await prepareCheckoutPaymentMethodModal();
+        const modalElement = document.getElementById('checkout-payment-methods-modal');
+        if (modalElement) {
+            typedWindow.bootstrap?.Modal?.getOrCreateInstance(modalElement)?.show();
+        }
         return;
     }
 
@@ -713,8 +822,8 @@ async function submitCheckout(): Promise<void> {
 
     if (submitButton) {
         submitButton.dataset.submitting = 'true';
-        submitButton.disabled = true;
     }
+    setCheckoutSubmitDisabled(true);
 
     const customerIdValue = (document.getElementById('checkout-customer-id') as HTMLInputElement | null)?.value ?? '';
     const customerId = Number.parseInt(customerIdValue, 10);
@@ -724,8 +833,8 @@ async function submitCheckout(): Promise<void> {
         typedWindow.UserPanelAlerts?.showError('checkout-alert-error', 'Customer ID is required.');
         if (submitButton) {
             submitButton.dataset.submitting = 'false';
-            submitButton.disabled = false;
         }
+        setCheckoutSubmitDisabled(false);
         return;
     }
 
@@ -733,8 +842,8 @@ async function submitCheckout(): Promise<void> {
         typedWindow.UserPanelAlerts?.showError('checkout-alert-error', 'You must confirm the order details before placing the order.');
         if (submitButton) {
             submitButton.dataset.submitting = 'false';
-            submitButton.disabled = false;
         }
+        setCheckoutSubmitDisabled(false);
         return;
     }
 
@@ -743,8 +852,8 @@ async function submitCheckout(): Promise<void> {
         typedWindow.UserPanelAlerts?.showError('checkout-alert-error', 'Cart could not be loaded.');
         if (submitButton) {
             submitButton.dataset.submitting = 'false';
-            submitButton.disabled = false;
         }
+        setCheckoutSubmitDisabled(false);
         return;
     }
 
@@ -811,8 +920,8 @@ async function submitCheckout(): Promise<void> {
         typedWindow.UserPanelAlerts?.showError('checkout-alert-error', 'No order lines were added. Returning to domain search...');
         if (submitButton) {
             submitButton.dataset.submitting = 'false';
-            submitButton.disabled = false;
         }
+        setCheckoutSubmitDisabled(false);
 
         redirectToDomainSearch(3000);
         return;
@@ -844,8 +953,8 @@ async function submitCheckout(): Promise<void> {
         typedWindow.UserPanelAlerts?.showError('checkout-alert-error', response?.message ?? 'Could not place order.');
         if (submitButton) {
             submitButton.dataset.submitting = 'false';
-            submitButton.disabled = false;
         }
+        setCheckoutSubmitDisabled(false);
         return;
     }
 
@@ -880,3 +989,15 @@ if (document.readyState === 'loading') {
 } else {
     initializeCheckout();
 }
+
+function registerCheckoutEnhancedLoadListener(): void {
+    const typedWindow = window as CheckoutWindow;
+    if (typedWindow.Blazor?.addEventListener) {
+        typedWindow.Blazor.addEventListener('enhancedload', initializeCheckout);
+        return;
+    }
+
+    window.setTimeout(registerCheckoutEnhancedLoadListener, 100);
+}
+
+registerCheckoutEnhancedLoadListener();

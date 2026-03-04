@@ -3,6 +3,7 @@ using ISPAdmin.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
+using System.Security.Claims;
 
 namespace ISPAdmin.Controllers;
 
@@ -15,11 +16,192 @@ namespace ISPAdmin.Controllers;
 public class CustomerPaymentMethodsController : ControllerBase
 {
     private readonly ICustomerPaymentMethodService _paymentMethodService;
+    private readonly IMyAccountService _myAccountService;
     private static readonly Serilog.ILogger _log = Log.ForContext<CustomerPaymentMethodsController>();
 
-    public CustomerPaymentMethodsController(ICustomerPaymentMethodService paymentMethodService)
+    public CustomerPaymentMethodsController(ICustomerPaymentMethodService paymentMethodService, IMyAccountService myAccountService)
     {
         _paymentMethodService = paymentMethodService;
+        _myAccountService = myAccountService;
+    }
+
+    [HttpGet("mine")]
+    [Authorize]
+    [ProducesResponseType(typeof(IEnumerable<CustomerPaymentMethodDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<IEnumerable<CustomerPaymentMethodDto>>> GetMyPaymentMethods()
+    {
+        try
+        {
+            var customerId = await ResolveCurrentCustomerIdAsync();
+            if (customerId <= 0)
+            {
+                return Unauthorized();
+            }
+
+            var paymentMethods = await _paymentMethodService.GetPaymentMethodsByCustomerIdAsync(customerId);
+            return Ok(paymentMethods);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in GetMyPaymentMethods for user {User}", User.Identity?.Name);
+            return StatusCode(500, "An error occurred while retrieving payment methods");
+        }
+    }
+
+    [HttpPost("mine")]
+    [Authorize]
+    [ProducesResponseType(typeof(CustomerPaymentMethodDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<CustomerPaymentMethodDto>> CreateMyPaymentMethod([FromBody] CreateCustomerPaymentMethodDto createDto)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var customerId = await ResolveCurrentCustomerIdAsync();
+            if (customerId <= 0)
+            {
+                return Unauthorized();
+            }
+
+            createDto.CustomerId = customerId;
+            var paymentMethod = await _paymentMethodService.CreatePaymentMethodAsync(createDto);
+            return CreatedAtAction(nameof(GetPaymentMethodById), new { id = paymentMethod.Id }, paymentMethod);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _log.Warning(ex, "API: Validation error in CreateMyPaymentMethod");
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in CreateMyPaymentMethod for user {User}", User.Identity?.Name);
+            return StatusCode(500, "An error occurred while creating the payment method");
+        }
+    }
+
+    [HttpPut("mine/{id}")]
+    [Authorize]
+    [ProducesResponseType(typeof(CustomerPaymentMethodDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<CustomerPaymentMethodDto>> UpdateMyPaymentMethod(int id, [FromBody] UpdateCustomerPaymentMethodDto updateDto)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var customerId = await ResolveCurrentCustomerIdAsync();
+            if (customerId <= 0)
+            {
+                return Unauthorized();
+            }
+
+            var paymentMethod = await _paymentMethodService.UpdatePaymentMethodAsync(id, customerId, updateDto);
+            if (paymentMethod == null)
+            {
+                return NotFound($"Payment method with ID {id} not found");
+            }
+
+            return Ok(paymentMethod);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in UpdateMyPaymentMethod for ID {PaymentMethodId}", id);
+            return StatusCode(500, "An error occurred while updating the payment method");
+        }
+    }
+
+    [HttpPost("mine/{id}/set-default")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult> SetMyDefaultPaymentMethod(int id)
+    {
+        try
+        {
+            var customerId = await ResolveCurrentCustomerIdAsync();
+            if (customerId <= 0)
+            {
+                return Unauthorized();
+            }
+
+            var result = await _paymentMethodService.SetAsDefaultAsync(id, customerId);
+            if (!result)
+            {
+                return NotFound($"Payment method with ID {id} not found");
+            }
+
+            return Ok(new { message = "Payment method set as default successfully" });
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in SetMyDefaultPaymentMethod for ID {PaymentMethodId}", id);
+            return StatusCode(500, "An error occurred while setting the default payment method");
+        }
+    }
+
+    [HttpDelete("mine/{id}")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult> DeleteMyPaymentMethod(int id)
+    {
+        try
+        {
+            var customerId = await ResolveCurrentCustomerIdAsync();
+            if (customerId <= 0)
+            {
+                return Unauthorized();
+            }
+
+            var result = await _paymentMethodService.DeletePaymentMethodAsync(id, customerId);
+            if (!result)
+            {
+                return NotFound($"Payment method with ID {id} not found");
+            }
+
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in DeleteMyPaymentMethod for ID {PaymentMethodId}", id);
+            return StatusCode(500, "An error occurred while deleting the payment method");
+        }
+    }
+
+    private async Task<int> ResolveCurrentCustomerIdAsync()
+    {
+        var userId = GetCurrentUserId();
+        var account = await _myAccountService.GetMyAccountAsync(userId);
+        return account?.Customer?.Id ?? 0;
+    }
+
+    private int GetCurrentUserId()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+        {
+            throw new UnauthorizedAccessException("User ID not found in token");
+        }
+
+        return userId;
     }
 
     /// <summary>

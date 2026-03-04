@@ -53,6 +53,82 @@ function initializePaymentInstrumentPanel() {
     continueButton?.addEventListener('click', () => {
         void continueToPayment();
     });
+    const addButton = document.getElementById('checkout-payment-methods-open-create');
+    addButton?.addEventListener('click', () => {
+        void prepareCheckoutPaymentMethodModal();
+    });
+    const addForm = document.getElementById('checkout-payment-methods-create-form');
+    addForm?.addEventListener('submit', (event) => {
+        event.preventDefault();
+        void saveCheckoutPaymentMethod();
+    });
+}
+async function prepareCheckoutPaymentMethodModal() {
+    const typedWindow = window;
+    const select = document.getElementById('checkout-payment-methods-instrument');
+    if (!select) {
+        return;
+    }
+    const response = await typedWindow.UserPanelApi?.request('/PaymentInstruments/active', {
+        method: 'GET'
+    }, true);
+    const options = (response?.success && response.data ? response.data : [])
+        .filter((item) => item.isActive)
+        .sort((a, b) => (a.displayOrder - b.displayOrder) || a.name.localeCompare(b.name));
+    if (options.length === 0) {
+        select.innerHTML = '<option value="">No active instruments</option>';
+        return;
+    }
+    select.innerHTML = options
+        .map((item) => `<option value="${escapeHtmlCheckout(item.code)}">${escapeHtmlCheckout(item.name)}</option>`)
+        .join('');
+}
+function mapInstrumentCodeToPaymentMethodType(code) {
+    const normalized = code.trim().toLowerCase();
+    if (normalized === 'creditcard' || normalized === 'credit card' || normalized === 'card') {
+        return 0;
+    }
+    if (normalized === 'bankaccount' || normalized === 'bank account') {
+        return 1;
+    }
+    if (normalized === 'paypal') {
+        return 2;
+    }
+    if (normalized === 'cash') {
+        return 3;
+    }
+    if (normalized === 'invoice') {
+        return 4;
+    }
+    return 99;
+}
+async function saveCheckoutPaymentMethod() {
+    const typedWindow = window;
+    const instrument = document.getElementById('checkout-payment-methods-instrument')?.value.trim() ?? '';
+    const isDefault = document.getElementById('checkout-payment-methods-default')?.checked ?? true;
+    if (!instrument) {
+        typedWindow.UserPanelAlerts?.showError('checkout-alert-error', 'Payment instrument is required.');
+        return;
+    }
+    const response = await typedWindow.UserPanelApi?.request('/CustomerPaymentMethods/mine', {
+        method: 'POST',
+        body: JSON.stringify({
+            paymentInstrument: instrument,
+            type: mapInstrumentCodeToPaymentMethodType(instrument),
+            paymentMethodToken: '',
+            isDefault
+        })
+    }, true);
+    if (!response || !response.success) {
+        typedWindow.UserPanelAlerts?.showError('checkout-alert-error', response?.message ?? 'Could not add payment instrument.');
+        return;
+    }
+    const modalElement = document.getElementById('checkout-payment-methods-modal');
+    if (modalElement) {
+        typedWindow.bootstrap?.Modal?.getInstance(modalElement)?.hide();
+    }
+    typedWindow.UserPanelAlerts?.showSuccess('checkout-alert-success', 'Payment instrument added.');
+    await loadPaymentInstruments();
 }
 function closeCheckoutDeleteModal() {
     const typedWindow = window;
@@ -74,8 +150,8 @@ function clearCheckoutSessionState() {
     const submitButton = document.getElementById('checkout-submit');
     if (submitButton) {
         submitButton.dataset.submitting = 'false';
-        submitButton.disabled = false;
     }
+    setCheckoutSubmitDisabled(false);
     const paymentCard = document.getElementById('checkout-payment-instrument-card');
     paymentCard?.classList.add('d-none');
     const orderNumberEl = document.getElementById('checkout-added-order-number');
@@ -87,6 +163,16 @@ function clearCheckoutSessionState() {
         paymentStatus.textContent = 'Order removed from checkout.';
     }
     renderSummary();
+}
+function setCheckoutSubmitDisabled(disabled) {
+    const submitButton = document.getElementById('checkout-submit');
+    if (submitButton) {
+        submitButton.disabled = disabled;
+    }
+    const confirmInput = document.getElementById('checkout-confirm');
+    if (confirmInput) {
+        confirmInput.disabled = disabled;
+    }
 }
 function redirectToDomainSearch(delayMs = 1200) {
     window.setTimeout(() => {
@@ -255,9 +341,9 @@ function markOrderAsAdded(orderId, orderNumber, persist) {
     }
     const submitButton = document.getElementById('checkout-submit');
     if (submitButton) {
-        submitButton.disabled = true;
         submitButton.dataset.submitting = 'false';
     }
+    setCheckoutSubmitDisabled(true);
     const form = document.getElementById('checkout-form');
     if (form) {
         form.dataset.orderAdded = 'true';
@@ -279,13 +365,7 @@ async function loadPaymentInstruments() {
     if (!select) {
         return;
     }
-    const customerId = await resolveCheckoutCustomerId();
-    if (!customerId) {
-        select.innerHTML = '<option value="">No customer payment methods found</option>';
-        renderPaymentInstrumentFields();
-        return;
-    }
-    const methodsResponse = await typedWindow.UserPanelApi?.request(`/CustomerPaymentMethods/customer/${customerId}`, {
+    const methodsResponse = await typedWindow.UserPanelApi?.request('/CustomerPaymentMethods/mine', {
         method: 'GET'
     }, true);
     const allowedInstrumentCodes = new Set();
@@ -302,6 +382,11 @@ async function loadPaymentInstruments() {
     if (allowedInstrumentCodes.size === 0) {
         select.innerHTML = '<option value="">No active payment methods available</option>';
         renderPaymentInstrumentFields();
+        await prepareCheckoutPaymentMethodModal();
+        const modalElement = document.getElementById('checkout-payment-methods-modal');
+        if (modalElement) {
+            typedWindow.bootstrap?.Modal?.getOrCreateInstance(modalElement)?.show();
+        }
         return;
     }
     const response = await typedWindow.UserPanelApi?.request('/PaymentInstruments/active', {
@@ -489,8 +574,8 @@ async function submitCheckout() {
     }
     if (submitButton) {
         submitButton.dataset.submitting = 'true';
-        submitButton.disabled = true;
     }
+    setCheckoutSubmitDisabled(true);
     const customerIdValue = document.getElementById('checkout-customer-id')?.value ?? '';
     const customerId = Number.parseInt(customerIdValue, 10);
     const confirmed = document.getElementById('checkout-confirm')?.checked ?? false;
@@ -498,16 +583,16 @@ async function submitCheckout() {
         typedWindow.UserPanelAlerts?.showError('checkout-alert-error', 'Customer ID is required.');
         if (submitButton) {
             submitButton.dataset.submitting = 'false';
-            submitButton.disabled = false;
         }
+        setCheckoutSubmitDisabled(false);
         return;
     }
     if (!confirmed) {
         typedWindow.UserPanelAlerts?.showError('checkout-alert-error', 'You must confirm the order details before placing the order.');
         if (submitButton) {
             submitButton.dataset.submitting = 'false';
-            submitButton.disabled = false;
         }
+        setCheckoutSubmitDisabled(false);
         return;
     }
     const state = typedWindow.UserPanelCart?.getState();
@@ -515,8 +600,8 @@ async function submitCheckout() {
         typedWindow.UserPanelAlerts?.showError('checkout-alert-error', 'Cart could not be loaded.');
         if (submitButton) {
             submitButton.dataset.submitting = 'false';
-            submitButton.disabled = false;
         }
+        setCheckoutSubmitDisabled(false);
         return;
     }
     const recurringAmount = state.hosting.reduce((sum, item) => sum + (item.billingCycle === 'yearly' ? item.yearlyPrice : item.monthlyPrice), 0)
@@ -574,8 +659,8 @@ async function submitCheckout() {
         typedWindow.UserPanelAlerts?.showError('checkout-alert-error', 'No order lines were added. Returning to domain search...');
         if (submitButton) {
             submitButton.dataset.submitting = 'false';
-            submitButton.disabled = false;
         }
+        setCheckoutSubmitDisabled(false);
         redirectToDomainSearch(3000);
         return;
     }
@@ -602,8 +687,8 @@ async function submitCheckout() {
         typedWindow.UserPanelAlerts?.showError('checkout-alert-error', response?.message ?? 'Could not place order.');
         if (submitButton) {
             submitButton.dataset.submitting = 'false';
-            submitButton.disabled = false;
         }
+        setCheckoutSubmitDisabled(false);
         return;
     }
     typedWindow.UserPanelAlerts?.showSuccess('checkout-alert-success', `Order created: ${response.data.orderNumber}`);
@@ -636,4 +721,13 @@ if (document.readyState === 'loading') {
 else {
     initializeCheckout();
 }
+function registerCheckoutEnhancedLoadListener() {
+    const typedWindow = window;
+    if (typedWindow.Blazor?.addEventListener) {
+        typedWindow.Blazor.addEventListener('enhancedload', initializeCheckout);
+        return;
+    }
+    window.setTimeout(registerCheckoutEnhancedLoadListener, 100);
+}
+registerCheckoutEnhancedLoadListener();
 //# sourceMappingURL=checkout.js.map

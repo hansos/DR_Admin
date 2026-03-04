@@ -43,13 +43,7 @@
         const typedWindow = window;
         typedWindow.UserPanelAlerts?.hide('payment-methods-alert-success');
         typedWindow.UserPanelAlerts?.hide('payment-methods-alert-error');
-        const customerId = await getPaymentMethodsCustomerId();
-        if (!customerId) {
-            typedWindow.UserPanelAlerts?.showError('payment-methods-alert-error', 'Could not resolve customer for payment methods.');
-            renderPaymentMethods([]);
-            return;
-        }
-        const response = await typedWindow.UserPanelApi?.request(`/CustomerPaymentMethods/customer/${customerId}`, { method: 'GET' }, true);
+        const response = await typedWindow.UserPanelApi?.request('/CustomerPaymentMethods/mine', { method: 'GET' }, true);
         if (!response || !response.success || !response.data) {
             typedWindow.UserPanelAlerts?.showError('payment-methods-alert-error', response?.message ?? 'Could not load payment methods.');
             renderPaymentMethods([]);
@@ -208,11 +202,6 @@
         const typedWindow = window;
         typedWindow.UserPanelAlerts?.hide('payment-methods-alert-success');
         typedWindow.UserPanelAlerts?.hide('payment-methods-alert-error');
-        const customerId = await getPaymentMethodsCustomerId();
-        if (!customerId) {
-            typedWindow.UserPanelAlerts?.showError('payment-methods-alert-error', 'Could not resolve customer for payment method creation.');
-            return;
-        }
         const editId = Number.parseInt(readPaymentMethodsInputValue('payment-methods-edit-id'), 10);
         const instrument = readPaymentMethodsInputValue('payment-methods-instrument');
         const isDefault = document.getElementById('payment-methods-default')?.checked ?? false;
@@ -227,7 +216,7 @@
         }
         const type = mapInstrumentToType(instrument);
         const isEdit = !Number.isNaN(editId) && editId > 0;
-        const response = await typedWindow.UserPanelApi?.request(isEdit ? `/CustomerPaymentMethods/${editId}?customerId=${customerId}` : '/CustomerPaymentMethods', {
+        const response = await typedWindow.UserPanelApi?.request(isEdit ? `/CustomerPaymentMethods/mine/${editId}` : '/CustomerPaymentMethods/mine', {
             method: isEdit ? 'PUT' : 'POST',
             body: JSON.stringify(isEdit
                 ? {
@@ -236,7 +225,6 @@
                     isDefault
                 }
                 : {
-                    customerId,
                     paymentInstrument: instrument,
                     type,
                     paymentMethodToken: '',
@@ -257,12 +245,7 @@
     }
     async function setDefaultPaymentMethod(paymentMethodId) {
         const typedWindow = window;
-        const customerId = await getPaymentMethodsCustomerId();
-        if (!customerId) {
-            typedWindow.UserPanelAlerts?.showError('payment-methods-alert-error', 'Could not resolve customer for default update.');
-            return;
-        }
-        const response = await typedWindow.UserPanelApi?.request(`/CustomerPaymentMethods/${paymentMethodId}/set-default?customerId=${customerId}`, {
+        const response = await typedWindow.UserPanelApi?.request(`/CustomerPaymentMethods/mine/${paymentMethodId}/set-default`, {
             method: 'POST'
         }, true);
         if (!response || !response.success) {
@@ -274,12 +257,7 @@
     }
     async function deletePaymentMethod(paymentMethodId) {
         const typedWindow = window;
-        const customerId = await getPaymentMethodsCustomerId();
-        if (!customerId) {
-            typedWindow.UserPanelAlerts?.showError('payment-methods-alert-error', 'Could not resolve customer for deletion.');
-            return;
-        }
-        const response = await typedWindow.UserPanelApi?.request(`/CustomerPaymentMethods/${paymentMethodId}?customerId=${customerId}`, {
+        const response = await typedWindow.UserPanelApi?.request(`/CustomerPaymentMethods/mine/${paymentMethodId}`, {
             method: 'DELETE'
         }, true);
         if (!response || !response.success) {
