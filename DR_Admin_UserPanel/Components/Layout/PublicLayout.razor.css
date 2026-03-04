@@ -8,17 +8,26 @@
     border-bottom: 1px solid rgba(255, 255, 255, 0.15);
     display: flex;
     align-items: center;
+    background-color:white;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
 }
 
 .public-brand {
-    color: #fff;
+    display: block;
+    width: 180px;
+    height: 40px;
+    background-image: url('/logo.png');
+    background-repeat: no-repeat;
+    background-position: left center;
+    background-size: contain;
     text-decoration: none;
-    font-weight: 600;
-    font-size: 1.1rem;
+    text-indent: -9999px;
+    overflow: hidden;
+    white-space: nowrap;
 }
 
 .public-brand:hover {
-    color: #fff;
+    opacity: 0.95;
 }
 
 .public-link {
