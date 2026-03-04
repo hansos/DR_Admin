@@ -69,10 +69,12 @@ function getState(): CartState {
 
 function saveState(state: CartState): void {
     sessionStorage.setItem(cartStorageKey, JSON.stringify(state));
+    window.dispatchEvent(new Event('up:cart-changed'));
 }
 
 function clear(): void {
     sessionStorage.removeItem(cartStorageKey);
+    window.dispatchEvent(new Event('up:cart-changed'));
 }
 
 const cartWindow = window as UserPanelWindowCart;

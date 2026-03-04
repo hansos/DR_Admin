@@ -28,9 +28,11 @@ function getState() {
 }
 function saveState(state) {
     sessionStorage.setItem(cartStorageKey, JSON.stringify(state));
+    window.dispatchEvent(new Event('up:cart-changed'));
 }
 function clear() {
     sessionStorage.removeItem(cartStorageKey);
+    window.dispatchEvent(new Event('up:cart-changed'));
 }
 const cartWindow = window;
 cartWindow.UserPanelCart = {

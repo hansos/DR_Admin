@@ -3,6 +3,39 @@ const mainMenuStorageKey = 'up_main_menu_expanded_section';
 function getMenuContainer() {
     return document.getElementById('user-menu');
 }
+function hasCartOrderLines() {
+    try {
+        const raw = sessionStorage.getItem('up_cart_state');
+        if (!raw) {
+            return false;
+        }
+        const state = JSON.parse(raw);
+        const hasDomain = state.domain !== null && state.domain !== undefined;
+        const hasHosting = Array.isArray(state.hosting) && state.hosting.length > 0;
+        const hasServices = Array.isArray(state.services) && state.services.length > 0;
+        return hasDomain || hasHosting || hasServices;
+    }
+    catch {
+        return false;
+    }
+}
+function updateCheckoutMenuAvailability() {
+    const checkoutLink = document.querySelector('#user-menu .nav-subitems a.nav-link-item[href="/shop/checkout"]');
+    if (!checkoutLink) {
+        return;
+    }
+    const enabled = hasCartOrderLines();
+    checkoutLink.classList.toggle('disabled', !enabled);
+    checkoutLink.setAttribute('aria-disabled', enabled ? 'false' : 'true');
+    if (!enabled) {
+        checkoutLink.setAttribute('tabindex', '-1');
+        if (window.location.pathname.toLowerCase() === '/shop/checkout') {
+            window.location.href = '/shop/domain-search';
+        }
+        return;
+    }
+    checkoutLink.removeAttribute('tabindex');
+}
 function persistExpandedSection(section) {
     try {
         if (section) {
@@ -86,6 +119,10 @@ function bindGroupToggleEvents() {
         const target = event.target;
         const subLink = target.closest('#user-menu .nav-subitems a.nav-link-item');
         if (subLink) {
+            if (subLink.classList.contains('disabled')) {
+                event.preventDefault();
+                return;
+            }
             const group = subLink.closest('.nav-group');
             if (group) {
                 expandGroup(group);
@@ -124,8 +161,10 @@ function initializeMainMenu() {
     }
     if (!initialized) {
         bindGroupToggleEvents();
+        window.addEventListener('up:cart-changed', updateCheckoutMenuAvailability);
         initialized = true;
     }
+    updateCheckoutMenuAvailability();
     const activeGroup = updateActiveLink();
     if (activeGroup) {
         expandGroup(activeGroup);

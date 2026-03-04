@@ -37,6 +37,9 @@ function initializeRegister(): void {
 
     form.dataset.bound = 'true';
 
+    bindRegisterPasswordToggle('auth-register-password', 'auth-register-toggle-password');
+    bindRegisterPasswordToggle('auth-register-confirm-password', 'auth-register-toggle-confirm-password');
+
     form.addEventListener('submit', async (event: Event) => {
         event.preventDefault();
 
@@ -69,6 +72,23 @@ function initializeRegister(): void {
         setTimeout(() => {
             window.location.href = '/account/login';
         }, 1200);
+    });
+}
+
+function bindRegisterPasswordToggle(inputId: string, toggleId: string): void {
+    const input = document.getElementById(inputId) as HTMLInputElement | null;
+    const toggle = document.getElementById(toggleId) as HTMLButtonElement | null;
+    const icon = toggle?.querySelector('i');
+    if (!input || !toggle || !icon || toggle.dataset.bound === 'true') {
+        return;
+    }
+
+    toggle.dataset.bound = 'true';
+    toggle.addEventListener('click', () => {
+        const isPassword = input.type === 'password';
+        input.type = isPassword ? 'text' : 'password';
+        icon.className = isPassword ? 'bi bi-eye-slash' : 'bi bi-eye';
+        toggle.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
     });
 }
 

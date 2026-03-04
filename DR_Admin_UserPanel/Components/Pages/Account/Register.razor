@@ -25,11 +25,21 @@
                             </div>
                             <div class="col-12 col-md-6">
                                 <label for="auth-register-password" class="form-label">Password</label>
-                                <input id="auth-register-password" class="form-control" type="password" required />
+                                <div class="input-group">
+                                    <input id="auth-register-password" class="form-control" type="password" required />
+                                    <button id="auth-register-toggle-password" class="btn btn-outline-secondary" type="button" aria-label="Show password">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
                             </div>
                             <div class="col-12 col-md-6">
                                 <label for="auth-register-confirm-password" class="form-label">Confirm password</label>
-                                <input id="auth-register-confirm-password" class="form-control" type="password" required />
+                                <div class="input-group">
+                                    <input id="auth-register-confirm-password" class="form-control" type="password" required />
+                                    <button id="auth-register-toggle-confirm-password" class="btn btn-outline-secondary" type="button" aria-label="Show confirm password">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
                             </div>
                             <div class="col-12">
                                 <label for="auth-register-customer-name" class="form-label">Customer name</label>

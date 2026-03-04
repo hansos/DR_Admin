@@ -51,6 +51,8 @@ function initializeLogin(): void {
         return;
     }
 
+    bindLoginPasswordToggle();
+
     form.addEventListener('submit', async (event: Event) => {
         event.preventDefault();
 
@@ -92,6 +94,23 @@ function initializeLogin(): void {
         setTimeout(() => {
             window.location.href = target;
         }, 700);
+    });
+}
+
+function bindLoginPasswordToggle(): void {
+    const input = document.getElementById('auth-login-password') as HTMLInputElement | null;
+    const toggle = document.getElementById('auth-login-toggle-password') as HTMLButtonElement | null;
+    const icon = toggle?.querySelector('i');
+    if (!input || !toggle || !icon || toggle.dataset.bound === 'true') {
+        return;
+    }
+
+    toggle.dataset.bound = 'true';
+    toggle.addEventListener('click', () => {
+        const isPassword = input.type === 'password';
+        input.type = isPassword ? 'text' : 'password';
+        icon.className = isPassword ? 'bi bi-eye-slash' : 'bi bi-eye';
+        toggle.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
     });
 }
 
