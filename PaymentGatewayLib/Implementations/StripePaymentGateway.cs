@@ -631,6 +631,156 @@ namespace PaymentGatewayLib.Implementations
             }
         }
 
+        public async Task<StripeSubscriptionCreateResult> CreateRecurringSubscriptionAsync(StripeSubscriptionCreateRequest request)
+        {
+            try
+            {
+                if (request.Amount <= 0)
+                {
+                    return new StripeSubscriptionCreateResult
+                    {
+                        Success = false,
+                        ErrorMessage = "Subscription amount must be greater than zero"
+                    };
+                }
+
+                var customerId = await EnsureCustomerIdAsync(request);
+                if (string.IsNullOrWhiteSpace(customerId))
+                {
+                    return new StripeSubscriptionCreateResult
+                    {
+                        Success = false,
+                        ErrorMessage = "Unable to resolve Stripe customer"
+                    };
+                }
+
+                var productContent = new FormUrlEncodedContent(new Dictionary<string, string>
+                {
+                    { "name", string.IsNullOrWhiteSpace(request.ProductName) ? "Recurring Subscription" : request.ProductName }
+                });
+
+                var productResponse = await _httpClient.PostAsync("/v1/products", productContent);
+                var productBody = await productResponse.Content.ReadAsStringAsync();
+                if (!productResponse.IsSuccessStatusCode)
+                {
+                    return new StripeSubscriptionCreateResult
+                    {
+                        Success = false,
+                        ErrorMessage = productBody
+                    };
+                }
+
+                var product = JsonSerializer.Deserialize<JsonElement>(productBody);
+                var productId = product.GetProperty("id").GetString() ?? string.Empty;
+
+                var priceParams = new Dictionary<string, string>
+                {
+                    { "unit_amount", ConvertToSmallestUnit(request.Amount, request.Currency).ToString() },
+                    { "currency", request.Currency.ToLowerInvariant() },
+                    { "recurring[interval]", string.IsNullOrWhiteSpace(request.Interval) ? "month" : request.Interval.ToLowerInvariant() },
+                    { "recurring[interval_count]", Math.Max(1, request.IntervalCount).ToString() },
+                    { "product", productId }
+                };
+
+                var priceContent = new FormUrlEncodedContent(priceParams);
+                var priceResponse = await _httpClient.PostAsync("/v1/prices", priceContent);
+                var priceBody = await priceResponse.Content.ReadAsStringAsync();
+                if (!priceResponse.IsSuccessStatusCode)
+                {
+                    return new StripeSubscriptionCreateResult
+                    {
+                        Success = false,
+                        ErrorMessage = priceBody
+                    };
+                }
+
+                var price = JsonSerializer.Deserialize<JsonElement>(priceBody);
+                var priceId = price.GetProperty("id").GetString() ?? string.Empty;
+
+                var subscriptionParams = new Dictionary<string, string>
+                {
+                    { "customer", customerId },
+                    { "items[0][price]", priceId },
+                    { "collection_method", "charge_automatically" }
+                };
+
+                if (request.TrialEndUtc.HasValue && request.TrialEndUtc.Value > DateTime.UtcNow)
+                {
+                    subscriptionParams.Add("trial_end", new DateTimeOffset(request.TrialEndUtc.Value).ToUnixTimeSeconds().ToString());
+                }
+
+                if (request.Metadata.Count > 0)
+                {
+                    foreach (var kv in request.Metadata)
+                    {
+                        subscriptionParams[$"metadata[{kv.Key}]"] = kv.Value;
+                    }
+                }
+
+                var subscriptionContent = new FormUrlEncodedContent(subscriptionParams);
+                var subscriptionResponse = await _httpClient.PostAsync("/v1/subscriptions", subscriptionContent);
+                var subscriptionBody = await subscriptionResponse.Content.ReadAsStringAsync();
+
+                if (!subscriptionResponse.IsSuccessStatusCode)
+                {
+                    return new StripeSubscriptionCreateResult
+                    {
+                        Success = false,
+                        ErrorMessage = subscriptionBody
+                    };
+                }
+
+                var subscription = JsonSerializer.Deserialize<JsonElement>(subscriptionBody);
+                return new StripeSubscriptionCreateResult
+                {
+                    Success = true,
+                    SubscriptionId = subscription.GetProperty("id").GetString() ?? string.Empty,
+                    CustomerId = customerId,
+                    Status = subscription.TryGetProperty("status", out var status) ? status.GetString() ?? string.Empty : string.Empty
+                };
+            }
+            catch (Exception ex)
+            {
+                return new StripeSubscriptionCreateResult
+                {
+                    Success = false,
+                    ErrorMessage = ex.Message
+                };
+            }
+        }
+
+        private async Task<string> EnsureCustomerIdAsync(StripeSubscriptionCreateRequest request)
+        {
+            if (!string.IsNullOrWhiteSpace(request.CustomerId) && request.CustomerId.StartsWith("cus_", StringComparison.OrdinalIgnoreCase))
+            {
+                return request.CustomerId;
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.CustomerEmail))
+            {
+                var encodedEmail = Uri.EscapeDataString(request.CustomerEmail);
+                var lookup = await _httpClient.GetAsync($"/v1/customers?email={encodedEmail}&limit=1");
+                var lookupBody = await lookup.Content.ReadAsStringAsync();
+                if (lookup.IsSuccessStatusCode)
+                {
+                    var lookupJson = JsonSerializer.Deserialize<JsonElement>(lookupBody);
+                    if (lookupJson.TryGetProperty("data", out var customers) && customers.GetArrayLength() > 0)
+                    {
+                        return customers[0].GetProperty("id").GetString() ?? string.Empty;
+                    }
+                }
+            }
+
+            var createCustomerResult = await CreateCustomerProfileAsync(new CustomerProfileRequest
+            {
+                Email = request.CustomerEmail,
+                Name = string.IsNullOrWhiteSpace(request.CustomerName) ? request.CustomerEmail : request.CustomerName,
+                Description = "Auto-created for recurring subscription"
+            });
+
+            return createCustomerResult.Success ? createCustomerResult.CustomerId : string.Empty;
+        }
+
         private static IEnumerable<string> ResolveStripePaymentMethodTypes(PaymentIntentRequest request)
         {
             var values = new List<string>();

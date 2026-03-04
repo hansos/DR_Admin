@@ -8,6 +8,7 @@ using PaymentGatewayLib.Infrastructure.Settings;
 using PaymentGatewayLib.Interfaces;
 using PaymentGatewayLib.Models;
 using Serilog;
+using System.Text.Json;
 
 namespace ISPAdmin.Services;
 
@@ -181,6 +182,8 @@ public class PaymentIntentService : IPaymentIntentService
         {
             entity.CapturedAt ??= DateTime.UtcNow;
             await TryFinalizeCapturedPaymentAsync(entity, gateway, status.TransactionId, paymentMethodToken);
+            await EnsureRecurringSubscriptionForCapturedOrderAsync(entity);
+            await EnsureRecurringSubscriptionsFromIntentDescriptionAsync(entity);
         }
         else if (mappedStatus == PaymentIntentStatus.Authorized)
         {
@@ -516,6 +519,271 @@ public class PaymentIntentService : IPaymentIntentService
         };
 
         _context.InvoicePayments.Add(invoicePayment);
+    }
+
+    private async Task EnsureRecurringSubscriptionForCapturedOrderAsync(Data.Entities.PaymentIntent intent)
+    {
+        if (!intent.OrderId.HasValue || intent.OrderId.Value <= 0)
+        {
+            return;
+        }
+
+        var order = await _context.Orders
+            .FirstOrDefaultAsync(o => o.Id == intent.OrderId.Value);
+
+        if (order == null)
+        {
+            return;
+        }
+
+        await EnsureRecurringSubscriptionForOrderAsync(intent, order);
+    }
+
+    private async Task EnsureRecurringSubscriptionsFromIntentDescriptionAsync(Data.Entities.PaymentIntent intent)
+    {
+        if (string.IsNullOrWhiteSpace(intent.Description))
+        {
+            return;
+        }
+
+        var marker = "Checkout payment for order";
+        if (!intent.Description.Contains(marker, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        var tail = intent.Description[(intent.Description.IndexOf(marker, StringComparison.OrdinalIgnoreCase) + marker.Length)..];
+        var orderNumbers = tail
+            .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
+            .Select(v => v.Trim())
+            .Where(v => !string.IsNullOrWhiteSpace(v))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        foreach (var orderNumber in orderNumbers)
+        {
+            var order = await _context.Orders
+                .FirstOrDefaultAsync(o => o.OrderNumber == orderNumber && o.CustomerId == intent.CustomerId);
+
+            if (order == null)
+            {
+                continue;
+            }
+
+            if (intent.OrderId.HasValue && order.Id == intent.OrderId.Value)
+            {
+                continue;
+            }
+
+            await EnsureRecurringSubscriptionForOrderAsync(intent, order);
+        }
+    }
+
+    private async Task EnsureRecurringSubscriptionForOrderAsync(Data.Entities.PaymentIntent intent, Order order)
+    {
+        if (order.RecurringAmount <= 0 || !order.AutoRenew)
+        {
+            return;
+        }
+
+        var gateway = await _context.PaymentGateways
+            .AsNoTracking()
+            .FirstOrDefaultAsync(g => g.Id == intent.PaymentGatewayId && g.IsActive && g.DeletedAt == null);
+
+        order.Status = OrderStatus.Active;
+        order.UpdatedAt = DateTime.UtcNow;
+
+        var billingCycleId = await ResolveBillingCycleIdForOrderAsync(order);
+        var (billingPeriodCount, billingPeriodUnit) = ResolveBillingPeriod(order.StartDate, order.NextBillingDate);
+
+        var existingSubscription = await _context.Subscriptions
+            .FirstOrDefaultAsync(s =>
+                s.CustomerId == order.CustomerId &&
+                s.ServiceId == order.ServiceId &&
+                s.BillingCycleId == billingCycleId &&
+                s.StartDate == order.StartDate &&
+                s.NextBillingDate == order.NextBillingDate &&
+                s.Amount == order.RecurringAmount &&
+                s.Status != SubscriptionStatus.Cancelled);
+
+        if (existingSubscription != null)
+        {
+            await EnsureStripeSubscriptionMirrorAsync(existingSubscription, order, gateway);
+            return;
+        }
+
+        var defaultPaymentMethodId = await _context.CustomerPaymentMethods
+            .AsNoTracking()
+            .Where(m => m.CustomerId == order.CustomerId && m.IsActive && m.IsDefault && m.DeletedAt == null)
+            .Select(m => (int?)m.Id)
+            .FirstOrDefaultAsync();
+
+        var subscription = new Subscription
+        {
+            CustomerId = order.CustomerId,
+            ServiceId = order.ServiceId,
+            BillingCycleId = billingCycleId,
+            CustomerPaymentMethodId = defaultPaymentMethodId,
+            Status = SubscriptionStatus.Active,
+            StartDate = order.StartDate,
+            EndDate = order.EndDate,
+            NextBillingDate = order.NextBillingDate,
+            CurrentPeriodStart = order.StartDate,
+            CurrentPeriodEnd = order.NextBillingDate,
+            Amount = order.RecurringAmount,
+            CurrencyCode = string.IsNullOrWhiteSpace(order.CurrencyCode) ? intent.Currency : order.CurrencyCode,
+            BillingPeriodCount = billingPeriodCount,
+            BillingPeriodUnit = billingPeriodUnit,
+            TrialEndDate = null,
+            IsInTrial = false,
+            RetryCount = 0,
+            MaxRetryAttempts = 3,
+            Metadata = string.Empty,
+            Notes = $"Auto-created from paid order {order.OrderNumber}",
+            Quantity = 1,
+            SendEmailNotifications = true,
+            AutoRetryFailedPayments = true,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        _context.Subscriptions.Add(subscription);
+        await EnsureStripeSubscriptionMirrorAsync(subscription, order, gateway);
+    }
+
+    private async Task EnsureStripeSubscriptionMirrorAsync(Subscription subscription, Order order, Data.Entities.PaymentGateway? gateway)
+    {
+        if (gateway == null || !string.Equals(gateway.ProviderCode, "stripe", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(subscription.Metadata) && subscription.Metadata.Contains("stripeSubscriptionId", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        var customer = await _context.Customers
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == order.CustomerId);
+
+        if (customer == null)
+        {
+            return;
+        }
+
+        var stripeGateway = CreateGatewayClient(gateway) as StripePaymentGateway;
+        if (stripeGateway == null)
+        {
+            return;
+        }
+
+        var stripeRequest = new StripeSubscriptionCreateRequest
+        {
+            CustomerEmail = customer.Email,
+            CustomerName = string.IsNullOrWhiteSpace(customer.CustomerName) ? customer.Name : customer.CustomerName,
+            ProductName = string.IsNullOrWhiteSpace(order.OrderNumber)
+                ? "Recurring subscription"
+                : $"Recurring subscription {order.OrderNumber}",
+            Amount = subscription.Amount,
+            Currency = string.IsNullOrWhiteSpace(subscription.CurrencyCode) ? "EUR" : subscription.CurrencyCode,
+            Interval = MapStripeInterval(subscription.BillingPeriodUnit),
+            IntervalCount = Math.Max(1, subscription.BillingPeriodCount),
+            TrialEndUtc = subscription.NextBillingDate > DateTime.UtcNow ? subscription.NextBillingDate : null,
+            Metadata = new Dictionary<string, string>
+            {
+                ["order_id"] = order.Id.ToString(),
+                ["order_number"] = order.OrderNumber,
+                ["subscription_id"] = subscription.Id.ToString()
+            }
+        };
+
+        var stripeResult = await stripeGateway.CreateRecurringSubscriptionAsync(stripeRequest);
+        if (!stripeResult.Success)
+        {
+            _log.Warning("Failed to mirror recurring subscription {SubscriptionId} to Stripe for order {OrderId}: {Error}",
+                subscription.Id, order.Id, stripeResult.ErrorMessage);
+            return;
+        }
+
+        subscription.Metadata = JsonSerializer.Serialize(new
+        {
+            stripeSubscriptionId = stripeResult.SubscriptionId,
+            stripeCustomerId = stripeResult.CustomerId,
+            stripeStatus = stripeResult.Status
+        });
+        subscription.UpdatedAt = DateTime.UtcNow;
+    }
+
+    private static string MapStripeInterval(SubscriptionPeriodUnit unit)
+    {
+        return unit switch
+        {
+            SubscriptionPeriodUnit.Years => "year",
+            SubscriptionPeriodUnit.Days => "day",
+            _ => "month"
+        };
+    }
+
+    private async Task<int> ResolveBillingCycleIdForOrderAsync(Order order)
+    {
+        var durationDays = Math.Max(1, (int)Math.Round((order.NextBillingDate - order.StartDate).TotalDays));
+
+        var exactMatch = await _context.BillingCycles
+            .AsNoTracking()
+            .Where(c => c.DurationInDays == durationDays)
+            .OrderBy(c => c.SortOrder)
+            .Select(c => c.Id)
+            .FirstOrDefaultAsync();
+
+        if (exactMatch > 0)
+        {
+            return exactMatch;
+        }
+
+        var closestMatch = await _context.BillingCycles
+            .AsNoTracking()
+            .OrderBy(c => Math.Abs(c.DurationInDays - durationDays))
+            .ThenBy(c => c.SortOrder)
+            .Select(c => c.Id)
+            .FirstOrDefaultAsync();
+
+        if (closestMatch > 0)
+        {
+            return closestMatch;
+        }
+
+        var fallbackCycle = new BillingCycle
+        {
+            Code = $"AUTO-{durationDays}D",
+            Name = $"{durationDays} Days",
+            DurationInDays = durationDays,
+            Description = "Auto-generated billing cycle from paid recurring order",
+            SortOrder = 999,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        _context.BillingCycles.Add(fallbackCycle);
+        await _context.SaveChangesAsync();
+        return fallbackCycle.Id;
+    }
+
+    private static (int BillingPeriodCount, SubscriptionPeriodUnit BillingPeriodUnit) ResolveBillingPeriod(DateTime startDate, DateTime nextBillingDate)
+    {
+        var days = Math.Max(1, (int)Math.Round((nextBillingDate - startDate).TotalDays));
+
+        if (days % 365 == 0)
+        {
+            return (Math.Max(1, days / 365), SubscriptionPeriodUnit.Years);
+        }
+
+        if (days % 30 == 0)
+        {
+            return (Math.Max(1, days / 30), SubscriptionPeriodUnit.Months);
+        }
+
+        return (days, SubscriptionPeriodUnit.Days);
     }
 
     private PaymentIntentDto MapToDto(Data.Entities.PaymentIntent entity, Data.Entities.PaymentGateway? gateway = null)

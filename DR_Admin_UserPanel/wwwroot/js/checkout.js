@@ -35,6 +35,7 @@ const checkoutDomainSearchPath = '/shop/domain-search';
 let stripeInstance = null;
 let stripeCardElement = null;
 let stripeClientSecret = null;
+let stripePaymentIntentId = null;
 function initializeCheckout() {
     const page = document.getElementById('checkout-page');
     if (!page || page.dataset.bound === 'true') {
@@ -647,6 +648,7 @@ async function continueToPayment() {
     if (status) {
         status.textContent = `Payment initialized. Intent #${response.data.id} (${response.data.status}).`;
     }
+    stripePaymentIntentId = response.data.id;
     const provider = (response.data.paymentGatewayProviderCode ?? '').trim().toLowerCase();
     if (provider === 'stripe') {
         const prepared = prepareStripePaymentForm(response.data);
@@ -694,6 +696,7 @@ function hideStripePaymentForm() {
     const cardPanel = document.getElementById('checkout-stripe-form-card');
     cardPanel?.classList.add('d-none');
     clearStripeError();
+    stripePaymentIntentId = null;
 }
 function showStripeError(message) {
     const errorContainer = document.getElementById('checkout-stripe-error');
@@ -712,6 +715,7 @@ function clearStripeError() {
     errorContainer.classList.add('d-none');
 }
 async function confirmStripePayment() {
+    const typedWindow = window;
     if (!stripeInstance || !stripeCardElement || !stripeClientSecret) {
         showStripeError('Stripe session is not initialized.');
         return;
@@ -723,7 +727,21 @@ async function confirmStripePayment() {
     });
     if (result.error) {
         showStripeError(result.error.message ?? 'Payment failed. Please check card details.');
+        return;
     }
+    if (!stripePaymentIntentId || stripePaymentIntentId <= 0) {
+        typedWindow.UserPanelAlerts?.showError('checkout-alert-error', 'Payment intent ID could not be resolved for API confirmation.');
+        return;
+    }
+    const confirmResponse = await typedWindow.UserPanelApi?.request(`/PaymentIntents/${stripePaymentIntentId}/confirm`, {
+        method: 'POST',
+        body: JSON.stringify('')
+    }, true);
+    if (!confirmResponse || !confirmResponse.success) {
+        typedWindow.UserPanelAlerts?.showError('checkout-alert-error', confirmResponse?.message ?? 'Payment was processed, but API confirmation failed.');
+        return;
+    }
+    typedWindow.UserPanelAlerts?.showSuccess('checkout-alert-success', 'Payment confirmed. Recurring subscriptions are being synchronized.');
 }
 function calculateCheckoutTotal(state) {
     let total = 0;
