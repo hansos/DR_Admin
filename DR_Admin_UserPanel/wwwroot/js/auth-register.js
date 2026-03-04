@@ -68,4 +68,13 @@ if (document.readyState === 'loading') {
 else {
     initializeRegister();
 }
+function registerRegisterEnhancedLoadListener() {
+    const typedWindow = window;
+    if (typedWindow.Blazor?.addEventListener) {
+        typedWindow.Blazor.addEventListener('enhancedload', initializeRegister);
+        return;
+    }
+    window.setTimeout(registerRegisterEnhancedLoadListener, 100);
+}
+registerRegisterEnhancedLoadListener();
 //# sourceMappingURL=auth-register.js.map

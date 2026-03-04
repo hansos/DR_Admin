@@ -13,6 +13,9 @@ interface ResetWindow extends Window {
         showError: (id: string, message: string) => void;
         hide: (id: string) => void;
     };
+    Blazor?: {
+        addEventListener?: (eventName: string, callback: () => void) => void;
+    };
 }
 
 function initializeResetPassword(): void {
@@ -77,3 +80,16 @@ if (document.readyState === 'loading') {
 } else {
     initializeResetPassword();
 }
+
+function registerResetEnhancedLoadListener(): void {
+    const typedWindow = window as ResetWindow;
+
+    if (typedWindow.Blazor?.addEventListener) {
+        typedWindow.Blazor.addEventListener('enhancedload', initializeResetPassword);
+        return;
+    }
+
+    window.setTimeout(registerResetEnhancedLoadListener, 100);
+}
+
+registerResetEnhancedLoadListener();

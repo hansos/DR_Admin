@@ -37,4 +37,13 @@ if (document.readyState === 'loading') {
 else {
     initializeForgotPassword();
 }
+function registerForgotEnhancedLoadListener() {
+    const typedWindow = window;
+    if (typedWindow.Blazor?.addEventListener) {
+        typedWindow.Blazor.addEventListener('enhancedload', initializeForgotPassword);
+        return;
+    }
+    window.setTimeout(registerForgotEnhancedLoadListener, 100);
+}
+registerForgotEnhancedLoadListener();
 //# sourceMappingURL=auth-forgot-password.js.map

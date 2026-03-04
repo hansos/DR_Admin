@@ -11,6 +11,9 @@ interface ForgotWindow extends Window {
         showError: (id: string, message: string) => void;
         hide: (id: string) => void;
     };
+    Blazor?: {
+        addEventListener?: (eventName: string, callback: () => void) => void;
+    };
 }
 
 function initializeForgotPassword(): void {
@@ -59,3 +62,16 @@ if (document.readyState === 'loading') {
 } else {
     initializeForgotPassword();
 }
+
+function registerForgotEnhancedLoadListener(): void {
+    const typedWindow = window as ForgotWindow;
+
+    if (typedWindow.Blazor?.addEventListener) {
+        typedWindow.Blazor.addEventListener('enhancedload', initializeForgotPassword);
+        return;
+    }
+
+    window.setTimeout(registerForgotEnhancedLoadListener, 100);
+}
+
+registerForgotEnhancedLoadListener();

@@ -55,4 +55,13 @@ if (document.readyState === 'loading') {
 else {
     initializeLogin();
 }
+function registerLoginEnhancedLoadListener() {
+    const typedWindow = window;
+    if (typedWindow.Blazor?.addEventListener) {
+        typedWindow.Blazor.addEventListener('enhancedload', initializeLogin);
+        return;
+    }
+    window.setTimeout(registerLoginEnhancedLoadListener, 100);
+}
+registerLoginEnhancedLoadListener();
 //# sourceMappingURL=auth-login.js.map

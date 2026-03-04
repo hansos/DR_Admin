@@ -50,4 +50,13 @@ if (document.readyState === 'loading') {
 else {
     initializeResetPassword();
 }
+function registerResetEnhancedLoadListener() {
+    const typedWindow = window;
+    if (typedWindow.Blazor?.addEventListener) {
+        typedWindow.Blazor.addEventListener('enhancedload', initializeResetPassword);
+        return;
+    }
+    window.setTimeout(registerResetEnhancedLoadListener, 100);
+}
+registerResetEnhancedLoadListener();
 //# sourceMappingURL=auth-reset-password.js.map

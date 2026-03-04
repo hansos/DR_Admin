@@ -32,6 +32,9 @@ interface LoginWindow extends Window {
         showError: (id: string, message: string) => void;
         hide: (id: string) => void;
     };
+    Blazor?: {
+        addEventListener?: (eventName: string, callback: () => void) => void;
+    };
 }
 
 function initializeLogin(): void {
@@ -102,3 +105,16 @@ if (document.readyState === 'loading') {
 } else {
     initializeLogin();
 }
+
+function registerLoginEnhancedLoadListener(): void {
+    const typedWindow = window as LoginWindow;
+
+    if (typedWindow.Blazor?.addEventListener) {
+        typedWindow.Blazor.addEventListener('enhancedload', initializeLogin);
+        return;
+    }
+
+    window.setTimeout(registerLoginEnhancedLoadListener, 100);
+}
+
+registerLoginEnhancedLoadListener();

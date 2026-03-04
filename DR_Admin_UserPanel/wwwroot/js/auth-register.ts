@@ -24,6 +24,9 @@ interface RegisterWindow extends Window {
         showError: (id: string, message: string) => void;
         hide: (id: string) => void;
     };
+    Blazor?: {
+        addEventListener?: (eventName: string, callback: () => void) => void;
+    };
 }
 
 function initializeRegister(): void {
@@ -108,3 +111,16 @@ if (document.readyState === 'loading') {
 } else {
     initializeRegister();
 }
+
+function registerRegisterEnhancedLoadListener(): void {
+    const typedWindow = window as RegisterWindow;
+
+    if (typedWindow.Blazor?.addEventListener) {
+        typedWindow.Blazor.addEventListener('enhancedload', initializeRegister);
+        return;
+    }
+
+    window.setTimeout(registerRegisterEnhancedLoadListener, 100);
+}
+
+registerRegisterEnhancedLoadListener();
