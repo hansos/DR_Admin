@@ -280,6 +280,9 @@ public static class AuthorizationPoliciesConfiguration
         options.AddPolicy("Order.Write", policy =>
             policy.RequireRole(ADMIN, SALES));
 
+        options.AddPolicy("Order.Checkout", policy =>
+            policy.RequireRole(ADMIN, SALES, CUSTOMER));
+
         // PaymentGateway policies
         options.AddPolicy("PaymentGateway.Delete", policy =>
             policy.RequireRole(ADMIN));

@@ -421,7 +421,8 @@ public class CustomerService : ICustomerService
                 Value = (defaultStartValue + 1).ToString(),
                 Description = "The next customer reference number (PNR) to assign. Auto-incremented on each new customer creation.",
                 CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                UpdatedAt = DateTime.UtcNow,
+                IsSystemKey = true
             };
             _context.SystemSettings.Add(setting);
             await _context.SaveChangesAsync();
@@ -430,7 +431,7 @@ public class CustomerService : ICustomerService
             return defaultStartValue;
         }
 
-        if (!long.TryParse(setting.Value, out var currentValue))
+        if (!long.TryParse(setting.Value, out var currentValue) || currentValue <= 0)
         {
             _log.Warning("Invalid {Key} value '{Value}', resetting to default {Default}", key, setting.Value, defaultStartValue);
             currentValue = defaultStartValue;
@@ -477,7 +478,8 @@ public class CustomerService : ICustomerService
                 Value = (defaultStartValue + 1).ToString(),
                 Description = "The next customer number (CNR) to assign. Auto-incremented on each customer's first sale.",
                 CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                UpdatedAt = DateTime.UtcNow,
+                IsSystemKey = true
             };
             _context.SystemSettings.Add(setting);
             await _context.SaveChangesAsync();
@@ -486,7 +488,7 @@ public class CustomerService : ICustomerService
             return defaultStartValue;
         }
 
-        if (!long.TryParse(setting.Value, out var currentValue))
+        if (!long.TryParse(setting.Value, out var currentValue) || currentValue <= 0)
         {
             _log.Warning("Invalid {Key} value '{Value}', resetting to default {Default}", key, setting.Value, defaultStartValue);
             currentValue = defaultStartValue;

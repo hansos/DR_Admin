@@ -178,8 +178,10 @@ public class InitializationService : IInitializationService
             {
                 new SystemSetting { Key = "CNR", Value = "1001", Description = "Next customer number", IsSystemKey=true},
                 new SystemSetting { Key = "PNR", Value = "1001", Description = "Next reference number", IsSystemKey=true},
+                new SystemSetting { Key = "ONR", Value = "1001", Description = "Next order number", IsSystemKey=true},
                 new SystemSetting { Key = "CSX", Value = "CUST", Description = "customer number prefix", IsSystemKey=true},
                 new SystemSetting { Key = "RSX", Value = "REF", Description = "Reference number prefix", IsSystemKey=true},
+                new SystemSetting { Key = "OSX", Value = "ORD", Description = "Order number prefix", IsSystemKey=true},
             };
 
             foreach (var ss in systemSettings)

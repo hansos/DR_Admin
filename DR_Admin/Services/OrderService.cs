@@ -219,12 +219,62 @@ public class OrderService : IOrderService
 
     private async Task<string> GenerateOrderNumberAsync()
     {
-        var lastOrder = await _context.Orders
-            .OrderByDescending(o => o.Id)
-            .FirstOrDefaultAsync();
+        var nextNumber = await GetNextOrderNumberAsync();
+        var prefix = await GetOrderNumberPrefixAsync();
 
-        var nextNumber = (lastOrder?.Id ?? 0) + 1;
-        return $"ORD-{DateTime.UtcNow.Year}-{nextNumber:D5}";
+        return string.IsNullOrWhiteSpace(prefix)
+            ? nextNumber.ToString()
+            : $"{prefix}{nextNumber}";
+    }
+
+    private async Task<long> GetNextOrderNumberAsync()
+    {
+        const string key = "ONR";
+        const long defaultStartValue = 1001;
+
+        var setting = await _context.SystemSettings
+            .FirstOrDefaultAsync(s => s.Key == key);
+
+        if (setting == null)
+        {
+            setting = new SystemSetting
+            {
+                Key = key,
+                Value = (defaultStartValue + 1).ToString(),
+                Description = "The next order number (ONR) to assign. Auto-incremented on each new order creation.",
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                IsSystemKey = true
+            };
+            _context.SystemSettings.Add(setting);
+            await _context.SaveChangesAsync();
+
+            _log.Information("Initialized {Key} system setting with starting value {Value}", key, defaultStartValue);
+            return defaultStartValue;
+        }
+
+        if (!long.TryParse(setting.Value, out var currentValue) || currentValue <= 0)
+        {
+            _log.Warning("Invalid {Key} value '{Value}', resetting to default {Default}", key, setting.Value, defaultStartValue);
+            currentValue = defaultStartValue;
+        }
+
+        setting.Value = (currentValue + 1).ToString();
+        setting.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
+        return currentValue;
+    }
+
+    private async Task<string?> GetOrderNumberPrefixAsync()
+    {
+        const string key = "OSX";
+
+        var setting = await _context.SystemSettings
+            .AsNoTracking()
+            .FirstOrDefaultAsync(s => s.Key == key);
+
+        return setting?.Value;
     }
 
     public async Task<OrderDto?> UpdateOrderAsync(int id, UpdateOrderDto updateDto)
