@@ -71,4 +71,16 @@ public interface ICouponService
     /// <param name="discountAmount">The discount amount applied</param>
     /// <returns>True if successful</returns>
     Task<bool> RecordUsageAsync(int couponId, int customerId, int? orderId, decimal discountAmount);
+
+    /// <summary>
+    /// Retrieves paginated coupon usage entries.
+    /// </summary>
+    /// <param name="parameters">Pagination parameters.</param>
+    /// <param name="couponId">Optional coupon identifier filter.</param>
+    /// <param name="customerId">Optional customer identifier filter.</param>
+    /// <returns>Paginated coupon usage entries.</returns>
+    Task<PagedResult<CouponUsageDto>> GetCouponUsagesPagedAsync(
+        PaginationParameters parameters,
+        int? couponId = null,
+        int? customerId = null);
 }

@@ -88,9 +88,19 @@ public class CouponDto
     public bool IsActive { get; set; }
 
     /// <summary>
+    /// Allowed service type IDs (null = all services)
+    /// </summary>
+    public List<int>? AllowedServiceTypeIds { get; set; }
+
+    /// <summary>
     /// Current usage count
     /// </summary>
     public int UsageCount { get; set; }
+
+    /// <summary>
+    /// Internal notes
+    /// </summary>
+    public string InternalNotes { get; set; } = string.Empty;
 
     /// <summary>
     /// Date created

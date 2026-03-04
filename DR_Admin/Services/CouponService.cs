@@ -53,6 +53,63 @@ public class CouponService : ICouponService
     }
 
     /// <summary>
+    /// Retrieves paginated coupon usage entries.
+    /// </summary>
+    /// <param name="parameters">Pagination parameters.</param>
+    /// <param name="couponId">Optional coupon identifier filter.</param>
+    /// <param name="customerId">Optional customer identifier filter.</param>
+    /// <returns>Paginated coupon usage entries.</returns>
+    public async Task<PagedResult<CouponUsageDto>> GetCouponUsagesPagedAsync(
+        PaginationParameters parameters,
+        int? couponId = null,
+        int? customerId = null)
+    {
+        try
+        {
+            _log.Information(
+                "Fetching paginated coupon usage entries - Page: {PageNumber}, PageSize: {PageSize}, CouponId: {CouponId}, CustomerId: {CustomerId}",
+                parameters.PageNumber,
+                parameters.PageSize,
+                couponId,
+                customerId);
+
+            var query = _context.CouponUsages
+                .Include(cu => cu.Coupon)
+                .Include(cu => cu.Customer)
+                .AsNoTracking()
+                .AsQueryable();
+
+            if (couponId.HasValue)
+            {
+                query = query.Where(cu => cu.CouponId == couponId.Value);
+            }
+
+            if (customerId.HasValue)
+            {
+                query = query.Where(cu => cu.CustomerId == customerId.Value);
+            }
+
+            query = query.Where(cu => cu.Coupon.DeletedAt == null);
+
+            var totalCount = await query.CountAsync();
+
+            var usages = await query
+                .OrderByDescending(cu => cu.UsedAt)
+                .Skip((parameters.PageNumber - 1) * parameters.PageSize)
+                .Take(parameters.PageSize)
+                .ToListAsync();
+
+            var dtoList = usages.Select(MapUsageToDto).ToList();
+            return new PagedResult<CouponUsageDto>(dtoList, totalCount, parameters.PageNumber, parameters.PageSize);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while fetching paginated coupon usage entries");
+            throw;
+        }
+    }
+
+    /// <summary>
     /// Retrieves all currently active coupons within validity dates.
     /// </summary>
     /// <returns>A collection of active coupons.</returns>
@@ -583,6 +640,12 @@ public class CouponService : ICouponService
 
     private static CouponDto MapToDto(Coupon coupon)
     {
+        List<int>? allowedServiceTypeIds = null;
+        if (!string.IsNullOrWhiteSpace(coupon.AllowedServiceTypeIdsJson))
+        {
+            allowedServiceTypeIds = JsonSerializer.Deserialize<List<int>>(coupon.AllowedServiceTypeIdsJson);
+        }
+
         return new CouponDto
         {
             Id = coupon.Id,
@@ -601,9 +664,28 @@ public class CouponService : ICouponService
             MaxUsages = coupon.MaxUsages,
             MaxUsagesPerCustomer = coupon.MaxUsagesPerCustomer,
             IsActive = coupon.IsActive,
+            AllowedServiceTypeIds = allowedServiceTypeIds,
             UsageCount = coupon.UsageCount,
+            InternalNotes = coupon.InternalNotes,
             CreatedAt = coupon.CreatedAt,
             UpdatedAt = coupon.UpdatedAt
+        };
+    }
+
+    private static CouponUsageDto MapUsageToDto(CouponUsage usage)
+    {
+        return new CouponUsageDto
+        {
+            Id = usage.Id,
+            CouponId = usage.CouponId,
+            CouponCode = usage.Coupon?.Code ?? string.Empty,
+            CouponName = usage.Coupon?.Name ?? string.Empty,
+            CustomerId = usage.CustomerId,
+            CustomerName = usage.Customer?.Name ?? string.Empty,
+            QuoteId = usage.QuoteId,
+            OrderId = usage.OrderId,
+            DiscountAmount = usage.DiscountAmount,
+            UsedAt = usage.UsedAt
         };
     }
 }
