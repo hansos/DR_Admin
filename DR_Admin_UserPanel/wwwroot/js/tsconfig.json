@@ -11,6 +11,7 @@
   "files": [
     "app-settings.ts",
     "main-menu.ts",
+    "global-icons.ts",
     "auth.ts",
     "api-client.ts",
     "alerts.ts",

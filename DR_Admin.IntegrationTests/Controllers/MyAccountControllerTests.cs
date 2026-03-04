@@ -53,6 +53,18 @@ public class MyAccountControllerTests : IClassFixture<TestWebApplicationFactory>
         Assert.Equal(request.Email, result.Email);
         Assert.NotNull(result.EmailConfirmationToken);
 
+        var loginResponse = await _client.PostAsJsonAsync("/api/v1/Auth/login", new LoginRequestDto
+        {
+            Username = request.Email,
+            Password = request.Password
+        }, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, loginResponse.StatusCode);
+
+        var loginResult = await loginResponse.Content.ReadFromJsonAsync<LoginResponseDto>(TestContext.Current.CancellationToken);
+        Assert.NotNull(loginResult);
+        Assert.Contains("Customer", loginResult.Roles);
+
         Console.WriteLine($"Registered User ID: {result.UserId}");
         Console.WriteLine($"Email: {result.Email}");
         Console.WriteLine($"Confirmation Token: {result.EmailConfirmationToken}");

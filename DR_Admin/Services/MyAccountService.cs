@@ -12,6 +12,7 @@ using Serilog;
 using MessagingTemplateLib.Templating;
 using MessagingTemplateLib.Models;
 using MessagingTemplateLib;
+using static ISPAdmin.Infrastructure.RoleNames;
 
 namespace ISPAdmin.Services;
 
@@ -59,9 +60,12 @@ public class MyAccountService : IMyAccountService
                 throw new InvalidOperationException("Username already taken");
             }
 
+            var nextReferenceNumber = await GetNextReferenceNumberAsync();
+
             // Create customer
             var customer = new Customer
             {
+                ReferenceNumber = nextReferenceNumber,
                 Name = request.CustomerName,
                 Email = request.CustomerEmail,
                 Phone = request.CustomerPhone,
@@ -88,6 +92,20 @@ public class MyAccountService : IMyAccountService
             };
 
             _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+
+            var customerRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == CUSTOMER);
+            if (customerRole == null)
+            {
+                throw new InvalidOperationException("Customer role is not configured");
+            }
+
+            _context.UserRoles.Add(new UserRole
+            {
+                UserId = user.Id,
+                RoleId = customerRole.Id
+            });
+
             await _context.SaveChangesAsync();
 
             // Generate email confirmation token
@@ -430,6 +448,45 @@ public class MyAccountService : IMyAccountService
             rng.GetBytes(randomBytes);
         }
         return Convert.ToBase64String(randomBytes);
+    }
+
+    private async Task<long> GetNextReferenceNumberAsync()
+    {
+        const string key = "PNR";
+        const long defaultStartValue = 1001;
+
+        var setting = await _context.SystemSettings
+            .FirstOrDefaultAsync(s => s.Key == key);
+
+        if (setting == null)
+        {
+            setting = new Data.Entities.SystemSetting
+            {
+                Key = key,
+                Value = (defaultStartValue + 1).ToString(),
+                Description = "The next customer reference number (PNR) to assign. Auto-incremented on each new customer creation.",
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            _context.SystemSettings.Add(setting);
+            await _context.SaveChangesAsync();
+
+            _log.Information("Initialized {Key} system setting with starting value {Value}", key, defaultStartValue);
+            return defaultStartValue;
+        }
+
+        if (!long.TryParse(setting.Value, out var currentValue))
+        {
+            _log.Warning("Invalid {Key} value '{Value}', resetting to default {Default}", key, setting.Value, defaultStartValue);
+            currentValue = defaultStartValue;
+        }
+
+        setting.Value = (currentValue + 1).ToString();
+        setting.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
+        return currentValue;
     }
 
     private async Task QueueEmailConfirmationAsync(string email, string token, int userId, int? customerId)
