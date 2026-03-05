@@ -13,6 +13,9 @@ interface UserAccountDto {
 }
 
 interface PrivacyWindow extends Window {
+    UserPanelSettings?: {
+        frontendSiteCode: string;
+    };
     UserPanelApi?: {
         request: <T>(path: string, options?: RequestInit, requiresAuth?: boolean) => Promise<{ success: boolean; data?: T; message?: string }>;
     };
@@ -37,6 +40,10 @@ function initializePrivacyPage(): void {
 
     document.getElementById('privacy-delete-request')?.addEventListener('click', () => {
         void requestPrivacyDeletion();
+    });
+
+    document.getElementById('privacy-send-verification')?.addEventListener('click', () => {
+        void requestPrivacyEmailVerification();
     });
 
     void loadPrivacySummary();
@@ -79,6 +86,11 @@ function renderPrivacySummary(account: UserAccountDto): void {
         <hr />
         ${customerText}
     `;
+
+    const actions = document.getElementById('privacy-verification-actions');
+    if (actions) {
+        actions.classList.toggle('d-none', !!account.emailConfirmed);
+    }
 }
 
 async function requestPrivacyExport(): Promise<void> {
@@ -94,6 +106,25 @@ async function requestPrivacyExport(): Promise<void> {
     }
 
     typedWindow.UserPanelAlerts?.showSuccess('privacy-alert-success', response.message ?? 'Export request submitted.');
+}
+
+async function requestPrivacyEmailVerification(): Promise<void> {
+    const typedWindow = window as PrivacyWindow;
+    typedWindow.UserPanelAlerts?.hide('privacy-alert-success');
+    typedWindow.UserPanelAlerts?.hide('privacy-alert-error');
+
+    const siteCode = typedWindow.UserPanelSettings?.frontendSiteCode ?? 'shop';
+    const response = await typedWindow.UserPanelApi?.request('/MyAccount/request-email-confirmation', {
+        method: 'POST',
+        body: JSON.stringify({ siteCode })
+    }, true);
+
+    if (!response || !response.success) {
+        typedWindow.UserPanelAlerts?.showError('privacy-alert-error', response?.message ?? 'Could not send verification email.');
+        return;
+    }
+
+    typedWindow.UserPanelAlerts?.showSuccess('privacy-alert-success', response.message ?? 'Verification email sent.');
 }
 
 async function requestPrivacyDeletion(): Promise<void> {

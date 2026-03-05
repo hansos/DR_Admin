@@ -107,6 +107,51 @@ public class MyAccountController : ControllerBase
     }
 
     /// <summary>
+    /// Requests a new email confirmation link for the currently authenticated user.
+    /// </summary>
+    /// <param name="request">Optional site code used to build frontend confirmation URL.</param>
+    /// <returns>Success status message.</returns>
+    [HttpPost("request-email-confirmation")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult> RequestEmailConfirmation([FromBody] RequestEmailConfirmationDto? request)
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            var account = await _myAccountService.GetMyAccountAsync(userId);
+
+            if (account == null)
+            {
+                _log.Warning("RequestEmailConfirmation failed: account not found for user {UserId}", userId);
+                return NotFound(new { message = "Account not found" });
+            }
+
+            if (account.EmailConfirmed.HasValue)
+            {
+                return BadRequest(new { message = "Email is already verified." });
+            }
+
+            var result = await _myAccountService.RequestEmailConfirmationAsync(userId, request?.SiteCode);
+            if (!result)
+            {
+                return StatusCode(500, new { message = "Could not send verification email." });
+            }
+
+            return Ok(new { message = "Verification email sent." });
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error during request email confirmation");
+            return StatusCode(500, new { message = "An error occurred while sending verification email" });
+        }
+    }
+
+    /// <summary>
     /// Requests a password reset by sending an email with a reset token
     /// </summary>
     /// <param name="request">Email address for the account</param>

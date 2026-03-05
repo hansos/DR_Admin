@@ -28,35 +28,79 @@ function initializeForgotPassword(): void {
 
     form.dataset.bound = 'true';
 
+    const retryButton = document.getElementById('auth-forgot-password-retry') as HTMLButtonElement | null;
+    if (retryButton && retryButton.dataset.bound !== 'true') {
+        retryButton.dataset.bound = 'true';
+        retryButton.addEventListener('click', () => {
+            void retryForgotPassword();
+        });
+    }
+
     form.addEventListener('submit', async (event: Event) => {
         event.preventDefault();
-
-        const typedWindow = window as ForgotWindow;
-        typedWindow.UserPanelAlerts?.hide('auth-forgot-password-alert-success');
-        typedWindow.UserPanelAlerts?.hide('auth-forgot-password-alert-error');
-
-        const email = readForgotValue('auth-forgot-password-email');
-        if (!email) {
-            typedWindow.UserPanelAlerts?.showError('auth-forgot-password-alert-error', 'Email is required.');
-            return;
-        }
-
-        const siteCode = typedWindow.UserPanelSettings?.frontendSiteCode ?? 'shop';
-        const payload: ForgotPasswordRequestDto = { email, siteCode };
-
-        const response = await typedWindow.UserPanelApi?.request<unknown>('/MyAccount/request-password-reset', {
-            method: 'POST',
-            body: JSON.stringify(payload)
-        }, false);
-
-        if (!response || !response.success) {
-            typedWindow.UserPanelAlerts?.showError('auth-forgot-password-alert-error', response?.message ?? 'Could not request reset link.');
-            return;
-        }
-
-        typedWindow.UserPanelAlerts?.showSuccess('auth-forgot-password-alert-success', response.message ?? 'If the account exists, a reset link has been sent.');
-        form.reset();
+        await submitForgotPassword();
     });
+}
+
+async function submitForgotPassword(): Promise<void> {
+    const typedWindow = window as ForgotWindow;
+    typedWindow.UserPanelAlerts?.hide('auth-forgot-password-alert-success');
+    typedWindow.UserPanelAlerts?.hide('auth-forgot-password-alert-error');
+
+    const email = readForgotValue('auth-forgot-password-email');
+    if (!email) {
+        typedWindow.UserPanelAlerts?.showError('auth-forgot-password-alert-error', 'Email is required.');
+        return;
+    }
+
+    const response = await sendForgotPasswordRequest(email);
+    if (!response || !response.success) {
+        typedWindow.UserPanelAlerts?.showError('auth-forgot-password-alert-error', response?.message ?? 'Could not request reset link.');
+        return;
+    }
+
+    typedWindow.UserPanelAlerts?.showSuccess('auth-forgot-password-alert-success', response.message ?? 'If the account exists, a reset link has been sent.');
+    setForgotPasswordPostSubmitState(true);
+}
+
+async function retryForgotPassword(): Promise<void> {
+    const typedWindow = window as ForgotWindow;
+    typedWindow.UserPanelAlerts?.hide('auth-forgot-password-alert-success');
+    typedWindow.UserPanelAlerts?.hide('auth-forgot-password-alert-error');
+
+    setForgotPasswordPostSubmitState(false);
+
+    const emailInput = document.getElementById('auth-forgot-password-email') as HTMLInputElement | null;
+    emailInput?.focus();
+}
+
+async function sendForgotPasswordRequest(email: string): Promise<{ success: boolean; message?: string } | undefined> {
+    const typedWindow = window as ForgotWindow;
+    const siteCode = typedWindow.UserPanelSettings?.frontendSiteCode ?? 'shop';
+    const payload: ForgotPasswordRequestDto = { email, siteCode };
+
+    return typedWindow.UserPanelApi?.request<unknown>('/MyAccount/request-password-reset', {
+        method: 'POST',
+        body: JSON.stringify(payload)
+    }, false);
+}
+
+function setForgotPasswordPostSubmitState(enabled: boolean): void {
+    const emailInput = document.getElementById('auth-forgot-password-email') as HTMLInputElement | null;
+    if (emailInput) {
+        emailInput.disabled = enabled;
+    }
+
+    const submitContainer = document.getElementById('auth-forgot-password-submit-container');
+    const postActions = document.getElementById('auth-forgot-password-post-actions');
+
+    if (submitContainer) {
+        submitContainer.classList.toggle('d-none', enabled);
+    }
+
+    if (postActions) {
+        postActions.classList.toggle('d-none', !enabled);
+    }
 }
 
 function readForgotValue(id: string): string {

@@ -13,6 +13,7 @@
     "main-menu.ts",
     "global-icons.ts",
     "auth.ts",
+    "auth-confirm-email.ts",
     "api-client.ts",
     "alerts.ts",
     "cart-state.ts",

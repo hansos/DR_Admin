@@ -10,6 +10,9 @@
             event.preventDefault();
             void saveTwoFactorStatus();
         });
+        document.getElementById('security-2fa-send-verification')?.addEventListener('click', () => {
+            void requestEmailVerification();
+        });
         void loadSecurityTwoFactorPage();
     }
     async function loadSecurityTwoFactorPage() {
@@ -44,6 +47,10 @@
                 ? '<span class="badge bg-success">Email verified</span>'
                 : '<span class="badge bg-warning text-dark">Email not verified</span>';
         }
+        const verifyButton = document.getElementById('security-2fa-send-verification');
+        if (verifyButton) {
+            verifyButton.classList.toggle('d-none', !!account.emailConfirmed);
+        }
     }
     function renderTwoFactorStatus(status) {
         const checkbox = document.getElementById('security-2fa-enabled');
@@ -62,6 +69,21 @@
         statusBox.textContent = status.enabled
             ? `2FA is enabled (${method}). Recovery codes remaining: ${recovery}.`
             : '2FA is currently disabled.';
+    }
+    async function requestEmailVerification() {
+        const typedWindow = window;
+        typedWindow.UserPanelAlerts?.hide('security-2fa-alert-success');
+        typedWindow.UserPanelAlerts?.hide('security-2fa-alert-error');
+        const siteCode = typedWindow.UserPanelSettings?.frontendSiteCode ?? 'shop';
+        const response = await typedWindow.UserPanelApi?.request('/MyAccount/request-email-confirmation', {
+            method: 'POST',
+            body: JSON.stringify({ siteCode })
+        }, true);
+        if (!response || !response.success) {
+            typedWindow.UserPanelAlerts?.showError('security-2fa-alert-error', response?.message ?? 'Could not send verification email.');
+            return;
+        }
+        typedWindow.UserPanelAlerts?.showSuccess('security-2fa-alert-success', response.message ?? 'Verification email sent.');
     }
     async function saveTwoFactorStatus() {
         const typedWindow = window;

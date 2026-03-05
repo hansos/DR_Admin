@@ -26,6 +26,9 @@ function initializeResetPassword(): void {
 
     form.dataset.bound = 'true';
 
+    bindResetPasswordToggle('auth-reset-password-new', 'auth-reset-password-toggle-new');
+    bindResetPasswordToggle('auth-reset-password-confirm', 'auth-reset-password-toggle-confirm');
+
     form.addEventListener('submit', async (event: Event) => {
         event.preventDefault();
 
@@ -67,6 +70,23 @@ function initializeResetPassword(): void {
         setTimeout(() => {
             window.location.href = '/account/login';
         }, 1200);
+    });
+}
+
+function bindResetPasswordToggle(inputId: string, toggleId: string): void {
+    const input = document.getElementById(inputId) as HTMLInputElement | null;
+    const toggle = document.getElementById(toggleId) as HTMLButtonElement | null;
+    const icon = toggle?.querySelector('i');
+    if (!input || !toggle || !icon || toggle.dataset.bound === 'true') {
+        return;
+    }
+
+    toggle.dataset.bound = 'true';
+    toggle.addEventListener('click', () => {
+        const isPassword = input.type === 'password';
+        input.type = isPassword ? 'text' : 'password';
+        icon.className = isPassword ? 'bi bi-eye-slash' : 'bi bi-eye';
+        toggle.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
     });
 }
 

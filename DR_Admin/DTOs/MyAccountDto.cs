@@ -84,6 +84,14 @@ public class RequestPasswordResetDto
 }
 
 /// <summary>
+/// Request DTO for requesting an email verification message
+/// </summary>
+public class RequestEmailConfirmationDto
+{
+    public string? SiteCode { get; set; }
+}
+
+/// <summary>
 /// Request DTO for resetting password with token
 /// </summary>
 public class ResetPasswordWithTokenRequestDto

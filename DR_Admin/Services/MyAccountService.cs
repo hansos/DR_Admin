@@ -171,6 +171,47 @@ public class MyAccountService : IMyAccountService
         }
     }
 
+    public async Task<bool> RequestEmailConfirmationAsync(int userId, string? siteCode = null)
+    {
+        try
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            if (user == null)
+            {
+                _log.Warning("Request email confirmation failed: User not found - {UserId}", userId);
+                return false;
+            }
+
+            if (user.EmailConfirmed.HasValue)
+            {
+                _log.Information("Request email confirmation skipped: Email already verified - {UserId}", userId);
+                return true;
+            }
+
+            var existingTokens = await _context.Tokens
+                .Where(t => t.UserId == user.Id && t.TokenType == "EmailConfirmation" && t.RevokedAt == null)
+                .ToListAsync();
+
+            foreach (var token in existingTokens)
+            {
+                token.RevokedAt = DateTime.UtcNow;
+            }
+
+            await _context.SaveChangesAsync();
+
+            var confirmationToken = await GenerateEmailConfirmationTokenAsync(user.Id);
+            await QueueEmailConfirmationAsync(user.Email, confirmationToken, user.Id, user.CustomerId, siteCode);
+
+            _log.Information("Email confirmation requested successfully for user: {UserId}", userId);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error requesting email confirmation for user: {UserId}", userId);
+            return false;
+        }
+    }
+
     public async Task<bool> SetPasswordAsync(string email, string token, string newPassword)
     {
         try
@@ -528,7 +569,7 @@ public class MyAccountService : IMyAccountService
     private async Task QueueEmailConfirmationAsync(string email, string token, int userId, int? customerId, string? siteCode)
     {
         var frontendSite = ResolveFrontendSite(siteCode);
-        var confirmationUrl = $"{frontendSite.BaseUrl}{frontendSite.EmailConfirmationPath}?token={Uri.EscapeDataString(token)}";
+        var confirmationUrl = $"{frontendSite.BaseUrl}{frontendSite.EmailConfirmationPath}?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(email)}";
 
         // Create template model
         var model = new EmailConfirmationModel

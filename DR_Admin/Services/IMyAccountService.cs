@@ -15,6 +15,11 @@ public interface IMyAccountService
     Task<bool> ConfirmEmailAsync(string confirmationToken);
 
     /// <summary>
+    /// Request a new email confirmation for an authenticated user
+    /// </summary>
+    Task<bool> RequestEmailConfirmationAsync(int userId, string? siteCode = null);
+
+    /// <summary>
     /// Set password for new account using token
     /// </summary>
     Task<bool> SetPasswordAsync(string email, string token, string newPassword);
