@@ -110,6 +110,83 @@ namespace PaymentGatewayLib.Implementations
         }
 
         /// <summary>
+        /// Checks the status of a Stripe subscription.
+        /// </summary>
+        /// <param name="externalSubscriptionId">Stripe subscription ID.</param>
+        /// <returns>Subscription status check result.</returns>
+        public async Task<SubscriptionStatusCheckResult> CheckSubscriptionStatusAsync(string externalSubscriptionId)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(externalSubscriptionId))
+                {
+                    return new SubscriptionStatusCheckResult
+                    {
+                        Success = false,
+                        IsSupported = true,
+                        ExternalSubscriptionId = string.Empty,
+                        ErrorMessage = "Subscription ID is required"
+                    };
+                }
+
+                var response = await _httpClient.GetAsync($"/v1/subscriptions/{externalSubscriptionId}");
+                var responseBody = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    return new SubscriptionStatusCheckResult
+                    {
+                        Success = false,
+                        IsSupported = true,
+                        ExternalSubscriptionId = externalSubscriptionId,
+                        ErrorMessage = $"Failed to retrieve subscription status: {responseBody}"
+                    };
+                }
+
+                var subscription = JsonSerializer.Deserialize<JsonElement>(responseBody);
+                var gatewayStatus = subscription.TryGetProperty("status", out var statusElement)
+                    ? statusElement.GetString() ?? string.Empty
+                    : string.Empty;
+
+                return new SubscriptionStatusCheckResult
+                {
+                    Success = true,
+                    IsSupported = true,
+                    ExternalSubscriptionId = externalSubscriptionId,
+                    GatewayStatus = gatewayStatus,
+                    Status = MapStripeSubscriptionStatus(gatewayStatus),
+                    CheckedAtUtc = DateTime.UtcNow
+                };
+            }
+            catch (Exception ex)
+            {
+                return new SubscriptionStatusCheckResult
+                {
+                    Success = false,
+                    IsSupported = true,
+                    ExternalSubscriptionId = externalSubscriptionId,
+                    ErrorMessage = $"Error checking subscription status: {ex.Message}",
+                    CheckedAtUtc = DateTime.UtcNow
+                };
+            }
+        }
+
+        private static SubscriptionStatusCheckState MapStripeSubscriptionStatus(string status)
+        {
+            return status?.ToLowerInvariant() switch
+            {
+                "active" => SubscriptionStatusCheckState.Active,
+                "trialing" => SubscriptionStatusCheckState.Trialing,
+                "past_due" => SubscriptionStatusCheckState.PastDue,
+                "unpaid" => SubscriptionStatusCheckState.PastDue,
+                "canceled" => SubscriptionStatusCheckState.Cancelled,
+                "incomplete" => SubscriptionStatusCheckState.Incomplete,
+                "incomplete_expired" => SubscriptionStatusCheckState.Cancelled,
+                _ => SubscriptionStatusCheckState.Unknown
+            };
+        }
+
+        /// <summary>
         /// Refunds a previous payment transaction
         /// </summary>
         public async Task<RefundResult> RefundPaymentAsync(RefundRequest request)

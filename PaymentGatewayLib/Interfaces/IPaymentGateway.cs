@@ -64,5 +64,21 @@ namespace PaymentGatewayLib.Interfaces
         /// <param name="endDate">End date for transaction search</param>
         /// <returns>List of transactions within the specified period</returns>
         Task<IEnumerable<TransactionSummary>> GetTransactionsAsync(DateTime startDate, DateTime endDate);
+
+        /// <summary>
+        /// Checks status of a recurring subscription in the gateway.
+        /// </summary>
+        /// <param name="externalSubscriptionId">Gateway subscription identifier</param>
+        /// <returns>Subscription status check result</returns>
+        Task<SubscriptionStatusCheckResult> CheckSubscriptionStatusAsync(string externalSubscriptionId)
+        {
+            return Task.FromResult(new SubscriptionStatusCheckResult
+            {
+                Success = false,
+                IsSupported = false,
+                ExternalSubscriptionId = externalSubscriptionId,
+                ErrorMessage = "Subscription status checks are not supported by this gateway"
+            });
+        }
     }
 }

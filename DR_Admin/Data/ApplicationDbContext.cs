@@ -595,6 +595,17 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Description).HasMaxLength(200);
         });
 
+        // Subscription configuration
+        modelBuilder.Entity<Subscription>(entity =>
+        {
+            entity.HasIndex(e => e.PaymentGatewayId);
+
+            entity.HasOne(e => e.PaymentGateway)
+                .WithMany()
+                .HasForeignKey(e => e.PaymentGatewayId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
         // Order configuration
         modelBuilder.Entity<Order>(entity =>
         {

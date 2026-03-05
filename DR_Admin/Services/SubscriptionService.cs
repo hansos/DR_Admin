@@ -3,7 +3,10 @@ using ISPAdmin.Data.Entities;
 using ISPAdmin.Data.Enums;
 using ISPAdmin.DTOs;
 using Microsoft.EntityFrameworkCore;
+using PaymentGatewayLib.Factories;
+using PaymentGatewayLib.Models;
 using Serilog;
+using System.Text.Json;
 
 namespace ISPAdmin.Services;
 
@@ -182,6 +185,28 @@ public class SubscriptionService : ISubscriptionService
                 ? startDate.AddDays(createDto.TrialDays)
                 : (DateTime?)null;
 
+            var paymentGatewayId = createDto.PaymentGatewayId;
+            if (!paymentGatewayId.HasValue && createDto.CustomerPaymentMethodId.HasValue)
+            {
+                paymentGatewayId = await _context.Set<CustomerPaymentMethod>()
+                    .Where(pm => pm.Id == createDto.CustomerPaymentMethodId.Value)
+                    .Select(pm => pm.PaymentGatewayId)
+                    .FirstOrDefaultAsync();
+            }
+
+            if (!paymentGatewayId.HasValue)
+            {
+                throw new InvalidOperationException("PaymentGatewayId must be set when creating a subscription");
+            }
+
+            var paymentGatewayExists = await _context.Set<PaymentGateway>()
+                .AnyAsync(pg => pg.Id == paymentGatewayId.Value && pg.DeletedAt == null);
+
+            if (!paymentGatewayExists)
+            {
+                throw new InvalidOperationException($"Payment gateway {paymentGatewayId.Value} was not found");
+            }
+
             var firstBillingDate = trialEndDate ?? startDate;
             var nextBillingDate = CalculateNextBillingDate(firstBillingDate,
                 createDto.BillingPeriodCount, createDto.BillingPeriodUnit);
@@ -192,6 +217,7 @@ public class SubscriptionService : ISubscriptionService
                 ServiceId = createDto.ServiceId,
                 BillingCycleId = createDto.BillingCycleId,
                 CustomerPaymentMethodId = createDto.CustomerPaymentMethodId,
+                PaymentGatewayId = paymentGatewayId,
                 Status = trialEndDate.HasValue ? SubscriptionStatus.Trialing : SubscriptionStatus.Active,
                 StartDate = startDate,
                 EndDate = createDto.EndDate,
@@ -257,6 +283,19 @@ public class SubscriptionService : ISubscriptionService
             // Update only provided fields
             if (updateDto.CustomerPaymentMethodId.HasValue)
                 subscription.CustomerPaymentMethodId = updateDto.CustomerPaymentMethodId.Value;
+
+            if (updateDto.PaymentGatewayId.HasValue)
+            {
+                var paymentGatewayExists = await _context.Set<PaymentGateway>()
+                    .AnyAsync(pg => pg.Id == updateDto.PaymentGatewayId.Value && pg.DeletedAt == null);
+
+                if (!paymentGatewayExists)
+                {
+                    throw new InvalidOperationException($"Payment gateway {updateDto.PaymentGatewayId.Value} was not found");
+                }
+
+                subscription.PaymentGatewayId = updateDto.PaymentGatewayId.Value;
+            }
 
             if (updateDto.EndDate.HasValue)
                 subscription.EndDate = updateDto.EndDate.Value;
@@ -600,7 +639,154 @@ public class SubscriptionService : ISubscriptionService
         }
     }
 
+    /// <summary>
+    /// Checks subscription statuses in attached payment gateways and updates local status values.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Number of subscriptions updated.</returns>
+    public async Task<int> CheckSubscriptionStatusesAsync(CancellationToken cancellationToken = default)
+    {
+        var subscriptions = await _context.Set<Subscription>()
+            .Where(s => s.PaymentGatewayId.HasValue
+                && s.Status != SubscriptionStatus.Cancelled
+                && s.Status != SubscriptionStatus.Expired)
+            .ToListAsync(cancellationToken);
+
+        if (subscriptions.Count == 0)
+        {
+            return 0;
+        }
+
+        var gateways = await _context.Set<PaymentGateway>()
+            .AsNoTracking()
+            .Where(g => g.IsActive && g.DeletedAt == null)
+            .ToDictionaryAsync(g => g.Id, cancellationToken);
+
+        var updated = 0;
+
+        foreach (var subscription in subscriptions)
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                break;
+            }
+
+            if (!subscription.PaymentGatewayId.HasValue || !gateways.TryGetValue(subscription.PaymentGatewayId.Value, out var gateway))
+            {
+                continue;
+            }
+
+            var externalSubscriptionId = ExtractExternalSubscriptionId(subscription.Metadata);
+            if (string.IsNullOrWhiteSpace(externalSubscriptionId))
+            {
+                continue;
+            }
+
+            try
+            {
+                var gatewayClient = PaymentGatewayRuntimeFactory.Create(
+                    gateway.ProviderCode,
+                    gateway.ApiKey,
+                    gateway.ApiSecret,
+                    gateway.UseSandbox);
+
+                var result = await gatewayClient.CheckSubscriptionStatusAsync(externalSubscriptionId);
+
+                if (!result.IsSupported || !result.Success)
+                {
+                    continue;
+                }
+
+                var newStatus = MapToLocalStatus(result.Status, subscription.Status);
+                if (newStatus == subscription.Status)
+                {
+                    continue;
+                }
+
+                subscription.Status = newStatus;
+                subscription.UpdatedAt = DateTime.UtcNow;
+
+                if (newStatus == SubscriptionStatus.Cancelled)
+                {
+                    subscription.CancelledAt ??= DateTime.UtcNow;
+                }
+
+                updated++;
+            }
+            catch (NotSupportedException)
+            {
+                continue;
+            }
+            catch (Exception ex)
+            {
+                _log.Warning(ex, "Failed to check subscription status for subscription {SubscriptionId}", subscription.Id);
+            }
+        }
+
+        if (updated > 0)
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+
+        return updated;
+    }
+
     // Private helper methods
+
+    private static string? ExtractExternalSubscriptionId(string metadata)
+    {
+        if (string.IsNullOrWhiteSpace(metadata))
+        {
+            return null;
+        }
+
+        var trimmed = metadata.Trim();
+        if (trimmed.StartsWith("sub_", StringComparison.OrdinalIgnoreCase))
+        {
+            return trimmed;
+        }
+
+        if (trimmed.StartsWith("{") && trimmed.EndsWith("}"))
+        {
+            try
+            {
+                using var document = JsonDocument.Parse(trimmed);
+                var root = document.RootElement;
+                var keys = new[] { "subscriptionId", "externalSubscriptionId", "stripeSubscriptionId", "gatewaySubscriptionId" };
+
+                foreach (var key in keys)
+                {
+                    if (root.TryGetProperty(key, out var value) && value.ValueKind == JsonValueKind.String)
+                    {
+                        var id = value.GetString();
+                        if (!string.IsNullOrWhiteSpace(id))
+                        {
+                            return id;
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        return null;
+    }
+
+    private static SubscriptionStatus MapToLocalStatus(SubscriptionStatusCheckState status, SubscriptionStatus currentStatus)
+    {
+        return status switch
+        {
+            SubscriptionStatusCheckState.Active => SubscriptionStatus.Active,
+            SubscriptionStatusCheckState.Trialing => SubscriptionStatus.Trialing,
+            SubscriptionStatusCheckState.PastDue => SubscriptionStatus.PastDue,
+            SubscriptionStatusCheckState.Cancelled => SubscriptionStatus.Cancelled,
+            SubscriptionStatusCheckState.Incomplete => SubscriptionStatus.Incomplete,
+            _ => currentStatus
+        };
+    }
 
     private static SubscriptionDto MapToDto(Subscription subscription)
     {
@@ -611,6 +797,7 @@ public class SubscriptionService : ISubscriptionService
             ServiceId = subscription.ServiceId,
             BillingCycleId = subscription.BillingCycleId,
             CustomerPaymentMethodId = subscription.CustomerPaymentMethodId,
+            PaymentGatewayId = subscription.PaymentGatewayId,
             Status = subscription.Status,
             StartDate = subscription.StartDate,
             EndDate = subscription.EndDate,

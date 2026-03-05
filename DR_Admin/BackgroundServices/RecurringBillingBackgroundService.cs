@@ -1,4 +1,5 @@
 using ISPAdmin.Services;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 
@@ -15,6 +16,7 @@ public class RecurringBillingBackgroundService : BackgroundService
 
     // Configuration
     private readonly TimeSpan _checkInterval = TimeSpan.FromHours(1); // Check every hour
+    private readonly TimeSpan _subscriptionStatusCheckInterval = TimeSpan.FromHours(6); // Four checks per day
     private readonly TimeSpan _processingDelay = TimeSpan.FromSeconds(30); // Delay between processing each subscription
     private readonly int _batchSize = 50; // Process 50 subscriptions at a time
 
@@ -33,11 +35,19 @@ public class RecurringBillingBackgroundService : BackgroundService
         // Wait for 1 minute on startup to ensure all services are initialized
         await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
 
+        var nextSubscriptionStatusCheckAt = DateTime.UtcNow;
+
         while (!stoppingToken.IsCancellationRequested)
         {
             try
             {
                 await ProcessDueSubscriptionsAsync(stoppingToken);
+
+                if (DateTime.UtcNow >= nextSubscriptionStatusCheckAt)
+                {
+                    await CheckSubscriptionStatusesAsync(stoppingToken);
+                    nextSubscriptionStatusCheckAt = DateTime.UtcNow.Add(_subscriptionStatusCheckInterval);
+                }
 
                 // Wait for the next check interval
                 _log.Information("Recurring Billing Background Service sleeping for {Interval}", _checkInterval);
@@ -57,6 +67,24 @@ public class RecurringBillingBackgroundService : BackgroundService
         }
 
         _log.Information("Recurring Billing Background Service stopping");
+    }
+
+    /// <summary>
+    /// Checks subscription statuses against payment gateways four times daily.
+    /// </summary>
+    private async Task CheckSubscriptionStatusesAsync(CancellationToken stoppingToken)
+    {
+        try
+        {
+            using var scope = _serviceProvider.CreateScope();
+            var subscriptionService = scope.ServiceProvider.GetRequiredService<ISubscriptionService>();
+            var updated = await subscriptionService.CheckSubscriptionStatusesAsync(stoppingToken);
+            _log.Information("Subscription gateway status checks completed. Updated {Count} subscriptions", updated);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error during subscription gateway status checks");
+        }
     }
 
     /// <summary>

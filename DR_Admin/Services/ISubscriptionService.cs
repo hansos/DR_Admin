@@ -93,4 +93,11 @@ public interface ISubscriptionService
     /// <param name="subscriptionId">The subscription identifier</param>
     /// <returns>True if billing was successful, false otherwise</returns>
     Task<bool> ProcessSubscriptionBillingAsync(int subscriptionId);
+
+    /// <summary>
+    /// Checks gateway subscription statuses and updates local subscription states.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Number of subscriptions updated.</returns>
+    Task<int> CheckSubscriptionStatusesAsync(CancellationToken cancellationToken = default);
 }

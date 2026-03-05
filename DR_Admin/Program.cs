@@ -277,6 +277,7 @@ builder.Services.AddHostedService<OutboxProcessorService>();
 builder.Services.AddHostedService<ExchangeRateUpdateService>();
 builder.Services.AddHostedService<RegistrarTldPriceSyncBackgroundService>();
 builder.Services.AddHostedService<DatabaseBackupService>();
+builder.Services.AddHostedService<RecurringBillingBackgroundService>();
 
 // Configure CORS from appsettings
 var corsSettings = builder.Configuration.GetSection("CorsSettings");

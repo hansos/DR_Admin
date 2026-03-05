@@ -33,6 +33,11 @@ public class SubscriptionDto
     public int? CustomerPaymentMethodId { get; set; }
 
     /// <summary>
+    /// Payment gateway identifier for subscription status checks
+    /// </summary>
+    public int? PaymentGatewayId { get; set; }
+
+    /// <summary>
     /// Current status of the subscription
     /// </summary>
     public SubscriptionStatus Status { get; set; }
@@ -194,6 +199,11 @@ public class CreateSubscriptionDto
     public int? CustomerPaymentMethodId { get; set; }
 
     /// <summary>
+    /// Payment gateway identifier for subscription status checks
+    /// </summary>
+    public int? PaymentGatewayId { get; set; }
+
+    /// <summary>
     /// Date when the subscription should start (defaults to now)
     /// </summary>
     public DateTime? StartDate { get; set; }
@@ -268,6 +278,11 @@ public class UpdateSubscriptionDto
     /// Customer payment method identifier
     /// </summary>
     public int? CustomerPaymentMethodId { get; set; }
+
+    /// <summary>
+    /// Payment gateway identifier
+    /// </summary>
+    public int? PaymentGatewayId { get; set; }
 
     /// <summary>
     /// Date when the subscription should end (null for ongoing)

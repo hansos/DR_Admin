@@ -3,8 +3,8 @@ using ISPAdmin.Data.Entities;
 using ISPAdmin.Data.Enums;
 using ISPAdmin.DTOs;
 using Microsoft.EntityFrameworkCore;
+using PaymentGatewayLib.Factories;
 using PaymentGatewayLib.Infrastructure.Settings;
-using PaymentGatewayLib.Implementations;
 using PaymentGatewayLib.Interfaces;
 using Serilog;
 using System.Security.Cryptography;
@@ -838,14 +838,6 @@ public class PaymentProcessingService : IPaymentProcessingService
 
     private static IPaymentGateway CreateGatewayClient(PaymentGateway gateway)
     {
-        var provider = (gateway.ProviderCode ?? string.Empty).Trim().ToLowerInvariant();
-
-        return provider switch
-        {
-            "stripe" => new StripePaymentGateway(gateway.ApiSecret, gateway.ApiKey),
-            "paypal" => new PayPalPaymentGateway(gateway.ApiKey, gateway.ApiSecret, gateway.UseSandbox),
-            "square" => new SquarePaymentGateway(gateway.ApiKey, gateway.ApiSecret, gateway.UseSandbox),
-            _ => throw new NotSupportedException($"Payment provider '{gateway.ProviderCode}' is not currently supported by PaymentProcessingService")
-        };
+        return PaymentGatewayRuntimeFactory.Create(gateway.ProviderCode, gateway.ApiKey, gateway.ApiSecret, gateway.UseSandbox);
     }
 }

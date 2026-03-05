@@ -28,6 +28,11 @@ public class Subscription : EntityBase
     public int? CustomerPaymentMethodId { get; set; }
 
     /// <summary>
+    /// Foreign key to payment gateway used for subscription status checks
+    /// </summary>
+    public int? PaymentGatewayId { get; set; }
+
+    /// <summary>
     /// Current status of the subscription
     /// </summary>
     public SubscriptionStatus Status { get; set; } = SubscriptionStatus.Active;
@@ -173,6 +178,11 @@ public class Subscription : EntityBase
     /// Navigation property to the customer payment method
     /// </summary>
     public CustomerPaymentMethod? CustomerPaymentMethod { get; set; }
+
+    /// <summary>
+    /// Navigation property to the payment gateway
+    /// </summary>
+    public PaymentGateway? PaymentGateway { get; set; }
 
     /// <summary>
     /// Navigation property to billing history records
