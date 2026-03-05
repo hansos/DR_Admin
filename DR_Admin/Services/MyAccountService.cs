@@ -86,6 +86,7 @@ public class MyAccountService : IMyAccountService
                 Email = request.Email,
                 PasswordHash = passwordHash, // TODO: Hash this properly
                 EmailConfirmed = null,
+                IsMailTwoFactorEnabled = false,
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
@@ -208,6 +209,62 @@ public class MyAccountService : IMyAccountService
         catch (Exception ex)
         {
             _log.Error(ex, "Error requesting email confirmation for user: {UserId}", userId);
+            return false;
+        }
+    }
+
+    public async Task<TwoFactorStatusDto?> GetTwoFactorStatusAsync(int userId)
+    {
+        try
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            if (user == null)
+            {
+                _log.Warning("Get two-factor status failed: User not found - {UserId}", userId);
+                return null;
+            }
+
+            return new TwoFactorStatusDto
+            {
+                Enabled = user.IsMailTwoFactorEnabled,
+                Method = user.IsMailTwoFactorEnabled ? "Email" : null,
+                RecoveryCodesRemaining = null
+            };
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error getting two-factor status for user: {UserId}", userId);
+            return null;
+        }
+    }
+
+    public async Task<bool> UpdateMailTwoFactorSettingAsync(int userId, bool enabled)
+    {
+        try
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            if (user == null)
+            {
+                _log.Warning("Update two-factor setting failed: User not found - {UserId}", userId);
+                return false;
+            }
+
+            if (enabled && !user.EmailConfirmed.HasValue)
+            {
+                _log.Warning("Update two-factor setting failed: Email not verified - {UserId}", userId);
+                return false;
+            }
+
+            user.IsMailTwoFactorEnabled = enabled;
+            user.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            _log.Information("Mail two-factor setting updated for user {UserId}: {Enabled}", userId, enabled);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error updating two-factor setting for user: {UserId}", userId);
             return false;
         }
     }

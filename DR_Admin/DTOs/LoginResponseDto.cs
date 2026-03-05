@@ -34,4 +34,19 @@ public class LoginResponseDto
     /// Gets or sets the roles assigned to the authenticated user
     /// </summary>
     public IEnumerable<string> Roles { get; set; } = new List<string>();
+
+    /// <summary>
+    /// Gets or sets a value indicating whether two-factor verification is required before tokens are issued.
+    /// </summary>
+    public bool RequiresTwoFactor { get; set; }
+
+    /// <summary>
+    /// Gets or sets the two-factor method when two-factor verification is required.
+    /// </summary>
+    public string? TwoFactorMethod { get; set; }
+
+    /// <summary>
+    /// Gets or sets the temporary challenge token used to verify a mail code.
+    /// </summary>
+    public string? TwoFactorChallengeToken { get; set; }
 }

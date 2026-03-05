@@ -1,0 +1,5 @@
+Your verification code is: {{Code}}
+
+This code expires in {{ExpirationMinutes}} minutes.
+
+If you did not try to sign in, please change your password immediately.

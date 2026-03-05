@@ -19,6 +19,7 @@
     "cart-state.ts",
     "auth-register.ts",
     "auth-login.ts",
+    "auth-login-2fa.ts",
     "auth-forgot-password.ts",
     "auth-reset-password.ts",
     "account-settings.ts",

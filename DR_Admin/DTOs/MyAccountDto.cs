@@ -92,6 +92,38 @@ public class RequestEmailConfirmationDto
 }
 
 /// <summary>
+/// Request DTO for updating two-factor authentication settings.
+/// </summary>
+public class UpdateTwoFactorSettingsRequestDto
+{
+    /// <summary>
+    /// Gets or sets a value indicating whether mail two-factor authentication is enabled.
+    /// </summary>
+    public bool Enabled { get; set; }
+}
+
+/// <summary>
+/// DTO for two-factor authentication status.
+/// </summary>
+public class TwoFactorStatusDto
+{
+    /// <summary>
+    /// Gets or sets a value indicating whether two-factor authentication is enabled.
+    /// </summary>
+    public bool Enabled { get; set; }
+
+    /// <summary>
+    /// Gets or sets the configured second-factor method.
+    /// </summary>
+    public string? Method { get; set; }
+
+    /// <summary>
+    /// Gets or sets the remaining count of recovery codes.
+    /// </summary>
+    public int? RecoveryCodesRemaining { get; set; }
+}
+
+/// <summary>
 /// Request DTO for resetting password with token
 /// </summary>
 public class ResetPasswordWithTokenRequestDto

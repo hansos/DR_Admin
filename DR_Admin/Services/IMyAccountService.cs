@@ -20,6 +20,16 @@ public interface IMyAccountService
     Task<bool> RequestEmailConfirmationAsync(int userId, string? siteCode = null);
 
     /// <summary>
+    /// Gets two-factor authentication status for authenticated user.
+    /// </summary>
+    Task<TwoFactorStatusDto?> GetTwoFactorStatusAsync(int userId);
+
+    /// <summary>
+    /// Updates mail-based two-factor authentication setting for authenticated user.
+    /// </summary>
+    Task<bool> UpdateMailTwoFactorSettingAsync(int userId, bool enabled);
+
+    /// <summary>
     /// Set password for new account using token
     /// </summary>
     Task<bool> SetPasswordAsync(string email, string token, string newPassword);

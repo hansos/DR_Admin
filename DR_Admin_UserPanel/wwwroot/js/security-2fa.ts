@@ -107,7 +107,7 @@ function renderTwoFactorStatus(status: TwoFactorStatusDto | null): void {
 
     checkbox.checked = status.enabled;
     const recovery = status.recoveryCodesRemaining ?? 0;
-    const method = status.method?.trim() ? status.method : 'Authenticator';
+    const method = status.method?.trim() ? status.method : 'Email';
     statusBox.textContent = status.enabled
         ? `2FA is enabled (${method}). Recovery codes remaining: ${recovery}.`
         : '2FA is currently disabled.';

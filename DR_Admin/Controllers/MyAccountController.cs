@@ -152,6 +152,67 @@ public class MyAccountController : ControllerBase
     }
 
     /// <summary>
+    /// Gets current mail-based two-factor authentication status for the authenticated user.
+    /// </summary>
+    /// <returns>Two-factor status details.</returns>
+    [HttpGet("2fa/status")]
+    [Authorize]
+    [ProducesResponseType(typeof(TwoFactorStatusDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<TwoFactorStatusDto>> GetTwoFactorStatus()
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            var status = await _myAccountService.GetTwoFactorStatusAsync(userId);
+            if (status == null)
+            {
+                return NotFound(new { message = "Account not found" });
+            }
+
+            return Ok(status);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error retrieving two-factor status");
+            return StatusCode(500, new { message = "An error occurred while retrieving two-factor status" });
+        }
+    }
+
+    /// <summary>
+    /// Updates mail-based two-factor authentication setting for the authenticated user.
+    /// </summary>
+    /// <param name="request">Requested two-factor setting.</param>
+    /// <returns>Success status message.</returns>
+    [HttpPost("2fa")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult> UpdateTwoFactorSetting([FromBody] UpdateTwoFactorSettingsRequestDto request)
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            var result = await _myAccountService.UpdateMailTwoFactorSettingAsync(userId, request.Enabled);
+            if (!result)
+            {
+                return BadRequest(new { message = "Could not update two-factor setting. Ensure your email is verified before enabling 2FA." });
+            }
+
+            return Ok(new { message = "Two-factor setting updated successfully" });
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error updating two-factor setting");
+            return StatusCode(500, new { message = "An error occurred while updating two-factor setting" });
+        }
+    }
+
+    /// <summary>
     /// Requests a password reset by sending an email with a reset token
     /// </summary>
     /// <param name="request">Email address for the account</param>

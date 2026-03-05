@@ -68,10 +68,11 @@ public class AuthController : ControllerBase
             {
                 UserId = result.UserId,
                 Identifier = loginRequest.Username,
-                IsSuccessful = true,
+                IsSuccessful = !result.RequiresTwoFactor,
                 AttemptedAt = DateTime.UtcNow,
                 IPAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? string.Empty,
-                UserAgent = Request.Headers.UserAgent.ToString()
+                UserAgent = Request.Headers.UserAgent.ToString(),
+                FailureReason = result.RequiresTwoFactor ? "Two-factor verification pending" : null
             });
         }
         catch (Exception ex)
@@ -80,6 +81,58 @@ public class AuthController : ControllerBase
         }
 
         return Ok(result);
+    }
+
+    /// <summary>
+    /// Verifies a mail-based two-factor authentication code and issues JWT tokens.
+    /// </summary>
+    /// <param name="request">Challenge token and one-time code.</param>
+    /// <returns>JWT authentication response.</returns>
+    [HttpPost("2fa/verify")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(LoginResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<LoginResponseDto>> VerifyMailTwoFactor([FromBody] VerifyMailTwoFactorRequestDto request)
+    {
+        if (string.IsNullOrWhiteSpace(request.ChallengeToken) || string.IsNullOrWhiteSpace(request.Code))
+        {
+            return BadRequest(new { message = "Challenge token and code are required" });
+        }
+
+        var result = await _authService.VerifyMailTwoFactorAsync(request.ChallengeToken, request.Code);
+        if (result == null)
+        {
+            return Unauthorized(new { message = "Invalid or expired verification code" });
+        }
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Resends a mail-based two-factor authentication code for an active challenge.
+    /// </summary>
+    /// <param name="request">Challenge token.</param>
+    /// <returns>Success status message.</returns>
+    [HttpPost("2fa/resend")]
+    [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult> ResendMailTwoFactor([FromBody] ResendMailTwoFactorRequestDto request)
+    {
+        if (string.IsNullOrWhiteSpace(request.ChallengeToken))
+        {
+            return BadRequest(new { message = "Challenge token is required" });
+        }
+
+        var result = await _authService.ResendMailTwoFactorCodeAsync(request.ChallengeToken);
+        if (!result)
+        {
+            return Unauthorized(new { message = "Invalid or expired challenge token" });
+        }
+
+        return Ok(new { message = "Verification code sent" });
     }
 
     /// <summary>

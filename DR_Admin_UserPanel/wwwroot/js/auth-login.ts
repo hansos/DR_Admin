@@ -10,6 +10,9 @@ interface LoginResponseDto {
     refreshToken: string;
     expiresAt: string;
     roles: string[];
+    requiresTwoFactor?: boolean;
+    twoFactorMethod?: string | null;
+    twoFactorChallengeToken?: string | null;
 }
 
 interface LoginWindow extends Window {
@@ -75,6 +78,22 @@ function initializeLogin(): void {
 
         if (!response || !response.success || !response.data) {
             typedWindow.UserPanelAlerts?.showError('auth-login-alert-error', response?.message ?? 'Login failed.');
+            return;
+        }
+
+        if (response.data.requiresTwoFactor && response.data.twoFactorChallengeToken) {
+            sessionStorage.setItem('up-2fa-challenge', response.data.twoFactorChallengeToken);
+            typedWindow.UserPanelAlerts?.showSuccess('auth-login-alert-success', 'Verification code sent to your email. Redirecting...');
+
+            const returnUrl = new URLSearchParams(window.location.search).get('returnUrl');
+            const target = returnUrl && returnUrl.startsWith('/')
+                ? `/account/login-2fa?returnUrl=${encodeURIComponent(returnUrl)}`
+                : '/account/login-2fa';
+
+            setTimeout(() => {
+                window.location.href = target;
+            }, 600);
+
             return;
         }
 
