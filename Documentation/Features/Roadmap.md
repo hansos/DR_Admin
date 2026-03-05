@@ -10,29 +10,31 @@ It provides programmatic access to domain registration, hosting management, and 
 ## 1. Domain Management
 
 ### Features
-- **Domain Search & Availability**
-  - Check availability across multiple registrars.
-  - Support for TLD-specific rules and pricing.
-- **Domain Registration**
-  - Register domains with multiple registrars.
-  - Bulk registration support.
-- **Domain Renewal & Expiration**
-  - Manual and automatic renewals.
-  - Notifications for upcoming expirations.
-- **Domain Transfer**
-  - Initiate and track inbound/outbound transfers.
-- **Domain Ownership & Contact Management**
-  - Update WHOIS/Registrant info.
-  - Privacy protection / WHOIS proxy support.
-- **DNS Management**
-  - Add, update, or remove DNS records (A, AAAA, CNAME, MX, TXT, SRV, etc.).
-  - Multiple name server support.
-  - DNS zone import/export.
-- **Domain Status & History**
-  - Query domain status: active, pending, locked, suspended.
-  - Retrieve registration date, expiration, registrar, and owner info.
+
+- ==**Domain Search & Availability**==
+  - ==Check availability across multiple registrars.==
+  - ==Support for TLD-specific rules and pricing.==
+- ==**Domain Registration**==
+  - ==Register domains with multiple registrars.==
+  - ==Bulk registration support.==
+- ==**Domain Renewal & Expiration**==
+  - ==Manual and automatic renewals.==
+  - ==Notifications for upcoming expirations.==
+- ==**Domain Transfer**==
+  - ==Initiate and track inbound/outbound transfers.==
+- ==**Domain Ownership & Contact Management**==
+  - ==Update WHOIS/Registrant info.==
+  - ==Privacy protection / WHOIS proxy support.==
+- ==**DNS Management**==
+  - ==Add, update, or remove DNS records (A, AAAA, CNAME, MX, TXT, SRV, etc.).==
+  - ==Multiple name server support.==
+  - ==DNS zone import/export.==
+- ==**Domain Status & History**==
+  - ==Query domain status: active, pending, locked, suspended.==
+  - ==Retrieve registration date, expiration, registrar, and owner info.==
 
 ### Workflows
+
 1. **Register a domain**
    - Search availability → Select registrar/TLD → Register → Configure initial DNS
 2. **Bulk renew domains**
@@ -45,6 +47,7 @@ It provides programmatic access to domain registration, hosting management, and 
 ## 2. Hosting Management
 
 ### Features
+
 - **Account & Plan Management**
   - Create, update, suspend, delete accounts.
   - Assign hosting plans (storage, bandwidth, databases, emails, SSL).
@@ -64,6 +67,7 @@ It provides programmatic access to domain registration, hosting management, and 
   - Alerts for errors or thresholds.
 
 ### Workflows
+
 1. **Provision new hosting account**
    - Select plan → Create account → Set DNS → Deploy website/CMS
 2. **Upgrade hosting plan**
@@ -76,6 +80,7 @@ It provides programmatic access to domain registration, hosting management, and 
 ## 3. Email Delivery & Management
 
 ### Features
+
 - **Mailbox Management**
   - Create, update, delete mailboxes.
   - Forwarding, aliases, storage quota.
@@ -90,6 +95,7 @@ It provides programmatic access to domain registration, hosting management, and 
   - Mailing list management.
 
 ### Workflows
+
 1. **Create mailbox**
    - Assign username/password → Set quota/forwarding
 2. **Send email via API**
@@ -102,6 +108,7 @@ It provides programmatic access to domain registration, hosting management, and 
 ## 4. Reseller & User Management
 
 ### Features
+
 - **Multi-Reseller Support**
   - Sub-accounts with limited permissions.
   - Track reseller usage/earnings.
@@ -113,6 +120,7 @@ It provides programmatic access to domain registration, hosting management, and 
   - Generate invoices and integrate payment gateways.
 
 ### Workflows
+
 1. **Create reseller account**
    - Assign quota and pricing → Generate API key
 2. **Monitor client usage**
@@ -123,6 +131,7 @@ It provides programmatic access to domain registration, hosting management, and 
 ## 5. Customer Management
 
 ### Features
+
 - **Customer Lifecycle & Profiles**
   - Create, read, update, and delete customer accounts.
   - Store billing address, contact information, VAT/tax IDs, and custom metadata.
@@ -149,6 +158,7 @@ It provides programmatic access to domain registration, hosting management, and 
   - Change history, GDPR support (data export, anonymization), and consent tracking.
 
 ### Workflows
+
 1. **Onboard new customer**
    - Collect required info → Verify email/identity → Provision initial services → Generate welcome invoice
 2. **Update billing information**
@@ -163,6 +173,7 @@ It provides programmatic access to domain registration, hosting management, and 
 ## 6. Reporting & Automation
 
 ### Features
+
 - **Activity Logs**
   - Track all API actions for auditing.
 - **Usage Reports**
@@ -176,6 +187,7 @@ It provides programmatic access to domain registration, hosting management, and 
   - Automated renewals, backups, monitoring.
 
 ### Workflows
+
 1. **Generate monthly usage report**
    - Fetch domain, hosting, email data → Summarize per reseller/client
 2. **Set automated renewal**
