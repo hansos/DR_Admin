@@ -27,12 +27,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Features/Roadmap.md",
+                "file": "Installation/Email_Plugins.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Roadmap"
+              "title": "Email_Plugins"
             }
           }
         ],
@@ -200,6 +200,13 @@
   },
   "active": "e2a5583f37386951",
   "lastOpenFiles": [
+    "Installation/index.md",
+    "Installation/Email_Plugins.md",
+    "Installation/Build.md",
+    "Installation/Configuration.md",
+    "Installation/Installation.md",
+    "Features/Roadmap.md",
+    "Installation/API_Plugin_Onboarding_Guide.md",
     "niabka0c.bjy~",
     "Template-Classes-Migration.md",
     "Index.md",
@@ -220,7 +227,6 @@
     "Features/Hosting/Complete_Implementation.md",
     "Features/Hosting",
     "Features/Hostin",
-    "Features/Ny mappe",
     "PaginationImplementation.md",
     "Features/Workflows/Customer-registration.md",
     "Features/BillingAndSales/PaymentCollectionMechanisms.md",
@@ -229,12 +235,6 @@
     "Features/BillingAndSales/BetalingsinnkrevingOgMottak.md",
     "Features/BillingAndSales/OrderToInvoiceFlow.md",
     "Features/BillingAndSales/PaymentProcessingImplementation.md",
-    "Features/DomainRegistration/Register-Domain-Flow.md",
-    "Features/DomainRegistration/TLD-Pricing-Refactoring-Final-Summary.md",
-    "Features/DomainRegistration/TLD-Pricing-Refactoring-Complete.md",
-    "Features/DomainRegistration/TLD-Pricing-Migration-Status.md",
-    "Features/DomainRegistration/TLD-Pricing-Final.md",
-    "Features/DomainRegistration/TLD-Pricing-API-Reference.md",
-    "Features/DomainRegistration/TLD-Pricing-Implementation-Complete.md"
+    "Features/DomainRegistration/Register-Domain-Flow.md"
   ]
 }

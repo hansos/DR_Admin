@@ -35,12 +35,12 @@ It provides programmatic access to domain registration, hosting management, and 
 
 ### Workflows
 
-1. **Register a domain**
-   - Search availability → Select registrar/TLD → Register → Configure initial DNS
-2. **Bulk renew domains**
+1. ~~**Register a domain**~~
+   - ~~Search availability → Select registrar/TLD → Register → Configure initial DNS~~
+1. **Bulk renew domains**
    - Fetch expiring domains → Renew in batch
-3. **Update DNS records**
-   - Modify records via API → Propagate changes
+1. ~~**Update DNS records**~~
+   - ~~Modify records via API → Propagate changes~~
 
 ---
 
@@ -48,9 +48,9 @@ It provides programmatic access to domain registration, hosting management, and 
 
 ### Features
 
-- **Account & Plan Management**
-  - Create, update, suspend, delete accounts.
-  - Assign hosting plans (storage, bandwidth, databases, emails, SSL).
+- ~~**Account & Plan Management**~~
+  - ~~Create, update, suspend, delete accounts.~~
+  - ~~Assign hosting plans (storage, bandwidth, databases, emails, SSL).~~
 - **Resource Management**
   - Track usage: storage, bandwidth, CPU, memory.
   - Upgrade or downgrade plans.
@@ -68,11 +68,11 @@ It provides programmatic access to domain registration, hosting management, and 
 
 ### Workflows
 
-1. **Provision new hosting account**
-   - Select plan → Create account → Set DNS → Deploy website/CMS
-2. **Upgrade hosting plan**
-   - Check resource usage → Change plan → Notify user
-3. **Backup & restore**
+1. ~~**Provision new hosting account**~~
+   - ~~Select plan → Create account → Set DNS → Deploy website/CMS~~
+1. ~~**Upgrade hosting plan**~~
+   - ~~Check resource usage → Change plan → Notify user~~
+1. **Backup & restore**
    - Schedule backups → Restore files/databases
 
 ---
@@ -132,28 +132,28 @@ It provides programmatic access to domain registration, hosting management, and 
 
 ### Features
 
-- **Customer Lifecycle & Profiles**
-  - Create, read, update, and delete customer accounts.
-  - Store billing address, contact information, VAT/tax IDs, and custom metadata.
-- **Onboarding & Verification**
-  - Email verification, required fields validation, and initial provisioning workflows.
-- **Contact Persons & Roles**
-  - Multiple contact persons per customer (billing, technical, administrative).
-  - Assign contact roles and permissions.
-- **Billing Preferences & Payment Methods**
-  - Store and manage customer payment methods (cards, direct debit, stored gateway tokens).
-  - Set billing cycles, default payment method, and invoice delivery preferences.
-- **Credits, Discounts & Coupons**
-  - Apply credits to customer accounts and manage coupon redemptions.
-- **Subscriptions & Services**
-  - Link hosting, domains, and other services to customer accounts.
-  - Manage subscription lifecycle (start, pause, cancel, renew).
+- ~~**Customer Lifecycle & Profiles**~~
+  - ~~Create, read, update, and delete customer accounts.~~
+  - ~~Store billing address, contact information, VAT/tax IDs, and custom metadata.~~
+- ~~**Onboarding & Verification**~~
+  - ~~Email verification, required fields validation, and initial provisioning workflows.~~
+- ~~**Contact Persons & Roles**~~
+  - ~~Multiple contact persons per customer (billing, technical, administrative).~~
+  - ~~Assign contact roles and permissions.~~
+- ~~**Billing Preferences & Payment Methods**~~
+  - ~~Store and manage customer payment methods (cards, direct debit, stored gateway tokens).~~
+  - ~~Set billing cycles, default payment method, and invoice delivery preferences.~~
+- ~~**Credits, Discounts & Coupons**~~
+  - ~~Apply credits to customer accounts and manage coupon redemptions.~~
+- ~~**Subscriptions & Services**~~
+  - ~~Link hosting, domains, and other services to customer accounts.~~
+  - ~~Manage subscription lifecycle (start, pause, cancel, renew).~~
 - **Account Status & Operations**
   - Suspend/reactivate/terminate customers and cascade actions to linked services.
-- **Support & Tickets**
-  - Associate support tickets and communication history with customer records.
-- **Search, Filtering & Bulk Operations**
-  - Full-text and attribute filters (by email, company, VAT, status), bulk import/export.
+- ~~**Support & Tickets**~~
+  - ~~Associate support tickets and communication history with customer records.~~
+- ~~**Search, Filtering & Bulk Operations**~~
+  - ~~Full-text and attribute filters (by email, company, VAT, status), bulk import/export.~~
 - **Audit & Compliance**
   - Change history, GDPR support (data export, anonymization), and consent tracking.
 
@@ -196,3 +196,4 @@ It provides programmatic access to domain registration, hosting management, and 
 ---
 
 > This roadmap outlines the future vision for **DR_Admin**. Features will be implemented incrementally as the project progresses.
+> Implemented features are marked with striketrough.
