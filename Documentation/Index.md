@@ -1,6 +1,5 @@
 # DR_Admin Features Overview
 
-
 **DR_Admin** is a comprehensive REST API backend designed to simplify and automate essential web services for resellers, developers, and IT administrators. Its core capabilities span three main areas: domain registration, hosting management, and email delivery.  
 
 Being a REST API, **DR_Admin can be accessed programmatically by any client written in any language**, making it highly flexible for integration into web applications, desktop tools, or automation scripts. Each component is built with flexibility, reliability, and integration in mind, supporting multiple providers and advanced features.
@@ -52,7 +51,6 @@ The **Hosting module** (detailed in DR_Admin documentation) provides tools for m
 
 See [Hosting](Features/Hosting.md) for more information.
 
-
 ---
 
 ### 3. Email Delivery
@@ -67,7 +65,6 @@ The **Mailing module** allows applications to send emails asynchronously with su
   - **Attachments:** Include one or more files with outgoing emails.  
 - **Asynchronous Operations:** All methods are fully async for integration with modern applications, improving performance and responsiveness.  
 - **Error Handling:** Built-in exception support for invalid addresses, network failures, or authentication issues.
-
 
 See [Mailing](Features/Mailing.md) for more information.
 
@@ -104,13 +101,14 @@ DR_Admin runs on **all operating systems that support .NET**, giving you the fle
 
 This ensures that DR_Admin can be hosted in any environment, whether on-premises servers, cloud infrastructure, or development machines.
 
-
 ---
+
 ### Summary
 
 DR_Admin is a unified platform designed to manage the critical aspects of online services: domain registration, hosting management, and email delivery. Its modular approach, support for multiple providers, and asynchronous operations make it an ideal solution for resellers, developers, and IT administrators who require automation, flexibility, and reliability in managing web services.
 
 See 
+
 - [Domain registration](Features/Domain-registration.md)
 - [Hosting](Features/Hosting.md)
 - [Mailing](Features/Mailing.md)
