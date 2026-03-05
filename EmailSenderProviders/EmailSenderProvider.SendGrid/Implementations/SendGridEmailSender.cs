@@ -22,8 +22,6 @@ namespace EmailSenderLib.Implementations
 
         public async Task SendEmailAsync(string to, string subject, string body, List<string> attachments, bool isHtml = false)
         {
-            // TODO: Implement SendGrid email sending
-            // Requires SendGrid NuGet package
             await Task.CompletedTask;
             throw new NotImplementedException("SendGrid email sending requires SendGrid package implementation");
         }

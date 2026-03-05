@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using EmailSenderLib.Factories;
+using EmailSenderLib.Infrastructure.Settings;
 using ISPAdmin.Data;
 using ISPAdmin.Utilities;
 using ISPAdmin.Infrastructure.Settings;
@@ -16,12 +18,20 @@ public class SystemService : ISystemService
 {
     private readonly ApplicationDbContext _context;
     private readonly AppSettings _appSettings;
+    private readonly EmailSenderFactory _emailSenderFactory;
+    private readonly EmailSettings _emailSettings;
     private static readonly Serilog.ILogger _log = Log.ForContext<SystemService>();
 
-    public SystemService(ApplicationDbContext context, AppSettings appSettings)
+    public SystemService(
+        ApplicationDbContext context,
+        AppSettings appSettings,
+        EmailSenderFactory emailSenderFactory,
+        EmailSettings emailSettings)
     {
         _context = context;
         _appSettings = appSettings;
+        _emailSenderFactory = emailSenderFactory;
+        _emailSettings = emailSettings;
     }
 
     /// <summary>
@@ -248,6 +258,85 @@ public class SystemService : ISystemService
 
         await _context.SaveChangesAsync();
         return users.Count;
+    }
+
+    /// <summary>
+    /// Sends test emails with both plain text and HTML bodies.
+    /// </summary>
+    /// <param name="request">Test email request containing sender and receiver addresses.</param>
+    /// <returns>Detailed test email execution report.</returns>
+    public async Task<TestEmailResultDto> SendTestEmailAsync(TestEmailRequestDto request)
+    {
+        if (string.IsNullOrWhiteSpace(request.SenderEmail))
+        {
+            throw new ArgumentException("SenderEmail is required", nameof(request.SenderEmail));
+        }
+
+        if (string.IsNullOrWhiteSpace(request.ReceiverEmail))
+        {
+            throw new ArgumentException("ReceiverEmail is required", nameof(request.ReceiverEmail));
+        }
+
+        var startedAt = DateTime.UtcNow;
+        var result = new TestEmailResultDto
+        {
+            StartedAtUtc = startedAt,
+            RequestedSenderEmail = request.SenderEmail.Trim(),
+            ReceiverEmail = request.ReceiverEmail.Trim(),
+            PreferredPluginKey = _emailSettings.Selection.DefaultPluginKey
+                ?? _emailSettings.Provider
+                ?? string.Empty
+        };
+
+        var emailSender = _emailSenderFactory.CreateEmailSender();
+        result.SenderImplementation = emailSender.GetType().Name;
+
+        var traceId = Guid.NewGuid().ToString("N");
+        var baseSubject = $"DR Admin Test Email [{traceId}]";
+
+        var textBody =
+$"DR Admin test email (TEXT).\n" +
+$"Requested sender: {result.RequestedSenderEmail}\n" +
+$"Receiver: {result.ReceiverEmail}\n" +
+$"Timestamp (UTC): {DateTime.UtcNow:O}\n";
+
+        var htmlBody =
+$"<html><body>" +
+$"<h3>DR Admin test email (HTML)</h3>" +
+$"<p><strong>Requested sender:</strong> {System.Net.WebUtility.HtmlEncode(result.RequestedSenderEmail)}</p>" +
+$"<p><strong>Receiver:</strong> {System.Net.WebUtility.HtmlEncode(result.ReceiverEmail)}</p>" +
+$"<p><strong>Timestamp (UTC):</strong> {DateTime.UtcNow:O}</p>" +
+$"</body></html>";
+
+        try
+        {
+            await emailSender.SendEmailAsync(result.ReceiverEmail, $"{baseSubject} [TEXT]", textBody, false);
+            result.TextEmailSent = true;
+        }
+        catch (Exception ex)
+        {
+            result.TextEmailSent = false;
+            result.TextEmailError = ex.ToString();
+            _log.Error(ex, "Error sending TEXT test email to {Receiver}", result.ReceiverEmail);
+        }
+
+        try
+        {
+            await emailSender.SendEmailAsync(result.ReceiverEmail, $"{baseSubject} [HTML]", htmlBody, true);
+            result.HtmlEmailSent = true;
+        }
+        catch (Exception ex)
+        {
+            result.HtmlEmailSent = false;
+            result.HtmlEmailError = ex.ToString();
+            _log.Error(ex, "Error sending HTML test email to {Receiver}", result.ReceiverEmail);
+        }
+
+        result.Success = result.TextEmailSent && result.HtmlEmailSent;
+        result.CompletedAtUtc = DateTime.UtcNow;
+        result.Note = "Requested sender is included in test content. Actual sender address is controlled by selected email provider configuration.";
+
+        return result;
     }
 
     /// <summary>

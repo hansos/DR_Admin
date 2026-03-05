@@ -18,6 +18,7 @@ using ISPAdmin.Workflow.Domain.Workflows;
 using ISPAdmin.Workflow.Domain.Events.DomainEvents;
 using ISPAdmin.Workflow.Domain.Events.InvoiceEvents;
 using ISPAdmin.Workflow.Domain.Events.OrderEvents;
+using EmailSenderLib.Plugins.Email;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -222,6 +223,64 @@ builder.Services.AddSingleton<ExchangeRateLib.Factories.ExchangeRateFactory>();
 var emailSettings = builder.Configuration.GetSection("EmailSettings").Get<EmailSenderLib.Infrastructure.Settings.EmailSettings>()
     ?? new EmailSenderLib.Infrastructure.Settings.EmailSettings();
 builder.Services.AddSingleton(emailSettings);
+
+var configuredEmailPluginKeys = emailSettings.Selection.EnabledPluginKeys ?? [];
+if (configuredEmailPluginKeys.Count == 0)
+{
+    configuredEmailPluginKeys = [];
+
+    if (!string.IsNullOrWhiteSpace(emailSettings.Provider))
+    {
+        configuredEmailPluginKeys.Add(emailSettings.Provider);
+    }
+
+    if (!string.IsNullOrWhiteSpace(emailSettings.Selection.DefaultPluginKey))
+    {
+        configuredEmailPluginKeys.Add(emailSettings.Selection.DefaultPluginKey);
+    }
+
+    configuredEmailPluginKeys.AddRange(emailSettings.Selection.FallbackPluginKeys ?? []);
+}
+
+foreach (var pluginKey in configuredEmailPluginKeys
+    .Where(k => !string.IsNullOrWhiteSpace(k))
+    .Select(k => k.Trim().ToLowerInvariant())
+    .Distinct())
+{
+    var pluginTypeName = pluginKey switch
+    {
+        "smtp" => "EmailSenderProviders.Smtp.Plugins.Email.SmtpEmailSenderPlugin, EmailSenderProvider.Smtp",
+        "mailkit" => "EmailSenderProviders.MailKit.Plugins.Email.MailKitEmailSenderPlugin, EmailSenderProvider.MailKit",
+        "graphapi" => "EmailSenderProviders.GraphApi.Plugins.Email.GraphApiEmailSenderPlugin, EmailSenderProvider.GraphApi",
+        "exchange" => "EmailSenderProviders.Exchange.Plugins.Email.ExchangeEmailSenderPlugin, EmailSenderProvider.Exchange",
+        "sendgrid" => "EmailSenderProviders.SendGrid.Plugins.Email.SendGridEmailSenderPlugin, EmailSenderProvider.SendGrid",
+        "mailgun" => "EmailSenderProviders.Mailgun.Plugins.Email.MailgunEmailSenderPlugin, EmailSenderProvider.Mailgun",
+        "amazonses" => "EmailSenderProviders.AmazonSes.Plugins.Email.AmazonSesEmailSenderPlugin, EmailSenderProvider.AmazonSes",
+        "postmark" => "EmailSenderProviders.Postmark.Plugins.Email.PostmarkEmailSenderPlugin, EmailSenderProvider.Postmark",
+        _ => null
+    };
+
+    if (pluginTypeName is null)
+    {
+        throw new InvalidOperationException($"Unsupported email plugin key configured: '{pluginKey}'.");
+    }
+
+    var pluginType = Type.GetType(pluginTypeName, throwOnError: false);
+
+    if (pluginType is null)
+    {
+        log.Warning("Email plugin assembly/type not found for key '{PluginKey}' ({PluginTypeName}). Skipping registration.", pluginKey, pluginTypeName);
+        continue;
+    }
+
+    if (!typeof(IEmailSenderPlugin).IsAssignableFrom(pluginType))
+    {
+        throw new InvalidOperationException($"Configured email plugin type '{pluginTypeName}' does not implement IEmailSenderPlugin.");
+    }
+
+    builder.Services.AddSingleton(typeof(IEmailSenderPlugin), pluginType);
+}
+
 builder.Services.AddSingleton<EmailSenderLib.Factories.EmailSenderFactory>();
 
 // Payment Gateway Library - Stripe settings

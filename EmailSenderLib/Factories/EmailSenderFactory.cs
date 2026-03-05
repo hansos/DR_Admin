@@ -1,111 +1,84 @@
-﻿using EmailSenderLib.Implementations;
-using EmailSenderLib.Infrastructure.Settings;
+﻿using EmailSenderLib.Infrastructure.Settings;
 using EmailSenderLib.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using EmailSenderLib.Plugins.Email;
+using PluginLib.Plugins;
 
 namespace EmailSenderLib.Factories
 {
     public class EmailSenderFactory
     {
         private readonly EmailSettings _mailSettings;
+        private readonly IPluginSelector _pluginSelector;
+        private readonly IReadOnlyCollection<IEmailSenderPlugin> _emailPlugins;
 
-        public EmailSenderFactory(EmailSettings emailSettings)
+        public EmailSenderFactory(EmailSettings emailSettings, IEnumerable<IEmailSenderPlugin>? emailPlugins = null)
         {
             _mailSettings = emailSettings ?? throw new ArgumentNullException(nameof(emailSettings));
+            var enabled = new HashSet<string>(
+                _mailSettings.Selection.EnabledPluginKeys ?? [],
+                StringComparer.OrdinalIgnoreCase);
+            var disabled = new HashSet<string>(
+                _mailSettings.Selection.DisabledPluginKeys ?? [],
+                StringComparer.OrdinalIgnoreCase);
+
+            _emailPlugins = (emailPlugins ?? [])
+                .Where(p => (enabled.Count == 0 || enabled.Contains(p.Key))
+                            && !disabled.Contains(p.Key))
+                .ToArray();
+
+            _pluginSelector = new PluginSelector(new PluginRegistry(_emailPlugins));
         }
 
         public IEmailSender CreateEmailSender()
         {
+            return CreateEmailSender(null);
+        }
 
-            return _mailSettings.Provider.ToLower() switch
+        public IEmailSender CreateEmailSender(string? pluginKey, IEnumerable<string>? fallbackPluginKeys = null)
+        {
+            var preferredPluginKey = FirstNotEmpty(
+                pluginKey,
+                _mailSettings.Provider,
+                _mailSettings.Selection.DefaultPluginKey);
+
+            var configuredFallbacks = _mailSettings.Selection.FallbackPluginKeys;
+            var fallbackKeys = (fallbackPluginKeys ?? configuredFallbacks ?? [])
+                .Where(k => !string.IsNullOrWhiteSpace(k));
+
+            var selectedPlugin = _pluginSelector.Select(
+                PluginType.Email,
+                preferredPluginKey,
+                fallbackKeys);
+
+            if (selectedPlugin is not IEmailSenderPlugin emailPlugin)
             {
-                "smtp" => _mailSettings.Smtp is not null 
-                    ? new SmtpEmailSender(
-                        _mailSettings.Smtp.Host,
-                        _mailSettings.Smtp.Port,
-                        _mailSettings.Smtp.Username,
-                        _mailSettings.Smtp.Password,
-                        _mailSettings.Smtp.EnableSsl,
-                        _mailSettings.Smtp.FromEmail,
-                        _mailSettings.Smtp.FromName
-                    )
-                    : throw new InvalidOperationException("SMTP settings are not configured"),
-                
-                "mailkit" => _mailSettings.MailKit is not null
-                    ? new MailKitEmailSender(
-                        _mailSettings.MailKit.Host,
-                        _mailSettings.MailKit.Port,
-                        _mailSettings.MailKit.Username,
-                        _mailSettings.MailKit.Password,
-                        _mailSettings.MailKit.UseSsl,
-                        _mailSettings.MailKit.FromEmail,
-                        _mailSettings.MailKit.FromName
-                    )
-                    : throw new InvalidOperationException("MailKit settings are not configured"),
-                
-                "graphapi" => _mailSettings.GraphApi is not null
-                    ? new GraphApiEmailSender(
-                        _mailSettings.GraphApi.TenantId,
-                        _mailSettings.GraphApi.ClientId,
-                        _mailSettings.GraphApi.ClientSecret,
-                        _mailSettings.GraphApi.FromEmail,
-                        _mailSettings.GraphApi.FromName,
-                        _mailSettings.GraphApi.Scope
-                    )
-                    : throw new InvalidOperationException("GraphApi settings are not configured"),
-                
-                "exchange" => _mailSettings.Exchange is not null
-                    ? new ExchangeEmailSender(
-                        _mailSettings.Exchange.ServerUrl,
-                        _mailSettings.Exchange.Username,
-                        _mailSettings.Exchange.Password,
-                        _mailSettings.Exchange.Domain,
-                        _mailSettings.Exchange.FromEmail,
-                        _mailSettings.Exchange.FromName,
-                        _mailSettings.Exchange.Version
-                    )
-                    : throw new InvalidOperationException("Exchange settings are not configured"),
-                
-                "sendgrid" => _mailSettings.SendGrid is not null
-                    ? new SendGridEmailSender(
-                        _mailSettings.SendGrid.ApiKey,
-                        _mailSettings.SendGrid.FromEmail,
-                        _mailSettings.SendGrid.FromName
-                    )
-                    : throw new InvalidOperationException("SendGrid settings are not configured"),
-                
-                "mailgun" => _mailSettings.Mailgun is not null
-                    ? new MailgunEmailSender(
-                        _mailSettings.Mailgun.ApiKey,
-                        _mailSettings.Mailgun.Domain,
-                        _mailSettings.Mailgun.FromEmail,
-                        _mailSettings.Mailgun.FromName,
-                        _mailSettings.Mailgun.Region
-                    )
-                    : throw new InvalidOperationException("Mailgun settings are not configured"),
-                
-                "amazonses" => _mailSettings.AmazonSes is not null
-                    ? new AmazonSesEmailSender(
-                        _mailSettings.AmazonSes.AccessKeyId,
-                        _mailSettings.AmazonSes.SecretAccessKey,
-                        _mailSettings.AmazonSes.Region,
-                        _mailSettings.AmazonSes.FromEmail,
-                        _mailSettings.AmazonSes.FromName
-                    )
-                    : throw new InvalidOperationException("AmazonSes settings are not configured"),
-                
-                "postmark" => _mailSettings.Postmark is not null
-                    ? new PostmarkEmailSender(
-                        _mailSettings.Postmark.ServerToken,
-                        _mailSettings.Postmark.FromEmail,
-                        _mailSettings.Postmark.FromName
-                    )
-                    : throw new InvalidOperationException("Postmark settings are not configured"),
-                
-                _ => throw new InvalidOperationException($"Unknown email provider: {_mailSettings.Provider}")
-            };
+                throw new InvalidOperationException($"Selected plugin '{selectedPlugin.Key}' is not a valid email plugin.");
+            }
+
+            if (!emailPlugin.CanCreate(_mailSettings))
+            {
+                foreach (var fallback in fallbackKeys)
+                {
+                    var plugin = _emailPlugins.FirstOrDefault(
+                        p => p.Key.Equals(fallback, StringComparison.OrdinalIgnoreCase)
+                             && p.CanCreate(_mailSettings)
+                             && p.IsEnabled);
+
+                    if (plugin is not null)
+                    {
+                        return plugin.Create(_mailSettings);
+                    }
+                }
+
+                throw new InvalidOperationException($"Email plugin '{emailPlugin.Key}' is selected but not configured.");
+            }
+
+            return emailPlugin.Create(_mailSettings);
+        }
+
+        private static string? FirstNotEmpty(params string?[] candidates)
+        {
+            return candidates.FirstOrDefault(static c => !string.IsNullOrWhiteSpace(c));
         }
     }
 }

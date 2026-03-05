@@ -24,6 +24,95 @@ public interface ISystemService
     /// <param name="backupFilePath">Full path to the backup file to restore</param>
     /// <returns>Summary of restore results</returns>
     Task<RestoreResultDto> RestoreFromBackupAsync(string backupFilePath);
+
+    /// <summary>
+    /// Sends test emails with both plain text and HTML bodies.
+    /// </summary>
+    /// <param name="request">Test email request containing sender and receiver addresses.</param>
+    /// <returns>Detailed test email execution report.</returns>
+    Task<TestEmailResultDto> SendTestEmailAsync(TestEmailRequestDto request);
+}
+
+/// <summary>
+/// Request payload for sending test emails.
+/// </summary>
+public class TestEmailRequestDto
+{
+    /// <summary>
+    /// Sender email address for the test context.
+    /// </summary>
+    public string SenderEmail { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Receiver email address.
+    /// </summary>
+    public string ReceiverEmail { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Detailed result report for test email sending.
+/// </summary>
+public class TestEmailResultDto
+{
+    /// <summary>
+    /// Indicates if both text and html emails were sent successfully.
+    /// </summary>
+    public bool Success { get; set; }
+
+    /// <summary>
+    /// UTC timestamp when execution started.
+    /// </summary>
+    public DateTime StartedAtUtc { get; set; }
+
+    /// <summary>
+    /// UTC timestamp when execution completed.
+    /// </summary>
+    public DateTime CompletedAtUtc { get; set; }
+
+    /// <summary>
+    /// Requested sender email from the API payload.
+    /// </summary>
+    public string RequestedSenderEmail { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Receiver email from the API payload.
+    /// </summary>
+    public string ReceiverEmail { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Configured preferred plugin key.
+    /// </summary>
+    public string PreferredPluginKey { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Concrete sender implementation type.
+    /// </summary>
+    public string SenderImplementation { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Indicates whether text email send succeeded.
+    /// </summary>
+    public bool TextEmailSent { get; set; }
+
+    /// <summary>
+    /// Indicates whether html email send succeeded.
+    /// </summary>
+    public bool HtmlEmailSent { get; set; }
+
+    /// <summary>
+    /// Error message for text email send if it failed.
+    /// </summary>
+    public string? TextEmailError { get; set; }
+
+    /// <summary>
+    /// Error message for html email send if it failed.
+    /// </summary>
+    public string? HtmlEmailError { get; set; }
+
+    /// <summary>
+    /// Informational note included in the report.
+    /// </summary>
+    public string Note { get; set; } = string.Empty;
 }
 
 /// <summary>

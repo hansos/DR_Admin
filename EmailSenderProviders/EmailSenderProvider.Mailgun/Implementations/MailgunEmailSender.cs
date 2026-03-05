@@ -2,17 +2,21 @@ using EmailSenderLib.Interfaces;
 
 namespace EmailSenderLib.Implementations
 {
-    public class PostmarkEmailSender : IEmailSender
+    public class MailgunEmailSender : IEmailSender
     {
-        private readonly string _serverToken;
+        private readonly string _apiKey;
+        private readonly string _domain;
         private readonly string _fromEmail;
         private readonly string _fromName;
+        private readonly string _region;
 
-        public PostmarkEmailSender(string serverToken, string fromEmail, string fromName = "")
+        public MailgunEmailSender(string apiKey, string domain, string fromEmail, string fromName = "", string region = "US")
         {
-            _serverToken = serverToken;
+            _apiKey = apiKey;
+            _domain = domain;
             _fromEmail = fromEmail;
             _fromName = fromName;
+            _region = region;
         }
 
         public async Task SendEmailAsync(string to, string subject, string body, bool isHtml = false)
@@ -22,10 +26,8 @@ namespace EmailSenderLib.Implementations
 
         public async Task SendEmailAsync(string to, string subject, string body, List<string> attachments, bool isHtml = false)
         {
-            // TODO: Implement Postmark email sending
-            // Requires PostmarkDotNet NuGet package
             await Task.CompletedTask;
-            throw new NotImplementedException("Postmark email sending requires PostmarkDotNet package implementation");
+            throw new NotImplementedException("Mailgun email sending requires HTTP API implementation");
         }
     }
 }

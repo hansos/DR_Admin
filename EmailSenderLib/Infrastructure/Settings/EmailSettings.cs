@@ -8,6 +8,7 @@ namespace EmailSenderLib.Infrastructure.Settings
     {
         public string Provider { get; set; } = string.Empty;
         public string TemplatesPath { get; set; } = "Templates";
+        public EmailPluginSelectionSettings Selection { get; set; } = new();
         public Smtp? Smtp { get; set; }
         public MailKit? MailKit { get; set; }
         public GraphApi? GraphApi { get; set; }

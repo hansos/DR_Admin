@@ -28,8 +28,6 @@ namespace EmailSenderLib.Implementations
 
         public async Task SendEmailAsync(string to, string subject, string body, List<string> attachments, bool isHtml = false)
         {
-            // TODO: Implement Microsoft Graph API email sending
-            // Requires Microsoft.Graph NuGet package
             throw new NotImplementedException("GraphApi email sending requires Microsoft.Graph package implementation");
         }
     }

@@ -61,7 +61,6 @@ namespace EmailSenderLib.Implementations
                     bodyBuilder.TextBody = body;
                 }
 
-                // Add attachments
                 if (attachments != null && attachments.Any())
                 {
                     _log.Debug("Processing {Count} attachments", attachments.Count);
@@ -84,16 +83,13 @@ namespace EmailSenderLib.Implementations
 
                 using var client = new SmtpClient();
 
-                // Determine the secure socket options based on port and SSL setting
                 SecureSocketOptions socketOptions;
                 if (_port == 465)
                 {
-                    // Port 465 uses implicit SSL/TLS
                     socketOptions = SecureSocketOptions.SslOnConnect;
                 }
                 else if (_enableSsl)
                 {
-                    // Port 587 and others typically use STARTTLS
                     socketOptions = SecureSocketOptions.StartTls;
                 }
                 else
@@ -135,7 +131,7 @@ namespace EmailSenderLib.Implementations
             }
             catch (Exception ex)
             {
-                _log.Error(ex, "Unexpected error sending email - Type: {ExceptionType}, Message: {Message}", 
+                _log.Error(ex, "Unexpected error sending email - Type: {ExceptionType}, Message: {Message}",
                     ex.GetType().Name, ex.Message);
                 throw;
             }

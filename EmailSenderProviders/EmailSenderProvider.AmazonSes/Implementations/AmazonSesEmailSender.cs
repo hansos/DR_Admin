@@ -26,8 +26,6 @@ namespace EmailSenderLib.Implementations
 
         public async Task SendEmailAsync(string to, string subject, string body, List<string> attachments, bool isHtml = false)
         {
-            // TODO: Implement Amazon SES email sending
-            // Requires AWSSDK.SimpleEmail NuGet package
             await Task.CompletedTask;
             throw new NotImplementedException("Amazon SES email sending requires AWS SDK implementation");
         }

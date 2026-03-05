@@ -30,24 +30,6 @@ namespace EmailSenderLib.Implementations
 
         public async Task SendEmailAsync(string to, string subject, string body, List<string> attachments, bool isHtml = false)
         {
-            // TODO: Implement MailKit email sending
-            // Requires MailKit NuGet package
-            // Example implementation:
-            // using var client = new SmtpClient();
-            // await client.ConnectAsync(_host, _port, _useSsl);
-            // await client.AuthenticateAsync(_username, _password);
-            // var message = new MimeMessage();
-            // message.From.Add(new MailboxAddress(_fromName, _fromEmail));
-            // message.To.Add(MailboxAddress.Parse(to));
-            // message.Subject = subject;
-            // var builder = new BodyBuilder { HtmlBody = isHtml ? body : null, TextBody = isHtml ? null : body };
-            // foreach (var attachment in attachments ?? [])
-            //     if (File.Exists(attachment))
-            //         builder.Attachments.Add(attachment);
-            // message.Body = builder.ToMessageBody();
-            // await client.SendAsync(message);
-            // await client.DisconnectAsync(true);
-            
             await Task.CompletedTask;
             throw new NotImplementedException("MailKit email sending requires MailKit package implementation");
         }

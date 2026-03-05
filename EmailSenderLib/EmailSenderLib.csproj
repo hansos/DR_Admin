@@ -7,8 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\PluginLib\PluginLib.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="Extensions\" />
     <Folder Include="Enums\" />
+    <Folder Include="Implementations\" />
     <Folder Include="Templating\" />
   </ItemGroup>
 
