@@ -11,27 +11,27 @@ It provides programmatic access to domain registration, hosting management, and 
 
 ### Features
 
-- ==**Domain Search & Availability**==
-  - ==Check availability across multiple registrars.==
-  - ==Support for TLD-specific rules and pricing.==
-- ==**Domain Registration**==
-  - ==Register domains with multiple registrars.==
-  - ==Bulk registration support.==
-- ==**Domain Renewal & Expiration**==
-  - ==Manual and automatic renewals.==
-  - ==Notifications for upcoming expirations.==
-- ==**Domain Transfer**==
-  - ==Initiate and track inbound/outbound transfers.==
-- ==**Domain Ownership & Contact Management**==
-  - ==Update WHOIS/Registrant info.==
-  - ==Privacy protection / WHOIS proxy support.==
-- ==**DNS Management**==
-  - ==Add, update, or remove DNS records (A, AAAA, CNAME, MX, TXT, SRV, etc.).==
-  - ==Multiple name server support.==
-  - ==DNS zone import/export.==
-- ==**Domain Status & History**==
-  - ==Query domain status: active, pending, locked, suspended.==
-  - ==Retrieve registration date, expiration, registrar, and owner info.==
+- ~~**Domain Search & Availability**~~
+  - ~~Check availability across multiple registrars.~~
+  - ~~Support for TLD-specific rules and pricing.~~
+- ~~**Domain Registration**~~
+  - ~~Register domains with multiple registrars.~~
+  - ~~Bulk registration support.~~
+- ~~**Domain Renewal & Expiration**~~
+  - ~~Manual and automatic renewals.~~
+  - ~~Notifications for upcoming expirations.~~
+- ~~**Domain Transfer**~~
+  - ~~Initiate and track inbound/outbound transfers.~~
+- ~~**Domain Ownership & Contact Management**~~
+  - ~~Update WHOIS/Registrant info.~~
+  - ~~Privacy protection / WHOIS proxy support.~~
+- ~~**DNS Management**~~
+  - ~~Add, update, or remove DNS records (A, AAAA, CNAME, MX, TXT, SRV, etc.).~~
+  - ~~Multiple name server support.~~
+  - ~~DNS zone import/export.~~
+- ~~**Domain Status & History**~~
+  - ~~Query domain status: active, pending, locked, suspended.~~
+  - ~~Retrieve registration date, expiration, registrar, and owner info.~~
 
 ### Workflows
 
