@@ -3,9 +3,13 @@ using ISPAdmin.Data.Entities;
 using ISPAdmin.Data.Enums;
 using ISPAdmin.DTOs;
 using Microsoft.EntityFrameworkCore;
+using PaymentGatewayLib.Infrastructure.Settings;
 using PaymentGatewayLib.Implementations;
 using PaymentGatewayLib.Interfaces;
 using Serilog;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
 
 namespace ISPAdmin.Services;
 
@@ -15,12 +19,15 @@ namespace ISPAdmin.Services;
 public class PaymentProcessingService : IPaymentProcessingService
 {
     private readonly ApplicationDbContext _context;
+    private readonly StripeSettings _stripeSettings;
     private static readonly Serilog.ILogger _log = Log.ForContext<PaymentProcessingService>();
 
     public PaymentProcessingService(
-        ApplicationDbContext context)
+        ApplicationDbContext context,
+        StripeSettings stripeSettings)
     {
         _context = context;
+        _stripeSettings = stripeSettings;
     }
 
     public async Task<PaymentResultDto> ProcessInvoicePaymentAsync(ProcessInvoicePaymentDto dto)
@@ -208,15 +215,56 @@ public class PaymentProcessingService : IPaymentProcessingService
         try
         {
             _log.Information("Handling payment webhook from gateway: {GatewayName}", gatewayName);
-            
-            // TODO: Implement webhook verification and processing
-            // This would:
-            // 1. Verify webhook signature
-            // 2. Parse webhook payload
-            // 3. Update payment attempt/transaction status
-            // 4. Update invoice status
-            // 5. Send notifications
-            
+
+            if (!string.Equals(gatewayName, "stripe", StringComparison.OrdinalIgnoreCase))
+            {
+                _log.Warning("Unsupported webhook gateway: {GatewayName}", gatewayName);
+                return false;
+            }
+
+            if (!IsValidStripeSignature(payload, signature))
+            {
+                _log.Warning("Invalid Stripe webhook signature");
+                return false;
+            }
+
+            using var document = JsonDocument.Parse(payload);
+            var root = document.RootElement;
+
+            if (!root.TryGetProperty("type", out var typeElement)
+                || !root.TryGetProperty("data", out var dataElement)
+                || !dataElement.TryGetProperty("object", out var objectElement))
+            {
+                _log.Warning("Invalid Stripe webhook payload format");
+                return false;
+            }
+
+            var eventType = typeElement.GetString() ?? string.Empty;
+
+            switch (eventType)
+            {
+                case "invoice.paid":
+                case "invoice.payment_succeeded":
+                    await HandleStripeInvoicePaidAsync(objectElement);
+                    break;
+
+                case "invoice.payment_failed":
+                    await HandleStripeInvoicePaymentFailedAsync(objectElement);
+                    break;
+
+                case "customer.subscription.updated":
+                    await HandleStripeSubscriptionUpdatedAsync(objectElement);
+                    break;
+
+                case "customer.subscription.deleted":
+                    await HandleStripeSubscriptionDeletedAsync(objectElement);
+                    break;
+
+                default:
+                    _log.Information("Ignoring unsupported Stripe event type: {EventType}", eventType);
+                    break;
+            }
+
             return true;
         }
         catch (Exception ex)
@@ -453,6 +501,339 @@ public class PaymentProcessingService : IPaymentProcessingService
             CreatedAt = attempt.CreatedAt,
             UpdatedAt = attempt.UpdatedAt
         };
+    }
+
+    private bool IsValidStripeSignature(string payload, string signatureHeader)
+    {
+        if (string.IsNullOrWhiteSpace(_stripeSettings.WebhookSecret))
+        {
+            return true;
+        }
+
+        if (string.IsNullOrWhiteSpace(signatureHeader))
+        {
+            return false;
+        }
+
+        string? timestamp = null;
+        string? v1 = null;
+
+        foreach (var part in signatureHeader.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            if (part.StartsWith("t=", StringComparison.OrdinalIgnoreCase))
+            {
+                timestamp = part[2..];
+            }
+            else if (part.StartsWith("v1=", StringComparison.OrdinalIgnoreCase))
+            {
+                v1 = part[3..];
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(timestamp) || string.IsNullOrWhiteSpace(v1))
+        {
+            return false;
+        }
+
+        var signedPayload = $"{timestamp}.{payload}";
+        using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(_stripeSettings.WebhookSecret));
+        var hashBytes = hmac.ComputeHash(Encoding.UTF8.GetBytes(signedPayload));
+        var computedSignature = Convert.ToHexString(hashBytes).ToLowerInvariant();
+
+        return CryptographicOperations.FixedTimeEquals(
+            Encoding.UTF8.GetBytes(computedSignature),
+            Encoding.UTF8.GetBytes(v1));
+    }
+
+    private async Task HandleStripeInvoicePaidAsync(JsonElement stripeInvoice)
+    {
+        var invoice = await ResolveInvoiceFromStripeObjectAsync(stripeInvoice);
+        if (invoice == null)
+        {
+            _log.Warning("Stripe invoice.paid received but local invoice could not be resolved");
+            return;
+        }
+
+        invoice.Status = InvoiceStatus.Paid;
+        invoice.PaidAt ??= DateTime.UtcNow;
+        invoice.AmountPaid = invoice.TotalAmount;
+        invoice.AmountDue = 0;
+        invoice.UpdatedAt = DateTime.UtcNow;
+
+        var chargeId = GetStringProperty(stripeInvoice, "charge");
+        var paymentIntentId = GetStringProperty(stripeInvoice, "payment_intent");
+        var transactionId = !string.IsNullOrWhiteSpace(chargeId) ? chargeId : paymentIntentId;
+
+        if (!string.IsNullOrWhiteSpace(transactionId))
+        {
+            var transaction = await _context.PaymentTransactions
+                .FirstOrDefaultAsync(t => t.TransactionId == transactionId);
+
+            if (transaction != null)
+            {
+                transaction.Status = PaymentTransactionStatus.Completed;
+                transaction.ProcessedAt ??= DateTime.UtcNow;
+                transaction.UpdatedAt = DateTime.UtcNow;
+
+                var hasInvoicePayment = await _context.InvoicePayments
+                    .AnyAsync(ip => ip.InvoiceId == invoice.Id && ip.PaymentTransactionId == transaction.Id);
+
+                if (!hasInvoicePayment)
+                {
+                    _context.InvoicePayments.Add(new InvoicePayment
+                    {
+                        InvoiceId = invoice.Id,
+                        PaymentTransactionId = transaction.Id,
+                        AmountApplied = invoice.TotalAmount,
+                        Currency = invoice.CurrencyCode,
+                        InvoiceBalance = 0,
+                        InvoiceTotalAmount = invoice.TotalAmount,
+                        IsFullPayment = true,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    });
+                }
+            }
+
+            var attempt = await _context.PaymentAttempts
+                .FirstOrDefaultAsync(a => a.GatewayTransactionId == transactionId);
+
+            if (attempt != null)
+            {
+                attempt.Status = PaymentAttemptStatus.Succeeded;
+                attempt.UpdatedAt = DateTime.UtcNow;
+            }
+        }
+
+        var subscription = await ResolveSubscriptionFromStripeObjectAsync(stripeInvoice, invoice);
+        if (subscription != null)
+        {
+            subscription.Status = SubscriptionStatus.Active;
+            subscription.RetryCount = 0;
+            subscription.LastSuccessfulBilling = DateTime.UtcNow;
+            subscription.LastBillingAttempt = DateTime.UtcNow;
+            subscription.UpdatedAt = DateTime.UtcNow;
+        }
+
+        await _context.SaveChangesAsync();
+    }
+
+    private async Task HandleStripeInvoicePaymentFailedAsync(JsonElement stripeInvoice)
+    {
+        var invoice = await ResolveInvoiceFromStripeObjectAsync(stripeInvoice);
+        if (invoice != null)
+        {
+            invoice.Status = DateTime.UtcNow > invoice.DueDate ? InvoiceStatus.Overdue : InvoiceStatus.Issued;
+            invoice.UpdatedAt = DateTime.UtcNow;
+        }
+
+        var chargeId = GetStringProperty(stripeInvoice, "charge");
+        var paymentIntentId = GetStringProperty(stripeInvoice, "payment_intent");
+        var transactionId = !string.IsNullOrWhiteSpace(chargeId) ? chargeId : paymentIntentId;
+
+        if (!string.IsNullOrWhiteSpace(transactionId))
+        {
+            var transaction = await _context.PaymentTransactions
+                .FirstOrDefaultAsync(t => t.TransactionId == transactionId);
+
+            if (transaction != null)
+            {
+                transaction.Status = PaymentTransactionStatus.Failed;
+                transaction.UpdatedAt = DateTime.UtcNow;
+            }
+
+            var attempt = await _context.PaymentAttempts
+                .FirstOrDefaultAsync(a => a.GatewayTransactionId == transactionId);
+
+            if (attempt != null)
+            {
+                attempt.Status = PaymentAttemptStatus.Failed;
+                attempt.UpdatedAt = DateTime.UtcNow;
+            }
+        }
+
+        var subscription = await ResolveSubscriptionFromStripeObjectAsync(stripeInvoice, invoice);
+        if (subscription != null)
+        {
+            subscription.Status = SubscriptionStatus.PastDue;
+            subscription.RetryCount += 1;
+            subscription.LastBillingAttempt = DateTime.UtcNow;
+            subscription.UpdatedAt = DateTime.UtcNow;
+        }
+
+        await _context.SaveChangesAsync();
+    }
+
+    private async Task HandleStripeSubscriptionUpdatedAsync(JsonElement stripeSubscription)
+    {
+        var subscription = await ResolveSubscriptionFromStripeObjectAsync(stripeSubscription, null);
+        if (subscription == null)
+        {
+            _log.Warning("Stripe customer.subscription.updated received but local subscription could not be resolved");
+            return;
+        }
+
+        var stripeStatus = GetStringProperty(stripeSubscription, "status")?.ToLowerInvariant();
+        subscription.Status = stripeStatus switch
+        {
+            "active" => SubscriptionStatus.Active,
+            "trialing" => SubscriptionStatus.Trialing,
+            "past_due" => SubscriptionStatus.PastDue,
+            "canceled" => SubscriptionStatus.Cancelled,
+            "incomplete" => SubscriptionStatus.Incomplete,
+            _ => subscription.Status
+        };
+
+        if (subscription.Status == SubscriptionStatus.Cancelled)
+        {
+            subscription.CancelledAt ??= DateTime.UtcNow;
+        }
+
+        subscription.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+    }
+
+    private async Task HandleStripeSubscriptionDeletedAsync(JsonElement stripeSubscription)
+    {
+        var subscription = await ResolveSubscriptionFromStripeObjectAsync(stripeSubscription, null);
+        if (subscription == null)
+        {
+            _log.Warning("Stripe customer.subscription.deleted received but local subscription could not be resolved");
+            return;
+        }
+
+        subscription.Status = SubscriptionStatus.Cancelled;
+        subscription.CancelledAt ??= DateTime.UtcNow;
+        subscription.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+    }
+
+    private async Task<Invoice?> ResolveInvoiceFromStripeObjectAsync(JsonElement stripeObject)
+    {
+        var localInvoiceId = TryGetMetadataInt(stripeObject, "localInvoiceId")
+            ?? TryGetMetadataInt(stripeObject, "invoiceId");
+
+        if (localInvoiceId.HasValue)
+        {
+            return await _context.Invoices.FirstOrDefaultAsync(i => i.Id == localInvoiceId.Value);
+        }
+
+        var chargeId = GetStringProperty(stripeObject, "charge");
+        var paymentIntentId = GetStringProperty(stripeObject, "payment_intent");
+
+        if (!string.IsNullOrWhiteSpace(chargeId) || !string.IsNullOrWhiteSpace(paymentIntentId))
+        {
+            var transactionId = !string.IsNullOrWhiteSpace(chargeId) ? chargeId : paymentIntentId;
+
+            var invoiceIdFromTransaction = await _context.PaymentTransactions
+                .Where(t => t.TransactionId == transactionId)
+                .Select(t => (int?)t.InvoiceId)
+                .FirstOrDefaultAsync();
+
+            if (invoiceIdFromTransaction.HasValue)
+            {
+                return await _context.Invoices.FirstOrDefaultAsync(i => i.Id == invoiceIdFromTransaction.Value);
+            }
+
+            var invoiceIdFromAttempt = await _context.PaymentAttempts
+                .Where(a => a.GatewayTransactionId == transactionId)
+                .Select(a => (int?)a.InvoiceId)
+                .FirstOrDefaultAsync();
+
+            if (invoiceIdFromAttempt.HasValue)
+            {
+                return await _context.Invoices.FirstOrDefaultAsync(i => i.Id == invoiceIdFromAttempt.Value);
+            }
+        }
+
+        return null;
+    }
+
+    private async Task<Subscription?> ResolveSubscriptionFromStripeObjectAsync(JsonElement stripeObject, Invoice? invoice)
+    {
+        var localSubscriptionId = TryGetMetadataInt(stripeObject, "localSubscriptionId")
+            ?? TryGetMetadataInt(stripeObject, "subscriptionId");
+
+        if (localSubscriptionId.HasValue)
+        {
+            return await _context.Subscriptions.FirstOrDefaultAsync(s => s.Id == localSubscriptionId.Value);
+        }
+
+        if (invoice != null)
+        {
+            var id = ExtractSubscriptionIdFromInvoiceComment(invoice.InternalComment);
+            if (id.HasValue)
+            {
+                return await _context.Subscriptions.FirstOrDefaultAsync(s => s.Id == id.Value);
+            }
+        }
+
+        var stripeSubscriptionId = GetStringProperty(stripeObject, "id");
+        if (!string.IsNullOrWhiteSpace(stripeSubscriptionId) && stripeSubscriptionId.StartsWith("sub_", StringComparison.OrdinalIgnoreCase))
+        {
+            return await _context.Subscriptions
+                .FirstOrDefaultAsync(s => s.Metadata.Contains(stripeSubscriptionId));
+        }
+
+        var nestedSubscriptionId = GetStringProperty(stripeObject, "subscription");
+        if (!string.IsNullOrWhiteSpace(nestedSubscriptionId))
+        {
+            return await _context.Subscriptions
+                .FirstOrDefaultAsync(s => s.Metadata.Contains(nestedSubscriptionId));
+        }
+
+        return null;
+    }
+
+    private static int? TryGetMetadataInt(JsonElement element, string key)
+    {
+        if (!element.TryGetProperty("metadata", out var metadata) || metadata.ValueKind != JsonValueKind.Object)
+        {
+            return null;
+        }
+
+        if (!metadata.TryGetProperty(key, out var valueElement))
+        {
+            return null;
+        }
+
+        var value = valueElement.GetString();
+        return int.TryParse(value, out var result) ? result : null;
+    }
+
+    private static string? GetStringProperty(JsonElement element, string propertyName)
+    {
+        if (!element.TryGetProperty(propertyName, out var propertyValue))
+        {
+            return null;
+        }
+
+        return propertyValue.ValueKind switch
+        {
+            JsonValueKind.String => propertyValue.GetString(),
+            JsonValueKind.Number => propertyValue.GetRawText(),
+            JsonValueKind.Null => null,
+            _ => propertyValue.GetRawText()
+        };
+    }
+
+    private static int? ExtractSubscriptionIdFromInvoiceComment(string comment)
+    {
+        const string marker = "Auto-generated from subscription ID:";
+        if (string.IsNullOrWhiteSpace(comment))
+        {
+            return null;
+        }
+
+        var markerIndex = comment.IndexOf(marker, StringComparison.OrdinalIgnoreCase);
+        if (markerIndex < 0)
+        {
+            return null;
+        }
+
+        var value = comment[(markerIndex + marker.Length)..].Trim();
+        return int.TryParse(value, out var subscriptionId) ? subscriptionId : null;
     }
 
     private static IPaymentGateway CreateGatewayClient(PaymentGateway gateway)

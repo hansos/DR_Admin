@@ -1,0 +1,233 @@
+@page "/billing/coupons"
+
+<div id="coupons-page" class="container-fluid">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+        <div>
+            <h2 class="h4 mb-1"><i class="bi bi-ticket-perforated"></i> Coupons</h2>
+            <p class="text-muted mb-0">Manage coupons and coupon usage.</p>
+        </div>
+        <button class="btn btn-primary" id="coupons-create" type="button">
+            <i class="bi bi-plus-circle"></i> New Coupon
+        </button>
+    </div>
+
+    <div id="coupons-alert-success" class="alert alert-success d-none" role="alert"></div>
+    <div id="coupons-alert-error" class="alert alert-danger d-none" role="alert"></div>
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-tags"></i> Coupons</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Code</th>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Value</th>
+                            <th>Validity</th>
+                            <th>Usage</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="coupons-table-body">
+                        <tr>
+                            <td colspan="9" class="text-center">
+                                <div class="spinner-border text-primary"></div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-light">
+            <div class="row g-2 align-items-end">
+                <div class="col-12 col-md-4">
+                    <label class="form-label mb-1" for="coupons-usages-filter-coupon">Coupon</label>
+                    <select class="form-select" id="coupons-usages-filter-coupon">
+                        <option value="">Any coupon</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-3">
+                    <label class="form-label mb-1" for="coupons-usages-filter-customerid">Customer ID</label>
+                    <input class="form-control" id="coupons-usages-filter-customerid" type="number" min="1" placeholder="Any" />
+                </div>
+                <div class="col-12 col-md-2 ms-auto">
+                    <label class="form-label mb-1" for="coupons-usages-page-size">Page size</label>
+                    <select class="form-select" id="coupons-usages-page-size">
+                        <option value="10">10</option>
+                        <option value="25" selected>25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+                <div class="col-12 d-flex gap-2 justify-content-end">
+                    <button class="btn btn-outline-primary" id="coupons-usages-apply" type="button"><i class="bi bi-funnel"></i> Apply</button>
+                    <button class="btn btn-outline-secondary" id="coupons-usages-reset" type="button"><i class="bi bi-x-circle"></i> Reset</button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Used At</th>
+                            <th>Coupon</th>
+                            <th>Customer</th>
+                            <th>Quote</th>
+                            <th>Order</th>
+                            <th>Discount</th>
+                        </tr>
+                    </thead>
+                    <tbody id="coupons-usages-table-body">
+                        <tr>
+                            <td colspan="7" class="text-center">
+                                <div class="spinner-border text-primary"></div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div class="text-muted small" id="coupons-usages-pagination-info"></div>
+                <div id="coupons-usages-paging-controls" class="mt-3">
+                    <nav aria-label="Coupon usages pagination">
+                        <ul class="pagination justify-content-center mb-0" id="coupons-usages-paging-controls-list"></ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="coupons-edit-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="coupons-modal-title">New Coupon</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="coupons-form" novalidate>
+                    <div class="row g-3">
+                        <div class="col-12 col-md-4">
+                            <label class="form-label" for="coupons-code">Code <span class="text-danger">*</span></label>
+                            <input class="form-control" id="coupons-code" type="text" maxlength="50" />
+                        </div>
+                        <div class="col-12 col-md-8">
+                            <label class="form-label" for="coupons-name">Name <span class="text-danger">*</span></label>
+                            <input class="form-control" id="coupons-name" type="text" maxlength="200" />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="coupons-description">Description</label>
+                            <textarea class="form-control" id="coupons-description" rows="2"></textarea>
+                        </div>
+                        <div class="col-12 col-md-3">
+                            <label class="form-label" for="coupons-type">Type <span class="text-danger">*</span></label>
+                            <select class="form-select" id="coupons-type">
+                                <option value="0">Percentage</option>
+                                <option value="1">Fixed amount</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-3">
+                            <label class="form-label" for="coupons-value">Value <span class="text-danger">*</span></label>
+                            <input class="form-control" id="coupons-value" type="number" min="0" step="0.01" />
+                        </div>
+                        <div class="col-12 col-md-3">
+                            <label class="form-label" for="coupons-applies-to">Applies to <span class="text-danger">*</span></label>
+                            <select class="form-select" id="coupons-applies-to">
+                                <option value="0">Setup fee</option>
+                                <option value="1">Recurring</option>
+                                <option value="2">Both</option>
+                                <option value="3">Total</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-3">
+                            <label class="form-label" for="coupons-recurrence-type">Recurrence <span class="text-danger">*</span></label>
+                            <select class="form-select" id="coupons-recurrence-type">
+                                <option value="0">None</option>
+                                <option value="1">One time</option>
+                                <option value="2">Recurring years</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-3">
+                            <label class="form-label" for="coupons-recurring-years">Recurring years</label>
+                            <input class="form-control" id="coupons-recurring-years" type="number" min="1" />
+                        </div>
+                        <div class="col-12 col-md-3">
+                            <label class="form-label" for="coupons-minimum-amount">Minimum amount</label>
+                            <input class="form-control" id="coupons-minimum-amount" type="number" min="0" step="0.01" />
+                        </div>
+                        <div class="col-12 col-md-3">
+                            <label class="form-label" for="coupons-maximum-discount">Maximum discount</label>
+                            <input class="form-control" id="coupons-maximum-discount" type="number" min="0" step="0.01" />
+                        </div>
+                        <div class="col-12 col-md-3">
+                            <label class="form-label" for="coupons-max-usages">Max usages</label>
+                            <input class="form-control" id="coupons-max-usages" type="number" min="1" />
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label class="form-label" for="coupons-valid-from">Valid from <span class="text-danger">*</span></label>
+                            <input class="form-control" id="coupons-valid-from" type="datetime-local" />
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label class="form-label" for="coupons-valid-until">Valid until <span class="text-danger">*</span></label>
+                            <input class="form-control" id="coupons-valid-until" type="datetime-local" />
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label class="form-label" for="coupons-max-usages-per-customer">Max usages per customer</label>
+                            <input class="form-control" id="coupons-max-usages-per-customer" type="number" min="1" />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="coupons-allowed-service-type-ids">Allowed service type IDs</label>
+                            <input class="form-control" id="coupons-allowed-service-type-ids" type="text" placeholder="e.g. 1,2,3" />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="coupons-internal-notes">Internal notes</label>
+                            <textarea class="form-control" id="coupons-internal-notes" rows="2"></textarea>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" id="coupons-is-active" type="checkbox" checked />
+                                <label class="form-check-label" for="coupons-is-active">Active</label>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="coupons-save"><i class="bi bi-check-lg"></i> Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="coupons-delete-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Delete coupon <strong id="coupons-delete-name"></strong>?</p>
+                <p class="text-danger"><i class="bi bi-exclamation-triangle-fill"></i> This cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="coupons-confirm-delete"><i class="bi bi-trash"></i> Delete</button>
+            </div>
+        </div>
+    </div>
+</div>

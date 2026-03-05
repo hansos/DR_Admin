@@ -286,6 +286,56 @@ public class CouponsController : ControllerBase
     }
 
     /// <summary>
+    /// Retrieves paginated coupon usage entries
+    /// </summary>
+    /// <param name="pageNumber">Page number (1-based)</param>
+    /// <param name="pageSize">Page size</param>
+    /// <param name="couponId">Optional coupon ID filter</param>
+    /// <param name="customerId">Optional customer ID filter</param>
+    /// <returns>Paginated coupon usage entries</returns>
+    /// <response code="200">Returns paginated coupon usage entries</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user doesn't have required role</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpGet("usages")]
+    [Authorize(Policy = "Coupon.Read")]
+    [ProducesResponseType(typeof(PagedResult<CouponUsageDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<PagedResult<CouponUsageDto>>> GetCouponUsages(
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 25,
+        [FromQuery] int? couponId = null,
+        [FromQuery] int? customerId = null)
+    {
+        try
+        {
+            var paginationParams = new PaginationParameters
+            {
+                PageNumber = pageNumber,
+                PageSize = pageSize
+            };
+
+            _log.Information(
+                "API: GetCouponUsages called by user {User}, page {PageNumber}, pageSize {PageSize}, couponId {CouponId}, customerId {CustomerId}",
+                User.Identity?.Name,
+                paginationParams.PageNumber,
+                paginationParams.PageSize,
+                couponId,
+                customerId);
+
+            var result = await _couponService.GetCouponUsagesPagedAsync(paginationParams, couponId, customerId);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in GetCouponUsages");
+            return StatusCode(500, "An error occurred while retrieving coupon usage entries");
+        }
+    }
+
+    /// <summary>
     /// Validates a coupon for an order
     /// </summary>
     /// <param name="validateDto">The validation data</param>
