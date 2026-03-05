@@ -7,6 +7,7 @@ interface RegisterRequestDto {
     customerEmail: string;
     customerPhone: string;
     customerAddress: string;
+    siteCode: string;
 }
 
 interface RegisterResponseDto {
@@ -16,6 +17,9 @@ interface RegisterResponseDto {
 }
 
 interface RegisterWindow extends Window {
+    UserPanelSettings?: {
+        frontendSiteCode: string;
+    };
     UserPanelApi?: {
         request: <T>(path: string, options?: RequestInit, requiresAuth?: boolean) => Promise<{ success: boolean; data?: T; message?: string }>;
     };
@@ -109,6 +113,9 @@ function buildRegisterRequest(): RegisterRequestDto | null {
         return null;
     }
 
+    const typedWindow = window as RegisterWindow;
+    const siteCode = typedWindow.UserPanelSettings?.frontendSiteCode ?? 'shop';
+
     return {
         username,
         email,
@@ -117,7 +124,8 @@ function buildRegisterRequest(): RegisterRequestDto | null {
         customerName,
         customerEmail: email,
         customerPhone,
-        customerAddress
+        customerAddress,
+        siteCode
     };
 }
 

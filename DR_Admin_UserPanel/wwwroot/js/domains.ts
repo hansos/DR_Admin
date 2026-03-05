@@ -25,6 +25,12 @@ interface DomainsWindow extends Window {
     };
 }
 
+interface UserAccountDto {
+    customer?: {
+        id: number;
+    } | null;
+}
+
 let domainsPageNumber = 1;
 let domainsPageSize = 25;
 let domainsLastCount = 0;
@@ -71,7 +77,15 @@ async function loadDomains(): Promise<void> {
 
     domainsPageSize = Number.parseInt(readDomainsInputValue('domains-page-size'), 10) || 25;
 
-    const response = await typedWindow.UserPanelApi?.request<PagedResult<DomainDto> | DomainDto[]>(`/RegisteredDomains?pageNumber=${domainsPageNumber}&pageSize=${domainsPageSize}`, { method: 'GET' }, true);
+    const customerId = await resolveDomainsCustomerId();
+    if (!customerId) {
+        typedWindow.UserPanelAlerts?.showError('domains-alert-error', 'Could not resolve customer account.');
+        renderDomainsRows([]);
+        setDomainsPaginationInfo(0);
+        return;
+    }
+
+    const response = await typedWindow.UserPanelApi?.request<PagedResult<DomainDto> | DomainDto[]>(`/RegisteredDomains/customer/${customerId}?pageNumber=${domainsPageNumber}&pageSize=${domainsPageSize}`, { method: 'GET' }, true);
 
     if (!response || !response.success || !response.data) {
         typedWindow.UserPanelAlerts?.showError('domains-alert-error', response?.message ?? 'Could not load domains.');
@@ -85,6 +99,12 @@ async function loadDomains(): Promise<void> {
 
     renderDomainsRows(filtered);
     setDomainsPaginationInfo(filtered.length);
+}
+
+async function resolveDomainsCustomerId(): Promise<number | null> {
+    const typedWindow = window as DomainsWindow;
+    const response = await typedWindow.UserPanelApi?.request<UserAccountDto>('/MyAccount/me', { method: 'GET' }, true);
+    return response?.success ? (response.data?.customer?.id ?? null) : null;
 }
 
 function normalizeDomains(payload: PagedResult<DomainDto> | DomainDto[]): DomainDto[] {

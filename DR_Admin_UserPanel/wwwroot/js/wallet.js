@@ -23,8 +23,18 @@
             typedWindow.UserPanelApi?.request(`/CustomerCredits/customer/${customerId}/transactions`, { method: 'GET' }, true)
         ]);
         if (!creditResponse || !creditResponse.success || !creditResponse.data) {
-            typedWindow.UserPanelAlerts?.showError('wallet-alert-error', creditResponse?.message ?? 'Could not load wallet balance.');
-            renderWalletBalance(null);
+            if (creditResponse?.statusCode === 404) {
+                renderWalletBalance({
+                    customerId,
+                    balance: 0,
+                    currencyCode: '',
+                    updatedAt: ''
+                });
+            }
+            else {
+                typedWindow.UserPanelAlerts?.showError('wallet-alert-error', creditResponse?.message ?? 'Could not load wallet balance.');
+                renderWalletBalance(null);
+            }
         }
         else {
             renderWalletBalance(creditResponse.data);

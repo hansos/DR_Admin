@@ -6,6 +6,7 @@ function resolveApiBaseUrl() {
 const settingsWindow = window;
 settingsWindow.UserPanelSettings = {
     apiBaseUrl: resolveApiBaseUrl(),
+    frontendSiteCode: 'shop',
     protectedPathPrefixes: ['/dashboard', '/shop', '/domains', '/hosting', '/billing', '/contacts', '/profile', '/settings', '/security', '/privacy', '/support', '/activity']
 };
 //# sourceMappingURL=app-settings.js.map

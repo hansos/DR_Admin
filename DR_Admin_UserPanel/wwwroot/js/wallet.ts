@@ -23,7 +23,7 @@ interface CreditTransactionDto {
 
 interface WalletWindow extends Window {
     UserPanelApi?: {
-        request: <T>(path: string, options?: RequestInit, requiresAuth?: boolean) => Promise<{ success: boolean; data?: T; message?: string }>;
+        request: <T>(path: string, options?: RequestInit, requiresAuth?: boolean) => Promise<{ success: boolean; data?: T; message?: string; statusCode?: number }>;
     };
     UserPanelAlerts?: {
         showError: (id: string, message: string) => void;
@@ -59,8 +59,17 @@ async function loadWalletData(): Promise<void> {
     ]);
 
     if (!creditResponse || !creditResponse.success || !creditResponse.data) {
-        typedWindow.UserPanelAlerts?.showError('wallet-alert-error', creditResponse?.message ?? 'Could not load wallet balance.');
-        renderWalletBalance(null);
+        if (creditResponse?.statusCode === 404) {
+            renderWalletBalance({
+                customerId,
+                balance: 0,
+                currencyCode: '',
+                updatedAt: ''
+            });
+        } else {
+            typedWindow.UserPanelAlerts?.showError('wallet-alert-error', creditResponse?.message ?? 'Could not load wallet balance.');
+            renderWalletBalance(null);
+        }
     } else {
         renderWalletBalance(creditResponse.data);
     }

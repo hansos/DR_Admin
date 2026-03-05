@@ -129,7 +129,7 @@ public class MyAccountController : ControllerBase
                 return BadRequest(new { message = "Email address is required" });
             }
 
-            var result = await _myAccountService.RequestPasswordResetAsync(request.Email);
+            var result = await _myAccountService.RequestPasswordResetAsync(request.Email, request.SiteCode);
 
             if (!result)
             {
@@ -321,7 +321,7 @@ public class MyAccountController : ControllerBase
                 return BadRequest(new { message = "New email and password are required" });
             }
 
-            var result = await _myAccountService.PatchEmailAsync(userId, request.NewEmail, request.Password);
+            var result = await _myAccountService.PatchEmailAsync(userId, request.NewEmail, request.Password, request.SiteCode);
 
             if (!result)
             {

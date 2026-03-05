@@ -18,6 +18,13 @@ function getApiBaseUrl(): string {
     return baseUrl;
 }
 
+function getFrontendSiteCode(): string {
+    const siteCode = (window as any).AppSettings?.frontendSiteCode;
+    return typeof siteCode === 'string' && siteCode.trim().length > 0
+        ? siteCode
+        : 'reseller';
+}
+
 async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
     try {
         const headers: Record<string, string> = {
@@ -111,7 +118,7 @@ async function requestPasswordReset(email: string): Promise<void> {
 
     const response = await apiRequest<any>(`${getApiBaseUrl()}/MyAccount/request-password-reset`, {
         method: 'POST',
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, siteCode: getFrontendSiteCode() }),
     });
 
     if (submitBtn) {

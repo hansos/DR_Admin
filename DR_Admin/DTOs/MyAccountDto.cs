@@ -35,6 +35,7 @@ public class RegisterAccountRequestDto
     public string Email { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
     public string ConfirmPassword { get; set; } = string.Empty;
+    public string? SiteCode { get; set; }
     
     // Customer information
     public string CustomerName { get; set; } = string.Empty;
@@ -79,6 +80,7 @@ public class SetPasswordRequestDto
 public class RequestPasswordResetDto
 {
     public string Email { get; set; } = string.Empty;
+    public string? SiteCode { get; set; }
 }
 
 /// <summary>
@@ -108,6 +110,7 @@ public class PatchEmailRequestDto
 {
     public string NewEmail { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
+    public string? SiteCode { get; set; }
 }
 
 /// <summary>

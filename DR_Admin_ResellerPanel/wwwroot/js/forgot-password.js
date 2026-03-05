@@ -11,6 +11,12 @@
         }
         return baseUrl;
     }
+    function getFrontendSiteCode() {
+        const siteCode = window.AppSettings?.frontendSiteCode;
+        return typeof siteCode === 'string' && siteCode.trim().length > 0
+            ? siteCode
+            : 'reseller';
+    }
     async function apiRequest(endpoint, options = {}) {
         try {
             const headers = {
@@ -89,7 +95,7 @@
         }
         const response = await apiRequest(`${getApiBaseUrl()}/MyAccount/request-password-reset`, {
             method: 'POST',
-            body: JSON.stringify({ email }),
+            body: JSON.stringify({ email, siteCode: getFrontendSiteCode() }),
         });
         if (submitBtn) {
             submitBtn.disabled = false;

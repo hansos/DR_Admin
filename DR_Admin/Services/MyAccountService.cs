@@ -112,7 +112,7 @@ public class MyAccountService : IMyAccountService
             var confirmationToken = await GenerateEmailConfirmationTokenAsync(user.Id);
 
             // Queue email confirmation email
-            await QueueEmailConfirmationAsync(user.Email, confirmationToken, user.Id, customer.Id);
+            await QueueEmailConfirmationAsync(user.Email, confirmationToken, user.Id, customer.Id, request.SiteCode);
 
             _log.Information("User registered successfully: {Email}", request.Email);
 
@@ -251,7 +251,7 @@ public class MyAccountService : IMyAccountService
         }
     }
 
-    public async Task<bool> PatchEmailAsync(int userId, string newEmail, string password)
+    public async Task<bool> PatchEmailAsync(int userId, string newEmail, string password, string? siteCode = null)
     {
         try
         {
@@ -288,7 +288,7 @@ public class MyAccountService : IMyAccountService
 
             // Generate new confirmation token and queue re-confirmation email
             var confirmationToken = await GenerateEmailConfirmationTokenAsync(user.Id);
-            await QueueEmailConfirmationAsync(newEmail, confirmationToken, user.Id, user.CustomerId);
+            await QueueEmailConfirmationAsync(newEmail, confirmationToken, user.Id, user.CustomerId, siteCode);
 
             _log.Information("Email updated successfully for user: {UserId}", userId);
             return true;
@@ -489,9 +489,46 @@ public class MyAccountService : IMyAccountService
         return currentValue;
     }
 
-    private async Task QueueEmailConfirmationAsync(string email, string token, int userId, int? customerId)
+    private FrontendSiteSettings ResolveFrontendSite(string? siteCode)
     {
-        var confirmationUrl = $"{_appSettings.FrontendBaseUrl}{_appSettings.EmailConfirmationPath}?token={Uri.EscapeDataString(token)}";
+        if (_appSettings.FrontendSites.Count > 0)
+        {
+            var requestedCode = string.IsNullOrWhiteSpace(siteCode)
+                ? _appSettings.DefaultFrontendSiteCode
+                : siteCode;
+
+            var matchedSite = _appSettings.FrontendSites.FirstOrDefault(site =>
+                string.Equals(site.Code, requestedCode, StringComparison.OrdinalIgnoreCase));
+
+            if (matchedSite != null)
+            {
+                return matchedSite;
+            }
+
+            var defaultSite = _appSettings.FrontendSites.FirstOrDefault(site =>
+                string.Equals(site.Code, _appSettings.DefaultFrontendSiteCode, StringComparison.OrdinalIgnoreCase));
+
+            if (defaultSite != null)
+            {
+                return defaultSite;
+            }
+
+            return _appSettings.FrontendSites[0];
+        }
+
+        return new FrontendSiteSettings
+        {
+            Code = _appSettings.DefaultFrontendSiteCode,
+            BaseUrl = _appSettings.FrontendBaseUrl,
+            EmailConfirmationPath = _appSettings.EmailConfirmationPath,
+            PasswordResetPath = _appSettings.PasswordResetPath
+        };
+    }
+
+    private async Task QueueEmailConfirmationAsync(string email, string token, int userId, int? customerId, string? siteCode)
+    {
+        var frontendSite = ResolveFrontendSite(siteCode);
+        var confirmationUrl = $"{frontendSite.BaseUrl}{frontendSite.EmailConfirmationPath}?token={Uri.EscapeDataString(token)}";
 
         // Create template model
         var model = new EmailConfirmationModel
@@ -520,9 +557,10 @@ public class MyAccountService : IMyAccountService
         _log.Information("Email confirmation queued for {Email}", email);
     }
 
-    private async Task QueuePasswordResetEmailAsync(string email, string token, int userId, int? customerId)
+    private async Task QueuePasswordResetEmailAsync(string email, string token, int userId, int? customerId, string? siteCode)
     {
-        var resetUrl = $"{_appSettings.FrontendBaseUrl}{_appSettings.PasswordResetPath}?token={Uri.EscapeDataString(token)}";
+        var frontendSite = ResolveFrontendSite(siteCode);
+        var resetUrl = $"{frontendSite.BaseUrl}{frontendSite.PasswordResetPath}?token={Uri.EscapeDataString(token)}";
 
         // Create template model
         var model = new PasswordResetModel
@@ -553,7 +591,7 @@ public class MyAccountService : IMyAccountService
 
     #endregion
 
-    public async Task<bool> RequestPasswordResetAsync(string email)
+    public async Task<bool> RequestPasswordResetAsync(string email, string? siteCode = null)
     {
         try
         {
@@ -581,7 +619,7 @@ public class MyAccountService : IMyAccountService
             var resetToken = await GeneratePasswordResetTokenAsync(user.Id);
 
             // Queue password reset email
-            await QueuePasswordResetEmailAsync(email, resetToken, user.Id, user.CustomerId);
+            await QueuePasswordResetEmailAsync(email, resetToken, user.Id, user.CustomerId, siteCode);
 
             _log.Information("Password reset token generated for {Email}", email);
             return true;

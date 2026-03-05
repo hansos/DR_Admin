@@ -35,14 +35,26 @@ builder.Host.UseSerilog();
 builder.Services.AddSingleton(Log.Logger);
 
 // Configure AppSettings as singleton
-var appSettings = new AppSettings
+var appSettings = builder.Configuration.GetSection("AppSettings").Get<AppSettings>() ?? new AppSettings();
+appSettings.DefaultConnection = builder.Configuration.GetConnectionString("DefaultConnection") ?? string.Empty;
+appSettings.DbSettings = builder.Configuration.GetSection("DbSettings").Get<DbSettings>() ?? new DbSettings();
+
+if (appSettings.FrontendSites.Count == 0 && !string.IsNullOrWhiteSpace(appSettings.FrontendBaseUrl))
 {
-    DefaultConnection = builder.Configuration.GetConnectionString("DefaultConnection") ?? string.Empty,
-    FrontendBaseUrl = builder.Configuration["AppSettings:FrontendBaseUrl"] ?? "https://localhost:5001",
-    EmailConfirmationPath = builder.Configuration["AppSettings:EmailConfirmationPath"] ?? "/confirm-email",
-    PasswordResetPath = builder.Configuration["AppSettings:PasswordResetPath"] ?? "/reset-password",
-    DbSettings = builder.Configuration.GetSection("DbSettings").Get<DbSettings>() ?? new DbSettings()
-};
+    appSettings.FrontendSites.Add(new FrontendSiteSettings
+    {
+        Code = appSettings.DefaultFrontendSiteCode,
+        BaseUrl = appSettings.FrontendBaseUrl,
+        EmailConfirmationPath = appSettings.EmailConfirmationPath,
+        PasswordResetPath = appSettings.PasswordResetPath
+    });
+}
+
+if (string.IsNullOrWhiteSpace(appSettings.DefaultFrontendSiteCode) && appSettings.FrontendSites.Count > 0)
+{
+    appSettings.DefaultFrontendSiteCode = appSettings.FrontendSites[0].Code;
+}
+
 builder.Services.AddSingleton(appSettings);
 
 // Configure DbContext based on database type from settings

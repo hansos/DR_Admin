@@ -1,5 +1,6 @@
 interface UserPanelSettings {
     apiBaseUrl: string;
+    frontendSiteCode: string;
     protectedPathPrefixes: string[];
 }
 
@@ -15,5 +16,6 @@ function resolveApiBaseUrl(): string {
 const settingsWindow = window as UserPanelWindowWithSettings;
 settingsWindow.UserPanelSettings = {
     apiBaseUrl: resolveApiBaseUrl(),
+    frontendSiteCode: 'shop',
     protectedPathPrefixes: ['/dashboard', '/shop', '/domains', '/hosting', '/billing', '/contacts', '/profile', '/settings', '/security', '/privacy', '/support', '/activity']
 };

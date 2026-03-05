@@ -77,7 +77,7 @@ public static class AuthorizationPoliciesConfiguration
             policy.RequireRole(ADMIN));
 
         options.AddPolicy("Customer.Read", policy =>
-            policy.RequireRole(ADMIN, SUPPORT, SALES));
+            policy.RequireRole(ADMIN, SUPPORT, SALES, CUSTOMER));
 
         options.AddPolicy("Customer.Write", policy =>
             policy.RequireRole(ADMIN, SALES));
@@ -87,7 +87,7 @@ public static class AuthorizationPoliciesConfiguration
             policy.RequireRole(ADMIN));
 
         options.AddPolicy("CustomerCredit.Read", policy =>
-            policy.RequireRole(ADMIN, SUPPORT));
+            policy.RequireRole(ADMIN, SUPPORT, CUSTOMER));
 
         options.AddPolicy("CustomerCredit.Write", policy =>
             policy.RequireRole(ADMIN));
@@ -166,7 +166,7 @@ public static class AuthorizationPoliciesConfiguration
             policy.RequireRole(ADMIN));
 
         options.AddPolicy("Domain.Read", policy =>
-            policy.RequireRole(ADMIN, SUPPORT, SALES));
+            policy.RequireRole(ADMIN, SUPPORT, SALES, CUSTOMER));
 
         options.AddPolicy("Domain.Write", policy =>
             policy.RequireRole(ADMIN, SALES));
@@ -239,7 +239,7 @@ public static class AuthorizationPoliciesConfiguration
             policy.RequireRole(ADMIN));
 
         options.AddPolicy("Invoice.Read", policy =>
-            policy.RequireRole(ADMIN, SUPPORT, SALES));
+            policy.RequireRole(ADMIN, SUPPORT, SALES, CUSTOMER));
 
         options.AddPolicy("Invoice.Write", policy =>
             policy.RequireRole(ADMIN, SALES));
@@ -275,7 +275,7 @@ public static class AuthorizationPoliciesConfiguration
             policy.RequireRole(ADMIN));
 
         options.AddPolicy("Order.Read", policy =>
-            policy.RequireRole(ADMIN, SUPPORT, SALES));
+            policy.RequireRole(ADMIN, SUPPORT, SALES, CUSTOMER));
 
         options.AddPolicy("Order.Write", policy =>
             policy.RequireRole(ADMIN, SALES));
@@ -554,7 +554,7 @@ public static class AuthorizationPoliciesConfiguration
             policy.RequireRole(ADMIN));
 
         options.AddPolicy("User.Read", policy =>
-            policy.RequireRole(ADMIN, SUPPORT));
+            policy.RequireRole(ADMIN, SUPPORT, CUSTOMER));
 
         options.AddPolicy("User.Write", policy =>
             policy.RequireRole(ADMIN, SUPPORT));

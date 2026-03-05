@@ -15,9 +15,11 @@ function initializeForgotPassword() {
             typedWindow.UserPanelAlerts?.showError('auth-forgot-password-alert-error', 'Email is required.');
             return;
         }
+        const siteCode = typedWindow.UserPanelSettings?.frontendSiteCode ?? 'shop';
+        const payload = { email, siteCode };
         const response = await typedWindow.UserPanelApi?.request('/MyAccount/request-password-reset', {
             method: 'POST',
-            body: JSON.stringify({ email })
+            body: JSON.stringify(payload)
         }, false);
         if (!response || !response.success) {
             typedWindow.UserPanelAlerts?.showError('auth-forgot-password-alert-error', response?.message ?? 'Could not request reset link.');

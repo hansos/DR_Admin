@@ -27,7 +27,7 @@ public interface IMyAccountService
     /// <summary>
     /// Update email address for authenticated user
     /// </summary>
-    Task<bool> PatchEmailAsync(int userId, string newEmail, string password);
+    Task<bool> PatchEmailAsync(int userId, string newEmail, string password, string? siteCode = null);
 
     /// <summary>
     /// Update customer information for authenticated user
@@ -42,7 +42,7 @@ public interface IMyAccountService
     /// <summary>
     /// Request password reset and send email with reset token
     /// </summary>
-    Task<bool> RequestPasswordResetAsync(string email);
+    Task<bool> RequestPasswordResetAsync(string email, string? siteCode = null);
 
     /// <summary>
     /// Reset password using password reset token (no email required)

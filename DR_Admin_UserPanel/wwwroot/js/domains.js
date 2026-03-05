@@ -36,7 +36,14 @@
         const typedWindow = window;
         typedWindow.UserPanelAlerts?.hide('domains-alert-error');
         domainsPageSize = Number.parseInt(readDomainsInputValue('domains-page-size'), 10) || 25;
-        const response = await typedWindow.UserPanelApi?.request(`/RegisteredDomains?pageNumber=${domainsPageNumber}&pageSize=${domainsPageSize}`, { method: 'GET' }, true);
+        const customerId = await resolveDomainsCustomerId();
+        if (!customerId) {
+            typedWindow.UserPanelAlerts?.showError('domains-alert-error', 'Could not resolve customer account.');
+            renderDomainsRows([]);
+            setDomainsPaginationInfo(0);
+            return;
+        }
+        const response = await typedWindow.UserPanelApi?.request(`/RegisteredDomains/customer/${customerId}?pageNumber=${domainsPageNumber}&pageSize=${domainsPageSize}`, { method: 'GET' }, true);
         if (!response || !response.success || !response.data) {
             typedWindow.UserPanelAlerts?.showError('domains-alert-error', response?.message ?? 'Could not load domains.');
             renderDomainsRows([]);
@@ -47,6 +54,11 @@
         domainsLastCount = filtered.length;
         renderDomainsRows(filtered);
         setDomainsPaginationInfo(filtered.length);
+    }
+    async function resolveDomainsCustomerId() {
+        const typedWindow = window;
+        const response = await typedWindow.UserPanelApi?.request('/MyAccount/me', { method: 'GET' }, true);
+        return response?.success ? (response.data?.customer?.id ?? null) : null;
     }
     function normalizeDomains(payload) {
         if (Array.isArray(payload)) {

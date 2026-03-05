@@ -5,6 +5,7 @@ const apiBaseUrl = window.location.protocol === 'https:'
 
 const appSettings = {
     apiBaseUrl,
+    frontendSiteCode: 'reseller',
 };
 
 (window as any).AppSettings = appSettings;

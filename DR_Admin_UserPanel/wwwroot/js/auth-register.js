@@ -64,6 +64,8 @@ function buildRegisterRequest() {
     if (password !== confirmPassword) {
         return null;
     }
+    const typedWindow = window;
+    const siteCode = typedWindow.UserPanelSettings?.frontendSiteCode ?? 'shop';
     return {
         username,
         email,
@@ -72,7 +74,8 @@ function buildRegisterRequest() {
         customerName,
         customerEmail: email,
         customerPhone,
-        customerAddress
+        customerAddress,
+        siteCode
     };
 }
 function readValue(id) {

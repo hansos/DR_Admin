@@ -1,8 +1,12 @@
 interface ForgotPasswordRequestDto {
     email: string;
+    siteCode: string;
 }
 
 interface ForgotWindow extends Window {
+    UserPanelSettings?: {
+        frontendSiteCode: string;
+    };
     UserPanelApi?: {
         request: <T>(path: string, options?: RequestInit, requiresAuth?: boolean) => Promise<{ success: boolean; data?: T; message?: string }>;
     };
@@ -37,9 +41,12 @@ function initializeForgotPassword(): void {
             return;
         }
 
+        const siteCode = typedWindow.UserPanelSettings?.frontendSiteCode ?? 'shop';
+        const payload: ForgotPasswordRequestDto = { email, siteCode };
+
         const response = await typedWindow.UserPanelApi?.request<unknown>('/MyAccount/request-password-reset', {
             method: 'POST',
-            body: JSON.stringify({ email } as ForgotPasswordRequestDto)
+            body: JSON.stringify(payload)
         }, false);
 
         if (!response || !response.success) {

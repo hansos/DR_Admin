@@ -5,6 +5,7 @@ const apiBaseUrl = window.location.protocol === 'https:'
     : 'http://localhost:5133/api/v1';
 const appSettings = {
     apiBaseUrl,
+    frontendSiteCode: 'reseller',
 };
 window.AppSettings = appSettings;
 //# sourceMappingURL=app-settings.js.map
