@@ -1,0 +1,46 @@
+@page "/help/status"
+
+<div id="help-status-page" class="container-fluid">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+        <div>
+            <h2 class="h4 mb-1"><i class="bi bi-activity"></i> System Status</h2>
+            <p class="text-muted mb-0">View local client status and authentication token details.</p>
+        </div>
+        <button id="help-status-refresh" class="btn btn-outline-secondary" type="button">
+            <i class="bi bi-arrow-clockwise"></i> Refresh
+        </button>
+    </div>
+
+    <div id="help-status-alert-success" class="alert alert-success d-none" role="alert"></div>
+    <div id="help-status-alert-error" class="alert alert-danger d-none" role="alert"></div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-light">
+            <h5 class="mb-0"><i class="bi bi-info-circle"></i> Session Status</h5>
+        </div>
+        <div class="card-body">
+            <dl class="row mb-3">
+                <dt class="col-sm-3">API Base URL</dt>
+                <dd class="col-sm-9" id="help-status-api-base-url">-</dd>
+
+                <dt class="col-sm-3">Authentication</dt>
+                <dd class="col-sm-9" id="help-status-auth-state">-</dd>
+
+                <dt class="col-sm-3">Token Preview</dt>
+                <dd class="col-sm-9"><code id="help-status-token-preview">-</code></dd>
+
+                <dt class="col-sm-3">Token Length</dt>
+                <dd class="col-sm-9" id="help-status-token-length">-</dd>
+
+                <dt class="col-sm-3">Token Expires</dt>
+                <dd class="col-sm-9" id="help-status-token-expiry">-</dd>
+            </dl>
+
+            <div class="d-flex gap-2">
+                <button id="help-status-copy-token" class="btn btn-primary" type="button">
+                    <i class="bi bi-clipboard"></i> Copy rp_authToken
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

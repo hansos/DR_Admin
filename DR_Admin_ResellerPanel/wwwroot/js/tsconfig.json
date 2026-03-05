@@ -46,7 +46,8 @@
         "users.ts",
         "roles.ts",
         "login-histories.ts",
-        "support-tickets.ts"
+        "support-tickets.ts",
+        "help-status.ts"
     ]
 }
 
