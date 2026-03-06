@@ -128,6 +128,8 @@ namespace ISPAdmin.Migrations
                     Type = table.Column<int>(type: "INTEGER", nullable: false),
                     Value = table.Column<decimal>(type: "TEXT", precision: 18, scale: 2, nullable: false),
                     AppliesTo = table.Column<int>(type: "INTEGER", nullable: false),
+                    RecurrenceType = table.Column<int>(type: "INTEGER", nullable: false),
+                    RecurringYears = table.Column<int>(type: "INTEGER", nullable: true),
                     MinimumAmount = table.Column<decimal>(type: "TEXT", precision: 18, scale: 2, nullable: true),
                     MaximumDiscount = table.Column<decimal>(type: "TEXT", precision: 18, scale: 2, nullable: true),
                     ValidFrom = table.Column<DateTime>(type: "TEXT", nullable: false),
@@ -1127,6 +1129,9 @@ namespace ISPAdmin.Migrations
                     PasswordHash = table.Column<string>(type: "TEXT", nullable: false),
                     Email = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
                     EmailConfirmed = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    IsMailTwoFactorEnabled = table.Column<bool>(type: "INTEGER", nullable: false),
+                    IsAuthenticatorTwoFactorEnabled = table.Column<bool>(type: "INTEGER", nullable: false),
+                    AuthenticatorKey = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
                     IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
                     NormalizedUsername = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
@@ -2526,71 +2531,6 @@ namespace ISPAdmin.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Subscriptions",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    CustomerId = table.Column<int>(type: "INTEGER", nullable: false),
-                    ServiceId = table.Column<int>(type: "INTEGER", nullable: true),
-                    BillingCycleId = table.Column<int>(type: "INTEGER", nullable: false),
-                    CustomerPaymentMethodId = table.Column<int>(type: "INTEGER", nullable: true),
-                    Status = table.Column<int>(type: "INTEGER", nullable: false),
-                    StartDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    EndDate = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    NextBillingDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    CurrentPeriodStart = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    CurrentPeriodEnd = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    Amount = table.Column<decimal>(type: "TEXT", nullable: false),
-                    CurrencyCode = table.Column<string>(type: "TEXT", nullable: false),
-                    BillingPeriodCount = table.Column<int>(type: "INTEGER", nullable: false),
-                    BillingPeriodUnit = table.Column<int>(type: "INTEGER", nullable: false),
-                    TrialEndDate = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    IsInTrial = table.Column<bool>(type: "INTEGER", nullable: false),
-                    RetryCount = table.Column<int>(type: "INTEGER", nullable: false),
-                    MaxRetryAttempts = table.Column<int>(type: "INTEGER", nullable: false),
-                    LastBillingAttempt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    LastSuccessfulBilling = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    CancelledAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    CancellationReason = table.Column<string>(type: "TEXT", nullable: false),
-                    PausedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    PauseReason = table.Column<string>(type: "TEXT", nullable: false),
-                    Metadata = table.Column<string>(type: "TEXT", nullable: false),
-                    Notes = table.Column<string>(type: "TEXT", nullable: false),
-                    Quantity = table.Column<int>(type: "INTEGER", nullable: false),
-                    SendEmailNotifications = table.Column<bool>(type: "INTEGER", nullable: false),
-                    AutoRetryFailedPayments = table.Column<bool>(type: "INTEGER", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Subscriptions", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Subscriptions_BillingCycles_BillingCycleId",
-                        column: x => x.BillingCycleId,
-                        principalTable: "BillingCycles",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Subscriptions_CustomerPaymentMethods_CustomerPaymentMethodId",
-                        column: x => x.CustomerPaymentMethodId,
-                        principalTable: "CustomerPaymentMethods",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_Subscriptions_Customers_CustomerId",
-                        column: x => x.CustomerId,
-                        principalTable: "Customers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Subscriptions_Services_ServiceId",
-                        column: x => x.ServiceId,
-                        principalTable: "Services",
-                        principalColumn: "Id");
-                });
-
-            migrationBuilder.CreateTable(
                 name: "InvoiceLines",
                 columns: table => new
                 {
@@ -2911,6 +2851,78 @@ namespace ISPAdmin.Migrations
                         principalTable: "PaymentGateways",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Subscriptions",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    CustomerId = table.Column<int>(type: "INTEGER", nullable: false),
+                    ServiceId = table.Column<int>(type: "INTEGER", nullable: true),
+                    BillingCycleId = table.Column<int>(type: "INTEGER", nullable: false),
+                    CustomerPaymentMethodId = table.Column<int>(type: "INTEGER", nullable: true),
+                    PaymentGatewayId = table.Column<int>(type: "INTEGER", nullable: true),
+                    Status = table.Column<int>(type: "INTEGER", nullable: false),
+                    StartDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    EndDate = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    NextBillingDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    CurrentPeriodStart = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    CurrentPeriodEnd = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    Amount = table.Column<decimal>(type: "TEXT", nullable: false),
+                    CurrencyCode = table.Column<string>(type: "TEXT", nullable: false),
+                    BillingPeriodCount = table.Column<int>(type: "INTEGER", nullable: false),
+                    BillingPeriodUnit = table.Column<int>(type: "INTEGER", nullable: false),
+                    TrialEndDate = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    IsInTrial = table.Column<bool>(type: "INTEGER", nullable: false),
+                    RetryCount = table.Column<int>(type: "INTEGER", nullable: false),
+                    MaxRetryAttempts = table.Column<int>(type: "INTEGER", nullable: false),
+                    LastBillingAttempt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    LastSuccessfulBilling = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    CancelledAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    CancellationReason = table.Column<string>(type: "TEXT", nullable: false),
+                    PausedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    PauseReason = table.Column<string>(type: "TEXT", nullable: false),
+                    Metadata = table.Column<string>(type: "TEXT", nullable: false),
+                    Notes = table.Column<string>(type: "TEXT", nullable: false),
+                    Quantity = table.Column<int>(type: "INTEGER", nullable: false),
+                    SendEmailNotifications = table.Column<bool>(type: "INTEGER", nullable: false),
+                    AutoRetryFailedPayments = table.Column<bool>(type: "INTEGER", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Subscriptions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Subscriptions_BillingCycles_BillingCycleId",
+                        column: x => x.BillingCycleId,
+                        principalTable: "BillingCycles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Subscriptions_CustomerPaymentMethods_CustomerPaymentMethodId",
+                        column: x => x.CustomerPaymentMethodId,
+                        principalTable: "CustomerPaymentMethods",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Subscriptions_Customers_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Subscriptions_PaymentGateways_PaymentGatewayId",
+                        column: x => x.PaymentGatewayId,
+                        principalTable: "PaymentGateways",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_Subscriptions_Services_ServiceId",
+                        column: x => x.ServiceId,
+                        principalTable: "Services",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -4387,6 +4399,11 @@ namespace ISPAdmin.Migrations
                 name: "IX_Subscriptions_CustomerPaymentMethodId",
                 table: "Subscriptions",
                 column: "CustomerPaymentMethodId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Subscriptions_PaymentGatewayId",
+                table: "Subscriptions",
+                column: "PaymentGatewayId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Subscriptions_ServiceId",

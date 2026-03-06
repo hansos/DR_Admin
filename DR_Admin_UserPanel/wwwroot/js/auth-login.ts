@@ -83,12 +83,20 @@ function initializeLogin(): void {
 
         if (response.data.requiresTwoFactor && response.data.twoFactorChallengeToken) {
             sessionStorage.setItem('up-2fa-challenge', response.data.twoFactorChallengeToken);
-            typedWindow.UserPanelAlerts?.showSuccess('auth-login-alert-success', 'Verification code sent to your email. Redirecting...');
+            const method = (response.data.twoFactorMethod ?? 'Email').trim() || 'Email';
+            sessionStorage.setItem('up-2fa-method', method);
+
+            const statusMessage = method === 'Authenticator'
+                ? 'Verification required in Microsoft Authenticator. Redirecting...'
+                : 'Verification code sent to your email. Redirecting...';
+
+            typedWindow.UserPanelAlerts?.showSuccess('auth-login-alert-success', statusMessage);
 
             const returnUrl = new URLSearchParams(window.location.search).get('returnUrl');
+            const methodQuery = `method=${encodeURIComponent(method)}`;
             const target = returnUrl && returnUrl.startsWith('/')
-                ? `/account/login-2fa?returnUrl=${encodeURIComponent(returnUrl)}`
-                : '/account/login-2fa';
+                ? `/account/login-2fa?${methodQuery}&returnUrl=${encodeURIComponent(returnUrl)}`
+                : `/account/login-2fa?${methodQuery}`;
 
             setTimeout(() => {
                 window.location.href = target;

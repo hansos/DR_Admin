@@ -8,6 +8,8 @@ public class User : EntityBase
     public string Email { get; set; } = string.Empty;
     public DateTime? EmailConfirmed { get; set; }
     public bool IsMailTwoFactorEnabled { get; set; }
+    public bool IsAuthenticatorTwoFactorEnabled { get; set; }
+    public string? AuthenticatorKey { get; set; }
     public bool IsActive { get; set; }
 
     /// <summary>

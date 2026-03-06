@@ -31,6 +31,33 @@ public interface ISystemService
     /// <param name="request">Test email request containing sender and receiver addresses.</param>
     /// <returns>Detailed test email execution report.</returns>
     Task<TestEmailResultDto> SendTestEmailAsync(TestEmailRequestDto request);
+
+    /// <summary>
+    /// Seeds core test data into selected tables when those tables are empty.
+    /// </summary>
+    /// <returns>Summary of seeded records grouped by table.</returns>
+    Task<SeedTestDataResultDto> SeedTestDataAsync();
+}
+
+/// <summary>
+/// Result of the test data seeding operation.
+/// </summary>
+public class SeedTestDataResultDto
+{
+    /// <summary>
+    /// Indicates whether the seeding operation completed successfully.
+    /// </summary>
+    public bool Success { get; set; }
+
+    /// <summary>
+    /// Describes the outcome of the operation.
+    /// </summary>
+    public string Message { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Number of records inserted per table.
+    /// </summary>
+    public Dictionary<string, int> InsertedByTable { get; set; } = new();
 }
 
 /// <summary>

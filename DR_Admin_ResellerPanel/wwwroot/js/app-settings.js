@@ -6,6 +6,7 @@ const apiBaseUrl = window.location.protocol === 'https:'
 const appSettings = {
     apiBaseUrl,
     frontendSiteCode: 'reseller',
+    enableTestDataSeedingOnInitialize: false,
 };
 window.AppSettings = appSettings;
 //# sourceMappingURL=app-settings.js.map

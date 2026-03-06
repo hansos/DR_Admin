@@ -1,7 +1,7 @@
 namespace ISPAdmin.DTOs;
 
 /// <summary>
-/// Request DTO for verifying a mail two-factor authentication code.
+/// Request DTO for verifying a two-factor authentication code.
 /// </summary>
 public class VerifyMailTwoFactorRequestDto
 {
@@ -11,7 +11,7 @@ public class VerifyMailTwoFactorRequestDto
     public string ChallengeToken { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the one-time code sent by email.
+    /// Gets or sets the one-time code from the selected second-factor method.
     /// </summary>
     public string Code { get; set; } = string.Empty;
 }

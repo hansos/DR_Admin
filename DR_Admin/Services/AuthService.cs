@@ -11,6 +11,7 @@ using ISPAdmin.Data.Entities;
 using MessagingTemplateLib;
 using MessagingTemplateLib.Models;
 using MessagingTemplateLib.Templating;
+using ISPAdmin.Utilities;
 
 namespace ISPAdmin.Services;
 
@@ -63,6 +64,28 @@ public class AuthService : IAuthService
                 return null;
             }
 
+            if (user.IsAuthenticatorTwoFactorEnabled)
+            {
+                if (string.IsNullOrWhiteSpace(user.AuthenticatorKey))
+                {
+                    _log.Warning("Login blocked: Authenticator 2FA enabled but key is missing - {Username}", username);
+                    return null;
+                }
+
+                var challengeToken = await GenerateTwoFactorChallengeAsync(user.Id, "AuthenticatorTwoFactorChallenge");
+
+                _log.Information("User passed password verification and authenticator 2FA challenge started: {Username}", username);
+                return new LoginResponseDto
+                {
+                    UserId = user.Id,
+                    Username = user.Username,
+                    Roles = user.UserRoles.Select(ur => ur.Role.Name).ToList(),
+                    RequiresTwoFactor = true,
+                    TwoFactorMethod = "Authenticator",
+                    TwoFactorChallengeToken = challengeToken
+                };
+            }
+
             if (user.IsMailTwoFactorEnabled)
             {
                 if (!user.EmailConfirmed.HasValue)
@@ -71,7 +94,7 @@ public class AuthService : IAuthService
                     return null;
                 }
 
-                var challengeToken = await GenerateMailTwoFactorChallengeAsync(user.Id);
+                var challengeToken = await GenerateTwoFactorChallengeAsync(user.Id, "MailTwoFactorChallenge");
                 var code = await GenerateMailTwoFactorCodeAsync(user.Id);
                 await QueueMailTwoFactorCodeAsync(user, code);
 
@@ -98,14 +121,14 @@ public class AuthService : IAuthService
         }
     }
 
-    public async Task<LoginResponseDto?> VerifyMailTwoFactorAsync(string challengeToken, string code)
+    public async Task<LoginResponseDto?> VerifyTwoFactorAsync(string challengeToken, string code)
     {
         try
         {
             var now = DateTime.UtcNow;
             var challenge = await _context.Tokens
                 .FirstOrDefaultAsync(t =>
-                    t.TokenType == "MailTwoFactorChallenge" &&
+                    (t.TokenType == "MailTwoFactorChallenge" || t.TokenType == "AuthenticatorTwoFactorChallenge") &&
                     t.TokenValue == challengeToken &&
                     t.RevokedAt == null &&
                     t.Expiry > now);
@@ -113,20 +136,6 @@ public class AuthService : IAuthService
             if (challenge == null)
             {
                 _log.Warning("Mail 2FA verify failed: Invalid or expired challenge");
-                return null;
-            }
-
-            var codeToken = await _context.Tokens
-                .FirstOrDefaultAsync(t =>
-                    t.TokenType == "MailTwoFactorCode" &&
-                    t.UserId == challenge.UserId &&
-                    t.TokenValue == code &&
-                    t.RevokedAt == null &&
-                    t.Expiry > now);
-
-            if (codeToken == null)
-            {
-                _log.Warning("Mail 2FA verify failed: Invalid or expired code for user: {UserId}", challenge.UserId);
                 return null;
             }
 
@@ -141,8 +150,34 @@ public class AuthService : IAuthService
                 return null;
             }
 
+            if (challenge.TokenType == "MailTwoFactorChallenge")
+            {
+                var codeToken = await _context.Tokens
+                    .FirstOrDefaultAsync(t =>
+                        t.TokenType == "MailTwoFactorCode" &&
+                        t.UserId == challenge.UserId &&
+                        t.TokenValue == code &&
+                        t.RevokedAt == null &&
+                        t.Expiry > now);
+
+                if (codeToken == null)
+                {
+                    _log.Warning("Mail 2FA verify failed: Invalid or expired code for user: {UserId}", challenge.UserId);
+                    return null;
+                }
+
+                codeToken.RevokedAt = now;
+            }
+            else
+            {
+                if (string.IsNullOrWhiteSpace(user.AuthenticatorKey) || !TotpUtility.ValidateCode(user.AuthenticatorKey, code))
+                {
+                    _log.Warning("Authenticator 2FA verify failed: Invalid code for user: {UserId}", challenge.UserId);
+                    return null;
+                }
+            }
+
             challenge.RevokedAt = now;
-            codeToken.RevokedAt = now;
             await _context.SaveChangesAsync();
 
             return await IssueLoginTokensAsync(user);
@@ -283,10 +318,10 @@ public class AuthService : IAuthService
         };
     }
 
-    private async Task<string> GenerateMailTwoFactorChallengeAsync(int userId)
+    private async Task<string> GenerateTwoFactorChallengeAsync(int userId, string tokenType)
     {
         var activeChallenges = await _context.Tokens
-            .Where(t => t.UserId == userId && t.TokenType == "MailTwoFactorChallenge" && t.RevokedAt == null)
+            .Where(t => t.UserId == userId && t.TokenType == tokenType && t.RevokedAt == null)
             .ToListAsync();
 
         foreach (var activeChallenge in activeChallenges)
@@ -298,7 +333,7 @@ public class AuthService : IAuthService
         _context.Tokens.Add(new Token
         {
             UserId = userId,
-            TokenType = "MailTwoFactorChallenge",
+            TokenType = tokenType,
             TokenValue = challengeToken,
             Expiry = DateTime.UtcNow.AddMinutes(10),
             CreatedAt = DateTime.UtcNow

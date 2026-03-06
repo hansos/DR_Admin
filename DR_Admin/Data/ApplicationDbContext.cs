@@ -502,6 +502,7 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.PasswordHash).IsRequired();
             entity.Property(e => e.Email).IsRequired().HasMaxLength(200);
             entity.Property(e => e.NormalizedUsername).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.AuthenticatorKey).HasMaxLength(200);
             
             entity.HasIndex(e => e.Username).IsUnique();
             entity.HasIndex(e => e.Email).IsUnique();

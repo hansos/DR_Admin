@@ -70,4 +70,32 @@ public class TestController : ControllerBase
             return StatusCode(500, "An error occurred while sending test email");
         }
     }
+
+    /// <summary>
+    /// Seeds test catalog data into selected tables when those tables are empty.
+    /// </summary>
+    /// <returns>Summary of inserted records grouped by table.</returns>
+    /// <response code="200">Returns seeding result summary</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user is not an admin</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpPost("seed-data")]
+    [ProducesResponseType(typeof(SeedTestDataResultDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<SeedTestDataResultDto>> SeedTestData()
+    {
+        try
+        {
+            _log.Information("API: Test/SeedTestData called by user {User}", User.Identity?.Name);
+            var result = await _systemService.SeedTestDataAsync();
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in Test/SeedTestData");
+            return StatusCode(500, "An error occurred while seeding test data");
+        }
+    }
 }

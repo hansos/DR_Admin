@@ -12,6 +12,7 @@ using Serilog;
 using MessagingTemplateLib.Templating;
 using MessagingTemplateLib.Models;
 using MessagingTemplateLib;
+using ISPAdmin.Utilities;
 using static ISPAdmin.Infrastructure.RoleNames;
 
 namespace ISPAdmin.Services;
@@ -87,6 +88,8 @@ public class MyAccountService : IMyAccountService
                 PasswordHash = passwordHash, // TODO: Hash this properly
                 EmailConfirmed = null,
                 IsMailTwoFactorEnabled = false,
+                IsAuthenticatorTwoFactorEnabled = false,
+                AuthenticatorKey = null,
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
@@ -226,8 +229,10 @@ public class MyAccountService : IMyAccountService
 
             return new TwoFactorStatusDto
             {
-                Enabled = user.IsMailTwoFactorEnabled,
-                Method = user.IsMailTwoFactorEnabled ? "Email" : null,
+                Enabled = user.IsMailTwoFactorEnabled || user.IsAuthenticatorTwoFactorEnabled,
+                Method = user.IsAuthenticatorTwoFactorEnabled
+                    ? "Authenticator"
+                    : (user.IsMailTwoFactorEnabled ? "Email" : null),
                 RecoveryCodesRemaining = null
             };
         }
@@ -238,7 +243,7 @@ public class MyAccountService : IMyAccountService
         }
     }
 
-    public async Task<bool> UpdateMailTwoFactorSettingAsync(int userId, bool enabled)
+    public async Task<bool> UpdateTwoFactorSettingAsync(int userId, bool enabled, string? method)
     {
         try
         {
@@ -249,22 +254,130 @@ public class MyAccountService : IMyAccountService
                 return false;
             }
 
-            if (enabled && !user.EmailConfirmed.HasValue)
+            if (!enabled)
             {
-                _log.Warning("Update two-factor setting failed: Email not verified - {UserId}", userId);
-                return false;
+                user.IsMailTwoFactorEnabled = false;
+                user.IsAuthenticatorTwoFactorEnabled = false;
+                user.UpdatedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+
+                _log.Information("Two-factor setting disabled for user {UserId}", userId);
+                return true;
             }
 
-            user.IsMailTwoFactorEnabled = enabled;
-            user.UpdatedAt = DateTime.UtcNow;
-            await _context.SaveChangesAsync();
+            var normalizedMethod = method?.Trim();
+            if (string.Equals(normalizedMethod, "Email", StringComparison.OrdinalIgnoreCase))
+            {
+                if (!user.EmailConfirmed.HasValue)
+                {
+                    _log.Warning("Update two-factor setting failed: Email not verified - {UserId}", userId);
+                    return false;
+                }
 
-            _log.Information("Mail two-factor setting updated for user {UserId}: {Enabled}", userId, enabled);
-            return true;
+                user.IsMailTwoFactorEnabled = true;
+                user.IsAuthenticatorTwoFactorEnabled = false;
+                user.UpdatedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+
+                _log.Information("Mail two-factor setting updated for user {UserId}: enabled", userId);
+                return true;
+            }
+
+            if (string.Equals(normalizedMethod, "Authenticator", StringComparison.OrdinalIgnoreCase))
+            {
+                if (!user.IsAuthenticatorTwoFactorEnabled || string.IsNullOrWhiteSpace(user.AuthenticatorKey))
+                {
+                    _log.Warning("Update two-factor setting failed: Authenticator not configured - {UserId}", userId);
+                    return false;
+                }
+
+                user.IsMailTwoFactorEnabled = false;
+                user.IsAuthenticatorTwoFactorEnabled = true;
+                user.UpdatedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+
+                _log.Information("Authenticator two-factor setting updated for user {UserId}: enabled", userId);
+                return true;
+            }
+
+            _log.Warning("Update two-factor setting failed: Invalid method '{Method}' for user {UserId}", method, userId);
+            return false;
         }
         catch (Exception ex)
         {
             _log.Error(ex, "Error updating two-factor setting for user: {UserId}", userId);
+            return false;
+        }
+    }
+
+    public async Task<AuthenticatorSetupDto?> BeginAuthenticatorSetupAsync(int userId)
+    {
+        try
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId && u.IsActive);
+            if (user == null)
+            {
+                _log.Warning("Begin authenticator setup failed: User not found - {UserId}", userId);
+                return null;
+            }
+
+            var sharedKey = TotpUtility.GenerateSharedKey();
+            user.AuthenticatorKey = sharedKey;
+            user.IsAuthenticatorTwoFactorEnabled = false;
+            user.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            var accountName = !string.IsNullOrWhiteSpace(user.Email) ? user.Email : user.Username;
+            var qrCodeUri = TotpUtility.BuildOtpAuthUri("DR Admin Shop", accountName, sharedKey);
+
+            _log.Information("Authenticator setup initialized for user {UserId}", userId);
+            return new AuthenticatorSetupDto
+            {
+                SharedKey = sharedKey,
+                QrCodeUri = qrCodeUri
+            };
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error initializing authenticator setup for user: {UserId}", userId);
+            return null;
+        }
+    }
+
+    public async Task<bool> ConfirmAuthenticatorSetupAsync(int userId, string code)
+    {
+        try
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId && u.IsActive);
+            if (user == null)
+            {
+                _log.Warning("Confirm authenticator setup failed: User not found - {UserId}", userId);
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(user.AuthenticatorKey))
+            {
+                _log.Warning("Confirm authenticator setup failed: Shared key missing - {UserId}", userId);
+                return false;
+            }
+
+            if (!TotpUtility.ValidateCode(user.AuthenticatorKey, code))
+            {
+                _log.Warning("Confirm authenticator setup failed: Invalid code - {UserId}", userId);
+                return false;
+            }
+
+            user.IsAuthenticatorTwoFactorEnabled = true;
+            user.IsMailTwoFactorEnabled = false;
+            user.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            _log.Information("Authenticator setup confirmed for user {UserId}", userId);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error confirming authenticator setup for user: {UserId}", userId);
             return false;
         }
     }

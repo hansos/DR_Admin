@@ -7,6 +7,7 @@ namespace DR_Admin_ResellerPanel
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+            var enableTestDataSeedingOnInitialize = builder.Configuration.GetValue<bool>("Features:EnableTestDataSeedingOnInitialize", false);
 
             // Add services to the container.
             builder.Services.AddRazorComponents()
@@ -28,6 +29,11 @@ namespace DR_Admin_ResellerPanel
             app.UseAntiforgery();
 
             app.MapStaticAssets();
+
+            app.MapGet("/runtime-config", () => Results.Ok(new
+            {
+                enableTestDataSeedingOnInitialize
+            }));
 
             app.MapRazorComponents<App>()
                 .AddInteractiveServerRenderMode();

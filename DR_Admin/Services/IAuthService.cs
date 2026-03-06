@@ -10,9 +10,9 @@ public interface IAuthService
     Task<LoginResponseDto?> AuthenticateAsync(string username, string password);
 
     /// <summary>
-    /// Verifies mail two-factor code and issues authentication tokens.
+    /// Verifies two-factor code and issues authentication tokens.
     /// </summary>
-    Task<LoginResponseDto?> VerifyMailTwoFactorAsync(string challengeToken, string code);
+    Task<LoginResponseDto?> VerifyTwoFactorAsync(string challengeToken, string code);
 
     /// <summary>
     /// Resends mail two-factor code for an active challenge.

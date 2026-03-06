@@ -197,10 +197,10 @@ public class MyAccountController : ControllerBase
         try
         {
             var userId = GetCurrentUserId();
-            var result = await _myAccountService.UpdateMailTwoFactorSettingAsync(userId, request.Enabled);
+            var result = await _myAccountService.UpdateTwoFactorSettingAsync(userId, request.Enabled, request.Method);
             if (!result)
             {
-                return BadRequest(new { message = "Could not update two-factor setting. Ensure your email is verified before enabling 2FA." });
+                return BadRequest(new { message = "Could not update two-factor setting. Ensure selected method is configured and valid." });
             }
 
             return Ok(new { message = "Two-factor setting updated successfully" });
@@ -209,6 +209,69 @@ public class MyAccountController : ControllerBase
         {
             _log.Error(ex, "Error updating two-factor setting");
             return StatusCode(500, new { message = "An error occurred while updating two-factor setting" });
+        }
+    }
+
+    /// <summary>
+    /// Starts Microsoft Authenticator setup by generating a shared key and QR provisioning URI.
+    /// </summary>
+    [HttpPost("2fa/authenticator/setup")]
+    [Authorize]
+    [ProducesResponseType(typeof(AuthenticatorSetupDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<AuthenticatorSetupDto>> BeginAuthenticatorSetup()
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            var setup = await _myAccountService.BeginAuthenticatorSetupAsync(userId);
+            if (setup == null)
+            {
+                return NotFound(new { message = "Account not found" });
+            }
+
+            return Ok(setup);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error starting authenticator setup");
+            return StatusCode(500, new { message = "An error occurred while starting authenticator setup" });
+        }
+    }
+
+    /// <summary>
+    /// Confirms Microsoft Authenticator setup using a current verification code.
+    /// </summary>
+    [HttpPost("2fa/authenticator/confirm")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult> ConfirmAuthenticatorSetup([FromBody] ConfirmAuthenticatorSetupRequestDto request)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(request.Code))
+            {
+                return BadRequest(new { message = "Verification code is required" });
+            }
+
+            var userId = GetCurrentUserId();
+            var result = await _myAccountService.ConfirmAuthenticatorSetupAsync(userId, request.Code);
+            if (!result)
+            {
+                return BadRequest(new { message = "Invalid authenticator code or setup not initialized" });
+            }
+
+            return Ok(new { message = "Authenticator setup confirmed" });
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error confirming authenticator setup");
+            return StatusCode(500, new { message = "An error occurred while confirming authenticator setup" });
         }
     }
 

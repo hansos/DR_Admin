@@ -1,5 +1,6 @@
 "use strict";
 const challengeStorageKey = 'up-2fa-challenge';
+const methodStorageKey = 'up-2fa-method';
 function initializeLoginTwoFactor() {
     const form = document.getElementById('auth-login-2fa-form');
     if (!form || form.dataset.bound === 'true') {
@@ -7,9 +8,12 @@ function initializeLoginTwoFactor() {
     }
     form.dataset.bound = 'true';
     const challengeToken = getChallengeToken();
+    const method = getTwoFactorMethod();
+    updateMethodUi(method);
     if (!challengeToken) {
         const typedWindow = window;
         typedWindow.UserPanelAlerts?.showError('auth-login-2fa-alert-error', 'Two-factor challenge has expired. Please sign in again.');
+        sessionStorage.removeItem(methodStorageKey);
         window.setTimeout(() => {
             window.location.href = '/account/login';
         }, 1200);
@@ -20,7 +24,9 @@ function initializeLoginTwoFactor() {
         await verifyCode(challengeToken);
     });
     document.getElementById('auth-login-2fa-resend')?.addEventListener('click', async () => {
-        await resendCode(challengeToken);
+        if (method === 'Email') {
+            await resendCode(challengeToken);
+        }
     });
 }
 async function verifyCode(challengeToken) {
@@ -46,6 +52,7 @@ async function verifyCode(challengeToken) {
         return;
     }
     sessionStorage.removeItem(challengeStorageKey);
+    sessionStorage.removeItem(methodStorageKey);
     typedWindow.UserPanelAuth?.setSession({
         userId: response.data.userId,
         username: response.data.username,
@@ -83,6 +90,27 @@ function getChallengeToken() {
         return queryToken.trim();
     }
     return sessionStorage.getItem(challengeStorageKey) ?? '';
+}
+function getTwoFactorMethod() {
+    const queryMethod = new URLSearchParams(window.location.search).get('method');
+    if (queryMethod && queryMethod.trim()) {
+        sessionStorage.setItem(methodStorageKey, queryMethod.trim());
+        return queryMethod.trim();
+    }
+    return sessionStorage.getItem(methodStorageKey) ?? 'Email';
+}
+function updateMethodUi(method) {
+    const normalized = method === 'Authenticator' ? 'Authenticator' : 'Email';
+    const methodLabel = document.getElementById('auth-login-2fa-method-label');
+    const resendButton = document.getElementById('auth-login-2fa-resend');
+    if (methodLabel) {
+        methodLabel.textContent = normalized === 'Authenticator'
+            ? 'Enter the current 6-digit code from Microsoft Authenticator.'
+            : 'Enter the code sent to your email.';
+    }
+    if (resendButton) {
+        resendButton.classList.toggle('d-none', normalized !== 'Email');
+    }
 }
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initializeLoginTwoFactor);

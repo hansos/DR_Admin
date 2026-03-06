@@ -37,10 +37,37 @@
                     <form id="security-2fa-form" novalidate>
                         <div class="form-check form-switch mb-2">
                             <input id="security-2fa-enabled" class="form-check-input" type="checkbox" />
-                            <label for="security-2fa-enabled" class="form-check-label">Enable two-factor authentication (email code)</label>
+                            <label for="security-2fa-enabled" class="form-check-label">Enable two-factor authentication</label>
                         </div>
 
-                        <div class="small text-muted mb-3">When enabled, sign-in requires a one-time code sent to your verified email address.</div>
+                        <div class="mb-3">
+                            <label class="form-label">Verification method</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="security-2fa-method" id="security-2fa-method-email" value="Email" checked />
+                                <label class="form-check-label" for="security-2fa-method-email">Email code</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="security-2fa-method" id="security-2fa-method-authenticator" value="Authenticator" />
+                                <label class="form-check-label" for="security-2fa-method-authenticator">Microsoft Authenticator</label>
+                            </div>
+                        </div>
+
+                        <div id="security-2fa-authenticator-panel" class="border rounded p-3 mb-3 d-none">
+                            <p class="small text-muted mb-2">Scan the QR code in Microsoft Authenticator or enter the setup key manually.</p>
+                            <div id="security-2fa-qr-wrapper" class="mb-2 d-none">
+                                <img id="security-2fa-qr-image" class="img-thumbnail" alt="Authenticator QR code" />
+                            </div>
+                            <div id="security-2fa-manual-key" class="small mb-3 text-break"></div>
+
+                            <div class="d-flex flex-wrap gap-2 mb-2">
+                                <button id="security-2fa-setup-authenticator" class="btn btn-sm btn-outline-primary" type="button">Generate QR code</button>
+                            </div>
+
+                            <div class="input-group input-group-sm">
+                                <input id="security-2fa-authenticator-code" class="form-control" type="text" maxlength="6" placeholder="Enter 6-digit code" />
+                                <button id="security-2fa-confirm-authenticator" class="btn btn-success" type="button">Confirm app</button>
+                            </div>
+                        </div>
 
                         <div id="security-2fa-status" class="text-muted small mb-3">Loading 2FA status...</div>
 

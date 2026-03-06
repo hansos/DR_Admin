@@ -2,6 +2,7 @@ using System.Diagnostics;
 using EmailSenderLib.Factories;
 using EmailSenderLib.Infrastructure.Settings;
 using ISPAdmin.Data;
+using ISPAdmin.Data.Entities;
 using ISPAdmin.Utilities;
 using ISPAdmin.Infrastructure.Settings;
 using Microsoft.EntityFrameworkCore;
@@ -337,6 +338,343 @@ $"</body></html>";
         result.Note = "Requested sender is included in test content. Actual sender address is controlled by selected email provider configuration.";
 
         return result;
+    }
+
+    /// <summary>
+    /// Seeds core test data into selected tables when those tables are empty.
+    /// </summary>
+    /// <returns>Summary of seeded records grouped by table.</returns>
+    public async Task<SeedTestDataResultDto> SeedTestDataAsync()
+    {
+        var result = new SeedTestDataResultDto();
+
+        try
+        {
+            _log.Information("Starting test data seeding for core catalog tables");
+
+            if (!await _context.Tlds.AnyAsync())
+            {
+                _context.Tlds.AddRange(
+                    new Tld { Extension = "com", Description = "Commercial", IsActive = true, DefaultRegistrationYears = 1, MaxRegistrationYears = 10 },
+                    new Tld { Extension = "net", Description = "Network", IsActive = true, DefaultRegistrationYears = 1, MaxRegistrationYears = 10 },
+                    new Tld { Extension = "org", Description = "Organization", IsActive = true, DefaultRegistrationYears = 1, MaxRegistrationYears = 10 });
+                result.InsertedByTable["Tlds"] = 3;
+            }
+
+            if (!await _context.ServerTypes.AnyAsync())
+            {
+                _context.ServerTypes.AddRange(
+                    new ServerType { Name = "shared", DisplayName = "Shared", Description = "Shared hosting server", IsActive = true },
+                    new ServerType { Name = "vps", DisplayName = "VPS", Description = "Virtual private server", IsActive = true },
+                    new ServerType { Name = "dedicated", DisplayName = "Dedicated", Description = "Dedicated physical server", IsActive = true });
+                result.InsertedByTable["ServerTypes"] = 3;
+            }
+
+            if (!await _context.OperatingSystems.AnyAsync())
+            {
+                _context.OperatingSystems.AddRange(
+                    new ISPAdmin.Data.Entities.OperatingSystem { Name = "ubuntu-22-04", DisplayName = "Ubuntu 22.04 LTS", Version = "22.04", Description = "Ubuntu Linux", IsActive = true },
+                    new ISPAdmin.Data.Entities.OperatingSystem { Name = "debian-12", DisplayName = "Debian 12", Version = "12", Description = "Debian Linux", IsActive = true },
+                    new ISPAdmin.Data.Entities.OperatingSystem { Name = "windows-server-2022", DisplayName = "Windows Server 2022", Version = "2022", Description = "Microsoft Windows Server", IsActive = true });
+                result.InsertedByTable["OperatingSystems"] = 3;
+            }
+
+            if (!await _context.HostProviders.AnyAsync())
+            {
+                _context.HostProviders.Add(
+                    new HostProvider
+                    {
+                        Name = "namecheap",
+                        DisplayName = "NameCheap",
+                        Description = "NameCheap infrastructure provider",
+                        WebsiteUrl = "https://www.namecheap.com",
+                        IsActive = true
+                    });
+                result.InsertedByTable["HostProviders"] = 1;
+            }
+
+            if (!await _context.HostingPackages.AnyAsync())
+            {
+                _context.HostingPackages.AddRange(
+                    new HostingPackage
+                    {
+                        Name = "Starter Hosting",
+                        Description = "Entry level hosting package",
+                        DiskSpaceMB = 10240,
+                        BandwidthMB = 102400,
+                        EmailAccounts = 10,
+                        Databases = 5,
+                        Domains = 1,
+                        Subdomains = 5,
+                        FtpAccounts = 5,
+                        SslSupport = true,
+                        BackupSupport = false,
+                        DedicatedIp = false,
+                        MonthlyPrice = 4.99m,
+                        YearlyPrice = 49.99m,
+                        IsActive = true
+                    },
+                    new HostingPackage
+                    {
+                        Name = "Business Hosting",
+                        Description = "Business hosting package",
+                        DiskSpaceMB = 51200,
+                        BandwidthMB = 512000,
+                        EmailAccounts = 50,
+                        Databases = 20,
+                        Domains = 10,
+                        Subdomains = 25,
+                        FtpAccounts = 20,
+                        SslSupport = true,
+                        BackupSupport = true,
+                        DedicatedIp = false,
+                        MonthlyPrice = 12.99m,
+                        YearlyPrice = 129.99m,
+                        IsActive = true
+                    },
+                    new HostingPackage
+                    {
+                        Name = "Pro Hosting",
+                        Description = "Advanced hosting package",
+                        DiskSpaceMB = 102400,
+                        BandwidthMB = 1048576,
+                        EmailAccounts = 200,
+                        Databases = 100,
+                        Domains = 50,
+                        Subdomains = 100,
+                        FtpAccounts = 100,
+                        SslSupport = true,
+                        BackupSupport = true,
+                        DedicatedIp = true,
+                        MonthlyPrice = 24.99m,
+                        YearlyPrice = 249.99m,
+                        IsActive = true
+                    });
+                result.InsertedByTable["HostingPackages"] = 3;
+            }
+
+            if (!await _context.ControlPanelTypes.AnyAsync())
+            {
+                _context.ControlPanelTypes.AddRange(
+                    new ControlPanelType { Name = "cpanel", DisplayName = "cPanel", Description = "cPanel hosting control panel", IsActive = true },
+                    new ControlPanelType { Name = "plesk", DisplayName = "Plesk", Description = "Plesk hosting control panel", IsActive = true },
+                    new ControlPanelType { Name = "directadmin", DisplayName = "DirectAdmin", Description = "DirectAdmin hosting control panel", IsActive = true });
+                result.InsertedByTable["ControlPanelTypes"] = 3;
+            }
+
+            if (!await _context.DnsZonePackages.AnyAsync())
+            {
+                _context.DnsZonePackages.AddRange(
+                    new DnsZonePackage
+                    {
+                        Name = "Basic DNS Template",
+                        Description = "Standard DNS records template",
+                        IsActive = true,
+                        IsDefault = true,
+                        SortOrder = 1
+                    },
+                    new DnsZonePackage
+                    {
+                        Name = "Business DNS Template",
+                        Description = "DNS template for business hosting",
+                        IsActive = true,
+                        IsDefault = false,
+                        SortOrder = 2
+                    });
+                result.InsertedByTable["DnsZonePackages"] = 2;
+            }
+
+            ServiceType additionalServiceType;
+            if (!await _context.ServiceTypes.AnyAsync())
+            {
+                additionalServiceType = new ServiceType
+                {
+                    Name = "Additional Service",
+                    Description = "Service type for add-on products"
+                };
+
+                _context.ServiceTypes.AddRange(
+                    new ServiceType { Name = "Hosting", Description = "Hosting services" },
+                    new ServiceType { Name = "Domain", Description = "Domain services" },
+                    additionalServiceType);
+
+                result.InsertedByTable["ServiceTypes"] = 3;
+            }
+            else
+            {
+                additionalServiceType = await _context.ServiceTypes
+                    .OrderBy(x => x.Id)
+                    .FirstAsync();
+            }
+
+            BillingCycle monthlyBillingCycle;
+            if (!await _context.BillingCycles.AnyAsync())
+            {
+                monthlyBillingCycle = new BillingCycle
+                {
+                    Code = "MONTHLY",
+                    Name = "Monthly",
+                    DurationInDays = 30,
+                    Description = "Monthly recurring billing",
+                    SortOrder = 1
+                };
+
+                _context.BillingCycles.AddRange(
+                    monthlyBillingCycle,
+                    new BillingCycle
+                    {
+                        Code = "YEARLY",
+                        Name = "Yearly",
+                        DurationInDays = 365,
+                        Description = "Yearly recurring billing",
+                        SortOrder = 2
+                    });
+
+                result.InsertedByTable["BillingCycles"] = 2;
+            }
+            else
+            {
+                monthlyBillingCycle = await _context.BillingCycles
+                    .OrderBy(x => x.Id)
+                    .FirstAsync();
+            }
+
+            if (!await _context.Services.AnyAsync())
+            {
+                _context.Services.AddRange(
+                    new Service
+                    {
+                        Name = "SSL Certificate",
+                        Description = "Domain validated SSL certificate",
+                        ServiceType = additionalServiceType,
+                        BillingCycle = monthlyBillingCycle,
+                        Price = 3.99m,
+                        SetupFee = 0m,
+                        IsActive = true,
+                        IsFeatured = true,
+                        Sku = "ADDON-SSL",
+                        MinQuantity = 1,
+                        SortOrder = 1,
+                        SpecificationsJson = "{}"
+                    },
+                    new Service
+                    {
+                        Name = "Daily Backups",
+                        Description = "Automated daily backup add-on",
+                        ServiceType = additionalServiceType,
+                        BillingCycle = monthlyBillingCycle,
+                        Price = 2.99m,
+                        SetupFee = 0m,
+                        IsActive = true,
+                        IsFeatured = false,
+                        Sku = "ADDON-BACKUP",
+                        MinQuantity = 1,
+                        SortOrder = 2,
+                        SpecificationsJson = "{}"
+                    },
+                    new Service
+                    {
+                        Name = "Priority Support",
+                        Description = "Priority technical support add-on",
+                        ServiceType = additionalServiceType,
+                        BillingCycle = monthlyBillingCycle,
+                        Price = 5.99m,
+                        SetupFee = 0m,
+                        IsActive = true,
+                        IsFeatured = false,
+                        Sku = "ADDON-SUPPORT",
+                        MinQuantity = 1,
+                        SortOrder = 3,
+                        SpecificationsJson = "{}"
+                    });
+                result.InsertedByTable["Services"] = 3;
+            }
+
+            if (!await _context.Registrars.AnyAsync())
+            {
+                _context.Registrars.AddRange(
+                    new Registrar
+                    {
+                        Name = "AWS Route 53",
+                        Code = "aws",
+                        IsActive = true,
+                        IsDefault=true,
+                        ContactEmail = "support@amazon.com",
+                        Website = "https://aws.amazon.com/route53/",
+                        Notes = "Registry API provider via AWS"
+                    },
+                    new Registrar
+                    {
+                        Name = "Namecheap API",
+                        Code = "namecheap",
+                        IsActive = true,
+                        ContactEmail = "support@namecheap.com",
+                        Website = "https://www.namecheap.com/support/api/",
+                        Notes = "Namecheap domain registry API"
+                    },
+                    new Registrar
+                    {
+                        Name = "Cloudflare Registrar API",
+                        Code = "cloudflare",
+                        IsActive = true,
+                        ContactEmail = "support@cloudflare.com",
+                        Website = "https://www.cloudflare.com",
+                        Notes = "Cloudflare registrar integration"
+                    });
+                result.InsertedByTable["Registrars"] = 3;
+            }
+
+            if (!await _context.PaymentGateways.AnyAsync())
+            {
+                _context.PaymentGateways.AddRange(
+                    new PaymentGateway
+                    {
+                        Name = "Stripe",
+                        ProviderCode = "stripe",
+                        PaymentInstrument = "CreditCard",
+                        IsActive = true,
+                        IsDefault = true,
+                        ApiKey = "test_stripe_api_key",
+                        ApiSecret = "test_stripe_api_secret",
+                        ConfigurationJson = "{}",
+                        UseSandbox = true,
+                        Description = "Stripe payment provider",
+                        SupportedCurrencies = "USD,EUR,GBP"
+                    },
+                    new PaymentGateway
+                    {
+                        Name = "PayPal",
+                        ProviderCode = "paypal",
+                        PaymentInstrument = "PayPal",
+                        IsActive = true,
+                        IsDefault = false,
+                        ApiKey = "test_paypal_api_key",
+                        ApiSecret = "test_paypal_api_secret",
+                        ConfigurationJson = "{}",
+                        UseSandbox = true,
+                        Description = "PayPal payment provider",
+                        SupportedCurrencies = "USD,EUR,GBP"
+                    });
+                result.InsertedByTable["PaymentGateways"] = 2;
+            }
+
+            await _context.SaveChangesAsync();
+
+            result.Success = true;
+            result.Message = result.InsertedByTable.Count == 0
+                ? "No data inserted. Target tables already contained records."
+                : "Test data inserted successfully.";
+
+            _log.Information("Completed test data seeding. Inserted tables: {TableCount}", result.InsertedByTable.Count);
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while seeding test data");
+            result.Success = false;
+            result.Message = ex.Message;
+            return result;
+        }
     }
 
     /// <summary>

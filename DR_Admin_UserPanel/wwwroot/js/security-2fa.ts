@@ -12,6 +12,11 @@ interface TwoFactorStatusDto {
     recoveryCodesRemaining?: number | null;
 }
 
+interface AuthenticatorSetupDto {
+    sharedKey: string;
+    qrCodeUri: string;
+}
+
 interface SecurityTwoFactorWindow extends Window {
     UserPanelSettings?: {
         frontendSiteCode: string;
@@ -41,6 +46,20 @@ function initializeSecurityTwoFactorPage(): void {
 
     document.getElementById('security-2fa-send-verification')?.addEventListener('click', () => {
         void requestEmailVerification();
+    });
+
+    document.querySelectorAll('input[name="security-2fa-method"]').forEach((element) => {
+        element.addEventListener('change', () => {
+            updateAuthenticatorPanel();
+        });
+    });
+
+    document.getElementById('security-2fa-setup-authenticator')?.addEventListener('click', () => {
+        void beginAuthenticatorSetup();
+    });
+
+    document.getElementById('security-2fa-confirm-authenticator')?.addEventListener('click', () => {
+        void confirmAuthenticatorSetup();
     });
 
     void loadSecurityTwoFactorPage();
@@ -101,6 +120,8 @@ function renderTwoFactorStatus(status: TwoFactorStatusDto | null): void {
 
     if (!status) {
         checkbox.checked = false;
+        setSelectedMethod('Email');
+        updateAuthenticatorPanel();
         statusBox.textContent = '2FA endpoint is not available yet for this environment.';
         return;
     }
@@ -108,9 +129,92 @@ function renderTwoFactorStatus(status: TwoFactorStatusDto | null): void {
     checkbox.checked = status.enabled;
     const recovery = status.recoveryCodesRemaining ?? 0;
     const method = status.method?.trim() ? status.method : 'Email';
+    setSelectedMethod(method);
+    updateAuthenticatorPanel();
+
     statusBox.textContent = status.enabled
         ? `2FA is enabled (${method}). Recovery codes remaining: ${recovery}.`
         : '2FA is currently disabled.';
+}
+
+function updateAuthenticatorPanel(): void {
+    const panel = document.getElementById('security-2fa-authenticator-panel');
+    if (!panel) {
+        return;
+    }
+
+    panel.classList.toggle('d-none', getSelectedMethod() !== 'Authenticator');
+}
+
+function setSelectedMethod(method: string): void {
+    const normalized = method === 'Authenticator' ? 'Authenticator' : 'Email';
+    const emailOption = document.getElementById('security-2fa-method-email') as HTMLInputElement | null;
+    const authOption = document.getElementById('security-2fa-method-authenticator') as HTMLInputElement | null;
+    if (emailOption && authOption) {
+        emailOption.checked = normalized === 'Email';
+        authOption.checked = normalized === 'Authenticator';
+    }
+}
+
+function getSelectedMethod(): string {
+    const selected = document.querySelector('input[name="security-2fa-method"]:checked') as HTMLInputElement | null;
+    return selected?.value === 'Authenticator' ? 'Authenticator' : 'Email';
+}
+
+async function beginAuthenticatorSetup(): Promise<void> {
+    const typedWindow = window as SecurityTwoFactorWindow;
+    typedWindow.UserPanelAlerts?.hide('security-2fa-alert-success');
+    typedWindow.UserPanelAlerts?.hide('security-2fa-alert-error');
+
+    const response = await typedWindow.UserPanelApi?.request<AuthenticatorSetupDto>('/MyAccount/2fa/authenticator/setup', {
+        method: 'POST'
+    }, true);
+
+    if (!response || !response.success || !response.data) {
+        typedWindow.UserPanelAlerts?.showError('security-2fa-alert-error', response?.message ?? 'Could not initialize authenticator setup.');
+        return;
+    }
+
+    const qrWrapper = document.getElementById('security-2fa-qr-wrapper');
+    const qrImage = document.getElementById('security-2fa-qr-image') as HTMLImageElement | null;
+    const manualKey = document.getElementById('security-2fa-manual-key');
+
+    if (qrWrapper && qrImage) {
+        qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(response.data.qrCodeUri)}`;
+        qrWrapper.classList.remove('d-none');
+    }
+
+    if (manualKey) {
+        manualKey.innerHTML = `<strong>Manual key:</strong> ${escapeSecurityTwoFactorText(response.data.sharedKey)}`;
+    }
+
+    typedWindow.UserPanelAlerts?.showSuccess('security-2fa-alert-success', 'Authenticator setup created. Scan QR code and confirm with a 6-digit code.');
+}
+
+async function confirmAuthenticatorSetup(): Promise<void> {
+    const typedWindow = window as SecurityTwoFactorWindow;
+    typedWindow.UserPanelAlerts?.hide('security-2fa-alert-success');
+    typedWindow.UserPanelAlerts?.hide('security-2fa-alert-error');
+
+    const codeInput = document.getElementById('security-2fa-authenticator-code') as HTMLInputElement | null;
+    const code = codeInput?.value.trim() ?? '';
+    if (code.length < 6) {
+        typedWindow.UserPanelAlerts?.showError('security-2fa-alert-error', 'Enter a valid 6-digit authenticator code.');
+        return;
+    }
+
+    const response = await typedWindow.UserPanelApi?.request('/MyAccount/2fa/authenticator/confirm', {
+        method: 'POST',
+        body: JSON.stringify({ code })
+    }, true);
+
+    if (!response || !response.success) {
+        typedWindow.UserPanelAlerts?.showError('security-2fa-alert-error', response?.message ?? 'Could not confirm authenticator setup.');
+        return;
+    }
+
+    typedWindow.UserPanelAlerts?.showSuccess('security-2fa-alert-success', response.message ?? 'Authenticator was configured successfully.');
+    await loadSecurityTwoFactorPage();
 }
 
 async function requestEmailVerification(): Promise<void> {
@@ -144,7 +248,7 @@ async function saveTwoFactorStatus(): Promise<void> {
 
     const response = await typedWindow.UserPanelApi?.request('/MyAccount/2fa', {
         method: 'POST',
-        body: JSON.stringify({ enabled: checkbox.checked })
+        body: JSON.stringify({ enabled: checkbox.checked, method: getSelectedMethod() })
     }, true);
 
     if (!response || !response.success) {

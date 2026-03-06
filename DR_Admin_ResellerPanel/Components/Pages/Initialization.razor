@@ -35,13 +35,32 @@
 
                             <div class="mb-3">
                                 <label for="initialization-password" class="form-label">Password</label>
-                                <input id="initialization-password" class="form-control" type="password" autocomplete="new-password" required />
+                                <div class="input-group">
+                                    <input id="initialization-password" class="form-control" type="password" autocomplete="new-password" required />
+                                    <button id="initialization-toggle-password" class="btn btn-outline-secondary" type="button" data-target="initialization-password" aria-label="Show or hide password">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
                                 <div class="form-text">Minimum 8 characters and include uppercase, lowercase, number and special character.</div>
                             </div>
 
                             <div class="mb-3">
                                 <label for="initialization-password-confirm" class="form-label">Confirm Password</label>
-                                <input id="initialization-password-confirm" class="form-control" type="password" autocomplete="new-password" required />
+                                <div class="input-group">
+                                    <input id="initialization-password-confirm" class="form-control" type="password" autocomplete="new-password" required />
+                                    <button id="initialization-toggle-password-confirm" class="btn btn-outline-secondary" type="button" data-target="initialization-password-confirm" aria-label="Show or hide confirmation password">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="mb-3 d-none" id="initialization-seed-test-data-wrapper">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="true" id="initialization-seed-test-data" />
+                                    <label class="form-check-label" for="initialization-seed-test-data">
+                                        Seed extended test data after initialization (calls <code>/api/v1/Test/seed-data</code>)
+                                    </label>
+                                </div>
                             </div>
 
                             <button id="initialization-submit" type="submit" class="btn btn-primary w-100">

@@ -100,6 +100,11 @@ public class UpdateTwoFactorSettingsRequestDto
     /// Gets or sets a value indicating whether mail two-factor authentication is enabled.
     /// </summary>
     public bool Enabled { get; set; }
+
+    /// <summary>
+    /// Gets or sets the requested two-factor method. Supported values: Email, Authenticator.
+    /// </summary>
+    public string? Method { get; set; }
 }
 
 /// <summary>
@@ -121,6 +126,33 @@ public class TwoFactorStatusDto
     /// Gets or sets the remaining count of recovery codes.
     /// </summary>
     public int? RecoveryCodesRemaining { get; set; }
+}
+
+/// <summary>
+/// Response DTO for authenticator app setup details.
+/// </summary>
+public class AuthenticatorSetupDto
+{
+    /// <summary>
+    /// Gets or sets the base32 shared secret key for manual entry.
+    /// </summary>
+    public string SharedKey { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the otpauth URI used for QR code generation.
+    /// </summary>
+    public string QrCodeUri { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Request DTO for confirming authenticator app setup.
+/// </summary>
+public class ConfirmAuthenticatorSetupRequestDto
+{
+    /// <summary>
+    /// Gets or sets the one-time code from authenticator app.
+    /// </summary>
+    public string Code { get; set; } = string.Empty;
 }
 
 /// <summary>

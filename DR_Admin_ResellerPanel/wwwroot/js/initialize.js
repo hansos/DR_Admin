@@ -65,18 +65,71 @@
     function showLoginSection() {
         document.getElementById('initialization-login-section')?.classList.remove('d-none');
     }
+    async function getEnableSeedTestDataOnInitialize() {
+        const defaultValue = window.AppSettings?.enableTestDataSeedingOnInitialize === true;
+        try {
+            const response = await fetch('/runtime-config', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+            });
+            if (!response.ok) {
+                return defaultValue;
+            }
+            const data = (await response.json());
+            return data.enableTestDataSeedingOnInitialize === true;
+        }
+        catch {
+            return defaultValue;
+        }
+    }
+    function setupPasswordToggle(buttonId) {
+        const button = document.getElementById(buttonId);
+        if (!button || button.dataset.bound === 'true') {
+            return;
+        }
+        const targetId = button.dataset.target;
+        if (!targetId) {
+            return;
+        }
+        const input = document.getElementById(targetId);
+        if (!input) {
+            return;
+        }
+        button.dataset.bound = 'true';
+        button.addEventListener('click', () => {
+            const shouldShow = input.type === 'password';
+            input.type = shouldShow ? 'text' : 'password';
+            button.innerHTML = shouldShow ? '<i class="bi bi-eye-slash"></i>' : '<i class="bi bi-eye"></i>';
+        });
+    }
+    async function setupOptionalSeedDataCheckbox() {
+        const wrapper = document.getElementById('initialization-seed-test-data-wrapper');
+        if (!wrapper) {
+            return;
+        }
+        const isEnabled = await getEnableSeedTestDataOnInitialize();
+        if (isEnabled) {
+            wrapper.classList.remove('d-none');
+            return;
+        }
+        wrapper.classList.add('d-none');
+    }
     function hideForm() {
         document.getElementById('initialization-form')?.classList.add('d-none');
         document.getElementById('initialization-alert-info')?.classList.add('d-none');
     }
-    function renderSetupResult() {
+    function renderSetupResult(extraMessage) {
         const wrapper = document.getElementById('initialization-result');
         const summary = document.getElementById('initialization-done-summary');
         if (!wrapper || !summary) {
             return;
         }
         wrapper.classList.remove('d-none');
-        summary.textContent = 'The first administrator account was created. Core code tables were also initialized as part of the same process.';
+        const baseMessage = 'The first administrator account was created. Core code tables were also initialized as part of the same process.';
+        summary.textContent = extraMessage ? `${baseMessage} ${extraMessage}` : baseMessage;
     }
     function scheduleLoginRedirect(seconds) {
         showLoginSection();
@@ -139,9 +192,20 @@
             setSubmitting(false);
             return;
         }
+        const seedTestDataCheckbox = document.getElementById('initialization-seed-test-data');
+        const enableSeedTestData = await getEnableSeedTestDataOnInitialize();
+        let seedWarningMessage = '';
+        if (enableSeedTestData && seedTestDataCheckbox?.checked) {
+            const seedResponse = await request(`${getApiBaseUrl()}/Test/seed-data`, {
+                method: 'POST',
+            });
+            if (!seedResponse.ok) {
+                seedWarningMessage = seedResponse.message || 'Extended test data seeding failed. You can run it later from an authenticated admin session.';
+            }
+        }
         hideForm();
         showMessage('success', 'Initialization completed successfully.');
-        renderSetupResult();
+        renderSetupResult(seedWarningMessage);
         document.getElementById('initialization-proceed-info')?.classList.remove('d-none');
         showLoginSection();
         setSubmitting(false);
@@ -152,6 +216,9 @@
             return;
         }
         page.dataset.initialized = 'true';
+        setupPasswordToggle('initialization-toggle-password');
+        setupPasswordToggle('initialization-toggle-password-confirm');
+        setupOptionalSeedDataCheckbox();
         checkStatusAndPreparePage().then((canContinue) => {
             if (!canContinue) {
                 return;

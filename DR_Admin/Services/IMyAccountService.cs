@@ -25,9 +25,19 @@ public interface IMyAccountService
     Task<TwoFactorStatusDto?> GetTwoFactorStatusAsync(int userId);
 
     /// <summary>
-    /// Updates mail-based two-factor authentication setting for authenticated user.
+    /// Updates two-factor authentication setting for authenticated user.
     /// </summary>
-    Task<bool> UpdateMailTwoFactorSettingAsync(int userId, bool enabled);
+    Task<bool> UpdateTwoFactorSettingAsync(int userId, bool enabled, string? method);
+
+    /// <summary>
+    /// Starts authenticator app setup by generating shared key and provisioning URI.
+    /// </summary>
+    Task<AuthenticatorSetupDto?> BeginAuthenticatorSetupAsync(int userId);
+
+    /// <summary>
+    /// Confirms authenticator app setup using a valid one-time code.
+    /// </summary>
+    Task<bool> ConfirmAuthenticatorSetupAsync(int userId, string code);
 
     /// <summary>
     /// Set password for new account using token

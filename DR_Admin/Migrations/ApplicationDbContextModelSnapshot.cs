@@ -15,7 +15,7 @@ namespace ISPAdmin.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "10.0.2");
+            modelBuilder.HasAnnotation("ProductVersion", "10.0.3");
 
             modelBuilder.Entity("ISPAdmin.Data.Entities.AddressType", b =>
                 {
@@ -5773,6 +5773,10 @@ namespace ISPAdmin.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("AuthenticatorKey")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
@@ -5788,6 +5792,9 @@ namespace ISPAdmin.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsAuthenticatorTwoFactorEnabled")
                         .HasColumnType("INTEGER");
 
                     b.Property<bool>("IsMailTwoFactorEnabled")

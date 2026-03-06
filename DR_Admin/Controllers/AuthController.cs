@@ -100,7 +100,7 @@ public class AuthController : ControllerBase
             return BadRequest(new { message = "Challenge token and code are required" });
         }
 
-        var result = await _authService.VerifyMailTwoFactorAsync(request.ChallengeToken, request.Code);
+        var result = await _authService.VerifyTwoFactorAsync(request.ChallengeToken, request.Code);
         if (result == null)
         {
             return Unauthorized(new { message = "Invalid or expired verification code" });
