@@ -40,6 +40,11 @@ public interface IMyAccountService
     Task<bool> ConfirmAuthenticatorSetupAsync(int userId, string code);
 
     /// <summary>
+    /// Deletes all two-factor authentication configuration for authenticated user.
+    /// </summary>
+    Task<bool> DeleteTwoFactorAsync(int userId);
+
+    /// <summary>
     /// Set password for new account using token
     /// </summary>
     Task<bool> SetPasswordAsync(string email, string token, string newPassword);

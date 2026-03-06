@@ -348,6 +348,7 @@ $"</body></html>";
     {
         var result = new SeedTestDataResultDto();
         var seededTlds = new List<Tld>();
+        var seededServers = new List<Server>();
 
         try
         {
@@ -394,6 +395,129 @@ $"</body></html>";
                         IsActive = true
                     });
                 result.InsertedByTable["HostProviders"] = 1;
+            }
+
+            if (!await _context.Servers.AnyAsync())
+            {
+                var serverTypes = _context.ServerTypes.Local.ToList();
+                if (serverTypes.Count == 0)
+                {
+                    serverTypes = await _context.ServerTypes
+                        .OrderBy(x => x.Id)
+                        .ToListAsync();
+                }
+
+                var operatingSystems = _context.OperatingSystems.Local.ToList();
+                if (operatingSystems.Count == 0)
+                {
+                    operatingSystems = await _context.OperatingSystems
+                        .OrderBy(x => x.Id)
+                        .ToListAsync();
+                }
+
+                var hostProvider = _context.HostProviders.Local.FirstOrDefault()
+                    ?? await _context.HostProviders
+                        .OrderBy(x => x.Id)
+                        .FirstOrDefaultAsync();
+
+                if (serverTypes.Count > 0 && operatingSystems.Count > 0)
+                {
+                    var primaryServerType = serverTypes[0];
+                    var secondaryServerType = serverTypes.Count > 1 ? serverTypes[1] : serverTypes[0];
+                    var primaryOperatingSystem = operatingSystems[0];
+                    var secondaryOperatingSystem = operatingSystems.Count > 1 ? operatingSystems[1] : operatingSystems[0];
+
+                    seededServers.AddRange(
+                        new Server
+                        {
+                            Name = "web-01",
+                            ServerType = primaryServerType,
+                            HostProvider = hostProvider,
+                            Location = "US-East",
+                            OperatingSystem = primaryOperatingSystem,
+                            Status = true,
+                            CpuCores = 4,
+                            RamMB = 8192,
+                            DiskSpaceGB = 120,
+                            Notes = "Seeded test web server"
+                        },
+                        new Server
+                        {
+                            Name = "app-01",
+                            ServerType = secondaryServerType,
+                            HostProvider = hostProvider,
+                            Location = "EU-West",
+                            OperatingSystem = secondaryOperatingSystem,
+                            Status = true,
+                            CpuCores = 8,
+                            RamMB = 16384,
+                            DiskSpaceGB = 240,
+                            Notes = "Seeded test application server"
+                        });
+
+                    _context.Servers.AddRange(seededServers);
+                    result.InsertedByTable["Servers"] = seededServers.Count;
+                }
+                else
+                {
+                    _log.Warning("Skipped server seeding because required ServerTypes or OperatingSystems are unavailable");
+                }
+            }
+
+            if (!await _context.ServerIpAddresses.AnyAsync())
+            {
+                var serversForIpSeed = seededServers.Count > 0
+                    ? seededServers
+                    : await _context.Servers
+                        .OrderBy(x => x.Id)
+                        .Take(2)
+                        .ToListAsync();
+
+                if (serversForIpSeed.Count > 0)
+                {
+                    var seededIps = new List<ServerIpAddress>
+                    {
+                        new ServerIpAddress
+                        {
+                            Server = serversForIpSeed[0],
+                            IpAddress = "192.0.2.10",
+                            IpVersion = "IPv4",
+                            IsPrimary = true,
+                            Status = "Active",
+                            Notes = "Primary IP for seeded server"
+                        },
+                        new ServerIpAddress
+                        {
+                            Server = serversForIpSeed[0],
+                            IpAddress = "192.0.2.11",
+                            IpVersion = "IPv4",
+                            IsPrimary = false,
+                            Status = "Reserved",
+                            Notes = "Secondary IP for seeded server"
+                        }
+                    };
+
+                    if (serversForIpSeed.Count > 1)
+                    {
+                        seededIps.Add(
+                            new ServerIpAddress
+                            {
+                                Server = serversForIpSeed[1],
+                                IpAddress = "2001:db8::10",
+                                IpVersion = "IPv6",
+                                IsPrimary = true,
+                                Status = "Active",
+                                Notes = "Primary IPv6 for seeded server"
+                            });
+                    }
+
+                    _context.ServerIpAddresses.AddRange(seededIps);
+                    result.InsertedByTable["ServerIpAddresses"] = seededIps.Count;
+                }
+                else
+                {
+                    _log.Warning("Skipped server IP address seeding because no servers are available");
+                }
             }
 
             if (!await _context.HostingPackages.AnyAsync())
@@ -715,6 +839,49 @@ $"</body></html>";
                         SupportedCurrencies = "USD,EUR,GBP"
                     });
                 result.InsertedByTable["PaymentGateways"] = 2;
+            }
+
+            if (!await _context.PaymentInstruments.AnyAsync())
+            {
+                var stripeGateway = _context.PaymentGateways.Local
+                    .FirstOrDefault(x => x.ProviderCode == "stripe")
+                    ?? await _context.PaymentGateways
+                        .FirstOrDefaultAsync(x => x.ProviderCode == "stripe");
+
+                _context.PaymentInstruments.AddRange(
+                    new PaymentInstrument
+                    {
+                        Code = "CreditCard",
+                        Name = "Credit Card",
+                        NormalizedCode = "creditcard",
+                        NormalizedName = "credit card",
+                        Description = "Card payments",
+                        IsActive = true,
+                        DisplayOrder = 1,
+                        DefaultGateway = stripeGateway
+                    },
+                    new PaymentInstrument
+                    {
+                        Code = "PayPal",
+                        Name = "PayPal",
+                        NormalizedCode = "paypal",
+                        NormalizedName = "paypal",
+                        Description = "PayPal payments",
+                        IsActive = true,
+                        DisplayOrder = 2
+                    },
+                    new PaymentInstrument
+                    {
+                        Code = "Cash",
+                        Name = "Cash",
+                        NormalizedCode = "cash",
+                        NormalizedName = "cash",
+                        Description = "Cash payments",
+                        IsActive = true,
+                        DisplayOrder = 3
+                    });
+
+                result.InsertedByTable["PaymentInstruments"] = 3;
             }
 
             await _context.SaveChangesAsync();

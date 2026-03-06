@@ -213,6 +213,35 @@ public class MyAccountController : ControllerBase
     }
 
     /// <summary>
+    /// Deletes all two-factor authentication settings for the authenticated user.
+    /// </summary>
+    [HttpDelete("2fa")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult> DeleteTwoFactor()
+    {
+        try
+        {
+            var userId = GetCurrentUserId();
+            var result = await _myAccountService.DeleteTwoFactorAsync(userId);
+            if (!result)
+            {
+                return BadRequest(new { message = "Could not delete two-factor configuration." });
+            }
+
+            return Ok(new { message = "Two-factor configuration deleted successfully" });
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error deleting two-factor configuration");
+            return StatusCode(500, new { message = "An error occurred while deleting two-factor configuration" });
+        }
+    }
+
+    /// <summary>
     /// Starts Microsoft Authenticator setup by generating a shared key and QR provisioning URI.
     /// </summary>
     [HttpPost("2fa/authenticator/setup")]

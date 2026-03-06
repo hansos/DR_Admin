@@ -232,7 +232,9 @@ public class MyAccountService : IMyAccountService
                 Enabled = user.IsMailTwoFactorEnabled || user.IsAuthenticatorTwoFactorEnabled,
                 Method = user.IsAuthenticatorTwoFactorEnabled
                     ? "Authenticator"
-                    : (user.IsMailTwoFactorEnabled ? "Email" : null),
+                    : (user.IsMailTwoFactorEnabled
+                        ? "Email"
+                        : (!string.IsNullOrWhiteSpace(user.AuthenticatorKey) ? "Authenticator" : "Email")),
                 RecoveryCodesRemaining = null
             };
         }
@@ -285,7 +287,7 @@ public class MyAccountService : IMyAccountService
 
             if (string.Equals(normalizedMethod, "Authenticator", StringComparison.OrdinalIgnoreCase))
             {
-                if (!user.IsAuthenticatorTwoFactorEnabled || string.IsNullOrWhiteSpace(user.AuthenticatorKey))
+                if (string.IsNullOrWhiteSpace(user.AuthenticatorKey))
                 {
                     _log.Warning("Update two-factor setting failed: Authenticator not configured - {UserId}", userId);
                     return false;
@@ -378,6 +380,33 @@ public class MyAccountService : IMyAccountService
         catch (Exception ex)
         {
             _log.Error(ex, "Error confirming authenticator setup for user: {UserId}", userId);
+            return false;
+        }
+    }
+
+    public async Task<bool> DeleteTwoFactorAsync(int userId)
+    {
+        try
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId && u.IsActive);
+            if (user == null)
+            {
+                _log.Warning("Delete two-factor failed: User not found - {UserId}", userId);
+                return false;
+            }
+
+            user.IsMailTwoFactorEnabled = false;
+            user.IsAuthenticatorTwoFactorEnabled = false;
+            user.AuthenticatorKey = null;
+            user.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            _log.Information("Two-factor configuration deleted for user {UserId}", userId);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error deleting two-factor configuration for user: {UserId}", userId);
             return false;
         }
     }
