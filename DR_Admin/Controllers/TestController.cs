@@ -15,6 +15,11 @@ public class TestController : ControllerBase
 {
     private readonly ISystemService _systemService;
     private static readonly Serilog.ILogger _log = Log.ForContext<TestController>();
+#if DEBUG
+    private const bool IsDebugBuild = true;
+#else
+    private const bool IsDebugBuild = false;
+#endif
 
     public TestController(ISystemService systemService)
     {
@@ -97,5 +102,28 @@ public class TestController : ControllerBase
             _log.Error(ex, "API: Error in Test/SeedTestData");
             return StatusCode(500, "An error occurred while seeding test data");
         }
+    }
+
+    /// <summary>
+    /// Returns whether the API is running as a Debug or Release build.
+    /// </summary>
+    /// <returns>Build mode details including mode name and debug flag.</returns>
+    /// <response code="200">Returns current build mode information</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user is not an admin</response>
+    [HttpGet("build-mode")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public ActionResult<object> GetBuildMode()
+    {
+        var mode = IsDebugBuild ? "Debug" : "Release";
+        _log.Information("API: Test/GetBuildMode called by user {User}; Build mode: {Mode}", User.Identity?.Name, mode);
+
+        return Ok(new
+        {
+            Mode = mode,
+            IsDebug = IsDebugBuild
+        });
     }
 }

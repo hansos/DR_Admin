@@ -31,18 +31,6 @@
         el.textContent = text;
     }
 
-    function showSuccess(message: string): void {
-        const success = document.getElementById('help-status-alert-success');
-        const error = document.getElementById('help-status-alert-error');
-
-        if (success) {
-            success.textContent = message;
-            success.classList.remove('d-none');
-        }
-
-        error?.classList.add('d-none');
-    }
-
     function showError(message: string): void {
         const success = document.getElementById('help-status-alert-success');
         const error = document.getElementById('help-status-alert-error');
@@ -111,43 +99,8 @@
         setText('help-status-token-expiry', token ? formatExpiry(token) : '-');
     }
 
-    async function copyTokenToClipboard(): Promise<void> {
-        const token = sessionStorage.getItem('rp_authToken');
-        if (!token) {
-            showError('No rp_authToken found in session storage.');
-            return;
-        }
-
-        try {
-            if (navigator.clipboard?.writeText) {
-                await navigator.clipboard.writeText(token);
-            } else {
-                const textarea = document.createElement('textarea');
-                textarea.value = token;
-                textarea.style.position = 'fixed';
-                textarea.style.left = '-9999px';
-                document.body.appendChild(textarea);
-                textarea.focus();
-                textarea.select();
-                const copied = document.execCommand('copy');
-                document.body.removeChild(textarea);
-
-                if (!copied) {
-                    throw new Error('Copy command failed.');
-                }
-            }
-
-            showSuccess('rp_authToken copied to clipboard.');
-        } catch {
-            showError('Unable to copy rp_authToken to clipboard.');
-        }
-    }
-
     function bindEvents(): void {
         document.getElementById('help-status-refresh')?.addEventListener('click', refreshStatus);
-        document.getElementById('help-status-copy-token')?.addEventListener('click', () => {
-            void copyTokenToClipboard();
-        });
     }
 
     function initializePage(): void {

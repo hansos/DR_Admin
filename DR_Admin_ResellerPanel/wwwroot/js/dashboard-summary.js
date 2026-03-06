@@ -1,6 +1,16 @@
 "use strict";
 // @ts-nocheck
 (function () {
+    function setSeedDataSubmitting(isSubmitting) {
+        const button = document.getElementById('dashboard-summary-seed-data-button');
+        if (!button) {
+            return;
+        }
+        button.disabled = isSubmitting;
+        button.innerHTML = isSubmitting
+            ? '<span class="spinner-border spinner-border-sm me-2"></span>Seeding...'
+            : '<i class="bi bi-database-add"></i> Seed Test Data';
+    }
     let hasOngoingWorkflowWarning = false;
     let pendingAcceptQuoteId = null;
     let pendingAcceptQuoteNumber = '';
@@ -189,16 +199,6 @@
                 message: 'Network error. Please try again.',
             };
         }
-    }
-    function setSeedDataSubmitting(isSubmitting) {
-        const button = document.getElementById('dashboard-summary-seed-data-button');
-        if (!button) {
-            return;
-        }
-        button.disabled = isSubmitting;
-        button.innerHTML = isSubmitting
-            ? '<span class="spinner-border spinner-border-sm me-2"></span>Seeding...'
-            : '<i class="bi bi-database-add"></i> Seed Test Data';
     }
     function initializePage() {
         const page = document.getElementById('dashboard-summary-page');

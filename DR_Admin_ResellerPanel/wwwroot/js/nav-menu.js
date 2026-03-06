@@ -6,6 +6,54 @@
     const expandedSectionStorageKey = 'nav-menu-expanded-section';
     let navMenuObserver = null;
     let restoreRetryTimer = null;
+    function getApiBaseUrl() {
+        return window.AppSettings?.apiBaseUrl ?? '';
+    }
+    function getAuthToken() {
+        const auth = window.Auth;
+        if (auth?.getToken) {
+            return auth.getToken();
+        }
+        return sessionStorage.getItem('rp_authToken');
+    }
+    function setDebugMenuVisibility(isVisible) {
+        const debugLink = document.getElementById('nav-menu-help-debug-link');
+        if (!debugLink) {
+            return;
+        }
+        debugLink.classList.toggle('d-none', !isVisible);
+    }
+    async function updateDebugMenuVisibility() {
+        const apiBaseUrl = getApiBaseUrl();
+        if (!apiBaseUrl) {
+            setDebugMenuVisibility(false);
+            return;
+        }
+        try {
+            const headers = {
+                'Content-Type': 'application/json',
+            };
+            const token = getAuthToken();
+            if (token) {
+                headers.Authorization = `Bearer ${token}`;
+            }
+            const response = await fetch(`${apiBaseUrl}/Test/build-mode`, {
+                method: 'GET',
+                headers,
+                credentials: 'include',
+            });
+            if (!response.ok) {
+                setDebugMenuVisibility(false);
+                return;
+            }
+            const payload = await response.json();
+            const isDebug = payload?.isDebug === true || payload?.IsDebug === true;
+            setDebugMenuVisibility(isDebug);
+        }
+        catch {
+            setDebugMenuVisibility(false);
+        }
+    }
     function toggleSection(section) {
         const navGroups = document.querySelectorAll('#nav-menu .nav-group');
         console.log("Ready to toggle the main menu...");
@@ -186,6 +234,7 @@
         observeNavMenu(navMenu);
         restoreExpandedSection();
         updateActiveLink();
+        void updateDebugMenuVisibility();
         console.log('Nav menu initialized');
         return true;
     }
@@ -217,6 +266,7 @@
             blazor.addEventListener('enhancedload', () => {
                 restoreExpandedSection();
                 updateActiveLink();
+                void updateDebugMenuVisibility();
             });
             console.log('NavMenu: Blazor enhancedload listener registered');
         }
@@ -234,10 +284,12 @@
         setTimeout(() => {
             restoreExpandedSection();
             updateActiveLink();
+            void updateDebugMenuVisibility();
         }, 200);
         setTimeout(() => {
             restoreExpandedSection();
             updateActiveLink();
+            void updateDebugMenuVisibility();
         }, 500);
     });
 })();

@@ -1,6 +1,19 @@
 "use strict";
 // @ts-nocheck
 (function () {
+    function showSeedDataSection() {
+        document.getElementById('initialization-seed-data-section')?.classList.remove('d-none');
+    }
+    function setSeedDataSubmitting(isSubmitting) {
+        const button = document.getElementById('initialization-seed-data-button');
+        if (!button) {
+            return;
+        }
+        button.disabled = isSubmitting;
+        button.innerHTML = isSubmitting
+            ? '<span class="spinner-border spinner-border-sm me-2"></span>Seeding...'
+            : '<i class="bi bi-database-add"></i> Seed Test Data';
+    }
     function getApiBaseUrl() {
         return window.AppSettings?.apiBaseUrl ?? '';
     }
@@ -62,16 +75,6 @@
             ? '<span class="spinner-border spinner-border-sm me-2"></span>Initializing...'
             : '<i class="bi bi-play-circle"></i> Initialize Database';
     }
-    function setSeedDataSubmitting(isSubmitting) {
-        const button = document.getElementById('initialization-seed-data-button');
-        if (!button) {
-            return;
-        }
-        button.disabled = isSubmitting;
-        button.innerHTML = isSubmitting
-            ? '<span class="spinner-border spinner-border-sm me-2"></span>Seeding...'
-            : '<i class="bi bi-database-add"></i> Seed Test Data';
-    }
     function showLoginSection() {
         document.getElementById('initialization-login-section')?.classList.remove('d-none');
     }
@@ -126,9 +129,6 @@
             return;
         }
         wrapper.classList.add('d-none');
-    }
-    function showSeedDataSection() {
-        document.getElementById('initialization-seed-data-section')?.classList.remove('d-none');
     }
     function hideForm() {
         document.getElementById('initialization-form')?.classList.add('d-none');
