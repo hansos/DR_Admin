@@ -347,6 +347,7 @@ $"</body></html>";
     public async Task<SeedTestDataResultDto> SeedTestDataAsync()
     {
         var result = new SeedTestDataResultDto();
+        var seededTlds = new List<Tld>();
 
         try
         {
@@ -354,10 +355,12 @@ $"</body></html>";
 
             if (!await _context.Tlds.AnyAsync())
             {
-                _context.Tlds.AddRange(
+                seededTlds.AddRange(
                     new Tld { Extension = "com", Description = "Commercial", IsActive = true, DefaultRegistrationYears = 1, MaxRegistrationYears = 10 },
                     new Tld { Extension = "net", Description = "Network", IsActive = true, DefaultRegistrationYears = 1, MaxRegistrationYears = 10 },
                     new Tld { Extension = "org", Description = "Organization", IsActive = true, DefaultRegistrationYears = 1, MaxRegistrationYears = 10 });
+
+                _context.Tlds.AddRange(seededTlds);
                 result.InsertedByTable["Tlds"] = 3;
             }
 
@@ -622,6 +625,62 @@ $"</body></html>";
                         Notes = "Cloudflare registrar integration"
                     });
                 result.InsertedByTable["Registrars"] = 3;
+            }
+
+            if (seededTlds.Count > 0)
+            {
+                var awsRegistrar = _context.Registrars.Local
+                    .FirstOrDefault(x => x.Code == "aws")
+                    ?? await _context.Registrars.FirstOrDefaultAsync(x => x.Code == "aws");
+
+                if (awsRegistrar == null)
+                {
+                    awsRegistrar = new Registrar
+                    {
+                        Name = "AWS Route 53",
+                        Code = "aws",
+                        IsActive = true,
+                        IsDefault = true,
+                        ContactEmail = "support@amazon.com",
+                        Website = "https://aws.amazon.com/route53/",
+                        Notes = "Registry API provider via AWS"
+                    };
+
+                    _context.Registrars.Add(awsRegistrar);
+                    result.InsertedByTable["Registrars"] = result.InsertedByTable.GetValueOrDefault("Registrars") + 1;
+                }
+
+                var seededAtUtc = DateTime.UtcNow;
+
+                _context.TldSalesPricing.AddRange(
+                    seededTlds.Select(tld => new TldSalesPricing
+                    {
+                        Tld = tld,
+                        EffectiveFrom = seededAtUtc,
+                        RegistrationPrice = 12.99m,
+                        RenewalPrice = 14.99m,
+                        TransferPrice = 11.99m,
+                        PrivacyPrice = 2.99m,
+                        Currency = "USD",
+                        IsPromotional = false,
+                        IsActive = true,
+                        Notes = "Seeded default sales pricing",
+                        CreatedBy = "SystemService.SeedTestDataAsync"
+                    }));
+                result.InsertedByTable["TldSalesPricing"] = seededTlds.Count;
+
+                _context.RegistrarTlds.AddRange(
+                    seededTlds.Select(tld => new RegistrarTld
+                    {
+                        Registrar = awsRegistrar,
+                        Tld = tld,
+                        IsActive = true,
+                        AutoRenew = true,
+                        MinRegistrationYears = tld.DefaultRegistrationYears ?? 1,
+                        MaxRegistrationYears = tld.MaxRegistrationYears,
+                        Notes = "Seeded AWS registrar mapping"
+                    }));
+                result.InsertedByTable["RegistrarTlds"] = seededTlds.Count;
             }
 
             if (!await _context.PaymentGateways.AnyAsync())

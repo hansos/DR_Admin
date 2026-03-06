@@ -62,6 +62,16 @@
             ? '<span class="spinner-border spinner-border-sm me-2"></span>Initializing...'
             : '<i class="bi bi-play-circle"></i> Initialize Database';
     }
+    function setSeedDataSubmitting(isSubmitting) {
+        const button = document.getElementById('initialization-seed-data-button');
+        if (!button) {
+            return;
+        }
+        button.disabled = isSubmitting;
+        button.innerHTML = isSubmitting
+            ? '<span class="spinner-border spinner-border-sm me-2"></span>Seeding...'
+            : '<i class="bi bi-database-add"></i> Seed Test Data';
+    }
     function showLoginSection() {
         document.getElementById('initialization-login-section')?.classList.remove('d-none');
     }
@@ -117,6 +127,9 @@
         }
         wrapper.classList.add('d-none');
     }
+    function showSeedDataSection() {
+        document.getElementById('initialization-seed-data-section')?.classList.remove('d-none');
+    }
     function hideForm() {
         document.getElementById('initialization-form')?.classList.add('d-none');
         document.getElementById('initialization-alert-info')?.classList.add('d-none');
@@ -137,6 +150,22 @@
             window.location.href = '/login';
         }, seconds * 1000);
     }
+    async function seedData() {
+        setSeedDataSubmitting(true);
+        const response = await request(`${getApiBaseUrl()}/Test/seed-data`, {
+            method: 'POST',
+        });
+        if (!response.ok) {
+            showMessage('error', response.message || 'Seeding test data failed.');
+            setSeedDataSubmitting(false);
+            return;
+        }
+        const message = typeof response.data === 'object' && response.data !== null
+            ? response.data.message
+            : undefined;
+        showMessage('success', message || 'Test data seeded successfully.');
+        setSeedDataSubmitting(false);
+    }
     async function checkStatusAndPreparePage() {
         const response = await request(`${getApiBaseUrl()}/Initialization/status`, { method: 'GET' });
         if (!response.ok || !response.data) {
@@ -155,10 +184,16 @@
     async function submitInitialization() {
         const usernameInput = document.getElementById('initialization-username');
         const emailInput = document.getElementById('initialization-email');
+        const companyNameInput = document.getElementById('initialization-company-name');
+        const companyEmailInput = document.getElementById('initialization-company-email');
+        const companyPhoneInput = document.getElementById('initialization-company-phone');
         const passwordInput = document.getElementById('initialization-password');
         const confirmInput = document.getElementById('initialization-password-confirm');
         const username = usernameInput?.value.trim() ?? '';
         const email = emailInput?.value.trim() ?? '';
+        const companyName = companyNameInput?.value.trim() ?? '';
+        const companyEmail = companyEmailInput?.value.trim() ?? '';
+        const companyPhone = companyPhoneInput?.value.trim() ?? '';
         const password = passwordInput?.value ?? '';
         const confirmPassword = confirmInput?.value ?? '';
         if (!username) {
@@ -167,6 +202,10 @@
         }
         if (!validateEmail(email)) {
             showMessage('error', 'Please enter a valid email address.');
+            return;
+        }
+        if (companyEmail && !validateEmail(companyEmail)) {
+            showMessage('error', 'Please enter a valid company email address.');
             return;
         }
         if (password !== confirmPassword) {
@@ -180,7 +219,14 @@
         setSubmitting(true);
         const response = await request(`${getApiBaseUrl()}/Initialization/initialize`, {
             method: 'POST',
-            body: JSON.stringify({ username, password, email }),
+            body: JSON.stringify({
+                username,
+                password,
+                email,
+                companyName,
+                companyEmail,
+                companyPhone,
+            }),
         });
         if (!response.ok) {
             const alreadyInitialized = (response.message || '').toLowerCase().includes('already exist');
@@ -206,6 +252,7 @@
         hideForm();
         showMessage('success', 'Initialization completed successfully.');
         renderSetupResult(seedWarningMessage);
+        showSeedDataSection();
         document.getElementById('initialization-proceed-info')?.classList.remove('d-none');
         showLoginSection();
         setSubmitting(false);
@@ -219,6 +266,10 @@
         setupPasswordToggle('initialization-toggle-password');
         setupPasswordToggle('initialization-toggle-password-confirm');
         setupOptionalSeedDataCheckbox();
+        const seedDataButton = document.getElementById('initialization-seed-data-button');
+        seedDataButton?.addEventListener('click', async () => {
+            await seedData();
+        });
         checkStatusAndPreparePage().then((canContinue) => {
             if (!canContinue) {
                 return;

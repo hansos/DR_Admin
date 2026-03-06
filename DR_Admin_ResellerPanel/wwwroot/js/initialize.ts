@@ -5,6 +5,22 @@ interface InitializationStatusResponse {
     IsInitialized?: boolean;
 }
 
+function showSeedDataSection(): void {
+    document.getElementById('initialization-seed-data-section')?.classList.remove('d-none');
+}
+
+function setSeedDataSubmitting(isSubmitting: boolean): void {
+    const button = document.getElementById('initialization-seed-data-button') as HTMLButtonElement | null;
+    if (!button) {
+        return;
+    }
+
+    button.disabled = isSubmitting;
+    button.innerHTML = isSubmitting
+        ? '<span class="spinner-border spinner-border-sm me-2"></span>Seeding...'
+        : '<i class="bi bi-database-add"></i> Seed Test Data';
+}
+
 interface InitializationResponse {
     success?: boolean;
     message?: string;
@@ -179,6 +195,27 @@ function scheduleLoginRedirect(seconds: number): void {
     }, seconds * 1000);
 }
 
+async function seedData(): Promise<void> {
+    setSeedDataSubmitting(true);
+
+    const response = await request<unknown>(`${getApiBaseUrl()}/Test/seed-data`, {
+        method: 'POST',
+    });
+
+    if (!response.ok) {
+        showMessage('error', response.message || 'Seeding test data failed.');
+        setSeedDataSubmitting(false);
+        return;
+    }
+
+    const message = typeof response.data === 'object' && response.data !== null
+        ? ((response.data as any).message as string | undefined)
+        : undefined;
+
+    showMessage('success', message || 'Test data seeded successfully.');
+    setSeedDataSubmitting(false);
+}
+
 async function checkStatusAndPreparePage(): Promise<boolean> {
     const response = await request<InitializationStatusResponse>(`${getApiBaseUrl()}/Initialization/status`, { method: 'GET' });
     if (!response.ok || !response.data) {
@@ -200,11 +237,17 @@ async function checkStatusAndPreparePage(): Promise<boolean> {
 async function submitInitialization(): Promise<void> {
     const usernameInput = document.getElementById('initialization-username') as HTMLInputElement | null;
     const emailInput = document.getElementById('initialization-email') as HTMLInputElement | null;
+    const companyNameInput = document.getElementById('initialization-company-name') as HTMLInputElement | null;
+    const companyEmailInput = document.getElementById('initialization-company-email') as HTMLInputElement | null;
+    const companyPhoneInput = document.getElementById('initialization-company-phone') as HTMLInputElement | null;
     const passwordInput = document.getElementById('initialization-password') as HTMLInputElement | null;
     const confirmInput = document.getElementById('initialization-password-confirm') as HTMLInputElement | null;
 
     const username = usernameInput?.value.trim() ?? '';
     const email = emailInput?.value.trim() ?? '';
+    const companyName = companyNameInput?.value.trim() ?? '';
+    const companyEmail = companyEmailInput?.value.trim() ?? '';
+    const companyPhone = companyPhoneInput?.value.trim() ?? '';
     const password = passwordInput?.value ?? '';
     const confirmPassword = confirmInput?.value ?? '';
 
@@ -215,6 +258,11 @@ async function submitInitialization(): Promise<void> {
 
     if (!validateEmail(email)) {
         showMessage('error', 'Please enter a valid email address.');
+        return;
+    }
+
+    if (companyEmail && !validateEmail(companyEmail)) {
+        showMessage('error', 'Please enter a valid company email address.');
         return;
     }
 
@@ -232,7 +280,14 @@ async function submitInitialization(): Promise<void> {
 
     const response = await request<InitializationResponse>(`${getApiBaseUrl()}/Initialization/initialize`, {
         method: 'POST',
-        body: JSON.stringify({ username, password, email }),
+        body: JSON.stringify({
+            username,
+            password,
+            email,
+            companyName,
+            companyEmail,
+            companyPhone,
+        }),
     });
 
     if (!response.ok) {
@@ -266,6 +321,7 @@ async function submitInitialization(): Promise<void> {
     hideForm();
     showMessage('success', 'Initialization completed successfully.');
     renderSetupResult(seedWarningMessage);
+    showSeedDataSection();
     document.getElementById('initialization-proceed-info')?.classList.remove('d-none');
     showLoginSection();
     setSubmitting(false);
@@ -282,6 +338,11 @@ function initializePage(): void {
     setupPasswordToggle('initialization-toggle-password');
     setupPasswordToggle('initialization-toggle-password-confirm');
     setupOptionalSeedDataCheckbox();
+
+    const seedDataButton = document.getElementById('initialization-seed-data-button') as HTMLButtonElement | null;
+    seedDataButton?.addEventListener('click', async () => {
+        await seedData();
+    });
 
     checkStatusAndPreparePage().then((canContinue) => {
         if (!canContinue) {

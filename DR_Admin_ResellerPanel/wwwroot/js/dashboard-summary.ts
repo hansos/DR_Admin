@@ -5,6 +5,18 @@ interface Domain {
     name: string;
 }
 
+function setSeedDataSubmitting(isSubmitting: boolean): void {
+    const button = document.getElementById('dashboard-summary-seed-data-button') as HTMLButtonElement | null;
+    if (!button) {
+        return;
+    }
+
+    button.disabled = isSubmitting;
+    button.innerHTML = isSubmitting
+        ? '<span class="spinner-border spinner-border-sm me-2"></span>Seeding...'
+        : '<i class="bi bi-database-add"></i> Seed Test Data';
+}
+
 interface SetupTodoItem {
     key: string;
     name: string;
@@ -301,11 +313,35 @@ function initializePage(): void {
     (page as any).dataset.initialized = 'true';
 
     bindQuoteActions();
+    bindSeedDataAction();
 
     renderOngoingWorkflowPanel();
     loadSystemReadinessTodo();
     loadPendingSummary();
     loadSalesSummary();
+}
+
+function bindSeedDataAction(): void {
+    const button = document.getElementById('dashboard-summary-seed-data-button') as HTMLButtonElement | null;
+    if (!button || button.dataset.bound === 'true') {
+        return;
+    }
+
+    button.dataset.bound = 'true';
+    button.addEventListener('click', async () => {
+        clearError();
+        setSeedDataSubmitting(true);
+
+        const response = await apiRequest<unknown>(`${getApiBaseUrl()}/Test/seed-data`, { method: 'POST' });
+        if (!response.success) {
+            showError(response.message || 'Failed to seed test data.');
+            setSeedDataSubmitting(false);
+            return;
+        }
+
+        await loadSystemReadinessTodo();
+        setSeedDataSubmitting(false);
+    });
 }
 
 async function loadSystemReadinessTodo(): Promise<void> {
@@ -347,6 +383,14 @@ async function loadSystemReadinessTodo(): Promise<void> {
     }));
 
     renderSystemReadinessTodo(results);
+}
+
+function registerGlobalReadinessRefresh(): void {
+    const root = window as any;
+    root.DashboardSummary = root.DashboardSummary ?? {};
+    root.DashboardSummary.refreshReadiness = async () => {
+        await loadSystemReadinessTodo();
+    };
 }
 
 function renderSystemReadinessTodo(items: SetupTodoResult[]): void {
@@ -1072,5 +1116,7 @@ if (document.readyState === 'loading') {
 } else {
     setupPageObserver();
 }
+
+registerGlobalReadinessRefresh();
 
 })();

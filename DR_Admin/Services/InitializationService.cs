@@ -277,6 +277,31 @@ public class InitializationService : IInitializationService
             _context.UserRoles.Add(userRole);
             await _context.SaveChangesAsync();
 
+            var companyName = request.CompanyName?.Trim();
+            var companyEmail = request.CompanyEmail?.Trim();
+            var companyPhone = request.CompanyPhone?.Trim();
+
+            if (!string.IsNullOrWhiteSpace(companyName) ||
+                !string.IsNullOrWhiteSpace(companyEmail) ||
+                !string.IsNullOrWhiteSpace(companyPhone))
+            {
+                var existingCompany = await _context.MyCompanies
+                    .OrderBy(x => x.Id)
+                    .FirstOrDefaultAsync();
+
+                if (existingCompany == null)
+                {
+                    _context.MyCompanies.Add(new MyCompany
+                    {
+                        Name = !string.IsNullOrWhiteSpace(companyName) ? companyName : request.Username,
+                        Email = string.IsNullOrWhiteSpace(companyEmail) ? null : companyEmail,
+                        Phone = string.IsNullOrWhiteSpace(companyPhone) ? null : companyPhone,
+                    });
+
+                    await _context.SaveChangesAsync();
+                }
+            }
+
             _log.Information("Initial admin user created: {Username}", user.Username);
 
             return new InitializationResponseDto
