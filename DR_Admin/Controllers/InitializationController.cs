@@ -15,12 +15,19 @@ public class InitializationController : ControllerBase
 {
     private readonly IInitializationService _initializationService;
     private readonly ITldService _tldService;
+    private readonly ISystemService _systemService;
     private static readonly Serilog.ILogger _log = Log.ForContext<InitializationController>();
+#if DEBUG
+    private const bool IsDebugBuild = true;
+#else
+    private const bool IsDebugBuild = false;
+#endif
 
-    public InitializationController(IInitializationService initializationService, ITldService tldService)
+    public InitializationController(IInitializationService initializationService, ITldService tldService, ISystemService systemService)
     {
         _initializationService = initializationService;
         _tldService = tldService;
+        _systemService = systemService;
     }
 
     /// <summary>
@@ -35,6 +42,68 @@ public class InitializationController : ControllerBase
     {
         var isInitialized = await _initializationService.IsInitializedAsync();
         return Ok(new InitializationStatusDto { IsInitialized = isInitialized });
+    }
+
+    /// <summary>
+    /// Gets whether the API runs in Debug mode for initialization-time debug tooling.
+    /// </summary>
+    /// <returns>Build mode details including mode name and debug flag.</returns>
+    /// <response code="200">Returns current build mode information</response>
+    [HttpGet("build-mode")]
+    [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public ActionResult<object> GetBuildMode()
+    {
+        var mode = IsDebugBuild ? "Debug" : "Release";
+        return Ok(new
+        {
+            Mode = mode,
+            IsDebug = IsDebugBuild
+        });
+    }
+
+    /// <summary>
+    /// Imports admin user and MyCompany profile from a debug snapshot file.
+    /// </summary>
+    /// <param name="request">Import request containing the snapshot file name.</param>
+    /// <returns>Summary of the import operation.</returns>
+    /// <response code="200">Returns import result details</response>
+    /// <response code="400">If file name is missing</response>
+    /// <response code="403">If API is not running in debug mode</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpPost("import-admin-mycompany-snapshot")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(AdminUserMyCompanyImportResultDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<AdminUserMyCompanyImportResultDto>> ImportAdminMyCompanySnapshot([FromBody] AdminUserMyCompanyImportRequestDto request)
+    {
+        try
+        {
+            if (!IsDebugBuild)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, new { message = "This endpoint is only available in Debug mode." });
+            }
+
+            if (request == null || string.IsNullOrWhiteSpace(request.FileName))
+            {
+                return BadRequest(new { message = "FileName is required." });
+            }
+
+            var result = await _systemService.ImportAdminUserAndMyCompanyAsync(request);
+            if (!result.Success)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, result);
+            }
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error importing debug admin/MyCompany snapshot during initialization");
+            return StatusCode(500, new { message = "An error occurred while importing admin/MyCompany snapshot." });
+        }
     }
 
     /// <summary>

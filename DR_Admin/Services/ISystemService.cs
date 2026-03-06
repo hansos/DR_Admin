@@ -37,6 +37,261 @@ public interface ISystemService
     /// </summary>
     /// <returns>Summary of seeded records grouped by table.</returns>
     Task<SeedTestDataResultDto> SeedTestDataAsync();
+
+    /// <summary>
+    /// Exports the current admin user and MyCompany profile to a debug snapshot file.
+    /// </summary>
+    /// <param name="fileName">Optional snapshot file name. If omitted, a timestamped file name is generated.</param>
+    /// <returns>Summary and payload for the exported debug snapshot.</returns>
+    Task<AdminUserMyCompanyExportResultDto> ExportAdminUserAndMyCompanyAsync(string? fileName = null);
+
+    /// <summary>
+    /// Imports a previously exported admin user and MyCompany profile snapshot from a debug file.
+    /// </summary>
+    /// <param name="request">Import request containing snapshot file details.</param>
+    /// <returns>Summary of the import operation.</returns>
+    Task<AdminUserMyCompanyImportResultDto> ImportAdminUserAndMyCompanyAsync(AdminUserMyCompanyImportRequestDto request);
+}
+
+/// <summary>
+/// Request payload for importing admin user and MyCompany snapshot data.
+/// </summary>
+public class AdminUserMyCompanyImportRequestDto
+{
+    /// <summary>
+    /// Snapshot file name located in the debug snapshot directory.
+    /// </summary>
+    public string FileName { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Result payload for exporting admin user and MyCompany snapshot data.
+/// </summary>
+public class AdminUserMyCompanyExportResultDto
+{
+    /// <summary>
+    /// Indicates whether the export operation completed successfully.
+    /// </summary>
+    public bool Success { get; set; }
+
+    /// <summary>
+    /// Full path to the generated snapshot file.
+    /// </summary>
+    public string FilePath { get; set; } = string.Empty;
+
+    /// <summary>
+    /// File name of the generated snapshot file.
+    /// </summary>
+    public string FileName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Exported admin user and MyCompany snapshot payload.
+    /// </summary>
+    public AdminUserMyCompanySnapshotDto Snapshot { get; set; } = new();
+
+    /// <summary>
+    /// Error message if export failed.
+    /// </summary>
+    public string? ErrorMessage { get; set; }
+}
+
+/// <summary>
+/// Result payload for importing admin user and MyCompany snapshot data.
+/// </summary>
+public class AdminUserMyCompanyImportResultDto
+{
+    /// <summary>
+    /// Indicates whether the import operation completed successfully.
+    /// </summary>
+    public bool Success { get; set; }
+
+    /// <summary>
+    /// Full path of the imported snapshot file.
+    /// </summary>
+    public string FilePath { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Indicates whether an admin user record was created during import.
+    /// </summary>
+    public bool AdminUserCreated { get; set; }
+
+    /// <summary>
+    /// Indicates whether an existing admin user record was updated during import.
+    /// </summary>
+    public bool AdminUserUpdated { get; set; }
+
+    /// <summary>
+    /// Indicates whether a MyCompany record was created during import.
+    /// </summary>
+    public bool MyCompanyCreated { get; set; }
+
+    /// <summary>
+    /// Indicates whether an existing MyCompany record was updated during import.
+    /// </summary>
+    public bool MyCompanyUpdated { get; set; }
+
+    /// <summary>
+    /// Error message if import failed.
+    /// </summary>
+    public string? ErrorMessage { get; set; }
+}
+
+/// <summary>
+/// Snapshot payload containing admin user and MyCompany data.
+/// </summary>
+public class AdminUserMyCompanySnapshotDto
+{
+    /// <summary>
+    /// UTC timestamp when snapshot was created.
+    /// </summary>
+    public DateTime ExportedAtUtc { get; set; }
+
+    /// <summary>
+    /// Admin user snapshot data.
+    /// </summary>
+    public AdminUserSnapshotDto AdminUser { get; set; } = new();
+
+    /// <summary>
+    /// Optional MyCompany snapshot data.
+    /// </summary>
+    public MyCompanySnapshotDto? MyCompany { get; set; }
+}
+
+/// <summary>
+/// Snapshot payload for admin user data.
+/// </summary>
+public class AdminUserSnapshotDto
+{
+    /// <summary>
+    /// Username of the admin user.
+    /// </summary>
+    public string Username { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Email address of the admin user.
+    /// </summary>
+    public string Email { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Password hash of the admin user.
+    /// </summary>
+    public string PasswordHash { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Indicates whether the admin user is active.
+    /// </summary>
+    public bool IsActive { get; set; }
+
+    /// <summary>
+    /// Optional UTC timestamp of email confirmation.
+    /// </summary>
+    public DateTime? EmailConfirmed { get; set; }
+
+    /// <summary>
+    /// Indicates whether email-based two-factor authentication is enabled.
+    /// </summary>
+    public bool IsMailTwoFactorEnabled { get; set; }
+
+    /// <summary>
+    /// Indicates whether authenticator-based two-factor authentication is enabled.
+    /// </summary>
+    public bool IsAuthenticatorTwoFactorEnabled { get; set; }
+
+    /// <summary>
+    /// Shared authenticator key if configured.
+    /// </summary>
+    public string? AuthenticatorKey { get; set; }
+}
+
+/// <summary>
+/// Snapshot payload for MyCompany data.
+/// </summary>
+public class MyCompanySnapshotDto
+{
+    /// <summary>
+    /// Gets or sets the display name of the company.
+    /// </summary>
+    public string Name { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the legal registered company name.
+    /// </summary>
+    public string? LegalName { get; set; }
+
+    /// <summary>
+    /// Gets or sets the company email used for communication.
+    /// </summary>
+    public string? Email { get; set; }
+
+    /// <summary>
+    /// Gets or sets the company phone number.
+    /// </summary>
+    public string? Phone { get; set; }
+
+    /// <summary>
+    /// Gets or sets the first address line.
+    /// </summary>
+    public string? AddressLine1 { get; set; }
+
+    /// <summary>
+    /// Gets or sets the second address line.
+    /// </summary>
+    public string? AddressLine2 { get; set; }
+
+    /// <summary>
+    /// Gets or sets the postal code.
+    /// </summary>
+    public string? PostalCode { get; set; }
+
+    /// <summary>
+    /// Gets or sets the city.
+    /// </summary>
+    public string? City { get; set; }
+
+    /// <summary>
+    /// Gets or sets the state or region.
+    /// </summary>
+    public string? State { get; set; }
+
+    /// <summary>
+    /// Gets or sets the country code.
+    /// </summary>
+    public string? CountryCode { get; set; }
+
+    /// <summary>
+    /// Gets or sets organization number.
+    /// </summary>
+    public string? OrganizationNumber { get; set; }
+
+    /// <summary>
+    /// Gets or sets tax identifier.
+    /// </summary>
+    public string? TaxId { get; set; }
+
+    /// <summary>
+    /// Gets or sets VAT number.
+    /// </summary>
+    public string? VatNumber { get; set; }
+
+    /// <summary>
+    /// Gets or sets invoice email.
+    /// </summary>
+    public string? InvoiceEmail { get; set; }
+
+    /// <summary>
+    /// Gets or sets website URL.
+    /// </summary>
+    public string? Website { get; set; }
+
+    /// <summary>
+    /// Gets or sets logo URL.
+    /// </summary>
+    public string? LogoUrl { get; set; }
+
+    /// <summary>
+    /// Gets or sets letterhead footer text.
+    /// </summary>
+    public string? LetterheadFooter { get; set; }
 }
 
 /// <summary>

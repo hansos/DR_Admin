@@ -28,4 +28,31 @@
             </dl>
         </div>
     </div>
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-header bg-light">
+            <h5 class="mb-0"><i class="bi bi-save2"></i> Admin User + MyCompany Snapshot</h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-2 align-items-end mb-3">
+                <div class="col-md-6">
+                    <label class="form-label" for="help-debug-snapshot-file">Snapshot file name</label>
+                    <input id="help-debug-snapshot-file" class="form-control" type="text" placeholder="admin-mycompany-debug.json" />
+                </div>
+                <div class="col-md-6 d-flex gap-2">
+                    <button id="help-debug-export-snapshot" class="btn btn-primary" type="button">
+                        <i class="bi bi-download"></i> Export Snapshot
+                    </button>
+                    <button id="help-debug-import-snapshot" class="btn btn-outline-primary" type="button">
+                        <i class="bi bi-upload"></i> Import Snapshot
+                    </button>
+                </div>
+            </div>
+
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Last Snapshot File</dt>
+                <dd class="col-sm-9" id="help-debug-snapshot-last-file">-</dd>
+            </dl>
+        </div>
+    </div>
 </div>

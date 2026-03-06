@@ -21,6 +21,26 @@
                         <div id="initialization-alert-success" class="alert alert-success d-none" role="alert"></div>
                         <div id="initialization-alert-error" class="alert alert-danger d-none" role="alert"></div>
 
+                        <div id="initialization-debug-import" class="card border-warning mb-3 d-none">
+                            <div class="card-header bg-warning-subtle">
+                                <h6 class="mb-0"><i class="bi bi-bug"></i> Debug Import</h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="small text-muted mb-2">Import admin user and MyCompany from a snapshot file located in the API <code>DebugSnapshots</code> directory.</p>
+                                <div class="row g-2 align-items-end">
+                                    <div class="col-md-8">
+                                        <label for="initialization-debug-import-file" class="form-label">Snapshot file name</label>
+                                        <input id="initialization-debug-import-file" class="form-control" type="text" placeholder="admin-mycompany-debug.json" />
+                                    </div>
+                                    <div class="col-md-4">
+                                        <button id="initialization-debug-import-button" type="button" class="btn btn-outline-warning w-100">
+                                            <i class="bi bi-upload"></i> Import Snapshot
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <form id="initialization-form" novalidate>
                             <div class="mb-3">
                                 <label for="initialization-username" class="form-label">Username</label>

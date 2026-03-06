@@ -11,10 +11,126 @@
         IsDebug?: boolean;
     }
 
+    interface SnapshotExportResponse {
+        success?: boolean;
+        Success?: boolean;
+        fileName?: string;
+        FileName?: string;
+        filePath?: string;
+        FilePath?: string;
+        errorMessage?: string;
+        ErrorMessage?: string;
+    }
+
+    interface SnapshotImportResponse {
+        success?: boolean;
+        Success?: boolean;
+        filePath?: string;
+        FilePath?: string;
+        errorMessage?: string;
+        ErrorMessage?: string;
+    }
+
     const typedWindow = window as AuthWindow;
+    let isDebugMode = false;
 
     function getApiBaseUrl(): string {
         return typedWindow.AppSettings?.apiBaseUrl ?? '';
+    }
+
+    async function callApi<T>(path: string, method: 'GET' | 'POST', body?: object): Promise<T | null> {
+        const apiBaseUrl = getApiBaseUrl();
+        if (!apiBaseUrl) {
+            return null;
+        }
+
+        const headers = new Headers();
+        headers.set('Content-Type', 'application/json');
+
+        const token = getAuthToken();
+        if (token) {
+            headers.set('Authorization', `Bearer ${token}`);
+        }
+
+        try {
+            const response = await fetch(`${apiBaseUrl}${path}`, {
+                method,
+                headers,
+                credentials: 'include',
+                body: body ? JSON.stringify(body) : undefined,
+            });
+
+            if (!response.ok) {
+                return null;
+            }
+
+            return (await response.json()) as T;
+        } catch {
+            return null;
+        }
+    }
+
+    function getSnapshotFileName(): string {
+        const input = document.getElementById('help-debug-snapshot-file') as HTMLInputElement | null;
+        return input?.value.trim() ?? '';
+    }
+
+    function setLastSnapshotFile(value: string): void {
+        setText('help-debug-snapshot-last-file', value || '-');
+    }
+
+    async function exportSnapshot(): Promise<void> {
+        if (!isDebugMode) {
+            showError('Export is only available in Debug mode.');
+            return;
+        }
+
+        const fileName = getSnapshotFileName();
+        const query = fileName ? `?fileName=${encodeURIComponent(fileName)}` : '';
+        const result = await callApi<SnapshotExportResponse>(`/Test/admin-mycompany/export${query}`, 'POST');
+
+        if (!result) {
+            showError('Failed to export admin/MyCompany snapshot.');
+            return;
+        }
+
+        const success = result.success === true || result.Success === true;
+        if (!success) {
+            showError(result.errorMessage ?? result.ErrorMessage ?? 'Failed to export admin/MyCompany snapshot.');
+            return;
+        }
+
+        const savedFile = result.fileName ?? result.FileName ?? result.filePath ?? result.FilePath ?? '-';
+        setLastSnapshotFile(savedFile);
+        showSuccess('Admin/MyCompany snapshot exported successfully.');
+    }
+
+    async function importSnapshot(): Promise<void> {
+        if (!isDebugMode) {
+            showError('Import is only available in Debug mode.');
+            return;
+        }
+
+        const fileName = getSnapshotFileName();
+        if (!fileName) {
+            showError('Enter snapshot file name before importing.');
+            return;
+        }
+
+        const result = await callApi<SnapshotImportResponse>('/Test/admin-mycompany/import', 'POST', { fileName });
+        if (!result) {
+            showError('Failed to import admin/MyCompany snapshot.');
+            return;
+        }
+
+        const success = result.success === true || result.Success === true;
+        if (!success) {
+            showError(result.errorMessage ?? result.ErrorMessage ?? 'Failed to import admin/MyCompany snapshot.');
+            return;
+        }
+
+        setLastSnapshotFile(fileName);
+        showSuccess('Admin/MyCompany snapshot imported successfully.');
     }
 
     function getAuthToken(): string | null {
@@ -107,6 +223,7 @@
 
         const mode = buildMode.mode ?? buildMode.Mode ?? 'Unknown';
         const isDebug = buildMode.isDebug === true || buildMode.IsDebug === true;
+        isDebugMode = isDebug;
 
         setText('help-debug-build-mode', mode);
         setText('help-debug-build-flag', isDebug ? 'true' : 'false');
@@ -125,6 +242,14 @@
     function bindEvents(): void {
         document.getElementById('help-debug-refresh')?.addEventListener('click', () => {
             void refreshStatus();
+        });
+
+        document.getElementById('help-debug-export-snapshot')?.addEventListener('click', () => {
+            void exportSnapshot();
+        });
+
+        document.getElementById('help-debug-import-snapshot')?.addEventListener('click', () => {
+            void importSnapshot();
         });
     }
 

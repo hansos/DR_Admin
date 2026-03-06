@@ -78,6 +78,60 @@
     function showLoginSection() {
         document.getElementById('initialization-login-section')?.classList.remove('d-none');
     }
+    function setDebugImportSubmitting(isSubmitting) {
+        const button = document.getElementById('initialization-debug-import-button');
+        if (!button) {
+            return;
+        }
+        button.disabled = isSubmitting;
+        button.innerHTML = isSubmitting
+            ? '<span class="spinner-border spinner-border-sm me-2"></span>Importing...'
+            : '<i class="bi bi-upload"></i> Import Snapshot';
+    }
+    async function setupDebugImportSection() {
+        const wrapper = document.getElementById('initialization-debug-import');
+        if (!wrapper) {
+            return;
+        }
+        const response = await request(`${getApiBaseUrl()}/Initialization/build-mode`, { method: 'GET' });
+        const isDebug = response.ok && !!response.data && (response.data.isDebug ?? response.data.IsDebug ?? false);
+        if (!isDebug) {
+            wrapper.classList.add('d-none');
+            return;
+        }
+        wrapper.classList.remove('d-none');
+    }
+    async function importDebugSnapshot() {
+        const fileInput = document.getElementById('initialization-debug-import-file');
+        const fileName = fileInput?.value.trim() ?? '';
+        if (!fileName) {
+            showMessage('error', 'Snapshot file name is required for debug import.');
+            return;
+        }
+        setDebugImportSubmitting(true);
+        const response = await request(`${getApiBaseUrl()}/Initialization/import-admin-mycompany-snapshot`, {
+            method: 'POST',
+            body: JSON.stringify({ fileName }),
+        });
+        if (!response.ok || !response.data) {
+            showMessage('error', response.message || 'Debug import failed.');
+            setDebugImportSubmitting(false);
+            return;
+        }
+        const success = response.data.success ?? response.data.Success ?? false;
+        if (!success) {
+            showMessage('error', response.data.errorMessage ?? response.data.ErrorMessage ?? 'Debug import failed.');
+            setDebugImportSubmitting(false);
+            return;
+        }
+        hideForm();
+        showMessage('success', 'Snapshot imported successfully. Database is initialized.');
+        renderSetupResult('Admin user and MyCompany were imported from debug snapshot.');
+        showSeedDataSection();
+        document.getElementById('initialization-proceed-info')?.classList.remove('d-none');
+        showLoginSection();
+        setDebugImportSubmitting(false);
+    }
     async function getEnableSeedTestDataOnInitialize() {
         const defaultValue = window.AppSettings?.enableTestDataSeedingOnInitialize === true;
         try {
@@ -266,9 +320,14 @@
         setupPasswordToggle('initialization-toggle-password');
         setupPasswordToggle('initialization-toggle-password-confirm');
         setupOptionalSeedDataCheckbox();
+        setupDebugImportSection();
         const seedDataButton = document.getElementById('initialization-seed-data-button');
         seedDataButton?.addEventListener('click', async () => {
             await seedData();
+        });
+        const debugImportButton = document.getElementById('initialization-debug-import-button');
+        debugImportButton?.addEventListener('click', async () => {
+            await importDebugSnapshot();
         });
         checkStatusAndPreparePage().then((canContinue) => {
             if (!canContinue) {

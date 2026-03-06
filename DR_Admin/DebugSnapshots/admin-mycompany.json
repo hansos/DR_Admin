@@ -1,0 +1,32 @@
+{
+  "ExportedAtUtc": "2026-03-06T14:07:06.6576058Z",
+  "AdminUser": {
+    "Username": "admin",
+    "Email": "info@sorteberg.com",
+    "PasswordHash": "$2a$12$0GSaJ4VZUkrBMV6mKkTJE.x0qSIjvQdiqr7wdSYL93rdRHaPxlOlS",
+    "IsActive": true,
+    "EmailConfirmed": null,
+    "IsMailTwoFactorEnabled": false,
+    "IsAuthenticatorTwoFactorEnabled": false,
+    "AuthenticatorKey": null
+  },
+  "MyCompany": {
+    "Name": "DR Admin Ltd.",
+    "LegalName": null,
+    "Email": "info@sorteberg.com",
+    "Phone": null,
+    "AddressLine1": null,
+    "AddressLine2": null,
+    "PostalCode": null,
+    "City": null,
+    "State": null,
+    "CountryCode": null,
+    "OrganizationNumber": null,
+    "TaxId": null,
+    "VatNumber": null,
+    "InvoiceEmail": null,
+    "Website": null,
+    "LogoUrl": null,
+    "LetterheadFooter": null
+  }
+}

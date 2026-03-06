@@ -3,12 +3,14 @@ using EmailSenderLib.Factories;
 using EmailSenderLib.Infrastructure.Settings;
 using ISPAdmin.Data;
 using ISPAdmin.Data.Entities;
+using ISPAdmin.Infrastructure;
 using ISPAdmin.Utilities;
 using ISPAdmin.Infrastructure.Settings;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.SqlClient;
 using Npgsql;
 using Serilog;
+using System.Text.Json;
 
 namespace ISPAdmin.Services;
 
@@ -901,6 +903,263 @@ $"</body></html>";
             result.Message = ex.Message;
             return result;
         }
+    }
+
+    /// <summary>
+    /// Exports the current admin user and MyCompany profile to a debug snapshot file.
+    /// </summary>
+    /// <param name="fileName">Optional snapshot file name. If omitted, a timestamped file name is generated.</param>
+    /// <returns>Summary and payload for the exported debug snapshot.</returns>
+    public async Task<AdminUserMyCompanyExportResultDto> ExportAdminUserAndMyCompanyAsync(string? fileName = null)
+    {
+        var result = new AdminUserMyCompanyExportResultDto();
+
+        try
+        {
+            var adminUser = await _context.Users
+                .AsNoTracking()
+                .Where(u => u.UserRoles.Any(ur => ur.Role.Name == RoleNames.ADMIN))
+                .OrderBy(u => u.Id)
+                .FirstOrDefaultAsync();
+
+            if (adminUser == null)
+            {
+                throw new InvalidOperationException("No admin user was found.");
+            }
+
+            var myCompany = await _context.MyCompanies
+                .AsNoTracking()
+                .OrderBy(x => x.Id)
+                .FirstOrDefaultAsync();
+
+            var snapshot = new AdminUserMyCompanySnapshotDto
+            {
+                ExportedAtUtc = DateTime.UtcNow,
+                AdminUser = new AdminUserSnapshotDto
+                {
+                    Username = adminUser.Username,
+                    Email = adminUser.Email,
+                    PasswordHash = adminUser.PasswordHash,
+                    IsActive = adminUser.IsActive,
+                    EmailConfirmed = adminUser.EmailConfirmed,
+                    IsMailTwoFactorEnabled = adminUser.IsMailTwoFactorEnabled,
+                    IsAuthenticatorTwoFactorEnabled = adminUser.IsAuthenticatorTwoFactorEnabled,
+                    AuthenticatorKey = adminUser.AuthenticatorKey
+                },
+                MyCompany = myCompany == null
+                    ? null
+                    : new MyCompanySnapshotDto
+                    {
+                        Name = myCompany.Name,
+                        LegalName = myCompany.LegalName,
+                        Email = myCompany.Email,
+                        Phone = myCompany.Phone,
+                        AddressLine1 = myCompany.AddressLine1,
+                        AddressLine2 = myCompany.AddressLine2,
+                        PostalCode = myCompany.PostalCode,
+                        City = myCompany.City,
+                        State = myCompany.State,
+                        CountryCode = myCompany.CountryCode,
+                        OrganizationNumber = myCompany.OrganizationNumber,
+                        TaxId = myCompany.TaxId,
+                        VatNumber = myCompany.VatNumber,
+                        InvoiceEmail = myCompany.InvoiceEmail,
+                        Website = myCompany.Website,
+                        LogoUrl = myCompany.LogoUrl,
+                        LetterheadFooter = myCompany.LetterheadFooter
+                    }
+            };
+
+            var snapshotsDirectory = GetDebugSnapshotsDirectory();
+            var safeFileName = BuildDebugSnapshotFileName(fileName);
+            var filePath = Path.Combine(snapshotsDirectory, safeFileName);
+
+            await File.WriteAllTextAsync(filePath, JsonSerializer.Serialize(snapshot, new JsonSerializerOptions
+            {
+                WriteIndented = true
+            }));
+
+            result.Success = true;
+            result.FileName = safeFileName;
+            result.FilePath = filePath;
+            result.Snapshot = snapshot;
+
+            _log.Information("Exported admin/MyCompany debug snapshot to {FilePath}", filePath);
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error exporting admin/MyCompany debug snapshot");
+            result.Success = false;
+            result.ErrorMessage = ex.Message;
+            return result;
+        }
+    }
+
+    /// <summary>
+    /// Imports a previously exported admin user and MyCompany profile snapshot from a debug file.
+    /// </summary>
+    /// <param name="request">Import request containing snapshot file details.</param>
+    /// <returns>Summary of the import operation.</returns>
+    public async Task<AdminUserMyCompanyImportResultDto> ImportAdminUserAndMyCompanyAsync(AdminUserMyCompanyImportRequestDto request)
+    {
+        var result = new AdminUserMyCompanyImportResultDto();
+
+        try
+        {
+            if (string.IsNullOrWhiteSpace(request.FileName))
+            {
+                throw new InvalidOperationException("FileName is required.");
+            }
+
+            var snapshotsDirectory = GetDebugSnapshotsDirectory();
+            var safeFileName = Path.GetFileName(request.FileName.Trim());
+            var filePath = Path.Combine(snapshotsDirectory, safeFileName);
+
+            if (!File.Exists(filePath))
+            {
+                throw new FileNotFoundException($"Snapshot file not found: {filePath}");
+            }
+
+            var json = await File.ReadAllTextAsync(filePath);
+            var snapshot = JsonSerializer.Deserialize<AdminUserMyCompanySnapshotDto>(json);
+            if (snapshot == null)
+            {
+                throw new InvalidOperationException("Snapshot content is invalid.");
+            }
+
+            if (string.IsNullOrWhiteSpace(snapshot.AdminUser.Username) || string.IsNullOrWhiteSpace(snapshot.AdminUser.Email))
+            {
+                throw new InvalidOperationException("Admin user snapshot is missing required fields.");
+            }
+
+            var adminRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == RoleNames.ADMIN);
+            if (adminRole == null)
+            {
+                adminRole = new Role
+                {
+                    Name = RoleNames.ADMIN,
+                    Description = "Administrator role",
+                    Code = RoleNames.ADMIN
+                };
+
+                _context.Roles.Add(adminRole);
+                await _context.SaveChangesAsync();
+            }
+
+            var adminUser = await _context.Users
+                .Include(u => u.UserRoles)
+                .FirstOrDefaultAsync(u => u.UserRoles.Any(ur => ur.RoleId == adminRole.Id));
+
+            if (adminUser == null)
+            {
+                adminUser = new User();
+                _context.Users.Add(adminUser);
+                result.AdminUserCreated = true;
+            }
+            else
+            {
+                result.AdminUserUpdated = true;
+            }
+
+            adminUser.Username = snapshot.AdminUser.Username;
+            adminUser.Email = snapshot.AdminUser.Email;
+            adminUser.IsActive = snapshot.AdminUser.IsActive;
+            adminUser.EmailConfirmed = snapshot.AdminUser.EmailConfirmed;
+            adminUser.IsMailTwoFactorEnabled = snapshot.AdminUser.IsMailTwoFactorEnabled;
+            adminUser.IsAuthenticatorTwoFactorEnabled = snapshot.AdminUser.IsAuthenticatorTwoFactorEnabled;
+            adminUser.AuthenticatorKey = snapshot.AdminUser.AuthenticatorKey;
+
+            if (!string.IsNullOrWhiteSpace(snapshot.AdminUser.PasswordHash))
+            {
+                adminUser.PasswordHash = snapshot.AdminUser.PasswordHash;
+            }
+
+            await _context.SaveChangesAsync();
+
+            var hasAdminRole = await _context.UserRoles.AnyAsync(ur => ur.UserId == adminUser.Id && ur.RoleId == adminRole.Id);
+            if (!hasAdminRole)
+            {
+                _context.UserRoles.Add(new UserRole
+                {
+                    UserId = adminUser.Id,
+                    RoleId = adminRole.Id
+                });
+            }
+
+            var myCompanySnapshot = snapshot.MyCompany;
+            if (myCompanySnapshot != null)
+            {
+                var myCompany = await _context.MyCompanies
+                    .OrderBy(x => x.Id)
+                    .FirstOrDefaultAsync();
+
+                if (myCompany == null)
+                {
+                    myCompany = new MyCompany();
+                    _context.MyCompanies.Add(myCompany);
+                    result.MyCompanyCreated = true;
+                }
+                else
+                {
+                    result.MyCompanyUpdated = true;
+                }
+
+                myCompany.Name = myCompanySnapshot.Name;
+                myCompany.LegalName = myCompanySnapshot.LegalName;
+                myCompany.Email = myCompanySnapshot.Email;
+                myCompany.Phone = myCompanySnapshot.Phone;
+                myCompany.AddressLine1 = myCompanySnapshot.AddressLine1;
+                myCompany.AddressLine2 = myCompanySnapshot.AddressLine2;
+                myCompany.PostalCode = myCompanySnapshot.PostalCode;
+                myCompany.City = myCompanySnapshot.City;
+                myCompany.State = myCompanySnapshot.State;
+                myCompany.CountryCode = myCompanySnapshot.CountryCode;
+                myCompany.OrganizationNumber = myCompanySnapshot.OrganizationNumber;
+                myCompany.TaxId = myCompanySnapshot.TaxId;
+                myCompany.VatNumber = myCompanySnapshot.VatNumber;
+                myCompany.InvoiceEmail = myCompanySnapshot.InvoiceEmail;
+                myCompany.Website = myCompanySnapshot.Website;
+                myCompany.LogoUrl = myCompanySnapshot.LogoUrl;
+                myCompany.LetterheadFooter = myCompanySnapshot.LetterheadFooter;
+            }
+
+            await _context.SaveChangesAsync();
+
+            result.Success = true;
+            result.FilePath = filePath;
+
+            _log.Information("Imported admin/MyCompany debug snapshot from {FilePath}", filePath);
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error importing admin/MyCompany debug snapshot");
+            result.Success = false;
+            result.ErrorMessage = ex.Message;
+            return result;
+        }
+    }
+
+    private static string GetDebugSnapshotsDirectory()
+    {
+        var snapshotsDirectory = Path.Combine(Directory.GetCurrentDirectory(), "DebugSnapshots");
+        Directory.CreateDirectory(snapshotsDirectory);
+        return snapshotsDirectory;
+    }
+
+    private static string BuildDebugSnapshotFileName(string? fileName)
+    {
+        var candidate = string.IsNullOrWhiteSpace(fileName)
+            ? $"admin-mycompany-{DateTime.UtcNow:yyyyMMdd-HHmmss}.json"
+            : Path.GetFileName(fileName.Trim());
+
+        if (!candidate.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+        {
+            candidate += ".json";
+        }
+
+        return candidate;
     }
 
     /// <summary>
