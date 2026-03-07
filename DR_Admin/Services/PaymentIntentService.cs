@@ -9,6 +9,7 @@ using PaymentGatewayLib.Interfaces;
 using PaymentGatewayLib.Models;
 using Serilog;
 using System.Text.Json;
+using System.Linq;
 
 namespace ISPAdmin.Services;
 
@@ -188,6 +189,7 @@ public class PaymentIntentService : IPaymentIntentService
             await TryFinalizeCapturedPaymentAsync(entity, gateway, status.TransactionId, paymentMethodToken);
             await EnsureRecurringSubscriptionForCapturedOrderAsync(entity);
             await EnsureRecurringSubscriptionsFromIntentDescriptionAsync(entity);
+            await EnsurePaidOrderArtifactsAsync(entity);
         }
         else if (mappedStatus == PaymentIntentStatus.Authorized)
         {
@@ -545,24 +547,11 @@ public class PaymentIntentService : IPaymentIntentService
 
     private async Task EnsureRecurringSubscriptionsFromIntentDescriptionAsync(Data.Entities.PaymentIntent intent)
     {
-        if (string.IsNullOrWhiteSpace(intent.Description))
+        var orderNumbers = GetCheckoutOrderNumbersFromDescription(intent.Description);
+        if (orderNumbers.Count == 0)
         {
             return;
         }
-
-        var marker = "Checkout payment for order";
-        if (!intent.Description.Contains(marker, StringComparison.OrdinalIgnoreCase))
-        {
-            return;
-        }
-
-        var tail = intent.Description[(intent.Description.IndexOf(marker, StringComparison.OrdinalIgnoreCase) + marker.Length)..];
-        var orderNumbers = tail
-            .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
-            .Select(v => v.Trim())
-            .Where(v => !string.IsNullOrWhiteSpace(v))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToList();
 
         foreach (var orderNumber in orderNumbers)
         {
@@ -581,6 +570,305 @@ public class PaymentIntentService : IPaymentIntentService
 
             await EnsureRecurringSubscriptionForOrderAsync(intent, order);
         }
+    }
+
+    private async Task EnsurePaidOrderArtifactsAsync(Data.Entities.PaymentIntent intent)
+    {
+        var orders = await ResolveOrdersFromPaymentIntentAsync(intent);
+        if (orders.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var order in orders)
+        {
+            await EnsureOrderActivatedAndProvisionedArtifactsAsync(order);
+        }
+    }
+
+    private async Task<List<Order>> ResolveOrdersFromPaymentIntentAsync(Data.Entities.PaymentIntent intent)
+    {
+        var orderIds = new HashSet<int>();
+        if (intent.OrderId.HasValue && intent.OrderId.Value > 0)
+        {
+            orderIds.Add(intent.OrderId.Value);
+        }
+
+        var orderNumbers = GetCheckoutOrderNumbersFromDescription(intent.Description);
+
+        IQueryable<Order> query = _context.Orders
+            .Include(o => o.OrderLines)
+            .Where(o => o.CustomerId == intent.CustomerId);
+
+        if (orderIds.Count == 0 && orderNumbers.Count == 0)
+        {
+            return new List<Order>();
+        }
+
+        query = query.Where(o => orderIds.Contains(o.Id) || orderNumbers.Contains(o.OrderNumber));
+
+        return await query.ToListAsync();
+    }
+
+    private async Task EnsureOrderActivatedAndProvisionedArtifactsAsync(Order order)
+    {
+        if (order.Status != OrderStatus.Cancelled)
+        {
+            order.Status = OrderStatus.Active;
+            order.UpdatedAt = DateTime.UtcNow;
+        }
+
+        var hasPrivacyProtection = order.OrderLines.Any(line =>
+            line.Description.StartsWith("WHOIS Privacy", StringComparison.OrdinalIgnoreCase));
+
+        foreach (var orderLine in order.OrderLines)
+        {
+            if (orderLine.Description.StartsWith("Domain:", StringComparison.OrdinalIgnoreCase))
+            {
+                await EnsureRegisteredDomainForPaidOrderLineAsync(order, orderLine, hasPrivacyProtection);
+                continue;
+            }
+
+            if (orderLine.Description.StartsWith("Hosting:", StringComparison.OrdinalIgnoreCase))
+            {
+                await EnsureHostingAccountForPaidOrderLineAsync(order, orderLine);
+            }
+        }
+    }
+
+    private async Task EnsureRegisteredDomainForPaidOrderLineAsync(Order order, OrderLine orderLine, bool hasPrivacyProtection)
+    {
+        var domainName = ExtractDomainName(orderLine.Description);
+        if (string.IsNullOrWhiteSpace(domainName))
+        {
+            return;
+        }
+
+        var normalizedDomainName = domainName.Trim().ToLowerInvariant();
+        var exists = await _context.RegisteredDomains
+            .AnyAsync(d => d.CustomerId == order.CustomerId && d.NormalizedName == normalizedDomainName);
+
+        if (exists)
+        {
+            return;
+        }
+
+        var registrarId = await ResolveRegistrarIdForOrderLineAsync(orderLine);
+        if (registrarId <= 0)
+        {
+            _log.Warning("No active registrar found while creating paid domain {DomainName} for order {OrderId}", domainName, order.Id);
+            return;
+        }
+
+        var calculatedPrice = orderLine.TotalPrice > 0
+            ? orderLine.TotalPrice
+            : Math.Max(0, orderLine.UnitPrice * Math.Max(1, orderLine.Quantity));
+
+        var domain = new RegisteredDomain
+        {
+            CustomerId = order.CustomerId,
+            ServiceId = orderLine.ServiceId ?? order.ServiceId,
+            Name = domainName,
+            NormalizedName = normalizedDomainName,
+            RegistrarId = registrarId,
+            Status = DomainStatus.Active.ToString(),
+            RegistrationDate = DateTime.UtcNow,
+            ExpirationDate = order.EndDate > DateTime.UtcNow ? order.EndDate : DateTime.UtcNow.AddYears(1),
+            AutoRenew = order.AutoRenew || orderLine.IsRecurring,
+            PrivacyProtection = hasPrivacyProtection,
+            RegistrationPrice = calculatedPrice,
+            RenewalPrice = orderLine.IsRecurring ? calculatedPrice : null,
+            Notes = $"Auto-created from paid checkout order {order.OrderNumber}",
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        _context.RegisteredDomains.Add(domain);
+    }
+
+    private async Task EnsureHostingAccountForPaidOrderLineAsync(Order order, OrderLine orderLine)
+    {
+        var serviceId = await ResolveHostingServiceIdAsync(order, orderLine);
+        if (!serviceId.HasValue || serviceId.Value <= 0)
+        {
+            _log.Warning("Could not resolve hosting service for paid order line {OrderLineId} in order {OrderId}", orderLine.Id, order.Id);
+            return;
+        }
+
+        var externalAccountId = $"checkout-order-{order.Id}-line-{orderLine.Id}";
+        var exists = await _context.HostingAccounts
+            .AnyAsync(a => a.ExternalAccountId == externalAccountId);
+
+        if (exists)
+        {
+            return;
+        }
+
+        var hostingAccount = new HostingAccount
+        {
+            CustomerId = order.CustomerId,
+            ServiceId = serviceId.Value,
+            ServerId = null,
+            ServerControlPanelId = null,
+            Provider = "checkout",
+            Username = BuildHostingUsername(order, orderLine),
+            PasswordHash = string.Empty,
+            Status = "Active",
+            ExpirationDate = order.EndDate > DateTime.UtcNow ? order.EndDate : DateTime.UtcNow.AddYears(1),
+            ExternalAccountId = externalAccountId,
+            SyncStatus = "NotSynced",
+            PlanName = ExtractHostingPlanName(orderLine.Description),
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        _context.HostingAccounts.Add(hostingAccount);
+    }
+
+    private async Task<int> ResolveRegistrarIdForOrderLineAsync(OrderLine orderLine)
+    {
+        var registrarCode = TryGetOrderLineMetadataValue(orderLine.Notes, "registrarCode");
+        if (!string.IsNullOrWhiteSpace(registrarCode))
+        {
+            var byCode = await _context.Registrars
+                .AsNoTracking()
+                .Where(r => r.IsActive)
+                .FirstOrDefaultAsync(r => r.Code == registrarCode);
+
+            if (byCode != null)
+            {
+                return byCode.Id;
+            }
+        }
+
+        var defaultRegistrar = await _context.Registrars
+            .AsNoTracking()
+            .Where(r => r.IsActive)
+            .OrderByDescending(r => r.IsDefault)
+            .ThenBy(r => r.Id)
+            .FirstOrDefaultAsync();
+
+        return defaultRegistrar?.Id ?? 0;
+    }
+
+    private async Task<int?> ResolveHostingServiceIdAsync(Order order, OrderLine orderLine)
+    {
+        if (orderLine.ServiceId.HasValue && orderLine.ServiceId.Value > 0)
+        {
+            return orderLine.ServiceId.Value;
+        }
+
+        if (order.ServiceId.HasValue && order.ServiceId.Value > 0)
+        {
+            return order.ServiceId.Value;
+        }
+
+        var planName = ExtractHostingPlanName(orderLine.Description);
+        if (string.IsNullOrWhiteSpace(planName))
+        {
+            return null;
+        }
+
+        return await _context.Services
+            .AsNoTracking()
+            .Where(s => s.Name == planName)
+            .OrderByDescending(s => s.IsActive)
+            .Select(s => (int?)s.Id)
+            .FirstOrDefaultAsync();
+    }
+
+    private static string BuildHostingUsername(Order order, OrderLine orderLine)
+    {
+        var seed = $"cust{order.CustomerId}ord{order.Id}ln{orderLine.LineNumber}".ToLowerInvariant();
+        return seed.Length <= 32 ? seed : seed[..32];
+    }
+
+    private static string ExtractHostingPlanName(string description)
+    {
+        if (string.IsNullOrWhiteSpace(description) || !description.StartsWith("Hosting:", StringComparison.OrdinalIgnoreCase))
+        {
+            return string.Empty;
+        }
+
+        var value = description["Hosting:".Length..].Trim();
+        var bracketIndex = value.IndexOf('(');
+        if (bracketIndex > 0)
+        {
+            value = value[..bracketIndex].Trim();
+        }
+
+        return value;
+    }
+
+    private static string ExtractDomainName(string description)
+    {
+        if (string.IsNullOrWhiteSpace(description) || !description.StartsWith("Domain:", StringComparison.OrdinalIgnoreCase))
+        {
+            return string.Empty;
+        }
+
+        var value = description["Domain:".Length..].Trim();
+
+        if (value.EndsWith(" recurring", StringComparison.OrdinalIgnoreCase))
+        {
+            value = value[..^" recurring".Length].Trim();
+        }
+
+        var bracketIndex = value.IndexOf('(');
+        if (bracketIndex > 0)
+        {
+            value = value[..bracketIndex].Trim();
+        }
+
+        return value;
+    }
+
+    private static string? TryGetOrderLineMetadataValue(string notes, string key)
+    {
+        if (string.IsNullOrWhiteSpace(notes) || string.IsNullOrWhiteSpace(key))
+        {
+            return null;
+        }
+
+        try
+        {
+            using var json = JsonDocument.Parse(notes);
+            if (json.RootElement.ValueKind != JsonValueKind.Object)
+            {
+                return null;
+            }
+
+            return json.RootElement.TryGetProperty(key, out var value) && value.ValueKind == JsonValueKind.String
+                ? value.GetString()
+                : null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static List<string> GetCheckoutOrderNumbersFromDescription(string description)
+    {
+        if (string.IsNullOrWhiteSpace(description))
+        {
+            return new List<string>();
+        }
+
+        var marker = "Checkout payment for order";
+        var markerIndex = description.IndexOf(marker, StringComparison.OrdinalIgnoreCase);
+        if (markerIndex < 0)
+        {
+            return new List<string>();
+        }
+
+        var tail = description[(markerIndex + marker.Length)..];
+        return tail
+            .Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
+            .Select(v => v.Trim())
+            .Where(v => !string.IsNullOrWhiteSpace(v))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
     }
 
     private async Task EnsureRecurringSubscriptionForOrderAsync(Data.Entities.PaymentIntent intent, Order order)
