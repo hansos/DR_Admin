@@ -3,6 +3,7 @@ using ISPAdmin.Data.Entities;
 using ISPAdmin.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using static ISPAdmin.Infrastructure.RoleNames;
 
 namespace ISPAdmin.Services;
 
@@ -23,6 +24,7 @@ public class UserService : IUserService
             _log.Information("Fetching all users");
             
             var users = await _context.Users
+                .Include(u => u.Customer)
                 .Include(u => u.UserRoles)
                     .ThenInclude(ur => ur.Role)
                 .AsNoTracking()
@@ -54,6 +56,7 @@ public class UserService : IUserService
 
             // Get paginated data
             var users = await _context.Users
+                .Include(u => u.Customer)
                 .Include(u => u.UserRoles)
                     .ThenInclude(ur => ur.Role)
                 .AsNoTracking()
@@ -89,6 +92,7 @@ public class UserService : IUserService
             _log.Information("Fetching user with ID: {UserId}", id);
             
             var user = await _context.Users
+                .Include(u => u.Customer)
                 .Include(u => u.UserRoles)
                     .ThenInclude(ur => ur.Role)
                 .AsNoTracking()
@@ -151,15 +155,13 @@ public class UserService : IUserService
             await _context.SaveChangesAsync();
 
             // Assign roles if provided
-            var rolesToAssign = createDto.Roles?
-                .Where(r => !string.IsNullOrWhiteSpace(r))
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToList() ?? new List<string>();
+            var rolesToAssign = await GetAllowedRolesForUserAsync(user.CustomerId, createDto.Roles);
 
             if (rolesToAssign.Count > 0)
             {
+                var roleLookup = rolesToAssign.ToHashSet(StringComparer.OrdinalIgnoreCase);
                 var roles = await _context.Roles
-                    .Where(r => rolesToAssign.Contains(r.Name))
+                    .Where(r => roleLookup.Contains(r.Name))
                     .ToListAsync();
 
                 var createdUserRoles = new List<UserRole>();
@@ -256,10 +258,7 @@ public class UserService : IUserService
 
                 _context.UserRoles.RemoveRange(existingUserRoles);
 
-                var rolesToAssign = updateDto.Roles
-                    .Where(r => !string.IsNullOrWhiteSpace(r))
-                    .Distinct(StringComparer.OrdinalIgnoreCase)
-                    .ToList();
+                var rolesToAssign = await GetAllowedRolesForUserAsync(user.CustomerId, updateDto.Roles);
 
                 // Add new roles
                 foreach (var roleName in rolesToAssign)
@@ -288,6 +287,7 @@ public class UserService : IUserService
 
             // Reload user with roles for DTO mapping
             var updatedUser = await _context.Users
+                .Include(u => u.Customer)
                 .Include(u => u.UserRoles)
                     .ThenInclude(ur => ur.Role)
                 .FirstOrDefaultAsync(u => u.Id == id);
@@ -338,10 +338,50 @@ public class UserService : IUserService
             Username = user.Username,
             Email = user.Email,
             IsActive = user.IsActive,
+            IsCustomerSelfRegistered = user.Customer?.IsSelfRegistered == true,
             Roles = user.UserRoles?.Select(ur => ur.Role.Name).ToList() ?? new List<string>(),
             CreatedAt = user.CreatedAt,
             UpdatedAt = user.UpdatedAt
         };
+    }
+
+    private async Task<List<string>> GetAllowedRolesForUserAsync(int? customerId, IEnumerable<string>? requestedRoles)
+    {
+        var roles = requestedRoles?
+            .Where(r => !string.IsNullOrWhiteSpace(r))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList() ?? new List<string>();
+
+        var isSelfRegisteredCustomer = await IsSelfRegisteredCustomerAsync(customerId);
+        if (!isSelfRegisteredCustomer)
+        {
+            return roles;
+        }
+
+        var hasInvalidRole = roles.Any(r => !string.Equals(r, CUSTOMER, StringComparison.OrdinalIgnoreCase));
+        if (hasInvalidRole)
+        {
+            throw new InvalidOperationException("Users for self-registered customers can only be assigned the Customer role.");
+        }
+
+        if (!roles.Any(r => string.Equals(r, CUSTOMER, StringComparison.OrdinalIgnoreCase)))
+        {
+            roles.Add(CUSTOMER);
+        }
+
+        return roles;
+    }
+
+    private async Task<bool> IsSelfRegisteredCustomerAsync(int? customerId)
+    {
+        if (!customerId.HasValue || customerId.Value <= 0)
+        {
+            return false;
+        }
+
+        return await _context.Customers
+            .AsNoTracking()
+            .AnyAsync(c => c.Id == customerId.Value && c.IsSelfRegistered);
     }
 
     private static string HashPassword(string password)

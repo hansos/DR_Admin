@@ -88,6 +88,7 @@
             username: item.username ?? item.Username ?? '',
             email: item.email ?? item.Email ?? '',
             isActive: item.isActive ?? item.IsActive ?? false,
+            isCustomerSelfRegistered: item.isCustomerSelfRegistered ?? item.IsCustomerSelfRegistered ?? false,
             roles: item.roles ?? item.Roles ?? [],
             createdAt: item.createdAt ?? item.CreatedAt ?? null,
             updatedAt: item.updatedAt ?? item.UpdatedAt ?? null,
@@ -107,19 +108,22 @@
             const rolesText = (user.roles && user.roles.length)
                 ? user.roles.map((r) => `<span class="badge bg-secondary me-1">${esc(r)}</span>`).join('')
                 : '<span class="text-muted">None</span>';
+            const rolesInfo = user.isCustomerSelfRegistered
+                ? `${rolesText}<div class="small text-muted mt-1">Role locked for self-registered customer.</div>`
+                : rolesText;
             const created = user.createdAt ? formatDate(user.createdAt) : '-';
             return `
         <tr>
             <td>${user.id}</td>
             <td>${esc(user.username)}</td>
             <td>${esc(user.email)}</td>
-            <td>${rolesText}</td>
+            <td>${rolesInfo}</td>
             <td><span class="badge bg-${user.isActive ? 'success' : 'secondary'}">${user.isActive ? 'Active' : 'Inactive'}</span></td>
             <td>${created}</td>
             <td>
                 <div class="btn-group btn-group-sm">
                     <button class="btn btn-outline-primary" type="button" data-action="edit" data-id="${user.id}" title="Edit"><i class="bi bi-pencil"></i></button>
-                    <button class="btn btn-outline-secondary" type="button" data-action="roles" data-id="${user.id}" title="Manage Roles"><i class="bi bi-shield-lock"></i></button>
+                    <button class="btn btn-outline-secondary" type="button" data-action="roles" data-id="${user.id}" title="Manage Roles" ${user.isCustomerSelfRegistered ? 'disabled' : ''}><i class="bi bi-shield-lock"></i></button>
                     <button class="btn btn-outline-danger" type="button" data-action="delete" data-id="${user.id}" data-name="${esc(user.username)}" title="Delete"><i class="bi bi-trash"></i></button>
                 </div>
             </td>
@@ -192,6 +196,10 @@
     async function openManageRoles(id) {
         const user = allUsers.find((item) => item.id === id);
         if (!user) {
+            return;
+        }
+        if (user.isCustomerSelfRegistered) {
+            showError('Roles are locked for users belonging to self-registered customers.');
             return;
         }
         rolesEditingUser = user;
@@ -284,6 +292,7 @@
         }
         if (roleInput) {
             roleInput.value = user.roles && user.roles.length ? user.roles[0] : '';
+            roleInput.disabled = user.isCustomerSelfRegistered;
         }
         if (customerInput) {
             customerInput.value = user.customerId != null ? String(user.customerId) : '';
@@ -294,6 +303,12 @@
         const passwordGroup = document.getElementById('users-password-group');
         if (passwordGroup) {
             passwordGroup.classList.add('d-none');
+        }
+        const roleHelp = document.querySelector('label[for="users-role"] + input + .form-text');
+        if (roleHelp) {
+            roleHelp.textContent = user.isCustomerSelfRegistered
+                ? 'Role is locked to Customer for self-registered customers.'
+                : 'Primary role name (optional).';
         }
         showModal('users-edit-modal');
     }

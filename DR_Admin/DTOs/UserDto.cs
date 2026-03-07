@@ -29,6 +29,11 @@ public class UserDto
     /// Gets or sets a value indicating whether the user account is active
     /// </summary>
     public bool IsActive { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the linked customer was created through self-service registration.
+    /// </summary>
+    public bool IsCustomerSelfRegistered { get; set; }
     
     /// <summary>
     /// Gets or sets the roles assigned to this user

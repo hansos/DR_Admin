@@ -218,6 +218,7 @@ public class CustomerService : ICustomerService
                 TaxId = createDto.TaxId,
                 VatNumber = createDto.VatNumber,
                 IsCompany = createDto.IsCompany,
+                IsSelfRegistered = false,
                 IsActive = createDto.IsActive,
                 Status = createDto.Status,
                 Balance = 0,
@@ -344,6 +345,7 @@ public class CustomerService : ICustomerService
                 VatNumber = customer.VatNumber,
                 // ContactPerson removed; use ContactPerson entities instead
                 IsCompany = customer.IsCompany,
+                IsSelfRegistered = customer.IsSelfRegistered,
                 IsActive = customer.IsActive,
                 Status = customer.Status,
                 Balance = customer.Balance,

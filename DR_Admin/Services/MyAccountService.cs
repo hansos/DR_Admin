@@ -70,6 +70,7 @@ public class MyAccountService : IMyAccountService
                 Name = request.CustomerName,
                 Email = request.CustomerEmail,
                 Phone = request.CustomerPhone,
+                IsSelfRegistered = request.IsSelfRegisteredCustomer,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };

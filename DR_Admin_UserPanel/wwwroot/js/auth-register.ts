@@ -8,6 +8,7 @@ interface RegisterRequestDto {
     customerPhone: string;
     customerAddress: string;
     siteCode: string;
+    isSelfRegisteredCustomer: boolean;
 }
 
 interface RegisterResponseDto {
@@ -125,7 +126,8 @@ function buildRegisterRequest(): RegisterRequestDto | null {
         customerEmail: email,
         customerPhone,
         customerAddress,
-        siteCode
+        siteCode,
+        isSelfRegisteredCustomer: true
     };
 }
 

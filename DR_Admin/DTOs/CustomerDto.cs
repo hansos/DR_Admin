@@ -70,6 +70,11 @@ public class CustomerDto
     /// Gets or sets a value indicating whether the customer is a company
     /// </summary>
     public bool IsCompany { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the customer was created by self-service registration.
+    /// </summary>
+    public bool IsSelfRegistered { get; set; }
     
     /// <summary>
     /// Gets or sets a value indicating whether the customer account is active

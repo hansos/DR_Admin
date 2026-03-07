@@ -31,16 +31,56 @@ public class CustomerAccountDto
 /// </summary>
 public class RegisterAccountRequestDto
 {
+    /// <summary>
+    /// Gets or sets the username for the new user account.
+    /// </summary>
     public string Username { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the user login email for the new account.
+    /// </summary>
     public string Email { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the password for the new account.
+    /// </summary>
     public string Password { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the password confirmation value.
+    /// </summary>
     public string ConfirmPassword { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets an optional frontend site code used for generated links.
+    /// </summary>
     public string? SiteCode { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the customer was created through self-service registration.
+    /// </summary>
+    public bool IsSelfRegisteredCustomer { get; set; } = true;
     
     // Customer information
+
+    /// <summary>
+    /// Gets or sets the customer display name.
+    /// </summary>
     public string CustomerName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the customer contact email.
+    /// </summary>
     public string CustomerEmail { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the customer contact phone.
+    /// </summary>
     public string CustomerPhone { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the customer address text.
+    /// </summary>
     public string CustomerAddress { get; set; } = string.Empty;
 }
 

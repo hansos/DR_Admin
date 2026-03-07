@@ -75,7 +75,8 @@ function buildRegisterRequest() {
         customerEmail: email,
         customerPhone,
         customerAddress,
-        siteCode
+        siteCode,
+        isSelfRegisteredCustomer: true
     };
 }
 function readValue(id) {

@@ -24,6 +24,12 @@ public class Customer : EntityBase
     public string? TaxId { get; set; }
     public string? VatNumber { get; set; }
     public bool IsCompany { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the customer was created through self-service registration.
+    /// </summary>
+    public bool IsSelfRegistered { get; set; }
+
     public bool IsActive { get; set; }
     public string Status { get; set; } = "Active";
     

@@ -356,6 +356,7 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.CustomerName).HasMaxLength(200);
             entity.Property(e => e.TaxId).HasMaxLength(50);
             entity.Property(e => e.VatNumber).HasMaxLength(50);
+            entity.Property(e => e.IsSelfRegistered);
             entity.Property(e => e.Status).IsRequired().HasMaxLength(50);
             entity.Property(e => e.Balance).HasPrecision(18, 2);
             entity.Property(e => e.CreditLimit).HasPrecision(18, 2);
@@ -373,6 +374,7 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => e.TaxId);
             entity.HasIndex(e => e.VatNumber);
             entity.HasIndex(e => e.IsActive);
+            entity.HasIndex(e => e.IsSelfRegistered);
             entity.HasIndex(e => e.NormalizedName);
             entity.HasIndex(e => e.NormalizedCustomerName);
             
