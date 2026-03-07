@@ -22,13 +22,11 @@
         ErrorMessage?: string;
     }
 
-    interface SnapshotImportResponse {
+    interface SeedTestDataResponse {
         success?: boolean;
         Success?: boolean;
-        filePath?: string;
-        FilePath?: string;
-        errorMessage?: string;
-        ErrorMessage?: string;
+        message?: string;
+        Message?: string;
     }
 
     const typedWindow = window as AuthWindow;
@@ -105,32 +103,25 @@
         showSuccess('Admin/MyCompany snapshot exported successfully.');
     }
 
-    async function importSnapshot(): Promise<void> {
+    async function seedTestData(): Promise<void> {
         if (!isDebugMode) {
-            showError('Import is only available in Debug mode.');
+            showError('Seeding test data is only available in Debug mode.');
             return;
         }
 
-        const fileName = getSnapshotFileName();
-        if (!fileName) {
-            showError('Enter snapshot file name before importing.');
-            return;
-        }
-
-        const result = await callApi<SnapshotImportResponse>('/Test/admin-mycompany/import', 'POST', { fileName });
+        const result = await callApi<SeedTestDataResponse>('/Test/seed-data', 'POST');
         if (!result) {
-            showError('Failed to import admin/MyCompany snapshot.');
+            showError('Failed to seed test data.');
             return;
         }
 
-        const success = result.success === true || result.Success === true;
+        const success = (result.success ?? result.Success ?? true) === true;
         if (!success) {
-            showError(result.errorMessage ?? result.ErrorMessage ?? 'Failed to import admin/MyCompany snapshot.');
+            showError(result.message ?? result.Message ?? 'Failed to seed test data.');
             return;
         }
 
-        setLastSnapshotFile(fileName);
-        showSuccess('Admin/MyCompany snapshot imported successfully.');
+        showSuccess(result.message ?? result.Message ?? 'Test data seeded successfully.');
     }
 
     function getAuthToken(): string | null {
@@ -248,8 +239,8 @@
             void exportSnapshot();
         });
 
-        document.getElementById('help-debug-import-snapshot')?.addEventListener('click', () => {
-            void importSnapshot();
+        document.getElementById('help-debug-seed-test-data')?.addEventListener('click', () => {
+            void seedTestData();
         });
     }
 

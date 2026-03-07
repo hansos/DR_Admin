@@ -211,6 +211,7 @@
         renderOngoingWorkflowPanel();
         loadSystemReadinessTodo();
         loadPendingSummary();
+        loadRecordStatsSummary();
         loadSalesSummary();
     }
     function bindSeedDataAction() {
@@ -729,6 +730,116 @@
             setPendingLoading(false);
         }
     }
+    async function loadRecordStatsSummary() {
+        setRecordStatsLoading('domains', true);
+        setRecordStatsLoading('customers', true);
+        const [domainsResult, customersResult] = await Promise.allSettled([
+            loadAllDomains(),
+            loadAllCustomersForStats(),
+        ]);
+        if (domainsResult.status === 'fulfilled') {
+            const summary = calculateRecordStats(domainsResult.value.map((item) => ({ createdAt: item.createdAt ?? '' })));
+            renderRecordStatsSummary('domains', summary);
+        }
+        else {
+            setRecordStatsUnavailable('domains');
+        }
+        if (customersResult.status === 'fulfilled') {
+            const summary = calculateRecordStats(customersResult.value);
+            renderRecordStatsSummary('customers', summary);
+        }
+        else {
+            setRecordStatsUnavailable('customers');
+        }
+    }
+    function calculateRecordStats(items) {
+        const now = Date.now();
+        const startToday = new Date();
+        startToday.setHours(0, 0, 0, 0);
+        const last24HoursCutoff = now - (24 * 60 * 60 * 1000);
+        const lastWeekCutoff = now - (7 * 24 * 60 * 60 * 1000);
+        const lastMonthCutoff = now - (30 * 24 * 60 * 60 * 1000);
+        let today = 0;
+        let last24Hours = 0;
+        let lastWeek = 0;
+        let lastMonth = 0;
+        items.forEach((item) => {
+            const timestamp = new Date(item.createdAt).getTime();
+            if (Number.isNaN(timestamp)) {
+                return;
+            }
+            if (timestamp >= startToday.getTime()) {
+                today += 1;
+            }
+            if (timestamp >= last24HoursCutoff) {
+                last24Hours += 1;
+            }
+            if (timestamp >= lastWeekCutoff) {
+                lastWeek += 1;
+            }
+            if (timestamp >= lastMonthCutoff) {
+                lastMonth += 1;
+            }
+        });
+        return {
+            today,
+            last24Hours,
+            lastWeek,
+            lastMonth,
+            total: items.length,
+        };
+    }
+    async function loadAllCustomersForStats() {
+        const allItems = [];
+        let pageNumber = 1;
+        const pageSize = 200;
+        let totalPages = 1;
+        while (pageNumber <= totalPages) {
+            const params = new URLSearchParams();
+            params.set('pageNumber', String(pageNumber));
+            params.set('pageSize', String(pageSize));
+            const response = await apiRequest(`${getApiBaseUrl()}/Customers?${params.toString()}`, { method: 'GET' });
+            if (!response.success) {
+                throw new Error(response.message || 'Failed to load customers');
+            }
+            const raw = response.data;
+            const extracted = extractItems(raw);
+            const meta = extracted.meta ?? raw;
+            const pageItems = extracted.items.map((item) => ({
+                createdAt: String(item.createdAt ?? item.CreatedAt ?? ''),
+            }));
+            allItems.push(...pageItems);
+            totalPages = Number(meta?.totalPages ?? meta?.TotalPages ?? raw?.totalPages ?? raw?.TotalPages ?? totalPages) || totalPages;
+            pageNumber += 1;
+            if (!extracted.items.length) {
+                break;
+            }
+        }
+        return allItems;
+    }
+    function renderRecordStatsSummary(prefix, summary) {
+        setText(`dashboard-summary-${prefix}-today`, String(summary.today));
+        setText(`dashboard-summary-${prefix}-last24h`, String(summary.last24Hours));
+        setText(`dashboard-summary-${prefix}-lastWeek`, String(summary.lastWeek));
+        setText(`dashboard-summary-${prefix}-lastMonth`, String(summary.lastMonth));
+        setText(`dashboard-summary-${prefix}-total`, String(summary.total));
+    }
+    function setRecordStatsUnavailable(prefix) {
+        setText(`dashboard-summary-${prefix}-today`, '-');
+        setText(`dashboard-summary-${prefix}-last24h`, '-');
+        setText(`dashboard-summary-${prefix}-lastWeek`, '-');
+        setText(`dashboard-summary-${prefix}-lastMonth`, '-');
+        setText(`dashboard-summary-${prefix}-total`, '-');
+    }
+    function setRecordStatsLoading(prefix, isLoading) {
+        if (isLoading) {
+            setText(`dashboard-summary-${prefix}-today`, '...');
+            setText(`dashboard-summary-${prefix}-last24h`, '...');
+            setText(`dashboard-summary-${prefix}-lastWeek`, '...');
+            setText(`dashboard-summary-${prefix}-lastMonth`, '...');
+            setText(`dashboard-summary-${prefix}-total`, '...');
+        }
+    }
     async function loadAllDomains() {
         let allItems = [];
         let pageNumber = 1;
@@ -776,6 +887,7 @@
         return {
             id: raw.id ?? raw.Id ?? 0,
             name: raw.name ?? raw.Name ?? raw.domainName ?? '',
+            createdAt: String(raw.createdAt ?? raw.CreatedAt ?? ''),
         };
     }
     function setPendingLoading(isLoading) {

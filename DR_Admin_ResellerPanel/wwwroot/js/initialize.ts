@@ -17,30 +17,10 @@ interface AdminMyCompanyImportResponse {
     ErrorMessage?: string;
 }
 
-function showSeedDataSection(): void {
-    document.getElementById('initialization-seed-data-section')?.classList.remove('d-none');
-}
-
-function setSeedDataSubmitting(isSubmitting: boolean): void {
-    const button = document.getElementById('initialization-seed-data-button') as HTMLButtonElement | null;
-    if (!button) {
-        return;
-    }
-
-    button.disabled = isSubmitting;
-    button.innerHTML = isSubmitting
-        ? '<span class="spinner-border spinner-border-sm me-2"></span>Seeding...'
-        : '<i class="bi bi-database-add"></i> Seed Test Data';
-}
-
 interface InitializationResponse {
     success?: boolean;
     message?: string;
     username?: string;
-}
-
-interface ResellerRuntimeConfigResponse {
-    enableTestDataSeedingOnInitialize?: boolean;
 }
 
 function getApiBaseUrl(): string {
@@ -181,33 +161,9 @@ async function importDebugSnapshot(): Promise<void> {
     hideForm();
     showMessage('success', 'Snapshot imported successfully. Database is initialized.');
     renderSetupResult('Admin user and MyCompany were imported from debug snapshot.');
-    showSeedDataSection();
     document.getElementById('initialization-proceed-info')?.classList.remove('d-none');
     showLoginSection();
     setDebugImportSubmitting(false);
-}
-
-async function getEnableSeedTestDataOnInitialize(): Promise<boolean> {
-    const defaultValue = (window as any).AppSettings?.enableTestDataSeedingOnInitialize === true;
-
-    try {
-        const response = await fetch('/runtime-config', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-        });
-
-        if (!response.ok) {
-            return defaultValue;
-        }
-
-        const data = (await response.json()) as ResellerRuntimeConfigResponse;
-        return data.enableTestDataSeedingOnInitialize === true;
-    } catch {
-        return defaultValue;
-    }
 }
 
 function setupPasswordToggle(buttonId: string): void {
@@ -234,21 +190,6 @@ function setupPasswordToggle(buttonId: string): void {
     });
 }
 
-async function setupOptionalSeedDataCheckbox(): Promise<void> {
-    const wrapper = document.getElementById('initialization-seed-test-data-wrapper');
-    if (!wrapper) {
-        return;
-    }
-
-    const isEnabled = await getEnableSeedTestDataOnInitialize();
-    if (isEnabled) {
-        wrapper.classList.remove('d-none');
-        return;
-    }
-
-    wrapper.classList.add('d-none');
-}
-
 function hideForm(): void {
     document.getElementById('initialization-form')?.classList.add('d-none');
     document.getElementById('initialization-alert-info')?.classList.add('d-none');
@@ -263,7 +204,7 @@ function renderSetupResult(extraMessage?: string): void {
     }
 
     wrapper.classList.remove('d-none');
-    const baseMessage = 'The first administrator account was created. Core code tables were also initialized as part of the same process.';
+    const baseMessage = 'The first administrator account was created successfully.';
     summary.textContent = extraMessage ? `${baseMessage} ${extraMessage}` : baseMessage;
 }
 
@@ -272,27 +213,6 @@ function scheduleLoginRedirect(seconds: number): void {
     setTimeout(() => {
         window.location.href = '/login';
     }, seconds * 1000);
-}
-
-async function seedData(): Promise<void> {
-    setSeedDataSubmitting(true);
-
-    const response = await request<unknown>(`${getApiBaseUrl()}/Test/seed-data`, {
-        method: 'POST',
-    });
-
-    if (!response.ok) {
-        showMessage('error', response.message || 'Seeding test data failed.');
-        setSeedDataSubmitting(false);
-        return;
-    }
-
-    const message = typeof response.data === 'object' && response.data !== null
-        ? ((response.data as any).message as string | undefined)
-        : undefined;
-
-    showMessage('success', message || 'Test data seeded successfully.');
-    setSeedDataSubmitting(false);
 }
 
 async function checkStatusAndPreparePage(): Promise<boolean> {
@@ -382,25 +302,9 @@ async function submitInitialization(): Promise<void> {
         return;
     }
 
-    const seedTestDataCheckbox = document.getElementById('initialization-seed-test-data') as HTMLInputElement | null;
-    const enableSeedTestData = await getEnableSeedTestDataOnInitialize();
-
-    let seedWarningMessage = '';
-
-    if (enableSeedTestData && seedTestDataCheckbox?.checked) {
-        const seedResponse = await request<unknown>(`${getApiBaseUrl()}/Test/seed-data`, {
-            method: 'POST',
-        });
-
-        if (!seedResponse.ok) {
-            seedWarningMessage = seedResponse.message || 'Extended test data seeding failed. You can run it later from an authenticated admin session.';
-        }
-    }
-
     hideForm();
     showMessage('success', 'Initialization completed successfully.');
-    renderSetupResult(seedWarningMessage);
-    showSeedDataSection();
+    renderSetupResult();
     document.getElementById('initialization-proceed-info')?.classList.remove('d-none');
     showLoginSection();
     setSubmitting(false);
@@ -416,13 +320,7 @@ function initializePage(): void {
 
     setupPasswordToggle('initialization-toggle-password');
     setupPasswordToggle('initialization-toggle-password-confirm');
-    setupOptionalSeedDataCheckbox();
     setupDebugImportSection();
-
-    const seedDataButton = document.getElementById('initialization-seed-data-button') as HTMLButtonElement | null;
-    seedDataButton?.addEventListener('click', async () => {
-        await seedData();
-    });
 
     const debugImportButton = document.getElementById('initialization-debug-import-button') as HTMLButtonElement | null;
     debugImportButton?.addEventListener('click', async () => {
