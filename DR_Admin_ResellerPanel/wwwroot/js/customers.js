@@ -100,6 +100,7 @@
             taxId: item.taxId ?? item.TaxId ?? null,
             vatNumber: item.vatNumber ?? item.VatNumber ?? null,
             isCompany: item.isCompany ?? item.IsCompany ?? false,
+            isSelfRegistered: item.isSelfRegistered ?? item.IsSelfRegistered ?? false,
             isActive: item.isActive ?? item.IsActive ?? false,
             status: item.status ?? item.Status ?? 'Active',
             balance: item.balance ?? item.Balance ?? 0,
@@ -118,12 +119,12 @@
         if (!tableBody) {
             return;
         }
-        tableBody.innerHTML = '<tr><td colspan="9" class="text-center"><div class="spinner-border text-primary"></div></td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="10" class="text-center"><div class="spinner-border text-primary"></div></td></tr>';
         loadPageSizeFromUi();
         const response = await apiRequest(buildPagedUrl(), { method: 'GET' });
         if (!response.success) {
             showError(response.message || 'Failed to load customers');
-            tableBody.innerHTML = '<tr><td colspan="9" class="text-center text-danger">Failed to load data</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="10" class="text-center text-danger">Failed to load data</td></tr>';
             return;
         }
         const raw = response.data;
@@ -143,26 +144,31 @@
             return;
         }
         if (!allCustomers.length) {
-            tableBody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">No customers found.</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="10" class="text-center text-muted">No customers found.</td></tr>';
             return;
         }
         tableBody.innerHTML = allCustomers.map((customer) => {
             const reference = customer.formattedReferenceNumber || (customer.referenceNumber ? String(customer.referenceNumber) : '-');
-            const customerNo = customer.formattedCustomerNumber || (customer.customerNumber ? String(customer.customerNumber) : '-');
+            const customerLabel = customer.name || '-';
+            const nameLabel = customer.customerName || '-';
             const status = customer.status || '-';
             const activeBadge = customer.isActive
+                ? '<span class="badge bg-success">Yes</span>'
+                : '<span class="badge bg-secondary">No</span>';
+            const selfRegisteredBadge = customer.isSelfRegistered
                 ? '<span class="badge bg-success">Yes</span>'
                 : '<span class="badge bg-secondary">No</span>';
             return `
         <tr>
             <td>${customer.id}</td>
             <td>${esc(reference)}</td>
-            <td>${esc(customerNo)}</td>
-            <td>${esc(customer.name)}</td>
+            <td>${esc(customerLabel)}</td>
+            <td>${esc(nameLabel)}</td>
             <td><a href="mailto:${esc(customer.email)}">${esc(customer.email)}</a></td>
             <td>${esc(customer.phone || '-')}</td>
             <td>${esc(status)}</td>
             <td>${activeBadge}</td>
+            <td>${selfRegisteredBadge}</td>
             <td class="text-end">
                 <div class="btn-group btn-group-sm">
                     <button class="btn btn-outline-primary" type="button" data-action="edit" data-id="${customer.id}" title="Edit"><i class="bi bi-pencil"></i></button>
@@ -282,6 +288,10 @@
         if (allowCurrencyOverride) {
             allowCurrencyOverride.checked = true;
         }
+        const isSelfRegistered = document.getElementById('customers-is-self-registered');
+        if (isSelfRegistered) {
+            isSelfRegistered.checked = false;
+        }
         showModal('customers-edit-modal');
     }
     function openEdit(id) {
@@ -315,6 +325,7 @@
         setTextAreaValue('customers-notes', customer.notes || '');
         setCheckboxValue('customers-is-company', !!customer.isCompany);
         setCheckboxValue('customers-is-active', !!customer.isActive);
+        setCheckboxValue('customers-is-self-registered', !!customer.isSelfRegistered);
         setCheckboxValue('customers-allow-currency-override', customer.allowCurrencyOverride !== false);
         showModal('customers-edit-modal');
     }
@@ -379,6 +390,7 @@
             notes: getTextAreaValue('customers-notes') || null,
             isCompany: getCheckboxValue('customers-is-company'),
             isActive: getCheckboxValue('customers-is-active'),
+            isSelfRegistered: getCheckboxValue('customers-is-self-registered'),
             allowCurrencyOverride: getCheckboxValue('customers-allow-currency-override'),
         };
         const response = editingId

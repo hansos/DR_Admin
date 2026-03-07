@@ -183,6 +183,11 @@ public class CreateCustomerDto
     /// Whether the customer account is active
     /// </summary>
     public bool IsActive { get; set; } = true;
+
+    /// <summary>
+    /// Whether the customer was created by self-service registration
+    /// </summary>
+    public bool IsSelfRegistered { get; set; }
     
     /// <summary>
     /// Customer's account status
@@ -287,6 +292,11 @@ public class UpdateCustomerDto
     /// Whether the customer account is active
     /// </summary>
     public bool IsActive { get; set; }
+
+    /// <summary>
+    /// Whether the customer was created by self-service registration
+    /// </summary>
+    public bool IsSelfRegistered { get; set; }
     
     /// <summary>
     /// Customer's account status

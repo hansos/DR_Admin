@@ -218,7 +218,7 @@ public class CustomerService : ICustomerService
                 TaxId = createDto.TaxId,
                 VatNumber = createDto.VatNumber,
                 IsCompany = createDto.IsCompany,
-                IsSelfRegistered = false,
+                IsSelfRegistered = createDto.IsSelfRegistered,
                 IsActive = createDto.IsActive,
                 Status = createDto.Status,
                 Balance = 0,
@@ -273,6 +273,7 @@ public class CustomerService : ICustomerService
             customer.TaxId = updateDto.TaxId;
             customer.VatNumber = updateDto.VatNumber;
             customer.IsCompany = updateDto.IsCompany;
+            customer.IsSelfRegistered = updateDto.IsSelfRegistered;
             customer.IsActive = updateDto.IsActive;
             customer.Status = updateDto.Status;
             customer.CreditLimit = updateDto.CreditLimit;
