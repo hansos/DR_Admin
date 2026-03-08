@@ -37,6 +37,7 @@ function applyMenuIcons(): void {
         ['/settings/notifications', 'bell'],
         ['/domains', 'globe2'],
         ['/hosting', 'hdd-rack'],
+        ['/services/add-ons', 'patch-check'],
         ['/contacts', 'people'],
         ['/billing/invoices', 'receipt'],
         ['/billing/renewals', 'calendar-check'],
