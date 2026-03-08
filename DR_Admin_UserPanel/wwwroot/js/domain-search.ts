@@ -85,7 +85,8 @@ interface DomainSearchWindow extends Window {
     };
     bootstrap?: {
         Modal?: {
-            getInstance: (element: Element) => { hide: () => void } | null;
+            getInstance: (element: Element) => { show?: () => void; hide: () => void } | null;
+            getOrCreateInstance: (element: Element) => { show: () => void; hide: () => void };
         };
     };
 }
@@ -214,12 +215,7 @@ function updateDomainSearchDeleteOrderVisibility(): void {
 
     const transferButton = document.getElementById('domain-search-transfer') as HTMLButtonElement | null;
     transferButton?.addEventListener('click', () => {
-        const domainName = latestResult?.domainName ?? getInputValue('domain-search-input');
-        if (!domainName) {
-            return;
-        }
-
-        window.location.href = `/shop/checkout?flow=transfer&domain=${encodeURIComponent(domainName)}`;
+        showTransferNotImplementedModal();
     });
 
     const alternativesButton = document.getElementById('domain-search-alternatives') as HTMLButtonElement | null;
@@ -371,6 +367,17 @@ function updateDomainSearchDeleteOrderVisibility(): void {
     });
 
     void restoreDomainSearchFromCart();
+}
+
+function showTransferNotImplementedModal(): void {
+    const typedWindow = window as DomainSearchWindow;
+    const modalElement = document.getElementById('domain-search-transfer-not-implemented-modal');
+    if (!modalElement) {
+        return;
+    }
+
+    const instance = typedWindow.bootstrap?.Modal?.getOrCreateInstance(modalElement);
+    instance?.show();
 }
 
 function bindDomainSearchDeleteOrderActions(): void {
@@ -552,6 +559,7 @@ function renderResult(result: DomainAvailabilityResult | null): void {
 
     if (!result) {
         card.classList.add('d-none');
+        card.classList.remove('border-success', 'bg-success-subtle', 'border-danger', 'bg-danger-subtle');
         priceInfo.classList.add('d-none');
         priceInfo.textContent = '';
         addAndBundleButton.classList.add('d-none');
@@ -568,6 +576,8 @@ function renderResult(result: DomainAvailabilityResult | null): void {
     card.classList.remove('d-none');
 
     if (result.isAvailable) {
+        card.classList.remove('border-danger', 'bg-danger-subtle');
+        card.classList.add('border-success', 'bg-success-subtle');
         summary.textContent = `${result.domainName} is available. Add it now and complete your bundle.`;
         const shownPrice = getSelectedDomainPrice(result);
         if (shownPrice > 0) {
@@ -589,7 +599,9 @@ function renderResult(result: DomainAvailabilityResult | null): void {
             void renderUpsellOptions();
         }
     } else {
-        summary.textContent = result.message || `${result.domainName} is not available.`;
+        card.classList.remove('border-success', 'bg-success-subtle');
+        card.classList.add('border-danger', 'bg-danger-subtle');
+        summary.textContent = formatUnavailableDomainMessage(result);
         priceInfo.classList.add('d-none');
         priceInfo.textContent = '';
         addAndBundleButton.classList.add('d-none');
@@ -600,6 +612,21 @@ function renderResult(result: DomainAvailabilityResult | null): void {
         alternativesList.innerHTML = '';
         setUpsellVisibility(false);
     }
+}
+
+function formatUnavailableDomainMessage(result: DomainAvailabilityResult): string {
+    const message = result.message.trim();
+    if (!message) {
+        return `${result.domainName} is not available.`;
+    }
+
+    const lowerMessage = message.toLowerCase();
+    const lowerDomainName = result.domainName.toLowerCase();
+    if (lowerMessage.includes('registered') && !lowerMessage.includes(lowerDomainName)) {
+        return `${result.domainName} is registered.`;
+    }
+
+    return message;
 }
 
 function addResultToCart(showMessage: boolean): boolean {

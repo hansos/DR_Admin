@@ -22,8 +22,19 @@ namespace DomainRegistrationLib.Factories
         /// </summary>
         private bool IsSandboxActive => _sandboxSettings is { Enabled: true, Filters.DomainRegistrationLib: true };
 
+        /// <summary>
+        /// Returns true when simulator mode is explicitly selected in configuration.
+        /// </summary>
+        private bool IsSimulatorForced => string.Equals(_registrarSettings.Provider, "simulator", StringComparison.OrdinalIgnoreCase);
+
         public IDomainRegistrar CreateRegistrar()
         {
+            if (IsSimulatorForced)
+            {
+                _logger.Information("Simulator mode is forced by configuration — returning SimulatorRegistrar");
+                return new SimulatorRegistrar();
+            }
+
             if (IsSandboxActive)
             {
                 _logger.Information("[SANDBOX] Sandbox mode is active — returning SandboxRegistrar instead of provider '{Provider}'", _registrarSettings.Provider);
@@ -123,12 +134,20 @@ namespace DomainRegistrationLib.Factories
                     )
                     : throw new InvalidOperationException("AWS settings are not configured"),
 
+                "simulator" => new SimulatorRegistrar(),
+
                 _ => throw new NotSupportedException($"Registrar provider '{_registrarSettings.Provider}' is not supported")
             };
         }
 
         public IDomainRegistrar CreateRegistrar(string providerCode)
         {
+            if (IsSimulatorForced)
+            {
+                _logger.Information("Simulator mode is forced by configuration — ignoring provider code '{ProviderCode}' and returning SimulatorRegistrar", providerCode);
+                return new SimulatorRegistrar();
+            }
+
             if (IsSandboxActive)
             {
                 _logger.Information("[SANDBOX] Sandbox mode is active — ignoring provider code '{ProviderCode}', returning SandboxRegistrar", providerCode);

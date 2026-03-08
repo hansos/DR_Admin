@@ -73,11 +73,7 @@ function initializeDomainSearch() {
     });
     const transferButton = document.getElementById('domain-search-transfer');
     transferButton?.addEventListener('click', () => {
-        const domainName = latestResult?.domainName ?? getInputValue('domain-search-input');
-        if (!domainName) {
-            return;
-        }
-        window.location.href = `/shop/checkout?flow=transfer&domain=${encodeURIComponent(domainName)}`;
+        showTransferNotImplementedModal();
     });
     const alternativesButton = document.getElementById('domain-search-alternatives');
     alternativesButton?.addEventListener('click', () => {
@@ -199,6 +195,15 @@ function initializeDomainSearch() {
         renderResult(response.data);
     });
     void restoreDomainSearchFromCart();
+}
+function showTransferNotImplementedModal() {
+    const typedWindow = window;
+    const modalElement = document.getElementById('domain-search-transfer-not-implemented-modal');
+    if (!modalElement) {
+        return;
+    }
+    const instance = typedWindow.bootstrap?.Modal?.getOrCreateInstance(modalElement);
+    instance?.show();
 }
 function bindDomainSearchDeleteOrderActions() {
     const confirmButton = document.getElementById('domain-search-delete-order-confirm');
@@ -347,6 +352,7 @@ function renderResult(result) {
     }
     if (!result) {
         card.classList.add('d-none');
+        card.classList.remove('border-success', 'bg-success-subtle', 'border-danger', 'bg-danger-subtle');
         priceInfo.classList.add('d-none');
         priceInfo.textContent = '';
         addAndBundleButton.classList.add('d-none');
@@ -361,6 +367,8 @@ function renderResult(result) {
     }
     card.classList.remove('d-none');
     if (result.isAvailable) {
+        card.classList.remove('border-danger', 'bg-danger-subtle');
+        card.classList.add('border-success', 'bg-success-subtle');
         summary.textContent = `${result.domainName} is available. Add it now and complete your bundle.`;
         const shownPrice = getSelectedDomainPrice(result);
         if (shownPrice > 0) {
@@ -383,7 +391,9 @@ function renderResult(result) {
         }
     }
     else {
-        summary.textContent = result.message || `${result.domainName} is not available.`;
+        card.classList.remove('border-success', 'bg-success-subtle');
+        card.classList.add('border-danger', 'bg-danger-subtle');
+        summary.textContent = formatUnavailableDomainMessage(result);
         priceInfo.classList.add('d-none');
         priceInfo.textContent = '';
         addAndBundleButton.classList.add('d-none');
@@ -394,6 +404,18 @@ function renderResult(result) {
         alternativesList.innerHTML = '';
         setUpsellVisibility(false);
     }
+}
+function formatUnavailableDomainMessage(result) {
+    const message = result.message.trim();
+    if (!message) {
+        return `${result.domainName} is not available.`;
+    }
+    const lowerMessage = message.toLowerCase();
+    const lowerDomainName = result.domainName.toLowerCase();
+    if (lowerMessage.includes('registered') && !lowerMessage.includes(lowerDomainName)) {
+        return `${result.domainName} is registered.`;
+    }
+    return message;
 }
 function addResultToCart(showMessage) {
     if (!latestResult || !latestResult.isAvailable) {

@@ -86,6 +86,23 @@
     <div id="domain-search-alert-success" class="alert alert-success d-none" role="alert"></div>
     <div id="domain-search-alert-error" class="alert alert-danger d-none" role="alert"></div>
 
+    <div class="modal fade" id="domain-search-transfer-not-implemented-modal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-danger">
+                <div class="modal-header bg-danger-subtle">
+                    <h5 class="modal-title">Transfer unavailable</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">Initiate transfer is not implemented yet.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="card shadow-sm" id="domain-search-form-card">
         <div class="card-body">
             <form id="domain-search-form" class="row g-3" novalidate>
