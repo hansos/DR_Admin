@@ -1,0 +1,39 @@
+{
+  "ExportedAtUtc": "2026-01-01T00:00:00Z",
+  "AdminUser": {
+    "Username": "admin",
+    "Email": "admin@example.com",
+    "PasswordHash": "$2a$11$7EqJtq98hPqEX7fNZaFWo.Oq1N4.5jM90oCbGyF/F7fs/3Gzdh0z.",
+    "IsActive": true,
+    "EmailConfirmed": "2026-01-01T00:00:00Z",
+    "IsMailTwoFactorEnabled": false,
+    "IsAuthenticatorTwoFactorEnabled": false,
+    "AuthenticatorKey": null
+  },
+  "MyCompany": {
+    "Name": "Dummy Hosting AS",
+    "LegalName": "Dummy Hosting AS",
+    "Email": "info@dummy-hosting.example",
+    "Phone": "+47 00 00 00 00",
+    "AddressLine1": "Example Street 1",
+    "AddressLine2": null,
+    "PostalCode": "0001",
+    "City": "Oslo",
+    "State": null,
+    "CountryCode": "NO",
+    "OrganizationNumber": "999999999",
+    "TaxId": null,
+    "VatNumber": "NO999999999MVA",
+    "InvoiceEmail": "billing@dummy-hosting.example",
+    "Website": "https://dummy-hosting.example",
+    "LogoUrl": null,
+    "LetterheadFooter": "Dummy data for debug initialization import"
+  },
+  "PrimaryContactPerson": {
+    "FirstName": "Primary",
+    "LastName": "Contact",
+    "Email": "primary.contact@dummy-hosting.example",
+    "Phone": "+47 11 11 11 11",
+    "Notes": "Primary contact imported from debug snapshot"
+  }
+}

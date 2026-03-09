@@ -1,0 +1,40 @@
+{
+  "exportedAtUtc": "2026-01-01T00:00:00Z",
+  "user": {
+    "username": "hansos",
+    "email": "hans.olav@sorteberg.com",
+    "passwordHash": "$2a$12$0GSaJ4VZUkrBMV6mKkTJE.x0qSIjvQdiqr7wdSYL93rdRHaPxlOlS",
+    "isActive": true,
+    "emailConfirmed": "2026-01-01T00:00:00Z",
+    "isMailTwoFactorEnabled": false,
+    "isAuthenticatorTwoFactorEnabled": false,
+    "authenticatorKey": null
+  },
+  "myCompany": {
+    "name": "hans.olav@sorteberg.com",
+    "legalName": "Super Hosting Ltd.",
+    "email": "hans.olav@sorteberg.com",
+    "phone": "+47 00 00 00 00",
+    "addressLine1": "Example Street 1",
+    "addressLine2": null,
+    "postalCode": "0001",
+    "city": "Oslo",
+    "state": null,
+    "countryCode": "NO",
+    "organizationNumber": "999999999",
+    "taxId": null,
+    "vatNumber": "NO999999999MVA",
+    "invoiceEmail": "billing@dummy-hosting.example",
+    "website": "https://dummy-hosting.example",
+    "logoUrl": null,
+    "letterheadFooter": "Dummy data for debug initialization import"
+  },
+  "PrimaryContactPerson": {
+    "FirstName": "Hans Olav",
+    "LastName": "Sorteberg",
+    "Email": "hans.olav@sorteberg.com",
+    "Phone": "+47 11 11 11 11",
+    "Notes": "Primary contact imported from debug snapshot"
+  }
+
+}

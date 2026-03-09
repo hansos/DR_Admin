@@ -209,7 +209,7 @@
             return;
         }
         setSubmitting(true);
-        const response = await request(`${getApiBaseUrl()}/Initialization/initialize`, {
+        const response = await request(`${getApiBaseUrl()}/Initialization/initialize-admin`, {
             method: 'POST',
             body: JSON.stringify({
                 username,

@@ -11,11 +11,13 @@ using static ISPAdmin.Infrastructure.RoleNames;
 public class InitializationService : IInitializationService
 {
     private readonly ApplicationDbContext _context;
+    private readonly IMyAccountService _myAccountService;
     private static readonly Serilog.ILogger _log = Log.ForContext<InitializationService>();
 
-    public InitializationService(ApplicationDbContext context)
+    public InitializationService(ApplicationDbContext context, IMyAccountService myAccountService)
     {
         _context = context;
+        _myAccountService = myAccountService;
     }
 
     public async Task<bool> IsInitializedAsync()
@@ -211,7 +213,7 @@ public class InitializationService : IInitializationService
         }
     }
 
-    public async Task<InitializationResponseDto?> InitializeAsync(InitializationRequestDto request)
+    public async Task<InitializationResponseDto?> InitializeAdminAsync(InitializationRequestDto request)
     {
         try
         {
@@ -316,5 +318,81 @@ public class InitializationService : IInitializationService
             _log.Error(ex, "Error during system initialization");
             return null;
         }
+    }
+
+    public async Task<UserPanelInitializationResponseDto?> InitializeUserPanelAsync(UserPanelInitializationRequestDto request)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(request.Username) ||
+                string.IsNullOrWhiteSpace(request.Email) ||
+                string.IsNullOrWhiteSpace(request.Password) ||
+                string.IsNullOrWhiteSpace(request.ConfirmPassword) ||
+                string.IsNullOrWhiteSpace(request.CompanyName) ||
+                string.IsNullOrWhiteSpace(request.ContactFirstName) ||
+                string.IsNullOrWhiteSpace(request.ContactLastName))
+            {
+                _log.Warning("User panel initialization attempted with invalid input");
+                return null;
+            }
+
+            if (request.Password != request.ConfirmPassword)
+            {
+                _log.Warning("User panel initialization attempted with mismatched passwords");
+                return null;
+            }
+
+            var customerUserExists = await _context.Users
+                .AnyAsync(u => u.UserRoles.Any(ur => ur.Role.Name == CUSTOMER));
+
+            if (customerUserExists)
+            {
+                _log.Warning("User panel initialization attempted but customer users already exist");
+                return null;
+            }
+
+            var codeTablesResult = await CheckAndUpdateCodeTablesAsync();
+            if (!codeTablesResult.Success)
+            {
+                _log.Error("Failed to initialize code tables for user panel initialization: {Message}", codeTablesResult.Message);
+                return null;
+            }
+
+            var registerResult = await _myAccountService.RegisterAsync(new RegisterAccountRequestDto
+            {
+                Username = request.Username,
+                Email = request.Email,
+                Password = request.Password,
+                ConfirmPassword = request.ConfirmPassword,
+                CustomerName = request.CompanyName,
+                CustomerEmail = request.Email,
+                CustomerPhone = request.CompanyPhone,
+                CustomerAddress = string.Empty,
+                ContactFirstName = request.ContactFirstName,
+                ContactLastName = request.ContactLastName,
+                SiteCode = "shop",
+                IsSelfRegisteredCustomer = true
+            });
+
+            return new UserPanelInitializationResponseDto
+            {
+                Success = true,
+                Message = "User panel initialized successfully with first customer user",
+                UserId = registerResult.UserId,
+                Username = request.Username,
+                Email = registerResult.Email,
+                CompanyName = request.CompanyName
+            };
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error during user panel initialization");
+            return null;
+        }
+    }
+
+    public Task<InitializationResponseDto?> InitializeAsync(InitializationRequestDto request)
+    {
+        return InitializeAdminAsync(request);
     }
 }

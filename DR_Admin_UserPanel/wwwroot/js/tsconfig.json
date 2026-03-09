@@ -22,6 +22,7 @@
     "auth-login-2fa.ts",
     "auth-forgot-password.ts",
     "auth-reset-password.ts",
+    "initialize.ts",
     "account-settings.ts",
     "account-change-password.ts",
     "account-customer-page.ts",

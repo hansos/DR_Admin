@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using EmailSenderLib.Factories;
 using EmailSenderLib.Infrastructure.Settings;
 using ISPAdmin.Data;
@@ -8,6 +8,7 @@ using ISPAdmin.Utilities;
 using ISPAdmin.Infrastructure.Settings;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Hosting;
 using Npgsql;
 using Serilog;
 using System.Text.Json;
@@ -23,18 +24,21 @@ public class SystemService : ISystemService
     private readonly AppSettings _appSettings;
     private readonly EmailSenderFactory _emailSenderFactory;
     private readonly EmailSettings _emailSettings;
+    private readonly IHostEnvironment _hostEnvironment;
     private static readonly Serilog.ILogger _log = Log.ForContext<SystemService>();
 
     public SystemService(
         ApplicationDbContext context,
         AppSettings appSettings,
         EmailSenderFactory emailSenderFactory,
-        EmailSettings emailSettings)
+        EmailSettings emailSettings,
+        IHostEnvironment hostEnvironment)
     {
         _context = context;
         _appSettings = appSettings;
         _emailSenderFactory = emailSenderFactory;
         _emailSettings = emailSettings;
+        _hostEnvironment = hostEnvironment;
     }
 
     /// <summary>
@@ -932,6 +936,25 @@ $"</body></html>";
                 .OrderBy(x => x.Id)
                 .FirstOrDefaultAsync();
 
+            ContactPerson? primaryContactPerson = null;
+
+            if (adminUser.CustomerId.HasValue)
+            {
+                primaryContactPerson = await _context.ContactPersons
+                    .AsNoTracking()
+                    .Where(cp => cp.CustomerId == adminUser.CustomerId && cp.IsActive)
+                    .OrderByDescending(cp => cp.IsPrimary)
+                    .ThenBy(cp => cp.Id)
+                    .FirstOrDefaultAsync();
+            }
+
+            primaryContactPerson ??= await _context.ContactPersons
+                .AsNoTracking()
+                .Where(cp => cp.CustomerId == null)
+                .OrderByDescending(cp => cp.IsPrimary)
+                .ThenBy(cp => cp.Id)
+                .FirstOrDefaultAsync();
+
             var snapshot = new AdminUserMyCompanySnapshotDto
             {
                 ExportedAtUtc = DateTime.UtcNow,
@@ -967,6 +990,16 @@ $"</body></html>";
                         Website = myCompany.Website,
                         LogoUrl = myCompany.LogoUrl,
                         LetterheadFooter = myCompany.LetterheadFooter
+                    },
+                PrimaryContactPerson = primaryContactPerson == null
+                    ? null
+                    : new PrimaryContactPersonSnapshotDto
+                    {
+                        FirstName = primaryContactPerson.FirstName,
+                        LastName = primaryContactPerson.LastName,
+                        Email = primaryContactPerson.Email,
+                        Phone = primaryContactPerson.Phone,
+                        Notes = primaryContactPerson.Notes
                     }
             };
 
@@ -1022,10 +1055,41 @@ $"</body></html>";
             }
 
             var json = await File.ReadAllTextAsync(filePath);
-            var snapshot = JsonSerializer.Deserialize<AdminUserMyCompanySnapshotDto>(json);
+            var snapshot = JsonSerializer.Deserialize<AdminUserMyCompanySnapshotDto>(json, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
             if (snapshot == null)
             {
                 throw new InvalidOperationException("Snapshot content is invalid.");
+            }
+
+            if (string.IsNullOrWhiteSpace(snapshot.AdminUser.Username) || string.IsNullOrWhiteSpace(snapshot.AdminUser.Email))
+            {
+                using var document = JsonDocument.Parse(json);
+                var root = document.RootElement;
+                JsonElement userElement;
+
+                if (root.TryGetProperty("User", out userElement) ||
+                    root.TryGetProperty("user", out userElement) ||
+                    root.TryGetProperty("AdminUser", out userElement) ||
+                    root.TryGetProperty("adminUser", out userElement))
+                {
+                    if ((userElement.TryGetProperty("Username", out var usernameProp) || userElement.TryGetProperty("username", out usernameProp)) && string.IsNullOrWhiteSpace(snapshot.AdminUser.Username))
+                    {
+                        snapshot.AdminUser.Username = usernameProp.GetString() ?? string.Empty;
+                    }
+
+                    if ((userElement.TryGetProperty("Email", out var emailProp) || userElement.TryGetProperty("email", out emailProp)) && string.IsNullOrWhiteSpace(snapshot.AdminUser.Email))
+                    {
+                        snapshot.AdminUser.Email = emailProp.GetString() ?? string.Empty;
+                    }
+
+                    if ((userElement.TryGetProperty("PasswordHash", out var passwordHashProp) || userElement.TryGetProperty("passwordHash", out passwordHashProp)) && string.IsNullOrWhiteSpace(snapshot.AdminUser.PasswordHash))
+                    {
+                        snapshot.AdminUser.PasswordHash = passwordHashProp.GetString() ?? string.Empty;
+                    }
+                }
             }
 
             if (string.IsNullOrWhiteSpace(snapshot.AdminUser.Username) || string.IsNullOrWhiteSpace(snapshot.AdminUser.Email))
@@ -1053,9 +1117,20 @@ $"</body></html>";
 
             if (adminUser == null)
             {
-                adminUser = new User();
-                _context.Users.Add(adminUser);
-                result.AdminUserCreated = true;
+                adminUser = await _context.Users
+                    .Include(u => u.UserRoles)
+                    .FirstOrDefaultAsync(u => u.Email == snapshot.AdminUser.Email || u.Username == snapshot.AdminUser.Username);
+
+                if (adminUser == null)
+                {
+                    adminUser = new User();
+                    _context.Users.Add(adminUser);
+                    result.AdminUserCreated = true;
+                }
+                else
+                {
+                    result.AdminUserUpdated = true;
+                }
             }
             else
             {
@@ -1085,6 +1160,70 @@ $"</body></html>";
                     UserId = adminUser.Id,
                     RoleId = adminRole.Id
                 });
+            }
+
+            var customerRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == RoleNames.CUSTOMER);
+            if (customerRole == null)
+            {
+                customerRole = new Role
+                {
+                    Name = RoleNames.CUSTOMER,
+                    Description = "Customer role",
+                    Code = RoleNames.CUSTOMER
+                };
+
+                _context.Roles.Add(customerRole);
+                await _context.SaveChangesAsync();
+            }
+
+            var hasCustomerRole = await _context.UserRoles.AnyAsync(ur => ur.UserId == adminUser.Id && ur.RoleId == customerRole.Id);
+            if (!hasCustomerRole)
+            {
+                _context.UserRoles.Add(new UserRole
+                {
+                    UserId = adminUser.Id,
+                    RoleId = customerRole.Id
+                });
+            }
+
+            if (!adminUser.CustomerId.HasValue)
+            {
+                var existingCustomer = await _context.Customers
+                    .FirstOrDefaultAsync(c => c.Email == adminUser.Email);
+
+                if (existingCustomer == null)
+                {
+                    var firstName = snapshot.PrimaryContactPerson?.FirstName?.Trim();
+                    var lastName = snapshot.PrimaryContactPerson?.LastName?.Trim();
+                    var customerName = string.Join(' ', new[] { firstName, lastName }.Where(x => !string.IsNullOrWhiteSpace(x))).Trim();
+
+                    if (string.IsNullOrWhiteSpace(customerName))
+                    {
+                        customerName = snapshot.MyCompany?.Name?.Trim();
+                    }
+
+                    if (string.IsNullOrWhiteSpace(customerName))
+                    {
+                        customerName = adminUser.Username;
+                    }
+
+                    existingCustomer = new Customer
+                    {
+                        Name = customerName,
+                        Email = adminUser.Email,
+                        Phone = snapshot.PrimaryContactPerson?.Phone
+                            ?? snapshot.MyCompany?.Phone
+                            ?? string.Empty,
+                        IsSelfRegistered = true,
+                        IsActive = true,
+                        Status = "Active"
+                    };
+
+                    _context.Customers.Add(existingCustomer);
+                    await _context.SaveChangesAsync();
+                }
+
+                adminUser.CustomerId = existingCustomer.Id;
             }
 
             var myCompanySnapshot = snapshot.MyCompany;
@@ -1124,6 +1263,41 @@ $"</body></html>";
                 myCompany.LetterheadFooter = myCompanySnapshot.LetterheadFooter;
             }
 
+            var primaryContactSnapshot = snapshot.PrimaryContactPerson;
+            if (primaryContactSnapshot != null)
+            {
+                var primaryContactPerson = await _context.ContactPersons
+                    .Where(cp => cp.CustomerId == adminUser.CustomerId)
+                    .OrderByDescending(cp => cp.IsPrimary)
+                    .ThenBy(cp => cp.Id)
+                    .FirstOrDefaultAsync();
+
+                if (primaryContactPerson == null)
+                {
+                    primaryContactPerson = new ContactPerson();
+                    _context.ContactPersons.Add(primaryContactPerson);
+                    result.PrimaryContactPersonCreated = true;
+                }
+                else
+                {
+                    result.PrimaryContactPersonUpdated = true;
+                }
+
+                primaryContactPerson.CustomerId = adminUser.CustomerId;
+                primaryContactPerson.FirstName = primaryContactSnapshot.FirstName;
+                primaryContactPerson.LastName = primaryContactSnapshot.LastName;
+                primaryContactPerson.Email = primaryContactSnapshot.Email;
+                primaryContactPerson.Phone = primaryContactSnapshot.Phone;
+                primaryContactPerson.Notes = primaryContactSnapshot.Notes;
+                primaryContactPerson.IsPrimary = true;
+                primaryContactPerson.IsActive = true;
+                primaryContactPerson.IsDefaultOwner = true;
+                primaryContactPerson.IsDefaultAdministrator = true;
+                primaryContactPerson.IsDefaultTech = true;
+                primaryContactPerson.IsDefaultBilling = true;
+                primaryContactPerson.IsDomainGlobal = true;
+            }
+
             await _context.SaveChangesAsync();
 
             result.Success = true;
@@ -1141,9 +1315,265 @@ $"</body></html>";
         }
     }
 
-    private static string GetDebugSnapshotsDirectory()
+    public async Task<AdminUserMyCompanyImportResultDto> ImportCustomerUserSnapshotAsync(AdminUserMyCompanyImportRequestDto request)
     {
-        var snapshotsDirectory = Path.Combine(Directory.GetCurrentDirectory(), "DebugSnapshots");
+        var adminExists = await _context.Users
+            .AnyAsync(u => u.UserRoles.Any(ur => ur.Role.Name == RoleNames.ADMIN));
+
+        if (!adminExists)
+        {
+            return new AdminUserMyCompanyImportResultDto
+            {
+                Success = false,
+                ErrorMessage = "Customer with user and contact person cannot be imported before an admin user exists."
+            };
+        }
+
+        return await ImportCustomerUserSnapshotFileAsync(request);
+    }
+
+    private async Task<AdminUserMyCompanyImportResultDto> ImportCustomerUserSnapshotFileAsync(AdminUserMyCompanyImportRequestDto request)
+    {
+        var result = new AdminUserMyCompanyImportResultDto();
+        Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction? transaction = null;
+
+        try
+        {
+            if (string.IsNullOrWhiteSpace(request.FileName))
+            {
+                throw new InvalidOperationException("FileName is required.");
+            }
+
+            var snapshotsDirectory = GetDebugSnapshotsDirectory();
+            var safeFileName = Path.GetFileName(request.FileName.Trim());
+            var filePath = Path.Combine(snapshotsDirectory, safeFileName);
+
+            if (!File.Exists(filePath))
+            {
+                throw new FileNotFoundException($"Snapshot file not found: {filePath}");
+            }
+
+            var json = await File.ReadAllTextAsync(filePath);
+            using var document = JsonDocument.Parse(json);
+            var root = document.RootElement;
+
+            transaction = await _context.Database.BeginTransactionAsync();
+
+            JsonElement GetObject(params string[] names)
+            {
+                foreach (var name in names)
+                {
+                    if (root.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.Object)
+                    {
+                        return value;
+                    }
+                }
+
+                return default;
+            }
+
+            var userObject = GetObject("User", "user", "AdminUser", "adminUser");
+            if (userObject.ValueKind != JsonValueKind.Object)
+            {
+                throw new InvalidOperationException("User snapshot object is missing.");
+            }
+
+            var username = userObject.TryGetProperty("Username", out var usernameProp) || userObject.TryGetProperty("username", out usernameProp)
+                ? usernameProp.GetString() ?? string.Empty
+                : string.Empty;
+
+            var email = userObject.TryGetProperty("Email", out var emailProp) || userObject.TryGetProperty("email", out emailProp)
+                ? emailProp.GetString() ?? string.Empty
+                : string.Empty;
+
+            var passwordHash = userObject.TryGetProperty("PasswordHash", out var passwordHashProp) || userObject.TryGetProperty("passwordHash", out passwordHashProp)
+                ? passwordHashProp.GetString() ?? string.Empty
+                : string.Empty;
+
+            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(email))
+            {
+                throw new InvalidOperationException("User snapshot is missing required fields Username or Email.");
+            }
+
+            var customerObject = GetObject("Customer", "customer", "MyCompany", "myCompany");
+            var contactObject = GetObject("PrimaryContactPerson", "primaryContactPerson", "ContactPerson", "contactPerson");
+
+            var customerName = customerObject.ValueKind == JsonValueKind.Object &&
+                (customerObject.TryGetProperty("Name", out var customerNameProp) || customerObject.TryGetProperty("name", out customerNameProp))
+                ? customerNameProp.GetString() ?? string.Empty
+                : string.Empty;
+
+            var customerEmail = customerObject.ValueKind == JsonValueKind.Object &&
+                (customerObject.TryGetProperty("Email", out var customerEmailProp) || customerObject.TryGetProperty("email", out customerEmailProp))
+                ? customerEmailProp.GetString() ?? string.Empty
+                : string.Empty;
+
+            var customerPhone = customerObject.ValueKind == JsonValueKind.Object &&
+                (customerObject.TryGetProperty("Phone", out var customerPhoneProp) || customerObject.TryGetProperty("phone", out customerPhoneProp))
+                ? customerPhoneProp.GetString() ?? string.Empty
+                : string.Empty;
+
+            if (string.IsNullOrWhiteSpace(customerName))
+            {
+                customerName = username;
+            }
+
+            var customer = await _context.Customers
+                .FirstOrDefaultAsync(c => c.Email == email || (!string.IsNullOrWhiteSpace(customerEmail) && c.Email == customerEmail));
+
+            if (customer == null)
+            {
+                customer = new Customer
+                {
+                    Name = customerName,
+                    Email = string.IsNullOrWhiteSpace(customerEmail) ? email : customerEmail,
+                    Phone = customerPhone,
+                    IsSelfRegistered = true,
+                    IsActive = true,
+                    Status = "Active"
+                };
+
+                _context.Customers.Add(customer);
+                await _context.SaveChangesAsync();
+            }
+
+            var emailExists = await _context.Users.AnyAsync(u => u.Email == email);
+            if (emailExists)
+            {
+                throw new InvalidOperationException($"A user with email '{email}' already exists. Import requires a new unique user.");
+            }
+
+            var usernameExists = await _context.Users.AnyAsync(u => u.Username == username);
+            if (usernameExists)
+            {
+                throw new InvalidOperationException($"A user with username '{username}' already exists. Import requires a new unique user.");
+            }
+
+            var user = new User
+            {
+                Username = username,
+                Email = email,
+                CustomerId = customer.Id,
+                IsActive = true,
+                PasswordHash = string.IsNullOrWhiteSpace(passwordHash) ? string.Empty : passwordHash
+            };
+
+            _context.Users.Add(user);
+            result.AdminUserCreated = true;
+
+            var customerRole = await _context.Roles.FirstOrDefaultAsync(r => r.Name == RoleNames.CUSTOMER);
+            if (customerRole == null)
+            {
+                customerRole = new Role
+                {
+                    Name = RoleNames.CUSTOMER,
+                    Description = "Customer role",
+                    Code = RoleNames.CUSTOMER
+                };
+
+                _context.Roles.Add(customerRole);
+                await _context.SaveChangesAsync();
+            }
+
+            await _context.SaveChangesAsync();
+
+            var hasCustomerRole = await _context.UserRoles.AnyAsync(ur => ur.UserId == user.Id && ur.RoleId == customerRole.Id);
+            if (!hasCustomerRole)
+            {
+                _context.UserRoles.Add(new UserRole
+                {
+                    UserId = user.Id,
+                    RoleId = customerRole.Id
+                });
+            }
+
+            if (contactObject.ValueKind == JsonValueKind.Object)
+            {
+                var firstName = contactObject.TryGetProperty("FirstName", out var firstNameProp) || contactObject.TryGetProperty("firstName", out firstNameProp)
+                    ? firstNameProp.GetString() ?? string.Empty
+                    : string.Empty;
+                var lastName = contactObject.TryGetProperty("LastName", out var lastNameProp) || contactObject.TryGetProperty("lastName", out lastNameProp)
+                    ? lastNameProp.GetString() ?? string.Empty
+                    : string.Empty;
+                var contactEmail = contactObject.TryGetProperty("Email", out var contactEmailProp) || contactObject.TryGetProperty("email", out contactEmailProp)
+                    ? contactEmailProp.GetString() ?? string.Empty
+                    : email;
+                var contactPhone = contactObject.TryGetProperty("Phone", out var contactPhoneProp) || contactObject.TryGetProperty("phone", out contactPhoneProp)
+                    ? contactPhoneProp.GetString() ?? string.Empty
+                    : customerPhone;
+                var notes = contactObject.TryGetProperty("Notes", out var notesProp) || contactObject.TryGetProperty("notes", out notesProp)
+                    ? notesProp.GetString()
+                    : null;
+
+                var primaryContact = await _context.ContactPersons
+                    .Where(cp => cp.CustomerId == customer.Id)
+                    .OrderByDescending(cp => cp.IsPrimary)
+                    .ThenBy(cp => cp.Id)
+                    .FirstOrDefaultAsync();
+
+                if (primaryContact == null)
+                {
+                    primaryContact = new ContactPerson();
+                    _context.ContactPersons.Add(primaryContact);
+                    result.PrimaryContactPersonCreated = true;
+                }
+                else
+                {
+                    result.PrimaryContactPersonUpdated = true;
+                }
+
+                primaryContact.CustomerId = customer.Id;
+                primaryContact.FirstName = firstName;
+                primaryContact.LastName = lastName;
+                primaryContact.Email = contactEmail;
+                primaryContact.Phone = contactPhone;
+                primaryContact.Notes = notes;
+                primaryContact.IsPrimary = true;
+                primaryContact.IsActive = true;
+                primaryContact.IsDefaultOwner = true;
+                primaryContact.IsDefaultAdministrator = true;
+                primaryContact.IsDefaultTech = true;
+                primaryContact.IsDefaultBilling = true;
+                primaryContact.IsDomainGlobal = true;
+            }
+
+            await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            result.Success = true;
+            result.FilePath = filePath;
+
+            _log.Information("Imported customer user snapshot from {FilePath}", filePath);
+            return result;
+        }
+        catch (Exception ex)
+        {
+            if (transaction != null)
+            {
+                await transaction.RollbackAsync();
+            }
+
+            _log.Error(ex, "Error importing customer user snapshot");
+            result.Success = false;
+            result.ErrorMessage = ex.Message;
+            return result;
+        }
+        finally
+        {
+            if (transaction != null)
+            {
+                await transaction.DisposeAsync();
+            }
+        }
+    }
+
+    private string GetDebugSnapshotsDirectory()
+    {
+        var contentRoot = string.IsNullOrWhiteSpace(_hostEnvironment.ContentRootPath)
+            ? Directory.GetCurrentDirectory()
+            : _hostEnvironment.ContentRootPath;
+
+        var snapshotsDirectory = Path.Combine(contentRoot, "DebugSnapshots");
         Directory.CreateDirectory(snapshotsDirectory);
         return snapshotsDirectory;
     }
@@ -1551,3 +1981,6 @@ $"</body></html>";
         return dbPath;
     }
 }
+
+
+

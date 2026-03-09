@@ -24,6 +24,13 @@ public class PaymentIntentService : IPaymentIntentService
     private readonly StripeSettings _stripeSettings;
     private readonly DomainRegistrarFactory _domainRegistrarFactory;
     private static readonly Serilog.ILogger _log = Log.ForContext<PaymentIntentService>();
+    private static readonly ContactRoleType[] RequiredContactRoles =
+    [
+        ContactRoleType.Registrant,
+        ContactRoleType.Administrative,
+        ContactRoleType.Technical,
+        ContactRoleType.Billing
+    ];
 
     public PaymentIntentService(
         ApplicationDbContext context,
@@ -687,6 +694,10 @@ public class PaymentIntentService : IPaymentIntentService
 
         var registrationYears = ExtractRegistrationYears(orderLine.Description);
         var now = DateTime.UtcNow;
+        var customer = await _context.Customers
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == order.CustomerId);
+        var selectedContactPerson = await ResolvePreferredContactPersonAsync(order.CustomerId);
 
         DomainRegistrationResult? registrarResult = null;
         try
@@ -699,11 +710,7 @@ public class PaymentIntentService : IPaymentIntentService
 
             if (!string.IsNullOrWhiteSpace(registrarCode))
             {
-                var customer = await _context.Customers
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(c => c.Id == order.CustomerId);
-
-                var contact = BuildContactFromCustomer(customer);
+                var contact = BuildContactInformation(customer, selectedContactPerson);
                 var registrar = _domainRegistrarFactory.CreateRegistrar(registrarCode);
                 var registrationRequest = new DomainRegistrationRequest
                 {
@@ -762,6 +769,11 @@ public class PaymentIntentService : IPaymentIntentService
         };
 
         _context.RegisteredDomains.Add(domain);
+
+        if (registrationSucceeded)
+        {
+            EnsureDomainContactsAndAssignments(domain, customer, selectedContactPerson, now);
+        }
     }
 
     private static int ExtractRegistrationYears(string orderLineDescription)
@@ -786,20 +798,101 @@ public class PaymentIntentService : IPaymentIntentService
         return int.TryParse(yearsToken, out var years) && years > 0 ? years : 1;
     }
 
-    private static ContactInformation BuildContactFromCustomer(Customer? customer)
+    private async Task<ContactPerson?> ResolvePreferredContactPersonAsync(int customerId)
+    {
+        var contactPeople = await _context.ContactPersons
+            .AsNoTracking()
+            .Where(cp => cp.CustomerId == customerId && cp.IsActive)
+            .OrderByDescending(cp => cp.IsPrimary)
+            .ThenBy(cp => cp.Id)
+            .ToListAsync();
+
+        if (contactPeople.Count == 0)
+        {
+            return null;
+        }
+
+        return contactPeople.FirstOrDefault(cp => cp.IsDefaultOwner)
+            ?? contactPeople.FirstOrDefault(cp => cp.IsDefaultAdministrator)
+            ?? contactPeople.FirstOrDefault(cp => cp.IsDefaultTech)
+            ?? contactPeople.FirstOrDefault(cp => cp.IsDefaultBilling)
+            ?? contactPeople[0];
+    }
+
+    private static ContactInformation BuildContactInformation(Customer? customer, ContactPerson? contactPerson)
     {
         var fullName = customer?.Name?.Trim() ?? string.Empty;
         var split = fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        var firstName = split.Length > 0 ? split[0] : "Customer";
-        var lastName = split.Length > 1 ? string.Join(' ', split.Skip(1)) : "User";
+        var fallbackFirstName = split.Length > 0 ? split[0] : "Customer";
+        var fallbackLastName = split.Length > 1 ? string.Join(' ', split.Skip(1)) : "User";
+
+        var firstName = string.IsNullOrWhiteSpace(contactPerson?.FirstName)
+            ? fallbackFirstName
+            : contactPerson.FirstName;
+        var lastName = string.IsNullOrWhiteSpace(contactPerson?.LastName)
+            ? fallbackLastName
+            : contactPerson.LastName;
 
         return new ContactInformation
         {
             FirstName = firstName,
             LastName = lastName,
-            Email = customer?.Email ?? string.Empty,
-            Phone = customer?.Phone ?? string.Empty,
+            Email = contactPerson?.Email ?? customer?.Email ?? string.Empty,
+            Phone = contactPerson?.Phone ?? customer?.Phone ?? string.Empty,
             Country = "US"
+        };
+    }
+
+    private void EnsureDomainContactsAndAssignments(
+        RegisteredDomain domain,
+        Customer? customer,
+        ContactPerson? selectedContactPerson,
+        DateTime assignedAt)
+    {
+        foreach (var role in RequiredContactRoles)
+        {
+            _context.DomainContacts.Add(BuildDomainContact(domain, customer, selectedContactPerson, role));
+
+            if (selectedContactPerson != null)
+            {
+                _context.DomainContactAssignments.Add(new DomainContactAssignment
+                {
+                    RegisteredDomain = domain,
+                    ContactPersonId = selectedContactPerson.Id,
+                    RoleType = role,
+                    AssignedAt = assignedAt,
+                    IsActive = true
+                });
+            }
+        }
+    }
+
+    private static DomainContact BuildDomainContact(
+        RegisteredDomain domain,
+        Customer? customer,
+        ContactPerson? selectedContactPerson,
+        ContactRoleType role)
+    {
+        var contact = BuildContactInformation(customer, selectedContactPerson);
+
+        return new DomainContact
+        {
+            Domain = domain,
+            RoleType = role,
+            FirstName = contact.FirstName,
+            LastName = contact.LastName,
+            Email = contact.Email,
+            Phone = contact.Phone,
+            Organization = selectedContactPerson?.Department,
+            Address1 = string.Empty,
+            City = string.Empty,
+            PostalCode = string.Empty,
+            CountryCode = "US",
+            IsActive = selectedContactPerson?.IsActive ?? true,
+            SourceContactPersonId = selectedContactPerson?.Id,
+            NeedsSync = true,
+            IsCurrentVersion = true,
+            IsPrivacyProtected = domain.PrivacyProtection
         };
     }
 

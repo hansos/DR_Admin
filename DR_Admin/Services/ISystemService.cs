@@ -51,6 +51,13 @@ public interface ISystemService
     /// <param name="request">Import request containing snapshot file details.</param>
     /// <returns>Summary of the import operation.</returns>
     Task<AdminUserMyCompanyImportResultDto> ImportAdminUserAndMyCompanyAsync(AdminUserMyCompanyImportRequestDto request);
+
+    /// <summary>
+    /// Imports a customer user snapshot from a debug file for shop initialization.
+    /// </summary>
+    /// <param name="request">Import request containing snapshot file details.</param>
+    /// <returns>Summary of the import operation.</returns>
+    Task<AdminUserMyCompanyImportResultDto> ImportCustomerUserSnapshotAsync(AdminUserMyCompanyImportRequestDto request);
 }
 
 /// <summary>
@@ -131,6 +138,16 @@ public class AdminUserMyCompanyImportResultDto
     public bool MyCompanyUpdated { get; set; }
 
     /// <summary>
+    /// Indicates whether a primary contact person record was created during import.
+    /// </summary>
+    public bool PrimaryContactPersonCreated { get; set; }
+
+    /// <summary>
+    /// Indicates whether an existing primary contact person record was updated during import.
+    /// </summary>
+    public bool PrimaryContactPersonUpdated { get; set; }
+
+    /// <summary>
     /// Error message if import failed.
     /// </summary>
     public string? ErrorMessage { get; set; }
@@ -155,6 +172,42 @@ public class AdminUserMyCompanySnapshotDto
     /// Optional MyCompany snapshot data.
     /// </summary>
     public MyCompanySnapshotDto? MyCompany { get; set; }
+
+    /// <summary>
+    /// Optional primary contact person snapshot data.
+    /// </summary>
+    public PrimaryContactPersonSnapshotDto? PrimaryContactPerson { get; set; }
+}
+
+/// <summary>
+/// Snapshot payload for primary contact person data.
+/// </summary>
+public class PrimaryContactPersonSnapshotDto
+{
+    /// <summary>
+    /// Gets or sets the first name of the primary contact person.
+    /// </summary>
+    public string FirstName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the last name of the primary contact person.
+    /// </summary>
+    public string LastName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the email address of the primary contact person.
+    /// </summary>
+    public string Email { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the phone number of the primary contact person.
+    /// </summary>
+    public string Phone { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets optional notes for the primary contact person.
+    /// </summary>
+    public string? Notes { get; set; }
 }
 
 /// <summary>

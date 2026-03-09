@@ -31,6 +31,46 @@ public class InitializationController : ControllerBase
     }
 
     /// <summary>
+    /// Imports a customer user snapshot from a debug snapshot file.
+    /// </summary>
+    /// <param name="request">Import request containing the snapshot file name.</param>
+    /// <returns>Summary of the import operation.</returns>
+    [HttpPost("import-customer-snapshot")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(AdminUserMyCompanyImportResultDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<AdminUserMyCompanyImportResultDto>> ImportCustomerSnapshot([FromBody] AdminUserMyCompanyImportRequestDto request)
+    {
+        try
+        {
+            if (!IsDebugBuild)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, new { message = "This endpoint is only available in Debug mode." });
+            }
+
+            if (request == null || string.IsNullOrWhiteSpace(request.FileName))
+            {
+                return BadRequest(new { message = "FileName is required." });
+            }
+
+            var result = await _systemService.ImportCustomerUserSnapshotAsync(request);
+            if (!result.Success)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, result);
+            }
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error importing debug customer snapshot during initialization");
+            return StatusCode(500, new { message = "An error occurred while importing customer snapshot." });
+        }
+    }
+
+    /// <summary>
     /// Gets whether the database has already been initialized.
     /// </summary>
     /// <returns>Initialization status</returns>
@@ -117,12 +157,12 @@ public class InitializationController : ControllerBase
     /// <remarks>
     /// This endpoint can only be used once to create the first admin user. Subsequent calls will fail.
     /// </remarks>
-    [HttpPost("initialize")]
+    [HttpPost("initialize-admin")]
     [AllowAnonymous]
     [ProducesResponseType(typeof(InitializationResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<InitializationResponseDto>> Initialize([FromBody] InitializationRequestDto request)
+    public async Task<ActionResult<InitializationResponseDto>> InitializeAdmin([FromBody] InitializationRequestDto request)
     {
         if (string.IsNullOrWhiteSpace(request.Username) || 
             string.IsNullOrWhiteSpace(request.Password) || 
@@ -132,7 +172,7 @@ public class InitializationController : ControllerBase
             return BadRequest(new { message = "Username, password, and email are required" });
         }
 
-        var result = await _initializationService.InitializeAsync(request);
+        var result = await _initializationService.InitializeAdminAsync(request);
 
         if (result == null)
         {
@@ -141,6 +181,51 @@ public class InitializationController : ControllerBase
         }
 
         _log.Information("System initialized successfully with user: {Username}", result.Username);
+        return Ok(result);
+    }
+
+
+    /// <summary>
+    /// Initializes the user panel with the first customer user, company and primary contact person.
+    /// </summary>
+    /// <param name="request">Initialization request for the first user-panel account.</param>
+    /// <returns>Initialization result for user-panel onboarding.</returns>
+    /// <response code="200">Returns the initialization result if successful</response>
+    /// <response code="400">If required fields are missing or initialization cannot proceed</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpPost("initialize-customer")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(UserPanelInitializationResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<UserPanelInitializationResponseDto>> InitializeCustomer([FromBody] UserPanelInitializationRequestDto request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Username) ||
+            string.IsNullOrWhiteSpace(request.Email) ||
+            string.IsNullOrWhiteSpace(request.Password) ||
+            string.IsNullOrWhiteSpace(request.ConfirmPassword) ||
+            string.IsNullOrWhiteSpace(request.CompanyName) ||
+            string.IsNullOrWhiteSpace(request.ContactFirstName) ||
+            string.IsNullOrWhiteSpace(request.ContactLastName))
+        {
+            _log.Warning("User panel initialization attempt with missing required fields");
+            return BadRequest(new { message = "Username, email, password, company name, and contact person names are required" });
+        }
+
+        if (!string.Equals(request.Password, request.ConfirmPassword, StringComparison.Ordinal))
+        {
+            _log.Warning("User panel initialization attempt with mismatched passwords");
+            return BadRequest(new { message = "Password and confirm password must match" });
+        }
+
+        var result = await _initializationService.InitializeUserPanelAsync(request);
+        if (result == null)
+        {
+            _log.Warning("User panel initialization failed - customer users may already exist or input is invalid");
+            return BadRequest(new { message = "Initialization failed. Customer users may already exist in the system or invalid input provided." });
+        }
+
+        _log.Information("User panel initialized successfully with user: {Username}", result.Username);
         return Ok(result);
     }
 

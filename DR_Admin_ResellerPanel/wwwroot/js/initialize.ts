@@ -277,7 +277,7 @@ async function submitInitialization(): Promise<void> {
 
     setSubmitting(true);
 
-    const response = await request<InitializationResponse>(`${getApiBaseUrl()}/Initialization/initialize`, {
+    const response = await request<InitializationResponse>(`${getApiBaseUrl()}/Initialization/initialize-admin`, {
         method: 'POST',
         body: JSON.stringify({
             username,

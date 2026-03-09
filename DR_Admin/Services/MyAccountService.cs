@@ -41,6 +41,14 @@ public class MyAccountService : IMyAccountService
     {
         try
         {
+            var contactFirstName = request.ContactFirstName?.Trim() ?? string.Empty;
+            var contactLastName = request.ContactLastName?.Trim() ?? string.Empty;
+
+            if (string.IsNullOrWhiteSpace(contactFirstName) || string.IsNullOrWhiteSpace(contactLastName))
+            {
+                throw new InvalidOperationException("Contact person first name and last name are required");
+            }
+
             // Validate passwords match
             if (request.Password != request.ConfirmPassword)
             {
@@ -76,6 +84,26 @@ public class MyAccountService : IMyAccountService
             };
 
             _context.Customers.Add(customer);
+            await _context.SaveChangesAsync();
+
+            var contactPerson = new ContactPerson
+            {
+                CustomerId = customer.Id,
+                FirstName = contactFirstName,
+                LastName = contactLastName,
+                Email = request.CustomerEmail,
+                Phone = request.CustomerPhone,
+                IsPrimary = true,
+                IsActive = true,
+                IsDefaultOwner = true,
+                IsDefaultAdministrator = true,
+                IsDefaultTech = true,
+                IsDefaultBilling = true,
+                IsDomainGlobal = true,
+                Notes = "Auto-created during account registration"
+            };
+
+            _context.ContactPersons.Add(contactPerson);
             await _context.SaveChangesAsync();
 
             var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password, workFactor: 12);

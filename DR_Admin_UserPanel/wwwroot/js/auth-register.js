@@ -56,9 +56,11 @@ function buildRegisterRequest() {
     const password = readValue('auth-register-password');
     const confirmPassword = readValue('auth-register-confirm-password');
     const customerName = readValue('auth-register-customer-name');
+    const contactFirstName = readValue('auth-register-contact-first-name');
+    const contactLastName = readValue('auth-register-contact-last-name');
     const customerPhone = readValue('auth-register-customer-phone');
     const customerAddress = readValue('auth-register-customer-address');
-    if (!username || !email || !password || !confirmPassword || !customerName) {
+    if (!username || !email || !password || !confirmPassword || !customerName || !contactFirstName || !contactLastName) {
         return null;
     }
     if (password !== confirmPassword) {
@@ -75,6 +77,8 @@ function buildRegisterRequest() {
         customerEmail: email,
         customerPhone,
         customerAddress,
+        contactFirstName,
+        contactLastName,
         siteCode,
         isSelfRegisteredCustomer: true
     };

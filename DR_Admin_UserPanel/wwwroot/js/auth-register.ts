@@ -7,6 +7,8 @@ interface RegisterRequestDto {
     customerEmail: string;
     customerPhone: string;
     customerAddress: string;
+    contactFirstName: string;
+    contactLastName: string;
     siteCode: string;
     isSelfRegisteredCustomer: boolean;
 }
@@ -103,10 +105,12 @@ function buildRegisterRequest(): RegisterRequestDto | null {
     const password = readValue('auth-register-password');
     const confirmPassword = readValue('auth-register-confirm-password');
     const customerName = readValue('auth-register-customer-name');
+    const contactFirstName = readValue('auth-register-contact-first-name');
+    const contactLastName = readValue('auth-register-contact-last-name');
     const customerPhone = readValue('auth-register-customer-phone');
     const customerAddress = readValue('auth-register-customer-address');
 
-    if (!username || !email || !password || !confirmPassword || !customerName) {
+    if (!username || !email || !password || !confirmPassword || !customerName || !contactFirstName || !contactLastName) {
         return null;
     }
 
@@ -126,6 +130,8 @@ function buildRegisterRequest(): RegisterRequestDto | null {
         customerEmail: email,
         customerPhone,
         customerAddress,
+        contactFirstName,
+        contactLastName,
         siteCode,
         isSelfRegisteredCustomer: true
     };

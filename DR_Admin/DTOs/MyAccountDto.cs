@@ -82,6 +82,16 @@ public class RegisterAccountRequestDto
     /// Gets or sets the customer address text.
     /// </summary>
     public string CustomerAddress { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the first name of the primary contact person created for the customer.
+    /// </summary>
+    public string ContactFirstName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the last name of the primary contact person created for the customer.
+    /// </summary>
+    public string ContactLastName { get; set; } = string.Empty;
 }
 
 /// <summary>

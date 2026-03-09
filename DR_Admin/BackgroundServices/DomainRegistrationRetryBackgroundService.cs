@@ -19,6 +19,13 @@ public class DomainRegistrationRetryBackgroundService : BackgroundService
     private readonly TimeSpan _pollInterval = TimeSpan.FromMinutes(5);
     private readonly TimeSpan _startupDelay = TimeSpan.FromMinutes(1);
     private const int BatchSize = 50;
+    private static readonly ContactRoleType[] RequiredContactRoles =
+    [
+        ContactRoleType.Registrant,
+        ContactRoleType.Administrative,
+        ContactRoleType.Technical,
+        ContactRoleType.Billing
+    ];
 
     public DomainRegistrationRetryBackgroundService(IServiceProvider serviceProvider)
     {
@@ -151,6 +158,8 @@ public class DomainRegistrationRetryBackgroundService : BackgroundService
             domain.RegistrationError = null;
             domain.UpdatedAt = DateTime.UtcNow;
 
+            await EnsurePostRegistrationDataAsync(context, domain, cancellationToken);
+
             await context.SaveChangesAsync(cancellationToken);
             _log.Information("Domain registration retry succeeded for {DomainName}", domain.Name);
         }
@@ -196,6 +205,231 @@ public class DomainRegistrationRetryBackgroundService : BackgroundService
             Email = customer?.Email ?? string.Empty,
             Phone = customer?.Phone ?? string.Empty,
             Country = "US"
+        };
+    }
+
+    private static async Task EnsurePostRegistrationDataAsync(
+        ApplicationDbContext context,
+        RegisteredDomain domain,
+        CancellationToken cancellationToken)
+    {
+        await EnsureDefaultDnsRecordsAsync(context, domain.Id, cancellationToken);
+        await EnsureDomainContactsAndAssignmentsAsync(context, domain, cancellationToken);
+    }
+
+    private static async Task EnsureDefaultDnsRecordsAsync(
+        ApplicationDbContext context,
+        int domainId,
+        CancellationToken cancellationToken)
+    {
+        var hasDnsRecords = await context.DnsRecords
+            .AnyAsync(r => r.DomainId == domainId && !r.IsDeleted, cancellationToken);
+
+        if (hasDnsRecords)
+        {
+            return;
+        }
+
+        var package = await context.DnsZonePackages
+            .Include(p => p.Records)
+            .Where(p => p.IsActive)
+            .OrderByDescending(p => p.IsDefault)
+            .ThenBy(p => p.SortOrder)
+            .ThenBy(p => p.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (package == null || package.Records.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var templateRecord in package.Records)
+        {
+            context.DnsRecords.Add(new DnsRecord
+            {
+                DomainId = domainId,
+                DnsRecordTypeId = templateRecord.DnsRecordTypeId,
+                Name = templateRecord.Name,
+                Value = templateRecord.Value,
+                TTL = templateRecord.TTL,
+                Priority = templateRecord.Priority,
+                Weight = templateRecord.Weight,
+                Port = templateRecord.Port,
+                IsPendingSync = true,
+                IsDeleted = false
+            });
+        }
+    }
+
+    private static async Task EnsureDomainContactsAndAssignmentsAsync(
+        ApplicationDbContext context,
+        RegisteredDomain domain,
+        CancellationToken cancellationToken)
+    {
+        var activeContactPeople = await context.ContactPersons
+            .Where(cp => cp.CustomerId == domain.CustomerId && cp.IsActive)
+            .OrderByDescending(cp => cp.IsPrimary)
+            .ThenBy(cp => cp.Id)
+            .ToListAsync(cancellationToken);
+
+        if (activeContactPeople.Count == 0)
+        {
+            var fallbackContactPerson = await EnsureFallbackContactPersonAsync(context, domain, cancellationToken);
+            activeContactPeople.Add(fallbackContactPerson);
+        }
+
+        var existingAssignmentRoles = await context.DomainContactAssignments
+            .Where(a => a.RegisteredDomainId == domain.Id && a.IsActive)
+            .Select(a => a.RoleType)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        var existingContactRoles = await context.DomainContacts
+            .Where(c => c.DomainId == domain.Id && c.IsCurrentVersion)
+            .Select(c => c.RoleType)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        var assignmentRoleSet = existingAssignmentRoles.ToHashSet();
+        var contactRoleSet = existingContactRoles.ToHashSet();
+
+        foreach (var role in RequiredContactRoles)
+        {
+            var selectedContactPerson = SelectContactPersonForRole(activeContactPeople, role);
+
+            if (selectedContactPerson != null && !assignmentRoleSet.Contains(role))
+            {
+                context.DomainContactAssignments.Add(new DomainContactAssignment
+                {
+                    RegisteredDomainId = domain.Id,
+                    ContactPersonId = selectedContactPerson.Id,
+                    RoleType = role,
+                    AssignedAt = DateTime.UtcNow,
+                    IsActive = true
+                });
+
+                assignmentRoleSet.Add(role);
+            }
+
+            if (contactRoleSet.Contains(role))
+            {
+                continue;
+            }
+
+            context.DomainContacts.Add(BuildDomainContact(domain, selectedContactPerson, role));
+            contactRoleSet.Add(role);
+        }
+    }
+
+    private static async Task<ContactPerson> EnsureFallbackContactPersonAsync(
+        ApplicationDbContext context,
+        RegisteredDomain domain,
+        CancellationToken cancellationToken)
+    {
+        var existingContactPerson = await context.ContactPersons
+            .Where(cp => cp.CustomerId == domain.CustomerId)
+            .OrderByDescending(cp => cp.IsPrimary)
+            .ThenBy(cp => cp.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (existingContactPerson != null)
+        {
+            if (!existingContactPerson.IsActive)
+            {
+                existingContactPerson.IsActive = true;
+            }
+
+            return existingContactPerson;
+        }
+
+        var fallback = BuildContactFromCustomer(domain.Customer);
+
+        var contactPerson = new ContactPerson
+        {
+            CustomerId = domain.CustomerId,
+            FirstName = fallback.FirstName,
+            LastName = fallback.LastName,
+            Email = fallback.Email,
+            Phone = fallback.Phone,
+            IsPrimary = true,
+            IsActive = true,
+            IsDefaultOwner = true,
+            IsDefaultAdministrator = true,
+            IsDefaultTech = true,
+            IsDefaultBilling = true,
+            IsDomainGlobal = true,
+            Notes = $"Auto-created from domain registration for {domain.Name}"
+        };
+
+        context.ContactPersons.Add(contactPerson);
+        await context.SaveChangesAsync(cancellationToken);
+
+        return contactPerson;
+    }
+
+    private static ContactPerson? SelectContactPersonForRole(
+        IReadOnlyList<ContactPerson> contactPeople,
+        ContactRoleType role)
+    {
+        if (contactPeople.Count == 0)
+        {
+            return null;
+        }
+
+        return role switch
+        {
+            ContactRoleType.Registrant => contactPeople.FirstOrDefault(cp => cp.IsDefaultOwner)
+                ?? contactPeople.FirstOrDefault(cp => cp.IsPrimary)
+                ?? contactPeople[0],
+            ContactRoleType.Administrative => contactPeople.FirstOrDefault(cp => cp.IsDefaultAdministrator)
+                ?? contactPeople.FirstOrDefault(cp => cp.IsDefaultOwner)
+                ?? contactPeople.FirstOrDefault(cp => cp.IsPrimary)
+                ?? contactPeople[0],
+            ContactRoleType.Technical => contactPeople.FirstOrDefault(cp => cp.IsDefaultTech)
+                ?? contactPeople.FirstOrDefault(cp => cp.IsDefaultAdministrator)
+                ?? contactPeople.FirstOrDefault(cp => cp.IsPrimary)
+                ?? contactPeople[0],
+            ContactRoleType.Billing => contactPeople.FirstOrDefault(cp => cp.IsDefaultBilling)
+                ?? contactPeople.FirstOrDefault(cp => cp.IsDefaultOwner)
+                ?? contactPeople.FirstOrDefault(cp => cp.IsPrimary)
+                ?? contactPeople[0],
+            _ => contactPeople[0]
+        };
+    }
+
+    private static DomainContact BuildDomainContact(
+        RegisteredDomain domain,
+        ContactPerson? selectedContactPerson,
+        ContactRoleType role)
+    {
+        var firstName = selectedContactPerson?.FirstName;
+        var lastName = selectedContactPerson?.LastName;
+
+        if (string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(lastName))
+        {
+            var fallback = BuildContactFromCustomer(domain.Customer);
+            firstName ??= fallback.FirstName;
+            lastName ??= fallback.LastName;
+        }
+
+        return new DomainContact
+        {
+            DomainId = domain.Id,
+            RoleType = role,
+            FirstName = firstName,
+            LastName = lastName,
+            Email = selectedContactPerson?.Email ?? domain.Customer?.Email ?? string.Empty,
+            Phone = selectedContactPerson?.Phone ?? domain.Customer?.Phone ?? string.Empty,
+            Organization = selectedContactPerson?.Department,
+            Address1 = string.Empty,
+            City = string.Empty,
+            PostalCode = string.Empty,
+            CountryCode = "US",
+            IsActive = selectedContactPerson?.IsActive ?? true,
+            SourceContactPersonId = selectedContactPerson?.Id,
+            NeedsSync = true,
+            IsCurrentVersion = true,
+            IsPrivacyProtected = domain.PrivacyProtection
         };
     }
 }
