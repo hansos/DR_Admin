@@ -4,6 +4,7 @@ using ISPAdmin.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
+using System.Security.Claims;
 
 namespace ISPAdmin.Controllers;
 
@@ -17,12 +18,20 @@ public class RegistrarsController : ControllerBase
 {
     private readonly IRegistrarService _registrarService;
     private readonly IDomainManagerService _domainManagerService;
+    private readonly IRegisteredDomainService _registeredDomainService;
+    private readonly IMyAccountService _myAccountService;
     private static readonly Serilog.ILogger _log = Log.ForContext<RegistrarsController>();
 
-    public RegistrarsController(IRegistrarService registrarService, IDomainManagerService domainManagerService)
+    public RegistrarsController(
+        IRegistrarService registrarService,
+        IDomainManagerService domainManagerService,
+        IRegisteredDomainService registeredDomainService,
+        IMyAccountService myAccountService)
     {
         _registrarService = registrarService;
         _domainManagerService = domainManagerService;
+        _registeredDomainService = registeredDomainService;
+        _myAccountService = myAccountService;
     }
 
     /// <summary>
@@ -543,6 +552,24 @@ public class RegistrarsController : ControllerBase
             _log.Information("API: CheckDomainAvailability called for domain {DomainName} using registrar {RegistrarId} by user {User}", 
                 domainName, registrarId, User.Identity?.Name);
 
+            var existingDomain = await _registeredDomainService.GetDomainByNameAsync(domainName);
+            if (existingDomain != null)
+            {
+                var currentCustomerId = await ResolveCurrentCustomerIdAsync();
+                var isOwnedByCurrentCustomer = currentCustomerId.HasValue && currentCustomerId.Value == existingDomain.CustomerId;
+
+                return Ok(new DomainAvailabilityResult
+                {
+                    Success = true,
+                    DomainName = domainName,
+                    IsAvailable = false,
+                    IsTldSupported = true,
+                    Message = isOwnedByCurrentCustomer
+                        ? "You already own this domain in your account."
+                        : $"{domainName} is registered."
+                });
+            }
+
             var result = await _registrarService.CheckDomainAvailabilityAsync(registrarId, domainName);
             
             return Ok(result);
@@ -559,6 +586,18 @@ public class RegistrarsController : ControllerBase
                 domainName, registrarId);
             return StatusCode(500, "An error occurred while checking domain availability");
         }
+    }
+
+    private async Task<int?> ResolveCurrentCustomerIdAsync()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+        {
+            return null;
+        }
+
+        var account = await _myAccountService.GetMyAccountAsync(userId);
+        return account?.Customer?.Id;
     }
 
     /// <summary>

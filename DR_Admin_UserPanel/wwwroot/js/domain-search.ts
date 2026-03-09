@@ -578,6 +578,7 @@ function renderResult(result: DomainAvailabilityResult | null): void {
         addAndBundleButton.disabled = false;
         addAndBundleButton.innerHTML = '<i class="bi bi-bag-check"></i> Add domain & choose hosting/services';
         transferButton.classList.add('d-none');
+        (transferButton as HTMLButtonElement).disabled = false;
         alternativesButton.classList.add('d-none');
         alternativesList.classList.add('d-none');
         alternativesList.innerHTML = '';
@@ -587,6 +588,8 @@ function renderResult(result: DomainAvailabilityResult | null): void {
         updateFlowProgressIndicator();
         return;
     }
+
+    (transferButton as HTMLButtonElement).disabled = shouldDisableTransfer(result);
 
     if (result.isAvailable) {
         const shownPrice = getSelectedDomainPrice(result);
@@ -660,6 +663,10 @@ function formatUnavailableDomainMessage(result: DomainAvailabilityResult): strin
     }
 
     return message;
+}
+
+function shouldDisableTransfer(result: DomainAvailabilityResult): boolean {
+    return result.message.trim() === 'You already own this domain in your account.';
 }
 
 function addResultToCart(showMessage: boolean): boolean {

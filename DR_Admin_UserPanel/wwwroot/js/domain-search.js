@@ -370,6 +370,7 @@ function renderResult(result) {
         addAndBundleButton.disabled = false;
         addAndBundleButton.innerHTML = '<i class="bi bi-bag-check"></i> Add domain & choose hosting/services';
         transferButton.classList.add('d-none');
+        transferButton.disabled = false;
         alternativesButton.classList.add('d-none');
         alternativesList.classList.add('d-none');
         alternativesList.innerHTML = '';
@@ -379,6 +380,7 @@ function renderResult(result) {
         updateFlowProgressIndicator();
         return;
     }
+    transferButton.disabled = shouldDisableTransfer(result);
     if (result.isAvailable) {
         const shownPrice = getSelectedDomainPrice(result);
         if (isDomainSelectionLocked) {
@@ -448,6 +450,9 @@ function formatUnavailableDomainMessage(result) {
         return `${result.domainName} is registered.`;
     }
     return message;
+}
+function shouldDisableTransfer(result) {
+    return result.message.trim() === 'You already own this domain in your account.';
 }
 function addResultToCart(showMessage) {
     if (!latestResult || !latestResult.isAvailable) {
