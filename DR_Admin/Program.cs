@@ -163,6 +163,8 @@ builder.Services.AddTransient<IOperatingSystemService, OperatingSystemService>()
 builder.Services.AddTransient<IControlPanelTypeService, ControlPanelTypeService>();
 builder.Services.AddTransient<IServerControlPanelService, ServerControlPanelService>();
 builder.Services.AddTransient<IHostingPackageService, HostingPackageService>();
+builder.Services.AddTransient<ISoldHostingPackageService, SoldHostingPackageService>();
+builder.Services.AddTransient<ISoldOptionalServiceService, SoldOptionalServiceService>();
 builder.Services.AddTransient<IResellerCompanyService, ResellerCompanyService>();
 builder.Services.AddTransient<ISalesAgentService, SalesAgentService>();
 builder.Services.AddTransient<ISentEmailService, SentEmailService>();

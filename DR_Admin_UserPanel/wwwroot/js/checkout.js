@@ -901,7 +901,11 @@ async function submitCheckout() {
             quantity: 1,
             unitPrice: item.billingCycle === 'yearly' ? item.yearlyPrice : item.monthlyPrice,
             isRecurring: true,
-            notes: ''
+            notes: JSON.stringify({
+                kind: 'hosting-package',
+                hostingPackageId: item.id,
+                billingCycle: item.billingCycle
+            })
         };
         addRecurringLine(resolveRecurringMode(item.billingCycle, 'monthly'), hostingLine);
     });
@@ -914,7 +918,11 @@ async function submitCheckout() {
             quantity: 1,
             unitPrice: item.price,
             isRecurring: true,
-            notes: ''
+            notes: JSON.stringify({
+                kind: 'optional-service',
+                serviceId: item.id,
+                billingCycle: serviceMode
+            })
         });
     });
     if (oneTimeLines.length === 0 && recurringGroups.size === 0) {

@@ -3,6 +3,7 @@ using ISPAdmin.Data.Entities;
 using ISPAdmin.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using System.Text.Json;
 
 namespace ISPAdmin.Services;
 
@@ -160,6 +161,8 @@ public class OrderService : IOrderService
                 _context.OrderLines.AddRange(lines);
                 await _context.SaveChangesAsync();
                 order.OrderLines = lines;
+
+                await CreateSoldInstancesFromOrderLinesAsync(order, lines);
             }
 
             // Assign a CustomerNumber on first sale if the customer doesn't have one yet
@@ -275,6 +278,140 @@ public class OrderService : IOrderService
             .FirstOrDefaultAsync(s => s.Key == key);
 
         return setting?.Value;
+    }
+
+    private async Task CreateSoldInstancesFromOrderLinesAsync(Order order, List<OrderLine> lines)
+    {
+        foreach (var line in lines)
+        {
+            if (line.ServiceId.HasValue)
+            {
+                _context.SoldOptionalServices.Add(new SoldOptionalService
+                {
+                    CustomerId = order.CustomerId,
+                    ServiceId = line.ServiceId.Value,
+                    OrderId = order.Id,
+                    OrderLineId = line.Id,
+                    Quantity = line.Quantity <= 0 ? 1 : line.Quantity,
+                    UnitPrice = line.UnitPrice,
+                    TotalPrice = line.TotalPrice,
+                    Status = "Active",
+                    BillingCycle = ResolveBillingCycle(line.Notes, line.Description),
+                    CurrencyCode = string.IsNullOrWhiteSpace(order.CurrencyCode) ? "EUR" : order.CurrencyCode,
+                    ActivatedAt = order.StartDate,
+                    NextBillingDate = order.NextBillingDate,
+                    ExpiresAt = order.AutoRenew ? null : order.EndDate,
+                    AutoRenew = line.IsRecurring && order.AutoRenew,
+                    ConfigurationSnapshotJson = string.Empty,
+                    Notes = line.Notes,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                });
+
+                continue;
+            }
+
+            if (!TryGetHostingPackageId(line.Notes, out var hostingPackageId) || hostingPackageId <= 0)
+            {
+                continue;
+            }
+
+            var exists = await _context.HostingPackages
+                .AsNoTracking()
+                .AnyAsync(x => x.Id == hostingPackageId);
+
+            if (!exists)
+            {
+                _log.Warning("Skipping sold hosting package creation for order {OrderId}, line {LineId} because hosting package {HostingPackageId} does not exist", order.Id, line.Id, hostingPackageId);
+                continue;
+            }
+
+            _context.SoldHostingPackages.Add(new SoldHostingPackage
+            {
+                CustomerId = order.CustomerId,
+                HostingPackageId = hostingPackageId,
+                OrderId = order.Id,
+                OrderLineId = line.Id,
+                Status = "PendingProvisioning",
+                BillingCycle = ResolveBillingCycle(line.Notes, line.Description),
+                SetupFee = 0,
+                RecurringPrice = line.UnitPrice,
+                CurrencyCode = string.IsNullOrWhiteSpace(order.CurrencyCode) ? "EUR" : order.CurrencyCode,
+                ActivatedAt = order.StartDate,
+                NextBillingDate = order.NextBillingDate,
+                ExpiresAt = order.AutoRenew ? null : order.EndDate,
+                AutoRenew = line.IsRecurring && order.AutoRenew,
+                ConfigurationSnapshotJson = string.Empty,
+                Notes = line.Notes,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            });
+        }
+
+        await _context.SaveChangesAsync();
+    }
+
+    private static bool TryGetHostingPackageId(string? notes, out int hostingPackageId)
+    {
+        hostingPackageId = 0;
+        if (string.IsNullOrWhiteSpace(notes))
+        {
+            return false;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(notes);
+            if (!document.RootElement.TryGetProperty("hostingPackageId", out var idElement))
+            {
+                return false;
+            }
+
+            if (idElement.ValueKind == JsonValueKind.Number)
+            {
+                return idElement.TryGetInt32(out hostingPackageId) && hostingPackageId > 0;
+            }
+
+            if (idElement.ValueKind == JsonValueKind.String)
+            {
+                return int.TryParse(idElement.GetString(), out hostingPackageId) && hostingPackageId > 0;
+            }
+        }
+        catch
+        {
+        }
+
+        return false;
+    }
+
+    private static string ResolveBillingCycle(string? notes, string? description)
+    {
+        if (!string.IsNullOrWhiteSpace(notes))
+        {
+            try
+            {
+                using var document = JsonDocument.Parse(notes);
+                if (document.RootElement.TryGetProperty("billingCycle", out var value))
+                {
+                    var cycle = value.GetString();
+                    if (!string.IsNullOrWhiteSpace(cycle))
+                    {
+                        return cycle.Trim().ToLowerInvariant();
+                    }
+                }
+            }
+            catch
+            {
+            }
+        }
+
+        var normalizedDescription = (description ?? string.Empty).ToLowerInvariant();
+        if (normalizedDescription.Contains("year"))
+        {
+            return "yearly";
+        }
+
+        return "monthly";
     }
 
     public async Task<OrderDto?> UpdateOrderAsync(int id, UpdateOrderDto updateDto)
