@@ -20,7 +20,7 @@ namespace DomainRegistrationLib.Implementations
         };
 
         private static readonly string StorageDirectoryPath = Path.Combine(AppContext.BaseDirectory, "simulator-data");
-        private static readonly string StorageFilePath = Path.Combine(StorageDirectoryPath, "");
+        private static readonly string StorageFilePath = Path.Combine(StorageDirectoryPath, "domains.json");
 
         private static readonly HttpClient _rdapClient = new()
         {

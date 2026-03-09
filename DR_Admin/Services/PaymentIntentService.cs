@@ -2,6 +2,8 @@ using ISPAdmin.Data;
 using ISPAdmin.Data.Entities;
 using ISPAdmin.Data.Enums;
 using ISPAdmin.DTOs;
+using DomainRegistrationLib.Factories;
+using DomainRegistrationLib.Models;
 using Microsoft.EntityFrameworkCore;
 using PaymentGatewayLib.Implementations;
 using PaymentGatewayLib.Infrastructure.Settings;
@@ -20,12 +22,17 @@ public class PaymentIntentService : IPaymentIntentService
 {
     private readonly ApplicationDbContext _context;
     private readonly StripeSettings _stripeSettings;
+    private readonly DomainRegistrarFactory _domainRegistrarFactory;
     private static readonly Serilog.ILogger _log = Log.ForContext<PaymentIntentService>();
 
-    public PaymentIntentService(ApplicationDbContext context, StripeSettings stripeSettings)
+    public PaymentIntentService(
+        ApplicationDbContext context,
+        StripeSettings stripeSettings,
+        DomainRegistrarFactory domainRegistrarFactory)
     {
         _context = context;
         _stripeSettings = stripeSettings;
+        _domainRegistrarFactory = domainRegistrarFactory;
     }
 
     public async Task<IEnumerable<PaymentIntentDto>> GetAllPaymentIntentsAsync()
@@ -678,6 +685,58 @@ public class PaymentIntentService : IPaymentIntentService
             ? orderLine.TotalPrice
             : Math.Max(0, orderLine.UnitPrice * Math.Max(1, orderLine.Quantity));
 
+        var registrationYears = ExtractRegistrationYears(orderLine.Description);
+        var now = DateTime.UtcNow;
+
+        DomainRegistrationResult? registrarResult = null;
+        try
+        {
+            var registrarCode = await _context.Registrars
+                .AsNoTracking()
+                .Where(r => r.Id == registrarId)
+                .Select(r => r.Code)
+                .FirstOrDefaultAsync();
+
+            if (!string.IsNullOrWhiteSpace(registrarCode))
+            {
+                var customer = await _context.Customers
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(c => c.Id == order.CustomerId);
+
+                var contact = BuildContactFromCustomer(customer);
+                var registrar = _domainRegistrarFactory.CreateRegistrar(registrarCode);
+                var registrationRequest = new DomainRegistrationRequest
+                {
+                    DomainName = normalizedDomainName,
+                    Years = registrationYears,
+                    AutoRenew = order.AutoRenew || orderLine.IsRecurring,
+                    PrivacyProtection = hasPrivacyProtection,
+                    RegistrantContact = contact,
+                    AdminContact = contact,
+                    TechContact = contact,
+                    BillingContact = contact
+                };
+
+                registrarResult = await registrar.RegisterDomainAsync(registrationRequest);
+            }
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Registrar registration failed while processing paid order {OrderId} for domain {DomainName}", order.Id, domainName);
+        }
+
+        var registrationSucceeded = registrarResult?.Success == true;
+        var registrationDate = registrarResult?.RegistrationDate ?? (registrationSucceeded ? now : (DateTime?)null);
+        var expirationDate = registrarResult?.ExpirationDate ?? (registrationSucceeded ? now.AddYears(registrationYears) : (DateTime?)null);
+        var registrationError = registrationSucceeded
+            ? null
+            : registrarResult?.Message;
+
+        if (!registrationSucceeded && registrarResult?.Errors is { Count: > 0 })
+        {
+            registrationError = string.Join("; ", registrarResult.Errors.Where(e => !string.IsNullOrWhiteSpace(e)));
+        }
+
         var domain = new RegisteredDomain
         {
             CustomerId = order.CustomerId,
@@ -685,23 +744,63 @@ public class PaymentIntentService : IPaymentIntentService
             Name = domainName,
             NormalizedName = normalizedDomainName,
             RegistrarId = registrarId,
-            Status = DomainStatus.PendingRegistration.ToString(),
-            RegistrationStatus = DomainRegistrationStatus.PaidPendingRegistration,
-            RegistrationDate = null,
-            RegistrationAttemptCount = 0,
-            LastRegistrationAttemptUtc = null,
-            NextRegistrationAttemptUtc = DateTime.UtcNow,
-            RegistrationError = null,
+            Status = registrationSucceeded ? DomainStatus.Active.ToString() : DomainStatus.PendingRegistration.ToString(),
+            RegistrationStatus = registrationSucceeded ? DomainRegistrationStatus.Registered : DomainRegistrationStatus.PaidPendingRegistration,
+            RegistrationDate = registrationDate,
+            RegistrationAttemptCount = 1,
+            LastRegistrationAttemptUtc = now,
+            NextRegistrationAttemptUtc = registrationSucceeded ? null : now.AddMinutes(15),
+            RegistrationError = registrationError,
+            ExpirationDate = expirationDate,
             AutoRenew = order.AutoRenew || orderLine.IsRecurring,
             PrivacyProtection = hasPrivacyProtection,
             RegistrationPrice = calculatedPrice,
             RenewalPrice = orderLine.IsRecurring ? calculatedPrice : null,
             Notes = $"Auto-created from paid checkout order {order.OrderNumber}",
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            CreatedAt = now,
+            UpdatedAt = now
         };
 
         _context.RegisteredDomains.Add(domain);
+    }
+
+    private static int ExtractRegistrationYears(string orderLineDescription)
+    {
+        if (string.IsNullOrWhiteSpace(orderLineDescription))
+        {
+            return 1;
+        }
+
+        var start = orderLineDescription.IndexOf('(');
+        var end = orderLineDescription.IndexOf(')', start + 1);
+        if (start < 0 || end <= start)
+        {
+            return 1;
+        }
+
+        var content = orderLineDescription[(start + 1)..end];
+        var yearsToken = content
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .FirstOrDefault();
+
+        return int.TryParse(yearsToken, out var years) && years > 0 ? years : 1;
+    }
+
+    private static ContactInformation BuildContactFromCustomer(Customer? customer)
+    {
+        var fullName = customer?.Name?.Trim() ?? string.Empty;
+        var split = fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        var firstName = split.Length > 0 ? split[0] : "Customer";
+        var lastName = split.Length > 1 ? string.Join(' ', split.Skip(1)) : "User";
+
+        return new ContactInformation
+        {
+            FirstName = firstName,
+            LastName = lastName,
+            Email = customer?.Email ?? string.Empty,
+            Phone = customer?.Phone ?? string.Empty,
+            Country = "US"
+        };
     }
 
     private async Task EnsureHostingAccountForPaidOrderLineAsync(Order order, OrderLine orderLine)

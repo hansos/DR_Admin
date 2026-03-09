@@ -349,6 +349,7 @@ builder.Services.AddHostedService<ExchangeRateUpdateService>();
 builder.Services.AddHostedService<RegistrarTldPriceSyncBackgroundService>();
 builder.Services.AddHostedService<DatabaseBackupService>();
 builder.Services.AddHostedService<RecurringBillingBackgroundService>();
+builder.Services.AddHostedService<DomainRegistrationRetryBackgroundService>();
 
 // Configure CORS from appsettings
 var corsSettings = builder.Configuration.GetSection("CorsSettings");
