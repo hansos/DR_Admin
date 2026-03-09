@@ -730,22 +730,41 @@ function clearStripeError() {
     errorContainer.textContent = '';
     errorContainer.classList.add('d-none');
 }
+function setStripePaymentProcessing(isProcessing) {
+    const payButton = document.getElementById('checkout-stripe-pay-button');
+    if (payButton) {
+        if (!payButton.dataset.defaultLabel) {
+            payButton.dataset.defaultLabel = payButton.innerHTML;
+        }
+        payButton.disabled = isProcessing;
+        payButton.innerHTML = isProcessing
+            ? '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Processing payment...'
+            : (payButton.dataset.defaultLabel ?? 'Pay now');
+    }
+    const status = document.getElementById('checkout-payment-status');
+    if (status && isProcessing) {
+        status.textContent = 'Processing card payment. Please wait...';
+    }
+}
 async function confirmStripePayment() {
     const typedWindow = window;
     if (!stripeInstance || !stripeCardElement || !stripeClientSecret) {
         showStripeError('Stripe session is not initialized.');
         return;
     }
+    setStripePaymentProcessing(true);
     clearStripeError();
     const result = await stripeInstance.confirmCardPayment(stripeClientSecret, {
         payment_method: { card: stripeCardElement },
         return_url: `${window.location.origin}${buildCheckoutSuccessUrl('success')}`
     });
     if (result.error) {
+        setStripePaymentProcessing(false);
         showStripeError(result.error.message ?? 'Payment failed. Please check card details.');
         return;
     }
     if (!stripePaymentIntentId || stripePaymentIntentId <= 0) {
+        setStripePaymentProcessing(false);
         typedWindow.UserPanelAlerts?.showError('checkout-alert-error', 'Payment intent ID could not be resolved for API confirmation.');
         return;
     }
@@ -754,10 +773,12 @@ async function confirmStripePayment() {
         body: JSON.stringify('')
     }, true);
     if (!confirmResponse || !confirmResponse.success) {
+        setStripePaymentProcessing(false);
         typedWindow.UserPanelAlerts?.showError('checkout-alert-error', confirmResponse?.message ?? 'Payment was processed, but API confirmation failed.');
         return;
     }
     typedWindow.UserPanelAlerts?.showSuccess('checkout-alert-success', 'Payment confirmed. Recurring subscriptions are being synchronized.');
+    window.location.href = buildCheckoutSuccessUrl('success');
 }
 function calculateCheckoutTotal(state) {
     let total = 0;
