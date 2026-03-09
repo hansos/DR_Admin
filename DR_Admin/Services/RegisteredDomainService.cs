@@ -185,7 +185,9 @@ public class DomainRegistrationService : IRegisteredDomainService
 
             var domains = await _context.RegisteredDomains
                 .AsNoTracking()
-                .Where(d => d.ExpirationDate <= targetDate && d.ExpirationDate >= DateTime.UtcNow)
+                .Where(d => d.ExpirationDate.HasValue &&
+                            d.ExpirationDate <= targetDate &&
+                            d.ExpirationDate >= DateTime.UtcNow)
                 .Include(d => d.Registrar)
                 .Include(d => d.Customer)   
                 .OrderBy(d => d.Name)   
@@ -308,7 +310,12 @@ public class DomainRegistrationService : IRegisteredDomainService
                 NormalizedName = normalizedName,
                 RegistrarId = createDto.ProviderId,
                 Status = createDto.Status,
+                RegistrationStatus = createDto.RegistrationStatus,
                 RegistrationDate = createDto.RegistrationDate,
+                RegistrationAttemptCount = createDto.RegistrationAttemptCount,
+                LastRegistrationAttemptUtc = createDto.LastRegistrationAttemptUtc,
+                NextRegistrationAttemptUtc = createDto.NextRegistrationAttemptUtc,
+                RegistrationError = createDto.RegistrationError,
                 ExpirationDate = createDto.ExpirationDate,
                 AutoRenew = false,
                 PrivacyProtection = false,
@@ -382,7 +389,12 @@ public class DomainRegistrationService : IRegisteredDomainService
             domain.NormalizedName = normalizedName;
             domain.RegistrarId = updateDto.ProviderId;
             domain.Status = updateDto.Status;
+            domain.RegistrationStatus = updateDto.RegistrationStatus;
             domain.RegistrationDate = updateDto.RegistrationDate;
+            domain.RegistrationAttemptCount = updateDto.RegistrationAttemptCount;
+            domain.LastRegistrationAttemptUtc = updateDto.LastRegistrationAttemptUtc;
+            domain.NextRegistrationAttemptUtc = updateDto.NextRegistrationAttemptUtc;
+            domain.RegistrationError = updateDto.RegistrationError;
             domain.ExpirationDate = updateDto.ExpirationDate;
             domain.UpdatedAt = DateTime.UtcNow;
 
@@ -449,8 +461,13 @@ public class DomainRegistrationService : IRegisteredDomainService
             Name = domain.Name,
             ProviderId = domain.RegistrarId,
             Status = domain.Status,
+            RegistrationStatus = domain.RegistrationStatus,
             RegistrationDate = domain.RegistrationDate,
             ExpirationDate = domain.ExpirationDate,
+            RegistrationAttemptCount = domain.RegistrationAttemptCount,
+            LastRegistrationAttemptUtc = domain.LastRegistrationAttemptUtc,
+            NextRegistrationAttemptUtc = domain.NextRegistrationAttemptUtc,
+            RegistrationError = domain.RegistrationError,
             CreatedAt = domain.CreatedAt,
             UpdatedAt = domain.UpdatedAt,
             Customer = domain.Customer != null ? new CustomerDto

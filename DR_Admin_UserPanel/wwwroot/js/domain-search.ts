@@ -149,6 +149,7 @@ function initializeDomainSearch(): void {
     renderFloatingBasket();
     bindDomainSearchDeleteOrderActions();
     updateDomainSearchDeleteOrderVisibility();
+    updateFlowProgressIndicator();
 
     const addAndBundleButton = document.getElementById('domain-search-add-and-bundle') as HTMLButtonElement | null;
     addAndBundleButton?.addEventListener('click', () => {
@@ -179,12 +180,19 @@ function updateDomainSearchDeleteOrderVisibility(): void {
         isDomainSelectionLocked = true;
         setDomainFormLocked(true);
         addAndBundleButton.disabled = true;
+        renderResult(latestResult);
+        updateFlowProgressIndicator();
 
         setUpsellVisibility(true);
         void renderUpsellOptions();
 
         const upsellCard = document.getElementById('domain-search-upsell-card');
         upsellCard?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    const backToSearchButton = document.getElementById('domain-search-back-to-search') as HTMLButtonElement | null;
+    backToSearchButton?.addEventListener('click', () => {
+        switchToDomainSearchMode();
     });
 
     const recurringSelect = document.getElementById('domain-search-recurring') as HTMLSelectElement | null;
@@ -440,6 +448,9 @@ function clearDomainSearchOrderState(): void {
     const typedWindow = window as DomainSearchWindow;
     typedWindow.UserPanelCart?.clear();
     sessionStorage.removeItem(domainSearchCheckoutOrderMarkerStorageKey);
+    defaultRegistrarId = null;
+    defaultRegistrarCode = null;
+    defaultRegistrarCodeRequest = null;
 
     const domainInput = document.getElementById('domain-search-input') as HTMLInputElement | null;
     if (domainInput) {
@@ -475,7 +486,8 @@ async function deleteOrderFromDomainSearch(): Promise<void> {
 
     if (!response || !response.success) {
         if (response?.statusCode === 409) {
-            typedWindow.UserPanelAlerts?.showError('domain-search-alert-error', response.message ?? 'Order is already paid and cannot be deleted.');
+            clearDomainSearchOrderState();
+            typedWindow.UserPanelAlerts?.showSuccess('domain-search-alert-success', response.message ?? 'Order cannot be cancelled anymore. Local order session data was removed.');
             closeDomainSearchDeleteOrderModal();
             return;
         }
@@ -564,41 +576,59 @@ function renderResult(result: DomainAvailabilityResult | null): void {
         priceInfo.textContent = '';
         addAndBundleButton.classList.add('d-none');
         addAndBundleButton.disabled = false;
+        addAndBundleButton.innerHTML = '<i class="bi bi-bag-check"></i> Add domain & choose hosting/services';
         transferButton.classList.add('d-none');
         alternativesButton.classList.add('d-none');
         alternativesList.classList.add('d-none');
         alternativesList.innerHTML = '';
         summary.textContent = '';
+        renderSelectedDomainSummary(null);
         setUpsellVisibility(false);
+        updateFlowProgressIndicator();
         return;
     }
 
-    card.classList.remove('d-none');
-
     if (result.isAvailable) {
-        card.classList.remove('border-danger', 'bg-danger-subtle');
-        card.classList.add('border-success', 'bg-success-subtle');
-        summary.textContent = `${result.domainName} is available. Add it now and complete your bundle.`;
         const shownPrice = getSelectedDomainPrice(result);
-        if (shownPrice > 0) {
-            priceInfo.classList.remove('d-none');
-            priceInfo.textContent = `Price (${getSelectedPeriodYears()} year): ${shownPrice.toFixed(2)} ${latestCalculatedCurrency}`;
+        if (isDomainSelectionLocked) {
+            card.classList.add('d-none');
+            renderSelectedDomainSummary({
+                domainName: result.domainName,
+                periodYears: getSelectedPeriodYears(),
+                price: shownPrice > 0 ? `${shownPrice.toFixed(2)} ${latestCalculatedCurrency}` : 'Price unavailable'
+            });
         } else {
-            priceInfo.classList.remove('d-none');
-            priceInfo.textContent = 'Price for the selected TLD is currently unavailable.';
+            card.classList.remove('d-none');
+            renderSelectedDomainSummary(null);
+            card.classList.remove('border-danger', 'bg-danger-subtle');
+            card.classList.add('border-success', 'bg-success-subtle');
+            const years = getSelectedPeriodYears();
+            summary.innerHTML = `Your new domain: <strong>${escapeHtml(result.domainName)}</strong>, Price (${years} year${years > 1 ? 's' : ''}): ${shownPrice > 0 ? `${shownPrice.toFixed(2)} ${latestCalculatedCurrency}` : 'Price unavailable'}`;
+            if (shownPrice > 0) {
+                priceInfo.classList.add('d-none');
+                priceInfo.textContent = '';
+            } else {
+                priceInfo.classList.add('d-none');
+                priceInfo.textContent = '';
+            }
+
+            addAndBundleButton.classList.remove('d-none');
+            addAndBundleButton.disabled = false;
+            addAndBundleButton.innerHTML = `<i class="bi bi-bag-check"></i> ${getAddAndBundleButtonLabel(result)}`;
+            transferButton.classList.add('d-none');
+            alternativesButton.classList.add('d-none');
+            alternativesList.classList.add('d-none');
+            alternativesList.innerHTML = '';
         }
 
-        addAndBundleButton.classList.remove('d-none');
         addAndBundleButton.disabled = isDomainSelectionLocked;
-        transferButton.classList.add('d-none');
-        alternativesButton.classList.add('d-none');
-        alternativesList.classList.add('d-none');
-        alternativesList.innerHTML = '';
         setUpsellVisibility(isDomainSelectionLocked);
         if (isDomainSelectionLocked) {
             void renderUpsellOptions();
         }
     } else {
+        card.classList.remove('d-none');
+        renderSelectedDomainSummary(null);
         card.classList.remove('border-success', 'bg-success-subtle');
         card.classList.add('border-danger', 'bg-danger-subtle');
         summary.textContent = formatUnavailableDomainMessage(result);
@@ -606,12 +636,15 @@ function renderResult(result: DomainAvailabilityResult | null): void {
         priceInfo.textContent = '';
         addAndBundleButton.classList.add('d-none');
         addAndBundleButton.disabled = false;
+        addAndBundleButton.innerHTML = '<i class="bi bi-bag-check"></i> Add domain & choose hosting/services';
         transferButton.classList.remove('d-none');
         alternativesButton.classList.remove('d-none');
         alternativesList.classList.add('d-none');
         alternativesList.innerHTML = '';
         setUpsellVisibility(false);
     }
+
+    updateFlowProgressIndicator();
 }
 
 function formatUnavailableDomainMessage(result: DomainAvailabilityResult): string {
@@ -682,6 +715,92 @@ function getSelectedDomainPrice(result: DomainAvailabilityResult): number {
     }
 
     return latestCalculatedPrice ?? 0;
+}
+
+function getAddAndBundleButtonLabel(result: DomainAvailabilityResult): string {
+    const typedWindow = window as DomainSearchWindow;
+    const selectedDomainName = typedWindow.UserPanelCart?.getState()?.domain?.domainName ?? '';
+    if (selectedDomainName.trim().toLowerCase() === result.domainName.trim().toLowerCase()) {
+        return 'Continue with domain & choose hosting/services';
+    }
+
+    return 'Add domain & choose hosting/services';
+}
+
+function renderSelectedDomainSummary(selection: { domainName: string; periodYears: number; price: string } | null): void {
+    const card = document.getElementById('domain-search-selection-summary-card');
+    const domainElement = document.getElementById('domain-search-selection-summary-domain');
+    const priceElement = document.getElementById('domain-search-selection-summary-price');
+    if (!card || !domainElement || !priceElement) {
+        return;
+    }
+
+    if (!selection) {
+        card.classList.add('d-none');
+        domainElement.textContent = '';
+        priceElement.textContent = '';
+        return;
+    }
+
+    card.classList.remove('d-none');
+    domainElement.textContent = selection.domainName;
+    priceElement.textContent = `Price (${selection.periodYears} year${selection.periodYears > 1 ? 's' : ''}): ${selection.price}`;
+}
+
+function getCurrentFlowStep(): 1 | 2 | 3 {
+    const marker = getStoredCheckoutOrderMarker();
+    if ((marker?.orderId ?? 0) > 0) {
+        return 3;
+    }
+
+    if (isDomainSelectionLocked) {
+        return 2;
+    }
+
+    return 1;
+}
+
+function updateFlowProgressIndicator(): void {
+    const progressBar = document.getElementById('domain-search-flow-progress-bar');
+    const step1Indicator = document.getElementById('domain-search-flow-step-1-indicator');
+    const step2Indicator = document.getElementById('domain-search-flow-step-2-indicator');
+    const step3Indicator = document.getElementById('domain-search-flow-step-3-indicator');
+    const step1Label = document.getElementById('domain-search-flow-step-1-label');
+    const step2Label = document.getElementById('domain-search-flow-step-2-label');
+    const step3Label = document.getElementById('domain-search-flow-step-3-label');
+
+    if (!progressBar || !step1Indicator || !step2Indicator || !step3Indicator || !step1Label || !step2Label || !step3Label) {
+        return;
+    }
+
+    const step = getCurrentFlowStep();
+    const width = step === 1 ? 33 : step === 2 ? 66 : 100;
+    progressBar.setAttribute('aria-valuenow', width.toString());
+    (progressBar as HTMLElement).style.width = `${width}%`;
+
+    const applyState = (indicator: HTMLElement, label: HTMLElement, state: 'pending' | 'active' | 'completed'): void => {
+        indicator.classList.remove('bg-white', 'text-muted', 'border-secondary-subtle', 'bg-primary', 'text-white', 'border-primary', 'bg-success', 'border-success');
+        label.classList.remove('text-muted', 'text-primary', 'text-success', 'fw-semibold');
+
+        if (state === 'active') {
+            indicator.classList.add('bg-primary', 'text-white', 'border-primary');
+            label.classList.add('text-primary', 'fw-semibold');
+            return;
+        }
+
+        if (state === 'completed') {
+            indicator.classList.add('bg-success', 'text-white', 'border-success');
+            label.classList.add('text-success', 'fw-semibold');
+            return;
+        }
+
+        indicator.classList.add('bg-white', 'text-muted', 'border-secondary-subtle');
+        label.classList.add('text-muted');
+    };
+
+    applyState(step1Indicator as HTMLElement, step1Label as HTMLElement, step > 1 ? 'completed' : step === 1 ? 'active' : 'pending');
+    applyState(step2Indicator as HTMLElement, step2Label as HTMLElement, step > 2 ? 'completed' : step === 2 ? 'active' : 'pending');
+    applyState(step3Indicator as HTMLElement, step3Label as HTMLElement, step === 3 ? 'active' : 'pending');
 }
 
 async function applyDomainSettings(domainName: string): Promise<void> {
@@ -796,10 +915,9 @@ function renderFloatingBasket(): void {
     const typedWindow = window as DomainSearchWindow;
     const state = typedWindow.UserPanelCart?.getState();
     if (!state) {
-        panel.classList.remove('d-none');
-        linesContainer.innerHTML = '<div class="text-muted">Basket is empty.</div>';
+        panel.classList.add('d-none');
+        linesContainer.innerHTML = '';
         totalContainer.textContent = '0.00';
-        ensureBasketVisible(panel);
         updateDomainSearchDeleteOrderVisibility();
         return;
     }
@@ -837,10 +955,9 @@ function renderFloatingBasket(): void {
     }
 
     if (lines.length === 0) {
-        panel.classList.remove('d-none');
-        linesContainer.innerHTML = '<div class="text-muted">Basket is empty.</div>';
+        panel.classList.add('d-none');
+        linesContainer.innerHTML = '';
         totalContainer.textContent = '0.00';
-        ensureBasketVisible(panel);
         updateDomainSearchDeleteOrderVisibility();
         return;
     }
@@ -979,9 +1096,17 @@ function setDomainFormLocked(isLocked: boolean): void {
         element.disabled = isLocked;
     });
 
-    if (formCard) {
-        formCard.classList.toggle('opacity-75', isLocked);
-    }
+    formCard?.classList.toggle('d-none', isLocked);
+}
+
+function switchToDomainSearchMode(): void {
+    isDomainSelectionLocked = false;
+    setDomainFormLocked(false);
+    setUpsellVisibility(false);
+    renderResult(latestResult);
+
+    const domainInput = document.getElementById('domain-search-input') as HTMLInputElement | null;
+    domainInput?.focus();
 }
 
 async function getDomainRegistrationPrice(domainName: string, years: number): Promise<number | null> {
@@ -1318,10 +1443,8 @@ interface DefaultRegistrarSelection {
 }
 
 async function getDefaultRegistrarSelection(): Promise<DefaultRegistrarSelection | null> {
-    if (defaultRegistrarCode) {
-        return defaultRegistrarId && defaultRegistrarId > 0
-            ? { id: defaultRegistrarId, code: defaultRegistrarCode }
-            : null;
+    if (defaultRegistrarCode && defaultRegistrarId && defaultRegistrarId > 0) {
+        return { id: defaultRegistrarId, code: defaultRegistrarCode };
     }
 
     if (defaultRegistrarCodeRequest) {
@@ -1341,7 +1464,9 @@ async function getDefaultRegistrarSelection(): Promise<DefaultRegistrarSelection
             return null;
         }
 
-        const registrar = response.data.find((item: RegistrarLookupDto) => item.isDefault);
+        const registrar = defaultRegistrarCode
+            ? response.data.find((item: RegistrarLookupDto) => item.code === defaultRegistrarCode) ?? response.data.find((item: RegistrarLookupDto) => item.isDefault)
+            : response.data.find((item: RegistrarLookupDto) => item.isDefault);
         if (!registrar || !registrar.code || registrar.id <= 0) {
             return null;
         }

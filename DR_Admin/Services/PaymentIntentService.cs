@@ -185,11 +185,25 @@ public class PaymentIntentService : IPaymentIntentService
 
         if (mappedStatus == PaymentIntentStatus.Captured)
         {
-            entity.CapturedAt ??= DateTime.UtcNow;
-            await TryFinalizeCapturedPaymentAsync(entity, gateway, status.TransactionId, paymentMethodToken);
-            await EnsureRecurringSubscriptionForCapturedOrderAsync(entity);
-            await EnsureRecurringSubscriptionsFromIntentDescriptionAsync(entity);
-            await EnsurePaidOrderArtifactsAsync(entity);
+            await using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                entity.CapturedAt ??= DateTime.UtcNow;
+                await TryFinalizeCapturedPaymentAsync(entity, gateway, status.TransactionId, paymentMethodToken);
+                await EnsureRecurringSubscriptionForCapturedOrderAsync(entity);
+                await EnsureRecurringSubscriptionsFromIntentDescriptionAsync(entity);
+                await EnsurePaidOrderArtifactsAsync(entity);
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+
+            return true;
         }
         else if (mappedStatus == PaymentIntentStatus.Authorized)
         {
@@ -671,9 +685,13 @@ public class PaymentIntentService : IPaymentIntentService
             Name = domainName,
             NormalizedName = normalizedDomainName,
             RegistrarId = registrarId,
-            Status = DomainStatus.Active.ToString(),
-            RegistrationDate = DateTime.UtcNow,
-            ExpirationDate = order.EndDate > DateTime.UtcNow ? order.EndDate : DateTime.UtcNow.AddYears(1),
+            Status = DomainStatus.PendingRegistration.ToString(),
+            RegistrationStatus = DomainRegistrationStatus.PaidPendingRegistration,
+            RegistrationDate = null,
+            RegistrationAttemptCount = 0,
+            LastRegistrationAttemptUtc = null,
+            NextRegistrationAttemptUtc = DateTime.UtcNow,
+            RegistrationError = null,
             AutoRenew = order.AutoRenew || orderLine.IsRecurring,
             PrivacyProtection = hasPrivacyProtection,
             RegistrationPrice = calculatedPrice,

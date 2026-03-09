@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using ISPAdmin.Data.Entities;
+using ISPAdmin.Data.Enums;
 using ISPAdmin.Utilities;
 using OperatingSystem = ISPAdmin.Data.Entities.OperatingSystem;
 
@@ -719,6 +720,10 @@ public class ApplicationDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Name).IsRequired().HasMaxLength(255);
             entity.Property(e => e.Status).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.RegistrationStatus)
+                .HasConversion<int>()
+                .HasDefaultValue(DomainRegistrationStatus.PendingPayment);
+            entity.Property(e => e.RegistrationError).HasMaxLength(2000);
             entity.Property(e => e.RegistrationPrice).HasPrecision(18, 2);
             entity.Property(e => e.RenewalPrice).HasPrecision(18, 2);
             entity.Property(e => e.Notes).HasMaxLength(1000);
@@ -726,7 +731,9 @@ public class ApplicationDbContext : DbContext
             
             entity.HasIndex(e => e.Name).IsUnique();
             entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.RegistrationStatus);
             entity.HasIndex(e => e.ExpirationDate);
+            entity.HasIndex(e => e.NextRegistrationAttemptUtc);
             entity.HasIndex(e => e.NormalizedName).IsUnique();
             
             entity.HasOne(e => e.Customer)

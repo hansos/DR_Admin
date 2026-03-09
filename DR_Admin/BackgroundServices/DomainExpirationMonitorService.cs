@@ -61,6 +61,7 @@ public class DomainExpirationMonitorService : BackgroundService
         // Find domains expiring within 30 days
         var expiringDomains = await context.RegisteredDomains
             .Where(d => d.Status == DomainStatus.Active.ToString() &&
+                       d.ExpirationDate.HasValue &&
                        d.ExpirationDate <= DateTime.UtcNow.AddDays(30) &&
                        d.ExpirationDate > DateTime.UtcNow)
             .ToListAsync(cancellationToken);
@@ -74,7 +75,7 @@ public class DomainExpirationMonitorService : BackgroundService
 
             try
             {
-                var daysUntilExpiration = (domain.ExpirationDate - DateTime.UtcNow).Days;
+                var daysUntilExpiration = (domain.ExpirationDate!.Value - DateTime.UtcNow).Days;
                 
                 _log.Information("Processing expiring domain {DomainName} (expires in {Days} days)", 
                     domain.Name, daysUntilExpiration);
@@ -98,6 +99,7 @@ public class DomainExpirationMonitorService : BackgroundService
         // Find domains that have expired but status hasn't been updated
         var expiredDomains = await context.RegisteredDomains
             .Where(d => d.Status == DomainStatus.Active.ToString() &&
+                       d.ExpirationDate.HasValue &&
                        d.ExpirationDate < DateTime.UtcNow)
             .ToListAsync(cancellationToken);
 
@@ -122,7 +124,7 @@ public class DomainExpirationMonitorService : BackgroundService
                 {
                     AggregateId = domain.Id,
                     DomainName = domain.Name,
-                    ExpiredAt = domain.ExpirationDate,
+                    ExpiredAt = domain.ExpirationDate!.Value,
                     CustomerId = domain.CustomerId,
                     AutoRenewEnabled = domain.AutoRenew
                 });

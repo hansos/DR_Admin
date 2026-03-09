@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace ISPAdmin.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -692,6 +692,7 @@ namespace ISPAdmin.Migrations
                     TaxId = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
                     VatNumber = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
                     IsCompany = table.Column<bool>(type: "INTEGER", nullable: false),
+                    IsSelfRegistered = table.Column<bool>(type: "INTEGER", nullable: false),
                     IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
                     Status = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
                     CustomerStatusId = table.Column<int>(type: "INTEGER", nullable: true),
@@ -1699,8 +1700,13 @@ namespace ISPAdmin.Migrations
                     RegistrarId = table.Column<int>(type: "INTEGER", nullable: false),
                     RegistrarTldId = table.Column<int>(type: "INTEGER", nullable: true),
                     Status = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
-                    RegistrationDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    ExpirationDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    RegistrationStatus = table.Column<int>(type: "INTEGER", nullable: false, defaultValue: 0),
+                    RegistrationDate = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    RegistrationAttemptCount = table.Column<int>(type: "INTEGER", nullable: false),
+                    LastRegistrationAttemptUtc = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    NextRegistrationAttemptUtc = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    RegistrationError = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: true),
+                    ExpirationDate = table.Column<DateTime>(type: "TEXT", nullable: true),
                     AutoRenew = table.Column<bool>(type: "INTEGER", nullable: false),
                     PrivacyProtection = table.Column<bool>(type: "INTEGER", nullable: false),
                     RegistrationPrice = table.Column<decimal>(type: "TEXT", precision: 18, scale: 2, nullable: true),
@@ -3378,6 +3384,11 @@ namespace ISPAdmin.Migrations
                 column: "IsActive");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Customers_IsSelfRegistered",
+                table: "Customers",
+                column: "IsSelfRegistered");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Customers_NormalizedCustomerName",
                 table: "Customers",
                 column: "NormalizedCustomerName");
@@ -4051,6 +4062,11 @@ namespace ISPAdmin.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_RegisteredDomains_NextRegistrationAttemptUtc",
+                table: "RegisteredDomains",
+                column: "NextRegistrationAttemptUtc");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_RegisteredDomains_NormalizedName",
                 table: "RegisteredDomains",
                 column: "NormalizedName",
@@ -4065,6 +4081,11 @@ namespace ISPAdmin.Migrations
                 name: "IX_RegisteredDomains_RegistrarTldId",
                 table: "RegisteredDomains",
                 column: "RegistrarTldId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RegisteredDomains_RegistrationStatus",
+                table: "RegisteredDomains",
+                column: "RegistrationStatus");
 
             migrationBuilder.CreateIndex(
                 name: "IX_RegisteredDomains_ServiceId",

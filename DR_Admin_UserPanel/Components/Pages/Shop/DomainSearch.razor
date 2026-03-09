@@ -73,12 +73,30 @@
     </div>
 </div>
 
-    <div class="card border-0 bg-light-subtle mb-3">
+    <div class="card border-0 bg-light-subtle mb-3" id="domain-search-flow-card">
         <div class="card-body py-3">
-            <div class="row g-2 small text-muted">
-                <div class="col-12 col-md-4"><strong>1.</strong> Search your domain</div>
-                <div class="col-12 col-md-4"><strong>2.</strong> Add services and hosting</div>
-                <div class="col-12 col-md-4"><strong>3.</strong> Complete checkout</div>
+            <div class="progress mb-3" style="height: 0.5rem;">
+                <div id="domain-search-flow-progress-bar" class="progress-bar" role="progressbar" style="width: 33%" aria-valuemin="0" aria-valuemax="100" aria-valuenow="33"></div>
+            </div>
+            <div class="row g-3 text-center small">
+                <div class="col-4">
+                    <div id="domain-search-flow-step-1-indicator" class="mx-auto mb-2 rounded-circle border d-flex align-items-center justify-content-center bg-primary text-white border-primary" style="width: 2.2rem; height: 2.2rem;">
+                        <i class="bi bi-search"></i>
+                    </div>
+                    <div id="domain-search-flow-step-1-label" class="fw-semibold text-primary">Search your domain</div>
+                </div>
+                <div class="col-4">
+                    <div id="domain-search-flow-step-2-indicator" class="mx-auto mb-2 rounded-circle border d-flex align-items-center justify-content-center bg-white text-muted border-secondary-subtle" style="width: 2.2rem; height: 2.2rem;">
+                        <i class="bi bi-box-seam"></i>
+                    </div>
+                    <div id="domain-search-flow-step-2-label" class="text-muted">Add services and hosting</div>
+                </div>
+                <div class="col-4">
+                    <div id="domain-search-flow-step-3-indicator" class="mx-auto mb-2 rounded-circle border d-flex align-items-center justify-content-center bg-white text-muted border-secondary-subtle" style="width: 2.2rem; height: 2.2rem;">
+                        <i class="bi bi-credit-card"></i>
+                    </div>
+                    <div id="domain-search-flow-step-3-label" class="text-muted">Complete checkout</div>
+                </div>
             </div>
         </div>
     </div>
@@ -139,6 +157,14 @@
         </div>
     </div>
 
+    <div class="card shadow-sm mt-3 d-none" id="domain-search-selection-summary-card">
+        <div class="card-body">
+            <h2 class="h6">Selected domain</h2>
+            <p id="domain-search-selection-summary-domain" class="mb-1 fw-semibold"></p>
+            <p id="domain-search-selection-summary-price" class="mb-0 text-muted"></p>
+        </div>
+    </div>
+
     <div class="card shadow-sm mt-3 d-none" id="domain-search-upsell-card">
         <div class="card-body">
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
@@ -146,6 +172,9 @@
                     <h2 class="h6 mb-1">Configure your domain bundle</h2>
                     <p class="text-muted small mb-0">Selected hosting: <span id="domain-search-upsell-hosting-count">0</span> • Selected services: <span id="domain-search-upsell-service-count">0</span></p>
                 </div>
+                <button id="domain-search-back-to-search" type="button" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Change domain
+                </button>
             </div>
 
             <div class="row g-3 mb-3">
@@ -158,8 +187,8 @@
                 <div class="col-12 col-md-3">
                     <label for="domain-search-recurring" class="form-label">Payment mode</label>
                     <select id="domain-search-recurring" class="form-select">
-                        <option value="one-time" selected>One-time</option>
-                        <option value="recurring">Recurring</option>
+                        <option value="one-time">One-time</option>
+                        <option value="recurring" selected>Recurring</option>
                     </select>
                 </div>
                 <div class="col-12 col-md-5 d-flex align-items-end">

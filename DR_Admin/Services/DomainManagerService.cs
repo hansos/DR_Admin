@@ -402,9 +402,9 @@ public class DomainManagerService : IDomainManagerService
     {
         // If expiration date is in the future, calculate years from now to expiration
         // Otherwise default to 1 year
-        if (domain.ExpirationDate > DateTime.UtcNow)
+        if (domain.ExpirationDate.HasValue && domain.ExpirationDate > DateTime.UtcNow)
         {
-            var years = (domain.ExpirationDate - DateTime.UtcNow).TotalDays / 365.25;
+            var years = (domain.ExpirationDate.Value - DateTime.UtcNow).TotalDays / 365.25;
             return Math.Max(1, (int)Math.Ceiling(years));
         }
         

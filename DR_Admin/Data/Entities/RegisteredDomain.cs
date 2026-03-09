@@ -1,3 +1,5 @@
+using ISPAdmin.Data.Enums;
+
 namespace ISPAdmin.Data.Entities;
 
 public class RegisteredDomain : EntityBase
@@ -8,8 +10,13 @@ public class RegisteredDomain : EntityBase
     public int RegistrarId { get; set; }
     public int? RegistrarTldId { get; set; }
     public string Status { get; set; } = string.Empty;
-    public DateTime RegistrationDate { get; set; }
-    public DateTime ExpirationDate { get; set; }
+    public DomainRegistrationStatus RegistrationStatus { get; set; } = DomainRegistrationStatus.PendingPayment;
+    public DateTime? RegistrationDate { get; set; }
+    public int RegistrationAttemptCount { get; set; }
+    public DateTime? LastRegistrationAttemptUtc { get; set; }
+    public DateTime? NextRegistrationAttemptUtc { get; set; }
+    public string? RegistrationError { get; set; }
+    public DateTime? ExpirationDate { get; set; }
     public bool AutoRenew { get; set; }
     public bool PrivacyProtection { get; set; }
     public decimal? RegistrationPrice { get; set; }

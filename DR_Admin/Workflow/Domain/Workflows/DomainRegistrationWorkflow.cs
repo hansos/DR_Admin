@@ -188,7 +188,12 @@ public class DomainRegistrationWorkflow : IDomainRegistrationWorkflow
                 ServiceId = order.ServiceId,
                 RegistrarId = registrar.Id,
                 Status = DomainStatus.Active.ToString(),
+                RegistrationStatus = DomainRegistrationStatus.Registered,
                 RegistrationDate = DateTime.UtcNow,
+                RegistrationAttemptCount = 1,
+                LastRegistrationAttemptUtc = DateTime.UtcNow,
+                NextRegistrationAttemptUtc = null,
+                RegistrationError = null,
                 ExpirationDate = simulatedExpirationDate, // Use simulated date
                 AutoRenew = order.AutoRenew,
                 PrivacyProtection = false,
@@ -213,7 +218,7 @@ public class DomainRegistrationWorkflow : IDomainRegistrationWorkflow
                 DomainName = domain.Name,
                 CustomerId = domain.CustomerId,
                 RegistrarId = domain.RegistrarId,
-                ExpirationDate = domain.ExpirationDate,
+                ExpirationDate = domain.ExpirationDate!.Value,
                 RegistrationPrice = domain.RegistrationPrice ?? 0,
                 AutoRenew = domain.AutoRenew
             });

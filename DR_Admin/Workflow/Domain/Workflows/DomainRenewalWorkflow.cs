@@ -55,8 +55,14 @@ public class DomainRenewalWorkflow : IDomainRenewalWorkflow
                 return WorkflowResult.Failed($"Domain with ID {domainId} not found");
             }
 
+            if (!domain.ExpirationDate.HasValue)
+            {
+                _log.Warning("Domain {DomainName} has no expiration date and cannot be renewed yet", domain.Name);
+                return WorkflowResult.Failed("Domain has no expiration date");
+            }
+
             // Check if renewal is needed
-            var daysUntilExpiration = (domain.ExpirationDate - DateTime.UtcNow).Days;
+            var daysUntilExpiration = (domain.ExpirationDate.Value - DateTime.UtcNow).Days;
 
             if (daysUntilExpiration > 30)
             {
@@ -138,8 +144,8 @@ public class DomainRenewalWorkflow : IDomainRenewalWorkflow
                 if (renewalSuccessful)
                 {
                     // Update domain expiration date
-                    var previousExpiration = domain.ExpirationDate;
-                    domain.ExpirationDate = domain.ExpirationDate.AddYears(1); // Extend by 1 year
+                    var previousExpiration = domain.ExpirationDate ?? DateTime.UtcNow;
+                    domain.ExpirationDate = previousExpiration.AddYears(1); // Extend by 1 year
                     domain.UpdatedAt = DateTime.UtcNow;
 
                     // Mark invoice as paid
@@ -160,7 +166,7 @@ public class DomainRenewalWorkflow : IDomainRenewalWorkflow
                         AggregateId = domain.Id,
                         DomainName = domain.Name,
                         PreviousExpirationDate = previousExpiration,
-                        NewExpirationDate = domain.ExpirationDate,
+                        NewExpirationDate = domain.ExpirationDate.Value,
                         RenewalPrice = domain.RenewalPrice ?? 0,
                         RenewalYears = 1
                     });
@@ -206,7 +212,7 @@ public class DomainRenewalWorkflow : IDomainRenewalWorkflow
             CustomerId = domain.CustomerId,
             Status = InvoiceStatus.Draft,
             IssueDate = DateTime.UtcNow,
-            DueDate = domain.ExpirationDate,
+            DueDate = domain.ExpirationDate ?? DateTime.UtcNow.AddDays(14),
             SubTotal = domain.RenewalPrice ?? 12.99m,
             TaxAmount = 0,
             TotalAmount = domain.RenewalPrice ?? 12.99m,

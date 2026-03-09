@@ -3923,12 +3923,18 @@ namespace ISPAdmin.Migrations
                     b.Property<int>("CustomerId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTime>("ExpirationDate")
+                    b.Property<DateTime?>("ExpirationDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("LastRegistrationAttemptUtc")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(255)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("NextRegistrationAttemptUtc")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("NormalizedName")
@@ -3949,12 +3955,24 @@ namespace ISPAdmin.Migrations
                     b.Property<int?>("RegistrarTldId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTime>("RegistrationDate")
+                    b.Property<int>("RegistrationAttemptCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("RegistrationDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RegistrationError")
+                        .HasMaxLength(2000)
                         .HasColumnType("TEXT");
 
                     b.Property<decimal?>("RegistrationPrice")
                         .HasPrecision(18, 2)
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("RegistrationStatus")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(0);
 
                     b.Property<decimal?>("RenewalPrice")
                         .HasPrecision(18, 2)
@@ -3980,12 +3998,16 @@ namespace ISPAdmin.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
+                    b.HasIndex("NextRegistrationAttemptUtc");
+
                     b.HasIndex("NormalizedName")
                         .IsUnique();
 
                     b.HasIndex("RegistrarId");
 
                     b.HasIndex("RegistrarTldId");
+
+                    b.HasIndex("RegistrationStatus");
 
                     b.HasIndex("ServiceId");
 
