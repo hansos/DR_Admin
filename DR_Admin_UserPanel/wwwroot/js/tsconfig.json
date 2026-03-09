@@ -27,6 +27,7 @@
     "account-customer-page.ts",
     "domain-search.ts",
     "checkout.ts",
+    "checkout-success.ts",
     "dashboard-summary.ts",
     "domains.ts",
     "domain-details.ts",

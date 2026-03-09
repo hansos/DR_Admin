@@ -32,10 +32,24 @@ function getRecurringModeIntervalDays(mode) {
 }
 const checkoutOrderMarkerStorageKey = 'up_checkout_last_added_order';
 const checkoutDomainSearchPath = '/shop/domain-search';
+const checkoutSuccessPath = '/shop/checkout/success';
 let stripeInstance = null;
 let stripeCardElement = null;
 let stripeClientSecret = null;
 let stripePaymentIntentId = null;
+function buildCheckoutSuccessUrl(paymentStatus) {
+    const params = new URLSearchParams();
+    params.set('paymentStatus', paymentStatus);
+    const marker = getStoredOrderMarker();
+    if (marker && marker.orderId > 0) {
+        params.set('orderId', marker.orderId.toString());
+        const orderNumbers = (Array.isArray(marker.orderNumbers) && marker.orderNumbers.length > 0)
+            ? marker.orderNumbers
+            : [marker.orderNumber];
+        params.set('orderNumbers', orderNumbers.join(','));
+    }
+    return `${checkoutSuccessPath}?${params.toString()}`;
+}
 function initializeCheckout() {
     const page = document.getElementById('checkout-page');
     if (!page || page.dataset.bound === 'true') {
@@ -638,8 +652,8 @@ async function continueToPayment() {
             currency: 'EUR',
             paymentGatewayId: 0,
             paymentInstrument: selectedInstrument,
-            returnUrl: `${baseUrl}/shop/checkout?paymentStatus=success`,
-            cancelUrl: `${baseUrl}/shop/checkout?paymentStatus=failed`,
+            returnUrl: `${baseUrl}${buildCheckoutSuccessUrl('success')}`,
+            cancelUrl: `${baseUrl}${buildCheckoutSuccessUrl('failed')}`,
             description: `Checkout payment for order ${markerOrderLabel}`
         })
     }, true);
@@ -725,7 +739,7 @@ async function confirmStripePayment() {
     clearStripeError();
     const result = await stripeInstance.confirmCardPayment(stripeClientSecret, {
         payment_method: { card: stripeCardElement },
-        return_url: `${window.location.origin}/shop/checkout?paymentStatus=success`
+        return_url: `${window.location.origin}${buildCheckoutSuccessUrl('success')}`
     });
     if (result.error) {
         showStripeError(result.error.message ?? 'Payment failed. Please check card details.');
@@ -986,13 +1000,16 @@ function renderPaymentStatusFromQuery() {
     }
     const normalized = status.toLowerCase();
     if (normalized === 'success') {
-        container.textContent = 'Payment completed successfully.';
+        container.textContent = 'Payment completed successfully. Redirecting...';
+        window.location.href = buildCheckoutSuccessUrl('success');
     }
     else if (normalized === 'failed') {
-        container.textContent = 'Payment failed. Please retry.';
+        container.textContent = 'Payment failed. Redirecting...';
+        window.location.href = buildCheckoutSuccessUrl('failed');
     }
     else {
-        container.textContent = 'Payment is pending confirmation.';
+        container.textContent = 'Payment is pending confirmation. Redirecting...';
+        window.location.href = buildCheckoutSuccessUrl('pending');
     }
 }
 if (document.readyState === 'loading') {

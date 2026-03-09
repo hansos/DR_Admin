@@ -1,0 +1,50 @@
+@page "/shop/checkout/success"
+
+<PageTitle>Checkout status</PageTitle>
+
+<div class="container py-4" id="checkout-success-page">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <h1 class="h4 mb-1">Checkout status</h1>
+            <p class="text-muted mb-0" id="checkout-success-subtitle">Review your payment and provisioning status.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a id="checkout-success-primary-link" href="/domains" class="btn btn-primary">Go to domains</a>
+            <a href="/billing/invoices" class="btn btn-outline-secondary">View invoices</a>
+        </div>
+    </div>
+
+    <div id="checkout-success-alert-success" class="alert alert-success d-none" role="alert"></div>
+    <div id="checkout-success-alert-error" class="alert alert-danger d-none" role="alert"></div>
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-body">
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <span id="checkout-success-badge" class="badge bg-success">Paid</span>
+                <span class="small text-muted" id="checkout-success-payment-status-text">Payment status</span>
+            </div>
+            <p class="mb-0" id="checkout-success-message">Your order was processed.</p>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-header">Order details</div>
+        <div class="card-body">
+            <div class="mb-2">Primary order ID: <span class="fw-semibold" id="checkout-success-order-id">-</span></div>
+            <div>
+                <div class="small text-muted mb-1">Order numbers</div>
+                <div id="checkout-success-order-numbers" class="small">No order data available.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header">What next</div>
+        <div class="card-body">
+            <ul class="mb-0" id="checkout-success-next-steps">
+                <li>Open your invoices to verify payment records.</li>
+                <li>Go to domains to manage newly registered domains.</li>
+            </ul>
+        </div>
+    </div>
+</div>
