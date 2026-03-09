@@ -114,5 +114,10 @@ public class Service : EntityBase
     /// Collection of quote lines for this service
     /// </summary>
     public ICollection<QuoteLine> QuoteLines { get; set; } = new List<QuoteLine>();
+
+    /// <summary>
+    /// Collection of sold optional service instances
+    /// </summary>
+    public ICollection<SoldOptionalService> SoldOptionalServices { get; set; } = new List<SoldOptionalService>();
 }
 

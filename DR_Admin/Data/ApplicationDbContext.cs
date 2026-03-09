@@ -248,6 +248,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<BillingCycle> BillingCycles { get; set; }
     public DbSet<Order> Orders { get; set; }
     public DbSet<OrderLine> OrderLines { get; set; }
+    public DbSet<SoldHostingPackage> SoldHostingPackages { get; set; }
+    public DbSet<SoldOptionalService> SoldOptionalServices { get; set; }
     public DbSet<Invoice> Invoices { get; set; }
     public DbSet<InvoiceLine> InvoiceLines { get; set; }
     public DbSet<PaymentTransaction> PaymentTransactions { get; set; }
@@ -648,6 +650,84 @@ public class ApplicationDbContext : DbContext
                 .OnDelete(DeleteBehavior.SetNull);
 
             entity.HasIndex(e => new { e.OrderId, e.LineNumber });
+        });
+
+        // SoldHostingPackage configuration
+        modelBuilder.Entity<SoldHostingPackage>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Status).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.BillingCycle).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.SetupFee).HasPrecision(18, 2);
+            entity.Property(e => e.RecurringPrice).HasPrecision(18, 2);
+            entity.Property(e => e.CurrencyCode).IsRequired().HasMaxLength(3);
+            entity.Property(e => e.ConfigurationSnapshotJson).HasMaxLength(4000);
+            entity.Property(e => e.Notes).HasMaxLength(2000);
+
+            entity.HasIndex(e => e.CustomerId);
+            entity.HasIndex(e => e.HostingPackageId);
+            entity.HasIndex(e => e.OrderId);
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.NextBillingDate);
+
+            entity.HasOne(e => e.Customer)
+                .WithMany(c => c.SoldHostingPackages)
+                .HasForeignKey(e => e.CustomerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.HostingPackage)
+                .WithMany(p => p.SoldHostingPackages)
+                .HasForeignKey(e => e.HostingPackageId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Order)
+                .WithMany(o => o.SoldHostingPackages)
+                .HasForeignKey(e => e.OrderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.OrderLine)
+                .WithMany(ol => ol.SoldHostingPackages)
+                .HasForeignKey(e => e.OrderLineId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // SoldOptionalService configuration
+        modelBuilder.Entity<SoldOptionalService>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Status).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.BillingCycle).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.UnitPrice).HasPrecision(18, 2);
+            entity.Property(e => e.TotalPrice).HasPrecision(18, 2);
+            entity.Property(e => e.CurrencyCode).IsRequired().HasMaxLength(3);
+            entity.Property(e => e.ConfigurationSnapshotJson).HasMaxLength(4000);
+            entity.Property(e => e.Notes).HasMaxLength(2000);
+
+            entity.HasIndex(e => e.CustomerId);
+            entity.HasIndex(e => e.ServiceId);
+            entity.HasIndex(e => e.OrderId);
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.NextBillingDate);
+
+            entity.HasOne(e => e.Customer)
+                .WithMany(c => c.SoldOptionalServices)
+                .HasForeignKey(e => e.CustomerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Service)
+                .WithMany(s => s.SoldOptionalServices)
+                .HasForeignKey(e => e.ServiceId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Order)
+                .WithMany(o => o.SoldOptionalServices)
+                .HasForeignKey(e => e.OrderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.OrderLine)
+                .WithMany(ol => ol.SoldOptionalServices)
+                .HasForeignKey(e => e.OrderLineId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         // Invoice configuration

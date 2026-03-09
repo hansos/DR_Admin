@@ -68,6 +68,8 @@ public class Customer : EntityBase
     public ICollection<User> Users { get; set; } = new List<User>();
     public ICollection<Invoice> Invoices { get; set; } = new List<Invoice>();
     public ICollection<Order> Orders { get; set; } = new List<Order>();
+    public ICollection<SoldHostingPackage> SoldHostingPackages { get; set; } = new List<SoldHostingPackage>();
+    public ICollection<SoldOptionalService> SoldOptionalServices { get; set; } = new List<SoldOptionalService>();
     public ICollection<RegisteredDomain> RegisteredDomains { get; set; } = new List<RegisteredDomain>();
     public ICollection<HostingAccount> HostingAccounts { get; set; } = new List<HostingAccount>();
     public ICollection<CustomerAddress> CustomerAddresses { get; set; } = new List<CustomerAddress>();

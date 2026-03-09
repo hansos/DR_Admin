@@ -28,6 +28,13 @@ public class DomainRegistrationWorkflow : IDomainRegistrationWorkflow
     private readonly IOrderService _orderService;
     private readonly DomainRegistrarFactory _registrarFactory;
     private static readonly Serilog.ILogger _log = Serilog.Log.ForContext<DomainRegistrationWorkflow>();
+    private static readonly ContactRoleType[] RequiredContactRoles =
+    [
+        ContactRoleType.Registrant,
+        ContactRoleType.Administrative,
+        ContactRoleType.Technical,
+        ContactRoleType.Billing
+    ];
 
     public DomainRegistrationWorkflow(
         ApplicationDbContext context,
@@ -211,7 +218,11 @@ public class DomainRegistrationWorkflow : IDomainRegistrationWorkflow
 
             await _context.SaveChangesAsync();
 
-            // Step 4: Publish domain registered event
+            // Step 4: Ensure related domain data is initialized
+            await EnsurePostRegistrationDataAsync(domain);
+            await _context.SaveChangesAsync();
+
+            // Step 5: Publish domain registered event
             await _eventPublisher.PublishAsync(new DomainRegisteredEvent
             {
                 AggregateId = domain.Id,
@@ -223,7 +234,7 @@ public class DomainRegistrationWorkflow : IDomainRegistrationWorkflow
                 AutoRenew = domain.AutoRenew
             });
 
-            // Step 5: Publish order activated event
+            // Step 6: Publish order activated event
             await _eventPublisher.PublishAsync(new OrderActivatedEvent
             {
                 AggregateId = order.Id,
@@ -424,6 +435,246 @@ public class DomainRegistrationWorkflow : IDomainRegistrationWorkflow
 
         var nextNumber = (lastInvoice?.Id ?? 0) + 1;
         return $"INV-{DateTime.UtcNow.Year}-{nextNumber:D5}";
+    }
+
+    private async Task EnsurePostRegistrationDataAsync(RegisteredDomainEntity domain)
+    {
+        if (domain.Customer == null)
+        {
+            domain.Customer = await _context.Customers
+                .FirstOrDefaultAsync(c => c.Id == domain.CustomerId);
+        }
+
+        await EnsureDefaultDnsRecordsAsync(domain.Id);
+        await EnsureDomainContactsAndAssignmentsAsync(domain);
+    }
+
+    private async Task EnsureDefaultDnsRecordsAsync(int domainId)
+    {
+        var hasDnsRecords = await _context.DnsRecords
+            .AnyAsync(r => r.DomainId == domainId && !r.IsDeleted);
+
+        if (hasDnsRecords)
+        {
+            return;
+        }
+
+        var package = await _context.DnsZonePackages
+            .Include(p => p.Records)
+            .Where(p => p.IsActive)
+            .OrderByDescending(p => p.IsDefault)
+            .ThenBy(p => p.SortOrder)
+            .ThenBy(p => p.Id)
+            .FirstOrDefaultAsync();
+
+        if (package == null || package.Records.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var templateRecord in package.Records)
+        {
+            _context.DnsRecords.Add(new DnsRecord
+            {
+                DomainId = domainId,
+                DnsRecordTypeId = templateRecord.DnsRecordTypeId,
+                Name = templateRecord.Name,
+                Value = templateRecord.Value,
+                TTL = templateRecord.TTL,
+                Priority = templateRecord.Priority,
+                Weight = templateRecord.Weight,
+                Port = templateRecord.Port,
+                IsPendingSync = true,
+                IsDeleted = false
+            });
+        }
+    }
+
+    private async Task EnsureDomainContactsAndAssignmentsAsync(RegisteredDomainEntity domain)
+    {
+        var activeContactPeople = await _context.ContactPersons
+            .Where(cp => cp.CustomerId == domain.CustomerId && cp.IsActive)
+            .OrderByDescending(cp => cp.IsPrimary)
+            .ThenBy(cp => cp.Id)
+            .ToListAsync();
+
+        if (activeContactPeople.Count == 0)
+        {
+            var fallbackContactPerson = await EnsureFallbackContactPersonAsync(domain);
+            activeContactPeople.Add(fallbackContactPerson);
+        }
+
+        var existingAssignmentRoles = await _context.DomainContactAssignments
+            .Where(a => a.RegisteredDomainId == domain.Id && a.IsActive)
+            .Select(a => a.RoleType)
+            .Distinct()
+            .ToListAsync();
+
+        var existingContactRoles = await _context.DomainContacts
+            .Where(c => c.DomainId == domain.Id && c.IsCurrentVersion)
+            .Select(c => c.RoleType)
+            .Distinct()
+            .ToListAsync();
+
+        var assignmentRoleSet = existingAssignmentRoles.ToHashSet();
+        var contactRoleSet = existingContactRoles.ToHashSet();
+
+        foreach (var role in RequiredContactRoles)
+        {
+            var selectedContactPerson = SelectContactPersonForRole(activeContactPeople, role);
+
+            if (selectedContactPerson != null && !assignmentRoleSet.Contains(role))
+            {
+                _context.DomainContactAssignments.Add(new DomainContactAssignment
+                {
+                    RegisteredDomainId = domain.Id,
+                    ContactPersonId = selectedContactPerson.Id,
+                    RoleType = role,
+                    AssignedAt = DateTime.UtcNow,
+                    IsActive = true
+                });
+
+                assignmentRoleSet.Add(role);
+            }
+
+            if (contactRoleSet.Contains(role))
+            {
+                continue;
+            }
+
+            _context.DomainContacts.Add(BuildDomainContact(domain, selectedContactPerson, role));
+            contactRoleSet.Add(role);
+        }
+    }
+
+    private async Task<ContactPerson> EnsureFallbackContactPersonAsync(RegisteredDomainEntity domain)
+    {
+        var existingContactPerson = await _context.ContactPersons
+            .Where(cp => cp.CustomerId == domain.CustomerId)
+            .OrderByDescending(cp => cp.IsPrimary)
+            .ThenBy(cp => cp.Id)
+            .FirstOrDefaultAsync();
+
+        if (existingContactPerson != null)
+        {
+            if (!existingContactPerson.IsActive)
+            {
+                existingContactPerson.IsActive = true;
+            }
+
+            return existingContactPerson;
+        }
+
+        var firstName = "Customer";
+        var lastName = "User";
+        var fullName = domain.Customer?.Name?.Trim();
+
+        if (!string.IsNullOrWhiteSpace(fullName))
+        {
+            var split = fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            if (split.Length > 0)
+            {
+                firstName = split[0];
+                lastName = split.Length > 1 ? string.Join(' ', split.Skip(1)) : "User";
+            }
+        }
+
+        var contactPerson = new ContactPerson
+        {
+            CustomerId = domain.CustomerId,
+            FirstName = firstName,
+            LastName = lastName,
+            Email = domain.Customer?.Email ?? string.Empty,
+            Phone = domain.Customer?.Phone ?? string.Empty,
+            IsPrimary = true,
+            IsActive = true,
+            IsDefaultOwner = true,
+            IsDefaultAdministrator = true,
+            IsDefaultTech = true,
+            IsDefaultBilling = true,
+            IsDomainGlobal = true,
+            Notes = $"Auto-created from domain registration for {domain.Name}"
+        };
+
+        _context.ContactPersons.Add(contactPerson);
+        await _context.SaveChangesAsync();
+
+        return contactPerson;
+    }
+
+    private static ContactPerson? SelectContactPersonForRole(
+        IReadOnlyList<ContactPerson> contactPeople,
+        ContactRoleType role)
+    {
+        if (contactPeople.Count == 0)
+        {
+            return null;
+        }
+
+        return role switch
+        {
+            ContactRoleType.Registrant => contactPeople.FirstOrDefault(cp => cp.IsDefaultOwner)
+                ?? contactPeople.FirstOrDefault(cp => cp.IsPrimary)
+                ?? contactPeople[0],
+            ContactRoleType.Administrative => contactPeople.FirstOrDefault(cp => cp.IsDefaultAdministrator)
+                ?? contactPeople.FirstOrDefault(cp => cp.IsDefaultOwner)
+                ?? contactPeople.FirstOrDefault(cp => cp.IsPrimary)
+                ?? contactPeople[0],
+            ContactRoleType.Technical => contactPeople.FirstOrDefault(cp => cp.IsDefaultTech)
+                ?? contactPeople.FirstOrDefault(cp => cp.IsDefaultAdministrator)
+                ?? contactPeople.FirstOrDefault(cp => cp.IsPrimary)
+                ?? contactPeople[0],
+            ContactRoleType.Billing => contactPeople.FirstOrDefault(cp => cp.IsDefaultBilling)
+                ?? contactPeople.FirstOrDefault(cp => cp.IsDefaultOwner)
+                ?? contactPeople.FirstOrDefault(cp => cp.IsPrimary)
+                ?? contactPeople[0],
+            _ => contactPeople[0]
+        };
+    }
+
+    private static DomainContact BuildDomainContact(
+        RegisteredDomainEntity domain,
+        ContactPerson? selectedContactPerson,
+        ContactRoleType role)
+    {
+        var firstName = selectedContactPerson?.FirstName;
+        var lastName = selectedContactPerson?.LastName;
+
+        if (string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(lastName))
+        {
+            firstName = "Customer";
+            lastName = "User";
+            var fullName = domain.Customer?.Name?.Trim();
+            if (!string.IsNullOrWhiteSpace(fullName))
+            {
+                var split = fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                if (split.Length > 0)
+                {
+                    firstName = split[0];
+                    lastName = split.Length > 1 ? string.Join(' ', split.Skip(1)) : "User";
+                }
+            }
+        }
+
+        return new DomainContact
+        {
+            DomainId = domain.Id,
+            RoleType = role,
+            FirstName = firstName,
+            LastName = lastName,
+            Email = selectedContactPerson?.Email ?? domain.Customer?.Email ?? string.Empty,
+            Phone = selectedContactPerson?.Phone ?? domain.Customer?.Phone ?? string.Empty,
+            Organization = selectedContactPerson?.Department,
+            Address1 = string.Empty,
+            City = string.Empty,
+            PostalCode = string.Empty,
+            CountryCode = "US",
+            IsActive = selectedContactPerson?.IsActive ?? true,
+            SourceContactPersonId = selectedContactPerson?.Id,
+            NeedsSync = true,
+            IsCurrentVersion = true,
+            IsPrivacyProtected = domain.PrivacyProtection
+        };
     }
 }
 

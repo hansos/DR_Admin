@@ -59,4 +59,14 @@ public class OrderLine : EntityBase
     /// Navigation to service when linked
     /// </summary>
     public Service? Service { get; set; }
+
+    /// <summary>
+    /// Sold hosting package instances linked to this order line
+    /// </summary>
+    public ICollection<SoldHostingPackage> SoldHostingPackages { get; set; } = new List<SoldHostingPackage>();
+
+    /// <summary>
+    /// Sold optional service instances linked to this order line
+    /// </summary>
+    public ICollection<SoldOptionalService> SoldOptionalServices { get; set; } = new List<SoldOptionalService>();
 }

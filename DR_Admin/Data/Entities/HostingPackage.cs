@@ -31,4 +31,5 @@ public class HostingPackage : EntityBase
     public bool IsActive { get; set; } = true;
     
     public ICollection<Service> Services { get; set; } = new List<Service>();
+    public ICollection<SoldHostingPackage> SoldHostingPackages { get; set; } = new List<SoldHostingPackage>();
 }

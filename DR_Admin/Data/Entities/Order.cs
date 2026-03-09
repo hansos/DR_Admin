@@ -169,6 +169,16 @@ public class Order : EntityBase
     public ICollection<OrderLine> OrderLines { get; set; } = new List<OrderLine>();
 
     /// <summary>
+    /// Collection of sold hosting package instances for this order
+    /// </summary>
+    public ICollection<SoldHostingPackage> SoldHostingPackages { get; set; } = new List<SoldHostingPackage>();
+
+    /// <summary>
+    /// Collection of sold optional services for this order
+    /// </summary>
+    public ICollection<SoldOptionalService> SoldOptionalServices { get; set; } = new List<SoldOptionalService>();
+
+    /// <summary>
     /// Collection of payment intents for this order
     /// </summary>
     public ICollection<PaymentIntent> PaymentIntents { get; set; } = new List<PaymentIntent>();
