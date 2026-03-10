@@ -77,11 +77,14 @@ public class PaymentIntentService : IPaymentIntentService
     {
         ArgumentNullException.ThrowIfNull(createDto);
 
-        var resolvedCustomerId = customerId > 0 ? customerId : await ResolveCustomerIdFromRequestAsync(createDto);
+        var linkedCustomerId = await ResolveCustomerIdFromRequestAsync(createDto);
+        var resolvedCustomerId = linkedCustomerId > 0 ? linkedCustomerId : customerId;
         if (resolvedCustomerId <= 0)
         {
             throw new InvalidOperationException("Customer could not be resolved for payment intent creation.");
         }
+
+        var resolvedInvoiceId = await EnsureInvoiceForPaymentIntentAsync(createDto, resolvedCustomerId, createAsIssued: true);
 
         var gateway = await ResolveGatewayAsync(createDto, resolvedCustomerId);
         var customer = await _context.Customers
@@ -90,7 +93,7 @@ public class PaymentIntentService : IPaymentIntentService
 
         var entity = new Data.Entities.PaymentIntent
         {
-            InvoiceId = createDto.InvoiceId,
+            InvoiceId = resolvedInvoiceId,
             OrderId = createDto.OrderId,
             CustomerId = resolvedCustomerId,
             Amount = createDto.Amount,
@@ -203,6 +206,7 @@ public class PaymentIntentService : IPaymentIntentService
             try
             {
                 entity.CapturedAt ??= DateTime.UtcNow;
+                entity.InvoiceId = await EnsureInvoiceForCapturedPaymentIntentAsync(entity);
                 await TryFinalizeCapturedPaymentAsync(entity, gateway, status.TransactionId, paymentMethodToken);
                 await EnsureRecurringSubscriptionForCapturedOrderAsync(entity);
                 await EnsureRecurringSubscriptionsFromIntentDescriptionAsync(entity);
@@ -231,6 +235,313 @@ public class PaymentIntentService : IPaymentIntentService
 
         await _context.SaveChangesAsync();
         return mappedStatus is PaymentIntentStatus.Authorized or PaymentIntentStatus.Captured or PaymentIntentStatus.RequiresAction;
+    }
+
+    private async Task<int?> EnsureInvoiceForCapturedPaymentIntentAsync(Data.Entities.PaymentIntent intent)
+    {
+        if (intent.InvoiceId.HasValue && intent.InvoiceId.Value > 0)
+        {
+            return intent.InvoiceId;
+        }
+
+        var createDto = new CreatePaymentIntentDto
+        {
+            InvoiceId = null,
+            OrderId = intent.OrderId,
+            Amount = intent.Amount,
+            Currency = intent.Currency,
+            PaymentInstrument = string.Empty,
+            Description = intent.Description
+        };
+
+        return await EnsureInvoiceForPaymentIntentAsync(createDto, intent.CustomerId, createAsIssued: false);
+    }
+
+    private async Task<int?> EnsureInvoiceForPaymentIntentAsync(CreatePaymentIntentDto createDto, int customerId, bool createAsIssued)
+    {
+        if (createDto.InvoiceId.HasValue && createDto.InvoiceId.Value > 0)
+        {
+            var existingInvoice = await _context.Invoices
+                .AsNoTracking()
+                .FirstOrDefaultAsync(i => i.Id == createDto.InvoiceId.Value && i.CustomerId == customerId && i.DeletedAt == null);
+
+            if (existingInvoice != null)
+            {
+                return existingInvoice.Id;
+            }
+        }
+
+        var orders = await ResolveOrdersFromPaymentIntentRequestAsync(createDto, customerId);
+        if (orders.Count == 0)
+        {
+            return createDto.InvoiceId;
+        }
+
+        var orderNumbers = orders
+            .Select(o => o.OrderNumber)
+            .Where(v => !string.IsNullOrWhiteSpace(v))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(v => v, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        if (orderNumbers.Count == 0)
+        {
+            return createDto.InvoiceId;
+        }
+
+        var marker = BuildCheckoutInvoiceMarker(orderNumbers);
+        var invoice = await _context.Invoices
+            .FirstOrDefaultAsync(i =>
+                i.CustomerId == customerId &&
+                i.DeletedAt == null &&
+                i.Status != InvoiceStatus.Paid &&
+                i.InternalComment == marker);
+
+        if (invoice != null)
+        {
+            if (createAsIssued && invoice.Status == InvoiceStatus.Draft)
+            {
+                invoice.Status = InvoiceStatus.Issued;
+                invoice.UpdatedAt = DateTime.UtcNow;
+            }
+
+            if (!string.IsNullOrWhiteSpace(createDto.PaymentInstrument))
+            {
+                invoice.PaymentMethod = createDto.PaymentInstrument;
+                invoice.UpdatedAt = DateTime.UtcNow;
+            }
+
+            return invoice.Id;
+        }
+
+        invoice = await CreateInvoiceForOrdersAsync(createDto, customerId, orders, marker, orderNumbers, createAsIssued);
+        return invoice.Id;
+    }
+
+    private async Task<Invoice> CreateInvoiceForOrdersAsync(
+        CreatePaymentIntentDto createDto,
+        int customerId,
+        IReadOnlyCollection<Order> orders,
+        string marker,
+        IReadOnlyCollection<string> orderNumbers,
+        bool createAsIssued)
+    {
+        var customer = await _context.Customers
+            .AsNoTracking()
+            .FirstOrDefaultAsync(c => c.Id == customerId);
+
+        var now = DateTime.UtcNow;
+        var lineSeed = BuildInvoiceLinesFromOrders(orders);
+        var subtotal = lineSeed.Sum(line => line.TotalPrice);
+        var totalAmount = subtotal;
+        var isImmediatePayment = IsImmediatePaymentInstrument(createDto.PaymentInstrument);
+
+        var invoice = new Invoice
+        {
+            InvoiceNumber = await GenerateInvoiceNumberAsync(),
+            CustomerId = customerId,
+            Status = createAsIssued ? InvoiceStatus.Issued : InvoiceStatus.Draft,
+            IssueDate = now,
+            DueDate = isImmediatePayment ? now : now.AddDays(14),
+            SubTotal = subtotal,
+            TaxAmount = 0,
+            TotalAmount = totalAmount,
+            AmountPaid = 0,
+            AmountDue = totalAmount,
+            CurrencyCode = string.IsNullOrWhiteSpace(createDto.Currency) ? "EUR" : createDto.Currency,
+            TaxRate = 0,
+            TaxName = "VAT",
+            CustomerName = customer?.Name ?? string.Empty,
+            CustomerAddress = string.Empty,
+            CustomerTaxId = customer?.TaxId ?? string.Empty,
+            PaymentReference = string.Empty,
+            PaymentMethod = createDto.PaymentInstrument,
+            Notes = $"Auto-created from checkout order(s): {string.Join(", ", orderNumbers)}",
+            InternalComment = marker,
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+
+        _context.Invoices.Add(invoice);
+        await _context.SaveChangesAsync();
+
+        var unitId = await ResolveInvoiceUnitIdAsync();
+        var invoiceLines = lineSeed.Select(line => new InvoiceLine
+        {
+            InvoiceId = invoice.Id,
+            ServiceId = line.ServiceId,
+            UnitId = unitId,
+            LineNumber = line.LineNumber,
+            Description = line.Description,
+            Quantity = line.Quantity,
+            LineType = line.LineType,
+            UnitPrice = line.UnitPrice,
+            Discount = 0,
+            TotalPrice = line.TotalPrice,
+            TaxRate = 0,
+            TaxAmount = 0,
+            TotalWithTax = line.TotalPrice,
+            ServiceNameSnapshot = line.ServiceNameSnapshot,
+            AccountingCode = string.Empty,
+            Notes = line.Notes,
+            CreatedAt = now,
+            UpdatedAt = now
+        }).ToList();
+
+        _context.InvoiceLines.AddRange(invoiceLines);
+        await _context.SaveChangesAsync();
+
+        return invoice;
+    }
+
+    private async Task<int?> ResolveInvoiceUnitIdAsync()
+    {
+        return await _context.Units
+            .AsNoTracking()
+            .Where(u => u.Code == "pcs")
+            .Select(u => (int?)u.Id)
+            .FirstOrDefaultAsync()
+            ?? await _context.Units
+                .AsNoTracking()
+                .Select(u => (int?)u.Id)
+                .FirstOrDefaultAsync();
+    }
+
+    private static List<(int? ServiceId, int LineNumber, string Description, int Quantity, decimal UnitPrice, decimal TotalPrice, InvoiceLineType LineType, string ServiceNameSnapshot, string Notes)> BuildInvoiceLinesFromOrders(IReadOnlyCollection<Order> orders)
+    {
+        var lines = new List<(int? ServiceId, int LineNumber, string Description, int Quantity, decimal UnitPrice, decimal TotalPrice, InvoiceLineType LineType, string ServiceNameSnapshot, string Notes)>();
+        var lineNumber = 1;
+
+        foreach (var order in orders.OrderBy(o => o.Id))
+        {
+            var orderLines = order.OrderLines
+                .OrderBy(ol => ol.LineNumber)
+                .ToList();
+
+            if (orderLines.Count == 0)
+            {
+                var fallbackTotal = Math.Max(0, order.SetupFee + order.RecurringAmount);
+                lines.Add((
+                    order.ServiceId,
+                    lineNumber++,
+                    $"Order {order.OrderNumber}",
+                    1,
+                    fallbackTotal,
+                    fallbackTotal,
+                    InvoiceLineType.Service,
+                    $"Order {order.OrderNumber}",
+                    string.Empty));
+                continue;
+            }
+
+            foreach (var orderLine in orderLines)
+            {
+                var quantity = orderLine.Quantity <= 0 ? 1 : orderLine.Quantity;
+                var computedTotal = Math.Max(0, quantity * orderLine.UnitPrice);
+                var totalPrice = orderLine.TotalPrice > 0 ? orderLine.TotalPrice : computedTotal;
+
+                lines.Add((
+                    orderLine.ServiceId,
+                    lineNumber++,
+                    orderLine.Description,
+                    quantity,
+                    orderLine.UnitPrice,
+                    totalPrice,
+                    orderLine.IsRecurring ? InvoiceLineType.Service : InvoiceLineType.Product,
+                    orderLine.Description,
+                    orderLine.Notes));
+            }
+        }
+
+        return lines;
+    }
+
+    private async Task<List<Order>> ResolveOrdersFromPaymentIntentRequestAsync(CreatePaymentIntentDto createDto, int customerId)
+    {
+        var orderIds = new HashSet<int>();
+        if (createDto.OrderId.HasValue && createDto.OrderId.Value > 0)
+        {
+            orderIds.Add(createDto.OrderId.Value);
+        }
+
+        var orderNumbers = orderIds.Count == 0
+            ? GetCheckoutOrderNumbersFromDescription(createDto.Description)
+            : new List<string>();
+
+        IQueryable<Order> query = _context.Orders
+            .Include(o => o.OrderLines)
+            .Where(o => o.CustomerId == customerId && o.Status != OrderStatus.Cancelled);
+
+        if (orderIds.Count == 0 && orderNumbers.Count == 0)
+        {
+            return new List<Order>();
+        }
+
+        query = query.Where(o => orderIds.Contains(o.Id) || orderNumbers.Contains(o.OrderNumber));
+        return await query.ToListAsync();
+    }
+
+    private static string BuildCheckoutInvoiceMarker(IReadOnlyCollection<string> orderNumbers)
+    {
+        return $"checkout-orders:{string.Join("|", orderNumbers)}";
+    }
+
+    private async Task<string> GenerateInvoiceNumberAsync()
+    {
+        var nextNumber = await GetNextInvoiceNumberAsync();
+        var prefix = await GetInvoiceNumberPrefixAsync();
+
+        return string.IsNullOrWhiteSpace(prefix)
+            ? nextNumber.ToString()
+            : $"{prefix}{nextNumber}";
+    }
+
+    private async Task<long> GetNextInvoiceNumberAsync()
+    {
+        const string key = "INR";
+        const long defaultStartValue = 1001;
+
+        var setting = await _context.SystemSettings
+            .FirstOrDefaultAsync(s => s.Key == key);
+
+        if (setting == null)
+        {
+            setting = new SystemSetting
+            {
+                Key = key,
+                Value = (defaultStartValue + 1).ToString(),
+                Description = "The next invoice number (INR) to assign. Auto-incremented on each new invoice creation.",
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                IsSystemKey = true
+            };
+
+            _context.SystemSettings.Add(setting);
+            await _context.SaveChangesAsync();
+            return defaultStartValue;
+        }
+
+        if (!long.TryParse(setting.Value, out var currentValue) || currentValue <= 0)
+        {
+            currentValue = defaultStartValue;
+        }
+
+        setting.Value = (currentValue + 1).ToString();
+        setting.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
+        return currentValue;
+    }
+
+    private async Task<string?> GetInvoiceNumberPrefixAsync()
+    {
+        const string key = "ISX";
+
+        var setting = await _context.SystemSettings
+            .AsNoTracking()
+            .FirstOrDefaultAsync(s => s.Key == key);
+
+        return setting?.Value;
     }
 
     public async Task<bool> CancelPaymentIntentAsync(int id)
@@ -487,6 +798,12 @@ public class PaymentIntentService : IPaymentIntentService
             .Replace(" ", string.Empty)
             .Replace("-", string.Empty)
             .Replace("_", string.Empty);
+    }
+
+    private static bool IsImmediatePaymentInstrument(string paymentInstrument)
+    {
+        var normalized = NormalizeInstrumentKey(paymentInstrument);
+        return normalized is "creditcard" or "card" or "debitcard" or "paypal";
     }
 
     private async Task TryFinalizeCapturedPaymentAsync(Data.Entities.PaymentIntent intent, Data.Entities.PaymentGateway gateway, string gatewayTransactionId, string paymentMethodToken)

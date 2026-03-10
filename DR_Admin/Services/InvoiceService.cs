@@ -177,6 +177,7 @@ public class InvoiceService : IInvoiceService
             
             var invoice = await _context.Invoices
                 .AsNoTracking()
+                .Include(i => i.InvoiceLines)
                 .FirstOrDefaultAsync(i => i.Id == id && i.DeletedAt == null);
 
             if (invoice == null)
@@ -203,6 +204,7 @@ public class InvoiceService : IInvoiceService
             
             var invoice = await _context.Invoices
                 .AsNoTracking()
+                .Include(i => i.InvoiceLines)
                 .FirstOrDefaultAsync(i => i.InvoiceNumber == invoiceNumber && i.DeletedAt == null);
 
             if (invoice == null)
@@ -404,6 +406,32 @@ public class InvoiceService : IInvoiceService
             PaymentMethod = invoice.PaymentMethod,
             Notes = invoice.Notes,
             InternalComment = invoice.InternalComment,
+            InvoiceLines = invoice.InvoiceLines
+                .Where(line => line.DeletedAt == null)
+                .OrderBy(line => line.LineNumber)
+                .Select(line => new InvoiceLineDto
+                {
+                    Id = line.Id,
+                    InvoiceId = line.InvoiceId,
+                    ServiceId = line.ServiceId,
+                    UnitId = (int)(line.UnitId ?? 0),
+                    LineNumber = line.LineNumber,
+                    Description = line.Description,
+                    Quantity = line.Quantity,
+                    UnitPrice = line.UnitPrice,
+                    Discount = line.Discount,
+                    TotalPrice = line.TotalPrice,
+                    TaxRate = line.TaxRate,
+                    TaxAmount = line.TaxAmount,
+                    TotalWithTax = line.TotalWithTax,
+                    ServiceNameSnapshot = line.ServiceNameSnapshot,
+                    AccountingCode = line.AccountingCode,
+                    CreatedAt = line.CreatedAt,
+                    UpdatedAt = line.UpdatedAt,
+                    DeletedAt = line.DeletedAt,
+                    Notes = line.Notes
+                })
+                .ToList(),
             CreatedAt = invoice.CreatedAt,
             UpdatedAt = invoice.UpdatedAt,
             DeletedAt = invoice.DeletedAt

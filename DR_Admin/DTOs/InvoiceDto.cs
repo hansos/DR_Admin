@@ -55,6 +55,7 @@ public class InvoiceDto
     public string PaymentMethod { get; set; } = string.Empty;
     public string Notes { get; set; } = string.Empty;
     public string InternalComment { get; set; } = string.Empty;
+    public List<InvoiceLineDto> InvoiceLines { get; set; } = new();
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
     public DateTime? DeletedAt { get; set; }

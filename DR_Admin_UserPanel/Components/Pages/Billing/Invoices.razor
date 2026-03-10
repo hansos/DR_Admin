@@ -16,23 +16,9 @@
 
     <div class="card shadow-sm mb-3">
         <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead>
-                        <tr>
-                            <th>Invoice</th>
-                            <th>Status</th>
-                            <th>Issue</th>
-                            <th>Due</th>
-                            <th>Total</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="invoices-table-body">
-                        <tr><td colspan="6" class="text-center text-muted">Loading invoices...</td></tr>
-                    </tbody>
-                </table>
-            </div>
+            <ul class="list-group list-group-flush" id="invoices-list">
+                <li class="list-group-item text-center text-muted">Loading invoices...</li>
+            </ul>
             <div class="d-flex justify-content-between align-items-center mt-3">
                 <div id="invoices-pagination-info" class="small text-muted"></div>
                 <div class="d-flex gap-2">
@@ -41,10 +27,5 @@
                 </div>
             </div>
         </div>
-    </div>
-
-    <div class="card shadow-sm d-none" id="invoices-details-card">
-        <div class="card-header">Invoice details</div>
-        <div class="card-body" id="invoices-details-body"></div>
     </div>
 </div>

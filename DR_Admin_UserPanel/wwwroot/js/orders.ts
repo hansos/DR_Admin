@@ -68,16 +68,20 @@ function initializeOrdersPage(): void {
         }
     });
 
-    document.getElementById('orders-table-body')?.addEventListener('click', (event: Event) => {
+    document.getElementById('orders-list')?.addEventListener('click', (event: Event) => {
         const target = event.target as HTMLElement;
-        const button = target.closest('button[data-id]') as HTMLButtonElement | null;
-        if (!button) {
+        if (target.closest('.orders-lines-panel')) {
             return;
         }
 
-        const id = Number.parseInt(button.dataset.id ?? '', 10);
+        const listItem = target.closest('[data-order-item-id]') as HTMLElement | null;
+        if (!listItem) {
+            return;
+        }
+
+        const id = Number.parseInt(listItem.dataset.orderItemId ?? '', 10);
         if (!Number.isNaN(id) && id > 0) {
-            void loadOrderDetails(id);
+            void toggleOrderLines(id, listItem);
         }
     });
 
@@ -132,31 +136,53 @@ function normalizeOrders(payload: PagedResult<OrderDto> | OrderDto[]): OrderDto[
 function renderOrdersPage(): void {
     const start = (ordersPageNumber - 1) * ordersPageSize;
     const pageItems = ordersFiltered.slice(start, start + ordersPageSize);
-    renderOrdersRows(pageItems);
+    renderOrdersItems(pageItems);
     renderOrdersPageInfo(pageItems.length);
 }
 
-function renderOrdersRows(items: OrderDto[]): void {
-    const tableBody = document.getElementById('orders-table-body');
-    if (!tableBody) {
+function renderOrdersItems(items: OrderDto[]): void {
+    const list = document.getElementById('orders-list');
+    if (!list) {
         return;
     }
 
     if (items.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No orders found.</td></tr>';
+        list.innerHTML = '<li class="list-group-item text-center text-muted">No orders found.</li>';
         return;
     }
 
-    tableBody.innerHTML = items.map((item) => `
-        <tr>
-            <td>${escapeOrdersText(item.orderNumber)}</td>
-            <td>${escapeOrdersText(String(item.orderType))}</td>
-            <td>${escapeOrdersText(String(item.status))}</td>
-            <td>${formatOrdersDate(item.createdAt)}</td>
-            <td>${formatOrdersDate(item.nextBillingDate)}</td>
-            <td>${formatOrdersMoney(item.recurringAmount)} ${escapeOrdersText(item.currencyCode || 'EUR')}</td>
-            <td><button class="btn btn-outline-primary btn-sm" type="button" data-id="${item.id}">View lines</button></td>
-        </tr>
+    list.innerHTML = items.map((item) => `
+        <li class="list-group-item" data-order-item-id="${item.id}">
+            <div class="d-flex flex-column flex-xl-row justify-content-between gap-3">
+                <div class="row g-2 flex-grow-1">
+                    <div class="col-6 col-md-4 col-xl-2">
+                        <div class="small text-muted">Order</div>
+                        <div class="fw-semibold">${escapeOrdersText(item.orderNumber)}</div>
+                    </div>
+                    <div class="col-6 col-md-4 col-xl-2">
+                        <div class="small text-muted">Type</div>
+                        <div>${escapeOrdersText(String(item.orderType))}</div>
+                    </div>
+                    <div class="col-6 col-md-4 col-xl-2">
+                        <div class="small text-muted">Status</div>
+                        <div>${escapeOrdersText(String(item.status))}</div>
+                    </div>
+                    <div class="col-6 col-md-4 col-xl-2">
+                        <div class="small text-muted">Created</div>
+                        <div>${formatOrdersDate(item.createdAt)}</div>
+                    </div>
+                    <div class="col-6 col-md-4 col-xl-2">
+                        <div class="small text-muted">Next billing</div>
+                        <div>${formatOrdersDate(item.nextBillingDate)}</div>
+                    </div>
+                    <div class="col-6 col-md-4 col-xl-2">
+                        <div class="small text-muted">Recurring</div>
+                        <div>${formatOrdersMoney(item.recurringAmount)} ${escapeOrdersText(item.currencyCode || 'EUR')}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="orders-lines-panel d-none border-top mt-3 pt-3" data-loaded="false"></div>
+        </li>
     `).join('');
 }
 
@@ -167,66 +193,109 @@ function renderOrdersPageInfo(count: number): void {
     }
 }
 
-async function loadOrderDetails(id: number): Promise<void> {
+async function toggleOrderLines(id: number, listItem: HTMLElement): Promise<void> {
+    const panel = listItem.querySelector('.orders-lines-panel') as HTMLDivElement | null;
+    if (!panel) {
+        return;
+    }
+
+    const isOpen = !panel.classList.contains('d-none');
+    if (isOpen) {
+        panel.classList.add('d-none');
+        listItem.classList.remove('order-item-open');
+        return;
+    }
+
+    closeOtherOrderPanels(id);
+
+    if (panel.dataset.loaded !== 'true') {
+        panel.innerHTML = '<div class="text-muted">Loading order lines...</div>';
+        const loaded = await loadOrderDetailsIntoPanel(id, panel);
+        if (!loaded) {
+            panel.classList.add('d-none');
+            listItem.classList.remove('order-item-open');
+            return;
+        }
+
+        panel.dataset.loaded = 'true';
+    }
+
+    panel.classList.remove('d-none');
+    listItem.classList.add('order-item-open');
+}
+
+function closeOtherOrderPanels(activeOrderId: number): void {
+    const list = document.getElementById('orders-list');
+    if (!list) {
+        return;
+    }
+
+    const openPanels = list.querySelectorAll('.orders-lines-panel:not(.d-none)');
+    openPanels.forEach((panel) => {
+        const listItem = panel.closest('[data-order-item-id]') as HTMLElement | null;
+        const orderId = Number.parseInt(listItem?.dataset.orderItemId ?? '', 10);
+        if (!Number.isNaN(orderId) && orderId !== activeOrderId) {
+            panel.classList.add('d-none');
+            listItem?.classList.remove('order-item-open');
+        }
+    });
+}
+
+async function loadOrderDetailsIntoPanel(id: number, panel: HTMLDivElement): Promise<boolean> {
     const typedWindow = window as OrdersWindow;
     const response = await typedWindow.UserPanelApi?.request<OrderDto>(`/Orders/${id}`, { method: 'GET' }, true);
 
     if (!response || !response.success || !response.data) {
         typedWindow.UserPanelAlerts?.showError('orders-alert-error', response?.message ?? 'Could not load order details.');
-        return;
+        return false;
     }
 
     if (ordersCustomerId && response.data.customerId !== ordersCustomerId) {
         typedWindow.UserPanelAlerts?.showError('orders-alert-error', 'Order does not belong to current customer.');
-        return;
-    }
-
-    const card = document.getElementById('orders-details-card');
-    const body = document.getElementById('orders-details-body');
-    if (!card || !body) {
-        return;
+        return false;
     }
 
     const lines = response.data.orderLines ?? [];
-    const rows = lines.length === 0
-        ? '<tr><td colspan="6" class="text-center text-muted">No order lines found.</td></tr>'
+    const lineItems = lines.length === 0
+        ? '<li class="list-group-item text-center text-muted">No order lines found.</li>'
         : lines.map((line) => `
-            <tr>
-                <td>${line.lineNumber}</td>
-                <td>${escapeOrdersText(line.description)}</td>
-                <td>${line.quantity}</td>
-                <td>${formatOrdersMoney(line.unitPrice)}</td>
-                <td>${formatOrdersMoney(line.totalPrice)}</td>
-                <td>${line.isRecurring ? 'Yes' : 'No'}</td>
-            </tr>
+            <li class="list-group-item">
+                <div class="row g-2">
+                    <div class="col-6 col-md-2">
+                        <div class="small text-muted">Line</div>
+                        <div>${line.lineNumber}</div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="small text-muted">Description</div>
+                        <div>${escapeOrdersText(line.description)}</div>
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <div class="small text-muted">Qty</div>
+                        <div>${line.quantity}</div>
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <div class="small text-muted">Unit</div>
+                        <div>${formatOrdersMoney(line.unitPrice)}</div>
+                    </div>
+                    <div class="col-6 col-md-1">
+                        <div class="small text-muted">Total</div>
+                        <div>${formatOrdersMoney(line.totalPrice)}</div>
+                    </div>
+                    <div class="col-6 col-md-1">
+                        <div class="small text-muted">Recurring</div>
+                        <div>${line.isRecurring ? 'Yes' : 'No'}</div>
+                    </div>
+                </div>
+            </li>
         `).join('');
 
-    card.classList.remove('d-none');
-    body.innerHTML = `
-        <div class="mb-3">
-            <div><strong>${escapeOrdersText(response.data.orderNumber)}</strong></div>
-            <div>Status: ${escapeOrdersText(String(response.data.status))}</div>
-            <div>Type: ${escapeOrdersText(String(response.data.orderType))}</div>
-            <div>Created: ${formatOrdersDate(response.data.createdAt)}</div>
-        </div>
-        <div class="table-responsive">
-            <table class="table table-sm align-middle mb-0">
-                <thead>
-                    <tr>
-                        <th>Line</th>
-                        <th>Description</th>
-                        <th>Qty</th>
-                        <th>Unit</th>
-                        <th>Total</th>
-                        <th>Recurring</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${rows}
-                </tbody>
-            </table>
-        </div>
+    panel.innerHTML = `
+        <ul class="list-group list-group-flush">
+            ${lineItems}
+        </ul>
     `;
+
+    return true;
 }
 
 async function resolveOrdersCustomerId(): Promise<number | null> {
