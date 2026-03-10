@@ -5,6 +5,9 @@ public class SoldOptionalServiceDto
     public int Id { get; set; }
     public int CustomerId { get; set; }
     public int ServiceId { get; set; }
+    public int? RegisteredDomainId { get; set; }
+    public string ServiceName { get; set; } = string.Empty;
+    public string ConnectedDomainName { get; set; } = string.Empty;
     public int OrderId { get; set; }
     public int? OrderLineId { get; set; }
 
@@ -33,6 +36,7 @@ public class CreateSoldOptionalServiceDto
 {
     public int CustomerId { get; set; }
     public int ServiceId { get; set; }
+    public int? RegisteredDomainId { get; set; }
     public int OrderId { get; set; }
     public int? OrderLineId { get; set; }
 
@@ -56,6 +60,7 @@ public class CreateSoldOptionalServiceDto
 
 public class UpdateSoldOptionalServiceDto
 {
+    public int? RegisteredDomainId { get; set; }
     public int? Quantity { get; set; }
     public decimal? UnitPrice { get; set; }
     public decimal? TotalPrice { get; set; }

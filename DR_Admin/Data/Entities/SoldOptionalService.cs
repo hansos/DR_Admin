@@ -7,6 +7,7 @@ public class SoldOptionalService : EntityBase
 {
     public int CustomerId { get; set; }
     public int ServiceId { get; set; }
+    public int? RegisteredDomainId { get; set; }
     public int OrderId { get; set; }
     public int? OrderLineId { get; set; }
 
@@ -29,6 +30,7 @@ public class SoldOptionalService : EntityBase
 
     public Customer Customer { get; set; } = null!;
     public Service Service { get; set; } = null!;
+    public RegisteredDomain? RegisteredDomain { get; set; }
     public Order Order { get; set; } = null!;
     public OrderLine? OrderLine { get; set; }
 }

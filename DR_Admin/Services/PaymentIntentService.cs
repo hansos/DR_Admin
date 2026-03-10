@@ -662,6 +662,8 @@ public class PaymentIntentService : IPaymentIntentService
                 await EnsureHostingAccountForPaidOrderLineAsync(order, orderLine);
             }
         }
+
+        await LinkSoldProductsToRegisteredDomainsAsync(order);
     }
 
     private async Task EnsureRegisteredDomainForPaidOrderLineAsync(Order order, OrderLine orderLine, bool hasPrivacyProtection)
@@ -769,10 +771,86 @@ public class PaymentIntentService : IPaymentIntentService
         };
 
         _context.RegisteredDomains.Add(domain);
+        await _context.SaveChangesAsync();
+
+        await LinkSoldProductsToRegisteredDomainAsync(domain.Id, order.CustomerId, domainName);
 
         if (registrationSucceeded)
         {
             EnsureDomainContactsAndAssignments(domain, customer, selectedContactPerson, now);
+        }
+    }
+
+    private async Task LinkSoldProductsToRegisteredDomainsAsync(Order order)
+    {
+        var domainNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var line in order.OrderLines)
+        {
+            if (line.Description.StartsWith("Domain:", StringComparison.OrdinalIgnoreCase))
+            {
+                var extracted = ExtractDomainName(line.Description);
+                if (!string.IsNullOrWhiteSpace(extracted))
+                {
+                    domainNames.Add(extracted.Trim());
+                }
+            }
+
+            var fromNotes = TryGetOrderLineMetadataValue(line.Notes, "connectedDomainName")
+                ?? TryGetOrderLineMetadataValue(line.Notes, "domainName");
+            if (!string.IsNullOrWhiteSpace(fromNotes))
+            {
+                domainNames.Add(fromNotes.Trim());
+            }
+        }
+
+        foreach (var domainName in domainNames)
+        {
+            var normalizedDomainName = domainName.ToLowerInvariant();
+            var registeredDomain = await _context.RegisteredDomains
+                .FirstOrDefaultAsync(d => d.CustomerId == order.CustomerId && d.NormalizedName == normalizedDomainName);
+
+            if (registeredDomain == null)
+            {
+                continue;
+            }
+
+            await LinkSoldProductsToRegisteredDomainAsync(registeredDomain.Id, order.CustomerId, domainName);
+        }
+    }
+
+    private async Task LinkSoldProductsToRegisteredDomainAsync(int registeredDomainId, int customerId, string domainName)
+    {
+        var soldHosting = await _context.SoldHostingPackages
+            .Where(x => x.CustomerId == customerId && !x.RegisteredDomainId.HasValue)
+            .ToListAsync();
+
+        foreach (var item in soldHosting)
+        {
+            var noteDomain = TryGetOrderLineMetadataValue(item.Notes, "connectedDomainName")
+                ?? TryGetOrderLineMetadataValue(item.Notes, "domainName");
+
+            if (string.Equals(noteDomain, domainName, StringComparison.OrdinalIgnoreCase))
+            {
+                item.RegisteredDomainId = registeredDomainId;
+                item.UpdatedAt = DateTime.UtcNow;
+            }
+        }
+
+        var soldServices = await _context.SoldOptionalServices
+            .Where(x => x.CustomerId == customerId && !x.RegisteredDomainId.HasValue)
+            .ToListAsync();
+
+        foreach (var item in soldServices)
+        {
+            var noteDomain = TryGetOrderLineMetadataValue(item.Notes, "connectedDomainName")
+                ?? TryGetOrderLineMetadataValue(item.Notes, "domainName");
+
+            if (string.Equals(noteDomain, domainName, StringComparison.OrdinalIgnoreCase))
+            {
+                item.RegisteredDomainId = registeredDomainId;
+                item.UpdatedAt = DateTime.UtcNow;
+            }
         }
     }
 

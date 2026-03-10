@@ -13,6 +13,7 @@ using DomainRegistrationLib.Models;
 using DomainRegistrationLib.Factories;
 using RegisteredDomainEntity = ISPAdmin.Data.Entities.RegisteredDomain;
 using ISPAdmin.Workflow.Domain.Services;
+using System.Text.Json;
 
 namespace ISPAdmin.Workflow.Domain.Workflows;
 
@@ -147,9 +148,13 @@ public class DomainRegistrationWorkflow : IDomainRegistrationWorkflow
 
     public async Task<WorkflowResult> OnPaymentReceivedAsync(int orderId, int invoiceId)
     {
+        Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction? transaction = null;
+
         try
         {
             _log.Information("Processing payment received callback for order {OrderId}", orderId);
+
+            transaction = await _context.Database.BeginTransactionAsync();
 
             var order = await _context.Orders
                 .Include(o => o.Service)
@@ -220,9 +225,15 @@ public class DomainRegistrationWorkflow : IDomainRegistrationWorkflow
 
             // Step 4: Ensure related domain data is initialized
             await EnsurePostRegistrationDataAsync(domain);
+
+            // Step 5: Link sold products in this order to the newly created domain
+            await LinkSoldProductsToRegisteredDomainAsync(order.Id, domain.Id, order.CustomerId, domain.Name);
+
             await _context.SaveChangesAsync();
 
-            // Step 5: Publish domain registered event
+            await transaction.CommitAsync();
+
+            // Step 6: Publish domain registered event
             await _eventPublisher.PublishAsync(new DomainRegisteredEvent
             {
                 AggregateId = domain.Id,
@@ -234,7 +245,7 @@ public class DomainRegistrationWorkflow : IDomainRegistrationWorkflow
                 AutoRenew = domain.AutoRenew
             });
 
-            // Step 6: Publish order activated event
+            // Step 7: Publish order activated event
             await _eventPublisher.PublishAsync(new OrderActivatedEvent
             {
                 AggregateId = order.Id,
@@ -250,6 +261,11 @@ public class DomainRegistrationWorkflow : IDomainRegistrationWorkflow
         }
         catch (Exception ex)
         {
+            if (transaction != null)
+            {
+                await transaction.RollbackAsync();
+            }
+
             _log.Error(ex, "Payment processing failed for order {OrderId}", orderId);
 
             // Update order status to suspended
@@ -270,6 +286,95 @@ public class DomainRegistrationWorkflow : IDomainRegistrationWorkflow
 
             return WorkflowResult.Failed(ex.Message);
         }
+        finally
+        {
+            if (transaction != null)
+            {
+                await transaction.DisposeAsync();
+            }
+        }
+    }
+
+    private async Task LinkSoldProductsToRegisteredDomainAsync(int orderId, int registeredDomainId, int customerId, string domainName)
+    {
+        var soldHosting = await _context.SoldHostingPackages
+            .Where(x => x.OrderId == orderId && !x.RegisteredDomainId.HasValue)
+            .ToListAsync();
+
+        foreach (var item in soldHosting)
+        {
+            item.RegisteredDomainId = registeredDomainId;
+            item.UpdatedAt = DateTime.UtcNow;
+        }
+
+        var soldServices = await _context.SoldOptionalServices
+            .Where(x => x.OrderId == orderId && !x.RegisteredDomainId.HasValue)
+            .ToListAsync();
+
+        foreach (var item in soldServices)
+        {
+            item.RegisteredDomainId = registeredDomainId;
+            item.UpdatedAt = DateTime.UtcNow;
+        }
+
+        var candidateHosting = await _context.SoldHostingPackages
+            .Where(x => x.CustomerId == customerId && !x.RegisteredDomainId.HasValue)
+            .ToListAsync();
+
+        foreach (var item in candidateHosting)
+        {
+            if (!string.Equals(TryResolveConnectedDomainNameFromNotes(item.Notes), domainName, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            item.RegisteredDomainId = registeredDomainId;
+            item.UpdatedAt = DateTime.UtcNow;
+        }
+
+        var candidateServices = await _context.SoldOptionalServices
+            .Where(x => x.CustomerId == customerId && !x.RegisteredDomainId.HasValue)
+            .ToListAsync();
+
+        foreach (var item in candidateServices)
+        {
+            if (!string.Equals(TryResolveConnectedDomainNameFromNotes(item.Notes), domainName, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            item.RegisteredDomainId = registeredDomainId;
+            item.UpdatedAt = DateTime.UtcNow;
+        }
+    }
+
+    private static string TryResolveConnectedDomainNameFromNotes(string? notes)
+    {
+        if (string.IsNullOrWhiteSpace(notes))
+        {
+            return string.Empty;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(notes);
+            var root = document.RootElement;
+
+            if (root.TryGetProperty("connectedDomainName", out var connectedDomain) && connectedDomain.ValueKind == JsonValueKind.String)
+            {
+                return connectedDomain.GetString() ?? string.Empty;
+            }
+
+            if (root.TryGetProperty("domainName", out var domainName) && domainName.ValueKind == JsonValueKind.String)
+            {
+                return domainName.GetString() ?? string.Empty;
+            }
+        }
+        catch
+        {
+        }
+
+        return string.Empty;
     }
 
     private async Task<Service> CreateDomainServiceAsync(DomainRegistrationWorkflowInput input)

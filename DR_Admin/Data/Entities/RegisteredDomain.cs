@@ -36,4 +36,6 @@ public class RegisteredDomain : EntityBase
     public ICollection<DomainContact> DomainContacts { get; set; } = new List<DomainContact>();
     public ICollection<DomainContactAssignment> DomainContactAssignments { get; set; } = new List<DomainContactAssignment>();
     public ICollection<NameServer> NameServers { get; set; } = new List<NameServer>();
+    public ICollection<SoldHostingPackage> SoldHostingPackages { get; set; } = new List<SoldHostingPackage>();
+    public ICollection<SoldOptionalService> SoldOptionalServices { get; set; } = new List<SoldOptionalService>();
 }

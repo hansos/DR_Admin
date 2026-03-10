@@ -10,9 +10,61 @@
         </div>
     </div>
 
-    <div class="card shadow-sm">
+    <div id="services-addons-alert-success" class="alert alert-success d-none" role="alert"></div>
+    <div id="services-addons-alert-error" class="alert alert-danger d-none" role="alert"></div>
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-header bg-light">
+            <div class="row g-2 align-items-end">
+                <div class="col-12 col-md-4">
+                    <label for="services-addons-filter-status" class="form-label mb-1">Status</label>
+                    <input id="services-addons-filter-status" class="form-control" type="text" placeholder="Any" />
+                </div>
+                <div class="col-12 col-md-3">
+                    <label for="services-addons-filter-cycle" class="form-label mb-1">Billing cycle</label>
+                    <input id="services-addons-filter-cycle" class="form-control" type="text" placeholder="Any" />
+                </div>
+                <div class="col-12 col-md-2">
+                    <label for="services-addons-page-size" class="form-label mb-1">Page size</label>
+                    <select id="services-addons-page-size" class="form-select">
+                        <option value="10">10</option>
+                        <option value="25" selected>25</option>
+                        <option value="50">50</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-3 d-flex justify-content-md-end gap-2">
+                    <button id="services-addons-apply" class="btn btn-outline-primary" type="button">Apply</button>
+                </div>
+            </div>
+        </div>
         <div class="card-body">
-            <p class="mb-0 text-muted">No add-ons are connected to your account yet.</p>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Service</th>
+                            <th>Connected domain</th>
+                            <th>Status</th>
+                            <th>Billing</th>
+                            <th>Qty</th>
+                            <th>Total</th>
+                            <th>Next Billing</th>
+                            <th>Auto renew</th>
+                        </tr>
+                    </thead>
+                    <tbody id="services-addons-table-body">
+                        <tr><td colspan="9" class="text-center text-muted">Loading add-ons and services...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <div id="services-addons-pagination-info" class="small text-muted"></div>
+                <div class="d-flex gap-2">
+                    <button id="services-addons-prev" class="btn btn-sm btn-outline-secondary" type="button">Previous</button>
+                    <button id="services-addons-next" class="btn btn-sm btn-outline-secondary" type="button">Next</button>
+                </div>
+            </div>
         </div>
     </div>
 </div>

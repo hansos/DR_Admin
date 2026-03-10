@@ -666,6 +666,7 @@ public class ApplicationDbContext : DbContext
 
             entity.HasIndex(e => e.CustomerId);
             entity.HasIndex(e => e.HostingPackageId);
+            entity.HasIndex(e => e.RegisteredDomainId);
             entity.HasIndex(e => e.OrderId);
             entity.HasIndex(e => e.Status);
             entity.HasIndex(e => e.NextBillingDate);
@@ -679,6 +680,11 @@ public class ApplicationDbContext : DbContext
                 .WithMany(p => p.SoldHostingPackages)
                 .HasForeignKey(e => e.HostingPackageId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.RegisteredDomain)
+                .WithMany(d => d.SoldHostingPackages)
+                .HasForeignKey(e => e.RegisteredDomainId)
+                .OnDelete(DeleteBehavior.SetNull);
 
             entity.HasOne(e => e.Order)
                 .WithMany(o => o.SoldHostingPackages)
@@ -705,6 +711,7 @@ public class ApplicationDbContext : DbContext
 
             entity.HasIndex(e => e.CustomerId);
             entity.HasIndex(e => e.ServiceId);
+            entity.HasIndex(e => e.RegisteredDomainId);
             entity.HasIndex(e => e.OrderId);
             entity.HasIndex(e => e.Status);
             entity.HasIndex(e => e.NextBillingDate);
@@ -718,6 +725,11 @@ public class ApplicationDbContext : DbContext
                 .WithMany(s => s.SoldOptionalServices)
                 .HasForeignKey(e => e.ServiceId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.RegisteredDomain)
+                .WithMany(d => d.SoldOptionalServices)
+                .HasForeignKey(e => e.RegisteredDomainId)
+                .OnDelete(DeleteBehavior.SetNull);
 
             entity.HasOne(e => e.Order)
                 .WithMany(o => o.SoldOptionalServices)

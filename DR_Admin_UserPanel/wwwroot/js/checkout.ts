@@ -1173,6 +1173,7 @@ async function submitCheckout(): Promise<void> {
 
     const oneTimeLines: CreateOrderLineDto[] = [];
     const recurringGroups = new Map<string, CreateOrderLineDto[]>();
+    const connectedDomainName = state.domain?.domainName?.trim() ?? '';
 
     const addRecurringLine = (mode: string, line: CreateOrderLineDto): void => {
         const normalizedMode = mode.trim().toLowerCase();
@@ -1246,7 +1247,8 @@ async function submitCheckout(): Promise<void> {
             notes: JSON.stringify({
                 kind: 'hosting-package',
                 hostingPackageId: item.id,
-                billingCycle: item.billingCycle
+                billingCycle: item.billingCycle,
+                connectedDomainName
             })
         };
         addRecurringLine(resolveRecurringMode(item.billingCycle, 'monthly'), hostingLine);
@@ -1264,7 +1266,8 @@ async function submitCheckout(): Promise<void> {
             notes: JSON.stringify({
                 kind: 'optional-service',
                 serviceId: item.id,
-                billingCycle: serviceMode
+                billingCycle: serviceMode,
+                connectedDomainName
             })
         });
     });

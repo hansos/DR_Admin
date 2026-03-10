@@ -5,6 +5,8 @@ public class SoldHostingPackageDto
     public int Id { get; set; }
     public int CustomerId { get; set; }
     public int HostingPackageId { get; set; }
+    public int? RegisteredDomainId { get; set; }
+    public string ConnectedDomainName { get; set; } = string.Empty;
     public int OrderId { get; set; }
     public int? OrderLineId { get; set; }
 
@@ -32,6 +34,7 @@ public class CreateSoldHostingPackageDto
 {
     public int CustomerId { get; set; }
     public int HostingPackageId { get; set; }
+    public int? RegisteredDomainId { get; set; }
     public int OrderId { get; set; }
     public int? OrderLineId { get; set; }
 
@@ -54,6 +57,7 @@ public class CreateSoldHostingPackageDto
 
 public class UpdateSoldHostingPackageDto
 {
+    public int? RegisteredDomainId { get; set; }
     public string? Status { get; set; }
     public string? BillingCycle { get; set; }
 

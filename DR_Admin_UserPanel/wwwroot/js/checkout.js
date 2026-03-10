@@ -840,6 +840,7 @@ async function submitCheckout() {
     }
     const oneTimeLines = [];
     const recurringGroups = new Map();
+    const connectedDomainName = state.domain?.domainName?.trim() ?? '';
     const addRecurringLine = (mode, line) => {
         const normalizedMode = mode.trim().toLowerCase();
         const existing = recurringGroups.get(normalizedMode);
@@ -904,7 +905,8 @@ async function submitCheckout() {
             notes: JSON.stringify({
                 kind: 'hosting-package',
                 hostingPackageId: item.id,
-                billingCycle: item.billingCycle
+                billingCycle: item.billingCycle,
+                connectedDomainName
             })
         };
         addRecurringLine(resolveRecurringMode(item.billingCycle, 'monthly'), hostingLine);
@@ -921,7 +923,8 @@ async function submitCheckout() {
             notes: JSON.stringify({
                 kind: 'optional-service',
                 serviceId: item.id,
-                billingCycle: serviceMode
+                billingCycle: serviceMode,
+                connectedDomainName
             })
         });
     });

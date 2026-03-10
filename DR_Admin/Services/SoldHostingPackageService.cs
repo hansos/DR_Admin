@@ -20,27 +20,30 @@ public class SoldHostingPackageService : ISoldHostingPackageService
     {
         var entities = await _context.SoldHostingPackages
             .AsNoTracking()
+            .Include(x => x.RegisteredDomain)
             .OrderByDescending(x => x.CreatedAt)
             .ToListAsync();
 
-        return entities.Select(MapToDto);
+        return entities.Select(entity => MapToDto(entity));
     }
 
     public async Task<IEnumerable<SoldHostingPackageDto>> GetByCustomerIdAsync(int customerId)
     {
         var entities = await _context.SoldHostingPackages
             .AsNoTracking()
+            .Include(x => x.RegisteredDomain)
             .Where(x => x.CustomerId == customerId)
             .OrderByDescending(x => x.CreatedAt)
             .ToListAsync();
 
-        return entities.Select(MapToDto);
+        return entities.Select(entity => MapToDto(entity));
     }
 
     public async Task<SoldHostingPackageDto?> GetByIdAsync(int id)
     {
         var entity = await _context.SoldHostingPackages
             .AsNoTracking()
+            .Include(x => x.RegisteredDomain)
             .FirstOrDefaultAsync(x => x.Id == id);
 
         return entity == null ? null : MapToDto(entity);
@@ -52,6 +55,7 @@ public class SoldHostingPackageService : ISoldHostingPackageService
         {
             CustomerId = createDto.CustomerId,
             HostingPackageId = createDto.HostingPackageId,
+            RegisteredDomainId = createDto.RegisteredDomainId,
             OrderId = createDto.OrderId,
             OrderLineId = createDto.OrderLineId,
             Status = string.IsNullOrWhiteSpace(createDto.Status) ? "PendingProvisioning" : createDto.Status,
@@ -73,7 +77,8 @@ public class SoldHostingPackageService : ISoldHostingPackageService
         await _context.SaveChangesAsync();
 
         _log.Information("Created SoldHostingPackage {Id}", entity.Id);
-        return MapToDto(entity);
+        var connectedDomainName = await ResolveRegisteredDomainNameAsync(entity.RegisteredDomainId);
+        return MapToDto(entity, connectedDomainName);
     }
 
     public async Task<SoldHostingPackageDto?> UpdateAsync(int id, UpdateSoldHostingPackageDto updateDto)
@@ -84,6 +89,7 @@ public class SoldHostingPackageService : ISoldHostingPackageService
             return null;
         }
 
+        if (updateDto.RegisteredDomainId.HasValue) entity.RegisteredDomainId = updateDto.RegisteredDomainId;
         if (!string.IsNullOrWhiteSpace(updateDto.Status)) entity.Status = updateDto.Status;
         if (!string.IsNullOrWhiteSpace(updateDto.BillingCycle)) entity.BillingCycle = updateDto.BillingCycle;
         if (updateDto.SetupFee.HasValue) entity.SetupFee = updateDto.SetupFee.Value;
@@ -99,7 +105,8 @@ public class SoldHostingPackageService : ISoldHostingPackageService
         entity.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 
-        return MapToDto(entity);
+        var connectedDomainName = await ResolveRegisteredDomainNameAsync(entity.RegisteredDomainId);
+        return MapToDto(entity, connectedDomainName);
     }
 
     public async Task<bool> DeleteAsync(int id)
@@ -115,13 +122,29 @@ public class SoldHostingPackageService : ISoldHostingPackageService
         return true;
     }
 
-    private static SoldHostingPackageDto MapToDto(SoldHostingPackage entity)
+    private async Task<string> ResolveRegisteredDomainNameAsync(int? registeredDomainId)
+    {
+        if (!registeredDomainId.HasValue)
+        {
+            return string.Empty;
+        }
+
+        return await _context.RegisteredDomains
+            .AsNoTracking()
+            .Where(x => x.Id == registeredDomainId.Value)
+            .Select(x => x.Name)
+            .FirstOrDefaultAsync() ?? string.Empty;
+    }
+
+    private static SoldHostingPackageDto MapToDto(SoldHostingPackage entity, string? connectedDomainName = null)
     {
         return new SoldHostingPackageDto
         {
             Id = entity.Id,
             CustomerId = entity.CustomerId,
             HostingPackageId = entity.HostingPackageId,
+            RegisteredDomainId = entity.RegisteredDomainId,
+            ConnectedDomainName = connectedDomainName ?? entity.RegisteredDomain?.Name ?? string.Empty,
             OrderId = entity.OrderId,
             OrderLineId = entity.OrderLineId,
             Status = entity.Status,

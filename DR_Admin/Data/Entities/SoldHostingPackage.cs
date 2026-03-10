@@ -7,6 +7,7 @@ public class SoldHostingPackage : EntityBase
 {
     public int CustomerId { get; set; }
     public int HostingPackageId { get; set; }
+    public int? RegisteredDomainId { get; set; }
     public int OrderId { get; set; }
     public int? OrderLineId { get; set; }
 
@@ -28,6 +29,7 @@ public class SoldHostingPackage : EntityBase
 
     public Customer Customer { get; set; } = null!;
     public HostingPackage HostingPackage { get; set; } = null!;
+    public RegisteredDomain? RegisteredDomain { get; set; }
     public Order Order { get; set; } = null!;
     public OrderLine? OrderLine { get; set; }
 }

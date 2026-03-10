@@ -20,27 +20,33 @@ public class SoldOptionalServiceService : ISoldOptionalServiceService
     {
         var entities = await _context.SoldOptionalServices
             .AsNoTracking()
+            .Include(x => x.Service)
+            .Include(x => x.RegisteredDomain)
             .OrderByDescending(x => x.CreatedAt)
             .ToListAsync();
 
-        return entities.Select(MapToDto);
+        return entities.Select<SoldOptionalService, SoldOptionalServiceDto>(entity => MapToDto(entity));
     }
 
     public async Task<IEnumerable<SoldOptionalServiceDto>> GetByCustomerIdAsync(int customerId)
     {
         var entities = await _context.SoldOptionalServices
             .AsNoTracking()
+            .Include(x => x.Service)
+            .Include(x => x.RegisteredDomain)
             .Where(x => x.CustomerId == customerId)
             .OrderByDescending(x => x.CreatedAt)
             .ToListAsync();
 
-        return entities.Select(MapToDto);
+        return entities.Select<SoldOptionalService, SoldOptionalServiceDto>(entity => MapToDto(entity));
     }
 
     public async Task<SoldOptionalServiceDto?> GetByIdAsync(int id)
     {
         var entity = await _context.SoldOptionalServices
             .AsNoTracking()
+            .Include(x => x.Service)
+            .Include(x => x.RegisteredDomain)
             .FirstOrDefaultAsync(x => x.Id == id);
 
         return entity == null ? null : MapToDto(entity);
@@ -55,6 +61,7 @@ public class SoldOptionalServiceService : ISoldOptionalServiceService
         {
             CustomerId = createDto.CustomerId,
             ServiceId = createDto.ServiceId,
+            RegisteredDomainId = createDto.RegisteredDomainId,
             OrderId = createDto.OrderId,
             OrderLineId = createDto.OrderLineId,
             Quantity = quantity,
@@ -77,7 +84,9 @@ public class SoldOptionalServiceService : ISoldOptionalServiceService
         await _context.SaveChangesAsync();
 
         _log.Information("Created SoldOptionalService {Id}", entity.Id);
-        return MapToDto(entity);
+        var serviceName = await ResolveServiceNameAsync(entity.ServiceId);
+        var connectedDomainName = await ResolveRegisteredDomainNameAsync(entity.RegisteredDomainId);
+        return MapToDto(entity, serviceName, connectedDomainName);
     }
 
     public async Task<SoldOptionalServiceDto?> UpdateAsync(int id, UpdateSoldOptionalServiceDto updateDto)
@@ -88,6 +97,7 @@ public class SoldOptionalServiceService : ISoldOptionalServiceService
             return null;
         }
 
+        if (updateDto.RegisteredDomainId.HasValue) entity.RegisteredDomainId = updateDto.RegisteredDomainId;
         if (updateDto.Quantity.HasValue && updateDto.Quantity.Value > 0) entity.Quantity = updateDto.Quantity.Value;
         if (updateDto.UnitPrice.HasValue) entity.UnitPrice = updateDto.UnitPrice.Value;
         if (updateDto.TotalPrice.HasValue) entity.TotalPrice = updateDto.TotalPrice.Value;
@@ -104,7 +114,9 @@ public class SoldOptionalServiceService : ISoldOptionalServiceService
         entity.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 
-        return MapToDto(entity);
+        var serviceName = await ResolveServiceNameAsync(entity.ServiceId);
+        var connectedDomainName = await ResolveRegisteredDomainNameAsync(entity.RegisteredDomainId);
+        return MapToDto(entity, serviceName, connectedDomainName);
     }
 
     public async Task<bool> DeleteAsync(int id)
@@ -120,13 +132,39 @@ public class SoldOptionalServiceService : ISoldOptionalServiceService
         return true;
     }
 
-    private static SoldOptionalServiceDto MapToDto(SoldOptionalService entity)
+    private async Task<string> ResolveServiceNameAsync(int serviceId)
+    {
+        return await _context.Services
+            .AsNoTracking()
+            .Where(x => x.Id == serviceId)
+            .Select(x => x.Name)
+            .FirstOrDefaultAsync() ?? string.Empty;
+    }
+
+    private async Task<string> ResolveRegisteredDomainNameAsync(int? registeredDomainId)
+    {
+        if (!registeredDomainId.HasValue)
+        {
+            return string.Empty;
+        }
+
+        return await _context.RegisteredDomains
+            .AsNoTracking()
+            .Where(x => x.Id == registeredDomainId.Value)
+            .Select(x => x.Name)
+            .FirstOrDefaultAsync() ?? string.Empty;
+    }
+
+    private static SoldOptionalServiceDto MapToDto(SoldOptionalService entity, string? serviceName = null, string? connectedDomainName = null)
     {
         return new SoldOptionalServiceDto
         {
             Id = entity.Id,
             CustomerId = entity.CustomerId,
             ServiceId = entity.ServiceId,
+            RegisteredDomainId = entity.RegisteredDomainId,
+            ServiceName = serviceName ?? entity.Service?.Name ?? string.Empty,
+            ConnectedDomainName = connectedDomainName ?? entity.RegisteredDomain?.Name ?? string.Empty,
             OrderId = entity.OrderId,
             OrderLineId = entity.OrderLineId,
             Quantity = entity.Quantity,
