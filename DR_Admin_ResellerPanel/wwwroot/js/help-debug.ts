@@ -29,6 +29,17 @@
         Message?: string;
     }
 
+    interface DebugRuntimeInfoResponse {
+        databaseConnectionDescription?: string;
+        DatabaseConnectionDescription?: string;
+        simulatorRegistrarDatabasePath?: string;
+        SimulatorRegistrarDatabasePath?: string;
+        userJsonImportFilePath?: string;
+        UserJsonImportFilePath?: string;
+        adminJsonImportFilePath?: string;
+        AdminJsonImportFilePath?: string;
+    }
+
     const typedWindow = window as AuthWindow;
     let isDebugMode = false;
 
@@ -75,6 +86,76 @@
 
     function setLastSnapshotFile(value: string): void {
         setText('help-debug-snapshot-last-file', value || '-');
+    }
+
+    function getText(id: string): string {
+        const el = document.getElementById(id);
+        return el?.textContent?.trim() ?? '';
+    }
+
+    async function copyToClipboard(value: string, successMessage: string): Promise<void> {
+        if (!value) {
+            showError('Nothing to copy.');
+            return;
+        }
+
+        try {
+            await navigator.clipboard.writeText(value);
+            showSuccess(successMessage);
+        } catch {
+            showError('Unable to copy to clipboard.');
+        }
+    }
+
+    function setAuthTokenDisplay(): void {
+        const token = getAuthToken();
+        setText('help-debug-auth-token', token && token.length > 0 ? token : '-');
+    }
+
+    async function copyAuthToken(): Promise<void> {
+        const token = getAuthToken();
+        await copyToClipboard(token ?? '', 'rp_authToken copied to clipboard.');
+    }
+
+    async function copyPathValue(sourceId: string, label: string): Promise<void> {
+        const value = getText(sourceId);
+        await copyToClipboard(value === '-' ? '' : value, `${label} path copied to clipboard.`);
+    }
+
+    async function copyAllPaths(): Promise<void> {
+        const simulatorDbPath = getText('help-debug-path-simulator-db');
+        const userJsonPath = getText('help-debug-path-user-json');
+        const adminJsonPath = getText('help-debug-path-admin-json');
+
+        const lines = [
+            `simulator-registrar database: ${simulatorDbPath}`,
+            `user json import file: ${userJsonPath}`,
+            `admin json import file: ${adminJsonPath}`,
+        ].filter((line) => !line.endsWith(': -'));
+
+        await copyToClipboard(lines.join('\n'), 'All debug paths copied to clipboard.');
+    }
+
+    async function loadDebugRuntimeInfo(): Promise<void> {
+        const result = await callApi<DebugRuntimeInfoResponse>('/Test/debug-runtime-info', 'GET');
+        if (!result) {
+            setText('help-debug-db-connection', 'Unavailable');
+            setText('help-debug-path-simulator-db', '-');
+            setText('help-debug-path-user-json', '-');
+            setText('help-debug-path-admin-json', '-');
+            showError('Failed to load debug runtime details.');
+            return;
+        }
+
+        const connectionDescription = result.databaseConnectionDescription ?? result.DatabaseConnectionDescription ?? 'Unavailable';
+        const simulatorDbPath = result.simulatorRegistrarDatabasePath ?? result.SimulatorRegistrarDatabasePath ?? '-';
+        const userJsonPath = result.userJsonImportFilePath ?? result.UserJsonImportFilePath ?? '-';
+        const adminJsonPath = result.adminJsonImportFilePath ?? result.AdminJsonImportFilePath ?? '-';
+
+        setText('help-debug-db-connection', connectionDescription);
+        setText('help-debug-path-simulator-db', simulatorDbPath);
+        setText('help-debug-path-user-json', userJsonPath);
+        setText('help-debug-path-admin-json', adminJsonPath);
     }
 
     async function exportSnapshot(): Promise<void> {
@@ -203,6 +284,7 @@
 
     async function refreshStatus(): Promise<void> {
         hideAlerts();
+        setAuthTokenDisplay();
 
         const buildMode = await getBuildMode();
         if (!buildMode) {
@@ -227,6 +309,8 @@
             return;
         }
 
+        await loadDebugRuntimeInfo();
+
         showSuccess('Debug mode verified.');
     }
 
@@ -241,6 +325,26 @@
 
         document.getElementById('help-debug-seed-test-data')?.addEventListener('click', () => {
             void seedTestData();
+        });
+
+        document.getElementById('help-debug-copy-token')?.addEventListener('click', () => {
+            void copyAuthToken();
+        });
+
+        document.getElementById('help-debug-copy-path-simulator-db')?.addEventListener('click', () => {
+            void copyPathValue('help-debug-path-simulator-db', 'Simulator registrar database');
+        });
+
+        document.getElementById('help-debug-copy-path-user-json')?.addEventListener('click', () => {
+            void copyPathValue('help-debug-path-user-json', 'User json import file');
+        });
+
+        document.getElementById('help-debug-copy-path-admin-json')?.addEventListener('click', () => {
+            void copyPathValue('help-debug-path-admin-json', 'Admin json import file');
+        });
+
+        document.getElementById('help-debug-copy-all-paths')?.addEventListener('click', () => {
+            void copyAllPaths();
         });
     }
 

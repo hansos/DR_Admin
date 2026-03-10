@@ -1,3 +1,4 @@
+using ISPAdmin.DTOs;
 using ISPAdmin.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -14,6 +15,8 @@ namespace ISPAdmin.Controllers;
 public class TestController : ControllerBase
 {
     private readonly ISystemService _systemService;
+    private readonly IConfiguration _configuration;
+    private readonly IWebHostEnvironment _hostEnvironment;
     private static readonly Serilog.ILogger _log = Log.ForContext<TestController>();
 #if DEBUG
     private const bool IsDebugBuild = true;
@@ -21,9 +24,11 @@ public class TestController : ControllerBase
     private const bool IsDebugBuild = false;
 #endif
 
-    public TestController(ISystemService systemService)
+    public TestController(ISystemService systemService, IConfiguration configuration, IWebHostEnvironment hostEnvironment)
     {
         _systemService = systemService;
+        _configuration = configuration;
+        _hostEnvironment = hostEnvironment;
     }
 
     /// <summary>
@@ -211,5 +216,61 @@ public class TestController : ControllerBase
             Mode = mode,
             IsDebug = IsDebugBuild
         });
+    }
+
+    /// <summary>
+    /// Returns debug-only runtime details used by the reseller debug help page.
+    /// </summary>
+    /// <returns>Resolved database description and important debug file paths.</returns>
+    /// <response code="200">Returns runtime debug information</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user is not an admin or API is not running in debug mode</response>
+    [HttpGet("debug-runtime-info")]
+    [ProducesResponseType(typeof(TestDebugRuntimeInfoDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public ActionResult<TestDebugRuntimeInfoDto> GetDebugRuntimeInfo()
+    {
+        if (!IsDebugBuild)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = "This endpoint is only available in Debug mode." });
+        }
+
+        var databaseType = _configuration["DbSettings:DatabaseType"] ?? "Unknown";
+        var connectionString = _configuration.GetConnectionString("DefaultConnection") ?? string.Empty;
+        var sqlitePath = ExtractSqliteDbPath(connectionString);
+        var contentRoot = string.IsNullOrWhiteSpace(_hostEnvironment.ContentRootPath)
+            ? Directory.GetCurrentDirectory()
+            : _hostEnvironment.ContentRootPath;
+
+        var snapshotsDirectory = Path.Combine(contentRoot, "DebugSnapshots");
+        var result = new TestDebugRuntimeInfoDto
+        {
+            DatabaseConnectionDescription = string.Equals(databaseType, "SQLITE", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(sqlitePath)
+                ? $"DatabaseType={databaseType}; Data Source={sqlitePath}"
+                : $"DatabaseType={databaseType}; ConnectionString={connectionString}",
+            SimulatorRegistrarDatabasePath = Path.Combine(AppContext.BaseDirectory, "simulator-data", "domains.json"),
+            UserJsonImportFilePath = Path.Combine(snapshotsDirectory, "user.json"),
+            AdminJsonImportFilePath = Path.Combine(snapshotsDirectory, "admin.json")
+        };
+
+        return Ok(result);
+    }
+
+    private static string ExtractSqliteDbPath(string connectionString)
+    {
+        var dataSourcePrefix = "Data Source=";
+        var startIndex = connectionString.IndexOf(dataSourcePrefix, StringComparison.OrdinalIgnoreCase);
+        if (startIndex < 0)
+        {
+            return string.Empty;
+        }
+
+        startIndex += dataSourcePrefix.Length;
+        var endIndex = connectionString.IndexOf(';', startIndex);
+
+        return endIndex < 0
+            ? connectionString[startIndex..].Trim()
+            : connectionString[startIndex..endIndex].Trim();
     }
 }

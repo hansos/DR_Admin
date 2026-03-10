@@ -39,6 +39,65 @@
     function setLastSnapshotFile(value) {
         setText('help-debug-snapshot-last-file', value || '-');
     }
+    function getText(id) {
+        const el = document.getElementById(id);
+        return el?.textContent?.trim() ?? '';
+    }
+    async function copyToClipboard(value, successMessage) {
+        if (!value) {
+            showError('Nothing to copy.');
+            return;
+        }
+        try {
+            await navigator.clipboard.writeText(value);
+            showSuccess(successMessage);
+        }
+        catch {
+            showError('Unable to copy to clipboard.');
+        }
+    }
+    function setAuthTokenDisplay() {
+        const token = getAuthToken();
+        setText('help-debug-auth-token', token && token.length > 0 ? token : '-');
+    }
+    async function copyAuthToken() {
+        const token = getAuthToken();
+        await copyToClipboard(token ?? '', 'rp_authToken copied to clipboard.');
+    }
+    async function copyPathValue(sourceId, label) {
+        const value = getText(sourceId);
+        await copyToClipboard(value === '-' ? '' : value, `${label} path copied to clipboard.`);
+    }
+    async function copyAllPaths() {
+        const simulatorDbPath = getText('help-debug-path-simulator-db');
+        const userJsonPath = getText('help-debug-path-user-json');
+        const adminJsonPath = getText('help-debug-path-admin-json');
+        const lines = [
+            `simulator-registrar database: ${simulatorDbPath}`,
+            `user json import file: ${userJsonPath}`,
+            `admin json import file: ${adminJsonPath}`,
+        ].filter((line) => !line.endsWith(': -'));
+        await copyToClipboard(lines.join('\n'), 'All debug paths copied to clipboard.');
+    }
+    async function loadDebugRuntimeInfo() {
+        const result = await callApi('/Test/debug-runtime-info', 'GET');
+        if (!result) {
+            setText('help-debug-db-connection', 'Unavailable');
+            setText('help-debug-path-simulator-db', '-');
+            setText('help-debug-path-user-json', '-');
+            setText('help-debug-path-admin-json', '-');
+            showError('Failed to load debug runtime details.');
+            return;
+        }
+        const connectionDescription = result.databaseConnectionDescription ?? result.DatabaseConnectionDescription ?? 'Unavailable';
+        const simulatorDbPath = result.simulatorRegistrarDatabasePath ?? result.SimulatorRegistrarDatabasePath ?? '-';
+        const userJsonPath = result.userJsonImportFilePath ?? result.UserJsonImportFilePath ?? '-';
+        const adminJsonPath = result.adminJsonImportFilePath ?? result.AdminJsonImportFilePath ?? '-';
+        setText('help-debug-db-connection', connectionDescription);
+        setText('help-debug-path-simulator-db', simulatorDbPath);
+        setText('help-debug-path-user-json', userJsonPath);
+        setText('help-debug-path-admin-json', adminJsonPath);
+    }
     async function exportSnapshot() {
         if (!isDebugMode) {
             showError('Export is only available in Debug mode.');
@@ -140,6 +199,7 @@
     }
     async function refreshStatus() {
         hideAlerts();
+        setAuthTokenDisplay();
         const buildMode = await getBuildMode();
         if (!buildMode) {
             setText('help-debug-build-mode', 'Unavailable');
@@ -159,6 +219,7 @@
             }, 1200);
             return;
         }
+        await loadDebugRuntimeInfo();
         showSuccess('Debug mode verified.');
     }
     function bindEvents() {
@@ -170,6 +231,21 @@
         });
         document.getElementById('help-debug-seed-test-data')?.addEventListener('click', () => {
             void seedTestData();
+        });
+        document.getElementById('help-debug-copy-token')?.addEventListener('click', () => {
+            void copyAuthToken();
+        });
+        document.getElementById('help-debug-copy-path-simulator-db')?.addEventListener('click', () => {
+            void copyPathValue('help-debug-path-simulator-db', 'Simulator registrar database');
+        });
+        document.getElementById('help-debug-copy-path-user-json')?.addEventListener('click', () => {
+            void copyPathValue('help-debug-path-user-json', 'User json import file');
+        });
+        document.getElementById('help-debug-copy-path-admin-json')?.addEventListener('click', () => {
+            void copyPathValue('help-debug-path-admin-json', 'Admin json import file');
+        });
+        document.getElementById('help-debug-copy-all-paths')?.addEventListener('click', () => {
+            void copyAllPaths();
         });
     }
     function initializePage() {

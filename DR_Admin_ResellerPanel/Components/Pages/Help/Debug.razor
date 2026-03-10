@@ -30,6 +30,66 @@
     </div>
 
     <div class="card shadow-sm mb-3">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-key"></i> Auth Token</h5>
+            <button id="help-debug-copy-token" class="btn btn-outline-secondary" type="button">
+                <i class="bi bi-clipboard"></i> Copy rp_authToken
+            </button>
+        </div>
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Token</dt>
+                <dd class="col-sm-9 text-break" id="help-debug-auth-token">-</dd>
+            </dl>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-header bg-light">
+            <h5 class="mb-0"><i class="bi bi-diagram-3"></i> Database Connection</h5>
+        </div>
+        <div class="card-body">
+            <p id="help-debug-db-connection" class="mb-0 text-break">-</p>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-folder2-open"></i> Debug Paths</h5>
+            <button id="help-debug-copy-all-paths" class="btn btn-outline-secondary" type="button">
+                <i class="bi bi-clipboard-check"></i> Copy All Paths
+            </button>
+        </div>
+        <div class="card-body">
+            <dl class="row mb-2">
+                <dt class="col-sm-4">Simulator registrar database</dt>
+                <dd class="col-sm-8 d-flex flex-wrap gap-2 align-items-start">
+                    <span class="text-break flex-grow-1" id="help-debug-path-simulator-db">-</span>
+                    <button id="help-debug-copy-path-simulator-db" class="btn btn-sm btn-outline-secondary" type="button">
+                        <i class="bi bi-clipboard"></i> Copy
+                    </button>
+                </dd>
+
+                <dt class="col-sm-4">User json import file</dt>
+                <dd class="col-sm-8 d-flex flex-wrap gap-2 align-items-start">
+                    <span class="text-break flex-grow-1" id="help-debug-path-user-json">-</span>
+                    <button id="help-debug-copy-path-user-json" class="btn btn-sm btn-outline-secondary" type="button">
+                        <i class="bi bi-clipboard"></i> Copy
+                    </button>
+                </dd>
+
+                <dt class="col-sm-4">Admin json import file</dt>
+                <dd class="col-sm-8 d-flex flex-wrap gap-2 align-items-start mb-0">
+                    <span class="text-break flex-grow-1" id="help-debug-path-admin-json">-</span>
+                    <button id="help-debug-copy-path-admin-json" class="btn btn-sm btn-outline-secondary" type="button">
+                        <i class="bi bi-clipboard"></i> Copy
+                    </button>
+                </dd>
+            </dl>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-3">
         <div class="card-header bg-light">
             <h5 class="mb-0"><i class="bi bi-save2"></i> Admin User + MyCompany Snapshot</h5>
         </div>
