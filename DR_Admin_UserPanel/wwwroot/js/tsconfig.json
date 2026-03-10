@@ -38,6 +38,7 @@
     "hosting-details.ts",
     "contact-persons.ts",
     "invoices.ts",
+    "orders.ts",
     "renewals.ts",
     "notifications.ts",
     "security-2fa.ts",

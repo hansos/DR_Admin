@@ -1,0 +1,50 @@
+@page "/billing/orders"
+
+<PageTitle>Orders</PageTitle>
+
+<div class="container py-4" id="orders-page">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <h1 class="h4 mb-1">Orders</h1>
+            <p class="text-muted mb-0">Review your orders and line details.</p>
+        </div>
+    </div>
+
+    <div id="orders-alert-success" class="alert alert-success d-none" role="alert"></div>
+    <div id="orders-alert-error" class="alert alert-danger d-none" role="alert"></div>
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Order</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Next billing</th>
+                            <th>Recurring</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="orders-table-body">
+                        <tr><td colspan="7" class="text-center text-muted">Loading orders...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <div id="orders-pagination-info" class="small text-muted"></div>
+                <div class="d-flex gap-2">
+                    <button id="orders-prev" class="btn btn-sm btn-outline-secondary" type="button">Previous</button>
+                    <button id="orders-next" class="btn btn-sm btn-outline-secondary" type="button">Next</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm d-none" id="orders-details-card">
+        <div class="card-header">Order lines</div>
+        <div class="card-body" id="orders-details-body"></div>
+    </div>
+</div>
