@@ -16,6 +16,7 @@
     "auth-confirm-email.ts",
     "api-client.ts",
     "alerts.ts",
+    "home.ts",
     "cart-state.ts",
     "auth-register.ts",
     "auth-login.ts",

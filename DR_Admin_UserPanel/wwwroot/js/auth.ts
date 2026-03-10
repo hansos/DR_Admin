@@ -90,6 +90,7 @@ function isPublicRoute(path: string): boolean {
     return normalized === '/' ||
         normalized === '/about' ||
         normalized === '/about-public' ||
+        normalized === '/shop/domain-search' ||
         normalized === '/account/login' ||
         normalized === '/account/register' ||
         normalized === '/account/forgot-password' ||
@@ -120,32 +121,18 @@ function enforceGuard(): void {
 }
 
 function routeHomeByAuth(): void {
-    const path = window.location.pathname.toLowerCase();
-    if (path !== '/') {
-        return;
-    }
-
-    const homePage = document.getElementById('home-page');
-    if (!homePage) {
-        return;
-    }
-
-    if (isLoggedIn()) {
-        window.location.href = '/dashboard';
-        return;
-    }
-
-    window.location.href = '/account/login';
+    return;
 }
 
 function logout(): void {
     clearSession();
-    window.location.href = '/account/login';
+    window.location.href = '/';
 }
 
 function syncAuthUi(): void {
     const loggedIn = isLoggedIn();
     const session = getSession();
+    const currentPath = window.location.pathname.toLowerCase();
 
     const logoutButton = document.getElementById('global-logout') as HTMLButtonElement | null;
     if (logoutButton) {
@@ -161,6 +148,22 @@ function syncAuthUi(): void {
         } else {
             topAuthUserName.textContent = '';
             topAuthInfo.classList.add('d-none');
+        }
+    }
+
+    const publicAuthLink = document.getElementById('public-auth-link') as HTMLAnchorElement | null;
+    if (publicAuthLink) {
+        const hidePublicSignIn = !loggedIn && currentPath === '/account/login';
+        publicAuthLink.classList.toggle('d-none', hidePublicSignIn);
+
+        if (loggedIn) {
+            publicAuthLink.href = '#';
+            publicAuthLink.dataset.mode = 'signout';
+            publicAuthLink.innerHTML = '<i class="bi bi-box-arrow-in-right"></i>&nbsp;Sign out';
+        } else {
+            publicAuthLink.href = '/account/login';
+            publicAuthLink.dataset.mode = 'signin';
+            publicAuthLink.innerHTML = '<i class="bi bi-box-arrow-in-right"></i>&nbsp;Sign in';
         }
     }
 }
@@ -182,6 +185,22 @@ function bindLogoutButton(): void {
 
     topLogout.dataset.bound = 'true';
     topLogout.addEventListener('click', (event: Event) => {
+        event.preventDefault();
+        logout();
+    });
+
+    const publicAuthLink = document.getElementById('public-auth-link') as HTMLAnchorElement | null;
+    if (!publicAuthLink || publicAuthLink.dataset.bound === 'true') {
+        return;
+    }
+
+    publicAuthLink.dataset.bound = 'true';
+    publicAuthLink.addEventListener('click', (event: Event) => {
+        const mode = publicAuthLink.dataset.mode ?? '';
+        if (mode !== 'signout') {
+            return;
+        }
+
         event.preventDefault();
         logout();
     });

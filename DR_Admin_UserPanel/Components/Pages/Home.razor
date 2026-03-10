@@ -4,11 +4,50 @@
 <PageTitle>DR User Panel</PageTitle>
 
 <div class="container py-5" id="home-page">
-    <div class="row justify-content-center">
-        <div class="col-12 col-lg-6">
-            <div class="text-center">
-                <p class="text-muted mb-3">Redirecting...</p>
-                <a href="/account/login" class="btn btn-outline-primary">Continue</a>
+    <div class="row justify-content-center mb-4">
+        <div class="col-12 col-xl-10">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4 p-lg-5">
+                    <div class="mb-3">
+                        <h1 class="h3 mb-2">Welcome to DR Admin Shop</h1>
+                        <p class="text-muted mb-0">Search, register, and manage your domains, hosting, and services in one place.</p>
+                    </div>
+
+                    <form id="home-domain-search-form" class="row g-2" novalidate>
+                        <div class="col-12 col-md-8">
+                            <label for="home-domain-search-input" class="form-label">Find your domain</label>
+                            <input id="home-domain-search-input" name="domain" class="form-control" type="text" placeholder="example.com" required />
+                        </div>
+                        <div class="col-12 col-md-4 d-flex align-items-end">
+                            <button class="btn btn-primary w-100" type="submit">
+                                <i class="bi bi-search"></i> Search
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 justify-content-center">
+        <div class="col-12 col-md-6 col-xl-5">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <h2 class="h6 mb-2">About our site</h2>
+                    <p class="text-muted mb-0">We provide a self-service portal for domain lifecycle, DNS management, hosting setup, and billing workflows.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-xl-5">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <h2 class="h6 mb-2">What you can do</h2>
+                    <ul class="mb-0 text-muted ps-3">
+                        <li>Search and register available domains</li>
+                        <li>Bundle hosting and optional services</li>
+                        <li>Track orders, invoices, and renewals</li>
+                    </ul>
+                </div>
             </div>
         </div>
     </div>

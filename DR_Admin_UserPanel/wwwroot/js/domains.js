@@ -114,8 +114,15 @@
         info.textContent = `Page ${domainsPageNumber} · Showing ${count} item(s)`;
     }
     function formatDomainsDate(value) {
-        const date = new Date(value);
+        const normalizedValue = value?.trim();
+        if (!normalizedValue) {
+            return '-';
+        }
+        const date = new Date(normalizedValue);
         if (Number.isNaN(date.getTime())) {
+            return '-';
+        }
+        if (date.getUTCFullYear() <= 1970) {
             return '-';
         }
         return date.toLocaleDateString();

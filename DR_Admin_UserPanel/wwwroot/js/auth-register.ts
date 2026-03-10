@@ -19,6 +19,11 @@ interface RegisterResponseDto {
     message?: string;
 }
 
+interface RegisterBuildResult {
+    request: RegisterRequestDto | null;
+    errorMessage: string | null;
+}
+
 interface RegisterWindow extends Window {
     UserPanelSettings?: {
         frontendSiteCode: string;
@@ -54,15 +59,15 @@ function initializeRegister(): void {
         typedWindow.UserPanelAlerts?.hide('auth-register-alert-success');
         typedWindow.UserPanelAlerts?.hide('auth-register-alert-error');
 
-        const request = buildRegisterRequest();
-        if (!request) {
-            typedWindow.UserPanelAlerts?.showError('auth-register-alert-error', 'Please fill in all required registration fields.');
+        const buildResult = buildRegisterRequest();
+        if (!buildResult.request) {
+            typedWindow.UserPanelAlerts?.showError('auth-register-alert-error', buildResult.errorMessage ?? 'Please fill in all required registration fields.');
             return;
         }
 
         const response = await typedWindow.UserPanelApi?.request<RegisterResponseDto>('/MyAccount/register', {
             method: 'POST',
-            body: JSON.stringify(request)
+            body: JSON.stringify(buildResult.request)
         }, false);
 
         if (!response) {
@@ -99,7 +104,7 @@ function bindRegisterPasswordToggle(inputId: string, toggleId: string): void {
     });
 }
 
-function buildRegisterRequest(): RegisterRequestDto | null {
+function buildRegisterRequest(): RegisterBuildResult {
     const username = readValue('auth-register-username');
     const email = readValue('auth-register-email');
     const password = readValue('auth-register-password');
@@ -111,29 +116,38 @@ function buildRegisterRequest(): RegisterRequestDto | null {
     const customerAddress = readValue('auth-register-customer-address');
 
     if (!username || !email || !password || !confirmPassword || !customerName || !contactFirstName || !contactLastName) {
-        return null;
+        return {
+            request: null,
+            errorMessage: 'Please fill in all required registration fields.'
+        };
     }
 
     if (password !== confirmPassword) {
-        return null;
+        return {
+            request: null,
+            errorMessage: 'Passwords do not match. Please enter the same password in both fields.'
+        };
     }
 
     const typedWindow = window as RegisterWindow;
     const siteCode = typedWindow.UserPanelSettings?.frontendSiteCode ?? 'shop';
 
     return {
-        username,
-        email,
-        password,
-        confirmPassword,
-        customerName,
-        customerEmail: email,
-        customerPhone,
-        customerAddress,
-        contactFirstName,
-        contactLastName,
-        siteCode,
-        isSelfRegisteredCustomer: true
+        request: {
+            username,
+            email,
+            password,
+            confirmPassword,
+            customerName,
+            customerEmail: email,
+            customerPhone,
+            customerAddress,
+            contactFirstName,
+            contactLastName,
+            siteCode,
+            isSelfRegisteredCustomer: true
+        },
+        errorMessage: null
     };
 }
 

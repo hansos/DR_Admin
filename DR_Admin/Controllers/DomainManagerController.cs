@@ -155,7 +155,7 @@ public class DomainManagerController : ControllerBase
     /// <response code="403">If user doesn't have required permissions</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("registrar/{registrarCode}/domain/name/{domainName}/is-available")]
-    [Authorize(Policy = "Domain.Read")]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(DomainAvailabilityResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -210,7 +210,7 @@ public class DomainManagerController : ControllerBase
     /// <response code="403">If user doesn't have required permissions</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("domain/name/{domainName}/alternatives")]
-    [Authorize(Policy = "Domain.Read")]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(DomainNameAlternativesResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

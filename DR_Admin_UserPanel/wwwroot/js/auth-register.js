@@ -12,14 +12,14 @@ function initializeRegister() {
         const typedWindow = window;
         typedWindow.UserPanelAlerts?.hide('auth-register-alert-success');
         typedWindow.UserPanelAlerts?.hide('auth-register-alert-error');
-        const request = buildRegisterRequest();
-        if (!request) {
-            typedWindow.UserPanelAlerts?.showError('auth-register-alert-error', 'Please fill in all required registration fields.');
+        const buildResult = buildRegisterRequest();
+        if (!buildResult.request) {
+            typedWindow.UserPanelAlerts?.showError('auth-register-alert-error', buildResult.errorMessage ?? 'Please fill in all required registration fields.');
             return;
         }
         const response = await typedWindow.UserPanelApi?.request('/MyAccount/register', {
             method: 'POST',
-            body: JSON.stringify(request)
+            body: JSON.stringify(buildResult.request)
         }, false);
         if (!response) {
             typedWindow.UserPanelAlerts?.showError('auth-register-alert-error', 'Registration request could not be sent.');
@@ -61,26 +61,35 @@ function buildRegisterRequest() {
     const customerPhone = readValue('auth-register-customer-phone');
     const customerAddress = readValue('auth-register-customer-address');
     if (!username || !email || !password || !confirmPassword || !customerName || !contactFirstName || !contactLastName) {
-        return null;
+        return {
+            request: null,
+            errorMessage: 'Please fill in all required registration fields.'
+        };
     }
     if (password !== confirmPassword) {
-        return null;
+        return {
+            request: null,
+            errorMessage: 'Passwords do not match. Please enter the same password in both fields.'
+        };
     }
     const typedWindow = window;
     const siteCode = typedWindow.UserPanelSettings?.frontendSiteCode ?? 'shop';
     return {
-        username,
-        email,
-        password,
-        confirmPassword,
-        customerName,
-        customerEmail: email,
-        customerPhone,
-        customerAddress,
-        contactFirstName,
-        contactLastName,
-        siteCode,
-        isSelfRegisteredCustomer: true
+        request: {
+            username,
+            email,
+            password,
+            confirmPassword,
+            customerName,
+            customerEmail: email,
+            customerPhone,
+            customerAddress,
+            contactFirstName,
+            contactLastName,
+            siteCode,
+            isSelfRegisteredCustomer: true
+        },
+        errorMessage: null
     };
 }
 function readValue(id) {

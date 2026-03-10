@@ -112,7 +112,8 @@
             statusBox.textContent = '2FA endpoint is not available yet for this environment.';
             return;
         }
-        setTwoFactorActionsMode(status.enabled ? 'enabled' : 'disabled');
+        const hasReusableSetup = !status.enabled && normalizeTwoFactorMethod(status.method) === 'Authenticator';
+        setTwoFactorActionsMode(status.enabled ? 'enabled' : (hasReusableSetup ? 'disabled' : 'definition'));
         checkbox.checked = status.enabled;
         updateVerificationMethodAvailability();
         const recovery = status.recoveryCodesRemaining ?? 0;

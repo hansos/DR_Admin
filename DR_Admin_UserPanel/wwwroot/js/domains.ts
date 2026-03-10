@@ -172,8 +172,17 @@ function setDomainsPaginationInfo(count: number): void {
 }
 
 function formatDomainsDate(value: string): string {
-    const date = new Date(value);
+    const normalizedValue = value?.trim();
+    if (!normalizedValue) {
+        return '-';
+    }
+
+    const date = new Date(normalizedValue);
     if (Number.isNaN(date.getTime())) {
+        return '-';
+    }
+
+    if (date.getUTCFullYear() <= 1970) {
         return '-';
     }
 

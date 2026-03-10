@@ -170,7 +170,8 @@ function renderTwoFactorStatus(status: TwoFactorStatusDto | null): void {
         return;
     }
 
-    setTwoFactorActionsMode(status.enabled ? 'enabled' : 'disabled');
+    const hasReusableSetup = !status.enabled && normalizeTwoFactorMethod(status.method) === 'Authenticator';
+    setTwoFactorActionsMode(status.enabled ? 'enabled' : (hasReusableSetup ? 'disabled' : 'definition'));
     checkbox.checked = status.enabled;
     updateVerificationMethodAvailability();
     const recovery = status.recoveryCodesRemaining ?? 0;

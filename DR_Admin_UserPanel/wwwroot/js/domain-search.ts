@@ -70,6 +70,9 @@ interface DomainSearchWindow extends Window {
     UserPanelApi?: {
         request: <T>(path: string, options?: RequestInit, requiresAuth?: boolean) => Promise<{ success: boolean; data?: T; message?: string; statusCode?: number }>;
     };
+    UserPanelAuth?: {
+        isLoggedIn: () => boolean;
+    };
     UserPanelAlerts?: {
         showSuccess: (id: string, message: string) => void;
         showError: (id: string, message: string) => void;
@@ -135,8 +138,12 @@ let latestCalculatedCurrency = 'USD';
 let latestTldId: number | null = null;
 let latestPrivacyPrice: number | null = null;
 let isDomainSelectionLocked = false;
+let hasAttemptedDomainSearch = false;
 const basketPositionStorageKey = 'up_domain_search_basket_position';
 const domainSearchCheckoutOrderMarkerStorageKey = 'up_checkout_last_added_order';
+const domainSearchGuestAttemptsStorageKey = 'up_domain_search_guest_attempts';
+const domainSearchGuestAttemptsLimit = 10;
+const domainSearchGuestAttemptsWindowMs = 60 * 60 * 1000;
 
 function initializeDomainSearch(): void {
     const form = document.getElementById('domain-search-form') as HTMLFormElement | null;
@@ -154,6 +161,11 @@ function initializeDomainSearch(): void {
     const addAndBundleButton = document.getElementById('domain-search-add-and-bundle') as HTMLButtonElement | null;
     addAndBundleButton?.addEventListener('click', () => {
         if (!addResultToCart(false)) {
+            return;
+        }
+
+        if (!isDomainSearchUserLoggedIn()) {
+            redirectToLoginFromDomainSearch(true);
             return;
         }
 
@@ -339,6 +351,9 @@ function updateDomainSearchDeleteOrderVisibility(): void {
         typedWindow.UserPanelAlerts?.hide('domain-search-alert-success');
         typedWindow.UserPanelAlerts?.hide('domain-search-alert-error');
 
+        hasAttemptedDomainSearch = true;
+        updateDomainSearchDeleteOrderVisibility();
+
         isDomainSelectionLocked = false;
         setDomainFormLocked(false);
 
@@ -358,9 +373,14 @@ function updateDomainSearchDeleteOrderVisibility(): void {
         const encodedDomain = encodeURIComponent(domainName);
         const encodedRegistrarId = encodeURIComponent(registrar.id.toString());
 
+        if (!isDomainSearchUserLoggedIn() && registerGuestDomainSearchAttemptAndShouldForceLogin()) {
+            redirectToLoginFromDomainSearch(false);
+            return;
+        }
+
         const response = await typedWindow.UserPanelApi?.request<DomainAvailabilityResult>(`/Registrars/${encodedRegistrarId}/isavailable/${encodedDomain}`, {
             method: 'GET'
-        }, true);
+        }, false);
 
         if (!response || !response.success || !response.data) {
             typedWindow.UserPanelAlerts?.showError('domain-search-alert-error', response?.message ?? 'Could not check domain availability.');
@@ -374,7 +394,32 @@ function updateDomainSearchDeleteOrderVisibility(): void {
         renderResult(response.data);
     });
 
+    applyDomainSearchQueryPrefillAndSubmit(form);
     void restoreDomainSearchFromCart();
+}
+
+function applyDomainSearchQueryPrefillAndSubmit(form: HTMLFormElement): void {
+    const query = new URLSearchParams(window.location.search);
+    const domain = (query.get('domain') ?? '').trim();
+    if (!domain) {
+        return;
+    }
+
+    const input = document.getElementById('domain-search-input') as HTMLInputElement | null;
+    if (!input) {
+        return;
+    }
+
+    input.value = domain;
+
+    if (form.dataset.autoSearchDomain === domain.toLowerCase()) {
+        return;
+    }
+
+    form.dataset.autoSearchDomain = domain.toLowerCase();
+    window.setTimeout(() => {
+        form.requestSubmit();
+    }, 0);
 }
 
 function showTransferNotImplementedModal(): void {
@@ -407,17 +452,21 @@ function updateDomainSearchDeleteOrderVisibility(): void {
     }
 
     const marker = getStoredCheckoutOrderMarker();
+    const hasCartLines = hasDomainSearchCartLines();
+
+    const canDelete = hasAttemptedDomainSearch && ((marker?.orderId ?? 0) > 0 || hasCartLines);
+    button.classList.toggle('d-none', !canDelete);
+}
+
+function hasDomainSearchCartLines(): boolean {
     const typedWindow = window as DomainSearchWindow;
     const state = typedWindow.UserPanelCart?.getState();
 
-    const hasCartLines = !!state && (
+    return !!state && (
         state.domain !== null ||
         state.hosting.length > 0 ||
         state.services.length > 0
     );
-
-    const canDelete = (marker?.orderId ?? 0) > 0 || hasCartLines;
-    button.classList.toggle('d-none', !canDelete);
 }
 
 function getStoredCheckoutOrderMarker(): CheckoutOrderMarker | null {
@@ -503,6 +552,10 @@ async function deleteOrderFromDomainSearch(): Promise<void> {
 }
 
 async function restoreDomainSearchFromCart(): Promise<void> {
+    if (!isDomainSearchUserLoggedIn()) {
+        return;
+    }
+
     const typedWindow = window as DomainSearchWindow;
     const state = typedWindow.UserPanelCart?.getState();
     if (!state?.domain) {
@@ -554,6 +607,16 @@ async function restoreDomainSearchFromCart(): Promise<void> {
     setUpsellVisibility(true);
     await renderUpsellOptions();
     renderFloatingBasket();
+
+    const query = new URLSearchParams(window.location.search);
+    if (query.get('resumeBundle') === '1') {
+        const upsellCard = document.getElementById('domain-search-upsell-card');
+        upsellCard?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        query.delete('resumeBundle');
+        const updatedQuery = query.toString();
+        const updatedUrl = updatedQuery ? `${window.location.pathname}?${updatedQuery}` : window.location.pathname;
+        window.history.replaceState({}, '', updatedUrl);
+    }
 }
 
 function renderResult(result: DomainAvailabilityResult | null): void {
@@ -756,11 +819,13 @@ function renderSelectedDomainSummary(selection: { domainName: string; periodYear
 
 function getCurrentFlowStep(): 1 | 2 | 3 {
     const marker = getStoredCheckoutOrderMarker();
-    if ((marker?.orderId ?? 0) > 0) {
+    const hasCartLines = hasDomainSearchCartLines();
+
+    if ((marker?.orderId ?? 0) > 0 && hasCartLines) {
         return 3;
     }
 
-    if (isDomainSelectionLocked) {
+    if (isDomainSelectionLocked || hasCartLines) {
         return 2;
     }
 
@@ -823,7 +888,7 @@ async function applyDomainSettings(domainName: string): Promise<void> {
 
     const tldResponse = await typedWindow.UserPanelApi?.request<TldLookupDto>(`/Tlds/extension/${encodeURIComponent(tldExtension)}`, {
         method: 'GET'
-    }, true);
+    }, false);
 
     if (!tldResponse || !tldResponse.success || !tldResponse.data) {
         latestTldId = null;
@@ -882,7 +947,7 @@ async function loadPrivacyPrice(tldId: number): Promise<void> {
     const typedWindow = window as DomainSearchWindow;
     const response = await typedWindow.UserPanelApi?.request<TldSalesPricingDto>(`/tld-pricing/sales/tld/${tldId}/current`, {
         method: 'GET'
-    }, true);
+    }, false);
 
     if (!response || !response.success || !response.data) {
         latestPrivacyPrice = null;
@@ -1434,6 +1499,53 @@ function updateHostingCycle(hostingId: number, billingCycle: 'monthly' | 'yearly
     renderFloatingBasket();
 }
 
+function isDomainSearchUserLoggedIn(): boolean {
+    const typedWindow = window as DomainSearchWindow;
+    return typedWindow.UserPanelAuth?.isLoggedIn() === true;
+}
+
+function registerGuestDomainSearchAttemptAndShouldForceLogin(): boolean {
+    const now = Date.now();
+    const from = now - domainSearchGuestAttemptsWindowMs;
+    const current = getStoredGuestDomainSearchAttempts().filter((value: number) => value >= from);
+    current.push(now);
+    localStorage.setItem(domainSearchGuestAttemptsStorageKey, JSON.stringify(current));
+    return current.length > domainSearchGuestAttemptsLimit;
+}
+
+function getStoredGuestDomainSearchAttempts(): number[] {
+    try {
+        const raw = localStorage.getItem(domainSearchGuestAttemptsStorageKey);
+        if (!raw) {
+            return [];
+        }
+
+        const parsed = JSON.parse(raw) as unknown;
+        if (!Array.isArray(parsed)) {
+            return [];
+        }
+
+        return parsed
+            .filter((value: unknown) => typeof value === 'number' && Number.isFinite(value))
+            .map((value: unknown) => Number(value));
+    } catch {
+        return [];
+    }
+}
+
+function redirectToLoginFromDomainSearch(resumeBundle: boolean): void {
+    const params = new URLSearchParams(window.location.search);
+    if (resumeBundle) {
+        params.set('resumeBundle', '1');
+    } else {
+        params.delete('resumeBundle');
+    }
+
+    const query = params.toString();
+    const returnUrl = query ? `${window.location.pathname}?${query}` : window.location.pathname;
+    window.location.href = `/account/login?returnUrl=${encodeURIComponent(returnUrl)}`;
+}
+
 function getInputValue(id: string): string {
     const input = document.getElementById(id) as HTMLInputElement | HTMLSelectElement | null;
     return input?.value.trim() ?? '';
@@ -1465,7 +1577,7 @@ async function getDefaultRegistrarSelection(): Promise<DefaultRegistrarSelection
     defaultRegistrarCodeRequest = (async () => {
         const response = await typedWindow.UserPanelApi?.request<RegistrarLookupDto[]>('/Registrars/active', {
             method: 'GET'
-        }, true);
+        }, false);
 
         if (!response || !response.success || !response.data) {
             return null;
@@ -1502,7 +1614,7 @@ async function renderAlternativeDomains(domainName: string): Promise<void> {
     const typedWindow = window as DomainSearchWindow;
     const response = await typedWindow.UserPanelApi?.request<AlternativeDomainsResponseDto>(`/DomainManager/domain/name/${encodeURIComponent(domainName)}/alternatives?count=12`, {
         method: 'GET'
-    }, true);
+    }, false);
 
     if (!response || !response.success || !response.data) {
         list.innerHTML = '<div class="list-group-item text-muted">No alternatives found.</div>';
@@ -1538,7 +1650,7 @@ async function checkAlternativeAvailability(domainName: string, registrarCode: s
     const typedWindow = window as DomainSearchWindow;
     const response = await typedWindow.UserPanelApi?.request<DomainAvailabilityResult>(`/DomainManager/registrar/${encodeURIComponent(registrarCode)}/domain/name/${encodeURIComponent(domainName)}/is-available`, {
         method: 'GET'
-    }, true);
+    }, false);
 
     if (!response || !response.success || !response.data) {
         return 'taken';

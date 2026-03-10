@@ -50,6 +50,7 @@
         return normalized === '/' ||
             normalized === '/about' ||
             normalized === '/about-public' ||
+            normalized === '/shop/domain-search' ||
             normalized === '/account/login' ||
             normalized === '/account/register' ||
             normalized === '/account/forgot-password' ||
@@ -75,27 +76,16 @@
         }
     }
     function routeHomeByAuth() {
-        const path = window.location.pathname.toLowerCase();
-        if (path !== '/') {
-            return;
-        }
-        const homePage = document.getElementById('home-page');
-        if (!homePage) {
-            return;
-        }
-        if (isLoggedIn()) {
-            window.location.href = '/dashboard';
-            return;
-        }
-        window.location.href = '/account/login';
+        return;
     }
     function logout() {
         clearSession();
-        window.location.href = '/account/login';
+        window.location.href = '/';
     }
     function syncAuthUi() {
         const loggedIn = isLoggedIn();
         const session = getSession();
+        const currentPath = window.location.pathname.toLowerCase();
         const logoutButton = document.getElementById('global-logout');
         if (logoutButton) {
             logoutButton.style.display = loggedIn ? 'inline-block' : 'none';
@@ -110,6 +100,21 @@
             else {
                 topAuthUserName.textContent = '';
                 topAuthInfo.classList.add('d-none');
+            }
+        }
+        const publicAuthLink = document.getElementById('public-auth-link');
+        if (publicAuthLink) {
+            const hidePublicSignIn = !loggedIn && currentPath === '/account/login';
+            publicAuthLink.classList.toggle('d-none', hidePublicSignIn);
+            if (loggedIn) {
+                publicAuthLink.href = '#';
+                publicAuthLink.dataset.mode = 'signout';
+                publicAuthLink.innerHTML = '<i class="bi bi-box-arrow-in-right"></i>&nbsp;Sign out';
+            }
+            else {
+                publicAuthLink.href = '/account/login';
+                publicAuthLink.dataset.mode = 'signin';
+                publicAuthLink.innerHTML = '<i class="bi bi-box-arrow-in-right"></i>&nbsp;Sign in';
             }
         }
     }
@@ -129,6 +134,19 @@
         }
         topLogout.dataset.bound = 'true';
         topLogout.addEventListener('click', (event) => {
+            event.preventDefault();
+            logout();
+        });
+        const publicAuthLink = document.getElementById('public-auth-link');
+        if (!publicAuthLink || publicAuthLink.dataset.bound === 'true') {
+            return;
+        }
+        publicAuthLink.dataset.bound = 'true';
+        publicAuthLink.addEventListener('click', (event) => {
+            const mode = publicAuthLink.dataset.mode ?? '';
+            if (mode !== 'signout') {
+                return;
+            }
             event.preventDefault();
             logout();
         });

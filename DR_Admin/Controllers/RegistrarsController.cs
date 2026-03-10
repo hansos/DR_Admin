@@ -345,6 +345,7 @@ public class RegistrarsController : ControllerBase
     /// Get active registrars only
     /// </summary>
     [HttpGet("active")]
+    [AllowAnonymous]
     public async Task<ActionResult<IEnumerable<RegistrarDto>>> GetActiveRegistrars()
     {
         try
@@ -539,6 +540,7 @@ public class RegistrarsController : ControllerBase
     /// <response code="401">If user is not authenticated</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("{registrarId}/isavailable/{domainName}")]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(DomainRegistrationLib.Models.DomainAvailabilityResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

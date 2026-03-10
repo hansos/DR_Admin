@@ -12,8 +12,12 @@ let latestCalculatedCurrency = 'USD';
 let latestTldId = null;
 let latestPrivacyPrice = null;
 let isDomainSelectionLocked = false;
+let hasAttemptedDomainSearch = false;
 const basketPositionStorageKey = 'up_domain_search_basket_position';
 const domainSearchCheckoutOrderMarkerStorageKey = 'up_checkout_last_added_order';
+const domainSearchGuestAttemptsStorageKey = 'up_domain_search_guest_attempts';
+const domainSearchGuestAttemptsLimit = 10;
+const domainSearchGuestAttemptsWindowMs = 60 * 60 * 1000;
 function initializeDomainSearch() {
     const form = document.getElementById('domain-search-form');
     if (!form || form.dataset.bound === 'true') {
@@ -28,6 +32,10 @@ function initializeDomainSearch() {
     const addAndBundleButton = document.getElementById('domain-search-add-and-bundle');
     addAndBundleButton?.addEventListener('click', () => {
         if (!addResultToCart(false)) {
+            return;
+        }
+        if (!isDomainSearchUserLoggedIn()) {
+            redirectToLoginFromDomainSearch(true);
             return;
         }
         function updateDomainSearchDeleteOrderVisibility() {
@@ -173,6 +181,8 @@ function initializeDomainSearch() {
         const typedWindow = window;
         typedWindow.UserPanelAlerts?.hide('domain-search-alert-success');
         typedWindow.UserPanelAlerts?.hide('domain-search-alert-error');
+        hasAttemptedDomainSearch = true;
+        updateDomainSearchDeleteOrderVisibility();
         isDomainSelectionLocked = false;
         setDomainFormLocked(false);
         const domainName = getInputValue('domain-search-input');
@@ -188,9 +198,13 @@ function initializeDomainSearch() {
         }
         const encodedDomain = encodeURIComponent(domainName);
         const encodedRegistrarId = encodeURIComponent(registrar.id.toString());
+        if (!isDomainSearchUserLoggedIn() && registerGuestDomainSearchAttemptAndShouldForceLogin()) {
+            redirectToLoginFromDomainSearch(false);
+            return;
+        }
         const response = await typedWindow.UserPanelApi?.request(`/Registrars/${encodedRegistrarId}/isavailable/${encodedDomain}`, {
             method: 'GET'
-        }, true);
+        }, false);
         if (!response || !response.success || !response.data) {
             typedWindow.UserPanelAlerts?.showError('domain-search-alert-error', response?.message ?? 'Could not check domain availability.');
             renderResult(null);
@@ -201,7 +215,27 @@ function initializeDomainSearch() {
         latestCalculatedPrice = await getDomainRegistrationPrice(response.data.domainName, getSelectedPeriodYears());
         renderResult(response.data);
     });
+    applyDomainSearchQueryPrefillAndSubmit(form);
     void restoreDomainSearchFromCart();
+}
+function applyDomainSearchQueryPrefillAndSubmit(form) {
+    const query = new URLSearchParams(window.location.search);
+    const domain = (query.get('domain') ?? '').trim();
+    if (!domain) {
+        return;
+    }
+    const input = document.getElementById('domain-search-input');
+    if (!input) {
+        return;
+    }
+    input.value = domain;
+    if (form.dataset.autoSearchDomain === domain.toLowerCase()) {
+        return;
+    }
+    form.dataset.autoSearchDomain = domain.toLowerCase();
+    window.setTimeout(() => {
+        form.requestSubmit();
+    }, 0);
 }
 function showTransferNotImplementedModal() {
     const typedWindow = window;
@@ -228,13 +262,16 @@ function updateDomainSearchDeleteOrderVisibility() {
         return;
     }
     const marker = getStoredCheckoutOrderMarker();
+    const hasCartLines = hasDomainSearchCartLines();
+    const canDelete = hasAttemptedDomainSearch && ((marker?.orderId ?? 0) > 0 || hasCartLines);
+    button.classList.toggle('d-none', !canDelete);
+}
+function hasDomainSearchCartLines() {
     const typedWindow = window;
     const state = typedWindow.UserPanelCart?.getState();
-    const hasCartLines = !!state && (state.domain !== null ||
+    return !!state && (state.domain !== null ||
         state.hosting.length > 0 ||
         state.services.length > 0);
-    const canDelete = (marker?.orderId ?? 0) > 0 || hasCartLines;
-    button.classList.toggle('d-none', !canDelete);
 }
 function getStoredCheckoutOrderMarker() {
     try {
@@ -307,6 +344,9 @@ async function deleteOrderFromDomainSearch() {
     typedWindow.UserPanelAlerts?.showSuccess('domain-search-alert-success', 'Order cancelled and removed from your session.');
 }
 async function restoreDomainSearchFromCart() {
+    if (!isDomainSearchUserLoggedIn()) {
+        return;
+    }
     const typedWindow = window;
     const state = typedWindow.UserPanelCart?.getState();
     if (!state?.domain) {
@@ -349,6 +389,15 @@ async function restoreDomainSearchFromCart() {
     setUpsellVisibility(true);
     await renderUpsellOptions();
     renderFloatingBasket();
+    const query = new URLSearchParams(window.location.search);
+    if (query.get('resumeBundle') === '1') {
+        const upsellCard = document.getElementById('domain-search-upsell-card');
+        upsellCard?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        query.delete('resumeBundle');
+        const updatedQuery = query.toString();
+        const updatedUrl = updatedQuery ? `${window.location.pathname}?${updatedQuery}` : window.location.pathname;
+        window.history.replaceState({}, '', updatedUrl);
+    }
 }
 function renderResult(result) {
     const card = document.getElementById('domain-search-result-card');
@@ -524,10 +573,11 @@ function renderSelectedDomainSummary(selection) {
 }
 function getCurrentFlowStep() {
     const marker = getStoredCheckoutOrderMarker();
-    if ((marker?.orderId ?? 0) > 0) {
+    const hasCartLines = hasDomainSearchCartLines();
+    if ((marker?.orderId ?? 0) > 0 && hasCartLines) {
         return 3;
     }
-    if (isDomainSelectionLocked) {
+    if (isDomainSelectionLocked || hasCartLines) {
         return 2;
     }
     return 1;
@@ -579,7 +629,7 @@ async function applyDomainSettings(domainName) {
     }
     const tldResponse = await typedWindow.UserPanelApi?.request(`/Tlds/extension/${encodeURIComponent(tldExtension)}`, {
         method: 'GET'
-    }, true);
+    }, false);
     if (!tldResponse || !tldResponse.success || !tldResponse.data) {
         latestTldId = null;
         latestPrivacyPrice = null;
@@ -626,7 +676,7 @@ async function loadPrivacyPrice(tldId) {
     const typedWindow = window;
     const response = await typedWindow.UserPanelApi?.request(`/tld-pricing/sales/tld/${tldId}/current`, {
         method: 'GET'
-    }, true);
+    }, false);
     if (!response || !response.success || !response.data) {
         latestPrivacyPrice = null;
         setPrivacyPriceLabel();
@@ -1081,6 +1131,48 @@ function updateHostingCycle(hostingId, billingCycle) {
     typedWindow.UserPanelCart?.saveState(state);
     renderFloatingBasket();
 }
+function isDomainSearchUserLoggedIn() {
+    const typedWindow = window;
+    return typedWindow.UserPanelAuth?.isLoggedIn() === true;
+}
+function registerGuestDomainSearchAttemptAndShouldForceLogin() {
+    const now = Date.now();
+    const from = now - domainSearchGuestAttemptsWindowMs;
+    const current = getStoredGuestDomainSearchAttempts().filter((value) => value >= from);
+    current.push(now);
+    localStorage.setItem(domainSearchGuestAttemptsStorageKey, JSON.stringify(current));
+    return current.length > domainSearchGuestAttemptsLimit;
+}
+function getStoredGuestDomainSearchAttempts() {
+    try {
+        const raw = localStorage.getItem(domainSearchGuestAttemptsStorageKey);
+        if (!raw) {
+            return [];
+        }
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) {
+            return [];
+        }
+        return parsed
+            .filter((value) => typeof value === 'number' && Number.isFinite(value))
+            .map((value) => Number(value));
+    }
+    catch {
+        return [];
+    }
+}
+function redirectToLoginFromDomainSearch(resumeBundle) {
+    const params = new URLSearchParams(window.location.search);
+    if (resumeBundle) {
+        params.set('resumeBundle', '1');
+    }
+    else {
+        params.delete('resumeBundle');
+    }
+    const query = params.toString();
+    const returnUrl = query ? `${window.location.pathname}?${query}` : window.location.pathname;
+    window.location.href = `/account/login?returnUrl=${encodeURIComponent(returnUrl)}`;
+}
 function getInputValue(id) {
     const input = document.getElementById(id);
     return input?.value.trim() ?? '';
@@ -1103,7 +1195,7 @@ async function getDefaultRegistrarSelection() {
     defaultRegistrarCodeRequest = (async () => {
         const response = await typedWindow.UserPanelApi?.request('/Registrars/active', {
             method: 'GET'
-        }, true);
+        }, false);
         if (!response || !response.success || !response.data) {
             return null;
         }
@@ -1133,7 +1225,7 @@ async function renderAlternativeDomains(domainName) {
     const typedWindow = window;
     const response = await typedWindow.UserPanelApi?.request(`/DomainManager/domain/name/${encodeURIComponent(domainName)}/alternatives?count=12`, {
         method: 'GET'
-    }, true);
+    }, false);
     if (!response || !response.success || !response.data) {
         list.innerHTML = '<div class="list-group-item text-muted">No alternatives found.</div>';
         return;
@@ -1161,7 +1253,7 @@ async function checkAlternativeAvailability(domainName, registrarCode) {
     const typedWindow = window;
     const response = await typedWindow.UserPanelApi?.request(`/DomainManager/registrar/${encodeURIComponent(registrarCode)}/domain/name/${encodeURIComponent(domainName)}/is-available`, {
         method: 'GET'
-    }, true);
+    }, false);
     if (!response || !response.success || !response.data) {
         return 'taken';
     }
