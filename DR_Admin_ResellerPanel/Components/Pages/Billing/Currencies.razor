@@ -1,0 +1,181 @@
+@page "/billing/currencies"
+
+<div id="currency-management-page" class="container-fluid">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+        <div>
+            <h2 class="h4 mb-1"><i class="bi bi-currency-exchange"></i> Currency Management</h2>
+            <p class="text-muted mb-0">Manage supported currencies and exchange rates used for billing and conversions.</p>
+        </div>
+        <button class="btn btn-primary" id="currency-rates-create" type="button">
+            <i class="bi bi-plus-circle"></i> New Exchange Rate
+        </button>
+    </div>
+
+    <div id="currency-management-alert-success" class="alert alert-success d-none" role="alert"></div>
+    <div id="currency-management-alert-error" class="alert alert-danger d-none" role="alert"></div>
+
+    <div class="row g-3">
+        <div class="col-12 col-xl-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="bi bi-cash-stack"></i> Supported Currencies</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Code</th>
+                                    <th>Name</th>
+                                    <th>Default</th>
+                                    <th>Active</th>
+                                </tr>
+                            </thead>
+                            <tbody id="currencies-table-body">
+                                <tr>
+                                    <td colspan="4" class="text-center">
+                                        <div class="spinner-border text-primary"></div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-xl-8">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-graph-up-arrow"></i> Exchange Rates</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Pair</th>
+                                    <th>Rate</th>
+                                    <th>Effective Rate</th>
+                                    <th>Markup %</th>
+                                    <th>Effective Date</th>
+                                    <th>Expiry Date</th>
+                                    <th>Source</th>
+                                    <th>Active</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="currency-rates-table-body">
+                                <tr>
+                                    <td colspan="10" class="text-center">
+                                        <div class="spinner-border text-primary"></div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="currency-rates-edit-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="currency-rates-modal-title">New Exchange Rate</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="currency-rates-form" novalidate>
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <label for="currency-rates-base" class="form-label">Base currency <span class="text-danger">*</span></label>
+                            <select id="currency-rates-base" class="form-select"></select>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label for="currency-rates-target" class="form-label">Target currency <span class="text-danger">*</span></label>
+                            <select id="currency-rates-target" class="form-select"></select>
+                        </div>
+                    </div>
+                    <div class="row g-3 mt-1">
+                        <div class="col-12 col-md-4">
+                            <label for="currency-rates-rate" class="form-label">Rate <span class="text-danger">*</span></label>
+                            <input type="number" step="0.000001" min="0.000001" class="form-control" id="currency-rates-rate" placeholder="1.000000">
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label for="currency-rates-markup" class="form-label">Markup (%)</label>
+                            <input type="number" step="0.0001" min="0" class="form-control" id="currency-rates-markup" placeholder="0">
+                        </div>
+                        <div class="col-12 col-md-4 d-flex align-items-end">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="currency-rates-is-active" checked>
+                                <label class="form-check-label" for="currency-rates-is-active">Active</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row g-3 mt-1">
+                        <div class="col-12 col-md-6">
+                            <label for="currency-rates-effective-date" class="form-label">Effective date <span class="text-danger">*</span></label>
+                            <input type="datetime-local" class="form-control" id="currency-rates-effective-date">
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label for="currency-rates-expiry-date" class="form-label">Expiry date</label>
+                            <input type="datetime-local" class="form-control" id="currency-rates-expiry-date">
+                        </div>
+                    </div>
+                    <div class="row g-3 mt-1">
+                        <div class="col-12 col-md-6">
+                            <label for="currency-rates-source" class="form-label">Source</label>
+                            <select id="currency-rates-source" class="form-select">
+                                <option value="0">Manual</option>
+                                <option value="1">ECB</option>
+                                <option value="2">OpenExchangeRates</option>
+                                <option value="3">Fixer</option>
+                                <option value="4">CurrencyLayer</option>
+                                <option value="5">XE</option>
+                                <option value="6">ExchangeRateHost</option>
+                                <option value="7">Frankfurter</option>
+                                <option value="8">OANDA</option>
+                                <option value="99">Other</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label for="currency-rates-notes" class="form-label">Notes</label>
+                            <input type="text" class="form-control" id="currency-rates-notes" placeholder="Optional notes">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="currency-rates-save">
+                    <i class="bi bi-check-lg"></i> Save
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="currency-rates-delete-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Delete exchange rate <strong id="currency-rates-delete-name"></strong>?</p>
+                <p class="text-danger"><i class="bi bi-exclamation-triangle-fill"></i> This cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="currency-rates-confirm-delete">
+                    <i class="bi bi-trash"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
