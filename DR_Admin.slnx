@@ -27,10 +27,8 @@
   <Project Path="DomainRegistrationLib/DomainRegistrationLib.csproj" />
   <Project Path="DR_Admin.IntegrationTests/DR_Admin.IntegrationTests.csproj" />
   <Project Path="DR_Admin/DR_Admin.csproj" />
-  <Project Path="DR_Admin_FrontEnd_Demo/DR_Admin_FrontEnd_Demo.csproj" Id="3a0860b6-cb58-4b4f-ae77-83d352177449" />
   <Project Path="DR_Admin_ResellerPanel/DR_Admin_ResellerPanel.csproj" Id="56dcd999-e302-421f-8814-1c65d9fefd80" />
   <Project Path="DR_Admin_UserPanel/DR_Admin_UserPanel.csproj" Id="e36486b0-ce16-4d6c-a481-c51c0b2e09b8" />
-  <Project Path="DR_Admin_Web/DR_Admin_Web.csproj" />
   <Project Path="DR_Amin_Mobile/DR_Amin_Mobile.csproj" Id="0bd52d87-44f8-42f9-9a91-333f88e08b06">
     <Deploy Solution="Debug|*" />
   </Project>
