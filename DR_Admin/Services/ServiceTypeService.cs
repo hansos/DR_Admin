@@ -67,6 +67,8 @@ public class ServiceTypeService : IServiceTypeService
     public async Task<ServiceTypeDto?> GetServiceTypeByNameAsync(string name)
     {
         var normalizedName = StringNormalizationExtensions.Normalize(name);
+        var trimmedName = (name ?? string.Empty).Trim();
+        var loweredName = trimmedName.ToLowerInvariant();
         try
         {
             _log.Information("Fetching service type with name: {ServiceTypeName}", name);
@@ -76,16 +78,23 @@ public class ServiceTypeService : IServiceTypeService
 
             if (serviceType == null)
             {
-                _log.Warning("Service type with name {ServiceTypeName} not found", normalizedName);
+                serviceType = await _context.ServiceTypes
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(st => st.Name.ToLower() == loweredName);
+            }
+
+            if (serviceType == null)
+            {
+                _log.Warning("Service type with name {ServiceTypeName} not found", trimmedName);
                 return null;
             }
 
-            _log.Information("Successfully fetched service type with name: {ServiceTypeName}", normalizedName);
+            _log.Information("Successfully fetched service type with name: {ServiceTypeName}", serviceType.Name);
             return MapToDto(serviceType);
         }
         catch (Exception ex)
         {
-            _log.Error(ex, "Error occurred while fetching service type with name: {ServiceTypeName}", normalizedName);
+            _log.Error(ex, "Error occurred while fetching service type with name: {ServiceTypeName}", trimmedName);
             throw;
         }
     }
