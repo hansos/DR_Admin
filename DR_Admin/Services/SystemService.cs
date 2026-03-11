@@ -1502,13 +1502,18 @@ $"</body></html>";
                 throw new InvalidOperationException($"A user with username '{username}' already exists. Import requires a new unique user.");
             }
 
+            var createdAtUtc = DateTime.UtcNow;
+
             var user = new User
             {
                 Username = username,
                 Email = email,
                 CustomerId = customer.Id,
                 IsActive = true,
-                PasswordHash = string.IsNullOrWhiteSpace(passwordHash) ? string.Empty : passwordHash
+                PasswordHash = string.IsNullOrWhiteSpace(passwordHash) ? string.Empty : passwordHash,
+                CreatedAt = createdAtUtc,
+                UpdatedAt = createdAtUtc,
+                EmailConfirmed = createdAtUtc
             };
 
             _context.Users.Add(user);
