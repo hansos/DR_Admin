@@ -314,7 +314,7 @@
                     <td>${esc(formatDate(order.createdAt))}</td>
                     <td>${esc(formatDate(order.nextBillingDate))}</td>
                 </tr>
-                ${isSelected ? `<tr class="bg-light"><td colspan="8">${renderOrderLinesPanel(order)}</td></tr>` : ''}
+                ${isSelected ? `<tr class="orders-row-drilldown"><td colspan="8">${renderOrderLinesPanel(order)}</td></tr>` : ''}
             `;
         }).join('');
     };
