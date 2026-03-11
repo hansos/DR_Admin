@@ -192,6 +192,9 @@ builder.Services.AddScoped<IHostingFtpService, HostingFtpService>();
 // Sales and Payment Flow services
 builder.Services.AddTransient<ICouponService, CouponService>();
 builder.Services.AddTransient<ITaxService, TaxService>();
+builder.Services.AddTransient<ITaxJurisdictionService, TaxJurisdictionService>();
+builder.Services.AddTransient<ITaxRegistrationService, TaxRegistrationService>();
+builder.Services.AddTransient<IOrderTaxSnapshotService, OrderTaxSnapshotService>();
 builder.Services.AddTransient<IQuoteService, QuoteService>();
 builder.Services.AddTransient<ICreditService, CreditService>();
 builder.Services.AddTransient<IPaymentIntentService, PaymentIntentService>();

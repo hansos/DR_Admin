@@ -314,6 +314,9 @@ public class ApplicationDbContext : DbContext
     public DbSet<Coupon> Coupons { get; set; }
     public DbSet<CouponUsage> CouponUsages { get; set; }
     public DbSet<TaxRule> TaxRules { get; set; }
+    public DbSet<TaxJurisdiction> TaxJurisdictions { get; set; }
+    public DbSet<TaxRegistration> TaxRegistrations { get; set; }
+    public DbSet<OrderTaxSnapshot> OrderTaxSnapshots { get; set; }
     public DbSet<CustomerCredit> CustomerCredits { get; set; }
     public DbSet<CreditTransaction> CreditTransactions { get; set; }
     
@@ -1693,6 +1696,102 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => e.ValidFrom);
             entity.HasIndex(e => e.ValidUntil);
             entity.HasIndex(e => e.NormalizedName);
+        });
+
+        // TaxJurisdiction configuration
+        modelBuilder.Entity<TaxJurisdiction>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Code).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.CountryCode).IsRequired().HasMaxLength(2);
+            entity.Property(e => e.StateCode).HasMaxLength(20);
+            entity.Property(e => e.TaxAuthority).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.TaxCurrencyCode).IsRequired().HasMaxLength(3);
+            entity.Property(e => e.Notes).HasMaxLength(2000);
+
+            entity.HasIndex(e => e.Code).IsUnique();
+            entity.HasIndex(e => e.CountryCode);
+            entity.HasIndex(e => new { e.CountryCode, e.StateCode });
+            entity.HasIndex(e => e.IsActive);
+        });
+
+        // TaxRegistration configuration
+        modelBuilder.Entity<TaxRegistration>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.LegalEntityName).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.RegistrationNumber).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Notes).HasMaxLength(2000);
+
+            entity.HasIndex(e => e.TaxJurisdictionId);
+            entity.HasIndex(e => e.RegistrationNumber);
+            entity.HasIndex(e => e.IsActive);
+            entity.HasIndex(e => new { e.TaxJurisdictionId, e.RegistrationNumber }).IsUnique();
+
+            entity.HasOne(e => e.TaxJurisdiction)
+                .WithMany(j => j.TaxRegistrations)
+                .HasForeignKey(e => e.TaxJurisdictionId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // TaxRule configuration
+        modelBuilder.Entity<TaxRule>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.CountryCode).IsRequired().HasMaxLength(2);
+            entity.Property(e => e.StateCode).HasMaxLength(20);
+            entity.Property(e => e.TaxName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.TaxRate).HasPrecision(18, 6);
+            entity.Property(e => e.TaxAuthority).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.TaxRegistrationNumber).HasMaxLength(100);
+            entity.Property(e => e.InternalNotes).HasMaxLength(2000);
+
+            entity.HasIndex(e => e.CountryCode);
+            entity.HasIndex(e => new { e.CountryCode, e.StateCode });
+            entity.HasIndex(e => e.IsActive);
+            entity.HasIndex(e => e.EffectiveFrom);
+            entity.HasIndex(e => e.EffectiveUntil);
+            entity.HasIndex(e => e.TaxJurisdictionId);
+
+            entity.HasOne(e => e.TaxJurisdiction)
+                .WithMany(j => j.TaxRules)
+                .HasForeignKey(e => e.TaxJurisdictionId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // OrderTaxSnapshot configuration
+        modelBuilder.Entity<OrderTaxSnapshot>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.BuyerCountryCode).IsRequired().HasMaxLength(2);
+            entity.Property(e => e.BuyerStateCode).HasMaxLength(20);
+            entity.Property(e => e.BuyerTaxId).HasMaxLength(100);
+            entity.Property(e => e.TaxCurrencyCode).IsRequired().HasMaxLength(3);
+            entity.Property(e => e.DisplayCurrencyCode).IsRequired().HasMaxLength(3);
+            entity.Property(e => e.ExchangeRate).HasPrecision(18, 8);
+            entity.Property(e => e.NetAmount).HasPrecision(18, 6);
+            entity.Property(e => e.TaxAmount).HasPrecision(18, 6);
+            entity.Property(e => e.GrossAmount).HasPrecision(18, 6);
+            entity.Property(e => e.AppliedTaxRate).HasPrecision(18, 6);
+            entity.Property(e => e.AppliedTaxName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.RuleVersion).HasMaxLength(100);
+            entity.Property(e => e.CalculationInputsJson).HasMaxLength(8000);
+
+            entity.HasIndex(e => e.OrderId);
+            entity.HasIndex(e => e.TaxJurisdictionId);
+            entity.HasIndex(e => e.BuyerCountryCode);
+            entity.HasIndex(e => e.CreatedAt);
+
+            entity.HasOne(e => e.Order)
+                .WithMany(o => o.TaxSnapshots)
+                .HasForeignKey(e => e.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.TaxJurisdiction)
+                .WithMany()
+                .HasForeignKey(e => e.TaxJurisdictionId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         // CustomerTaxProfile configuration

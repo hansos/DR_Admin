@@ -187,4 +187,9 @@ public class Order : EntityBase
     /// Collection of coupon usages for this order
     /// </summary>
     public ICollection<CouponUsage> CouponUsages { get; set; } = new List<CouponUsage>();
+
+    /// <summary>
+    /// Collection of immutable tax snapshots captured for this order
+    /// </summary>
+    public ICollection<OrderTaxSnapshot> TaxSnapshots { get; set; } = new List<OrderTaxSnapshot>();
 }

@@ -509,6 +509,36 @@ public static class AuthorizationPoliciesConfiguration
         options.AddPolicy("TaxRule.Write", policy =>
             policy.RequireRole(ADMIN));
 
+        // TaxJurisdiction policies
+        options.AddPolicy("TaxJurisdiction.Delete", policy =>
+            policy.RequireRole(ADMIN));
+
+        options.AddPolicy("TaxJurisdiction.Read", policy =>
+            policy.RequireRole(ADMIN, FINANCE, SUPPORT));
+
+        options.AddPolicy("TaxJurisdiction.Write", policy =>
+            policy.RequireRole(ADMIN, FINANCE));
+
+        // TaxRegistration policies
+        options.AddPolicy("TaxRegistration.Delete", policy =>
+            policy.RequireRole(ADMIN));
+
+        options.AddPolicy("TaxRegistration.Read", policy =>
+            policy.RequireRole(ADMIN, FINANCE, SUPPORT));
+
+        options.AddPolicy("TaxRegistration.Write", policy =>
+            policy.RequireRole(ADMIN, FINANCE));
+
+        // OrderTaxSnapshot policies
+        options.AddPolicy("OrderTaxSnapshot.Delete", policy =>
+            policy.RequireRole(ADMIN, FINANCE));
+
+        options.AddPolicy("OrderTaxSnapshot.Read", policy =>
+            policy.RequireRole(ADMIN, FINANCE, SUPPORT));
+
+        options.AddPolicy("OrderTaxSnapshot.Write", policy =>
+            policy.RequireRole(ADMIN, FINANCE));
+
         // Tld policies
         options.AddPolicy("Tld.Delete", policy =>
             policy.RequireRole(ADMIN));

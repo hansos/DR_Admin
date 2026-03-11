@@ -74,6 +74,8 @@
 	  <MauiXaml Update="Pages\LoginPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
+	  <MauiXaml Remove="Pages\StatusPage.xaml" />
+	  <Compile Remove="Pages\StatusPage.xaml.cs" />
 	</ItemGroup>
 
 </Project>

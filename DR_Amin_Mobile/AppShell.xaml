@@ -23,6 +23,11 @@
 
     <FlyoutItem Title="General">
         <ShellContent
+            Title="Status"
+            ContentTemplate="{DataTemplate pages:StatusPage}"
+            Route="StatusPage" />
+
+        <ShellContent
             Title="Home"
             ContentTemplate="{DataTemplate local:MainPage}"
             Route="MainPage" />

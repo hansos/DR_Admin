@@ -6,6 +6,11 @@ namespace ISPAdmin.Data.Entities;
 public class TaxRule : EntityBase
 {
     /// <summary>
+    /// Optional foreign key to a tax jurisdiction.
+    /// </summary>
+    public int? TaxJurisdictionId { get; set; }
+
+    /// <summary>
     /// Country code (ISO 3166-1 alpha-2, e.g., "US", "GB", "DE")
     /// </summary>
     public string CountryCode { get; set; } = string.Empty;
@@ -79,4 +84,9 @@ public class TaxRule : EntityBase
     /// Soft delete timestamp
     /// </summary>
     public DateTime? DeletedAt { get; set; }
+
+    /// <summary>
+    /// Navigation property to tax jurisdiction.
+    /// </summary>
+    public TaxJurisdiction? TaxJurisdiction { get; set; }
 }
