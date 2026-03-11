@@ -20,6 +20,32 @@ public class CurrencyService : ICurrencyService
     }
 
     /// <summary>
+    /// Retrieves all configured currencies.
+    /// </summary>
+    /// <returns>A collection of currencies.</returns>
+    public async Task<IEnumerable<CurrencyDto>> GetAllCurrenciesAsync()
+    {
+        try
+        {
+            _log.Information("Fetching all currencies");
+
+            var currencies = await _context.Currencies
+                .AsNoTracking()
+                .OrderBy(c => c.SortOrder)
+                .ThenBy(c => c.Code)
+                .ToListAsync();
+
+            _log.Information("Successfully fetched {Count} currencies", currencies.Count);
+            return currencies.Select(MapToDto);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while fetching currencies");
+            throw;
+        }
+    }
+
+    /// <summary>
     /// Retrieves all currency exchange rates
     /// </summary>
     /// <returns>A collection of all currency exchange rates</returns>
@@ -417,6 +443,22 @@ public class CurrencyService : ICurrencyService
             Notes = rate.Notes,
             CreatedAt = rate.CreatedAt,
             UpdatedAt = rate.UpdatedAt
+        };
+    }
+
+    private static CurrencyDto MapToDto(Currency currency)
+    {
+        return new CurrencyDto
+        {
+            Id = currency.Id,
+            Code = currency.Code,
+            Name = currency.Name,
+            Symbol = currency.Symbol,
+            IsActive = currency.IsActive,
+            IsDefault = currency.IsDefault,
+            IsCustomerCurrency = currency.IsCustomerCurrency,
+            IsProviderCurrency = currency.IsProviderCurrency,
+            SortOrder = currency.SortOrder
         };
     }
 }

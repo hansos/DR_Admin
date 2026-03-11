@@ -1,12 +1,12 @@
 @page "/account/customer-page"
 
-<PageTitle>My Customer Page</PageTitle>
+<PageTitle>My Company</PageTitle>
 
 <div class="container py-4" id="account-customer-page">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
         <div>
-            <h1 class="h4 mb-1">My Customer Page</h1>
-            <p class="text-muted mb-0">Review and update your customer profile details.</p>
+            <h1 class="h4 mb-1">My Company</h1>
+            <p class="text-muted mb-0">Review and update your company details.</p>
         </div>
     </div>
 
@@ -16,24 +16,106 @@
     <div class="card shadow-sm">
         <div class="card-body">
             <form id="account-customer-form" class="row g-3" novalidate>
-                <div class="col-12 col-md-6">
-                    <label for="account-customer-company" class="form-label">Company name</label>
-                    <input id="account-customer-company" class="form-control" type="text" maxlength="150" required />
+                <div class="col-12">
+                    <div class="small text-muted" id="account-customer-reference"></div>
                 </div>
                 <div class="col-12 col-md-6">
-                    <label for="account-customer-contact-email" class="form-label">Billing email</label>
-                    <input id="account-customer-contact-email" class="form-control" type="email" maxlength="160" required />
+                    <label for="account-customer-company" class="form-label">Account name</label>
+                    <input id="account-customer-company" data-editable="true" class="form-control" type="text" maxlength="150" required />
+                </div>
+                <div class="col-12 col-md-6">
+                    <label for="account-customer-name" class="form-label">Contact person name</label>
+                    <input id="account-customer-name" data-editable="true" class="form-control" type="text" maxlength="150" />
+                </div>
+                <div class="col-12 col-md-6">
+                    <label for="account-customer-contact-email" class="form-label">Email</label>
+                    <input id="account-customer-contact-email" data-editable="true" class="form-control" type="email" maxlength="160" required />
+                </div>
+                <div class="col-12 col-md-6">
+                    <label for="account-customer-billing-email" class="form-label">Billing email</label>
+                    <input id="account-customer-billing-email" data-editable="true" class="form-control" type="email" maxlength="160" />
                 </div>
                 <div class="col-12 col-md-6">
                     <label for="account-customer-phone" class="form-label">Contact phone</label>
-                    <input id="account-customer-phone" class="form-control" type="tel" maxlength="40" />
+                    <input id="account-customer-phone" data-editable="true" class="form-control" type="tel" maxlength="40" />
+                </div>
+                <div class="col-12 col-md-6">
+                    <label for="account-customer-tax-id" class="form-label">Tax ID</label>
+                    <input id="account-customer-tax-id" data-editable="true" class="form-control" type="text" maxlength="80" />
+                </div>
+                <div class="col-12 col-md-6">
+                    <label for="account-customer-vat-number" class="form-label">VAT number</label>
+                    <input id="account-customer-vat-number" data-editable="true" class="form-control" type="text" maxlength="80" />
+                </div>
+                <div class="col-12 col-md-6">
+                    <label for="account-customer-status" class="form-label">Status</label>
+                    <input id="account-customer-status" class="form-control" type="text" maxlength="50" readonly />
                 </div>
                 <div class="col-12 col-md-6">
                     <label for="account-customer-address" class="form-label">Address</label>
-                    <input id="account-customer-address" class="form-control" type="text" maxlength="220" />
+                    <input id="account-customer-address" data-editable="true" class="form-control" type="text" maxlength="220" />
                 </div>
-                <div class="col-12 d-flex justify-content-end">
-                    <button id="account-customer-save" class="btn btn-primary" type="submit">Save customer page</button>
+                <div class="col-12 col-md-6">
+                    <label for="account-customer-balance" class="form-label">Balance</label>
+                    <input id="account-customer-balance" class="form-control" type="number" step="0.01" readonly />
+                </div>
+                <div class="col-12 col-md-6">
+                    <label for="account-customer-credit-limit" class="form-label">Credit limit</label>
+                    <input id="account-customer-credit-limit" class="form-control" type="number" step="0.01" readonly />
+                </div>
+                <div class="col-12 col-md-6">
+                    <label for="account-customer-preferred-currency" class="form-label">Preferred currency</label>
+                    <select id="account-customer-preferred-currency" data-editable="true" class="form-select">
+                        <option value="EUR">EUR</option>
+                        <option value="USD">USD</option>
+                        <option value="GBP">GBP</option>
+                        <option value="SEK">SEK</option>
+                        <option value="NOK">NOK</option>
+                        <option value="DKK">DKK</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-6">
+                    <label for="account-customer-preferred-payment-method" class="form-label">Preferred payment method</label>
+                    <select id="account-customer-preferred-payment-method" data-editable="true" class="form-select">
+                        <option value="">Select payment method</option>
+                        <option value="Card">Card</option>
+                        <option value="BankTransfer">Bank transfer</option>
+                        <option value="PayPal">PayPal</option>
+                        <option value="Cash">Cash</option>
+                        <option value="Invoice">Invoice</option>
+                    </select>
+                </div>
+                <div class="col-12">
+                    <label for="account-customer-notes" class="form-label">Notes</label>
+                    <textarea id="account-customer-notes" data-editable="true" class="form-control" rows="3" maxlength="4000"></textarea>
+                </div>
+                <div class="col-12 col-md-3">
+                    <div class="form-check">
+                        <input id="account-customer-is-company" data-editable="true" class="form-check-input" type="checkbox" />
+                        <label class="form-check-label" for="account-customer-is-company">Is company</label>
+                    </div>
+                </div>
+                <div class="col-12 col-md-3">
+                    <div class="form-check">
+                        <input id="account-customer-is-active" data-editable="true" class="form-check-input" type="checkbox" />
+                        <label class="form-check-label" for="account-customer-is-active">Is active</label>
+                    </div>
+                </div>
+                <div class="col-12 col-md-3">
+                    <div class="form-check">
+                        <input id="account-customer-is-self-registered" data-editable="true" class="form-check-input" type="checkbox" />
+                        <label class="form-check-label" for="account-customer-is-self-registered">Is self-registered</label>
+                    </div>
+                </div>
+                <div class="col-12 col-md-3">
+                    <div class="form-check">
+                        <input id="account-customer-allow-currency-override" data-editable="true" class="form-check-input" type="checkbox" />
+                        <label class="form-check-label" for="account-customer-allow-currency-override">Allow currency override</label>
+                    </div>
+                </div>
+                <div class="col-12 d-flex justify-content-end gap-2">
+                    <button id="account-customer-edit" class="btn btn-outline-primary" type="button">Edit</button>
+                    <button id="account-customer-save" class="btn btn-primary d-none" type="submit">Save company details</button>
                 </div>
             </form>
         </div>

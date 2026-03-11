@@ -8,6 +8,12 @@ namespace ISPAdmin.Services;
 public interface ICurrencyService
 {
     /// <summary>
+    /// Retrieves all configured currencies.
+    /// </summary>
+    /// <returns>A collection of currencies.</returns>
+    Task<IEnumerable<CurrencyDto>> GetAllCurrenciesAsync();
+
+    /// <summary>
     /// Retrieves all currency exchange rates
     /// </summary>
     /// <returns>A collection of all currency exchange rates</returns>

@@ -64,6 +64,12 @@ public class AuthService : IAuthService
                 return null;
             }
 
+            if (!user.EmailConfirmed.HasValue)
+            {
+                _log.Warning("Login attempt failed: Email address is not confirmed - {Username}", username);
+                return null;
+            }
+
             if (user.IsAuthenticatorTwoFactorEnabled)
             {
                 if (string.IsNullOrWhiteSpace(user.AuthenticatorKey))

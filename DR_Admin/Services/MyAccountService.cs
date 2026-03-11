@@ -70,6 +70,7 @@ public class MyAccountService : IMyAccountService
             }
 
             var nextReferenceNumber = await GetNextReferenceNumberAsync();
+            var defaultCustomerStatus = await ResolveDefaultCustomerStatusAsync();
 
             // Create customer
             var customer = new Customer
@@ -79,6 +80,8 @@ public class MyAccountService : IMyAccountService
                 Email = request.CustomerEmail,
                 Phone = request.CustomerPhone,
                 IsSelfRegistered = request.IsSelfRegisteredCustomer,
+                Status = defaultCustomerStatus.Code,
+                CustomerStatusId = defaultCustomerStatus.Id,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -604,7 +607,91 @@ public class MyAccountService : IMyAccountService
                 hasChanges = true;
             }
 
-            // Address updates should go through CustomerAddress API; ignore inline address
+            if (request.CustomerName != null)
+            {
+                customer.CustomerName = request.CustomerName;
+                hasChanges = true;
+            }
+
+            if (request.TaxId != null)
+            {
+                customer.TaxId = request.TaxId;
+                hasChanges = true;
+            }
+
+            if (request.VatNumber != null)
+            {
+                customer.VatNumber = request.VatNumber;
+                hasChanges = true;
+            }
+
+            if (request.IsCompany.HasValue)
+            {
+                customer.IsCompany = request.IsCompany.Value;
+                hasChanges = true;
+            }
+
+            if (request.IsSelfRegistered.HasValue)
+            {
+                customer.IsSelfRegistered = request.IsSelfRegistered.Value;
+                hasChanges = true;
+            }
+
+            if (request.IsActive.HasValue)
+            {
+                customer.IsActive = request.IsActive.Value;
+                hasChanges = true;
+            }
+
+            if (request.Status != null)
+            {
+                customer.Status = request.Status;
+                hasChanges = true;
+            }
+
+            if (request.Balance.HasValue)
+            {
+                customer.Balance = request.Balance.Value;
+                hasChanges = true;
+            }
+
+            if (request.CreditLimit.HasValue)
+            {
+                customer.CreditLimit = request.CreditLimit.Value;
+                hasChanges = true;
+            }
+
+            if (request.Notes != null)
+            {
+                customer.Notes = request.Notes;
+                hasChanges = true;
+            }
+
+            if (request.BillingEmail != null)
+            {
+                customer.BillingEmail = request.BillingEmail;
+                hasChanges = true;
+            }
+
+            if (request.PreferredPaymentMethod != null)
+            {
+                customer.PreferredPaymentMethod = request.PreferredPaymentMethod;
+                hasChanges = true;
+            }
+
+            if (request.PreferredCurrency != null)
+            {
+                customer.PreferredCurrency = request.PreferredCurrency;
+                hasChanges = true;
+            }
+
+            if (request.AllowCurrencyOverride.HasValue)
+            {
+                customer.AllowCurrencyOverride = request.AllowCurrencyOverride.Value;
+                hasChanges = true;
+            }
+
+            // Address updates should go through CustomerAddress API; keep compatibility field in DTO
 
             if (hasChanges)
             {
@@ -613,15 +700,7 @@ public class MyAccountService : IMyAccountService
                 _log.Information("Customer info updated successfully for user: {UserId}", userId);
             }
 
-            return new CustomerAccountDto
-            {
-                Id = customer.Id,
-                ReferenceNumber = customer.ReferenceNumber,
-                Name = customer.Name,
-                Email = customer.Email,
-                Phone = customer.Phone,
-                Address = string.Empty
-            };
+            return MapCustomerAccountDto(customer);
         }
         catch (Exception ex)
         {
@@ -650,16 +729,7 @@ public class MyAccountService : IMyAccountService
                 Username = user.Username,
                 Email = user.Email,
                 EmailConfirmed = user.EmailConfirmed,
-                Customer = user.Customer != null ? new CustomerAccountDto
-                {
-                    Id = user.Customer.Id,
-                    ReferenceNumber = user.Customer.ReferenceNumber,
-                    Name = user.Customer.Name,
-                    Email = user.Customer.Email,
-                    Phone = user.Customer.Phone,
-                    // Address moved to CustomerAddress; not available on Customer entity
-                    Address = string.Empty
-                } : null
+                Customer = user.Customer != null ? MapCustomerAccountDto(user.Customer) : null
             };
         }
         catch (Exception ex)
@@ -670,6 +740,34 @@ public class MyAccountService : IMyAccountService
     }
 
     #region Private Helper Methods
+
+    private static CustomerAccountDto MapCustomerAccountDto(Data.Entities.Customer customer)
+    {
+        return new CustomerAccountDto
+        {
+            Id = customer.Id,
+            ReferenceNumber = customer.ReferenceNumber,
+            CustomerNumber = customer.CustomerNumber,
+            Name = customer.Name,
+            Email = customer.Email,
+            Phone = customer.Phone,
+            Address = string.Empty,
+            CustomerName = customer.CustomerName,
+            TaxId = customer.TaxId,
+            VatNumber = customer.VatNumber,
+            IsCompany = customer.IsCompany,
+            IsSelfRegistered = customer.IsSelfRegistered,
+            IsActive = customer.IsActive,
+            Status = customer.Status,
+            Balance = customer.Balance,
+            CreditLimit = customer.CreditLimit,
+            Notes = customer.Notes,
+            BillingEmail = customer.BillingEmail,
+            PreferredPaymentMethod = customer.PreferredPaymentMethod,
+            PreferredCurrency = customer.PreferredCurrency,
+            AllowCurrencyOverride = customer.AllowCurrencyOverride
+        };
+    }
 
     private async Task<string> GenerateEmailConfirmationTokenAsync(int userId)
     {
@@ -688,6 +786,21 @@ public class MyAccountService : IMyAccountService
         await _context.SaveChangesAsync();
 
         return tokenValue;
+    }
+
+    private async Task<CustomerStatus> ResolveDefaultCustomerStatusAsync()
+    {
+        var defaultStatus = await _context.CustomerStatuses
+            .OrderByDescending(cs => cs.IsDefault)
+            .ThenBy(cs => cs.SortOrder)
+            .FirstOrDefaultAsync(cs => cs.IsActive);
+
+        if (defaultStatus == null)
+        {
+            throw new InvalidOperationException("No customer status is configured. Please create at least one active customer status.");
+        }
+
+        return defaultStatus;
     }
 
     private async Task<string> GeneratePasswordResetTokenAsync(int userId)

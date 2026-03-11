@@ -23,6 +23,36 @@ public class CurrenciesController : ControllerBase
     }
 
     /// <summary>
+    /// Retrieves all configured currencies.
+    /// </summary>
+    /// <returns>List of supported currencies.</returns>
+    /// <response code="200">Returns the list of currencies</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user does not have permission</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpGet]
+    [Authorize(Policy = "Currency.Read")]
+    [ProducesResponseType(typeof(IEnumerable<CurrencyDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<IEnumerable<CurrencyDto>>> GetAllCurrencies()
+    {
+        try
+        {
+            _log.Information("API: GetAllCurrencies called by user {User}", User.Identity?.Name);
+
+            var currencies = await _currencyService.GetAllCurrenciesAsync();
+            return Ok(currencies);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in GetAllCurrencies");
+            return StatusCode(500, "An error occurred while retrieving currencies");
+        }
+    }
+
+    /// <summary>
     /// Retrieves all currency exchange rates in the system
     /// </summary>
     /// <returns>List of all currency exchange rates</returns>

@@ -76,7 +76,14 @@
         }
     }
     function routeHomeByAuth() {
-        return;
+        const currentPath = window.location.pathname.toLowerCase();
+        if (currentPath !== '/') {
+            return;
+        }
+        if (!isLoggedIn()) {
+            return;
+        }
+        window.location.href = '/dashboard';
     }
     function logout() {
         clearSession();

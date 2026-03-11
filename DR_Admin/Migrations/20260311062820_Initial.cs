@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace ISPAdmin.Migrations
 {
     /// <inheritdoc />
-    public partial class initial : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -147,6 +147,30 @@ namespace ISPAdmin.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Coupons", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Currencies",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    Code = table.Column<string>(type: "TEXT", maxLength: 3, nullable: false),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    Symbol = table.Column<string>(type: "TEXT", maxLength: 10, nullable: true),
+                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
+                    IsDefault = table.Column<bool>(type: "INTEGER", nullable: false),
+                    IsCustomerCurrency = table.Column<bool>(type: "INTEGER", nullable: false),
+                    IsProviderCurrency = table.Column<bool>(type: "INTEGER", nullable: false),
+                    SortOrder = table.Column<int>(type: "INTEGER", nullable: false),
+                    NormalizedCode = table.Column<string>(type: "TEXT", maxLength: 3, nullable: false),
+                    NormalizedName = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Currencies", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -2407,6 +2431,127 @@ namespace ISPAdmin.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "SoldHostingPackages",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    CustomerId = table.Column<int>(type: "INTEGER", nullable: false),
+                    HostingPackageId = table.Column<int>(type: "INTEGER", nullable: false),
+                    RegisteredDomainId = table.Column<int>(type: "INTEGER", nullable: true),
+                    OrderId = table.Column<int>(type: "INTEGER", nullable: false),
+                    OrderLineId = table.Column<int>(type: "INTEGER", nullable: true),
+                    Status = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    BillingCycle = table.Column<string>(type: "TEXT", maxLength: 20, nullable: false),
+                    SetupFee = table.Column<decimal>(type: "TEXT", precision: 18, scale: 2, nullable: false),
+                    RecurringPrice = table.Column<decimal>(type: "TEXT", precision: 18, scale: 2, nullable: false),
+                    CurrencyCode = table.Column<string>(type: "TEXT", maxLength: 3, nullable: false),
+                    ActivatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    NextBillingDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    ExpiresAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    AutoRenew = table.Column<bool>(type: "INTEGER", nullable: false),
+                    ConfigurationSnapshotJson = table.Column<string>(type: "TEXT", maxLength: 4000, nullable: false),
+                    Notes = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SoldHostingPackages", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_SoldHostingPackages_Customers_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_SoldHostingPackages_HostingPackages_HostingPackageId",
+                        column: x => x.HostingPackageId,
+                        principalTable: "HostingPackages",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_SoldHostingPackages_OrderLines_OrderLineId",
+                        column: x => x.OrderLineId,
+                        principalTable: "OrderLines",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_SoldHostingPackages_Orders_OrderId",
+                        column: x => x.OrderId,
+                        principalTable: "Orders",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_SoldHostingPackages_RegisteredDomains_RegisteredDomainId",
+                        column: x => x.RegisteredDomainId,
+                        principalTable: "RegisteredDomains",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SoldOptionalServices",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    CustomerId = table.Column<int>(type: "INTEGER", nullable: false),
+                    ServiceId = table.Column<int>(type: "INTEGER", nullable: false),
+                    RegisteredDomainId = table.Column<int>(type: "INTEGER", nullable: true),
+                    OrderId = table.Column<int>(type: "INTEGER", nullable: false),
+                    OrderLineId = table.Column<int>(type: "INTEGER", nullable: true),
+                    Quantity = table.Column<int>(type: "INTEGER", nullable: false),
+                    UnitPrice = table.Column<decimal>(type: "TEXT", precision: 18, scale: 2, nullable: false),
+                    TotalPrice = table.Column<decimal>(type: "TEXT", precision: 18, scale: 2, nullable: false),
+                    Status = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    BillingCycle = table.Column<string>(type: "TEXT", maxLength: 20, nullable: false),
+                    CurrencyCode = table.Column<string>(type: "TEXT", maxLength: 3, nullable: false),
+                    ActivatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    NextBillingDate = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    ExpiresAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    AutoRenew = table.Column<bool>(type: "INTEGER", nullable: false),
+                    ConfigurationSnapshotJson = table.Column<string>(type: "TEXT", maxLength: 4000, nullable: false),
+                    Notes = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SoldOptionalServices", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_SoldOptionalServices_Customers_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_SoldOptionalServices_OrderLines_OrderLineId",
+                        column: x => x.OrderLineId,
+                        principalTable: "OrderLines",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_SoldOptionalServices_Orders_OrderId",
+                        column: x => x.OrderId,
+                        principalTable: "Orders",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_SoldOptionalServices_RegisteredDomains_RegisteredDomainId",
+                        column: x => x.RegisteredDomainId,
+                        principalTable: "RegisteredDomains",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_SoldOptionalServices_Services_ServiceId",
+                        column: x => x.ServiceId,
+                        principalTable: "Services",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "HostingDatabaseUsers",
                 columns: table => new
                 {
@@ -3306,6 +3451,43 @@ namespace ISPAdmin.Migrations
                 name: "IX_CreditTransactions_PaymentTransactionId",
                 table: "CreditTransactions",
                 column: "PaymentTransactionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Currencies_Code",
+                table: "Currencies",
+                column: "Code",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Currencies_IsActive",
+                table: "Currencies",
+                column: "IsActive");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Currencies_IsCustomerCurrency",
+                table: "Currencies",
+                column: "IsCustomerCurrency");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Currencies_IsDefault",
+                table: "Currencies",
+                column: "IsDefault");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Currencies_IsProviderCurrency",
+                table: "Currencies",
+                column: "IsProviderCurrency");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Currencies_NormalizedCode",
+                table: "Currencies",
+                column: "NormalizedCode",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Currencies_SortOrder",
+                table: "Currencies",
+                column: "SortOrder");
 
             migrationBuilder.CreateIndex(
                 name: "IX_CurrencyExchangeRates_BaseCurrency_TargetCurrency_EffectiveDate",
@@ -4387,6 +4569,76 @@ namespace ISPAdmin.Migrations
                 column: "ServiceTypeId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_SoldHostingPackages_CustomerId",
+                table: "SoldHostingPackages",
+                column: "CustomerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SoldHostingPackages_HostingPackageId",
+                table: "SoldHostingPackages",
+                column: "HostingPackageId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SoldHostingPackages_NextBillingDate",
+                table: "SoldHostingPackages",
+                column: "NextBillingDate");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SoldHostingPackages_OrderId",
+                table: "SoldHostingPackages",
+                column: "OrderId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SoldHostingPackages_OrderLineId",
+                table: "SoldHostingPackages",
+                column: "OrderLineId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SoldHostingPackages_RegisteredDomainId",
+                table: "SoldHostingPackages",
+                column: "RegisteredDomainId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SoldHostingPackages_Status",
+                table: "SoldHostingPackages",
+                column: "Status");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SoldOptionalServices_CustomerId",
+                table: "SoldOptionalServices",
+                column: "CustomerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SoldOptionalServices_NextBillingDate",
+                table: "SoldOptionalServices",
+                column: "NextBillingDate");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SoldOptionalServices_OrderId",
+                table: "SoldOptionalServices",
+                column: "OrderId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SoldOptionalServices_OrderLineId",
+                table: "SoldOptionalServices",
+                column: "OrderLineId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SoldOptionalServices_RegisteredDomainId",
+                table: "SoldOptionalServices",
+                column: "RegisteredDomainId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SoldOptionalServices_ServiceId",
+                table: "SoldOptionalServices",
+                column: "ServiceId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SoldOptionalServices_Status",
+                table: "SoldOptionalServices",
+                column: "Status");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_SubscriptionBillingHistories_InvoiceId",
                 table: "SubscriptionBillingHistories",
                 column: "InvoiceId");
@@ -4698,6 +4950,9 @@ namespace ISPAdmin.Migrations
                 name: "CreditTransactions");
 
             migrationBuilder.DropTable(
+                name: "Currencies");
+
+            migrationBuilder.DropTable(
                 name: "CurrencyExchangeRates");
 
             migrationBuilder.DropTable(
@@ -4755,9 +5010,6 @@ namespace ISPAdmin.Migrations
                 name: "NameServers");
 
             migrationBuilder.DropTable(
-                name: "OrderLines");
-
-            migrationBuilder.DropTable(
                 name: "OutboxEvents");
 
             migrationBuilder.DropTable(
@@ -4798,6 +5050,12 @@ namespace ISPAdmin.Migrations
 
             migrationBuilder.DropTable(
                 name: "SentEmails");
+
+            migrationBuilder.DropTable(
+                name: "SoldHostingPackages");
+
+            migrationBuilder.DropTable(
+                name: "SoldOptionalServices");
 
             migrationBuilder.DropTable(
                 name: "SubscriptionBillingHistories");
@@ -4848,13 +5106,16 @@ namespace ISPAdmin.Migrations
                 name: "HostingDatabases");
 
             migrationBuilder.DropTable(
-                name: "RegisteredDomains");
-
-            migrationBuilder.DropTable(
                 name: "Refunds");
 
             migrationBuilder.DropTable(
                 name: "RegistrarTldPriceDownloadSessions");
+
+            migrationBuilder.DropTable(
+                name: "OrderLines");
+
+            migrationBuilder.DropTable(
+                name: "RegisteredDomains");
 
             migrationBuilder.DropTable(
                 name: "Subscriptions");
@@ -4875,10 +5136,10 @@ namespace ISPAdmin.Migrations
                 name: "HostingAccounts");
 
             migrationBuilder.DropTable(
-                name: "RegistrarTlds");
+                name: "PaymentTransactions");
 
             migrationBuilder.DropTable(
-                name: "PaymentTransactions");
+                name: "RegistrarTlds");
 
             migrationBuilder.DropTable(
                 name: "CustomerPaymentMethods");
@@ -4890,13 +5151,13 @@ namespace ISPAdmin.Migrations
                 name: "ServerControlPanels");
 
             migrationBuilder.DropTable(
+                name: "PaymentIntents");
+
+            migrationBuilder.DropTable(
                 name: "Registrars");
 
             migrationBuilder.DropTable(
                 name: "Tlds");
-
-            migrationBuilder.DropTable(
-                name: "PaymentIntents");
 
             migrationBuilder.DropTable(
                 name: "ControlPanelTypes");

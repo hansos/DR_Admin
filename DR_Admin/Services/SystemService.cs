@@ -360,6 +360,57 @@ $"</body></html>";
         {
             _log.Information("Starting test data seeding for core catalog tables");
 
+            if (!await _context.Currencies.AnyAsync())
+            {
+                _context.Currencies.AddRange(
+                    new Currency
+                    {
+                        Code = "NOK",
+                        Name = "Norwegian Krone",
+                        Symbol = "kr",
+                        IsActive = true,
+                        IsDefault = false,
+                        IsCustomerCurrency = true,
+                        IsProviderCurrency = true,
+                        SortOrder = 1
+                    },
+                    new Currency
+                    {
+                        Code = "EUR",
+                        Name = "Euro",
+                        Symbol = "€",
+                        IsActive = true,
+                        IsDefault = true,
+                        IsCustomerCurrency = true,
+                        IsProviderCurrency = true,
+                        SortOrder = 2
+                    },
+                    new Currency
+                    {
+                        Code = "GBP",
+                        Name = "British Pound",
+                        Symbol = "£",
+                        IsActive = true,
+                        IsDefault = false,
+                        IsCustomerCurrency = true,
+                        IsProviderCurrency = true,
+                        SortOrder = 3
+                    },
+                    new Currency
+                    {
+                        Code = "USD",
+                        Name = "US Dollar",
+                        Symbol = "$",
+                        IsActive = true,
+                        IsDefault = false,
+                        IsCustomerCurrency = true,
+                        IsProviderCurrency = true,
+                        SortOrder = 4
+                    });
+
+                result.InsertedByTable["Currencies"] = 4;
+            }
+
             if (!await _context.Tlds.AnyAsync())
             {
                 seededTlds.AddRange(
@@ -1140,7 +1191,9 @@ $"</body></html>";
             adminUser.Username = snapshot.AdminUser.Username;
             adminUser.Email = snapshot.AdminUser.Email;
             adminUser.IsActive = snapshot.AdminUser.IsActive;
-            adminUser.EmailConfirmed = snapshot.AdminUser.EmailConfirmed;
+            adminUser.EmailConfirmed = result.AdminUserCreated
+                ? DateTime.UtcNow
+                : snapshot.AdminUser.EmailConfirmed;
             adminUser.IsMailTwoFactorEnabled = snapshot.AdminUser.IsMailTwoFactorEnabled;
             adminUser.IsAuthenticatorTwoFactorEnabled = snapshot.AdminUser.IsAuthenticatorTwoFactorEnabled;
             adminUser.AuthenticatorKey = snapshot.AdminUser.AuthenticatorKey;

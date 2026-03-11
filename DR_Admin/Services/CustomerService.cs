@@ -31,6 +31,7 @@ public class CustomerService : ICustomerService
             
             var customers = await _context.Customers
                 .AsNoTracking()
+                .Include(c => c.CustomerStatus)
                 .ToListAsync();
 
             var customerDtos = await MapToDtosAsync(customers);
@@ -63,6 +64,7 @@ public class CustomerService : ICustomerService
 
             var customers = await _context.Customers
                 .AsNoTracking()
+                .Include(c => c.CustomerStatus)
                 .OrderBy(c => c.Name)
                 .Skip((parameters.PageNumber - 1) * parameters.PageSize)
                 .Take(parameters.PageSize)
@@ -101,6 +103,7 @@ public class CustomerService : ICustomerService
             
             var customer = await _context.Customers
                 .AsNoTracking()
+                .Include(c => c.CustomerStatus)
                 .FirstOrDefaultAsync(c => c.Id == id);
 
             if (customer == null)
@@ -133,6 +136,7 @@ public class CustomerService : ICustomerService
             
             var customer = await _context.Customers
                 .AsNoTracking()
+                .Include(c => c.CustomerStatus)
                 .FirstOrDefaultAsync(c => c.Email == email || c.BillingEmail == email);
 
             if (customer == null)
@@ -148,6 +152,7 @@ public class CustomerService : ICustomerService
                     {
                         customer = await _context.Customers
                             .AsNoTracking()
+                            .Include(c => c.CustomerStatus)
                             .FirstOrDefaultAsync(c => c.Id == contact.CustomerId);
                     }
                 }
@@ -206,6 +211,7 @@ public class CustomerService : ICustomerService
             _log.Information("Creating new customer with email: {Email}", createDto.Email);
 
             var nextRefNumber = await GetNextReferenceNumberAsync();
+            var resolvedStatus = await ResolveCustomerStatusAsync(createDto.Status);
 
             var customer = new Customer
             {
@@ -220,7 +226,8 @@ public class CustomerService : ICustomerService
                 IsCompany = createDto.IsCompany,
                 IsSelfRegistered = createDto.IsSelfRegistered,
                 IsActive = createDto.IsActive,
-                Status = createDto.Status,
+                Status = resolvedStatus.Code,
+                CustomerStatusId = resolvedStatus.Id,
                 Balance = 0,
                 CreditLimit = createDto.CreditLimit,
                 Notes = createDto.Notes,
@@ -275,7 +282,9 @@ public class CustomerService : ICustomerService
             customer.IsCompany = updateDto.IsCompany;
             customer.IsSelfRegistered = updateDto.IsSelfRegistered;
             customer.IsActive = updateDto.IsActive;
-            customer.Status = updateDto.Status;
+            var resolvedStatus = await ResolveCustomerStatusAsync(updateDto.Status);
+            customer.Status = resolvedStatus.Code;
+            customer.CustomerStatusId = resolvedStatus.Id;
             customer.CreditLimit = updateDto.CreditLimit;
             customer.Notes = updateDto.Notes;
             customer.BillingEmail = updateDto.BillingEmail;
@@ -348,7 +357,7 @@ public class CustomerService : ICustomerService
                 IsCompany = customer.IsCompany,
                 IsSelfRegistered = customer.IsSelfRegistered,
                 IsActive = customer.IsActive,
-                Status = customer.Status,
+                Status = customer.CustomerStatus?.Code ?? customer.Status,
                 Balance = customer.Balance,
                 CreditLimit = customer.CreditLimit,
                 Notes = customer.Notes,
@@ -402,6 +411,39 @@ public class CustomerService : ICustomerService
         return string.IsNullOrEmpty(prefix)
             ? referenceNumber.ToString()
             : $"{prefix}{referenceNumber}";
+    }
+
+    /// <summary>
+    /// Resolves a customer status by code, or falls back to the configured default status.
+    /// </summary>
+    /// <param name="statusCode">The requested status code.</param>
+    /// <returns>The resolved status entity.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when no applicable status can be resolved.</exception>
+    private async Task<CustomerStatus> ResolveCustomerStatusAsync(string? statusCode)
+    {
+        if (!string.IsNullOrWhiteSpace(statusCode))
+        {
+            var normalizedStatusCode = statusCode.Trim().ToUpperInvariant();
+            var explicitStatus = await _context.CustomerStatuses
+                .FirstOrDefaultAsync(cs => cs.NormalizedCode == normalizedStatusCode || cs.Code.ToUpper() == normalizedStatusCode);
+
+            if (explicitStatus != null)
+            {
+                return explicitStatus;
+            }
+        }
+
+        var defaultStatus = await _context.CustomerStatuses
+            .OrderByDescending(cs => cs.IsDefault)
+            .ThenBy(cs => cs.SortOrder)
+            .FirstOrDefaultAsync(cs => cs.IsActive);
+
+        if (defaultStatus == null)
+        {
+            throw new InvalidOperationException("No customer status is configured. Please create at least one active customer status.");
+        }
+
+        return defaultStatus;
     }
 
     /// <summary>

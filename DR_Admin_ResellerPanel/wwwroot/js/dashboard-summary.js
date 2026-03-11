@@ -31,6 +31,14 @@
             checkType: 'list',
         },
         {
+            key: 'currencies',
+            name: 'Currencies',
+            description: 'Add supported currencies for customer and provider pricing.',
+            fixUrl: '/dashboard',
+            endpoint: '/Currencies',
+            checkType: 'list',
+        },
+        {
             key: 'payment-gateways',
             name: 'Payment Gateways',
             description: 'Configure active payment providers used for transactions.',

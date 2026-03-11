@@ -219,6 +219,11 @@ public class ApplicationDbContext : DbContext
                 customerStatus.NormalizedName = NormalizationHelper.Normalize(customerStatus.Name) ?? string.Empty;
                 break;
 
+            case Currency currency:
+                currency.NormalizedCode = NormalizationHelper.Normalize(currency.Code) ?? string.Empty;
+                currency.NormalizedName = NormalizationHelper.Normalize(currency.Name) ?? string.Empty;
+                break;
+
             case AddressType addressType:
                 addressType.NormalizedCode = NormalizationHelper.Normalize(addressType.Code) ?? string.Empty;
                 addressType.NormalizedName = NormalizationHelper.Normalize(addressType.Name) ?? string.Empty;
@@ -234,6 +239,7 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<Customer> Customers { get; set; }
     public DbSet<CustomerStatus> CustomerStatuses { get; set; }
+    public DbSet<Currency> Currencies { get; set; }
     public DbSet<CustomerAddress> CustomerAddresses { get; set; }
     public DbSet<AddressType> AddressTypes { get; set; }
     public DbSet<ContactPerson> ContactPersons { get; set; }
@@ -404,6 +410,25 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => e.NormalizedCode).IsUnique();
             entity.HasIndex(e => e.IsActive);
             entity.HasIndex(e => e.IsDefault);
+            entity.HasIndex(e => e.SortOrder);
+        });
+
+        // Currency configuration
+        modelBuilder.Entity<Currency>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Code).IsRequired().HasMaxLength(3);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Symbol).HasMaxLength(10);
+            entity.Property(e => e.NormalizedCode).IsRequired().HasMaxLength(3);
+            entity.Property(e => e.NormalizedName).IsRequired().HasMaxLength(100);
+
+            entity.HasIndex(e => e.Code).IsUnique();
+            entity.HasIndex(e => e.NormalizedCode).IsUnique();
+            entity.HasIndex(e => e.IsActive);
+            entity.HasIndex(e => e.IsDefault);
+            entity.HasIndex(e => e.IsCustomerCurrency);
+            entity.HasIndex(e => e.IsProviderCurrency);
             entity.HasIndex(e => e.SortOrder);
         });
 

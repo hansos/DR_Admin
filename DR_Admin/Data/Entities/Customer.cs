@@ -15,11 +15,18 @@ public class Customer : EntityBase
     /// </summary>
     public long? CustomerNumber { get; set; }
 
+    /// <summary>
+    /// Primary account name used as customer identity
+    /// (typically legal company name or full private person name).
+    /// </summary>
     public string Name { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string Phone { get; set; } = string.Empty;
 
     // Address fields are managed via CustomerAddress records
+    /// <summary>
+    /// Optional contact person/display name associated with the customer account.
+    /// </summary>
     public string? CustomerName { get; set; }
     public string? TaxId { get; set; }
     public string? VatNumber { get; set; }

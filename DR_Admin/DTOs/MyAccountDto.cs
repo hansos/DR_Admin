@@ -19,11 +19,34 @@ public class CustomerAccountDto
 {
     public int Id { get; set; }
     public long ReferenceNumber { get; set; }
+    public long? CustomerNumber { get; set; }
+
+    /// <summary>
+    /// Gets or sets the primary account name used as the customer record identity
+    /// (typically legal company name or full private person name).
+    /// </summary>
     public string Name { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string Phone { get; set; } = string.Empty;
-        // Address moved to CustomerAddress; not included here
-        public string Address { get; set; } = string.Empty;
+    public string Address { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets an optional contact person/display name associated with the account.
+    /// </summary>
+    public string? CustomerName { get; set; }
+    public string? TaxId { get; set; }
+    public string? VatNumber { get; set; }
+    public bool IsCompany { get; set; }
+    public bool IsSelfRegistered { get; set; }
+    public bool IsActive { get; set; }
+    public string Status { get; set; } = "Active";
+    public decimal Balance { get; set; }
+    public decimal CreditLimit { get; set; }
+    public string? Notes { get; set; }
+    public string? BillingEmail { get; set; }
+    public string? PreferredPaymentMethod { get; set; }
+    public string PreferredCurrency { get; set; } = "EUR";
+    public bool AllowCurrencyOverride { get; set; } = true;
 }
 
 /// <summary>
@@ -244,6 +267,20 @@ public class PatchCustomerInfoRequestDto
     public string? Email { get; set; }
     public string? Phone { get; set; }
     public string? Address { get; set; }
+    public string? CustomerName { get; set; }
+    public string? TaxId { get; set; }
+    public string? VatNumber { get; set; }
+    public bool? IsCompany { get; set; }
+    public bool? IsSelfRegistered { get; set; }
+    public bool? IsActive { get; set; }
+    public string? Status { get; set; }
+    public decimal? Balance { get; set; }
+    public decimal? CreditLimit { get; set; }
+    public string? Notes { get; set; }
+    public string? BillingEmail { get; set; }
+    public string? PreferredPaymentMethod { get; set; }
+    public string? PreferredCurrency { get; set; }
+    public bool? AllowCurrencyOverride { get; set; }
 }
 
 /// <summary>
