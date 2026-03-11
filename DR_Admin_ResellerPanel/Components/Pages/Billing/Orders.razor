@@ -6,6 +6,21 @@
             <h2 class="h4 mb-1"><i class="bi bi-cart-check"></i> Orders</h2>
             <p class="text-muted mb-0">Review and track all orders.</p>
         </div>
+
+<style>
+    #orders-table-body tr[data-order-id] {
+        cursor: pointer;
+        transition: background-color .15s ease-in-out;
+    }
+
+    #orders-table-body tr[data-order-id]:hover {
+        background-color: #f3f8ff;
+    }
+
+    #orders-table-body tr.orders-row-selected {
+        background-color: #e6f0ff;
+    }
+</style>
     </div>
 
     <div id="orders-alert-success" class="alert alert-success d-none" role="alert"></div>

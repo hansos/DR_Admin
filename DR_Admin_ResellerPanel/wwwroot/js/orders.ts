@@ -30,6 +30,18 @@
         currencyCode: string;
         createdAt: string;
         nextBillingDate: string;
+        orderLines: OrderLine[];
+    }
+
+    interface OrderLine {
+        id: number;
+        lineNumber: number;
+        description: string;
+        quantity: number;
+        unitPrice: number;
+        totalPrice: number;
+        isRecurring: boolean;
+        notes: string;
     }
 
     const orderStatusLabels: Record<number, string> = {
@@ -56,6 +68,7 @@
     let pageSize = 25;
     let totalCount = 0;
     let totalPages = 1;
+    let selectedOrderId: number | null = null;
 
     const getApiBaseUrl = (): string => {
         const settings = (window as Window & { AppSettings?: AppSettings }).AppSettings;
@@ -205,6 +218,10 @@
 
     const normalizeOrder = (item: unknown): Order => {
         const row = (item ?? {}) as Record<string, unknown>;
+        const orderLinesRaw = row.orderLines ?? row.OrderLines;
+        const orderLines = Array.isArray(orderLinesRaw)
+            ? orderLinesRaw.map((line) => normalizeOrderLine(line))
+            : [];
 
         return {
             id: parseNumber(row.id ?? row.Id),
@@ -216,7 +233,63 @@
             currencyCode: parseString(row.currencyCode ?? row.CurrencyCode) || 'EUR',
             createdAt: parseString(row.createdAt ?? row.CreatedAt),
             nextBillingDate: parseString(row.nextBillingDate ?? row.NextBillingDate),
+            orderLines,
         };
+    };
+
+    const normalizeOrderLine = (item: unknown): OrderLine => {
+        const row = (item ?? {}) as Record<string, unknown>;
+        return {
+            id: parseNumber(row.id ?? row.Id),
+            lineNumber: parseNumber(row.lineNumber ?? row.LineNumber),
+            description: parseString(row.description ?? row.Description),
+            quantity: parseNumber(row.quantity ?? row.Quantity),
+            unitPrice: parseNumber(row.unitPrice ?? row.UnitPrice),
+            totalPrice: parseNumber(row.totalPrice ?? row.TotalPrice),
+            isRecurring: Boolean(row.isRecurring ?? row.IsRecurring ?? false),
+            notes: parseString(row.notes ?? row.Notes),
+        };
+    };
+
+    const renderOrderLinesPanel = (order: Order): string => {
+        if (!order.orderLines.length) {
+            return `
+                <div class="small text-muted py-2">No order lines found for this order.</div>
+            `;
+        }
+
+        const lines = [...order.orderLines].sort((a, b) => a.lineNumber - b.lineNumber || a.id - b.id);
+        return `
+            <div class="py-2">
+                <div class="fw-semibold mb-2">Order lines</div>
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>Line</th>
+                                <th>Description</th>
+                                <th>Qty</th>
+                                <th>Recurring</th>
+                                <th class="text-end">Unit</th>
+                                <th class="text-end">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${lines.map((line) => `
+                                <tr>
+                                    <td>${line.lineNumber || '-'}</td>
+                                    <td>${esc(line.description || '-')}</td>
+                                    <td>${line.quantity}</td>
+                                    <td>${line.isRecurring ? '<span class="badge bg-info text-dark">Yes</span>' : '<span class="badge bg-secondary">No</span>'}</td>
+                                    <td class="text-end">${esc(formatMoney(line.unitPrice, order.currencyCode))}</td>
+                                    <td class="text-end">${esc(formatMoney(line.totalPrice, order.currencyCode))}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
     };
 
     const showError = (message: string): void => {
@@ -318,18 +391,32 @@
             return;
         }
 
-        tableBody.innerHTML = paged.map((order) => `
-            <tr>
-                <td>${order.id}</td>
-                <td><code>${esc(order.orderNumber || '-')}</code></td>
-                <td>${order.customerId}</td>
-                <td>${esc(order.orderType)}</td>
-                <td><span class="badge bg-${order.status === 'Active' ? 'success' : order.status === 'Pending' || order.status === 'Trial' ? 'warning text-dark' : order.status === 'Cancelled' ? 'danger' : 'secondary'}">${esc(order.status)}</span></td>
-                <td>${esc(formatMoney(order.recurringAmount, order.currencyCode))}</td>
-                <td>${esc(formatDate(order.createdAt))}</td>
-                <td>${esc(formatDate(order.nextBillingDate))}</td>
-            </tr>
-        `).join('');
+        tableBody.innerHTML = paged.map((order) => {
+            const statusClass = order.status === 'Active'
+                ? 'success'
+                : order.status === 'Pending' || order.status === 'Trial'
+                    ? 'warning text-dark'
+                    : order.status === 'Cancelled'
+                        ? 'danger'
+                        : 'secondary';
+
+            const isSelected = selectedOrderId === order.id;
+            const selectedClass = isSelected ? 'orders-row-selected' : '';
+
+            return `
+                <tr data-order-id="${order.id}" class="${selectedClass}">
+                    <td>${order.id}</td>
+                    <td><code>${esc(order.orderNumber || '-')}</code></td>
+                    <td>${order.customerId}</td>
+                    <td>${esc(order.orderType)}</td>
+                    <td><span class="badge bg-${statusClass}">${esc(order.status)}</span></td>
+                    <td>${esc(formatMoney(order.recurringAmount, order.currencyCode))}</td>
+                    <td>${esc(formatDate(order.createdAt))}</td>
+                    <td>${esc(formatDate(order.nextBillingDate))}</td>
+                </tr>
+                ${isSelected ? `<tr class="bg-light"><td colspan="8">${renderOrderLinesPanel(order)}</td></tr>` : ''}
+            `;
+        }).join('');
     };
 
     const renderPagination = (): void => {
@@ -424,6 +511,9 @@
         const list = extractOrders(response.data);
         allOrders = list.map((item) => normalizeOrder(item));
         filteredOrders = [...allOrders];
+        if (selectedOrderId !== null && !filteredOrders.some((order) => order.id === selectedOrderId)) {
+            selectedOrderId = null;
+        }
 
         updateView();
     };
@@ -460,6 +550,22 @@
             }
 
             changePage(page);
+        });
+
+        document.getElementById('orders-table-body')?.addEventListener('click', (event) => {
+            const target = event.target as HTMLElement;
+            const row = target.closest<HTMLTableRowElement>('tr[data-order-id]');
+            if (!row) {
+                return;
+            }
+
+            const orderId = Number(row.dataset.orderId ?? '0');
+            if (!Number.isFinite(orderId) || orderId <= 0) {
+                return;
+            }
+
+            selectedOrderId = selectedOrderId === orderId ? null : orderId;
+            updateView();
         });
     };
 
