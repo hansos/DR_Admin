@@ -15,14 +15,14 @@
   </Folder>
   <Folder Name="/PluginProviders/" />
   <Folder Name="/PluginProviders/EmailSenderProviders/">
-    <Project Path="EmailSenderProviders/EmailSenderProvider.AmazonSes/EmailSenderProvider.AmazonSes.csproj" />
-    <Project Path="EmailSenderProviders/EmailSenderProvider.Exchange/EmailSenderProvider.Exchange.csproj" />
-    <Project Path="EmailSenderProviders/EmailSenderProvider.GraphApi/EmailSenderProvider.GraphApi.csproj" />
-    <Project Path="EmailSenderProviders/EmailSenderProvider.Mailgun/EmailSenderProvider.Mailgun.csproj" />
-    <Project Path="EmailSenderProviders/EmailSenderProvider.MailKit/EmailSenderProvider.MailKit.csproj" />
-    <Project Path="EmailSenderProviders/EmailSenderProvider.Postmark/EmailSenderProvider.Postmark.csproj" />
-    <Project Path="EmailSenderProviders/EmailSenderProvider.SendGrid/EmailSenderProvider.SendGrid.csproj" />
-    <Project Path="EmailSenderProviders/EmailSenderProvider.Smtp/EmailSenderProvider.Smtp.csproj" />
+    <Project Path="PluginProviders/EmailSenderProviders/EmailSenderProvider.AmazonSes/EmailSenderProvider.AmazonSes.csproj" />
+    <Project Path="PluginProviders/EmailSenderProviders/EmailSenderProvider.Exchange/EmailSenderProvider.Exchange.csproj" />
+    <Project Path="PluginProviders/EmailSenderProviders/EmailSenderProvider.GraphApi/EmailSenderProvider.GraphApi.csproj" />
+    <Project Path="PluginProviders/EmailSenderProviders/EmailSenderProvider.Mailgun/EmailSenderProvider.Mailgun.csproj" />
+    <Project Path="PluginProviders/EmailSenderProviders/EmailSenderProvider.MailKit/EmailSenderProvider.MailKit.csproj" />
+    <Project Path="PluginProviders/EmailSenderProviders/EmailSenderProvider.Postmark/EmailSenderProvider.Postmark.csproj" />
+    <Project Path="PluginProviders/EmailSenderProviders/EmailSenderProvider.SendGrid/EmailSenderProvider.SendGrid.csproj" />
+    <Project Path="PluginProviders/EmailSenderProviders/EmailSenderProvider.Smtp/EmailSenderProvider.Smtp.csproj" />
   </Folder>
   <Project Path="DomainRegistrationLib/DomainRegistrationLib.csproj" />
   <Project Path="DR_Admin.IntegrationTests/DR_Admin.IntegrationTests.csproj" />
