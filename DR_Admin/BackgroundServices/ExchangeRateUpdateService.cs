@@ -154,21 +154,49 @@ public class ExchangeRateUpdateService : BackgroundService
             var factory = new ExchangeRateFactory(_exchangeRateSettings);
             var provider = factory.CreateProvider();
 
-            // Load base currency and target currencies from database
+            // Load base/target currencies from existing exchange-rate pairs.
             var existingRates = await dbContext.CurrencyExchangeRates
                 .Where(r => r.IsActive)
                 .Select(r => new { r.BaseCurrency, r.TargetCurrency })
                 .Distinct()
                 .ToListAsync(stoppingToken);
 
-            if (!existingRates.Any())
+            var currencyPairs = existingRates
+                .Select(x => (BaseCurrency: x.BaseCurrency, TargetCurrency: x.TargetCurrency))
+                .ToList();
+
+            if (!currencyPairs.Any())
             {
-                _log.Warning("No existing exchange rates found in database. Please manually add initial rates or configure currencies.");
-                return;
+                // Bootstrap from Currency table when exchange-rate table is empty.
+                var activeCurrencies = await dbContext.Currencies
+                    .AsNoTracking()
+                    .Where(c => c.IsActive)
+                    .OrderByDescending(c => c.IsDefault)
+                    .ThenBy(c => c.SortOrder)
+                    .ThenBy(c => c.Code)
+                    .Select(c => c.Code)
+                    .ToListAsync(stoppingToken);
+
+                if (activeCurrencies.Count < 2)
+                {
+                    _log.Warning("Cannot bootstrap exchange rates. At least two active currencies are required.");
+                    return;
+                }
+
+                var baseCurrency = activeCurrencies.First();
+
+                _log.Information(
+                    "No active exchange-rate pairs found. Bootstrapping update from currencies table using base {BaseCurrency} and {TargetCount} target currencies.",
+                    baseCurrency,
+                    activeCurrencies.Count - 1);
+
+                currencyPairs = activeCurrencies
+                    .Where(code => !string.Equals(code, baseCurrency, StringComparison.OrdinalIgnoreCase))
+                    .Select(code => (BaseCurrency: baseCurrency, TargetCurrency: code))
+                    .ToList();
             }
 
-            // Group by BaseCurrency to handle multiple base currencies
-            var currencyGroups = existingRates.GroupBy(r => r.BaseCurrency);
+            var currencyGroups = currencyPairs.GroupBy(x => x.BaseCurrency);
 
             foreach (var group in currencyGroups)
             {
