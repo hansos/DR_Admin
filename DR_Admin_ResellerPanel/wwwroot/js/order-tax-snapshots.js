@@ -1,0 +1,38 @@
+"use strict";
+(() => {
+    const pageId = 'order-tax-snapshots-page';
+    function showSuccess(message) {
+        const success = document.getElementById('order-tax-snapshots-alert-success');
+        const error = document.getElementById('order-tax-snapshots-alert-error');
+        if (success) {
+            success.textContent = message;
+            success.classList.remove('d-none');
+        }
+        error?.classList.add('d-none');
+    }
+    function initializePage() {
+        const page = document.getElementById(pageId);
+        if (!page || page.dataset.initialized === 'true') {
+            return;
+        }
+        page.dataset.initialized = 'true';
+        document.getElementById('order-tax-snapshots-refresh')?.addEventListener('click', () => {
+            showSuccess(`Refreshed at ${new Date().toLocaleString()}`);
+        });
+    }
+    function setup() {
+        initializePage();
+        if (!document.body) {
+            return;
+        }
+        const observer = new MutationObserver(() => initializePage());
+        observer.observe(document.body, { childList: true, subtree: true });
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', setup);
+    }
+    else {
+        setup();
+    }
+})();
+//# sourceMappingURL=order-tax-snapshots.js.map

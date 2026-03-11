@@ -1,0 +1,39 @@
+@page "/billing/invoice-tax-audit"
+
+<div id="invoice-tax-audit-page" class="container-fluid">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+        <div>
+            <h2 class="h4 mb-1"><i class="bi bi-receipt-cutoff"></i> Invoice Tax Audit</h2>
+            <p class="text-muted mb-0">Review invoice tax-source links to finalized order tax snapshots.</p>
+        </div>
+        <button class="btn btn-primary" id="invoice-tax-audit-refresh" type="button"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+    </div>
+
+    <div id="invoice-tax-audit-alert-success" class="alert alert-success d-none" role="alert"></div>
+    <div id="invoice-tax-audit-alert-error" class="alert alert-danger d-none" role="alert"></div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Invoice ID</th>
+                            <th>Order ID</th>
+                            <th>Snapshot ID</th>
+                            <th>SubTotal</th>
+                            <th>Tax Amount</th>
+                            <th>Total</th>
+                            <th>Tax Name</th>
+                        </tr>
+                    </thead>
+                    <tbody id="invoice-tax-audit-table-body">
+                        <tr>
+                            <td colspan="7" class="text-center text-muted">Loading...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,32 @@
+@page "/billing/tax-finalize"
+
+<div id="tax-finalize-tool-page" class="container-fluid">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+        <div>
+            <h2 class="h4 mb-1"><i class="bi bi-shield-lock"></i> Tax Finalize Tool</h2>
+            <p class="text-muted mb-0">Finalize tax snapshots with required evidence and idempotency controls.</p>
+        </div>
+        <button class="btn btn-primary" id="tax-finalize-tool-run" type="button"><i class="bi bi-play-circle"></i> Finalize</button>
+    </div>
+
+    <div id="tax-finalize-tool-alert-success" class="alert alert-success d-none" role="alert"></div>
+    <div id="tax-finalize-tool-alert-error" class="alert alert-danger d-none" role="alert"></div>
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Finalize Input</h5>
+        </div>
+        <div class="card-body">
+            <p class="text-muted mb-0">Use this page to submit finalize requests with order, evidence and idempotency key.</p>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Finalize Result</h5>
+        </div>
+        <div class="card-body">
+            <pre id="tax-finalize-tool-result" class="mb-0">No finalize executed.</pre>
+        </div>
+    </div>
+</div>
