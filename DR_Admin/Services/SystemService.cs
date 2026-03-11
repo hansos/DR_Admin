@@ -360,6 +360,108 @@ $"</body></html>";
         {
             _log.Information("Starting test data seeding for core catalog tables");
 
+            if (!await _context.Countries.AnyAsync())
+            {
+                _context.Countries.AddRange(
+                    new Country
+                    {
+                        Code = "NO",
+                        Tld = "no",
+                        Iso3 = "NOR",
+                        Numeric = 578,
+                        EnglishName = "Norway",
+                        LocalName = "Norge",
+                        IsActive = true,
+                        NormalizedEnglishName = "norway",
+                        NormalizedLocalName = "norge"
+                    },
+                    new Country
+                    {
+                        Code = "DK",
+                        Tld = "dk",
+                        Iso3 = "DNK",
+                        Numeric = 208,
+                        EnglishName = "Denmark",
+                        LocalName = "Danmark",
+                        IsActive = true,
+                        NormalizedEnglishName = "denmark",
+                        NormalizedLocalName = "danmark"
+                    },
+                    new Country
+                    {
+                        Code = "GB",
+                        Tld = "uk",
+                        Iso3 = "GBR",
+                        Numeric = 826,
+                        EnglishName = "United Kingdom",
+                        LocalName = "United Kingdom",
+                        IsActive = true,
+                        NormalizedEnglishName = "united kingdom",
+                        NormalizedLocalName = "united kingdom"
+                    },
+                    new Country
+                    {
+                        Code = "US",
+                        Tld = "us",
+                        Iso3 = "USA",
+                        Numeric = 840,
+                        EnglishName = "United States",
+                        LocalName = "United States",
+                        IsActive = true,
+                        NormalizedEnglishName = "united states",
+                        NormalizedLocalName = "united states"
+                    });
+
+                result.InsertedByTable["Countries"] = 4;
+            }
+
+            if (!await _context.CustomerStatuses.AnyAsync())
+            {
+                _context.CustomerStatuses.AddRange(
+                    new CustomerStatus
+                    {
+                        Code = "ACTIVE",
+                        Name = "Active",
+                        Description = "Customer account is active and can place orders",
+                        IsActive = true,
+                        Color = "#198754",
+                        Priority = 1,
+                        IsSystem = true
+                    },
+                    new CustomerStatus
+                    {
+                        Code = "PENDING",
+                        Name = "Pending",
+                        Description = "Customer account is pending review or setup",
+                        IsActive = true,
+                        Color = "#ffc107",
+                        Priority = 2,
+                        IsSystem = true
+                    },
+                    new CustomerStatus
+                    {
+                        Code = "SUSPENDED",
+                        Name = "Suspended",
+                        Description = "Customer account is temporarily suspended",
+                        IsActive = true,
+                        Color = "#fd7e14",
+                        Priority = 3,
+                        IsSystem = true
+                    },
+                    new CustomerStatus
+                    {
+                        Code = "INACTIVE",
+                        Name = "Inactive",
+                        Description = "Customer account is inactive",
+                        IsActive = true,
+                        Color = "#6c757d",
+                        Priority = 4,
+                        IsSystem = true
+                    });
+
+                result.InsertedByTable["CustomerStatuses"] = 4;
+            }
+
             if (!await _context.Currencies.AnyAsync())
             {
                 _context.Currencies.AddRange(

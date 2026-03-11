@@ -44,6 +44,11 @@ public class CustomerDto
     /// Gets or sets the customer's phone number
     /// </summary>
     public string Phone { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the customer country code (ISO 3166-1 alpha-2).
+    /// </summary>
+    public string? CountryCode { get; set; }
     
     // Address fields removed; use CustomerAddress records for address data
     
@@ -152,6 +157,11 @@ public class CreateCustomerDto
     /// Customer's phone number
     /// </summary>
     public string Phone { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Customer country code (ISO 3166-1 alpha-2)
+    /// </summary>
+    public string? CountryCode { get; set; }
     
     // Address fields removed from create DTO
     
@@ -261,6 +271,11 @@ public class UpdateCustomerDto
     /// Customer's phone number
     /// </summary>
     public string Phone { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Customer country code (ISO 3166-1 alpha-2)
+    /// </summary>
+    public string? CountryCode { get; set; }
     
     // Address fields removed from update DTO
     

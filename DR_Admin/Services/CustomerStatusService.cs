@@ -203,7 +203,9 @@ public class CustomerStatusService : ICustomerStatusService
                 Color = createDto.Color,
                 IsActive = createDto.IsActive,
                 IsDefault = createDto.IsDefault,
-                SortOrder = createDto.SortOrder
+                SortOrder = createDto.SortOrder,
+                Priority = createDto.Priority,
+                IsSystem = createDto.IsSystem
             };
 
             _context.CustomerStatuses.Add(customerStatus);
@@ -252,6 +254,8 @@ public class CustomerStatusService : ICustomerStatusService
             customerStatus.IsActive = updateDto.IsActive;
             customerStatus.IsDefault = updateDto.IsDefault;
             customerStatus.SortOrder = updateDto.SortOrder;
+            customerStatus.Priority = updateDto.Priority;
+            customerStatus.IsSystem = updateDto.IsSystem;
 
             await _context.SaveChangesAsync();
 
@@ -340,6 +344,8 @@ public class CustomerStatusService : ICustomerStatusService
             IsActive = customerStatus.IsActive,
             IsDefault = customerStatus.IsDefault,
             SortOrder = customerStatus.SortOrder,
+            Priority = customerStatus.Priority,
+            IsSystem = customerStatus.IsSystem,
             CreatedAt = customerStatus.CreatedAt,
             UpdatedAt = customerStatus.UpdatedAt
         };

@@ -23,6 +23,11 @@ public class Customer : EntityBase
     public string Email { get; set; } = string.Empty;
     public string Phone { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Gets or sets the ISO country code (2 characters) associated with the customer.
+    /// </summary>
+    public string? CountryCode { get; set; }
+
     // Address fields are managed via CustomerAddress records
     /// <summary>
     /// Optional contact person/display name associated with the customer account.
@@ -70,7 +75,7 @@ public class Customer : EntityBase
     /// </summary>
     public bool AllowCurrencyOverride { get; set; } = true;
 
-    // Country navigation removed; country is represented via CustomerAddress -> PostalCode -> Country
+    // Country navigation removed; country reference is stored as CountryCode and via CustomerAddress -> PostalCode -> Country
     public CustomerStatus? CustomerStatus { get; set; }
     public ICollection<User> Users { get; set; } = new List<User>();
     public ICollection<Invoice> Invoices { get; set; } = new List<Invoice>();

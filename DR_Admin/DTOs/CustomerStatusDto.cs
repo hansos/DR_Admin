@@ -44,6 +44,16 @@ public class CustomerStatusDto
     /// Gets or sets the sort order for displaying statuses
     /// </summary>
     public int SortOrder { get; set; }
+
+    /// <summary>
+    /// Gets or sets optional priority for status handling.
+    /// </summary>
+    public int? Priority { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether this status is a protected system status.
+    /// </summary>
+    public bool IsSystem { get; set; }
     
     /// <summary>
     /// Gets or sets the date and time when the status was created
@@ -95,6 +105,16 @@ public class CreateCustomerStatusDto
     /// Sort order for displaying statuses
     /// </summary>
     public int SortOrder { get; set; }
+
+    /// <summary>
+    /// Optional priority for status handling.
+    /// </summary>
+    public int? Priority { get; set; }
+
+    /// <summary>
+    /// Whether this status is a protected system status.
+    /// </summary>
+    public bool IsSystem { get; set; }
 }
 
 /// <summary>
@@ -131,4 +151,14 @@ public class UpdateCustomerStatusDto
     /// Sort order for displaying statuses
     /// </summary>
     public int SortOrder { get; set; }
+
+    /// <summary>
+    /// Optional priority for status handling.
+    /// </summary>
+    public int? Priority { get; set; }
+
+    /// <summary>
+    /// Whether this status is a protected system status.
+    /// </summary>
+    public bool IsSystem { get; set; }
 }

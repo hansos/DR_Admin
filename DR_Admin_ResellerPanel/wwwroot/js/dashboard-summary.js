@@ -200,6 +200,14 @@
             checkType: 'list',
         },
         {
+            key: 'customer-statuses',
+            name: 'Customer Statuses',
+            description: 'Define customer lifecycle statuses used by customer records.',
+            fixUrl: '/customers/list',
+            endpoint: '/CustomerStatuses',
+            checkType: 'list',
+        },
+        {
             key: 'company-settings',
             name: 'Company Setup',
             description: 'Fill in legal and contact profile used in invoices and communication.',

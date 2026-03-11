@@ -366,6 +366,7 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
             entity.Property(e => e.Email).IsRequired().HasMaxLength(200);
             entity.Property(e => e.Phone).HasMaxLength(50);
+            entity.Property(e => e.CountryCode).HasMaxLength(2);
             // Address fields removed from Customer entity
             entity.Property(e => e.CustomerName).HasMaxLength(200);
             entity.Property(e => e.TaxId).HasMaxLength(50);
@@ -384,6 +385,7 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => e.ReferenceNumber).IsUnique();
             entity.HasIndex(e => e.CustomerNumber).IsUnique().HasFilter(null);
             entity.HasIndex(e => e.Email);
+            entity.HasIndex(e => e.CountryCode);
             entity.HasIndex(e => e.Status);
             entity.HasIndex(e => e.TaxId);
             entity.HasIndex(e => e.VatNumber);
@@ -408,6 +410,8 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
             entity.Property(e => e.Description).HasMaxLength(500);
             entity.Property(e => e.Color).HasMaxLength(20);
+            entity.Property(e => e.Priority);
+            entity.Property(e => e.IsSystem);
             entity.Property(e => e.NormalizedCode).IsRequired().HasMaxLength(50);
             entity.Property(e => e.NormalizedName).IsRequired().HasMaxLength(100);
             
@@ -416,6 +420,7 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => e.IsActive);
             entity.HasIndex(e => e.IsDefault);
             entity.HasIndex(e => e.SortOrder);
+            entity.HasIndex(e => e.IsSystem);
         });
 
         // Currency configuration

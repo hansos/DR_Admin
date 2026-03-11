@@ -9,6 +9,7 @@ interface Customer {
     name: string;
     email: string;
     phone: string;
+    countryCode?: string | null;
     customerName?: string | null;
     taxId?: string | null;
     vatNumber?: string | null;
@@ -25,6 +26,32 @@ interface Customer {
     allowCurrencyOverride: boolean;
     createdAt?: string;
     updatedAt?: string;
+}
+
+interface CountryOption {
+    code: string;
+    englishName: string;
+    localName: string;
+}
+
+interface CustomerStatusOption {
+    code: string;
+    name: string;
+    isActive: boolean;
+    color?: string | null;
+}
+
+interface CurrencyOption {
+    code: string;
+    name: string;
+    isActive: boolean;
+    isCustomerCurrency?: boolean;
+}
+
+interface PaymentInstrumentOption {
+    code: string;
+    name: string;
+    isActive: boolean;
 }
 
 interface PagedResult<T> {
@@ -135,6 +162,28 @@ let currentPage = 1;
 let pageSize = 25;
 let totalCount = 0;
 let totalPages = 1;
+let countryOptionsLoaded = false;
+let statusOptionsLoaded = false;
+let currencyOptionsLoaded = false;
+let paymentMethodOptionsLoaded = false;
+const customerStatusLookup = new Map<string, CustomerStatusOption>();
+
+function normalizeStatusCode(code: string): string {
+    return (code || '').trim().toUpperCase();
+}
+
+function getStatusBadgeHtml(statusCode: string): string {
+    const normalizedCode = normalizeStatusCode(statusCode);
+    const statusOption = customerStatusLookup.get(normalizedCode);
+    const statusName = statusOption?.name || statusCode || '-';
+    const statusColor = (statusOption?.color || '').trim();
+
+    if (statusColor) {
+        return `<span class="badge" style="background-color: ${esc(statusColor)}; color: #fff;">${esc(statusName)}</span>`;
+    }
+
+    return `<span class="badge bg-secondary">${esc(statusName)}</span>`;
+}
 
 function loadPageSizeFromUi(): void {
     const el = document.getElementById('customers-page-size') as HTMLSelectElement | null;
@@ -161,6 +210,7 @@ function normalizeItem(item: any): Customer {
         name: item.name ?? item.Name ?? '',
         email: item.email ?? item.Email ?? '',
         phone: item.phone ?? item.Phone ?? '',
+        countryCode: item.countryCode ?? item.CountryCode ?? null,
         customerName: item.customerName ?? item.CustomerName ?? null,
         taxId: item.taxId ?? item.TaxId ?? null,
         vatNumber: item.vatNumber ?? item.VatNumber ?? null,
@@ -186,13 +236,13 @@ async function loadCustomers(): Promise<void> {
         return;
     }
 
-    tableBody.innerHTML = '<tr><td colspan="10" class="text-center"><div class="spinner-border text-primary"></div></td></tr>';
+    tableBody.innerHTML = '<tr><td colspan="9" class="text-center"><div class="spinner-border text-primary"></div></td></tr>';
 
     loadPageSizeFromUi();
     const response = await apiRequest<PagedResult<Customer> | Customer[]>(buildPagedUrl(), { method: 'GET' });
     if (!response.success) {
         showError(response.message || 'Failed to load customers');
-        tableBody.innerHTML = '<tr><td colspan="10" class="text-center text-danger">Failed to load data</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="9" class="text-center text-danger">Failed to load data</td></tr>';
         return;
     }
 
@@ -218,7 +268,7 @@ function renderTable(): void {
     }
 
     if (!allCustomers.length) {
-        tableBody.innerHTML = '<tr><td colspan="10" class="text-center text-muted">No customers found.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="9" class="text-center text-muted">No customers found.</td></tr>';
         return;
     }
 
@@ -226,10 +276,7 @@ function renderTable(): void {
         const reference = customer.formattedReferenceNumber || (customer.referenceNumber ? String(customer.referenceNumber) : '-');
         const customerLabel = customer.name || '-';
         const nameLabel = customer.customerName || '-';
-        const status = customer.status || '-';
-        const activeBadge = customer.isActive
-            ? '<span class="badge bg-success">Yes</span>'
-            : '<span class="badge bg-secondary">No</span>';
+        const statusBadge = getStatusBadgeHtml(customer.status || '');
         const selfRegisteredBadge = customer.isSelfRegistered
             ? '<span class="badge bg-success">Yes</span>'
             : '<span class="badge bg-secondary">No</span>';
@@ -242,8 +289,7 @@ function renderTable(): void {
             <td>${esc(nameLabel)}</td>
             <td><a href="mailto:${esc(customer.email)}">${esc(customer.email)}</a></td>
             <td>${esc(customer.phone || '-')}</td>
-            <td>${esc(status)}</td>
-            <td>${activeBadge}</td>
+            <td>${statusBadge}</td>
             <td>${selfRegisteredBadge}</td>
             <td class="text-end">
                 <div class="btn-group btn-group-sm">
@@ -380,11 +426,6 @@ function openCreate(): void {
     const form = document.getElementById('customers-form') as HTMLFormElement | null;
     form?.reset();
 
-    const isActive = document.getElementById('customers-is-active') as HTMLInputElement | null;
-    if (isActive) {
-        isActive.checked = true;
-    }
-
     const allowCurrencyOverride = document.getElementById('customers-allow-currency-override') as HTMLInputElement | null;
     if (allowCurrencyOverride) {
         allowCurrencyOverride.checked = true;
@@ -394,6 +435,11 @@ function openCreate(): void {
     if (isSelfRegistered) {
         isSelfRegistered.checked = false;
     }
+
+    setSelectValue('customers-country-code', '');
+    setSelectValue('customers-status', 'Active');
+    setSelectValue('customers-preferred-currency', 'EUR');
+    setSelectValue('customers-preferred-payment-method', '');
 
     showModal('customers-edit-modal');
 }
@@ -424,6 +470,7 @@ function openEdit(id: number): void {
     setInputValue('customers-email', customer.email);
     setInputValue('customers-billing-email', customer.billingEmail || '');
     setInputValue('customers-phone', customer.phone);
+    setSelectValue('customers-country-code', customer.countryCode || '');
     setInputValue('customers-tax-id', customer.taxId || '');
     setInputValue('customers-vat-number', customer.vatNumber || '');
     setInputValue('customers-status', customer.status || 'Active');
@@ -433,7 +480,6 @@ function openEdit(id: number): void {
     setTextAreaValue('customers-notes', customer.notes || '');
 
     setCheckboxValue('customers-is-company', !!customer.isCompany);
-    setCheckboxValue('customers-is-active', !!customer.isActive);
     setCheckboxValue('customers-is-self-registered', !!customer.isSelfRegistered);
     setCheckboxValue('customers-allow-currency-override', customer.allowCurrencyOverride !== false);
 
@@ -441,7 +487,14 @@ function openEdit(id: number): void {
 }
 
 function setInputValue(id: string, value: string): void {
-    const el = document.getElementById(id) as HTMLInputElement | null;
+    const el = document.getElementById(id) as HTMLInputElement | HTMLSelectElement | null;
+    if (el) {
+        el.value = value ?? '';
+    }
+}
+
+function setSelectValue(id: string, value: string): void {
+    const el = document.getElementById(id) as HTMLSelectElement | null;
     if (el) {
         el.value = value ?? '';
     }
@@ -462,7 +515,7 @@ function setCheckboxValue(id: string, value: boolean): void {
 }
 
 function getInputValue(id: string): string {
-    const el = document.getElementById(id) as HTMLInputElement | null;
+    const el = document.getElementById(id) as HTMLInputElement | HTMLSelectElement | null;
     return (el?.value ?? '').trim();
 }
 
@@ -496,21 +549,24 @@ async function saveCustomer(): Promise<void> {
         return;
     }
 
+    const selectedStatus = getInputValue('customers-status') || 'Active';
+
     const payload = {
         name,
         customerName: getInputValue('customers-customer-name') || null,
         email,
         billingEmail: getInputValue('customers-billing-email') || null,
         phone,
+        countryCode: getInputValue('customers-country-code') || null,
         taxId: getInputValue('customers-tax-id') || null,
         vatNumber: getInputValue('customers-vat-number') || null,
-        status: getInputValue('customers-status') || 'Active',
+        status: selectedStatus,
         preferredCurrency: getInputValue('customers-preferred-currency') || 'EUR',
         creditLimit: getNumberValue('customers-credit-limit'),
         preferredPaymentMethod: getInputValue('customers-preferred-payment-method') || null,
         notes: getTextAreaValue('customers-notes') || null,
         isCompany: getCheckboxValue('customers-is-company'),
-        isActive: getCheckboxValue('customers-is-active'),
+        isActive: selectedStatus.toLowerCase() !== 'inactive',
         isSelfRegistered: getCheckboxValue('customers-is-self-registered'),
         allowCurrencyOverride: getCheckboxValue('customers-allow-currency-override'),
     };
@@ -550,6 +606,193 @@ function initializeCustomerModal(): void {
 
     document.getElementById('customers-save')?.addEventListener('click', saveCustomer);
     document.addEventListener('customers:open-create', () => openCreate());
+
+    void loadCountryOptions();
+    void loadStatusOptions();
+    void loadCurrencyOptions();
+    void loadPaymentMethodOptions();
+}
+
+async function loadCountryOptions(): Promise<void> {
+    if (countryOptionsLoaded) {
+        return;
+    }
+
+    const select = document.getElementById('customers-country-code') as HTMLSelectElement | null;
+    if (!select) {
+        return;
+    }
+
+    const response = await apiRequest<PagedResult<CountryOption> | CountryOption[]>(`${getApiBaseUrl()}/Countries?pageNumber=1&pageSize=1000`, { method: 'GET' });
+    if (!response.success) {
+        return;
+    }
+
+    const { items } = extractItems(response.data);
+    const options = items
+        .map((item) => ({
+            code: String(item.code ?? item.Code ?? '').toUpperCase(),
+            englishName: String(item.englishName ?? item.EnglishName ?? ''),
+            localName: String(item.localName ?? item.LocalName ?? ''),
+        }))
+        .filter((item) => !!item.code)
+        .sort((a, b) => a.englishName.localeCompare(b.englishName));
+
+    const current = select.value;
+    select.innerHTML = '<option value="">Select country...</option>';
+    options.forEach((country) => {
+        const option = document.createElement('option');
+        option.value = country.code;
+        option.text = `${country.englishName || country.localName || country.code} (${country.code})`;
+        select.add(option);
+    });
+
+    select.value = current || '';
+    countryOptionsLoaded = true;
+}
+
+async function loadStatusOptions(): Promise<void> {
+    if (statusOptionsLoaded) {
+        return;
+    }
+
+    const select = document.getElementById('customers-status') as HTMLSelectElement | null;
+    if (!select) {
+        return;
+    }
+
+    const response = await apiRequest<CustomerStatusOption[] | PagedResult<CustomerStatusOption>>(`${getApiBaseUrl()}/CustomerStatuses`, { method: 'GET' });
+    if (!response.success) {
+        return;
+    }
+
+    const { items } = extractItems(response.data);
+    const options = items
+        .map((item) => ({
+            code: String(item.code ?? item.Code ?? '').trim(),
+            name: String(item.name ?? item.Name ?? '').trim(),
+            color: String(item.color ?? item.Color ?? '').trim(),
+            isActive: Boolean(item.isActive ?? item.IsActive ?? false),
+        }))
+        .filter((item) => !!item.code)
+        .sort((a, b) => a.name.localeCompare(b.name));
+
+    customerStatusLookup.clear();
+    options.forEach((status) => {
+        customerStatusLookup.set(normalizeStatusCode(status.code), status);
+    });
+
+    const activeOptions = options.filter((item) => item.isActive);
+
+    const current = select.value || 'Active';
+    select.innerHTML = '';
+    activeOptions.forEach((status) => {
+        const option = document.createElement('option');
+        option.value = status.code;
+        option.text = status.name || status.code;
+        select.add(option);
+    });
+
+    if (!Array.from(select.options).some((o) => o.value === current)) {
+        const fallback = document.createElement('option');
+        fallback.value = current;
+        fallback.text = current;
+        select.add(fallback);
+    }
+
+    select.value = current;
+    statusOptionsLoaded = true;
+}
+
+async function loadCurrencyOptions(): Promise<void> {
+    if (currencyOptionsLoaded) {
+        return;
+    }
+
+    const select = document.getElementById('customers-preferred-currency') as HTMLSelectElement | null;
+    if (!select) {
+        return;
+    }
+
+    const response = await apiRequest<CurrencyOption[] | PagedResult<CurrencyOption>>(`${getApiBaseUrl()}/Currencies`, { method: 'GET' });
+    if (!response.success) {
+        return;
+    }
+
+    const { items } = extractItems(response.data);
+    const options = items
+        .map((item) => ({
+            code: String(item.code ?? item.Code ?? '').trim().toUpperCase(),
+            name: String(item.name ?? item.Name ?? '').trim(),
+            isActive: Boolean(item.isActive ?? item.IsActive ?? false),
+            isCustomerCurrency: Boolean(item.isCustomerCurrency ?? item.IsCustomerCurrency ?? false),
+        }))
+        .filter((item) => item.isActive && item.isCustomerCurrency && !!item.code)
+        .sort((a, b) => a.code.localeCompare(b.code));
+
+    const current = select.value || 'EUR';
+    select.innerHTML = '';
+    options.forEach((currency) => {
+        const option = document.createElement('option');
+        option.value = currency.code;
+        option.text = currency.name ? `${currency.code} - ${currency.name}` : currency.code;
+        select.add(option);
+    });
+
+    if (!Array.from(select.options).some((o) => o.value === current)) {
+        const fallback = document.createElement('option');
+        fallback.value = current;
+        fallback.text = current;
+        select.add(fallback);
+    }
+
+    select.value = current;
+    currencyOptionsLoaded = true;
+}
+
+async function loadPaymentMethodOptions(): Promise<void> {
+    if (paymentMethodOptionsLoaded) {
+        return;
+    }
+
+    const select = document.getElementById('customers-preferred-payment-method') as HTMLSelectElement | null;
+    if (!select) {
+        return;
+    }
+
+    const response = await apiRequest<PaymentInstrumentOption[] | PagedResult<PaymentInstrumentOption>>(`${getApiBaseUrl()}/PaymentInstruments`, { method: 'GET' });
+    if (!response.success) {
+        return;
+    }
+
+    const { items } = extractItems(response.data);
+    const options = items
+        .map((item) => ({
+            code: String(item.code ?? item.Code ?? '').trim(),
+            name: String(item.name ?? item.Name ?? '').trim(),
+            isActive: Boolean(item.isActive ?? item.IsActive ?? false),
+        }))
+        .filter((item) => item.isActive && !!item.code)
+        .sort((a, b) => a.name.localeCompare(b.name));
+
+    const current = select.value;
+    select.innerHTML = '<option value="">Select payment method...</option>';
+    options.forEach((method) => {
+        const option = document.createElement('option');
+        option.value = method.code;
+        option.text = method.name || method.code;
+        select.add(option);
+    });
+
+    if (current && !Array.from(select.options).some((o) => o.value === current)) {
+        const fallback = document.createElement('option');
+        fallback.value = current;
+        fallback.text = current;
+        select.add(fallback);
+    }
+
+    select.value = current || '';
+    paymentMethodOptionsLoaded = true;
 }
 
 async function doDelete(): Promise<void> {

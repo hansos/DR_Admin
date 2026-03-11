@@ -219,6 +219,7 @@ public class CustomerService : ICustomerService
                 Name = createDto.Name,
                 Email = createDto.Email,
                 Phone = createDto.Phone,
+                CountryCode = createDto.CountryCode,
                 // Address data moved to CustomerAddress - not stored on Customer entity
                 CustomerName = createDto.CustomerName,
                 TaxId = createDto.TaxId,
@@ -226,8 +227,8 @@ public class CustomerService : ICustomerService
                 IsCompany = createDto.IsCompany,
                 IsSelfRegistered = createDto.IsSelfRegistered,
                 IsActive = createDto.IsActive,
-                Status = resolvedStatus.Code,
-                CustomerStatusId = resolvedStatus.Id,
+                Status = resolvedStatus?.Code ?? (string.IsNullOrWhiteSpace(createDto.Status) ? "Active" : createDto.Status.Trim()),
+                CustomerStatusId = resolvedStatus?.Id,
                 Balance = 0,
                 CreditLimit = createDto.CreditLimit,
                 Notes = createDto.Notes,
@@ -275,6 +276,7 @@ public class CustomerService : ICustomerService
             customer.Name = updateDto.Name;
             customer.Email = updateDto.Email;
             customer.Phone = updateDto.Phone;
+            customer.CountryCode = updateDto.CountryCode;
             // Address fields removed: managed via CustomerAddress entities
             customer.CustomerName = updateDto.CustomerName;
             customer.TaxId = updateDto.TaxId;
@@ -283,8 +285,8 @@ public class CustomerService : ICustomerService
             customer.IsSelfRegistered = updateDto.IsSelfRegistered;
             customer.IsActive = updateDto.IsActive;
             var resolvedStatus = await ResolveCustomerStatusAsync(updateDto.Status);
-            customer.Status = resolvedStatus.Code;
-            customer.CustomerStatusId = resolvedStatus.Id;
+            customer.Status = resolvedStatus?.Code ?? (string.IsNullOrWhiteSpace(updateDto.Status) ? "Active" : updateDto.Status.Trim());
+            customer.CustomerStatusId = resolvedStatus?.Id;
             customer.CreditLimit = updateDto.CreditLimit;
             customer.Notes = updateDto.Notes;
             customer.BillingEmail = updateDto.BillingEmail;
@@ -349,6 +351,7 @@ public class CustomerService : ICustomerService
                 Name = customer.Name,
                 Email = customer.Email,
                 Phone = customer.Phone,
+                CountryCode = customer.CountryCode,
                 // Address fields moved to CustomerAddress; not present on DTO
                 CustomerName = customer.CustomerName,
                 TaxId = customer.TaxId,
@@ -417,9 +420,8 @@ public class CustomerService : ICustomerService
     /// Resolves a customer status by code, or falls back to the configured default status.
     /// </summary>
     /// <param name="statusCode">The requested status code.</param>
-    /// <returns>The resolved status entity.</returns>
-    /// <exception cref="InvalidOperationException">Thrown when no applicable status can be resolved.</exception>
-    private async Task<CustomerStatus> ResolveCustomerStatusAsync(string? statusCode)
+    /// <returns>The resolved status entity, or null when no status records are configured.</returns>
+    private async Task<CustomerStatus?> ResolveCustomerStatusAsync(string? statusCode)
     {
         if (!string.IsNullOrWhiteSpace(statusCode))
         {
@@ -440,7 +442,8 @@ public class CustomerService : ICustomerService
 
         if (defaultStatus == null)
         {
-            throw new InvalidOperationException("No customer status is configured. Please create at least one active customer status.");
+            _log.Warning("No customer status is configured. Falling back to plain status string.");
+            return null;
         }
 
         return defaultStatus;

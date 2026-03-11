@@ -32,6 +32,12 @@
                             <input type="text" class="form-control" id="customers-phone" />
                         </div>
                         <div class="col-12 col-md-3">
+                            <label for="customers-country-code" class="form-label">Country</label>
+                            <select class="form-select" id="customers-country-code">
+                                <option value="">Select country...</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-3">
                             <label for="customers-tax-id" class="form-label">Tax ID</label>
                             <input type="text" class="form-control" id="customers-tax-id" />
                         </div>
@@ -42,11 +48,15 @@
 
                         <div class="col-12 col-md-4">
                             <label for="customers-status" class="form-label">Status</label>
-                            <input type="text" class="form-control" id="customers-status" placeholder="Active" />
+                            <select class="form-select" id="customers-status">
+                                <option value="Active">Active</option>
+                            </select>
                         </div>
                         <div class="col-12 col-md-4">
                             <label for="customers-preferred-currency" class="form-label">Preferred Currency</label>
-                            <input type="text" class="form-control" id="customers-preferred-currency" placeholder="EUR" />
+                            <select class="form-select" id="customers-preferred-currency">
+                                <option value="EUR">EUR</option>
+                            </select>
                         </div>
                         <div class="col-12 col-md-4">
                             <label for="customers-credit-limit" class="form-label">Credit Limit</label>
@@ -55,7 +65,9 @@
 
                         <div class="col-12 col-md-6">
                             <label for="customers-preferred-payment-method" class="form-label">Preferred Payment Method</label>
-                            <input type="text" class="form-control" id="customers-preferred-payment-method" />
+                            <select class="form-select" id="customers-preferred-payment-method">
+                                <option value="">Select payment method...</option>
+                            </select>
                         </div>
                         <div class="col-12 col-md-6">
                             <label for="customers-notes" class="form-label">Notes</label>
@@ -67,10 +79,6 @@
                                 <div class="form-check form-switch">
                                     <input class="form-check-input" type="checkbox" id="customers-is-company">
                                     <label class="form-check-label" for="customers-is-company">Company</label>
-                                </div>
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="customers-is-active" checked>
-                                    <label class="form-check-label" for="customers-is-active">Active</label>
                                 </div>
                                 <div class="form-check form-switch">
                                     <input class="form-check-input" type="checkbox" id="customers-is-self-registered">

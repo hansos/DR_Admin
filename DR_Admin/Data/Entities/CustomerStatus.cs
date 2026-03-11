@@ -1,5 +1,7 @@
 namespace ISPAdmin.Data.Entities;
 
+using System.ComponentModel.DataAnnotations.Schema;
+
 /// <summary>
 /// Represents a customer status that can be assigned to customers
 /// </summary>
@@ -39,6 +41,27 @@ public class CustomerStatus : EntityBase
     /// Gets or sets the sort order for displaying statuses
     /// </summary>
     public int SortOrder { get; set; }
+
+    /// <summary>
+    /// Gets or sets optional priority value used by seeding and business workflows.
+    /// </summary>
+    public int? Priority { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether this status is a protected system status.
+    /// </summary>
+    public bool IsSystem { get; set; }
+
+    /// <summary>
+    /// Backward-compatible alias for IsSystem.
+    /// </summary>
+    [Obsolete("Use IsSystem property instead.",true)]
+    [NotMapped]
+    public bool IsSysten
+    {
+        get => IsSystem;
+        set => IsSystem = value;
+    }
     
     /// <summary>
     /// Gets or sets the normalized version of Code for case-insensitive searches
