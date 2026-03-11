@@ -8,56 +8,115 @@
             <h1 class="h4 mb-1">Contact Persons</h1>
             <p class="text-muted mb-0">Manage billing, technical and administrative contacts.</p>
         </div>
+        <button id="contact-persons-add" class="btn btn-primary" type="button">
+            <i class="bi bi-plus-lg"></i> Add contact
+        </button>
     </div>
 
     <div id="contact-persons-alert-success" class="alert alert-success d-none" role="alert"></div>
     <div id="contact-persons-alert-error" class="alert alert-danger d-none" role="alert"></div>
 
-    <div class="card shadow-sm mb-3">
+    <div class="card shadow-sm">
         <div class="card-body">
-            <form id="contact-persons-form" class="row g-2" novalidate>
-                <input id="contact-persons-id" type="hidden" />
-                <div class="col-12 col-md-2">
-                    <input id="contact-persons-first-name" class="form-control" type="text" placeholder="First name" />
-                </div>
-                <div class="col-12 col-md-2">
-                    <input id="contact-persons-last-name" class="form-control" type="text" placeholder="Last name" />
-                </div>
-                <div class="col-12 col-md-3">
-                    <input id="contact-persons-email" class="form-control" type="email" placeholder="Email" />
-                </div>
-                <div class="col-12 col-md-2">
-                    <input id="contact-persons-phone" class="form-control" type="text" placeholder="Phone" />
-                </div>
-                <div class="col-12 col-md-3 d-flex gap-2 align-items-center">
-                    <div class="form-check form-switch">
-                        <input id="contact-persons-is-primary" class="form-check-input" type="checkbox" />
-                        <label for="contact-persons-is-primary" class="form-check-label">Primary</label>
-                    </div>
-                    <button id="contact-persons-save" class="btn btn-primary btn-sm" type="submit">Save</button>
-                    <button id="contact-persons-reset" class="btn btn-outline-secondary btn-sm" type="button">Reset</button>
-                </div>
-            </form>
+            <ul class="list-group list-group-flush" id="contact-persons-list">
+                <li class="list-group-item text-center text-muted">Loading contacts...</li>
+            </ul>
         </div>
     </div>
 
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Phone</th>
-                            <th>Roles</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="contact-persons-table-body">
-                        <tr><td colspan="5" class="text-center text-muted">Loading contacts...</td></tr>
-                    </tbody>
-                </table>
+    <div class="modal fade" id="contact-persons-modal" tabindex="-1" aria-labelledby="contact-persons-modal-title" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <form id="contact-persons-form" novalidate>
+                    <div class="modal-header">
+                        <h2 class="modal-title h5 mb-0" id="contact-persons-modal-title">Contact person</h2>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input id="contact-persons-id" type="hidden" />
+
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6">
+                                <label for="contact-persons-first-name" class="form-label">First name</label>
+                                <input id="contact-persons-first-name" class="form-control" type="text" maxlength="100" required />
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label for="contact-persons-last-name" class="form-label">Last name</label>
+                                <input id="contact-persons-last-name" class="form-control" type="text" maxlength="100" required />
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label for="contact-persons-email" class="form-label">Email</label>
+                                <input id="contact-persons-email" class="form-control" type="email" maxlength="160" required />
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label for="contact-persons-phone" class="form-label">Phone</label>
+                                <input id="contact-persons-phone" class="form-control" type="text" maxlength="60" />
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label for="contact-persons-position" class="form-label">Position</label>
+                                <input id="contact-persons-position" class="form-control" type="text" maxlength="120" />
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label for="contact-persons-department" class="form-label">Department</label>
+                                <input id="contact-persons-department" class="form-control" type="text" maxlength="120" />
+                            </div>
+                            <div class="col-12">
+                                <label for="contact-persons-notes" class="form-label">Notes</label>
+                                <textarea id="contact-persons-notes" class="form-control" rows="3" maxlength="2000"></textarea>
+                            </div>
+                            <div class="col-12">
+                                <div class="row g-2">
+                                    <div class="col-6 col-md-4">
+                                        <div class="form-check">
+                                            <input id="contact-persons-is-primary" class="form-check-input" type="checkbox" />
+                                            <label for="contact-persons-is-primary" class="form-check-label">Primary</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-4">
+                                        <div class="form-check">
+                                            <input id="contact-persons-is-active" class="form-check-input" type="checkbox" checked />
+                                            <label for="contact-persons-is-active" class="form-check-label">Active</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-4">
+                                        <div class="form-check">
+                                            <input id="contact-persons-is-default-owner" class="form-check-input" type="checkbox" />
+                                            <label for="contact-persons-is-default-owner" class="form-check-label">Default owner</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-4">
+                                        <div class="form-check">
+                                            <input id="contact-persons-is-default-billing" class="form-check-input" type="checkbox" />
+                                            <label for="contact-persons-is-default-billing" class="form-check-label">Default billing</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-4">
+                                        <div class="form-check">
+                                            <input id="contact-persons-is-default-tech" class="form-check-input" type="checkbox" />
+                                            <label for="contact-persons-is-default-tech" class="form-check-label">Default tech</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-4">
+                                        <div class="form-check">
+                                            <input id="contact-persons-is-default-administrator" class="form-check-input" type="checkbox" />
+                                            <label for="contact-persons-is-default-administrator" class="form-check-label">Default administrator</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-4">
+                                        <div class="form-check">
+                                            <input id="contact-persons-is-domain-global" class="form-check-input" type="checkbox" />
+                                            <label for="contact-persons-is-domain-global" class="form-check-label">Domain global</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button id="contact-persons-reset" class="btn btn-outline-secondary" type="button">Reset</button>
+                        <button id="contact-persons-save" class="btn btn-primary" type="submit">Save contact</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

@@ -5,11 +5,44 @@ interface ContactPersonDto {
     lastName: string;
     email: string;
     phone: string;
+    position?: string | null;
+    department?: string | null;
     isPrimary: boolean;
+    isActive: boolean;
+    notes?: string | null;
+    isDefaultOwner: boolean;
     isDefaultBilling: boolean;
     isDefaultTech: boolean;
     isDefaultAdministrator: boolean;
+    isDomainGlobal: boolean;
     customerId?: number | null;
+}
+
+interface UpsertContactPersonDto {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    position?: string | null;
+    department?: string | null;
+    isPrimary: boolean;
+    isActive: boolean;
+    notes?: string | null;
+    customerId: number;
+    isDefaultOwner: boolean;
+    isDefaultBilling: boolean;
+    isDefaultTech: boolean;
+    isDefaultAdministrator: boolean;
+    isDomainGlobal: boolean;
+}
+
+interface BootstrapModal {
+    show: () => void;
+    hide: () => void;
+}
+
+interface BootstrapModalFactory {
+    getOrCreateInstance: (element: Element) => BootstrapModal;
 }
 
 interface UserAccountDto {
@@ -25,11 +58,16 @@ interface ContactPersonsWindow extends Window {
     UserPanelAlerts?: {
         showSuccess: (id: string, message: string) => void;
         showError: (id: string, message: string) => void;
+        hide: (id: string) => void;
+    };
+    bootstrap?: {
+        Modal?: BootstrapModalFactory;
     };
 }
 
 let contactPersonsCustomerId: number | null = null;
 let contactPersonsItems: ContactPersonDto[] = [];
+let contactPersonsModal: BootstrapModal | null = null;
 
 function initializeContactPersonsPage(): void {
     const page = document.getElementById('contact-persons-page');
@@ -45,11 +83,15 @@ function initializeContactPersonsPage(): void {
         await saveContactPerson();
     });
 
+    document.getElementById('contact-persons-add')?.addEventListener('click', () => {
+        openContactPersonModal();
+    });
+
     document.getElementById('contact-persons-reset')?.addEventListener('click', () => {
         resetContactPersonsForm();
     });
 
-    document.getElementById('contact-persons-table-body')?.addEventListener('click', (event: Event) => {
+    document.getElementById('contact-persons-list')?.addEventListener('click', (event: Event) => {
         const target = event.target as HTMLElement;
         const button = target.closest('button[data-action]') as HTMLButtonElement | null;
         if (!button) {
@@ -71,16 +113,33 @@ function initializeContactPersonsPage(): void {
         }
     });
 
+    initializeContactPersonsModal();
     void loadContactPersons();
+}
+
+function initializeContactPersonsModal(): void {
+    const typedWindow = window as ContactPersonsWindow;
+    const modalElement = document.getElementById('contact-persons-modal');
+    const modalFactory = typedWindow.bootstrap?.Modal;
+
+    if (!modalElement || !modalFactory) {
+        contactPersonsModal = null;
+        return;
+    }
+
+    contactPersonsModal = modalFactory.getOrCreateInstance(modalElement);
 }
 
 async function loadContactPersons(): Promise<void> {
     const typedWindow = window as ContactPersonsWindow;
+    typedWindow.UserPanelAlerts?.hide('contact-persons-alert-success');
+    typedWindow.UserPanelAlerts?.hide('contact-persons-alert-error');
+
     contactPersonsCustomerId = await resolveContactPersonsCustomerId();
 
     if (!contactPersonsCustomerId) {
         typedWindow.UserPanelAlerts?.showError('contact-persons-alert-error', 'Could not resolve customer profile.');
-        renderContactPersonsRows([]);
+        renderContactPersonsItems([]);
         return;
     }
 
@@ -88,29 +147,32 @@ async function loadContactPersons(): Promise<void> {
 
     if (!response || !response.success || !response.data) {
         typedWindow.UserPanelAlerts?.showError('contact-persons-alert-error', response?.message ?? 'Could not load contact persons.');
-        renderContactPersonsRows([]);
+        renderContactPersonsItems([]);
         return;
     }
 
     contactPersonsItems = response.data;
-    renderContactPersonsRows(response.data);
+    renderContactPersonsItems(response.data);
 }
 
-function renderContactPersonsRows(items: ContactPersonDto[]): void {
-    const tableBody = document.getElementById('contact-persons-table-body');
-    if (!tableBody) {
+function renderContactPersonsItems(items: ContactPersonDto[]): void {
+    const list = document.getElementById('contact-persons-list');
+    if (!list) {
         return;
     }
 
     if (items.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No contact persons found.</td></tr>';
+        list.innerHTML = '<li class="list-group-item text-center text-muted">No contact persons found.</li>';
         return;
     }
 
-    tableBody.innerHTML = items.map((item) => {
+    list.innerHTML = items.map((item) => {
         const roles: string[] = [];
         if (item.isPrimary) {
             roles.push('Primary');
+        }
+        if (item.isDefaultOwner) {
+            roles.push('Owner');
         }
         if (item.isDefaultBilling) {
             roles.push('Billing');
@@ -122,18 +184,50 @@ function renderContactPersonsRows(items: ContactPersonDto[]): void {
             roles.push('Admin');
         }
 
-        return `<tr>
-            <td>${escapeContactPersonsText(`${item.firstName} ${item.lastName}`.trim())}</td>
-            <td>${escapeContactPersonsText(item.email)}</td>
-            <td>${escapeContactPersonsText(item.phone)}</td>
-            <td>${escapeContactPersonsText(roles.join(', ') || '-')}</td>
-            <td>
-                <div class="btn-group btn-group-sm">
-                    <button class="btn btn-outline-primary" type="button" data-action="edit" data-id="${item.id}">Edit</button>
-                    <button class="btn btn-outline-danger" type="button" data-action="delete" data-id="${item.id}">Delete</button>
+        const fullName = `${item.firstName} ${item.lastName}`.trim();
+
+        return `<li class="list-group-item">
+            <div class="d-flex flex-column flex-xl-row justify-content-between gap-3">
+                <div class="row g-2 flex-grow-1">
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="small text-muted">Name</div>
+                        <div class="fw-semibold">${escapeContactPersonsText(fullName || '-')}</div>
+                    </div>
+                    <div class="col-12 col-md-6 col-xl-3">
+                        <div class="small text-muted">Email</div>
+                        <div>${escapeContactPersonsText(item.email || '-')}</div>
+                    </div>
+                    <div class="col-12 col-md-6 col-xl-2">
+                        <div class="small text-muted">Phone</div>
+                        <div>${escapeContactPersonsText(item.phone || '-')}</div>
+                    </div>
+                    <div class="col-12 col-md-6 col-xl-2">
+                        <div class="small text-muted">Position</div>
+                        <div>${escapeContactPersonsText(item.position ?? '-')}</div>
+                    </div>
+                    <div class="col-12 col-md-6 col-xl-2">
+                        <div class="small text-muted">Department</div>
+                        <div>${escapeContactPersonsText(item.department ?? '-')}</div>
+                    </div>
+                    <div class="col-12 col-md-8">
+                        <div class="small text-muted">Roles</div>
+                        <div>${escapeContactPersonsText(roles.join(', ') || '-')}</div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="small text-muted">State</div>
+                        <div>${item.isActive ? 'Active' : 'Inactive'}${item.isDomainGlobal ? ' · Domain global' : ''}</div>
+                    </div>
+                    <div class="col-12">
+                        <div class="small text-muted">Notes</div>
+                        <div>${escapeContactPersonsText(item.notes ?? '-')}</div>
+                    </div>
                 </div>
-            </td>
-        </tr>`;
+                <div class="d-flex gap-2 align-items-start">
+                    <button class="btn btn-outline-primary btn-sm" type="button" data-action="edit" data-id="${item.id}">Edit</button>
+                    <button class="btn btn-outline-danger btn-sm" type="button" data-action="delete" data-id="${item.id}">Delete</button>
+                </div>
+            </div>
+        </li>`;
     }).join('');
 }
 
@@ -148,15 +242,38 @@ function editContactPerson(id: number): void {
     setContactPersonsInputValue('contact-persons-last-name', item.lastName);
     setContactPersonsInputValue('contact-persons-email', item.email);
     setContactPersonsInputValue('contact-persons-phone', item.phone);
+    setContactPersonsInputValue('contact-persons-position', item.position ?? '');
+    setContactPersonsInputValue('contact-persons-department', item.department ?? '');
+    setContactPersonsTextAreaValue('contact-persons-notes', item.notes ?? '');
 
-    const primaryInput = document.getElementById('contact-persons-is-primary') as HTMLInputElement | null;
-    if (primaryInput) {
-        primaryInput.checked = item.isPrimary;
-    }
+    setContactPersonsCheckboxValue('contact-persons-is-primary', item.isPrimary);
+    setContactPersonsCheckboxValue('contact-persons-is-active', item.isActive);
+    setContactPersonsCheckboxValue('contact-persons-is-default-owner', item.isDefaultOwner);
+    setContactPersonsCheckboxValue('contact-persons-is-default-billing', item.isDefaultBilling);
+    setContactPersonsCheckboxValue('contact-persons-is-default-tech', item.isDefaultTech);
+    setContactPersonsCheckboxValue('contact-persons-is-default-administrator', item.isDefaultAdministrator);
+    setContactPersonsCheckboxValue('contact-persons-is-domain-global', item.isDomainGlobal);
+
+    setContactPersonsModalTitle('Edit contact person');
+    contactPersonsModal?.show();
+}
+
+function openContactPersonModal(): void {
+    resetContactPersonsForm();
+    setContactPersonsModalTitle('Add contact person');
+    contactPersonsModal?.show();
 }
 
 async function saveContactPerson(): Promise<void> {
     const typedWindow = window as ContactPersonsWindow;
+    typedWindow.UserPanelAlerts?.hide('contact-persons-alert-success');
+    typedWindow.UserPanelAlerts?.hide('contact-persons-alert-error');
+
+    const form = document.getElementById('contact-persons-form') as HTMLFormElement | null;
+    if (form && !form.reportValidity()) {
+        return;
+    }
+
     const firstName = readContactPersonsInputValue('contact-persons-first-name');
     const lastName = readContactPersonsInputValue('contact-persons-last-name');
     const email = readContactPersonsInputValue('contact-persons-email');
@@ -172,21 +289,22 @@ async function saveContactPerson(): Promise<void> {
         return;
     }
 
-    const isPrimary = (document.getElementById('contact-persons-is-primary') as HTMLInputElement | null)?.checked ?? false;
-
-    const payload = {
+    const payload: UpsertContactPersonDto = {
         firstName,
         lastName,
         email,
         phone,
+        position: toNullable(readContactPersonsInputValue('contact-persons-position')),
+        department: toNullable(readContactPersonsInputValue('contact-persons-department')),
+        notes: toNullable(readContactPersonsTextAreaValue('contact-persons-notes')),
         customerId: contactPersonsCustomerId,
-        isPrimary,
-        isActive: true,
-        isDefaultOwner: false,
-        isDefaultBilling: false,
-        isDefaultTech: false,
-        isDefaultAdministrator: false,
-        isDomainGlobal: false
+        isPrimary: getContactPersonsCheckboxValue('contact-persons-is-primary'),
+        isActive: getContactPersonsCheckboxValue('contact-persons-is-active'),
+        isDefaultOwner: getContactPersonsCheckboxValue('contact-persons-is-default-owner'),
+        isDefaultBilling: getContactPersonsCheckboxValue('contact-persons-is-default-billing'),
+        isDefaultTech: getContactPersonsCheckboxValue('contact-persons-is-default-tech'),
+        isDefaultAdministrator: getContactPersonsCheckboxValue('contact-persons-is-default-administrator'),
+        isDomainGlobal: getContactPersonsCheckboxValue('contact-persons-is-domain-global')
     };
 
     const idText = readContactPersonsInputValue('contact-persons-id');
@@ -204,6 +322,7 @@ async function saveContactPerson(): Promise<void> {
     }
 
     typedWindow.UserPanelAlerts?.showSuccess('contact-persons-alert-success', isEdit ? 'Contact updated.' : 'Contact created.');
+    contactPersonsModal?.hide();
     resetContactPersonsForm();
     await loadContactPersons();
 }
@@ -227,11 +346,17 @@ function resetContactPersonsForm(): void {
     setContactPersonsInputValue('contact-persons-last-name', '');
     setContactPersonsInputValue('contact-persons-email', '');
     setContactPersonsInputValue('contact-persons-phone', '');
+    setContactPersonsInputValue('contact-persons-position', '');
+    setContactPersonsInputValue('contact-persons-department', '');
+    setContactPersonsTextAreaValue('contact-persons-notes', '');
 
-    const primaryInput = document.getElementById('contact-persons-is-primary') as HTMLInputElement | null;
-    if (primaryInput) {
-        primaryInput.checked = false;
-    }
+    setContactPersonsCheckboxValue('contact-persons-is-primary', false);
+    setContactPersonsCheckboxValue('contact-persons-is-active', true);
+    setContactPersonsCheckboxValue('contact-persons-is-default-owner', false);
+    setContactPersonsCheckboxValue('contact-persons-is-default-billing', false);
+    setContactPersonsCheckboxValue('contact-persons-is-default-tech', false);
+    setContactPersonsCheckboxValue('contact-persons-is-default-administrator', false);
+    setContactPersonsCheckboxValue('contact-persons-is-domain-global', false);
 }
 
 async function resolveContactPersonsCustomerId(): Promise<number | null> {
@@ -250,6 +375,42 @@ function setContactPersonsInputValue(id: string, value: string): void {
     if (input) {
         input.value = value;
     }
+}
+
+function readContactPersonsTextAreaValue(id: string): string {
+    const input = document.getElementById(id) as HTMLTextAreaElement | null;
+    return input?.value.trim() ?? '';
+}
+
+function setContactPersonsTextAreaValue(id: string, value: string): void {
+    const input = document.getElementById(id) as HTMLTextAreaElement | null;
+    if (input) {
+        input.value = value;
+    }
+}
+
+function getContactPersonsCheckboxValue(id: string): boolean {
+    const input = document.getElementById(id) as HTMLInputElement | null;
+    return input?.checked ?? false;
+}
+
+function setContactPersonsCheckboxValue(id: string, value: boolean): void {
+    const input = document.getElementById(id) as HTMLInputElement | null;
+    if (input) {
+        input.checked = value;
+    }
+}
+
+function setContactPersonsModalTitle(value: string): void {
+    const title = document.getElementById('contact-persons-modal-title');
+    if (title) {
+        title.textContent = value;
+    }
+}
+
+function toNullable(value: string): string | null {
+    const trimmed = value.trim();
+    return trimmed ? trimmed : null;
 }
 
 function escapeContactPersonsText(value: string): string {
