@@ -1776,12 +1776,14 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.AppliedTaxRate).HasPrecision(18, 6);
             entity.Property(e => e.AppliedTaxName).IsRequired().HasMaxLength(100);
             entity.Property(e => e.RuleVersion).HasMaxLength(100);
+            entity.Property(e => e.IdempotencyKey).HasMaxLength(100);
             entity.Property(e => e.CalculationInputsJson).HasMaxLength(8000);
 
             entity.HasIndex(e => e.OrderId);
             entity.HasIndex(e => e.TaxJurisdictionId);
             entity.HasIndex(e => e.BuyerCountryCode);
             entity.HasIndex(e => e.CreatedAt);
+            entity.HasIndex(e => new { e.OrderId, e.IdempotencyKey }).IsUnique();
 
             entity.HasOne(e => e.Order)
                 .WithMany(o => o.TaxSnapshots)

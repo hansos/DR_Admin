@@ -509,6 +509,13 @@ public static class AuthorizationPoliciesConfiguration
         options.AddPolicy("TaxRule.Write", policy =>
             policy.RequireRole(ADMIN));
 
+        // TaxCalculation policies
+        options.AddPolicy("TaxCalculation.Quote", policy =>
+            policy.RequireRole(ADMIN, FINANCE, SALES));
+
+        options.AddPolicy("TaxCalculation.Finalize", policy =>
+            policy.RequireRole(ADMIN, FINANCE));
+
         // TaxJurisdiction policies
         options.AddPolicy("TaxJurisdiction.Delete", policy =>
             policy.RequireRole(ADMIN));

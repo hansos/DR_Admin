@@ -91,6 +91,7 @@ public class OrderTaxSnapshotService : IOrderTaxSnapshotService
             AppliedTaxName = dto.AppliedTaxName,
             ReverseChargeApplied = dto.ReverseChargeApplied,
             RuleVersion = dto.RuleVersion,
+            IdempotencyKey = dto.IdempotencyKey,
             CalculationInputsJson = dto.CalculationInputsJson,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
@@ -134,6 +135,7 @@ public class OrderTaxSnapshotService : IOrderTaxSnapshotService
         entity.AppliedTaxName = dto.AppliedTaxName;
         entity.ReverseChargeApplied = dto.ReverseChargeApplied;
         entity.RuleVersion = dto.RuleVersion;
+        entity.IdempotencyKey = dto.IdempotencyKey;
         entity.CalculationInputsJson = dto.CalculationInputsJson;
         entity.UpdatedAt = DateTime.UtcNow;
 
@@ -182,6 +184,7 @@ public class OrderTaxSnapshotService : IOrderTaxSnapshotService
             AppliedTaxName = entity.AppliedTaxName,
             ReverseChargeApplied = entity.ReverseChargeApplied,
             RuleVersion = entity.RuleVersion,
+            IdempotencyKey = entity.IdempotencyKey,
             CalculationInputsJson = entity.CalculationInputsJson,
             CreatedAt = entity.CreatedAt,
             UpdatedAt = entity.UpdatedAt

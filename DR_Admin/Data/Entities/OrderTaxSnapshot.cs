@@ -98,6 +98,11 @@ public class OrderTaxSnapshot : EntityBase
     public string RuleVersion { get; set; } = string.Empty;
 
     /// <summary>
+    /// Optional idempotency key used to avoid duplicate finalization writes.
+    /// </summary>
+    public string? IdempotencyKey { get; set; }
+
+    /// <summary>
     /// Serialized tax calculation inputs and evidence used for audit.
     /// </summary>
     public string CalculationInputsJson { get; set; } = string.Empty;

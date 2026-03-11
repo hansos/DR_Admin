@@ -70,3 +70,54 @@
 
 - Built `DR_Admin/DR_Admin.csproj` successfully after changes.
 - Existing warnings remain unrelated to this VAT/TAX work.
+
+### 10) Tax quote/finalize workflow
+
+- Added tax calculation API endpoints:
+  - `POST /api/v1/tax/quote`
+  - `POST /api/v1/tax/finalize`
+- Added DTOs for request/response and line-level breakdown:
+  - `TaxQuoteRequestDto`
+  - `TaxQuoteResultDto`
+  - `TaxQuoteLineRequestDto`
+  - `TaxQuoteLineResultDto`
+- Added calculation service:
+  - `ITaxCalculationService`
+  - `TaxCalculationService`
+
+### 11) VAT validation abstraction
+
+- Added VAT validation interface and default implementation:
+  - `IVatValidationService`
+  - `VatValidationService`
+- Wired validation into tax calculation and tax service flows.
+
+### 12) Tax service implementation upgrade
+
+- Replaced stub logic in `TaxService` with concrete implementation for:
+  - Tax rule CRUD operations
+  - Active/effective-date tax rule filtering
+  - Location/priority-based rule selection
+  - Reverse-charge behavior for B2B + validated tax ID
+  - VAT validation integration
+
+### 13) Idempotent tax finalization
+
+- Extended `OrderTaxSnapshot` with `IdempotencyKey`.
+- Added unique index for `(OrderId, IdempotencyKey)` in DbContext configuration.
+- Updated order tax snapshot DTOs and service mapping to include idempotency key.
+- Added migration:
+  - `20260311105706_AddOrderTaxSnapshotIdempotency`
+
+### 14) Policy enforcement updates
+
+- Updated `TaxRulesController` endpoints to use policy-based authorization consistently.
+- Added new authorization policies:
+  - `TaxCalculation.Quote`
+  - `TaxCalculation.Finalize`
+
+### 15) Additional DI registrations
+
+- Registered in `Program.cs`:
+  - `IVatValidationService -> VatValidationService`
+  - `ITaxCalculationService -> TaxCalculationService`

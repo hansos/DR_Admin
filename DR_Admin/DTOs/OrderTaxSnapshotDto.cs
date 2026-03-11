@@ -103,6 +103,11 @@ public class OrderTaxSnapshotDto
     public string RuleVersion { get; set; } = string.Empty;
 
     /// <summary>
+    /// Gets or sets optional idempotency key used for finalize operations.
+    /// </summary>
+    public string? IdempotencyKey { get; set; }
+
+    /// <summary>
     /// Gets or sets serialized calculation inputs.
     /// </summary>
     public string CalculationInputsJson { get; set; } = string.Empty;
