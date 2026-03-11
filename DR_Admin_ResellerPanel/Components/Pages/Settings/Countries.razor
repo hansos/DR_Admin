@@ -1,0 +1,140 @@
+@page "/settings/countries"
+
+<div id="countries-page" class="container-fluid">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+        <div>
+            <h2 class="h4 mb-1"><i class="bi bi-globe-europe-africa"></i> Countries</h2>
+            <p class="text-muted mb-0">Manage country master data used across customers, billing and tax workflows.</p>
+        </div>
+        <button class="btn btn-primary" id="countries-create" type="button">
+            <i class="bi bi-plus-circle"></i> New Country
+        </button>
+    </div>
+
+    <div id="countries-alert-success" class="alert alert-success d-none" role="alert"></div>
+    <div id="countries-alert-error" class="alert alert-danger d-none" role="alert"></div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-light">
+            <div class="row g-2 align-items-end">
+                <div class="col-12 col-md-4">
+                    <label for="countries-filter-search" class="form-label mb-1">Search</label>
+                    <input type="text" id="countries-filter-search" class="form-control" placeholder="Code, name, TLD or ISO3" />
+                </div>
+                <div class="col-12 col-md-3">
+                    <label for="countries-filter-active" class="form-label mb-1">Status</label>
+                    <select id="countries-filter-active" class="form-select">
+                        <option value="">All</option>
+                        <option value="true">Active</option>
+                        <option value="false">Inactive</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-auto">
+                    <button class="btn btn-outline-secondary w-100" id="countries-filter-reset" type="button">
+                        <i class="bi bi-x-circle"></i> Reset
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Code</th>
+                            <th>TLD</th>
+                            <th>ISO3</th>
+                            <th>Numeric</th>
+                            <th>English Name</th>
+                            <th>Local Name</th>
+                            <th>Active</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="countries-table-body">
+                        <tr>
+                            <td colspan="9" class="text-center">
+                                <div class="spinner-border text-primary"></div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="countries-edit-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="countries-modal-title">New Country</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="countries-form" novalidate>
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <label for="countries-code" class="form-label">Code <span class="text-danger">*</span></label>
+                            <input type="text" id="countries-code" class="form-control" maxlength="2" placeholder="US" />
+                        </div>
+                        <div class="col-6">
+                            <label for="countries-tld" class="form-label">TLD <span class="text-danger">*</span></label>
+                            <input type="text" id="countries-tld" class="form-control" maxlength="10" placeholder="us" />
+                        </div>
+                        <div class="col-6">
+                            <label for="countries-iso3" class="form-label">ISO3</label>
+                            <input type="text" id="countries-iso3" class="form-control" maxlength="3" placeholder="USA" />
+                        </div>
+                        <div class="col-6">
+                            <label for="countries-numeric" class="form-label">Numeric</label>
+                            <input type="number" id="countries-numeric" min="1" class="form-control" placeholder="840" />
+                        </div>
+                        <div class="col-12">
+                            <label for="countries-english-name" class="form-label">English name <span class="text-danger">*</span></label>
+                            <input type="text" id="countries-english-name" class="form-control" />
+                        </div>
+                        <div class="col-12">
+                            <label for="countries-local-name" class="form-label">Local name <span class="text-danger">*</span></label>
+                            <input type="text" id="countries-local-name" class="form-control" />
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="countries-is-active" checked>
+                                <label class="form-check-label" for="countries-is-active">Active</label>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="countries-save">
+                    <i class="bi bi-check-lg"></i> Save
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="countries-delete-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Delete country <strong id="countries-delete-name"></strong>?</p>
+                <p class="text-danger"><i class="bi bi-exclamation-triangle-fill"></i> This cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="countries-confirm-delete">
+                    <i class="bi bi-trash"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

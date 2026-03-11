@@ -2,6 +2,7 @@
 (() => {
     const pageId = 'tax-jurisdictions-page';
     let allJurisdictions = [];
+    let allCountries = [];
     let editingId = null;
     let pendingDeleteId = null;
     function getApiBaseUrl() {
@@ -106,6 +107,29 @@
             notes: String(item.notes ?? item.Notes ?? ''),
         };
     }
+    function normalizeCountry(item) {
+        return {
+            code: String(item.code ?? item.Code ?? '').toUpperCase(),
+            englishName: String(item.englishName ?? item.EnglishName ?? ''),
+            isActive: Boolean(item.isActive ?? item.IsActive ?? false),
+        };
+    }
+    function renderCountryOptions(selectedCountryCode) {
+        const countrySelect = document.getElementById('tax-jurisdictions-country');
+        if (!countrySelect) {
+            return;
+        }
+        const selected = (selectedCountryCode ?? '').trim().toUpperCase();
+        const options = ['<option value="">Select country</option>'];
+        allCountries
+            .filter((country) => country.isActive)
+            .sort((a, b) => a.englishName.localeCompare(b.englishName))
+            .forEach((country) => {
+            const isSelected = selected && country.code === selected ? ' selected' : '';
+            options.push(`<option value="${esc(country.code)}"${isSelected}>${esc(country.code)} - ${esc(country.englishName)}</option>`);
+        });
+        countrySelect.innerHTML = options.join('');
+    }
     function renderRows() {
         const tbody = document.getElementById('tax-jurisdictions-table-body');
         if (!tbody) {
@@ -170,6 +194,7 @@
             title.textContent = 'New Tax Jurisdiction';
         }
         document.getElementById('tax-jurisdictions-form')?.reset();
+        renderCountryOptions();
         setInputValue('tax-jurisdictions-currency', 'EUR');
         showModal('tax-jurisdictions-edit-modal');
     }
@@ -185,7 +210,7 @@
         }
         setInputValue('tax-jurisdictions-code', item.code);
         setInputValue('tax-jurisdictions-name', item.name);
-        setInputValue('tax-jurisdictions-country', item.countryCode);
+        renderCountryOptions(item.countryCode);
         setInputValue('tax-jurisdictions-state', item.stateCode);
         setInputValue('tax-jurisdictions-authority', item.taxAuthority);
         setInputValue('tax-jurisdictions-currency', item.taxCurrencyCode);
@@ -256,6 +281,13 @@
             tbody.innerHTML = '<tr><td colspan="7" class="text-center"><div class="spinner-border text-primary"></div></td></tr>';
         }
         const response = await apiRequest(`${getApiBaseUrl()}/TaxJurisdictions`, { method: 'GET' });
+        const countriesResponse = await apiRequest(`${getApiBaseUrl()}/Countries`, { method: 'GET' });
+        if (!countriesResponse.success) {
+            showError(countriesResponse.message ?? 'Failed to load countries.');
+            return;
+        }
+        allCountries = extractItems(countriesResponse.data).map((item) => normalizeCountry(item));
+        renderCountryOptions();
         if (!response.success) {
             showError(response.message ?? 'Failed to load tax jurisdictions.');
             return;

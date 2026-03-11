@@ -49,6 +49,7 @@
         "host-providers.ts",
         "control-panel-types.ts",
         "settings-company.ts",
+        "countries.ts",
         "change-password.ts",
         "forgot-password.ts",
         "reset-password.ts",

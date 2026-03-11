@@ -21,6 +21,12 @@
         notes: string;
     }
 
+    interface CountryOption {
+        code: string;
+        englishName: string;
+        isActive: boolean;
+    }
+
     interface BootstrapModalInstance {
         show(): void;
         hide(): void;
@@ -37,6 +43,7 @@
 
     const pageId = 'tax-jurisdictions-page';
     let allJurisdictions: TaxJurisdiction[] = [];
+    let allCountries: CountryOption[] = [];
     let editingId: number | null = null;
     let pendingDeleteId: number | null = null;
 
@@ -159,6 +166,34 @@
         };
     }
 
+    function normalizeCountry(item: Record<string, unknown>): CountryOption {
+        return {
+            code: String(item.code ?? item.Code ?? '').toUpperCase(),
+            englishName: String(item.englishName ?? item.EnglishName ?? ''),
+            isActive: Boolean(item.isActive ?? item.IsActive ?? false),
+        };
+    }
+
+    function renderCountryOptions(selectedCountryCode?: string): void {
+        const countrySelect = document.getElementById('tax-jurisdictions-country') as HTMLSelectElement | null;
+        if (!countrySelect) {
+            return;
+        }
+
+        const selected = (selectedCountryCode ?? '').trim().toUpperCase();
+        const options = ['<option value="">Select country</option>'];
+
+        allCountries
+            .filter((country) => country.isActive)
+            .sort((a, b) => a.englishName.localeCompare(b.englishName))
+            .forEach((country) => {
+                const isSelected = selected && country.code === selected ? ' selected' : '';
+                options.push(`<option value="${esc(country.code)}"${isSelected}>${esc(country.code)} - ${esc(country.englishName)}</option>`);
+            });
+
+        countrySelect.innerHTML = options.join('');
+    }
+
     function renderRows(): void {
         const tbody = document.getElementById('tax-jurisdictions-table-body');
         if (!tbody) {
@@ -191,14 +226,14 @@
     }
 
     function setInputValue(id: string, value: string): void {
-        const el = document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | null;
+        const el = document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null;
         if (el) {
             el.value = value;
         }
     }
 
     function getInputValue(id: string): string {
-        const el = document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | null;
+        const el = document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null;
         return el?.value.trim() ?? '';
     }
 
@@ -235,6 +270,7 @@
         }
 
         (document.getElementById('tax-jurisdictions-form') as HTMLFormElement | null)?.reset();
+        renderCountryOptions();
         setInputValue('tax-jurisdictions-currency', 'EUR');
         showModal('tax-jurisdictions-edit-modal');
     }
@@ -253,7 +289,7 @@
 
         setInputValue('tax-jurisdictions-code', item.code);
         setInputValue('tax-jurisdictions-name', item.name);
-        setInputValue('tax-jurisdictions-country', item.countryCode);
+        renderCountryOptions(item.countryCode);
         setInputValue('tax-jurisdictions-state', item.stateCode);
         setInputValue('tax-jurisdictions-authority', item.taxAuthority);
         setInputValue('tax-jurisdictions-currency', item.taxCurrencyCode);
@@ -339,6 +375,16 @@
         }
 
         const response = await apiRequest(`${getApiBaseUrl()}/TaxJurisdictions`, { method: 'GET' });
+        const countriesResponse = await apiRequest(`${getApiBaseUrl()}/Countries`, { method: 'GET' });
+
+        if (!countriesResponse.success) {
+            showError(countriesResponse.message ?? 'Failed to load countries.');
+            return;
+        }
+
+        allCountries = extractItems(countriesResponse.data).map((item) => normalizeCountry(item));
+        renderCountryOptions();
+
         if (!response.success) {
             showError(response.message ?? 'Failed to load tax jurisdictions.');
             return;

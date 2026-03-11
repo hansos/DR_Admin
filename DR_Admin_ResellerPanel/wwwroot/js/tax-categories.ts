@@ -19,6 +19,12 @@
         isActive: boolean;
     }
 
+    interface CountryOption {
+        code: string;
+        englishName: string;
+        isActive: boolean;
+    }
+
     interface BootstrapModalInstance {
         show(): void;
         hide(): void;
@@ -35,6 +41,7 @@
 
     const pageId = 'tax-categories-page';
     let allCategories: TaxCategory[] = [];
+    let allCountries: CountryOption[] = [];
     let editingId: number | null = null;
     let pendingDeleteId: number | null = null;
 
@@ -138,6 +145,34 @@
         };
     }
 
+    function normalizeCountry(item: Record<string, unknown>): CountryOption {
+        return {
+            code: String(item.code ?? item.Code ?? '').toUpperCase(),
+            englishName: String(item.englishName ?? item.EnglishName ?? ''),
+            isActive: Boolean(item.isActive ?? item.IsActive ?? false),
+        };
+    }
+
+    function renderCountryOptions(selectedCountryCode?: string): void {
+        const countrySelect = document.getElementById('tax-categories-country') as HTMLSelectElement | null;
+        if (!countrySelect) {
+            return;
+        }
+
+        const selected = (selectedCountryCode ?? '').trim().toUpperCase();
+        const options = ['<option value="">Select country</option>'];
+
+        allCountries
+            .filter((country) => country.isActive)
+            .sort((a, b) => a.englishName.localeCompare(b.englishName))
+            .forEach((country) => {
+                const isSelected = selected && country.code === selected ? ' selected' : '';
+                options.push(`<option value="${esc(country.code)}"${isSelected}>${esc(country.code)} - ${esc(country.englishName)}</option>`);
+            });
+
+        countrySelect.innerHTML = options.join('');
+    }
+
     function renderRows(): void {
         const tbody = document.getElementById('tax-categories-table-body');
         if (!tbody) {
@@ -170,14 +205,14 @@
     }
 
     function setInputValue(id: string, value: string): void {
-        const el = document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | null;
+        const el = document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null;
         if (el) {
             el.value = value;
         }
     }
 
     function getInputValue(id: string): string {
-        const el = document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | null;
+        const el = document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null;
         return el?.value.trim() ?? '';
     }
 
@@ -214,6 +249,7 @@
         }
 
         (document.getElementById('tax-categories-form') as HTMLFormElement | null)?.reset();
+        renderCountryOptions();
         showModal('tax-categories-edit-modal');
     }
 
@@ -229,7 +265,7 @@
             title.textContent = 'Edit Tax Category';
         }
 
-        setInputValue('tax-categories-country', item.countryCode);
+        renderCountryOptions(item.countryCode);
         setInputValue('tax-categories-state', item.stateCode);
         setInputValue('tax-categories-code', item.code);
         setInputValue('tax-categories-name', item.name);
@@ -310,6 +346,16 @@
         }
 
         const response = await apiRequest(`${getApiBaseUrl()}/TaxCategories`, { method: 'GET' });
+        const countriesResponse = await apiRequest(`${getApiBaseUrl()}/Countries`, { method: 'GET' });
+
+        if (!countriesResponse.success) {
+            showError(countriesResponse.message ?? 'Failed to load countries.');
+            return;
+        }
+
+        allCountries = extractItems(countriesResponse.data).map((item) => normalizeCountry(item));
+        renderCountryOptions();
+
         if (!response.success) {
             showError(response.message ?? 'Failed to load tax categories.');
             return;

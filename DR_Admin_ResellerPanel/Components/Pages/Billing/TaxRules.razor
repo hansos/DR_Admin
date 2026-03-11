@@ -51,22 +51,21 @@
             </div>
             <div class="modal-body">
                 <form id="tax-rules-form" novalidate>
+                    <input type="hidden" id="tax-rules-category-id" />
                     <div class="row g-3">
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label for="tax-rules-country" class="form-label">Country <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="tax-rules-country" maxlength="2" />
+                            <select class="form-select" id="tax-rules-country">
+                                <option value="">Select country</option>
+                            </select>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label for="tax-rules-state" class="form-label">State</label>
                             <input type="text" class="form-control" id="tax-rules-state" />
                         </div>
-                        <div class="col-md-3">
-                            <label for="tax-rules-category-id" class="form-label">Tax Category Id</label>
-                            <input type="number" class="form-control" id="tax-rules-category-id" min="1" />
-                        </div>
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label for="tax-rules-category" class="form-label">Category <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="tax-rules-category" />
+                            <select class="form-select" id="tax-rules-category"></select>
                         </div>
                     </div>
                     <div class="row g-3 mt-1">

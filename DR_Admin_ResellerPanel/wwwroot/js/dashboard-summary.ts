@@ -79,6 +79,14 @@ const setupTodoItems: SetupTodoItem[] = [
         checkType: 'list',
     },
     {
+        key: 'countries',
+        name: 'Countries',
+        description: 'Add country master data used by customer profiles and tax flows.',
+        fixUrl: '/settings/countries',
+        endpoint: '/Countries',
+        checkType: 'list',
+    },
+    {
         key: 'tax-jurisdictions',
         name: 'Tax Jurisdictions',
         description: 'Define active tax jurisdictions used in VAT/TAX determination.',
