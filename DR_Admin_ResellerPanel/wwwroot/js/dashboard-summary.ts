@@ -6,6 +6,11 @@ interface Domain {
     createdAt?: string;
 }
 
+interface SeedTestDataResult {
+    insertedByTable?: Record<string, number>;
+    InsertedByTable?: Record<string, number>;
+}
+
 interface CreatedRecordItem {
     createdAt: string;
 }
@@ -71,6 +76,49 @@ const setupTodoItems: SetupTodoItem[] = [
         description: 'Add supported currencies for customer and provider pricing.',
         fixUrl: '/dashboard',
         endpoint: '/Currencies',
+        checkType: 'list',
+    },
+    {
+        key: 'tax-jurisdictions',
+        name: 'Tax Jurisdictions',
+        description: 'Define active tax jurisdictions used in VAT/TAX determination.',
+        fixUrl: '/billing/tax-jurisdictions',
+        endpoint: '/TaxJurisdictions',
+        checkType: 'list',
+    },
+    {
+        key: 'tax-registrations',
+        name: 'Tax Registrations',
+        description: 'Register legal entity VAT/TAX numbers for each tax jurisdiction.',
+        fixUrl: '/billing/tax-registrations',
+        endpoint: '/TaxRegistrations',
+        dependsOn: ['tax-jurisdictions'],
+        checkType: 'list',
+    },
+    {
+        key: 'tax-categories',
+        name: 'Tax Categories',
+        description: 'Create country/state tax categories such as STANDARD and REDUCED.',
+        fixUrl: '/billing/tax-categories',
+        endpoint: '/TaxCategories',
+        checkType: 'list',
+    },
+    {
+        key: 'tax-rules',
+        name: 'Tax Rules',
+        description: 'Configure effective VAT/TAX rules and rates by jurisdiction/category.',
+        fixUrl: '/billing/tax-rules',
+        endpoint: '/TaxRules',
+        dependsOn: ['tax-jurisdictions', 'tax-categories'],
+        checkType: 'list',
+    },
+    {
+        key: 'order-tax-snapshots',
+        name: 'Order Tax Snapshots',
+        description: 'Verify finalized immutable tax snapshots are being created for orders.',
+        fixUrl: '/billing/order-tax-snapshots',
+        endpoint: '/OrderTaxSnapshots',
+        dependsOn: ['tax-rules'],
         checkType: 'list',
     },
     {
@@ -351,15 +399,29 @@ function bindSeedDataAction(): void {
 
     button.dataset.bound = 'true';
     button.addEventListener('click', async () => {
+        clearSuccess();
         clearError();
         setSeedDataSubmitting(true);
 
-        const response = await apiRequest<unknown>(`${getApiBaseUrl()}/Test/seed-data`, { method: 'POST' });
+        const response = await apiRequest<SeedTestDataResult>(`${getApiBaseUrl()}/Test/seed-data`, { method: 'POST' });
         if (!response.success) {
             showError(response.message || 'Failed to seed test data.');
             setSeedDataSubmitting(false);
             return;
         }
+
+        const insertedByTable = response.data?.insertedByTable ?? response.data?.InsertedByTable ?? {};
+        const taxTableKeys = [
+            'TaxJurisdictions',
+            'TaxRegistrations',
+            'TaxCategories',
+            'TaxRules',
+            'TaxDeterminationEvidences',
+            'OrderTaxSnapshots'
+        ];
+        const taxInsertedCount = taxTableKeys.reduce((sum, key) => sum + Number(insertedByTable[key] ?? 0), 0);
+
+        showSuccess(`Tax test data seeded successfully. Inserted/added ${taxInsertedCount} VAT/TAX record(s) across Norway, Denmark, GB and USA.`);
 
         await loadSystemReadinessTodo();
         setSeedDataSubmitting(false);
@@ -1227,8 +1289,26 @@ function showError(message: string): void {
     alert.classList.remove('d-none');
 }
 
+function showSuccess(message: string): void {
+    const alert = document.getElementById('dashboard-summary-alert-success');
+    if (!alert) {
+        return;
+    }
+
+    alert.textContent = message;
+    alert.classList.remove('d-none');
+}
+
 function clearError(): void {
     const alert = document.getElementById('dashboard-summary-alert-error');
+    if (alert) {
+        alert.textContent = '';
+        alert.classList.add('d-none');
+    }
+}
+
+function clearSuccess(): void {
+    const alert = document.getElementById('dashboard-summary-alert-success');
     if (alert) {
         alert.textContent = '';
         alert.classList.add('d-none');

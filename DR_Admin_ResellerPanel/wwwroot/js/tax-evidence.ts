@@ -19,8 +19,13 @@
 
         page.dataset.initialized = 'true';
 
+        const tbody = document.getElementById('tax-evidence-table-body');
+        if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Evidence API endpoint is not exposed yet.</td></tr>';
+        }
+
         document.getElementById('tax-evidence-refresh')?.addEventListener('click', () => {
-            showSuccess(`Refreshed at ${new Date().toLocaleString()}`);
+            showSuccess('Evidence API endpoint is not exposed yet.');
         });
     }
 

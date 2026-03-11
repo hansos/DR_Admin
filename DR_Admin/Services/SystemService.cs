@@ -941,6 +941,298 @@ $"</body></html>";
                 result.InsertedByTable["PaymentInstruments"] = 3;
             }
 
+            var taxSeedBaseDate = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            var taxSeedCountries = new[] { "NO", "DK", "GB", "US" };
+
+            var taxJurisdictionSeeds = new[]
+            {
+                new { Code = "NO", JurisdictionCode = "NO-NATIONAL", Name = "Norway VAT", CountryCode = "NO", StateCode = (string?)null, Authority = "Skatteetaten", TaxCurrencyCode = "NOK", RegistrationNumber = "NO123456789MVA", LegalEntity = "DR Admin Norway AS", TaxName = "MVA", TaxRate = 0.25m, TaxCategoryCode = "STANDARD", TaxCategoryName = "Standard VAT", TaxCategoryDescription = "Norway standard VAT", ReverseCharge = true, Priority = 100 },
+                new { Code = "DK", JurisdictionCode = "DK-NATIONAL", Name = "Denmark VAT", CountryCode = "DK", StateCode = (string?)null, Authority = "Skattestyrelsen", TaxCurrencyCode = "DKK", RegistrationNumber = "DK12345678", LegalEntity = "DR Admin Denmark ApS", TaxName = "MOMS", TaxRate = 0.25m, TaxCategoryCode = "STANDARD", TaxCategoryName = "Standard VAT", TaxCategoryDescription = "Denmark standard VAT", ReverseCharge = true, Priority = 100 },
+                new { Code = "GB", JurisdictionCode = "GB-NATIONAL", Name = "United Kingdom VAT", CountryCode = "GB", StateCode = (string?)null, Authority = "HM Revenue & Customs", TaxCurrencyCode = "GBP", RegistrationNumber = "GB123456789", LegalEntity = "DR Admin UK Ltd", TaxName = "VAT", TaxRate = 0.20m, TaxCategoryCode = "STANDARD", TaxCategoryName = "Standard VAT", TaxCategoryDescription = "United Kingdom standard VAT", ReverseCharge = true, Priority = 100 },
+                new { Code = "US", JurisdictionCode = "US-NY", Name = "United States Sales Tax (NY)", CountryCode = "US", StateCode = "NY", Authority = "New York State Department of Taxation and Finance", TaxCurrencyCode = "USD", RegistrationNumber = "NY-987654321", LegalEntity = "DR Admin USA Inc", TaxName = "Sales Tax", TaxRate = 0.08875m, TaxCategoryCode = "STANDARD", TaxCategoryName = "Standard Sales Tax", TaxCategoryDescription = "New York standard sales tax", ReverseCharge = false, Priority = 90 }
+            };
+
+            var existingJurisdictions = await _context.TaxJurisdictions
+                .Where(x => taxJurisdictionSeeds.Select(s => s.JurisdictionCode).Contains(x.Code))
+                .ToListAsync();
+
+            var jurisdictionsByCode = existingJurisdictions
+                .ToDictionary(x => x.Code, StringComparer.OrdinalIgnoreCase);
+
+            var insertedTaxJurisdictions = 0;
+            foreach (var seed in taxJurisdictionSeeds)
+            {
+                if (jurisdictionsByCode.ContainsKey(seed.JurisdictionCode))
+                {
+                    continue;
+                }
+
+                var jurisdiction = new TaxJurisdiction
+                {
+                    Code = seed.JurisdictionCode,
+                    Name = seed.Name,
+                    CountryCode = seed.CountryCode,
+                    StateCode = seed.StateCode,
+                    TaxAuthority = seed.Authority,
+                    TaxCurrencyCode = seed.TaxCurrencyCode,
+                    IsActive = true,
+                    Notes = $"Seeded VAT/TAX jurisdiction for {seed.CountryCode}"
+                };
+
+                _context.TaxJurisdictions.Add(jurisdiction);
+                jurisdictionsByCode[seed.JurisdictionCode] = jurisdiction;
+                insertedTaxJurisdictions++;
+            }
+
+            if (insertedTaxJurisdictions > 0)
+            {
+                result.InsertedByTable["TaxJurisdictions"] = insertedTaxJurisdictions;
+            }
+
+            var existingCategories = await _context.TaxCategories
+                .Where(x => taxSeedCountries.Contains(x.CountryCode))
+                .ToListAsync();
+
+            var insertedTaxCategories = 0;
+            var categoriesByCountryStateCode = existingCategories.ToDictionary(
+                x => $"{x.CountryCode}|{x.StateCode ?? string.Empty}|{x.Code}",
+                x => x,
+                StringComparer.OrdinalIgnoreCase);
+
+            foreach (var seed in taxJurisdictionSeeds)
+            {
+                var categoryKey = $"{seed.CountryCode}|{seed.StateCode ?? string.Empty}|{seed.TaxCategoryCode}";
+                if (categoriesByCountryStateCode.ContainsKey(categoryKey))
+                {
+                    continue;
+                }
+
+                var category = new TaxCategory
+                {
+                    CountryCode = seed.CountryCode,
+                    StateCode = seed.StateCode,
+                    Code = seed.TaxCategoryCode,
+                    Name = seed.TaxCategoryName,
+                    Description = seed.TaxCategoryDescription,
+                    IsActive = true
+                };
+
+                _context.TaxCategories.Add(category);
+                categoriesByCountryStateCode[categoryKey] = category;
+                insertedTaxCategories++;
+            }
+
+            if (insertedTaxCategories > 0)
+            {
+                result.InsertedByTable["TaxCategories"] = insertedTaxCategories;
+            }
+
+            var existingRegistrations = await _context.TaxRegistrations
+                .Include(x => x.TaxJurisdiction)
+                .Where(x => taxJurisdictionSeeds.Select(s => s.RegistrationNumber).Contains(x.RegistrationNumber))
+                .ToListAsync();
+
+            var insertedTaxRegistrations = 0;
+            foreach (var seed in taxJurisdictionSeeds)
+            {
+                var exists = existingRegistrations.Any(x =>
+                    string.Equals(x.RegistrationNumber, seed.RegistrationNumber, StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(x.TaxJurisdiction.Code, seed.JurisdictionCode, StringComparison.OrdinalIgnoreCase));
+
+                if (exists)
+                {
+                    continue;
+                }
+
+                var jurisdiction = jurisdictionsByCode[seed.JurisdictionCode];
+                _context.TaxRegistrations.Add(new TaxRegistration
+                {
+                    TaxJurisdiction = jurisdiction,
+                    LegalEntityName = seed.LegalEntity,
+                    RegistrationNumber = seed.RegistrationNumber,
+                    EffectiveFrom = taxSeedBaseDate,
+                    EffectiveUntil = null,
+                    IsActive = true,
+                    Notes = $"Seeded VAT/TAX registration for {seed.CountryCode}"
+                });
+
+                insertedTaxRegistrations++;
+            }
+
+            if (insertedTaxRegistrations > 0)
+            {
+                result.InsertedByTable["TaxRegistrations"] = insertedTaxRegistrations;
+            }
+
+            var existingRules = await _context.TaxRules
+                .Where(x => taxSeedCountries.Contains(x.CountryCode) && x.TaxCategory == "STANDARD")
+                .ToListAsync();
+
+            var insertedTaxRules = 0;
+            foreach (var seed in taxJurisdictionSeeds)
+            {
+                var alreadyExists = existingRules.Any(x =>
+                    string.Equals(x.CountryCode, seed.CountryCode, StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(x.StateCode ?? string.Empty, seed.StateCode ?? string.Empty, StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(x.TaxCategory, seed.TaxCategoryCode, StringComparison.OrdinalIgnoreCase)
+                    && x.IsActive);
+
+                if (alreadyExists)
+                {
+                    continue;
+                }
+
+                var jurisdiction = jurisdictionsByCode[seed.JurisdictionCode];
+                var categoryKey = $"{seed.CountryCode}|{seed.StateCode ?? string.Empty}|{seed.TaxCategoryCode}";
+                var category = categoriesByCountryStateCode.GetValueOrDefault(categoryKey);
+
+                _context.TaxRules.Add(new TaxRule
+                {
+                    TaxJurisdiction = jurisdiction,
+                    TaxCategoryEntity = category,
+                    CountryCode = seed.CountryCode,
+                    StateCode = seed.StateCode,
+                    TaxName = seed.TaxName,
+                    TaxCategory = seed.TaxCategoryCode,
+                    TaxRate = seed.TaxRate,
+                    IsActive = true,
+                    EffectiveFrom = taxSeedBaseDate,
+                    EffectiveUntil = null,
+                    AppliesToSetupFees = true,
+                    AppliesToRecurring = true,
+                    ReverseCharge = seed.ReverseCharge,
+                    TaxAuthority = seed.Authority,
+                    TaxRegistrationNumber = seed.RegistrationNumber,
+                    Priority = seed.Priority,
+                    InternalNotes = $"Seeded VAT/TAX rule for {seed.CountryCode}"
+                });
+
+                insertedTaxRules++;
+            }
+
+            if (insertedTaxRules > 0)
+            {
+                result.InsertedByTable["TaxRules"] = insertedTaxRules;
+            }
+
+            var evidenceSeeds = new[]
+            {
+                new { CountryCode = "NO", StateCode = (string?)null, IpAddress = "84.49.0.10", BuyerTaxId = "NO123456789MVA", BuyerTaxIdValidated = true, Provider = "BuiltInVatValidationProvider" },
+                new { CountryCode = "DK", StateCode = (string?)null, IpAddress = "80.62.0.11", BuyerTaxId = "DK12345678", BuyerTaxIdValidated = true, Provider = "BuiltInVatValidationProvider" },
+                new { CountryCode = "GB", StateCode = (string?)null, IpAddress = "51.140.0.12", BuyerTaxId = "GB123456789", BuyerTaxIdValidated = true, Provider = "StripeVatValidationProvider" },
+                new { CountryCode = "US", StateCode = "NY", IpAddress = "23.45.0.13", BuyerTaxId = "NY-987654321", BuyerTaxIdValidated = false, Provider = "BuiltInVatValidationProvider" }
+            };
+
+            var existingEvidence = await _context.TaxDeterminationEvidences
+                .Where(x => taxSeedCountries.Contains(x.BuyerCountryCode))
+                .ToListAsync();
+
+            var insertedEvidence = 0;
+            var evidenceByCountry = new Dictionary<string, TaxDeterminationEvidence>(StringComparer.OrdinalIgnoreCase);
+            foreach (var seed in evidenceSeeds)
+            {
+                var existingItem = existingEvidence.FirstOrDefault(x =>
+                    string.Equals(x.BuyerCountryCode, seed.CountryCode, StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(x.BuyerStateCode ?? string.Empty, seed.StateCode ?? string.Empty, StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(x.IpAddress, seed.IpAddress, StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(x.BuyerTaxId, seed.BuyerTaxId, StringComparison.OrdinalIgnoreCase));
+
+                if (existingItem != null)
+                {
+                    evidenceByCountry[seed.CountryCode] = existingItem;
+                    continue;
+                }
+
+                var evidence = new TaxDeterminationEvidence
+                {
+                    BuyerCountryCode = seed.CountryCode,
+                    BuyerStateCode = seed.StateCode,
+                    BillingCountryCode = seed.CountryCode,
+                    IpAddress = seed.IpAddress,
+                    BuyerTaxId = seed.BuyerTaxId,
+                    BuyerTaxIdValidated = seed.BuyerTaxIdValidated,
+                    VatValidationProvider = seed.Provider,
+                    VatValidationRawResponse = "{\"seeded\":true}",
+                    CapturedAt = DateTime.UtcNow
+                };
+
+                _context.TaxDeterminationEvidences.Add(evidence);
+                evidenceByCountry[seed.CountryCode] = evidence;
+                insertedEvidence++;
+            }
+
+            if (insertedEvidence > 0)
+            {
+                result.InsertedByTable["TaxDeterminationEvidences"] = insertedEvidence;
+            }
+
+            var existingSnapshots = await _context.OrderTaxSnapshots
+                .Where(x => x.IdempotencyKey != null && x.IdempotencyKey.StartsWith("seed-tax-"))
+                .ToListAsync();
+
+            var availableOrders = await _context.Orders
+                .OrderBy(x => x.Id)
+                .Take(4)
+                .ToListAsync();
+
+            var insertedSnapshots = 0;
+            for (var index = 0; index < taxJurisdictionSeeds.Length && index < availableOrders.Count; index++)
+            {
+                var seed = taxJurisdictionSeeds[index];
+                var order = availableOrders[index];
+                var idempotencyKey = $"seed-tax-{seed.CountryCode}";
+
+                var snapshotExists = existingSnapshots.Any(x =>
+                    x.OrderId == order.Id
+                    && string.Equals(x.IdempotencyKey, idempotencyKey, StringComparison.OrdinalIgnoreCase));
+
+                if (snapshotExists)
+                {
+                    continue;
+                }
+
+                var netAmount = 100m + (index * 25m);
+                var taxAmount = Math.Round(netAmount * seed.TaxRate, 2, MidpointRounding.AwayFromZero);
+                var grossAmount = netAmount + taxAmount;
+
+                _context.OrderTaxSnapshots.Add(new OrderTaxSnapshot
+                {
+                    OrderId = order.Id,
+                    TaxJurisdiction = jurisdictionsByCode[seed.JurisdictionCode],
+                    BuyerCountryCode = seed.CountryCode,
+                    BuyerStateCode = seed.StateCode,
+                    BuyerType = ISPAdmin.Data.Enums.CustomerType.B2B,
+                    BuyerTaxId = seed.RegistrationNumber,
+                    BuyerTaxIdValidated = seed.ReverseCharge,
+                    TaxCurrencyCode = seed.TaxCurrencyCode,
+                    DisplayCurrencyCode = seed.TaxCurrencyCode,
+                    NetAmount = netAmount,
+                    TaxAmount = taxAmount,
+                    GrossAmount = grossAmount,
+                    AppliedTaxRate = seed.TaxRate,
+                    AppliedTaxName = seed.TaxName,
+                    ReverseChargeApplied = seed.ReverseCharge,
+                    RuleVersion = "seed-v1",
+                    IdempotencyKey = idempotencyKey,
+                    TaxDeterminationEvidence = evidenceByCountry.GetValueOrDefault(seed.CountryCode),
+                    CalculationInputsJson = JsonSerializer.Serialize(new
+                    {
+                        seeded = true,
+                        countryCode = seed.CountryCode,
+                        stateCode = seed.StateCode,
+                        taxCategory = seed.TaxCategoryCode,
+                        orderId = order.Id
+                    })
+                });
+
+                insertedSnapshots++;
+            }
+
+            if (insertedSnapshots > 0)
+            {
+                result.InsertedByTable["OrderTaxSnapshots"] = insertedSnapshots;
+            }
+
             await _context.SaveChangesAsync();
 
             result.Success = true;
