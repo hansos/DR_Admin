@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="DR_Amin_Mobile.Pages.LoginPage"
+             Title="Login"
+             BackgroundColor="{StaticResource Gray950}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24,40,24,24" Spacing="16">
+            <Label Text="DR Admin"
+                   FontSize="28"
+                   FontAttributes="Bold"
+                   TextColor="{StaticResource White}" />
+
+            <Label Text="Sign in with your username and password"
+                   TextColor="{StaticResource Gray200}" />
+
+            <Entry x:Name="UsernameEntry"
+                   Placeholder="Username"
+                   TextColor="{StaticResource White}"
+                   PlaceholderColor="{StaticResource Gray400}"
+                   BackgroundColor="{StaticResource OffBlack}"
+                   Margin="0,12,0,0" />
+
+            <Entry x:Name="PasswordEntry"
+                   Placeholder="Password"
+                   IsPassword="True"
+                   TextColor="{StaticResource White}"
+                   PlaceholderColor="{StaticResource Gray400}"
+                   BackgroundColor="{StaticResource OffBlack}" />
+
+            <Button x:Name="LoginButton"
+                    Text="Log in"
+                    Clicked="OnLoginClicked"
+                    Margin="0,8,0,0" />
+
+            <Label x:Name="ResultLabel"
+                   TextColor="{StaticResource Gray200}"
+                   IsVisible="False" />
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

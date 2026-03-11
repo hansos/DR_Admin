@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+    x:Class="DR_Amin_Mobile.AppShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:DR_Amin_Mobile"
+    xmlns:pages="clr-namespace:DR_Amin_Mobile.Pages"
+    Title="DR_Amin_Mobile">
+
+    <FlyoutItem Title="Authentication">
+        <ShellContent
+            Title="Login"
+            ContentTemplate="{DataTemplate pages:LoginPage}"
+            Route="LoginPage" />
+    </FlyoutItem>
+
+    <FlyoutItem Title="Settings">
+        <ShellContent
+            Title="API URL"
+            ContentTemplate="{DataTemplate pages:ApiSettingsPage}"
+            Route="ApiSettingsPage" />
+    </FlyoutItem>
+
+    <FlyoutItem Title="General">
+        <ShellContent
+            Title="Home"
+            ContentTemplate="{DataTemplate local:MainPage}"
+            Route="MainPage" />
+    </FlyoutItem>
+
+</Shell>

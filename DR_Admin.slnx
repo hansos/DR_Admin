@@ -31,6 +31,9 @@
   <Project Path="DR_Admin_ResellerPanel/DR_Admin_ResellerPanel.csproj" Id="56dcd999-e302-421f-8814-1c65d9fefd80" />
   <Project Path="DR_Admin_UserPanel/DR_Admin_UserPanel.csproj" Id="e36486b0-ce16-4d6c-a481-c51c0b2e09b8" />
   <Project Path="DR_Admin_Web/DR_Admin_Web.csproj" />
+  <Project Path="DR_Amin_Mobile/DR_Amin_Mobile.csproj" Id="0bd52d87-44f8-42f9-9a91-333f88e08b06">
+    <Deploy Solution="Debug|*" />
+  </Project>
   <Project Path="EmailSenderLib/EmailSenderLib.csproj" Id="70cada2c-63e7-4433-b4d9-3003b17354f3" />
   <Project Path="ExchangeRateLib/ExchangeRateLib.csproj" Id="af2e6ab9-5586-4008-9371-f7446947a59b" />
   <Project Path="HostingPanelLib/HostingPanelLib.csproj" Id="5062074a-d52e-48c5-9b37-ae0509b39aad" />
