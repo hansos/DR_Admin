@@ -1,3 +1,5 @@
+using ISPAdmin.Data.Enums;
+
 namespace ISPAdmin.DTOs;
 
 /// <summary>
@@ -51,6 +53,21 @@ public class TaxQuoteResultDto
     public string DisplayCurrencyCode { get; set; } = "EUR";
 
     /// <summary>
+    /// Gets or sets applied exchange rate from tax to display currency.
+    /// </summary>
+    public decimal? ExchangeRate { get; set; }
+
+    /// <summary>
+    /// Gets or sets exchange rate timestamp.
+    /// </summary>
+    public DateTime? ExchangeRateDate { get; set; }
+
+    /// <summary>
+    /// Gets or sets source of applied exchange rate.
+    /// </summary>
+    public CurrencyRateSource? ExchangeRateSource { get; set; }
+
+    /// <summary>
     /// Gets or sets net amount total.
     /// </summary>
     public decimal NetAmount { get; set; }
@@ -74,6 +91,11 @@ public class TaxQuoteResultDto
     /// Gets or sets legal note to display on invoice or checkout.
     /// </summary>
     public string LegalNote { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets optional tax evidence identifier used for compliance.
+    /// </summary>
+    public int? TaxDeterminationEvidenceId { get; set; }
 
     /// <summary>
     /// Gets or sets calculated line results.

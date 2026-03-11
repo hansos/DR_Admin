@@ -11,6 +11,16 @@ public class Invoice : EntityBase
     public int CustomerId { get; set; }
     public Customer Customer { get; set; } = null!;
 
+    /// <summary>
+    /// Optional link to originating order.
+    /// </summary>
+    public int? OrderId { get; set; }
+
+    /// <summary>
+    /// Optional link to finalized order tax snapshot used as tax source.
+    /// </summary>
+    public int? OrderTaxSnapshotId { get; set; }
+
     // Status & Lifecycle
     public InvoiceStatus Status { get; set; }
     public DateTime IssueDate { get; set; }
@@ -82,6 +92,8 @@ public class Invoice : EntityBase
     public DateTime? DeletedAt { get; set; }
 
     // Navigation Properties
+    public Order? Order { get; set; }
+    public OrderTaxSnapshot? OrderTaxSnapshot { get; set; }
     public ICollection<InvoiceLine> InvoiceLines { get; set; } = new List<InvoiceLine>();
     public ICollection<PaymentTransaction> PaymentTransactions { get; set; } = new List<PaymentTransaction>();
 }

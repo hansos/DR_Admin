@@ -10,6 +10,8 @@ public class InvoiceDto
     public int Id { get; set; }
     public string InvoiceNumber { get; set; } = string.Empty;
     public int CustomerId { get; set; }
+    public int? OrderId { get; set; }
+    public int? OrderTaxSnapshotId { get; set; }
     public InvoiceStatus Status { get; set; }
     public DateTime IssueDate { get; set; }
     public DateTime DueDate { get; set; }
@@ -69,6 +71,8 @@ public class CreateInvoiceDto
 {
     public string InvoiceNumber { get; set; } = string.Empty;
     public int CustomerId { get; set; }
+    public int? OrderId { get; set; }
+    public int? OrderTaxSnapshotId { get; set; }
     public InvoiceStatus Status { get; set; } = InvoiceStatus.Draft;
     public DateTime IssueDate { get; set; }
     public DateTime DueDate { get; set; }
@@ -100,6 +104,8 @@ public class CreateInvoiceDto
 public class UpdateInvoiceDto
 {
     public string InvoiceNumber { get; set; } = string.Empty;
+    public int? OrderId { get; set; }
+    public int? OrderTaxSnapshotId { get; set; }
     public InvoiceStatus Status { get; set; }
     public DateTime IssueDate { get; set; }
     public DateTime DueDate { get; set; }

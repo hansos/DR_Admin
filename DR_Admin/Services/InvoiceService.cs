@@ -238,24 +238,84 @@ public class InvoiceService : IInvoiceService
                 throw new InvalidOperationException($"Invoice with number {createDto.InvoiceNumber} already exists");
             }
 
+            Order? order = null;
+            if (createDto.OrderId.HasValue)
+            {
+                order = await _context.Orders
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.Id == createDto.OrderId.Value);
+
+                if (order == null)
+                {
+                    throw new InvalidOperationException($"Order with ID {createDto.OrderId.Value} not found");
+                }
+
+                if (order.CustomerId != createDto.CustomerId)
+                {
+                    throw new InvalidOperationException("Invoice customer does not match order customer");
+                }
+            }
+
+            OrderTaxSnapshot? taxSnapshot = null;
+            if (createDto.OrderTaxSnapshotId.HasValue)
+            {
+                taxSnapshot = await _context.OrderTaxSnapshots
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.Id == createDto.OrderTaxSnapshotId.Value);
+
+                if (taxSnapshot == null)
+                {
+                    throw new InvalidOperationException($"Order tax snapshot with ID {createDto.OrderTaxSnapshotId.Value} not found");
+                }
+            }
+            else if (createDto.OrderId.HasValue)
+            {
+                taxSnapshot = await _context.OrderTaxSnapshots
+                    .AsNoTracking()
+                    .Where(x => x.OrderId == createDto.OrderId.Value)
+                    .OrderByDescending(x => x.CreatedAt)
+                    .FirstOrDefaultAsync();
+
+                if (taxSnapshot == null)
+                {
+                    throw new InvalidOperationException("A finalized tax snapshot is required before creating an invoice for this order");
+                }
+            }
+
+            if (taxSnapshot != null && createDto.OrderId.HasValue && taxSnapshot.OrderId != createDto.OrderId.Value)
+            {
+                throw new InvalidOperationException("Provided tax snapshot does not belong to the provided order");
+            }
+
+            var subTotal = taxSnapshot?.NetAmount ?? createDto.SubTotal;
+            var taxAmount = taxSnapshot?.TaxAmount ?? createDto.TaxAmount;
+            var totalAmount = taxSnapshot?.GrossAmount ?? createDto.TotalAmount;
+            var taxRate = taxSnapshot?.AppliedTaxRate ?? createDto.TaxRate;
+            var taxName = taxSnapshot?.AppliedTaxName ?? createDto.TaxName;
+            var customerTaxId = !string.IsNullOrWhiteSpace(createDto.CustomerTaxId)
+                ? createDto.CustomerTaxId
+                : taxSnapshot?.BuyerTaxId ?? string.Empty;
+
             var invoice = new Invoice
             {
                 InvoiceNumber = createDto.InvoiceNumber,
                 CustomerId = createDto.CustomerId,
+                OrderId = createDto.OrderId,
+                OrderTaxSnapshotId = taxSnapshot?.Id ?? createDto.OrderTaxSnapshotId,
                 Status = createDto.Status,
                 IssueDate = createDto.IssueDate,
                 DueDate = createDto.DueDate,
-                SubTotal = createDto.SubTotal,
-                TaxAmount = createDto.TaxAmount,
-                TotalAmount = createDto.TotalAmount,
+                SubTotal = subTotal,
+                TaxAmount = taxAmount,
+                TotalAmount = totalAmount,
                 AmountPaid = 0,
-                AmountDue = createDto.TotalAmount,
+                AmountDue = totalAmount,
                 CurrencyCode = createDto.CurrencyCode,
-                TaxRate = createDto.TaxRate,
-                TaxName = createDto.TaxName,
+                TaxRate = taxRate,
+                TaxName = taxName,
                 CustomerName = createDto.CustomerName,
                 CustomerAddress = createDto.CustomerAddress,
-                CustomerTaxId = createDto.CustomerTaxId,
+                CustomerTaxId = customerTaxId,
                 PaymentReference = createDto.PaymentReference,
                 PaymentMethod = createDto.PaymentMethod,
                 Notes = createDto.Notes,
@@ -306,6 +366,55 @@ public class InvoiceService : IInvoiceService
                 invoice.InvoiceNumber = updateDto.InvoiceNumber;
             }
 
+            Order? order = null;
+            if (updateDto.OrderId.HasValue)
+            {
+                order = await _context.Orders
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.Id == updateDto.OrderId.Value);
+
+                if (order == null)
+                {
+                    throw new InvalidOperationException($"Order with ID {updateDto.OrderId.Value} not found");
+                }
+
+                if (order.CustomerId != invoice.CustomerId)
+                {
+                    throw new InvalidOperationException("Invoice customer does not match order customer");
+                }
+            }
+
+            OrderTaxSnapshot? taxSnapshot = null;
+            if (updateDto.OrderTaxSnapshotId.HasValue)
+            {
+                taxSnapshot = await _context.OrderTaxSnapshots
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.Id == updateDto.OrderTaxSnapshotId.Value);
+
+                if (taxSnapshot == null)
+                {
+                    throw new InvalidOperationException($"Order tax snapshot with ID {updateDto.OrderTaxSnapshotId.Value} not found");
+                }
+            }
+            else if (updateDto.OrderId.HasValue)
+            {
+                taxSnapshot = await _context.OrderTaxSnapshots
+                    .AsNoTracking()
+                    .Where(x => x.OrderId == updateDto.OrderId.Value)
+                    .OrderByDescending(x => x.CreatedAt)
+                    .FirstOrDefaultAsync();
+
+                if (taxSnapshot == null)
+                {
+                    throw new InvalidOperationException("A finalized tax snapshot is required before updating an order-linked invoice");
+                }
+            }
+
+            if (taxSnapshot != null && updateDto.OrderId.HasValue && taxSnapshot.OrderId != updateDto.OrderId.Value)
+            {
+                throw new InvalidOperationException("Provided tax snapshot does not belong to the provided order");
+            }
+
             invoice.Status = updateDto.Status;
 
             // Only update date/time fields when a non-default value is provided by the client
@@ -317,17 +426,37 @@ public class InvoiceService : IInvoiceService
 
             if (updateDto.PaidAt.HasValue)
                 invoice.PaidAt = updateDto.PaidAt;
-            invoice.SubTotal = updateDto.SubTotal;
-            invoice.TaxAmount = updateDto.TaxAmount;
-            invoice.TotalAmount = updateDto.TotalAmount;
+
+            if (taxSnapshot != null)
+            {
+                invoice.OrderId = updateDto.OrderId;
+                invoice.OrderTaxSnapshotId = taxSnapshot.Id;
+                invoice.SubTotal = taxSnapshot.NetAmount;
+                invoice.TaxAmount = taxSnapshot.TaxAmount;
+                invoice.TotalAmount = taxSnapshot.GrossAmount;
+                invoice.TaxRate = taxSnapshot.AppliedTaxRate;
+                invoice.TaxName = taxSnapshot.AppliedTaxName;
+                invoice.CustomerTaxId = !string.IsNullOrWhiteSpace(updateDto.CustomerTaxId)
+                    ? updateDto.CustomerTaxId
+                    : taxSnapshot.BuyerTaxId;
+            }
+            else
+            {
+                invoice.OrderId = updateDto.OrderId;
+                invoice.OrderTaxSnapshotId = updateDto.OrderTaxSnapshotId;
+                invoice.SubTotal = updateDto.SubTotal;
+                invoice.TaxAmount = updateDto.TaxAmount;
+                invoice.TotalAmount = updateDto.TotalAmount;
+                invoice.TaxRate = updateDto.TaxRate;
+                invoice.TaxName = updateDto.TaxName;
+                invoice.CustomerTaxId = updateDto.CustomerTaxId;
+            }
+
             invoice.AmountPaid = updateDto.AmountPaid;
             invoice.AmountDue = updateDto.AmountDue;
             invoice.CurrencyCode = updateDto.CurrencyCode;
-            invoice.TaxRate = updateDto.TaxRate;
-            invoice.TaxName = updateDto.TaxName;
             invoice.CustomerName = updateDto.CustomerName;
             invoice.CustomerAddress = updateDto.CustomerAddress;
-            invoice.CustomerTaxId = updateDto.CustomerTaxId;
             invoice.PaymentReference = updateDto.PaymentReference;
             invoice.PaymentMethod = updateDto.PaymentMethod;
             invoice.Notes = updateDto.Notes;
@@ -382,6 +511,8 @@ public class InvoiceService : IInvoiceService
             Id = invoice.Id,
             InvoiceNumber = invoice.InvoiceNumber,
             CustomerId = invoice.CustomerId,
+            OrderId = invoice.OrderId,
+            OrderTaxSnapshotId = invoice.OrderTaxSnapshotId,
             Status = invoice.Status,
             IssueDate = invoice.IssueDate,
             DueDate = invoice.DueDate,

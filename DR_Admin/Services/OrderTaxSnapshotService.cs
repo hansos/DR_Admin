@@ -84,6 +84,8 @@ public class OrderTaxSnapshotService : IOrderTaxSnapshotService
             DisplayCurrencyCode = dto.DisplayCurrencyCode,
             ExchangeRate = dto.ExchangeRate,
             ExchangeRateDate = dto.ExchangeRateDate,
+            ExchangeRateSource = dto.ExchangeRateSource,
+            TaxDeterminationEvidenceId = dto.TaxDeterminationEvidenceId,
             NetAmount = dto.NetAmount,
             TaxAmount = dto.TaxAmount,
             GrossAmount = dto.GrossAmount,
@@ -118,29 +120,7 @@ public class OrderTaxSnapshotService : IOrderTaxSnapshotService
             return null;
         }
 
-        entity.TaxJurisdictionId = dto.TaxJurisdictionId;
-        entity.BuyerCountryCode = dto.BuyerCountryCode;
-        entity.BuyerStateCode = dto.BuyerStateCode;
-        entity.BuyerType = dto.BuyerType;
-        entity.BuyerTaxId = dto.BuyerTaxId;
-        entity.BuyerTaxIdValidated = dto.BuyerTaxIdValidated;
-        entity.TaxCurrencyCode = dto.TaxCurrencyCode;
-        entity.DisplayCurrencyCode = dto.DisplayCurrencyCode;
-        entity.ExchangeRate = dto.ExchangeRate;
-        entity.ExchangeRateDate = dto.ExchangeRateDate;
-        entity.NetAmount = dto.NetAmount;
-        entity.TaxAmount = dto.TaxAmount;
-        entity.GrossAmount = dto.GrossAmount;
-        entity.AppliedTaxRate = dto.AppliedTaxRate;
-        entity.AppliedTaxName = dto.AppliedTaxName;
-        entity.ReverseChargeApplied = dto.ReverseChargeApplied;
-        entity.RuleVersion = dto.RuleVersion;
-        entity.IdempotencyKey = dto.IdempotencyKey;
-        entity.CalculationInputsJson = dto.CalculationInputsJson;
-        entity.UpdatedAt = DateTime.UtcNow;
-
-        await _context.SaveChangesAsync();
-        return MapToDto(entity);
+        throw new InvalidOperationException("Order tax snapshots are immutable and cannot be updated once created.");
     }
 
     /// <summary>
@@ -156,9 +136,16 @@ public class OrderTaxSnapshotService : IOrderTaxSnapshotService
             return false;
         }
 
-        _context.OrderTaxSnapshots.Remove(entity);
-        await _context.SaveChangesAsync();
-        return true;
+        var isReferencedByInvoice = await _context.Invoices
+            .AsNoTracking()
+            .AnyAsync(x => x.OrderTaxSnapshotId == id && x.DeletedAt == null);
+
+        if (isReferencedByInvoice)
+        {
+            throw new InvalidOperationException("Order tax snapshot is referenced by one or more invoices and cannot be deleted.");
+        }
+
+        throw new InvalidOperationException("Order tax snapshots are immutable and cannot be deleted.");
     }
 
     private static OrderTaxSnapshotDto MapToDto(OrderTaxSnapshot entity)
@@ -177,6 +164,8 @@ public class OrderTaxSnapshotService : IOrderTaxSnapshotService
             DisplayCurrencyCode = entity.DisplayCurrencyCode,
             ExchangeRate = entity.ExchangeRate,
             ExchangeRateDate = entity.ExchangeRateDate,
+            ExchangeRateSource = entity.ExchangeRateSource,
+            TaxDeterminationEvidenceId = entity.TaxDeterminationEvidenceId,
             NetAmount = entity.NetAmount,
             TaxAmount = entity.TaxAmount,
             GrossAmount = entity.GrossAmount,

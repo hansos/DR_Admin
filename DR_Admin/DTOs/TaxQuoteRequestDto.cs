@@ -68,6 +68,21 @@ public class TaxQuoteRequestDto
     public DateTime? ExchangeRateDate { get; set; }
 
     /// <summary>
+    /// Gets or sets whether trusted server-side exchange rate is required when currencies differ.
+    /// </summary>
+    public bool RequireTrustedExchangeRate { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets billing country code used as location evidence.
+    /// </summary>
+    public string BillingCountryCode { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets source IP used as location evidence.
+    /// </summary>
+    public string IpAddress { get; set; } = string.Empty;
+
+    /// <summary>
     /// Gets or sets optional idempotency key for finalize operation.
     /// </summary>
     public string? IdempotencyKey { get; set; }

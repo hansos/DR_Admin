@@ -16,6 +16,11 @@ public class TaxRuleDto
     public string CountryCode { get; set; } = string.Empty;
 
     /// <summary>
+    /// Tax category identifier
+    /// </summary>
+    public int? TaxCategoryId { get; set; }
+
+    /// <summary>
     /// State code
     /// </summary>
     public string? StateCode { get; set; }
@@ -24,6 +29,11 @@ public class TaxRuleDto
     /// Tax name
     /// </summary>
     public string TaxName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Tax category
+    /// </summary>
+    public string TaxCategory { get; set; } = "STANDARD";
 
     /// <summary>
     /// Tax rate

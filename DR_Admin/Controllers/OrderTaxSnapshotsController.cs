@@ -115,13 +115,20 @@ public class OrderTaxSnapshotsController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        var result = await _orderTaxSnapshotService.UpdateOrderTaxSnapshotAsync(id, dto);
-        if (result == null)
+        try
         {
-            return NotFound($"Order tax snapshot with ID {id} not found");
-        }
+            var result = await _orderTaxSnapshotService.UpdateOrderTaxSnapshotAsync(id, dto);
+            if (result == null)
+            {
+                return NotFound($"Order tax snapshot with ID {id} not found");
+            }
 
-        return Ok(result);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(ex.Message);
+        }
     }
 
     /// <summary>
@@ -137,12 +144,19 @@ public class OrderTaxSnapshotsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> DeleteOrderTaxSnapshot(int id)
     {
-        var deleted = await _orderTaxSnapshotService.DeleteOrderTaxSnapshotAsync(id);
-        if (!deleted)
+        try
         {
-            return NotFound($"Order tax snapshot with ID {id} not found");
-        }
+            var deleted = await _orderTaxSnapshotService.DeleteOrderTaxSnapshotAsync(id);
+            if (!deleted)
+            {
+                return NotFound($"Order tax snapshot with ID {id} not found");
+            }
 
-        return NoContent();
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(ex.Message);
+        }
     }
 }

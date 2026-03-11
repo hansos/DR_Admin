@@ -191,9 +191,16 @@ builder.Services.AddScoped<IHostingFtpService, HostingFtpService>();
 
 // Sales and Payment Flow services
 builder.Services.AddTransient<ICouponService, CouponService>();
+builder.Services.AddHttpClient<StripeVatValidationProvider>(client =>
+{
+    client.BaseAddress = new Uri("https://api.stripe.com");
+});
+builder.Services.AddTransient<IVatValidationProvider, StripeVatValidationProvider>();
+builder.Services.AddSingleton<IVatValidationProvider, BuiltInVatValidationProvider>();
 builder.Services.AddTransient<IVatValidationService, VatValidationService>();
 builder.Services.AddTransient<ITaxService, TaxService>();
 builder.Services.AddTransient<ITaxCalculationService, TaxCalculationService>();
+builder.Services.AddTransient<ITaxCategoryService, TaxCategoryService>();
 builder.Services.AddTransient<ITaxJurisdictionService, TaxJurisdictionService>();
 builder.Services.AddTransient<ITaxRegistrationService, TaxRegistrationService>();
 builder.Services.AddTransient<IOrderTaxSnapshotService, OrderTaxSnapshotService>();

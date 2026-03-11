@@ -6,6 +6,11 @@ namespace ISPAdmin.DTOs;
 public class CreateTaxRuleDto
 {
     /// <summary>
+    /// Optional tax category identifier.
+    /// </summary>
+    public int? TaxCategoryId { get; set; }
+
+    /// <summary>
     /// Country code (ISO 3166-1 alpha-2)
     /// </summary>
     public string CountryCode { get; set; } = string.Empty;
@@ -19,6 +24,11 @@ public class CreateTaxRuleDto
     /// Tax name (e.g., "VAT", "GST")
     /// </summary>
     public string TaxName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Tax category (e.g., "STANDARD", "REDUCED", "EXEMPT")
+    /// </summary>
+    public string TaxCategory { get; set; } = "STANDARD";
 
     /// <summary>
     /// Tax rate as decimal (e.g., 0.21 for 21%)

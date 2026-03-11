@@ -1,30 +1,54 @@
 namespace ISPAdmin.Services;
 
 /// <summary>
-/// Default VAT validation service implementation.
+/// VAT validation service implementation using configured providers.
 /// </summary>
 public class VatValidationService : IVatValidationService
 {
+    private readonly IReadOnlyCollection<IVatValidationProvider> _providers;
+
+    public VatValidationService(IEnumerable<IVatValidationProvider> providers)
+    {
+        _providers = providers.ToList();
+    }
+
     /// <summary>
     /// Validates a tax identifier for a country.
     /// </summary>
     /// <param name="countryCode">Country code for validation.</param>
     /// <param name="taxId">Tax identifier value.</param>
     /// <returns>True when tax identifier is valid; otherwise false.</returns>
-    public Task<bool> ValidateAsync(string countryCode, string taxId)
+    public async Task<bool> ValidateAsync(string countryCode, string taxId)
     {
-        if (string.IsNullOrWhiteSpace(countryCode) || string.IsNullOrWhiteSpace(taxId))
+        var result = await ValidateDetailedAsync(countryCode, taxId);
+        return result.IsValid;
+    }
+
+    /// <summary>
+    /// Validates a tax identifier and returns detailed provider output.
+    /// </summary>
+    /// <param name="countryCode">Country code for validation.</param>
+    /// <param name="taxId">Tax identifier value.</param>
+    /// <returns>Detailed validation result.</returns>
+    public async Task<VatValidationResult> ValidateDetailedAsync(string countryCode, string taxId)
+    {
+        VatValidationResult? lastResult = null;
+
+        foreach (var provider in _providers)
         {
-            return Task.FromResult(false);
+            var result = await provider.ValidateAsync(countryCode, taxId);
+            lastResult = result;
+            if (result.IsValid)
+            {
+                return result;
+            }
         }
 
-        var compact = taxId.Replace(" ", string.Empty).Replace("-", string.Empty);
-        if (compact.Length < 6)
+        return lastResult ?? new VatValidationResult
         {
-            return Task.FromResult(false);
-        }
-
-        var startsWithCountry = compact.StartsWith(countryCode, StringComparison.OrdinalIgnoreCase);
-        return Task.FromResult(startsWithCountry || compact.Any(char.IsDigit));
+            IsValid = false,
+            ProviderName = _providers.FirstOrDefault()?.Name ?? "None",
+            RawResponse = "All providers returned invalid"
+        };
     }
 }

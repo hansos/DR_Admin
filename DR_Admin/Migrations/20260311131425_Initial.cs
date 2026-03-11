@@ -571,32 +571,71 @@ namespace ISPAdmin.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "TaxRules",
+                name: "TaxCategories",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    CountryCode = table.Column<string>(type: "TEXT", nullable: false),
-                    StateCode = table.Column<string>(type: "TEXT", nullable: true),
-                    TaxName = table.Column<string>(type: "TEXT", nullable: false),
-                    TaxRate = table.Column<decimal>(type: "TEXT", nullable: false),
+                    Code = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                    CountryCode = table.Column<string>(type: "TEXT", maxLength: 2, nullable: false),
+                    StateCode = table.Column<string>(type: "TEXT", maxLength: 20, nullable: true),
+                    Description = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: false),
                     IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
-                    EffectiveFrom = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    EffectiveUntil = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    AppliesToSetupFees = table.Column<bool>(type: "INTEGER", nullable: false),
-                    AppliesToRecurring = table.Column<bool>(type: "INTEGER", nullable: false),
-                    ReverseCharge = table.Column<bool>(type: "INTEGER", nullable: false),
-                    TaxAuthority = table.Column<string>(type: "TEXT", nullable: false),
-                    TaxRegistrationNumber = table.Column<string>(type: "TEXT", nullable: false),
-                    Priority = table.Column<int>(type: "INTEGER", nullable: false),
-                    InternalNotes = table.Column<string>(type: "TEXT", nullable: false),
-                    DeletedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_TaxRules", x => x.Id);
+                    table.PrimaryKey("PK_TaxCategories", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "TaxDeterminationEvidences",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    CustomerId = table.Column<int>(type: "INTEGER", nullable: true),
+                    OrderId = table.Column<int>(type: "INTEGER", nullable: true),
+                    BuyerCountryCode = table.Column<string>(type: "TEXT", maxLength: 2, nullable: false),
+                    BuyerStateCode = table.Column<string>(type: "TEXT", maxLength: 20, nullable: true),
+                    BillingCountryCode = table.Column<string>(type: "TEXT", maxLength: 2, nullable: false),
+                    IpAddress = table.Column<string>(type: "TEXT", maxLength: 64, nullable: false),
+                    BuyerTaxId = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    BuyerTaxIdValidated = table.Column<bool>(type: "INTEGER", nullable: false),
+                    VatValidationProvider = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    VatValidationRawResponse = table.Column<string>(type: "TEXT", maxLength: 4000, nullable: false),
+                    ExchangeRateSource = table.Column<int>(type: "INTEGER", nullable: true),
+                    CapturedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TaxDeterminationEvidences", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "TaxJurisdictions",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    Code = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    Name = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                    CountryCode = table.Column<string>(type: "TEXT", maxLength: 2, nullable: false),
+                    StateCode = table.Column<string>(type: "TEXT", maxLength: 20, nullable: true),
+                    TaxAuthority = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                    TaxCurrencyCode = table.Column<string>(type: "TEXT", maxLength: 3, nullable: false),
+                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
+                    Notes = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TaxJurisdictions", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -878,6 +917,77 @@ namespace ISPAdmin.Migrations
                         principalTable: "ServerTypes",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "TaxRegistrations",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    TaxJurisdictionId = table.Column<int>(type: "INTEGER", nullable: false),
+                    LegalEntityName = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                    RegistrationNumber = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    EffectiveFrom = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    EffectiveUntil = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
+                    Notes = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TaxRegistrations", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_TaxRegistrations_TaxJurisdictions_TaxJurisdictionId",
+                        column: x => x.TaxJurisdictionId,
+                        principalTable: "TaxJurisdictions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "TaxRules",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    TaxJurisdictionId = table.Column<int>(type: "INTEGER", nullable: true),
+                    TaxCategoryId = table.Column<int>(type: "INTEGER", nullable: true),
+                    CountryCode = table.Column<string>(type: "TEXT", maxLength: 2, nullable: false),
+                    StateCode = table.Column<string>(type: "TEXT", maxLength: 20, nullable: true),
+                    TaxName = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    TaxCategory = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    TaxRate = table.Column<decimal>(type: "TEXT", precision: 18, scale: 6, nullable: false),
+                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
+                    EffectiveFrom = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    EffectiveUntil = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    AppliesToSetupFees = table.Column<bool>(type: "INTEGER", nullable: false),
+                    AppliesToRecurring = table.Column<bool>(type: "INTEGER", nullable: false),
+                    ReverseCharge = table.Column<bool>(type: "INTEGER", nullable: false),
+                    TaxAuthority = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                    TaxRegistrationNumber = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    Priority = table.Column<int>(type: "INTEGER", nullable: false),
+                    InternalNotes = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: false),
+                    DeletedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TaxRules", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_TaxRules_TaxCategories_TaxCategoryId",
+                        column: x => x.TaxCategoryId,
+                        principalTable: "TaxCategories",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_TaxRules_TaxJurisdictions_TaxJurisdictionId",
+                        column: x => x.TaxJurisdictionId,
+                        principalTable: "TaxJurisdictions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
                 });
 
             migrationBuilder.CreateTable(
@@ -2297,6 +2407,60 @@ namespace ISPAdmin.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "OrderTaxSnapshots",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    OrderId = table.Column<int>(type: "INTEGER", nullable: false),
+                    TaxJurisdictionId = table.Column<int>(type: "INTEGER", nullable: true),
+                    BuyerCountryCode = table.Column<string>(type: "TEXT", maxLength: 2, nullable: false),
+                    BuyerStateCode = table.Column<string>(type: "TEXT", maxLength: 20, nullable: true),
+                    BuyerType = table.Column<int>(type: "INTEGER", nullable: false),
+                    BuyerTaxId = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    BuyerTaxIdValidated = table.Column<bool>(type: "INTEGER", nullable: false),
+                    TaxCurrencyCode = table.Column<string>(type: "TEXT", maxLength: 3, nullable: false),
+                    DisplayCurrencyCode = table.Column<string>(type: "TEXT", maxLength: 3, nullable: false),
+                    ExchangeRate = table.Column<decimal>(type: "TEXT", precision: 18, scale: 8, nullable: true),
+                    ExchangeRateDate = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    ExchangeRateSource = table.Column<int>(type: "INTEGER", nullable: true),
+                    TaxDeterminationEvidenceId = table.Column<int>(type: "INTEGER", nullable: true),
+                    NetAmount = table.Column<decimal>(type: "TEXT", precision: 18, scale: 6, nullable: false),
+                    TaxAmount = table.Column<decimal>(type: "TEXT", precision: 18, scale: 6, nullable: false),
+                    GrossAmount = table.Column<decimal>(type: "TEXT", precision: 18, scale: 6, nullable: false),
+                    AppliedTaxRate = table.Column<decimal>(type: "TEXT", precision: 18, scale: 6, nullable: false),
+                    AppliedTaxName = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    ReverseChargeApplied = table.Column<bool>(type: "INTEGER", nullable: false),
+                    RuleVersion = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    IdempotencyKey = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
+                    CalculationInputsJson = table.Column<string>(type: "TEXT", maxLength: 8000, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_OrderTaxSnapshots", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_OrderTaxSnapshots_Orders_OrderId",
+                        column: x => x.OrderId,
+                        principalTable: "Orders",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_OrderTaxSnapshots_TaxDeterminationEvidences_TaxDeterminationEvidenceId",
+                        column: x => x.TaxDeterminationEvidenceId,
+                        principalTable: "TaxDeterminationEvidences",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_OrderTaxSnapshots_TaxJurisdictions_TaxJurisdictionId",
+                        column: x => x.TaxJurisdictionId,
+                        principalTable: "TaxJurisdictions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "HostingDatabases",
                 columns: table => new
                 {
@@ -2796,6 +2960,8 @@ namespace ISPAdmin.Migrations
                         .Annotation("Sqlite:Autoincrement", true),
                     InvoiceNumber = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
                     CustomerId = table.Column<int>(type: "INTEGER", nullable: false),
+                    OrderId = table.Column<int>(type: "INTEGER", nullable: true),
+                    OrderTaxSnapshotId = table.Column<int>(type: "INTEGER", nullable: true),
                     Status = table.Column<int>(type: "INTEGER", nullable: false),
                     IssueDate = table.Column<DateTime>(type: "TEXT", nullable: false),
                     DueDate = table.Column<DateTime>(type: "TEXT", nullable: false),
@@ -2822,7 +2988,6 @@ namespace ISPAdmin.Migrations
                     InternalComment = table.Column<string>(type: "TEXT", nullable: false),
                     SelectedPaymentGatewayId = table.Column<int>(type: "INTEGER", nullable: true),
                     DeletedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    OrderId = table.Column<int>(type: "INTEGER", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
@@ -2836,10 +3001,17 @@ namespace ISPAdmin.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
+                        name: "FK_Invoices_OrderTaxSnapshots_OrderTaxSnapshotId",
+                        column: x => x.OrderTaxSnapshotId,
+                        principalTable: "OrderTaxSnapshots",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
                         name: "FK_Invoices_Orders_OrderId",
                         column: x => x.OrderId,
                         principalTable: "Orders",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
                 });
 
             migrationBuilder.CreateTable(
@@ -3908,6 +4080,11 @@ namespace ISPAdmin.Migrations
                 column: "OrderId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Invoices_OrderTaxSnapshotId",
+                table: "Invoices",
+                column: "OrderTaxSnapshotId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Invoices_SelectedPaymentGatewayId",
                 table: "Invoices",
                 column: "SelectedPaymentGatewayId");
@@ -3977,6 +4154,37 @@ namespace ISPAdmin.Migrations
                 name: "IX_Orders_ServiceId",
                 table: "Orders",
                 column: "ServiceId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OrderTaxSnapshots_BuyerCountryCode",
+                table: "OrderTaxSnapshots",
+                column: "BuyerCountryCode");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OrderTaxSnapshots_CreatedAt",
+                table: "OrderTaxSnapshots",
+                column: "CreatedAt");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OrderTaxSnapshots_OrderId",
+                table: "OrderTaxSnapshots",
+                column: "OrderId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OrderTaxSnapshots_OrderId_IdempotencyKey",
+                table: "OrderTaxSnapshots",
+                columns: new[] { "OrderId", "IdempotencyKey" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OrderTaxSnapshots_TaxDeterminationEvidenceId",
+                table: "OrderTaxSnapshots",
+                column: "TaxDeterminationEvidenceId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OrderTaxSnapshots_TaxJurisdictionId",
+                table: "OrderTaxSnapshots",
+                column: "TaxJurisdictionId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_PaymentAttempts_CustomerPaymentMethodId",
@@ -4735,6 +4943,124 @@ namespace ISPAdmin.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_TaxCategories_CountryCode",
+                table: "TaxCategories",
+                column: "CountryCode");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TaxCategories_CountryCode_StateCode_Code",
+                table: "TaxCategories",
+                columns: new[] { "CountryCode", "StateCode", "Code" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TaxCategories_IsActive",
+                table: "TaxCategories",
+                column: "IsActive");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TaxDeterminationEvidences_BuyerCountryCode",
+                table: "TaxDeterminationEvidences",
+                column: "BuyerCountryCode");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TaxDeterminationEvidences_CapturedAt",
+                table: "TaxDeterminationEvidences",
+                column: "CapturedAt");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TaxDeterminationEvidences_CustomerId",
+                table: "TaxDeterminationEvidences",
+                column: "CustomerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TaxDeterminationEvidences_OrderId",
+                table: "TaxDeterminationEvidences",
+                column: "OrderId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TaxJurisdictions_Code",
+                table: "TaxJurisdictions",
+                column: "Code",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TaxJurisdictions_CountryCode",
+                table: "TaxJurisdictions",
+                column: "CountryCode");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TaxJurisdictions_CountryCode_StateCode",
+                table: "TaxJurisdictions",
+                columns: new[] { "CountryCode", "StateCode" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TaxJurisdictions_IsActive",
+                table: "TaxJurisdictions",
+                column: "IsActive");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TaxRegistrations_IsActive",
+                table: "TaxRegistrations",
+                column: "IsActive");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TaxRegistrations_RegistrationNumber",
+                table: "TaxRegistrations",
+                column: "RegistrationNumber");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TaxRegistrations_TaxJurisdictionId",
+                table: "TaxRegistrations",
+                column: "TaxJurisdictionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TaxRegistrations_TaxJurisdictionId_RegistrationNumber",
+                table: "TaxRegistrations",
+                columns: new[] { "TaxJurisdictionId", "RegistrationNumber" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TaxRules_CountryCode",
+                table: "TaxRules",
+                column: "CountryCode");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TaxRules_CountryCode_StateCode",
+                table: "TaxRules",
+                columns: new[] { "CountryCode", "StateCode" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TaxRules_EffectiveFrom",
+                table: "TaxRules",
+                column: "EffectiveFrom");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TaxRules_EffectiveUntil",
+                table: "TaxRules",
+                column: "EffectiveUntil");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TaxRules_IsActive",
+                table: "TaxRules",
+                column: "IsActive");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TaxRules_TaxCategory",
+                table: "TaxRules",
+                column: "TaxCategory");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TaxRules_TaxCategoryId",
+                table: "TaxRules",
+                column: "TaxCategoryId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TaxRules_TaxJurisdictionId",
+                table: "TaxRules",
+                column: "TaxJurisdictionId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Tlds_Extension",
                 table: "Tlds",
                 column: "Extension",
@@ -5067,6 +5393,9 @@ namespace ISPAdmin.Migrations
                 name: "SystemSettings");
 
             migrationBuilder.DropTable(
+                name: "TaxRegistrations");
+
+            migrationBuilder.DropTable(
                 name: "TaxRules");
 
             migrationBuilder.DropTable(
@@ -5124,6 +5453,9 @@ namespace ISPAdmin.Migrations
                 name: "SupportTickets");
 
             migrationBuilder.DropTable(
+                name: "TaxCategories");
+
+            migrationBuilder.DropTable(
                 name: "Roles");
 
             migrationBuilder.DropTable(
@@ -5172,7 +5504,7 @@ namespace ISPAdmin.Migrations
                 name: "Servers");
 
             migrationBuilder.DropTable(
-                name: "Orders");
+                name: "OrderTaxSnapshots");
 
             migrationBuilder.DropTable(
                 name: "HostProviders");
@@ -5182,6 +5514,15 @@ namespace ISPAdmin.Migrations
 
             migrationBuilder.DropTable(
                 name: "ServerTypes");
+
+            migrationBuilder.DropTable(
+                name: "Orders");
+
+            migrationBuilder.DropTable(
+                name: "TaxDeterminationEvidences");
+
+            migrationBuilder.DropTable(
+                name: "TaxJurisdictions");
 
             migrationBuilder.DropTable(
                 name: "Quotes");

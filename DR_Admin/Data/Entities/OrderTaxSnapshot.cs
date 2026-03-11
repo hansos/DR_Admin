@@ -63,6 +63,16 @@ public class OrderTaxSnapshot : EntityBase
     public DateTime? ExchangeRateDate { get; set; }
 
     /// <summary>
+    /// Source of exchange rate used for this snapshot.
+    /// </summary>
+    public CurrencyRateSource? ExchangeRateSource { get; set; }
+
+    /// <summary>
+    /// Optional foreign key to tax determination evidence.
+    /// </summary>
+    public int? TaxDeterminationEvidenceId { get; set; }
+
+    /// <summary>
     /// Taxable amount before tax.
     /// </summary>
     public decimal NetAmount { get; set; }
@@ -116,4 +126,9 @@ public class OrderTaxSnapshot : EntityBase
     /// Navigation property to the applied jurisdiction.
     /// </summary>
     public TaxJurisdiction? TaxJurisdiction { get; set; }
+
+    /// <summary>
+    /// Navigation property to tax determination evidence.
+    /// </summary>
+    public TaxDeterminationEvidence? TaxDeterminationEvidence { get; set; }
 }

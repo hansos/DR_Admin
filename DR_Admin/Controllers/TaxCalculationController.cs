@@ -38,8 +38,15 @@ public class TaxCalculationController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        var result = await _taxCalculationService.QuoteTaxAsync(request);
-        return Ok(result);
+        try
+        {
+            var result = await _taxCalculationService.QuoteTaxAsync(request);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     /// <summary>
@@ -60,7 +67,14 @@ public class TaxCalculationController : ControllerBase
             return BadRequest(ModelState);
         }
 
-        var result = await _taxCalculationService.FinalizeTaxAsync(request);
-        return Ok(result);
+        try
+        {
+            var result = await _taxCalculationService.FinalizeTaxAsync(request);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 }

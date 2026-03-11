@@ -39,14 +39,14 @@
 
   <ItemGroup>
     <ProjectReference Include="..\EmailSenderLib\EmailSenderLib.csproj" />
-    <ProjectReference Include="..\EmailSenderProviders\EmailSenderProvider.Smtp\EmailSenderProvider.Smtp.csproj" />
-    <ProjectReference Include="..\EmailSenderProviders\EmailSenderProvider.MailKit\EmailSenderProvider.MailKit.csproj" />
-    <ProjectReference Include="..\EmailSenderProviders\EmailSenderProvider.GraphApi\EmailSenderProvider.GraphApi.csproj" />
-    <ProjectReference Include="..\EmailSenderProviders\EmailSenderProvider.Exchange\EmailSenderProvider.Exchange.csproj" />
-    <ProjectReference Include="..\EmailSenderProviders\EmailSenderProvider.SendGrid\EmailSenderProvider.SendGrid.csproj" />
-    <ProjectReference Include="..\EmailSenderProviders\EmailSenderProvider.Mailgun\EmailSenderProvider.Mailgun.csproj" />
-    <ProjectReference Include="..\EmailSenderProviders\EmailSenderProvider.AmazonSes\EmailSenderProvider.AmazonSes.csproj" />
-    <ProjectReference Include="..\EmailSenderProviders\EmailSenderProvider.Postmark\EmailSenderProvider.Postmark.csproj" />
+    <ProjectReference Include="..\PluginProviders\EmailSenderProviders\EmailSenderProvider.Smtp\EmailSenderProvider.Smtp.csproj" />
+    <ProjectReference Include="..\PluginProviders\EmailSenderProviders\EmailSenderProvider.MailKit\EmailSenderProvider.MailKit.csproj" />
+    <ProjectReference Include="..\PluginProviders\EmailSenderProviders\EmailSenderProvider.GraphApi\EmailSenderProvider.GraphApi.csproj" />
+    <ProjectReference Include="..\PluginProviders\EmailSenderProviders\EmailSenderProvider.Exchange\EmailSenderProvider.Exchange.csproj" />
+    <ProjectReference Include="..\PluginProviders\EmailSenderProviders\EmailSenderProvider.SendGrid\EmailSenderProvider.SendGrid.csproj" />
+    <ProjectReference Include="..\PluginProviders\EmailSenderProviders\EmailSenderProvider.Mailgun\EmailSenderProvider.Mailgun.csproj" />
+    <ProjectReference Include="..\PluginProviders\EmailSenderProviders\EmailSenderProvider.AmazonSes\EmailSenderProvider.AmazonSes.csproj" />
+    <ProjectReference Include="..\PluginProviders\EmailSenderProviders\EmailSenderProvider.Postmark\EmailSenderProvider.Postmark.csproj" />
     <ProjectReference Include="..\MessagingTemplateLib\MessagingTemplateLib.csproj" />
     <ProjectReference Include="..\DomainRegistrationLib\DomainRegistrationLib.csproj" />
     <ProjectReference Include="..\ExchangeRateLib\ExchangeRateLib.csproj" />

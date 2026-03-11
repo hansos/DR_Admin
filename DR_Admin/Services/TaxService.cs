@@ -103,11 +103,41 @@ public class TaxService : ITaxService
     /// <returns>Created tax rule DTO.</returns>
     public async Task<TaxRuleDto> CreateTaxRuleAsync(CreateTaxRuleDto createDto)
     {
+        var resolvedCountryCode = NormalizeCountryCode(createDto.CountryCode);
+        var resolvedStateCode = NormalizeStateCode(createDto.StateCode);
+        var resolvedTaxCategory = NormalizeTaxCategory(createDto.TaxCategory);
+
+        if (createDto.TaxCategoryId.HasValue)
+        {
+            var category = await _context.TaxCategories
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Id == createDto.TaxCategoryId.Value);
+
+            if (category == null)
+            {
+                throw new InvalidOperationException($"Tax category with ID {createDto.TaxCategoryId.Value} not found.");
+            }
+
+            resolvedCountryCode = NormalizeCountryCode(category.CountryCode);
+            resolvedStateCode = NormalizeStateCode(category.StateCode);
+            resolvedTaxCategory = NormalizeTaxCategory(category.Code);
+        }
+
+        await EnsureNoOverlappingRuleAsync(
+            resolvedCountryCode,
+            resolvedStateCode,
+            resolvedTaxCategory,
+            createDto.EffectiveFrom,
+            createDto.EffectiveUntil,
+            null);
+
         var entity = new TaxRule
         {
-            CountryCode = NormalizeCountryCode(createDto.CountryCode),
-            StateCode = NormalizeStateCode(createDto.StateCode),
+            TaxCategoryId = createDto.TaxCategoryId,
+            CountryCode = resolvedCountryCode,
+            StateCode = resolvedStateCode,
             TaxName = createDto.TaxName,
+            TaxCategory = resolvedTaxCategory,
             TaxRate = createDto.TaxRate,
             IsActive = createDto.IsActive,
             EffectiveFrom = createDto.EffectiveFrom,
@@ -143,7 +173,39 @@ public class TaxService : ITaxService
             return null;
         }
 
+        var resolvedCountryCode = entity.CountryCode;
+        var resolvedStateCode = entity.StateCode;
+        var resolvedTaxCategory = NormalizeTaxCategory(updateDto.TaxCategory);
+
+        if (updateDto.TaxCategoryId.HasValue)
+        {
+            var category = await _context.TaxCategories
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Id == updateDto.TaxCategoryId.Value);
+
+            if (category == null)
+            {
+                throw new InvalidOperationException($"Tax category with ID {updateDto.TaxCategoryId.Value} not found.");
+            }
+
+            resolvedCountryCode = NormalizeCountryCode(category.CountryCode);
+            resolvedStateCode = NormalizeStateCode(category.StateCode);
+            resolvedTaxCategory = NormalizeTaxCategory(category.Code);
+        }
+
+        await EnsureNoOverlappingRuleAsync(
+            resolvedCountryCode,
+            resolvedStateCode,
+            resolvedTaxCategory,
+            updateDto.EffectiveFrom,
+            updateDto.EffectiveUntil,
+            id);
+
         entity.TaxName = updateDto.TaxName;
+        entity.TaxCategoryId = updateDto.TaxCategoryId;
+        entity.CountryCode = resolvedCountryCode;
+        entity.StateCode = resolvedStateCode;
+        entity.TaxCategory = resolvedTaxCategory;
         entity.TaxRate = updateDto.TaxRate;
         entity.IsActive = updateDto.IsActive;
         entity.EffectiveFrom = updateDto.EffectiveFrom;
@@ -245,8 +307,10 @@ public class TaxService : ITaxService
         {
             Id = entity.Id,
             CountryCode = entity.CountryCode,
+            TaxCategoryId = entity.TaxCategoryId,
             StateCode = entity.StateCode,
             TaxName = entity.TaxName,
+            TaxCategory = entity.TaxCategory,
             TaxRate = entity.TaxRate,
             IsActive = entity.IsActive,
             EffectiveFrom = entity.EffectiveFrom,
@@ -274,6 +338,42 @@ public class TaxService : ITaxService
         return string.IsNullOrWhiteSpace(value)
             ? null
             : value.Trim().ToUpperInvariant();
+    }
+
+    private static string NormalizeTaxCategory(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value)
+            ? "STANDARD"
+            : value.Trim().ToUpperInvariant();
+    }
+
+    private async Task EnsureNoOverlappingRuleAsync(
+        string countryCode,
+        string? stateCode,
+        string taxCategory,
+        DateTime effectiveFrom,
+        DateTime? effectiveUntil,
+        int? excludeId)
+    {
+        var normalizedCountryCode = NormalizeCountryCode(countryCode);
+        var normalizedStateCode = NormalizeStateCode(stateCode);
+        var normalizedTaxCategory = NormalizeTaxCategory(taxCategory);
+        var newEnd = effectiveUntil ?? DateTime.MaxValue;
+
+        var hasOverlap = await _context.TaxRules
+            .AsNoTracking()
+            .Where(x => x.DeletedAt == null
+                        && x.CountryCode == normalizedCountryCode
+                        && x.StateCode == normalizedStateCode
+                        && x.TaxCategory == normalizedTaxCategory
+                        && (!excludeId.HasValue || x.Id != excludeId.Value))
+            .AnyAsync(x => effectiveFrom <= (x.EffectiveUntil ?? DateTime.MaxValue)
+                           && x.EffectiveFrom <= newEnd);
+
+        if (hasOverlap)
+        {
+            throw new InvalidOperationException($"Overlapping tax rule exists for {normalizedCountryCode}/{normalizedStateCode ?? "*"} and category {normalizedTaxCategory}.");
+        }
     }
 }
 

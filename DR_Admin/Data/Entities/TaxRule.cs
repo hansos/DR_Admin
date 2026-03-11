@@ -11,6 +11,11 @@ public class TaxRule : EntityBase
     public int? TaxJurisdictionId { get; set; }
 
     /// <summary>
+    /// Optional foreign key to a tax category.
+    /// </summary>
+    public int? TaxCategoryId { get; set; }
+
+    /// <summary>
     /// Country code (ISO 3166-1 alpha-2, e.g., "US", "GB", "DE")
     /// </summary>
     public string CountryCode { get; set; } = string.Empty;
@@ -24,6 +29,11 @@ public class TaxRule : EntityBase
     /// Display name for the tax (e.g., "VAT", "GST", "Sales Tax")
     /// </summary>
     public string TaxName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Tax category this rule applies to (e.g., "STANDARD", "REDUCED", "EXEMPT")
+    /// </summary>
+    public string TaxCategory { get; set; } = "STANDARD";
 
     /// <summary>
     /// Tax rate as a decimal (e.g., 0.21 for 21%)
@@ -89,4 +99,9 @@ public class TaxRule : EntityBase
     /// Navigation property to tax jurisdiction.
     /// </summary>
     public TaxJurisdiction? TaxJurisdiction { get; set; }
+
+    /// <summary>
+    /// Navigation property to tax category.
+    /// </summary>
+    public TaxCategory? TaxCategoryEntity { get; set; }
 }

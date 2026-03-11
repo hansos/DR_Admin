@@ -6,9 +6,19 @@ namespace ISPAdmin.DTOs;
 public class UpdateTaxRuleDto
 {
     /// <summary>
+    /// Optional tax category identifier.
+    /// </summary>
+    public int? TaxCategoryId { get; set; }
+
+    /// <summary>
     /// Tax name
     /// </summary>
     public string TaxName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Tax category
+    /// </summary>
+    public string TaxCategory { get; set; } = "STANDARD";
 
     /// <summary>
     /// Tax rate

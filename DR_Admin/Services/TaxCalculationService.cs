@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Net;
 using ISPAdmin.Data;
 using ISPAdmin.Data.Entities;
 using ISPAdmin.Data.Enums;
@@ -26,9 +27,9 @@ public class TaxCalculationService : ITaxCalculationService
     /// </summary>
     /// <param name="request">Tax quote request payload.</param>
     /// <returns>Calculated tax quote result.</returns>
-    public async Task<TaxQuoteResultDto> QuoteTaxAsync(TaxQuoteRequestDto request)
+    public Task<TaxQuoteResultDto> QuoteTaxAsync(TaxQuoteRequestDto request)
     {
-        return await CalculateCoreAsync(request, persistSnapshot: false);
+        return CalculateCoreAsync(request, persistSnapshot: false);
     }
 
     /// <summary>
@@ -43,33 +44,53 @@ public class TaxCalculationService : ITaxCalculationService
             throw new InvalidOperationException("OrderId is required for tax finalization.");
         }
 
-        if (!string.IsNullOrWhiteSpace(request.IdempotencyKey))
+        if (string.IsNullOrWhiteSpace(request.IdempotencyKey))
         {
-            var existing = await _context.OrderTaxSnapshots
-                .AsNoTracking()
-                .FirstOrDefaultAsync(x => x.OrderId == request.OrderId.Value && x.IdempotencyKey == request.IdempotencyKey);
+            throw new InvalidOperationException("IdempotencyKey is required for tax finalization.");
+        }
 
-            if (existing != null)
+        var order = await _context.Orders
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == request.OrderId.Value);
+
+        if (order == null)
+        {
+            throw new InvalidOperationException($"Order with ID {request.OrderId.Value} not found.");
+        }
+
+        if (request.CustomerId.HasValue && request.CustomerId.Value != order.CustomerId)
+        {
+            throw new InvalidOperationException("CustomerId does not match the order owner.");
+        }
+
+        var existing = await _context.OrderTaxSnapshots
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.OrderId == request.OrderId.Value && x.IdempotencyKey == request.IdempotencyKey);
+
+        if (existing != null)
+        {
+            return new TaxQuoteResultDto
             {
-                return new TaxQuoteResultDto
-                {
-                    SnapshotId = existing.Id,
-                    OrderId = existing.OrderId,
-                    TaxJurisdictionId = existing.TaxJurisdictionId,
-                    TaxName = existing.AppliedTaxName,
-                    TaxRate = existing.AppliedTaxRate,
-                    ReverseChargeApplied = existing.ReverseChargeApplied,
-                    RuleVersion = existing.RuleVersion,
-                    TaxCurrencyCode = existing.TaxCurrencyCode,
-                    DisplayCurrencyCode = existing.DisplayCurrencyCode,
-                    NetAmount = existing.NetAmount,
-                    TaxAmount = existing.TaxAmount,
-                    GrossAmount = existing.GrossAmount,
-                    BuyerTaxIdValidated = existing.BuyerTaxIdValidated,
-                    LegalNote = existing.ReverseChargeApplied ? "Reverse charge applied" : string.Empty,
-                    Lines = new List<TaxQuoteLineResultDto>()
-                };
-            }
+                SnapshotId = existing.Id,
+                OrderId = existing.OrderId,
+                TaxJurisdictionId = existing.TaxJurisdictionId,
+                TaxName = existing.AppliedTaxName,
+                TaxRate = existing.AppliedTaxRate,
+                ReverseChargeApplied = existing.ReverseChargeApplied,
+                RuleVersion = existing.RuleVersion,
+                TaxCurrencyCode = existing.TaxCurrencyCode,
+                DisplayCurrencyCode = existing.DisplayCurrencyCode,
+                    ExchangeRate = existing.ExchangeRate,
+                    ExchangeRateDate = existing.ExchangeRateDate,
+                    ExchangeRateSource = existing.ExchangeRateSource,
+                NetAmount = existing.NetAmount,
+                TaxAmount = existing.TaxAmount,
+                GrossAmount = existing.GrossAmount,
+                BuyerTaxIdValidated = existing.BuyerTaxIdValidated,
+                    TaxDeterminationEvidenceId = existing.TaxDeterminationEvidenceId,
+                LegalNote = existing.ReverseChargeApplied ? "Reverse charge applied" : string.Empty,
+                Lines = new List<TaxQuoteLineResultDto>()
+            };
         }
 
         return await CalculateCoreAsync(request, persistSnapshot: true);
@@ -80,6 +101,19 @@ public class TaxCalculationService : ITaxCalculationService
         if (request.Lines.Count == 0)
         {
             throw new InvalidOperationException("At least one line is required for tax calculation.");
+        }
+
+        if (persistSnapshot)
+        {
+            if (string.IsNullOrWhiteSpace(request.BillingCountryCode))
+            {
+                throw new InvalidOperationException("BillingCountryCode is required for tax finalization evidence.");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.IpAddress) || !IPAddress.TryParse(request.IpAddress, out _))
+            {
+                throw new InvalidOperationException("A valid IpAddress is required for tax finalization evidence.");
+            }
         }
 
         var buyerCountry = request.BuyerCountryCode;
@@ -112,41 +146,70 @@ public class TaxCalculationService : ITaxCalculationService
         buyerCountry = NormalizeCountryCode(buyerCountry);
         buyerState = NormalizeStateCode(buyerState);
 
-        var validatedTaxId = !string.IsNullOrWhiteSpace(buyerTaxId)
-            && (!request.ValidateBuyerTaxId || await _vatValidationService.ValidateAsync(buyerCountry, buyerTaxId));
+        var vatValidationResult = !string.IsNullOrWhiteSpace(buyerTaxId) && request.ValidateBuyerTaxId
+            ? await _vatValidationService.ValidateDetailedAsync(buyerCountry, buyerTaxId)
+            : new VatValidationResult
+            {
+                IsValid = !string.IsNullOrWhiteSpace(buyerTaxId),
+                ProviderName = "NotValidated",
+                RawResponse = "Validation bypassed"
+            };
+
+        var validatedTaxId = vatValidationResult.IsValid;
 
         var transactionDate = request.TransactionDate == default ? DateTime.UtcNow : request.TransactionDate;
-        var taxRule = await GetApplicableTaxRuleAsync(buyerCountry, buyerState, transactionDate);
-
-        var ruleTaxRate = taxRule?.TaxRate ?? 0m;
-        var reverseChargeApplied = taxRule?.ReverseCharge == true && buyerType == CustomerType.B2B && validatedTaxId;
-        var effectiveRate = reverseChargeApplied ? 0m : ruleTaxRate;
         var decimals = GetCurrencyDecimals(string.IsNullOrWhiteSpace(request.DisplayCurrencyCode)
             ? request.TaxCurrencyCode
             : request.DisplayCurrencyCode);
 
-        var lineResults = request.Lines.Select(line =>
+        var lineCalculations = new List<(TaxQuoteLineResultDto LineResult, TaxRule? Rule, bool ReverseChargeApplied)>();
+
+        foreach (var line in request.Lines)
         {
+            var taxRule = await GetApplicableTaxRuleAsync(
+                buyerCountry,
+                buyerState,
+                transactionDate,
+                NormalizeTaxCategory(line.TaxCategory));
+
+            var ruleTaxRate = taxRule?.TaxRate ?? 0m;
+            var reverseChargeApplied = taxRule?.ReverseCharge == true && buyerType == CustomerType.B2B && validatedTaxId;
+            var effectiveRate = reverseChargeApplied ? 0m : ruleTaxRate;
+
             var net = Math.Max(0m, line.NetAmount);
             var tax = Round(net * effectiveRate, decimals);
             var gross = Round(net + tax, decimals);
 
-            return new TaxQuoteLineResultDto
-            {
-                LineId = line.LineId,
-                Description = line.Description,
-                NetAmount = Round(net, decimals),
-                TaxRate = effectiveRate,
-                TaxAmount = tax,
-                GrossAmount = gross
-            };
-        }).ToList();
+            lineCalculations.Add((
+                new TaxQuoteLineResultDto
+                {
+                    LineId = line.LineId,
+                    Description = line.Description,
+                    NetAmount = Round(net, decimals),
+                    TaxRate = effectiveRate,
+                    TaxAmount = tax,
+                    GrossAmount = gross
+                },
+                taxRule,
+                reverseChargeApplied));
+        }
+
+        var lineResults = lineCalculations.Select(x => x.LineResult).ToList();
+        var reverseChargeAny = lineCalculations.Any(x => x.ReverseChargeApplied);
 
         var netAmount = Round(lineResults.Sum(x => x.NetAmount), decimals);
         var taxAmount = Round(lineResults.Sum(x => x.TaxAmount), decimals);
         var grossAmount = Round(netAmount + taxAmount, decimals);
 
-        var taxJurisdictionId = taxRule?.TaxJurisdictionId;
+        var taxNames = lineCalculations.Select(x => x.Rule?.TaxName ?? "VAT").Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        var taxRates = lineResults.Select(x => x.TaxRate).Distinct().ToList();
+
+        var taxName = taxNames.Count == 1 ? taxNames[0] : "Mixed";
+        var summaryTaxRate = taxRates.Count == 1 ? taxRates[0] : 0m;
+
+        var selectedRule = lineCalculations.Select(x => x.Rule).FirstOrDefault(x => x != null);
+
+        var taxJurisdictionId = selectedRule?.TaxJurisdictionId;
         if (!taxJurisdictionId.HasValue)
         {
             taxJurisdictionId = await _context.TaxJurisdictions
@@ -158,34 +221,74 @@ public class TaxCalculationService : ITaxCalculationService
                 .FirstOrDefaultAsync();
         }
 
-        var ruleVersion = taxRule == null
+        var ruleVersionParts = lineCalculations
+            .Where(x => x.Rule != null)
+            .Select(x => $"{x.Rule!.Id}:{x.Rule.UpdatedAt:yyyyMMddHHmmss}")
+            .Distinct()
+            .ToList();
+
+        var ruleVersion = ruleVersionParts.Count == 0
             ? "none"
-            : $"taxrule:{taxRule.Id}:{taxRule.UpdatedAt:yyyyMMddHHmmss}";
+            : $"taxrules:{string.Join("|", ruleVersionParts)}";
+
+        var (resolvedExchangeRate, resolvedExchangeRateDate, resolvedExchangeRateSource) = await ResolveExchangeRateAsync(
+            NormalizeCurrencyCode(request.TaxCurrencyCode, "EUR"),
+            NormalizeCurrencyCode(request.DisplayCurrencyCode, NormalizeCurrencyCode(request.TaxCurrencyCode, "EUR")),
+            transactionDate,
+            request,
+            persistSnapshot);
 
         var result = new TaxQuoteResultDto
         {
             OrderId = request.OrderId,
             TaxJurisdictionId = taxJurisdictionId,
-            TaxName = taxRule?.TaxName ?? "VAT",
-            TaxRate = effectiveRate,
-            ReverseChargeApplied = reverseChargeApplied,
+            TaxName = taxName,
+            TaxRate = summaryTaxRate,
+            ReverseChargeApplied = reverseChargeAny,
             RuleVersion = ruleVersion,
             TaxCurrencyCode = NormalizeCurrencyCode(request.TaxCurrencyCode, "EUR"),
             DisplayCurrencyCode = NormalizeCurrencyCode(request.DisplayCurrencyCode, NormalizeCurrencyCode(request.TaxCurrencyCode, "EUR")),
+            ExchangeRate = resolvedExchangeRate,
+            ExchangeRateDate = resolvedExchangeRateDate,
+            ExchangeRateSource = resolvedExchangeRateSource,
             NetAmount = netAmount,
             TaxAmount = taxAmount,
             GrossAmount = grossAmount,
             BuyerTaxIdValidated = validatedTaxId,
-            LegalNote = reverseChargeApplied ? "Reverse charge applied" : string.Empty,
+            LegalNote = reverseChargeAny ? "Reverse charge applied" : string.Empty,
             Lines = lineResults
         };
 
         if (persistSnapshot)
         {
+            var evidence = new TaxDeterminationEvidence
+            {
+                CustomerId = request.CustomerId,
+                OrderId = request.OrderId,
+                BuyerCountryCode = buyerCountry,
+                BuyerStateCode = buyerState,
+                BillingCountryCode = string.IsNullOrWhiteSpace(request.BillingCountryCode)
+                    ? buyerCountry
+                    : NormalizeCountryCode(request.BillingCountryCode),
+                IpAddress = request.IpAddress,
+                BuyerTaxId = buyerTaxId,
+                BuyerTaxIdValidated = validatedTaxId,
+                VatValidationProvider = vatValidationResult.ProviderName,
+                VatValidationRawResponse = vatValidationResult.RawResponse,
+                ExchangeRateSource = resolvedExchangeRateSource,
+                CapturedAt = DateTime.UtcNow,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            _context.TaxDeterminationEvidences.Add(evidence);
+            await _context.SaveChangesAsync();
+
             var snapshot = new OrderTaxSnapshot
             {
                 OrderId = request.OrderId!.Value,
                 TaxJurisdictionId = taxJurisdictionId,
+                TaxDeterminationEvidenceId = evidence.Id,
                 BuyerCountryCode = buyerCountry,
                 BuyerStateCode = buyerState,
                 BuyerType = buyerType,
@@ -193,14 +296,15 @@ public class TaxCalculationService : ITaxCalculationService
                 BuyerTaxIdValidated = validatedTaxId,
                 TaxCurrencyCode = result.TaxCurrencyCode,
                 DisplayCurrencyCode = result.DisplayCurrencyCode,
-                ExchangeRate = request.ExchangeRate,
-                ExchangeRateDate = request.ExchangeRateDate,
+                ExchangeRate = resolvedExchangeRate,
+                ExchangeRateDate = resolvedExchangeRateDate,
+                ExchangeRateSource = resolvedExchangeRateSource,
                 NetAmount = netAmount,
                 TaxAmount = taxAmount,
                 GrossAmount = grossAmount,
-                AppliedTaxRate = effectiveRate,
+                AppliedTaxRate = summaryTaxRate,
                 AppliedTaxName = result.TaxName,
-                ReverseChargeApplied = reverseChargeApplied,
+                ReverseChargeApplied = reverseChargeAny,
                 RuleVersion = ruleVersion,
                 IdempotencyKey = request.IdempotencyKey,
                 CalculationInputsJson = JsonSerializer.Serialize(new
@@ -217,7 +321,7 @@ public class TaxCalculationService : ITaxCalculationService
                     request.ExchangeRate,
                     request.ExchangeRateDate,
                     request.Lines,
-                    AppliedTaxRuleId = taxRule?.Id
+                    AppliedTaxRuleIds = lineCalculations.Where(x => x.Rule != null).Select(x => x.Rule!.Id).Distinct().ToList()
                 }),
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
@@ -226,12 +330,13 @@ public class TaxCalculationService : ITaxCalculationService
             _context.OrderTaxSnapshots.Add(snapshot);
             await _context.SaveChangesAsync();
             result.SnapshotId = snapshot.Id;
+            result.TaxDeterminationEvidenceId = evidence.Id;
         }
 
         return result;
     }
 
-    private async Task<TaxRule?> GetApplicableTaxRuleAsync(string countryCode, string? stateCode, DateTime when)
+    private async Task<TaxRule?> GetApplicableTaxRuleAsync(string countryCode, string? stateCode, DateTime when, string taxCategory)
     {
         return await _context.TaxRules
             .AsNoTracking()
@@ -239,6 +344,7 @@ public class TaxCalculationService : ITaxCalculationService
                         && x.IsActive
                         && x.CountryCode == countryCode
                         && (x.StateCode == stateCode || x.StateCode == null)
+                        && x.TaxCategory == taxCategory
                         && x.EffectiveFrom <= when
                         && (x.EffectiveUntil == null || x.EffectiveUntil >= when))
             .OrderByDescending(x => x.StateCode == stateCode)
@@ -261,6 +367,13 @@ public class TaxCalculationService : ITaxCalculationService
             : stateCode.Trim().ToUpperInvariant();
     }
 
+    private static string NormalizeTaxCategory(string? taxCategory)
+    {
+        return string.IsNullOrWhiteSpace(taxCategory)
+            ? "STANDARD"
+            : taxCategory.Trim().ToUpperInvariant();
+    }
+
     private static string NormalizeCurrencyCode(string? currencyCode, string fallback)
     {
         return string.IsNullOrWhiteSpace(currencyCode)
@@ -281,5 +394,46 @@ public class TaxCalculationService : ITaxCalculationService
     private static decimal Round(decimal value, int decimals)
     {
         return Math.Round(value, decimals, MidpointRounding.AwayFromZero);
+    }
+
+    private async Task<(decimal? rate, DateTime? rateDate, CurrencyRateSource? source)> ResolveExchangeRateAsync(
+        string taxCurrencyCode,
+        string displayCurrencyCode,
+        DateTime transactionDate,
+        TaxQuoteRequestDto request,
+        bool persistSnapshot)
+    {
+        if (taxCurrencyCode == displayCurrencyCode)
+        {
+            return (1m, transactionDate, CurrencyRateSource.Manual);
+        }
+
+        var trustedRate = await _context.CurrencyExchangeRates
+            .AsNoTracking()
+            .Where(x => x.IsActive
+                        && x.BaseCurrency == taxCurrencyCode
+                        && x.TargetCurrency == displayCurrencyCode
+                        && x.EffectiveDate <= transactionDate
+                        && (x.ExpiryDate == null || x.ExpiryDate >= transactionDate))
+            .OrderByDescending(x => x.EffectiveDate)
+            .FirstOrDefaultAsync();
+
+        if (trustedRate != null)
+        {
+            var effective = trustedRate.EffectiveRate > 0 ? trustedRate.EffectiveRate : trustedRate.Rate;
+            return (effective, trustedRate.EffectiveDate, trustedRate.Source);
+        }
+
+        if (request.RequireTrustedExchangeRate || persistSnapshot)
+        {
+            throw new InvalidOperationException($"No trusted exchange rate found for {taxCurrencyCode}/{displayCurrencyCode} at {transactionDate:O}.");
+        }
+
+        if (request.ExchangeRate.HasValue && request.ExchangeRate.Value > 0)
+        {
+            return (request.ExchangeRate.Value, request.ExchangeRateDate ?? transactionDate, CurrencyRateSource.Other);
+        }
+
+        return (null, null, null);
     }
 }

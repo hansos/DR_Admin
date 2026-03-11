@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ISPAdmin.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260311105706_AddOrderTaxSnapshotIdempotency")]
-    partial class AddOrderTaxSnapshotIdempotency
+    [Migration("20260311131425_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -2319,6 +2319,9 @@ namespace ISPAdmin.Migrations
                     b.Property<int?>("OrderId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("OrderTaxSnapshotId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTime?>("PaidAt")
                         .HasColumnType("TEXT");
 
@@ -2365,6 +2368,8 @@ namespace ISPAdmin.Migrations
                         .IsUnique();
 
                     b.HasIndex("OrderId");
+
+                    b.HasIndex("OrderTaxSnapshotId");
 
                     b.HasIndex("SelectedPaymentGatewayId");
 
@@ -2944,8 +2949,15 @@ namespace ISPAdmin.Migrations
                     b.Property<DateTime?>("ExchangeRateDate")
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("ExchangeRateSource")
+                        .HasColumnType("INTEGER");
+
                     b.Property<decimal>("GrossAmount")
                         .HasPrecision(18, 6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("IdempotencyKey")
+                        .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
                     b.Property<decimal>("NetAmount")
@@ -2972,6 +2984,9 @@ namespace ISPAdmin.Migrations
                         .HasMaxLength(3)
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("TaxDeterminationEvidenceId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int?>("TaxJurisdictionId")
                         .HasColumnType("INTEGER");
 
@@ -2986,7 +3001,12 @@ namespace ISPAdmin.Migrations
 
                     b.HasIndex("OrderId");
 
+                    b.HasIndex("TaxDeterminationEvidenceId");
+
                     b.HasIndex("TaxJurisdictionId");
+
+                    b.HasIndex("OrderId", "IdempotencyKey")
+                        .IsUnique();
 
                     b.ToTable("OrderTaxSnapshots");
                 });
@@ -5892,6 +5912,131 @@ namespace ISPAdmin.Migrations
                     b.ToTable("SystemSettings");
                 });
 
+            modelBuilder.Entity("ISPAdmin.Data.Entities.TaxCategory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CountryCode")
+                        .IsRequired()
+                        .HasMaxLength(2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("StateCode")
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CountryCode");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("CountryCode", "StateCode", "Code")
+                        .IsUnique();
+
+                    b.ToTable("TaxCategories");
+                });
+
+            modelBuilder.Entity("ISPAdmin.Data.Entities.TaxDeterminationEvidence", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("BillingCountryCode")
+                        .IsRequired()
+                        .HasMaxLength(2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("BuyerCountryCode")
+                        .IsRequired()
+                        .HasMaxLength(2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("BuyerStateCode")
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("BuyerTaxId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("BuyerTaxIdValidated")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CapturedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("CustomerId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("ExchangeRateSource")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("IpAddress")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("OrderId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("VatValidationProvider")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("VatValidationRawResponse")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BuyerCountryCode");
+
+                    b.HasIndex("CapturedAt");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("OrderId");
+
+                    b.ToTable("TaxDeterminationEvidences");
+                });
+
             modelBuilder.Entity("ISPAdmin.Data.Entities.TaxJurisdiction", b =>
                 {
                     b.Property<int>("Id")
@@ -6060,6 +6205,14 @@ namespace ISPAdmin.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("TaxCategory")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("TaxCategoryId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int?>("TaxJurisdictionId")
                         .HasColumnType("INTEGER");
 
@@ -6089,6 +6242,10 @@ namespace ISPAdmin.Migrations
                     b.HasIndex("EffectiveUntil");
 
                     b.HasIndex("IsActive");
+
+                    b.HasIndex("TaxCategory");
+
+                    b.HasIndex("TaxCategoryId");
 
                     b.HasIndex("TaxJurisdictionId");
 
@@ -7027,9 +7184,15 @@ namespace ISPAdmin.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("ISPAdmin.Data.Entities.Order", null)
+                    b.HasOne("ISPAdmin.Data.Entities.Order", "Order")
                         .WithMany("Invoices")
-                        .HasForeignKey("OrderId");
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("ISPAdmin.Data.Entities.OrderTaxSnapshot", "OrderTaxSnapshot")
+                        .WithMany()
+                        .HasForeignKey("OrderTaxSnapshotId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("ISPAdmin.Data.Entities.PaymentGateway", "SelectedPaymentGateway")
                         .WithMany()
@@ -7037,6 +7200,10 @@ namespace ISPAdmin.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Customer");
+
+                    b.Navigation("Order");
+
+                    b.Navigation("OrderTaxSnapshot");
 
                     b.Navigation("SelectedPaymentGateway");
                 });
@@ -7162,12 +7329,19 @@ namespace ISPAdmin.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("ISPAdmin.Data.Entities.TaxDeterminationEvidence", "TaxDeterminationEvidence")
+                        .WithMany()
+                        .HasForeignKey("TaxDeterminationEvidenceId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("ISPAdmin.Data.Entities.TaxJurisdiction", "TaxJurisdiction")
                         .WithMany()
                         .HasForeignKey("TaxJurisdictionId")
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Order");
+
+                    b.Navigation("TaxDeterminationEvidence");
 
                     b.Navigation("TaxJurisdiction");
                 });
@@ -7889,10 +8063,17 @@ namespace ISPAdmin.Migrations
 
             modelBuilder.Entity("ISPAdmin.Data.Entities.TaxRule", b =>
                 {
+                    b.HasOne("ISPAdmin.Data.Entities.TaxCategory", "TaxCategoryEntity")
+                        .WithMany("TaxRules")
+                        .HasForeignKey("TaxCategoryId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("ISPAdmin.Data.Entities.TaxJurisdiction", "TaxJurisdiction")
                         .WithMany("TaxRules")
                         .HasForeignKey("TaxJurisdictionId")
                         .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("TaxCategoryEntity");
 
                     b.Navigation("TaxJurisdiction");
                 });
@@ -8267,6 +8448,11 @@ namespace ISPAdmin.Migrations
             modelBuilder.Entity("ISPAdmin.Data.Entities.SupportTicket", b =>
                 {
                     b.Navigation("Messages");
+                });
+
+            modelBuilder.Entity("ISPAdmin.Data.Entities.TaxCategory", b =>
+                {
+                    b.Navigation("TaxRules");
                 });
 
             modelBuilder.Entity("ISPAdmin.Data.Entities.TaxJurisdiction", b =>

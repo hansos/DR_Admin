@@ -314,6 +314,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<Coupon> Coupons { get; set; }
     public DbSet<CouponUsage> CouponUsages { get; set; }
     public DbSet<TaxRule> TaxRules { get; set; }
+    public DbSet<TaxCategory> TaxCategories { get; set; }
+    public DbSet<TaxDeterminationEvidence> TaxDeterminationEvidences { get; set; }
     public DbSet<TaxJurisdiction> TaxJurisdictions { get; set; }
     public DbSet<TaxRegistration> TaxRegistrations { get; set; }
     public DbSet<OrderTaxSnapshot> OrderTaxSnapshots { get; set; }
@@ -776,6 +778,8 @@ public class ApplicationDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.InvoiceNumber).IsRequired().HasMaxLength(50);
             entity.HasIndex(e => e.InvoiceNumber).IsUnique();
+            entity.HasIndex(e => e.OrderId);
+            entity.HasIndex(e => e.OrderTaxSnapshotId);
             entity.Property(e => e.Status).IsRequired();
             entity.Property(e => e.CurrencyCode).HasMaxLength(3);
             entity.Property(e => e.TaxName).HasMaxLength(50);
@@ -786,6 +790,16 @@ public class ApplicationDbContext : DbContext
                 .WithMany(c => c.Invoices)
                 .HasForeignKey(e => e.CustomerId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Order)
+                .WithMany(o => o.Invoices)
+                .HasForeignKey(e => e.OrderId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(e => e.OrderTaxSnapshot)
+                .WithMany()
+                .HasForeignKey(e => e.OrderTaxSnapshotId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         // InvoiceLine configuration
@@ -956,6 +970,21 @@ public class ApplicationDbContext : DbContext
             
             entity.HasIndex(e => e.Type).IsUnique();
             entity.HasIndex(e => e.IsActive);
+        });
+
+        // TaxCategory configuration
+        modelBuilder.Entity<TaxCategory>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Code).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.CountryCode).IsRequired().HasMaxLength(2);
+            entity.Property(e => e.StateCode).HasMaxLength(20);
+            entity.Property(e => e.Description).HasMaxLength(1000);
+
+            entity.HasIndex(e => new { e.CountryCode, e.StateCode, e.Code }).IsUnique();
+            entity.HasIndex(e => e.IsActive);
+            entity.HasIndex(e => e.CountryCode);
         });
 
         // DnsRecord configuration
@@ -1698,6 +1727,24 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => e.NormalizedName);
         });
 
+        // TaxDeterminationEvidence configuration
+        modelBuilder.Entity<TaxDeterminationEvidence>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.BuyerCountryCode).IsRequired().HasMaxLength(2);
+            entity.Property(e => e.BuyerStateCode).HasMaxLength(20);
+            entity.Property(e => e.BillingCountryCode).IsRequired().HasMaxLength(2);
+            entity.Property(e => e.IpAddress).HasMaxLength(64);
+            entity.Property(e => e.BuyerTaxId).HasMaxLength(100);
+            entity.Property(e => e.VatValidationProvider).HasMaxLength(100);
+            entity.Property(e => e.VatValidationRawResponse).HasMaxLength(4000);
+
+            entity.HasIndex(e => e.CustomerId);
+            entity.HasIndex(e => e.OrderId);
+            entity.HasIndex(e => e.CapturedAt);
+            entity.HasIndex(e => e.BuyerCountryCode);
+        });
+
         // TaxJurisdiction configuration
         modelBuilder.Entity<TaxJurisdiction>(entity =>
         {
@@ -1742,6 +1789,7 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.CountryCode).IsRequired().HasMaxLength(2);
             entity.Property(e => e.StateCode).HasMaxLength(20);
             entity.Property(e => e.TaxName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.TaxCategory).IsRequired().HasMaxLength(50);
             entity.Property(e => e.TaxRate).HasPrecision(18, 6);
             entity.Property(e => e.TaxAuthority).IsRequired().HasMaxLength(200);
             entity.Property(e => e.TaxRegistrationNumber).HasMaxLength(100);
@@ -1753,10 +1801,17 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => e.EffectiveFrom);
             entity.HasIndex(e => e.EffectiveUntil);
             entity.HasIndex(e => e.TaxJurisdictionId);
+            entity.HasIndex(e => e.TaxCategoryId);
+            entity.HasIndex(e => e.TaxCategory);
 
             entity.HasOne(e => e.TaxJurisdiction)
                 .WithMany(j => j.TaxRules)
                 .HasForeignKey(e => e.TaxJurisdictionId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(e => e.TaxCategoryEntity)
+                .WithMany(c => c.TaxRules)
+                .HasForeignKey(e => e.TaxCategoryId)
                 .OnDelete(DeleteBehavior.SetNull);
         });
 
@@ -1784,6 +1839,7 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => e.BuyerCountryCode);
             entity.HasIndex(e => e.CreatedAt);
             entity.HasIndex(e => new { e.OrderId, e.IdempotencyKey }).IsUnique();
+            entity.HasIndex(e => e.TaxDeterminationEvidenceId);
 
             entity.HasOne(e => e.Order)
                 .WithMany(o => o.TaxSnapshots)
@@ -1793,6 +1849,11 @@ public class ApplicationDbContext : DbContext
             entity.HasOne(e => e.TaxJurisdiction)
                 .WithMany()
                 .HasForeignKey(e => e.TaxJurisdictionId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(e => e.TaxDeterminationEvidence)
+                .WithMany()
+                .HasForeignKey(e => e.TaxDeterminationEvidenceId)
                 .OnDelete(DeleteBehavior.SetNull);
         });
 

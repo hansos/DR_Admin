@@ -63,6 +63,16 @@ public class CreateOrderTaxSnapshotDto
     public DateTime? ExchangeRateDate { get; set; }
 
     /// <summary>
+    /// Gets or sets exchange rate source.
+    /// </summary>
+    public CurrencyRateSource? ExchangeRateSource { get; set; }
+
+    /// <summary>
+    /// Gets or sets optional tax determination evidence identifier.
+    /// </summary>
+    public int? TaxDeterminationEvidenceId { get; set; }
+
+    /// <summary>
     /// Gets or sets net amount.
     /// </summary>
     public decimal NetAmount { get; set; }
