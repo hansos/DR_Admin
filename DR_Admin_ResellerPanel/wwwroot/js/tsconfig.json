@@ -17,6 +17,7 @@
         "services.ts",
         "hosting-packages.ts",
         "customers.ts",
+        "customer-details.ts",
         "contact-persons.ts",
         "registry-apis.ts",
         "expiring-domains.ts",

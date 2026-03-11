@@ -131,6 +131,7 @@ let customerOptions: CustomerOption[] = [];
 let customerLookup = new Map<number, string>();
 
 let editingId: number | null = null;
+let editingCustomerId: number | null = null;
 let pendingDeleteId: number | null = null;
 
 let currentPage = 1;
@@ -207,11 +208,13 @@ function normalizeCustomerOption(item: any): CustomerOption {
 async function loadCustomersForSelect(): Promise<void> {
     const select = document.getElementById('contact-persons-customer') as HTMLSelectElement | null;
     const filterSelect = document.getElementById('contact-persons-filter-customer') as HTMLSelectElement | null;
-    if (!select || !filterSelect) {
+    if (!filterSelect) {
         return;
     }
 
-    select.innerHTML = '<option value="">Unassigned</option>';
+    if (select) {
+        select.innerHTML = '<option value="">Unassigned</option>';
+    }
     filterSelect.innerHTML = '<option value="">All customers</option>';
 
     const params = new URLSearchParams();
@@ -234,7 +237,9 @@ async function loadCustomersForSelect(): Promise<void> {
         `<option value="${option.id}">${esc(option.name)}</option>`
     )).join('');
 
-    select.insertAdjacentHTML('beforeend', optionsHtml);
+    if (select) {
+        select.insertAdjacentHTML('beforeend', optionsHtml);
+    }
     filterSelect.insertAdjacentHTML('beforeend', optionsHtml);
 }
 
@@ -340,6 +345,7 @@ function renderTable(): void {
             <td>${defaults}</td>
             <td class="text-end">
                 <div class="btn-group btn-group-sm">
+                    ${contact.customerId ? `<a class="btn btn-outline-secondary" href="/customers/details?customerId=${contact.customerId}" title="Goto customer"><i class="bi bi-eye"></i></a>` : ''}
                     ${adminUser ? `<button class="btn ${contact.isDomainGlobal ? 'btn-success' : 'btn-outline-warning'}" type="button" data-action="toggle-domain-global" data-id="${contact.id}" data-value="${contact.isDomainGlobal ? 'false' : 'true'}" title="${contact.isDomainGlobal ? 'Unset domain global' : 'Set domain global'}"><i class="bi ${contact.isDomainGlobal ? 'bi-globe2' : 'bi-globe'}"></i></button>` : ''}
                     <button class="btn btn-outline-primary" type="button" data-action="edit" data-id="${contact.id}" title="Edit"><i class="bi bi-pencil"></i></button>
                     <button class="btn btn-outline-danger" type="button" data-action="delete" data-id="${contact.id}" data-name="${esc(fullName)}" title="Delete"><i class="bi bi-trash"></i></button>
@@ -493,6 +499,7 @@ function bindPagingControlsActions(): void {
 
 function openCreate(): void {
     editingId = null;
+    editingCustomerId = null;
 
     const title = document.getElementById('contact-persons-modal-title');
     if (title) {
@@ -525,6 +532,7 @@ function openEdit(id: number): void {
     }
 
     editingId = id;
+    editingCustomerId = contact.customerId ?? null;
 
     const title = document.getElementById('contact-persons-modal-title');
     if (title) {
@@ -606,6 +614,11 @@ function getCheckboxValue(id: string): boolean {
 }
 
 function getCustomerIdValue(): number | null {
+    const customerSelect = document.getElementById('contact-persons-customer') as HTMLSelectElement | null;
+    if (!customerSelect) {
+        return editingCustomerId;
+    }
+
     const raw = getSelectValue('contact-persons-customer');
     if (!raw) {
         return null;

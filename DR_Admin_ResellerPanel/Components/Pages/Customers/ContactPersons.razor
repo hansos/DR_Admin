@@ -6,9 +6,6 @@
             <h2 class="h4 mb-1"><i class="bi bi-person-lines-fill"></i> Contact Persons</h2>
             <p class="text-muted mb-0">Manage customer contact persons.</p>
         </div>
-        <button class="btn btn-primary" id="contact-persons-create" type="button">
-            <i class="bi bi-plus-circle"></i> New Contact Person
-        </button>
     </div>
 
     <div id="contact-persons-alert-success" class="alert alert-success d-none" role="alert"></div>
@@ -93,19 +90,13 @@
                 <div class="alert alert-info d-none" id="contact-persons-edit-info"></div>
                 <form id="contact-persons-form" novalidate>
                     <div class="row g-3">
-                        <div class="col-12 col-md-4">
+                        <div class="col-12 col-md-6">
                             <label for="contact-persons-first-name" class="form-label">First Name <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="contact-persons-first-name" />
                         </div>
-                        <div class="col-12 col-md-4">
+                        <div class="col-12 col-md-6">
                             <label for="contact-persons-last-name" class="form-label">Last Name <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="contact-persons-last-name" />
-                        </div>
-                        <div class="col-12 col-md-4">
-                            <label for="contact-persons-customer" class="form-label">Customer</label>
-                            <select class="form-select" id="contact-persons-customer">
-                                <option value="">Unassigned</option>
-                            </select>
                         </div>
 
                         <div class="col-12 col-md-6">

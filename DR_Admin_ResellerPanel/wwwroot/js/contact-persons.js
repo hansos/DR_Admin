@@ -70,6 +70,7 @@
     let customerOptions = [];
     let customerLookup = new Map();
     let editingId = null;
+    let editingCustomerId = null;
     let pendingDeleteId = null;
     let currentPage = 1;
     let pageSize = 25;
@@ -139,10 +140,12 @@
     async function loadCustomersForSelect() {
         const select = document.getElementById('contact-persons-customer');
         const filterSelect = document.getElementById('contact-persons-filter-customer');
-        if (!select || !filterSelect) {
+        if (!filterSelect) {
             return;
         }
-        select.innerHTML = '<option value="">Unassigned</option>';
+        if (select) {
+            select.innerHTML = '<option value="">Unassigned</option>';
+        }
         filterSelect.innerHTML = '<option value="">All customers</option>';
         const params = new URLSearchParams();
         params.set('pageNumber', '1');
@@ -157,7 +160,9 @@
         customerOptions.sort((a, b) => a.name.localeCompare(b.name));
         customerLookup = new Map(customerOptions.map((option) => [option.id, option.name]));
         const optionsHtml = customerOptions.map((option) => (`<option value="${option.id}">${esc(option.name)}</option>`)).join('');
-        select.insertAdjacentHTML('beforeend', optionsHtml);
+        if (select) {
+            select.insertAdjacentHTML('beforeend', optionsHtml);
+        }
         filterSelect.insertAdjacentHTML('beforeend', optionsHtml);
     }
     function loadFiltersFromUi() {
@@ -246,6 +251,7 @@
             <td>${defaults}</td>
             <td class="text-end">
                 <div class="btn-group btn-group-sm">
+                    ${contact.customerId ? `<a class="btn btn-outline-secondary" href="/customers/details?customerId=${contact.customerId}" title="Goto customer"><i class="bi bi-eye"></i></a>` : ''}
                     ${adminUser ? `<button class="btn ${contact.isDomainGlobal ? 'btn-success' : 'btn-outline-warning'}" type="button" data-action="toggle-domain-global" data-id="${contact.id}" data-value="${contact.isDomainGlobal ? 'false' : 'true'}" title="${contact.isDomainGlobal ? 'Unset domain global' : 'Set domain global'}"><i class="bi ${contact.isDomainGlobal ? 'bi-globe2' : 'bi-globe'}"></i></button>` : ''}
                     <button class="btn btn-outline-primary" type="button" data-action="edit" data-id="${contact.id}" title="Edit"><i class="bi bi-pencil"></i></button>
                     <button class="btn btn-outline-danger" type="button" data-action="delete" data-id="${contact.id}" data-name="${esc(fullName)}" title="Delete"><i class="bi bi-trash"></i></button>
@@ -373,6 +379,7 @@
     }
     function openCreate() {
         editingId = null;
+        editingCustomerId = null;
         const title = document.getElementById('contact-persons-modal-title');
         if (title) {
             title.textContent = 'New Contact Person';
@@ -398,6 +405,7 @@
             return;
         }
         editingId = id;
+        editingCustomerId = contact.customerId ?? null;
         const title = document.getElementById('contact-persons-modal-title');
         if (title) {
             title.textContent = 'Edit Contact Person';
@@ -465,6 +473,10 @@
         return !!el?.checked;
     }
     function getCustomerIdValue() {
+        const customerSelect = document.getElementById('contact-persons-customer');
+        if (!customerSelect) {
+            return editingCustomerId;
+        }
         const raw = getSelectValue('contact-persons-customer');
         if (!raw) {
             return null;

@@ -180,12 +180,13 @@
             <td>${esc(reference)}</td>
             <td>${esc(customerLabel)}</td>
             <td>${esc(nameLabel)}</td>
-            <td><a href="mailto:${esc(customer.email)}">${esc(customer.email)}</a></td>
+            <td>${esc(customer.email)}</td>
             <td>${esc(customer.phone || '-')}</td>
             <td>${statusBadge}</td>
             <td>${selfRegisteredBadge}</td>
             <td class="text-end">
                 <div class="btn-group btn-group-sm">
+                    <a class="btn btn-outline-secondary" href="/customers/details?customerId=${customer.id}" title="Goto customer"><i class="bi bi-eye"></i></a>
                     <button class="btn btn-outline-primary" type="button" data-action="edit" data-id="${customer.id}" title="Edit"><i class="bi bi-pencil"></i></button>
                     <button class="btn btn-outline-danger" type="button" data-action="delete" data-id="${customer.id}" data-name="${esc(customer.name)}" title="Delete"><i class="bi bi-trash"></i></button>
                 </div>
@@ -282,7 +283,8 @@
             changePage(page);
         });
     }
-    function openCreate() {
+    async function openCreate() {
+        await ensureCustomerEditorOptionsLoaded();
         editingId = null;
         const title = document.getElementById('customers-modal-title');
         if (title) {
@@ -314,6 +316,10 @@
         if (!customer) {
             return;
         }
+        void applyCustomerToEditModal(customer, id);
+    }
+    async function applyCustomerToEditModal(customer, id) {
+        await ensureCustomerEditorOptionsLoaded();
         editingId = id;
         const title = document.getElementById('customers-modal-title');
         if (title) {
@@ -343,6 +349,32 @@
         setCheckboxValue('customers-is-self-registered', !!customer.isSelfRegistered);
         setCheckboxValue('customers-allow-currency-override', customer.allowCurrencyOverride !== false);
         showModal('customers-edit-modal');
+    }
+    async function openEditById(id) {
+        let customer = allCustomers.find((c) => c.id === id);
+        if (!customer) {
+            const response = await apiRequest(`${getApiBaseUrl()}/Customers/${id}`, { method: 'GET' });
+            if (!response.success || !response.data) {
+                showError(response.message || 'Failed to load customer');
+                return;
+            }
+            customer = normalizeItem(response.data);
+        }
+        await applyCustomerToEditModal(customer, id);
+    }
+    async function ensureCustomerEditorOptionsLoaded() {
+        if (!countryOptionsLoaded) {
+            await loadCountryOptions();
+        }
+        if (!statusOptionsLoaded) {
+            await loadStatusOptions();
+        }
+        if (!currencyOptionsLoaded) {
+            await loadCurrencyOptions();
+        }
+        if (!paymentMethodOptionsLoaded) {
+            await loadPaymentMethodOptions();
+        }
     }
     function setInputValue(id, value) {
         const el = document.getElementById(id);
@@ -444,7 +476,16 @@
         }
         modal.dataset.initialized = 'true';
         document.getElementById('customers-save')?.addEventListener('click', saveCustomer);
-        document.addEventListener('customers:open-create', () => openCreate());
+        document.addEventListener('customers:open-create', () => {
+            void openCreate();
+        });
+        document.addEventListener('customers:open-edit', (event) => {
+            const id = Number(event?.detail?.id ?? 0);
+            if (!Number.isFinite(id) || id <= 0) {
+                return;
+            }
+            void openEditById(id);
+        });
         void loadCountryOptions();
         void loadStatusOptions();
         void loadCurrencyOptions();

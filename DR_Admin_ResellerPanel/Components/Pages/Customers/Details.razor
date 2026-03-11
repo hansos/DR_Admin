@@ -1,0 +1,178 @@
+@page "/customers/details"
+
+<div id="customer-details-page" class="container-fluid">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+        <div>
+            <h2 class="h4 mb-1"><i class="bi bi-person-vcard"></i> Customer Details</h2>
+            <p class="text-muted mb-0">Customer profile and contact persons.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-secondary" href="/customers/list"><i class="bi bi-arrow-left"></i> Back to list</a>
+            <button class="btn btn-outline-primary" id="customer-details-customer-edit" type="button"><i class="bi bi-pencil"></i> Edit Customer</button>
+            <button class="btn btn-primary" id="customer-details-contact-create" type="button"><i class="bi bi-plus-circle"></i> Add Contact Person</button>
+        </div>
+    </div>
+
+<CustomerModal />
+
+    <div id="customer-details-alert-success" class="alert alert-success d-none" role="alert"></div>
+    <div id="customer-details-alert-error" class="alert alert-danger d-none" role="alert"></div>
+
+    <div id="customer-details-loading" class="text-center py-4">
+        <div class="spinner-border text-primary"></div>
+        <p class="mt-2 text-muted mb-0">Loading customer details...</p>
+    </div>
+
+    <div id="customer-details-content" class="d-none">
+        <div class="card shadow-sm mb-3">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Customer Information</h5>
+                <span class="badge bg-secondary" id="customer-details-status-badge">-</span>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-lg-6">
+                        <table class="table table-borderless mb-0">
+                            <tbody>
+                                <tr><th class="text-muted" scope="row">ID</th><td id="customer-details-id">-</td></tr>
+                                <tr><th class="text-muted" scope="row">Reference</th><td id="customer-details-reference">-</td></tr>
+                                <tr><th class="text-muted" scope="row">Customer Number</th><td id="customer-details-customer-number">-</td></tr>
+                                <tr><th class="text-muted" scope="row">Name</th><td id="customer-details-name">-</td></tr>
+                                <tr><th class="text-muted" scope="row">Customer Name</th><td id="customer-details-customer-name">-</td></tr>
+                                <tr><th class="text-muted" scope="row">Email</th><td id="customer-details-email">-</td></tr>
+                                <tr><th class="text-muted" scope="row">Billing Email</th><td id="customer-details-billing-email">-</td></tr>
+                                <tr><th class="text-muted" scope="row">Phone</th><td id="customer-details-phone">-</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="col-lg-6">
+                        <table class="table table-borderless mb-0">
+                            <tbody>
+                                <tr><th class="text-muted" scope="row">Country</th><td id="customer-details-country">-</td></tr>
+                                <tr><th class="text-muted" scope="row">Tax ID</th><td id="customer-details-tax-id">-</td></tr>
+                                <tr><th class="text-muted" scope="row">VAT Number</th><td id="customer-details-vat-number">-</td></tr>
+                                <tr><th class="text-muted" scope="row">Preferred Currency</th><td id="customer-details-currency">-</td></tr>
+                                <tr><th class="text-muted" scope="row">Preferred Payment Method</th><td id="customer-details-payment-method">-</td></tr>
+                                <tr><th class="text-muted" scope="row">Credit Limit</th><td id="customer-details-credit-limit">-</td></tr>
+                                <tr><th class="text-muted" scope="row">Balance</th><td id="customer-details-balance">-</td></tr>
+                                <tr><th class="text-muted" scope="row">Created</th><td id="customer-details-created">-</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <div class="small text-muted">Notes</div>
+                    <div id="customer-details-notes">-</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-people"></i> Contact Persons</h5>
+                <span id="customer-details-contact-count" class="badge bg-primary">0</span>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Position</th>
+                                <th>Primary</th>
+                                <th>Active</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customer-details-contacts-body">
+                            <tr><td colspan="7" class="text-center text-muted">No contact persons found.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="customer-details-contact-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="customer-details-contact-modal-title">Add Contact Person</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="customer-details-contact-form" novalidate>
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <label for="customer-details-contact-first-name" class="form-label">First name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="customer-details-contact-first-name" />
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label for="customer-details-contact-last-name" class="form-label">Last name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="customer-details-contact-last-name" />
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label for="customer-details-contact-email" class="form-label">Email <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control" id="customer-details-contact-email" />
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label for="customer-details-contact-phone" class="form-label">Phone <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="customer-details-contact-phone" />
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label for="customer-details-contact-position" class="form-label">Position</label>
+                            <input type="text" class="form-control" id="customer-details-contact-position" />
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label for="customer-details-contact-department" class="form-label">Department</label>
+                            <input type="text" class="form-control" id="customer-details-contact-department" />
+                        </div>
+                        <div class="col-12">
+                            <label for="customer-details-contact-notes" class="form-label">Notes</label>
+                            <textarea class="form-control" id="customer-details-contact-notes" rows="2"></textarea>
+                        </div>
+                        <div class="col-12">
+                            <div class="d-flex flex-wrap gap-4">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="customer-details-contact-primary" />
+                                    <label class="form-check-label" for="customer-details-contact-primary">Primary</label>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="customer-details-contact-active" checked />
+                                    <label class="form-check-label" for="customer-details-contact-active">Active</label>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="customer-details-contact-default-owner" />
+                                    <label class="form-check-label" for="customer-details-contact-default-owner">Default Owner</label>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="customer-details-contact-default-billing" />
+                                    <label class="form-check-label" for="customer-details-contact-default-billing">Default Billing</label>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="customer-details-contact-default-tech" />
+                                    <label class="form-check-label" for="customer-details-contact-default-tech">Default Tech</label>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="customer-details-contact-default-admin" />
+                                    <label class="form-check-label" for="customer-details-contact-default-admin">Default Admin</label>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="customer-details-contact-domain-global" />
+                                    <label class="form-check-label" for="customer-details-contact-domain-global">Domain Global</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="customer-details-contact-save"><i class="bi bi-check-lg"></i> Save</button>
+            </div>
+        </div>
+    </div>
+</div>
