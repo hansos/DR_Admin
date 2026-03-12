@@ -44,6 +44,7 @@
         "domains.ts",
         "tlds.ts",
         "dns-zones.ts",
+        "dns-nameservers.ts",
         "domain-details.ts",
         "operating-systems.ts",
         "nav-menu.ts",

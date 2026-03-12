@@ -1,0 +1,189 @@
+@page "/dns/nameservers"
+
+<div id="dns-nameservers-page" class="container-fluid">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+        <div>
+            <h2 class="h4 mb-1"><i class="bi bi-diagram-3"></i> Nameserver Management</h2>
+            <p class="text-muted mb-0">Manage registrar nameservers and self-managed private nameservers.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <button class="btn btn-success" id="dns-nameservers-add" type="button" disabled>
+                <i class="bi bi-plus-circle"></i> Add nameserver
+            </button>
+        </div>
+    </div>
+
+    <div id="dns-nameservers-alert-success" class="alert alert-success d-none" role="alert"></div>
+    <div id="dns-nameservers-alert-error" class="alert alert-danger d-none" role="alert"></div>
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-globe2"></i> Selected Domain</h5>
+            <span class="badge bg-primary" id="dns-nameservers-count">0 nameservers</span>
+        </div>
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-6">
+                    <div class="text-muted">Domain</div>
+                    <div class="fw-semibold" id="dns-nameservers-selected-domain">No domain selected</div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-muted">Domain ID</div>
+                    <div class="fw-semibold" id="dns-nameservers-selected-id">-</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-light">
+            <h5 class="mb-0"><i class="bi bi-list-ul"></i> Nameservers</h5>
+        </div>
+        <div class="card-body">
+            <div id="dns-nameservers-empty-selection" class="text-center py-5 text-muted">
+                <i class="bi bi-arrow-up-circle fs-1 d-block mb-2"></i>
+                Select a domain to manage nameservers.
+            </div>
+
+            <div id="dns-nameservers-loading" class="text-center py-5 d-none">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="mt-2">Loading nameservers...</p>
+            </div>
+
+            <div id="dns-nameservers-table-wrapper" class="d-none">
+                <div class="row g-2 mb-3">
+                    <div class="col-12 col-md-2">
+                        <label class="form-label mb-1" for="dns-nameservers-filter-domain">Domain</label>
+                        <input type="text" class="form-control" id="dns-nameservers-filter-domain" placeholder="Filter" />
+                    </div>
+                    <div class="col-12 col-md-2">
+                        <label class="form-label mb-1" for="dns-nameservers-filter-hostname">Hostname</label>
+                        <input type="text" class="form-control" id="dns-nameservers-filter-hostname" placeholder="Filter" />
+                    </div>
+                    <div class="col-12 col-md-2">
+                        <label class="form-label mb-1" for="dns-nameservers-filter-ip">IP Address</label>
+                        <input type="text" class="form-control" id="dns-nameservers-filter-ip" placeholder="Filter" />
+                    </div>
+                    <div class="col-12 col-md-2">
+                        <label class="form-label mb-1" for="dns-nameservers-mode-filter">Mode</label>
+                        <select class="form-select" id="dns-nameservers-mode-filter">
+                            <option value="all">All</option>
+                            <option value="registrar">Registrar managed</option>
+                            <option value="self">Self managed</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-2">
+                        <label class="form-label mb-1" for="dns-nameservers-filter-primary">Primary</label>
+                        <select class="form-select" id="dns-nameservers-filter-primary">
+                            <option value="all">All</option>
+                            <option value="yes">Yes</option>
+                            <option value="no">No</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-2">
+                        <label class="form-label mb-1" for="dns-nameservers-filter-sort">Sort</label>
+                        <input type="text" class="form-control" id="dns-nameservers-filter-sort" placeholder="Filter" />
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Domain</th>
+                                <th>Hostname</th>
+                                <th>IP Address</th>
+                                <th>Mode</th>
+                                <th>Primary</th>
+                                <th>Sort</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dns-nameservers-table-body"></tbody>
+                    </table>
+                </div>
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <label for="dns-nameservers-page-size" class="small text-muted mb-0">Page size</label>
+                        <select class="form-select form-select-sm" id="dns-nameservers-page-size" style="width:auto;">
+                            <option value="10">10</option>
+                            <option value="25" selected>25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                    <div class="text-muted small" id="dns-nameservers-pagination-info"></div>
+                    <nav aria-label="Nameserver pagination">
+                        <ul class="pagination pagination-sm mb-0" id="dns-nameservers-pagination-list"></ul>
+                    </nav>
+                </div>
+            </div>
+
+            <div id="dns-nameservers-empty" class="alert alert-info d-none" role="alert">
+                <i class="bi bi-info-circle"></i> No nameservers found for this domain.
+            </div>
+
+            <div class="mt-3 small text-muted">
+                <div><span class="badge bg-warning text-dark me-1">Registrar managed</span> Usually imported from provider APIs (for example AWS Route 53).</div>
+                <div class="mt-1"><span class="badge bg-info text-dark me-1">Self managed</span> Private nameservers with explicit IPs (for example cPanel/private servers).</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="dns-nameservers-edit-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="dns-nameservers-edit-title">Add Nameserver</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="dns-nameservers-form" novalidate>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label" for="dns-nameservers-hostname">Hostname</label>
+                            <input type="text" class="form-control" id="dns-nameservers-hostname" placeholder="ns1.example.com" />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="dns-nameservers-ip">IP Address (optional)</label>
+                            <input type="text" class="form-control" id="dns-nameservers-ip" placeholder="203.0.113.10" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="dns-nameservers-sort-order">Sort Order</label>
+                            <input type="number" class="form-control" id="dns-nameservers-sort-order" min="0" value="0" />
+                        </div>
+                        <div class="col-md-6 d-flex align-items-end">
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" id="dns-nameservers-primary" />
+                                <label class="form-check-label" for="dns-nameservers-primary">Primary nameserver</label>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="dns-nameservers-save"><i class="bi bi-check-lg"></i> Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="dns-nameservers-delete-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Nameserver</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Delete nameserver <strong id="dns-nameservers-delete-name"></strong>?</p>
+                <p class="text-danger"><i class="bi bi-exclamation-triangle-fill"></i> This cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="dns-nameservers-confirm-delete"><i class="bi bi-trash"></i> Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
