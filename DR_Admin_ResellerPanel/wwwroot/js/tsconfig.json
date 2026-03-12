@@ -25,6 +25,7 @@
         "payment-gateways.ts",
         "payment-instruments.ts",
         "currencies.ts",
+        "invoices.ts",
         "orders.ts",
         "tax-jurisdictions.ts",
         "tax-registrations.ts",
