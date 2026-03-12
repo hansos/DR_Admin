@@ -9,9 +9,9 @@
     let editingId = null;
     let pendingDeleteId = null;
     const domainLookup = new Map();
+    let serverOptions = [];
     let sortColumn = 'domain';
     let sortDirection = 'asc';
-    let filterDomain = '';
     let filterHostname = '';
     let filterIp = '';
     let filterMode = 'all';
@@ -79,11 +79,13 @@
         document.getElementById('dns-nameservers-save')?.addEventListener('click', saveNameServer);
         document.getElementById('dns-nameservers-confirm-delete')?.addEventListener('click', deleteNameServer);
         document.getElementById('dns-nameservers-mode-filter')?.addEventListener('change', applyModeFilter);
-        document.getElementById('dns-nameservers-filter-domain')?.addEventListener('input', applyModeFilter);
         document.getElementById('dns-nameservers-filter-hostname')?.addEventListener('input', applyModeFilter);
         document.getElementById('dns-nameservers-filter-ip')?.addEventListener('input', applyModeFilter);
         document.getElementById('dns-nameservers-filter-primary')?.addEventListener('change', applyModeFilter);
         document.getElementById('dns-nameservers-filter-sort')?.addEventListener('input', applyModeFilter);
+        document.getElementById('dns-nameservers-server-id')?.addEventListener('change', () => {
+            void applyServerDefaultIp();
+        });
         document.getElementById('dns-nameservers-page-size')?.addEventListener('change', () => {
             loadPageSizeFromUi();
             currentPage = 1;
@@ -91,6 +93,7 @@
         });
         bindTableActions();
         void ensureDomainLookupLoaded();
+        void ensureServerOptionsLoaded();
         void showAllDomainNameServers();
     }
     function bindTableActions() {
@@ -114,6 +117,10 @@
             }
             if (button.dataset.action === 'delete') {
                 openDelete(id);
+                return;
+            }
+            if (button.dataset.action === 'domains') {
+                openDomains(id);
             }
         });
         const tableHead = tableBody.closest('table')?.querySelector('thead');
@@ -212,7 +219,7 @@
         setText('dns-nameservers-selected-id', '-');
         const addButton = document.getElementById('dns-nameservers-add');
         if (addButton) {
-            addButton.disabled = true;
+            addButton.disabled = false;
         }
         await loadNameServers();
     }
@@ -249,15 +256,56 @@
             domainLookup.set(id, name);
         });
     }
+    async function ensureServerOptionsLoaded() {
+        if (serverOptions.length > 0) {
+            return;
+        }
+        const response = await apiRequest(`${getApiBaseUrl()}/Servers`, { method: 'GET' });
+        if (!response.success) {
+            return;
+        }
+        const raw = response.data;
+        const items = Array.isArray(raw)
+            ? raw
+            : Array.isArray(raw?.data)
+                ? raw.data
+                : Array.isArray(raw?.Data)
+                    ? raw.Data
+                    : [];
+        serverOptions = items
+            .map((item) => ({
+            id: Number(item.id ?? item.Id ?? 0),
+            name: String(item.name ?? item.Name ?? '').trim(),
+        }))
+            .filter((item) => Number.isFinite(item.id) && item.id > 0)
+            .sort((a, b) => a.name.localeCompare(b.name));
+    }
     function normalizeNameServer(item) {
+        const domainIdsRaw = item.domainIds ?? item.DomainIds;
+        const legacyDomainId = item.domainId ?? item.DomainId;
+        const normalizedDomainIds = Array.isArray(domainIdsRaw)
+            ? domainIdsRaw.map((id) => Number(id)).filter((id) => Number.isFinite(id) && id > 0)
+            : (Number.isFinite(Number(legacyDomainId)) && Number(legacyDomainId) > 0 ? [Number(legacyDomainId)] : []);
         return {
             id: item.id ?? item.Id ?? 0,
-            domainId: item.domainId ?? item.DomainId ?? 0,
+            domainIds: normalizedDomainIds,
+            serverId: item.serverId ?? item.ServerId ?? null,
             hostname: item.hostname ?? item.Hostname ?? '',
             ipAddress: item.ipAddress ?? item.IpAddress ?? null,
             isPrimary: item.isPrimary ?? item.IsPrimary ?? false,
             sortOrder: item.sortOrder ?? item.SortOrder ?? 0,
         };
+    }
+    function getPrimaryDomainId(ns) {
+        return ns.domainIds.length > 0 ? ns.domainIds[0] : 0;
+    }
+    function getDomainDisplayNames(ns) {
+        if (!ns.domainIds.length) {
+            return '-';
+        }
+        return ns.domainIds
+            .map((id) => domainLookup.get(id) || `Domain #${id}`)
+            .join(', ');
     }
     function detectMode(ns) {
         const hostname = (ns.hostname || '').toLowerCase();
@@ -278,10 +326,6 @@
         loadFiltersFromUi();
         currentPage = 1;
         filteredNameServers = allNameServers.filter((ns) => {
-            const domainName = (domainLookup.get(ns.domainId) || (selectedDomainName ?? `Domain #${ns.domainId}`)).toLowerCase();
-            if (filterDomain && !domainName.includes(filterDomain)) {
-                return false;
-            }
             if (filterHostname && !(ns.hostname || '').toLowerCase().includes(filterHostname)) {
                 return false;
             }
@@ -320,7 +364,6 @@
         }
     }
     function loadFiltersFromUi() {
-        filterDomain = (document.getElementById('dns-nameservers-filter-domain')?.value ?? '').trim().toLowerCase();
         filterHostname = (document.getElementById('dns-nameservers-filter-hostname')?.value ?? '').trim().toLowerCase();
         filterIp = (document.getElementById('dns-nameservers-filter-ip')?.value ?? '').trim().toLowerCase();
         filterMode = (document.getElementById('dns-nameservers-mode-filter')?.value ?? 'all').trim().toLowerCase() || 'all';
@@ -359,9 +402,16 @@
             const modeBadge = mode === 'self'
                 ? '<span class="badge bg-info text-dark">Self managed</span>'
                 : '<span class="badge bg-warning text-dark">Registrar managed</span>';
+            const domainCount = ns.domainIds.length;
+            const domainsButtonText = domainCount === 1 ? '1 domain' : `${domainCount} domains`;
             return `
             <tr>
-                <td>${esc(domainLookup.get(ns.domainId) || (selectedDomainName ?? `Domain #${ns.domainId}`))}</td>
+                <td>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-secondary">${domainCount}</span>
+                        <button class="btn btn-outline-secondary btn-sm" type="button" data-action="domains" data-id="${ns.id}"><i class="bi bi-list-ul"></i> ${domainsButtonText}</button>
+                    </div>
+                </td>
                 <td><code>${esc(ns.hostname || '-')}</code></td>
                 <td>${esc(ns.ipAddress || '-')}</td>
                 <td>${modeBadge}</td>
@@ -422,14 +472,14 @@
         });
     }
     function compareNameServers(a, b) {
-        const domainA = (domainLookup.get(a.domainId) || `Domain #${a.domainId}`).toLowerCase();
-        const domainB = (domainLookup.get(b.domainId) || `Domain #${b.domainId}`).toLowerCase();
+        const domainA = a.domainIds.length;
+        const domainB = b.domainIds.length;
         const modeA = detectMode(a);
         const modeB = detectMode(b);
         let result = 0;
         switch (sortColumn) {
             case 'domain':
-                result = domainA.localeCompare(domainB);
+                result = domainA - domainB;
                 break;
             case 'hostname':
                 result = (a.hostname || '').toLowerCase().localeCompare((b.hostname || '').toLowerCase());
@@ -458,7 +508,7 @@
             return;
         }
         const headers = [
-            { key: 'domain', label: 'Domain' },
+            { key: 'domain', label: 'Domains' },
             { key: 'hostname', label: 'Hostname' },
             { key: 'ipAddress', label: 'IP Address' },
             { key: 'mode', label: 'Mode' },
@@ -478,14 +528,33 @@
         <th class="text-end">Actions</th>
     `;
     }
-    function openCreate() {
-        if (!selectedDomainId) {
-            showError('Select a domain first.');
+    function openDomains(id) {
+        const ns = allNameServers.find((item) => item.id === id);
+        if (!ns) {
             return;
         }
+        const list = document.getElementById('dns-nameservers-domains-list');
+        if (!list) {
+            return;
+        }
+        setText('dns-nameservers-domains-hostname', ns.hostname || `Nameserver #${id}`);
+        if (!ns.domainIds.length) {
+            list.innerHTML = '<li class="list-group-item text-muted">No domains linked.</li>';
+        }
+        else {
+            list.innerHTML = ns.domainIds
+                .map((domainId) => `<li class="list-group-item">${esc(domainLookup.get(domainId) || `Domain #${domainId}`)}</li>`)
+                .join('');
+        }
+        showModal('dns-nameservers-domains-modal');
+    }
+    function openCreate() {
         editingId = null;
         const form = document.getElementById('dns-nameservers-form');
         form?.reset();
+        void ensureServerOptionsLoaded().then(() => {
+            renderServerSelect(null);
+        });
         setText('dns-nameservers-edit-title', 'Add Nameserver');
         setCheckboxValue('dns-nameservers-primary', false);
         setInputValue('dns-nameservers-sort-order', String(allNameServers.length));
@@ -498,6 +567,9 @@
         }
         editingId = id;
         setText('dns-nameservers-edit-title', 'Edit Nameserver');
+        void ensureServerOptionsLoaded().then(() => {
+            renderServerSelect(ns.serverId ?? null);
+        });
         setInputValue('dns-nameservers-hostname', ns.hostname);
         setInputValue('dns-nameservers-ip', ns.ipAddress || '');
         setInputValue('dns-nameservers-sort-order', String(ns.sortOrder));
@@ -505,17 +577,17 @@
         showModal('dns-nameservers-edit-modal');
     }
     async function saveNameServer() {
-        if (!selectedDomainId) {
-            showError('Select a domain first.');
-            return;
-        }
         const hostname = getInputValue('dns-nameservers-hostname');
         if (!hostname) {
             showError('Hostname is required.');
             return;
         }
+        const selectedServerId = getSelectedServerId();
+        const existingNameServer = editingId ? allNameServers.find((item) => item.id === editingId) : null;
+        const domainIds = existingNameServer?.domainIds ?? (selectedDomainId ? [selectedDomainId] : []);
         const payload = {
-            domainId: selectedDomainId,
+            domainIds,
+            serverId: selectedServerId,
             hostname,
             ipAddress: getInputValue('dns-nameservers-ip') || null,
             isPrimary: getCheckboxValue('dns-nameservers-primary'),
@@ -531,6 +603,47 @@
         hideModal('dns-nameservers-edit-modal');
         showSuccess(editingId ? 'Nameserver updated.' : 'Nameserver created.');
         await loadNameServers();
+    }
+    function renderServerSelect(selectedServerId) {
+        const select = document.getElementById('dns-nameservers-server-id');
+        if (!select) {
+            return;
+        }
+        const options = serverOptions
+            .map((item) => `<option value="${item.id}">${esc(item.name || `Server #${item.id}`)}</option>`)
+            .join('');
+        select.innerHTML = `<option value="">No server</option>${options}`;
+        if (selectedServerId && Number.isFinite(selectedServerId) && selectedServerId > 0) {
+            select.value = String(selectedServerId);
+        }
+    }
+    function getSelectedServerId() {
+        const select = document.getElementById('dns-nameservers-server-id');
+        const parsed = Number(select?.value ?? '0');
+        return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+    }
+    async function applyServerDefaultIp() {
+        const serverId = getSelectedServerId();
+        if (!serverId) {
+            return;
+        }
+        const response = await apiRequest(`${getApiBaseUrl()}/ServerIpAddresses/server/${serverId}`, { method: 'GET' });
+        if (!response.success) {
+            return;
+        }
+        const raw = response.data;
+        const items = Array.isArray(raw)
+            ? raw
+            : Array.isArray(raw?.data)
+                ? raw.data
+                : Array.isArray(raw?.Data)
+                    ? raw.Data
+                    : [];
+        const preferred = items.find((item) => (item.isPrimary ?? item.IsPrimary) === true) ?? items[0];
+        const ip = String(preferred?.ipAddress ?? preferred?.IpAddress ?? '').trim();
+        if (ip) {
+            setInputValue('dns-nameservers-ip', ip);
+        }
     }
     function openDelete(id) {
         const ns = allNameServers.find((item) => item.id === id);

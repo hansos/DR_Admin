@@ -202,6 +202,8 @@ namespace DomainRegistrationLib.Implementations
 
                 var response = await _route53Client.ListResourceRecordSetsAsync(request);
                 var records = new List<DnsRecordModel>();
+                var nameservers = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                var normalizedDomainName = domainName.Trim().TrimEnd('.').ToLowerInvariant();
 
                 int idCounter = 1;
                 foreach (var recordSet in response.ResourceRecordSets)
@@ -221,13 +223,21 @@ namespace DomainRegistrationLib.Implementations
                             TTL = ttl,
                             Priority = null
                         });
+
+                        if (type.Equals("NS", StringComparison.OrdinalIgnoreCase)
+                            && name.Equals(normalizedDomainName, StringComparison.OrdinalIgnoreCase)
+                            && !string.IsNullOrWhiteSpace(rr.Value))
+                        {
+                            nameservers.Add(rr.Value.Trim().TrimEnd('.').ToLowerInvariant());
+                        }
                     }
                 }
 
                 return new DnsZone
                 {
                     DomainName = domainName,
-                    Records = records
+                    Records = records,
+                    Nameservers = nameservers.OrderBy(x => x).ToList()
                 };
             }
             catch (Exception ex)

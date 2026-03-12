@@ -329,7 +329,7 @@ public class NameServerService : INameServerService
     {
         if (domainIds.Count == 0)
         {
-            throw new InvalidOperationException("At least one domain ID is required");
+            return;
         }
 
         var validCount = await _context.RegisteredDomains

@@ -560,6 +560,8 @@ public class DomainManagerService : IDomainManagerService
             _log.Information("Fetching DNS zone for {DomainName} from registrar", domain.Name);
             var zone = await registrarClient.GetDnsZoneAsync(domain.Name);
 
+            await SyncNameServersForDomainAsync(domain.Id, zone?.Nameservers ?? new List<string>());
+
             if (zone?.Records == null || zone.Records.Count == 0)
             {
                 _log.Information("No DNS records returned for {DomainName}", domain.Name);
@@ -695,6 +697,93 @@ public class DomainManagerService : IDomainManagerService
             result.ErrorMessage = ex.Message;
             return result;
         }
+    }
+
+    /// <summary>
+    /// Synchronizes NameServers and NameServerDomains for a specific domain using registrar DNS zone data.
+    /// </summary>
+    private async Task SyncNameServersForDomainAsync(int domainId, List<string> nameservers)
+    {
+        var normalizedNameservers = nameservers
+            .Where(ns => !string.IsNullOrWhiteSpace(ns))
+            .Select(ns => ns.Trim().TrimEnd('.').ToLowerInvariant())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        var existingLinks = await _context.NameServerDomains
+            .Include(nd => nd.NameServer)
+            .Where(nd => nd.DomainId == domainId)
+            .ToListAsync();
+
+        var existingByHostname = existingLinks
+            .GroupBy(nd => nd.NameServer.Hostname, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(g => g.Key, g => g.First().NameServer, StringComparer.OrdinalIgnoreCase);
+
+        for (var i = 0; i < normalizedNameservers.Count; i++)
+        {
+            var hostname = normalizedNameservers[i];
+
+            if (!existingByHostname.TryGetValue(hostname, out var nameServer))
+            {
+                nameServer = await _context.NameServers
+                    .FirstOrDefaultAsync(ns => ns.Hostname.ToLower() == hostname);
+
+                if (nameServer == null)
+                {
+                    nameServer = new NameServer
+                    {
+                        Hostname = hostname,
+                        IsPrimary = i == 0,
+                        SortOrder = i,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    };
+
+                    _context.NameServers.Add(nameServer);
+                    await _context.SaveChangesAsync();
+                }
+
+                var alreadyLinked = existingLinks.Any(nd => nd.NameServerId == nameServer.Id);
+                if (!alreadyLinked)
+                {
+                    _context.NameServerDomains.Add(new NameServerDomain
+                    {
+                        DomainId = domainId,
+                        NameServerId = nameServer.Id
+                    });
+                }
+            }
+
+            nameServer.IsPrimary = i == 0;
+            nameServer.SortOrder = i;
+            nameServer.UpdatedAt = DateTime.UtcNow;
+        }
+
+        var linksToRemove = existingLinks
+            .Where(nd => !normalizedNameservers.Contains(nd.NameServer.Hostname, StringComparer.OrdinalIgnoreCase))
+            .ToList();
+
+        if (linksToRemove.Count > 0)
+        {
+            _context.NameServerDomains.RemoveRange(linksToRemove);
+
+            var detachedNameServerIds = linksToRemove
+                .Select(x => x.NameServerId)
+                .Distinct()
+                .ToList();
+
+            var orphanNameServers = await _context.NameServers
+                .Where(ns => detachedNameServerIds.Contains(ns.Id))
+                .Where(ns => !ns.NameServerDomains.Any())
+                .ToListAsync();
+
+            if (orphanNameServers.Count > 0)
+            {
+                _context.NameServers.RemoveRange(orphanNameServers);
+            }
+        }
+
+        await _context.SaveChangesAsync();
     }
 
     /// <inheritdoc/>
