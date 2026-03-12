@@ -23,6 +23,113 @@ public class CustomersController : ControllerBase
     }
 
     /// <summary>
+    /// Retrieves internal notes for a customer.
+    /// </summary>
+    /// <param name="id">The customer identifier.</param>
+    /// <returns>List of internal notes.</returns>
+    /// <response code="200">Returns customer internal notes.</response>
+    /// <response code="401">If user is not authenticated.</response>
+    /// <response code="403">If user does not have required role.</response>
+    /// <response code="500">If an internal server error occurs.</response>
+    [HttpGet("{id}/internal-notes")]
+    [Authorize(Policy = "Customer.Read")]
+    [ProducesResponseType(typeof(IEnumerable<CustomerInternalNoteDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<IEnumerable<CustomerInternalNoteDto>>> GetInternalNotes(int id)
+    {
+        try
+        {
+            _log.Information("API: GetInternalNotes called for customer {CustomerId} by user {User}", id, User.Identity?.Name);
+            var notes = await _customerService.GetInternalNotesAsync(id);
+            return Ok(notes);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in GetInternalNotes for customer {CustomerId}", id);
+            return StatusCode(500, "An error occurred while retrieving internal customer notes");
+        }
+    }
+
+    /// <summary>
+    /// Creates a new internal note for a customer.
+    /// </summary>
+    /// <param name="id">The customer identifier.</param>
+    /// <param name="createDto">Internal note payload.</param>
+    /// <returns>The created internal note.</returns>
+    /// <response code="201">Returns created note.</response>
+    /// <response code="400">If request is invalid.</response>
+    /// <response code="401">If user is not authenticated.</response>
+    /// <response code="403">If user does not have required role.</response>
+    /// <response code="404">If customer is not found.</response>
+    /// <response code="500">If an internal server error occurs.</response>
+    [HttpPost("{id}/internal-notes")]
+    [Authorize(Policy = "Customer.Write")]
+    [ProducesResponseType(typeof(CustomerInternalNoteDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<CustomerInternalNoteDto>> CreateInternalNote(int id, [FromBody] CreateCustomerInternalNoteDto createDto)
+    {
+        try
+        {
+            if (createDto == null || string.IsNullOrWhiteSpace(createDto.Note))
+            {
+                return BadRequest("Note is required");
+            }
+
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var userId = int.TryParse(userIdClaim, out var parsedUserId) ? parsedUserId : (int?)null;
+
+            var created = await _customerService.CreateInternalNoteAsync(id, createDto, userId);
+            if (created == null)
+            {
+                return NotFound($"Customer with ID {id} not found");
+            }
+
+            return CreatedAtAction(nameof(GetInternalNotes), new { id }, created);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in CreateInternalNote for customer {CustomerId}", id);
+            return StatusCode(500, "An error occurred while creating internal customer note");
+        }
+    }
+
+    /// <summary>
+    /// Retrieves tracked changes for a customer.
+    /// </summary>
+    /// <param name="id">The customer identifier.</param>
+    /// <returns>List of tracked changes.</returns>
+    /// <response code="200">Returns customer change entries.</response>
+    /// <response code="401">If user is not authenticated.</response>
+    /// <response code="403">If user does not have required role.</response>
+    /// <response code="500">If an internal server error occurs.</response>
+    [HttpGet("{id}/changes")]
+    [Authorize(Policy = "Customer.Read")]
+    [ProducesResponseType(typeof(IEnumerable<CustomerChangeDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<IEnumerable<CustomerChangeDto>>> GetChanges(int id)
+    {
+        try
+        {
+            _log.Information("API: GetChanges called for customer {CustomerId} by user {User}", id, User.Identity?.Name);
+            var changes = await _customerService.GetChangesAsync(id);
+            return Ok(changes);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in GetChanges for customer {CustomerId}", id);
+            return StatusCode(500, "An error occurred while retrieving customer changes");
+        }
+    }
+
+    /// <summary>
     /// Retrieves all customers in the system
     /// </summary>
     /// <param name="pageNumber">Optional: Page number for pagination (default: returns all)</param>

@@ -80,4 +80,27 @@ public interface ICustomerService
     /// <param name="query">The search term</param>
     /// <returns>A list of matching customers</returns>
     Task<List<CustomerDto>> SearchCustomersAsync(string query);
+
+    /// <summary>
+    /// Retrieves internal notes for a customer.
+    /// </summary>
+    /// <param name="customerId">The customer identifier.</param>
+    /// <returns>List of internal notes.</returns>
+    Task<List<CustomerInternalNoteDto>> GetInternalNotesAsync(int customerId);
+
+    /// <summary>
+    /// Creates an internal note for a customer.
+    /// </summary>
+    /// <param name="customerId">The customer identifier.</param>
+    /// <param name="createDto">The note creation payload.</param>
+    /// <param name="createdByUserId">The user identifier creating the note.</param>
+    /// <returns>The created note.</returns>
+    Task<CustomerInternalNoteDto?> CreateInternalNoteAsync(int customerId, CreateCustomerInternalNoteDto createDto, int? createdByUserId);
+
+    /// <summary>
+    /// Retrieves tracked changes for a customer.
+    /// </summary>
+    /// <param name="customerId">The customer identifier.</param>
+    /// <returns>List of tracked changes.</returns>
+    Task<List<CustomerChangeDto>> GetChangesAsync(int customerId);
 }

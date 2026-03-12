@@ -2,6 +2,9 @@ using ISPAdmin.Data;
 using ISPAdmin.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using System.Diagnostics;
+using System.Net;
+using System.Net.Sockets;
 
 namespace ISPAdmin.Services;
 
@@ -61,6 +64,12 @@ public class DnsTroubleshootService : IDnsTroubleshootService
 
         AddRecordPresenceTest(report.Tests, activeRecords.Count, dnsZonesFixUrl);
         AddPendingSyncTest(report.Tests, activeRecords.Count(x => x.IsPendingSync), dnsZonesFixUrl);
+
+        await AddNameserverResolutionTestAsync(report.Tests, activeRecords, dnsZonesFixUrl);
+        await AddNameserverTcp53ReachabilityTestAsync(report.Tests, activeRecords, dnsZonesFixUrl);
+        AddAuthoritativeBaselineTest(report.Tests, activeRecords, domain.Name, dnsZonesFixUrl);
+        await AddDnsLatencyTimeoutTestAsync(report.Tests, activeRecords, dnsZonesFixUrl);
+
         AddDuplicateRecordTest(report.Tests, activeRecords, dnsZonesFixUrl);
         AddTtlRangeTest(report.Tests, activeRecords, dnsZonesFixUrl);
         AddMxPriorityTest(report.Tests, activeRecords, dnsZonesFixUrl);
@@ -97,6 +106,222 @@ public class DnsTroubleshootService : IDnsTroubleshootService
                 ? $"{pendingSyncCount} DNS record(s) are pending sync to DNS server."
                 : "All DNS records are synced.",
             Details = pendingSyncCount > 0 ? "Push pending records to DNS server from DNS Zones page." : null,
+            FixUrl = fixUrl
+        });
+    }
+
+    private static List<string> GetNameserverHosts(List<Data.Entities.DnsRecord> activeRecords)
+    {
+        return activeRecords
+            .Where(x => string.Equals(x.DnsRecordType?.Type, "NS", StringComparison.OrdinalIgnoreCase))
+            .Select(x => (x.Value ?? string.Empty).Trim().TrimEnd('.'))
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    private static async Task<Dictionary<string, List<IPAddress>>> ResolveNameserverHostsAsync(IEnumerable<string> nameserverHosts)
+    {
+        var map = new Dictionary<string, List<IPAddress>>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var host in nameserverHosts)
+        {
+            try
+            {
+                var addresses = await Dns.GetHostAddressesAsync(host);
+                map[host] = addresses.Distinct().ToList();
+            }
+            catch
+            {
+                map[host] = [];
+            }
+        }
+
+        return map;
+    }
+
+    private static async Task AddNameserverResolutionTestAsync(List<DnsTroubleshootTestResultDto> tests, List<Data.Entities.DnsRecord> activeRecords, string fixUrl)
+    {
+        var hosts = GetNameserverHosts(activeRecords);
+        if (hosts.Count == 0)
+        {
+            tests.Add(new DnsTroubleshootTestResultDto
+            {
+                Key = "nameserver-resolution",
+                Name = "Nameserver resolution",
+                Severity = "Error",
+                Passed = false,
+                Message = "No NS records found for this domain.",
+                Details = "Add at least one valid NS record.",
+                FixUrl = fixUrl
+            });
+            return;
+        }
+
+        var resolved = await ResolveNameserverHostsAsync(hosts);
+        var unresolved = resolved.Where(x => x.Value.Count == 0).Select(x => x.Key).ToList();
+
+        tests.Add(new DnsTroubleshootTestResultDto
+        {
+            Key = "nameserver-resolution",
+            Name = "Nameserver resolution",
+            Severity = unresolved.Count > 0 ? "Error" : "Info",
+            Passed = unresolved.Count == 0,
+            Message = unresolved.Count > 0
+                ? $"{unresolved.Count} NS host(s) could not be resolved."
+                : $"All {hosts.Count} NS host(s) resolved to IP addresses.",
+            Details = unresolved.Count > 0 ? string.Join(", ", unresolved.Take(8)) : null,
+            FixUrl = fixUrl
+        });
+    }
+
+    private static async Task<(bool success, long elapsedMs)> ProbeTcp53Async(IPAddress address, int timeoutMs)
+    {
+        var stopwatch = Stopwatch.StartNew();
+        using var client = new TcpClient();
+
+        try
+        {
+            var connectTask = client.ConnectAsync(address, 53);
+            var completed = await Task.WhenAny(connectTask, Task.Delay(timeoutMs));
+            stopwatch.Stop();
+
+            if (completed != connectTask || !client.Connected)
+            {
+                return (false, stopwatch.ElapsedMilliseconds);
+            }
+
+            return (true, stopwatch.ElapsedMilliseconds);
+        }
+        catch
+        {
+            stopwatch.Stop();
+            return (false, stopwatch.ElapsedMilliseconds);
+        }
+    }
+
+    private static async Task AddNameserverTcp53ReachabilityTestAsync(List<DnsTroubleshootTestResultDto> tests, List<Data.Entities.DnsRecord> activeRecords, string fixUrl)
+    {
+        var hosts = GetNameserverHosts(activeRecords);
+        var resolved = await ResolveNameserverHostsAsync(hosts);
+        var addresses = resolved.SelectMany(x => x.Value).Distinct().ToList();
+
+        if (addresses.Count == 0)
+        {
+            tests.Add(new DnsTroubleshootTestResultDto
+            {
+                Key = "nameserver-tcp53",
+                Name = "Nameserver TCP/53 reachability",
+                Severity = "Error",
+                Passed = false,
+                Message = "No resolvable nameserver IP addresses available for TCP/53 probe.",
+                Details = "Ensure NS records point to resolvable hosts.",
+                FixUrl = fixUrl
+            });
+            return;
+        }
+
+        var failed = new List<string>();
+        foreach (var address in addresses)
+        {
+            var probe = await ProbeTcp53Async(address, 1500);
+            if (!probe.success)
+            {
+                failed.Add(address.ToString());
+            }
+        }
+
+        tests.Add(new DnsTroubleshootTestResultDto
+        {
+            Key = "nameserver-tcp53",
+            Name = "Nameserver TCP/53 reachability",
+            Severity = failed.Count > 0 ? "Warning" : "Info",
+            Passed = failed.Count == 0,
+            Message = failed.Count > 0
+                ? $"{failed.Count} nameserver IP(s) did not accept TCP/53 within timeout."
+                : $"All {addresses.Count} nameserver IP(s) accepted TCP/53.",
+            Details = failed.Count > 0 ? string.Join(", ", failed.Take(8)) : null,
+            FixUrl = fixUrl
+        });
+    }
+
+    private static void AddAuthoritativeBaselineTest(List<DnsTroubleshootTestResultDto> tests, List<Data.Entities.DnsRecord> activeRecords, string domainName, string fixUrl)
+    {
+        var soaCount = activeRecords.Count(x => string.Equals(x.DnsRecordType?.Type, "SOA", StringComparison.OrdinalIgnoreCase));
+        var nsCount = activeRecords.Count(x => string.Equals(x.DnsRecordType?.Type, "NS", StringComparison.OrdinalIgnoreCase));
+
+        var apexAOrAaaaExists = activeRecords.Any(x =>
+            (string.Equals(x.DnsRecordType?.Type, "A", StringComparison.OrdinalIgnoreCase) ||
+             string.Equals(x.DnsRecordType?.Type, "AAAA", StringComparison.OrdinalIgnoreCase)) &&
+            (string.Equals((x.Name ?? string.Empty).Trim(), "@", StringComparison.OrdinalIgnoreCase) ||
+             string.Equals((x.Name ?? string.Empty).Trim(), domainName, StringComparison.OrdinalIgnoreCase)));
+
+        var hasIssue = soaCount != 1 || nsCount == 0;
+
+        tests.Add(new DnsTroubleshootTestResultDto
+        {
+            Key = "authoritative-baseline",
+            Name = "Authoritative baseline (SOA + NS)",
+            Severity = hasIssue ? "Error" : (!apexAOrAaaaExists ? "Warning" : "Info"),
+            Passed = !hasIssue,
+            Message = hasIssue
+                ? "Authoritative baseline failed: zone should have exactly one SOA and at least one NS record."
+                : "Authoritative baseline is present (SOA/NS).",
+            Details = $"SOA: {soaCount}, NS: {nsCount}" + (!apexAOrAaaaExists ? "; No apex A/AAAA record detected." : string.Empty),
+            FixUrl = fixUrl
+        });
+    }
+
+    private static async Task AddDnsLatencyTimeoutTestAsync(List<DnsTroubleshootTestResultDto> tests, List<Data.Entities.DnsRecord> activeRecords, string fixUrl)
+    {
+        var hosts = GetNameserverHosts(activeRecords);
+        var resolved = await ResolveNameserverHostsAsync(hosts);
+        var addresses = resolved.SelectMany(x => x.Value).Distinct().ToList();
+
+        if (addresses.Count == 0)
+        {
+            tests.Add(new DnsTroubleshootTestResultDto
+            {
+                Key = "dns-latency-timeout",
+                Name = "DNS latency and timeout",
+                Severity = "Warning",
+                Passed = false,
+                Message = "Could not measure DNS latency because no nameserver IPs were resolved.",
+                Details = "Check NS records and their host resolution.",
+                FixUrl = fixUrl
+            });
+            return;
+        }
+
+        var elapsedValues = new List<long>();
+        var timeoutCount = 0;
+
+        foreach (var address in addresses)
+        {
+            var probe = await ProbeTcp53Async(address, 1500);
+            elapsedValues.Add(probe.elapsedMs);
+            if (!probe.success)
+            {
+                timeoutCount += 1;
+            }
+        }
+
+        var averageMs = elapsedValues.Count > 0 ? elapsedValues.Average() : 0;
+        var slowCount = elapsedValues.Count(x => x > 500);
+
+        var severity = timeoutCount > 0 ? "Warning" : (slowCount > 0 ? "Warning" : "Info");
+        var passed = timeoutCount == 0;
+
+        tests.Add(new DnsTroubleshootTestResultDto
+        {
+            Key = "dns-latency-timeout",
+            Name = "DNS latency and timeout",
+            Severity = severity,
+            Passed = passed,
+            Message = timeoutCount > 0
+                ? $"{timeoutCount} nameserver probe(s) timed out. Avg response {averageMs:F0} ms."
+                : $"No timeouts detected. Avg response {averageMs:F0} ms.",
+            Details = slowCount > 0 ? $"{slowCount} probe(s) were slower than 500 ms." : null,
             FixUrl = fixUrl
         });
     }

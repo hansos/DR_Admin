@@ -478,6 +478,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<CustomerStatus> CustomerStatuses { get; set; }
     public DbSet<Currency> Currencies { get; set; }
     public DbSet<CustomerAddress> CustomerAddresses { get; set; }
+    public DbSet<CustomerInternalNote> CustomerInternalNotes { get; set; }
+    public DbSet<CustomerChange> CustomerChanges { get; set; }
     public DbSet<AddressType> AddressTypes { get; set; }
     public DbSet<ContactPerson> ContactPersons { get; set; }
     public DbSet<RegistrarMailAddress> RegistrarMailAddresses { get; set; }
@@ -640,6 +642,50 @@ public class ApplicationDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(e => e.CustomerStatusId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // CustomerInternalNote configuration
+        modelBuilder.Entity<CustomerInternalNote>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Note).IsRequired().HasMaxLength(4000);
+
+            entity.HasIndex(e => e.CustomerId);
+            entity.HasIndex(e => e.CreatedAt);
+
+            entity.HasOne(e => e.Customer)
+                .WithMany(c => c.InternalNotes)
+                .HasForeignKey(e => e.CustomerId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(e => e.CreatedByUserId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // CustomerChange configuration
+        modelBuilder.Entity<CustomerChange>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.ChangeType).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.FieldName).HasMaxLength(100);
+            entity.Property(e => e.OldValue).HasMaxLength(2000);
+            entity.Property(e => e.NewValue).HasMaxLength(2000);
+
+            entity.HasIndex(e => e.CustomerId);
+            entity.HasIndex(e => e.ChangedAt);
+            entity.HasIndex(e => e.ChangeType);
+
+            entity.HasOne(e => e.Customer)
+                .WithMany(c => c.Changes)
+                .HasForeignKey(e => e.CustomerId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.ChangedByUser)
+                .WithMany()
+                .HasForeignKey(e => e.ChangedByUserId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         // CustomerStatus configuration

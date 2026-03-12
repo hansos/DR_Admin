@@ -243,6 +243,19 @@ public class CustomerService : ICustomerService
             _context.Customers.Add(customer);
             await _context.SaveChangesAsync();
 
+            await AddCustomerChangeEntriesAsync(customer.Id, "Created", [new CustomerChange
+            {
+                CustomerId = customer.Id,
+                ChangeType = "Created",
+                FieldName = null,
+                OldValue = null,
+                NewValue = "Customer created",
+                ChangedAt = DateTime.UtcNow,
+                ChangedByUserId = null,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            }]);
+
             _log.Information("Successfully created customer with ID: {CustomerId}, ReferenceNumber: {ReferenceNumber}", customer.Id, customer.ReferenceNumber);
             return await MapToDtoAsync(customer);
         }
@@ -273,6 +286,26 @@ public class CustomerService : ICustomerService
                 return null;
             }
 
+            var before = new Dictionary<string, string?>
+            {
+                [nameof(customer.Name)] = customer.Name,
+                [nameof(customer.Email)] = customer.Email,
+                [nameof(customer.Phone)] = customer.Phone,
+                [nameof(customer.CountryCode)] = customer.CountryCode,
+                [nameof(customer.CustomerName)] = customer.CustomerName,
+                [nameof(customer.TaxId)] = customer.TaxId,
+                [nameof(customer.VatNumber)] = customer.VatNumber,
+                [nameof(customer.Status)] = customer.Status,
+                [nameof(customer.CreditLimit)] = customer.CreditLimit.ToString(),
+                [nameof(customer.BillingEmail)] = customer.BillingEmail,
+                [nameof(customer.PreferredPaymentMethod)] = customer.PreferredPaymentMethod,
+                [nameof(customer.PreferredCurrency)] = customer.PreferredCurrency,
+                [nameof(customer.AllowCurrencyOverride)] = customer.AllowCurrencyOverride.ToString(),
+                [nameof(customer.IsCompany)] = customer.IsCompany.ToString(),
+                [nameof(customer.IsSelfRegistered)] = customer.IsSelfRegistered.ToString(),
+                [nameof(customer.IsActive)] = customer.IsActive.ToString()
+            };
+
             customer.Name = updateDto.Name;
             customer.Email = updateDto.Email;
             customer.Phone = updateDto.Phone;
@@ -296,6 +329,44 @@ public class CustomerService : ICustomerService
             customer.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
+
+            var after = new Dictionary<string, string?>
+            {
+                [nameof(customer.Name)] = customer.Name,
+                [nameof(customer.Email)] = customer.Email,
+                [nameof(customer.Phone)] = customer.Phone,
+                [nameof(customer.CountryCode)] = customer.CountryCode,
+                [nameof(customer.CustomerName)] = customer.CustomerName,
+                [nameof(customer.TaxId)] = customer.TaxId,
+                [nameof(customer.VatNumber)] = customer.VatNumber,
+                [nameof(customer.Status)] = customer.Status,
+                [nameof(customer.CreditLimit)] = customer.CreditLimit.ToString(),
+                [nameof(customer.BillingEmail)] = customer.BillingEmail,
+                [nameof(customer.PreferredPaymentMethod)] = customer.PreferredPaymentMethod,
+                [nameof(customer.PreferredCurrency)] = customer.PreferredCurrency,
+                [nameof(customer.AllowCurrencyOverride)] = customer.AllowCurrencyOverride.ToString(),
+                [nameof(customer.IsCompany)] = customer.IsCompany.ToString(),
+                [nameof(customer.IsSelfRegistered)] = customer.IsSelfRegistered.ToString(),
+                [nameof(customer.IsActive)] = customer.IsActive.ToString()
+            };
+
+            var changes = before
+                .Where(pair => pair.Value != after[pair.Key])
+                .Select(pair => new CustomerChange
+                {
+                    CustomerId = customer.Id,
+                    ChangeType = "Updated",
+                    FieldName = pair.Key,
+                    OldValue = pair.Value,
+                    NewValue = after[pair.Key],
+                    ChangedAt = DateTime.UtcNow,
+                    ChangedByUserId = null,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                })
+                .ToList();
+
+            await AddCustomerChangeEntriesAsync(customer.Id, "Updated", changes);
 
             _log.Information("Successfully updated customer with ID: {CustomerId}", id);
             return await MapToDtoAsync(customer);
@@ -325,6 +396,21 @@ public class CustomerService : ICustomerService
                 _log.Warning("Customer with ID {CustomerId} not found for deletion", id);
                 return false;
             }
+
+            _context.CustomerChanges.Add(new CustomerChange
+            {
+                CustomerId = customer.Id,
+                ChangeType = "Deleted",
+                FieldName = null,
+                OldValue = customer.Name,
+                NewValue = null,
+                ChangedAt = DateTime.UtcNow,
+                ChangedByUserId = null,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            });
+
+            await _context.SaveChangesAsync();
 
             _context.Customers.Remove(customer);
             await _context.SaveChangesAsync();
@@ -631,5 +717,99 @@ public class CustomerService : ICustomerService
 
         _log.Information("Assigned CustomerNumber {CustomerNumber} to customer {CustomerId} on first sale", nextNumber, customerId);
         return nextNumber;
+    }
+
+    /// <inheritdoc />
+    public async Task<List<CustomerInternalNoteDto>> GetInternalNotesAsync(int customerId)
+    {
+        return await _context.CustomerInternalNotes
+            .AsNoTracking()
+            .Where(x => x.CustomerId == customerId)
+            .OrderByDescending(x => x.CreatedAt)
+            .Select(x => new CustomerInternalNoteDto
+            {
+                Id = x.Id,
+                CustomerId = x.CustomerId,
+                Note = x.Note,
+                CreatedByUserId = x.CreatedByUserId,
+                CreatedAt = x.CreatedAt,
+                UpdatedAt = x.UpdatedAt
+            })
+            .ToListAsync();
+    }
+
+    /// <inheritdoc />
+    public async Task<CustomerInternalNoteDto?> CreateInternalNoteAsync(int customerId, CreateCustomerInternalNoteDto createDto, int? createdByUserId)
+    {
+        var customerExists = await _context.Customers
+            .AsNoTracking()
+            .AnyAsync(x => x.Id == customerId);
+
+        if (!customerExists)
+        {
+            return null;
+        }
+
+        var noteText = createDto.Note?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(noteText))
+        {
+            return null;
+        }
+
+        var note = new CustomerInternalNote
+        {
+            CustomerId = customerId,
+            Note = noteText,
+            CreatedByUserId = createdByUserId,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        _context.CustomerInternalNotes.Add(note);
+        await _context.SaveChangesAsync();
+
+        return new CustomerInternalNoteDto
+        {
+            Id = note.Id,
+            CustomerId = note.CustomerId,
+            Note = note.Note,
+            CreatedByUserId = note.CreatedByUserId,
+            CreatedAt = note.CreatedAt,
+            UpdatedAt = note.UpdatedAt
+        };
+    }
+
+    /// <inheritdoc />
+    public async Task<List<CustomerChangeDto>> GetChangesAsync(int customerId)
+    {
+        return await _context.CustomerChanges
+            .AsNoTracking()
+            .Where(x => x.CustomerId == customerId)
+            .OrderByDescending(x => x.ChangedAt)
+            .ThenByDescending(x => x.Id)
+            .Select(x => new CustomerChangeDto
+            {
+                Id = x.Id,
+                CustomerId = x.CustomerId,
+                ChangeType = x.ChangeType,
+                FieldName = x.FieldName,
+                OldValue = x.OldValue,
+                NewValue = x.NewValue,
+                ChangedAt = x.ChangedAt,
+                ChangedByUserId = x.ChangedByUserId
+            })
+            .ToListAsync();
+    }
+
+    private async Task AddCustomerChangeEntriesAsync(int customerId, string changeType, List<CustomerChange> changes)
+    {
+        if (changes.Count == 0)
+        {
+            return;
+        }
+
+        _context.CustomerChanges.AddRange(changes);
+        await _context.SaveChangesAsync();
+        _log.Information("Added {Count} customer {ChangeType} change entries for customer ID {CustomerId}", changes.Count, changeType, customerId);
     }
 }

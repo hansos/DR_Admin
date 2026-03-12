@@ -43,9 +43,30 @@
         isDomainGlobal: boolean;
     }
 
+    interface CustomerInternalNote {
+        id: number;
+        customerId: number;
+        note: string;
+        createdByUserId?: number | null;
+        createdAt?: string;
+    }
+
+    interface CustomerChange {
+        id: number;
+        customerId: number;
+        changeType: string;
+        fieldName?: string | null;
+        oldValue?: string | null;
+        newValue?: string | null;
+        changedByUserId?: number | null;
+        changedAt?: string;
+    }
+
     let currentCustomerId = 0;
     let editingContactId: number | null = null;
     let allContacts: ContactPerson[] = [];
+    let allInternalNotes: CustomerInternalNote[] = [];
+    let allChanges: CustomerChange[] = [];
 
     const getApiBaseUrl = (): string => ((window as Window & { AppSettings?: AppSettings }).AppSettings?.apiBaseUrl ?? '');
 
@@ -181,6 +202,25 @@
         isDomainGlobal: Boolean(item.isDomainGlobal ?? item.IsDomainGlobal ?? false),
     });
 
+    const normalizeInternalNote = (item: any): CustomerInternalNote => ({
+        id: Number(item.id ?? item.Id ?? 0),
+        customerId: Number(item.customerId ?? item.CustomerId ?? 0),
+        note: String(item.note ?? item.Note ?? ''),
+        createdByUserId: item.createdByUserId ?? item.CreatedByUserId ?? null,
+        createdAt: String(item.createdAt ?? item.CreatedAt ?? ''),
+    });
+
+    const normalizeCustomerChange = (item: any): CustomerChange => ({
+        id: Number(item.id ?? item.Id ?? 0),
+        customerId: Number(item.customerId ?? item.CustomerId ?? 0),
+        changeType: String(item.changeType ?? item.ChangeType ?? ''),
+        fieldName: String(item.fieldName ?? item.FieldName ?? '') || null,
+        oldValue: String(item.oldValue ?? item.OldValue ?? '') || null,
+        newValue: String(item.newValue ?? item.NewValue ?? '') || null,
+        changedByUserId: item.changedByUserId ?? item.ChangedByUserId ?? null,
+        changedAt: String(item.changedAt ?? item.ChangedAt ?? ''),
+    });
+
     const renderContacts = (): void => {
         const body = document.getElementById('customer-details-contacts-body');
         if (!body) return;
@@ -254,6 +294,102 @@
 
         allContacts = (Array.isArray(response.data) ? response.data : []).map(normalizeContact);
         renderContacts();
+    };
+
+    const renderInternalNotes = (): void => {
+        const body = document.getElementById('customer-details-internal-notes-body');
+        if (!body) {
+            return;
+        }
+
+        setText('customer-details-notes-count', String(allInternalNotes.length));
+
+        if (!allInternalNotes.length) {
+            body.innerHTML = '<tr><td colspan="3" class="text-center text-muted">No internal notes found.</td></tr>';
+            return;
+        }
+
+        body.innerHTML = allInternalNotes.map((note) => `
+            <tr>
+                <td>${esc(formatDate(note.createdAt))}</td>
+                <td>${esc(note.note || '-')}</td>
+                <td>${note.createdByUserId ? `#${note.createdByUserId}` : '-'}</td>
+            </tr>
+        `).join('');
+    };
+
+    const renderChanges = (): void => {
+        const body = document.getElementById('customer-details-changes-body');
+        if (!body) {
+            return;
+        }
+
+        setText('customer-details-changes-count', String(allChanges.length));
+
+        if (!allChanges.length) {
+            body.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No customer changes found.</td></tr>';
+            return;
+        }
+
+        body.innerHTML = allChanges.map((change) => `
+            <tr>
+                <td>${esc(formatDate(change.changedAt))}</td>
+                <td>${esc(change.changeType || '-')}</td>
+                <td>${esc(change.fieldName || '-')}</td>
+                <td>${esc(change.oldValue || '-')}</td>
+                <td>${esc(change.newValue || '-')}</td>
+                <td>${change.changedByUserId ? `#${change.changedByUserId}` : '-'}</td>
+            </tr>
+        `).join('');
+    };
+
+    const loadInternalNotes = async (): Promise<void> => {
+        const response = await apiRequest<any[]>(`${getApiBaseUrl()}/Customers/${currentCustomerId}/internal-notes`, { method: 'GET' });
+        if (!response.success) {
+            showError(response.message || 'Failed to load internal notes.');
+            return;
+        }
+
+        allInternalNotes = (Array.isArray(response.data) ? response.data : []).map(normalizeInternalNote);
+        renderInternalNotes();
+    };
+
+    const loadChanges = async (): Promise<void> => {
+        const response = await apiRequest<any[]>(`${getApiBaseUrl()}/Customers/${currentCustomerId}/changes`, { method: 'GET' });
+        if (!response.success) {
+            showError(response.message || 'Failed to load customer changes.');
+            return;
+        }
+
+        allChanges = (Array.isArray(response.data) ? response.data : []).map(normalizeCustomerChange);
+        renderChanges();
+    };
+
+    const addInternalNote = async (): Promise<void> => {
+        const noteInput = document.getElementById('customer-details-internal-note-input') as HTMLTextAreaElement | null;
+        const note = (noteInput?.value ?? '').trim();
+
+        if (!note) {
+            showError('Internal note cannot be empty.');
+            return;
+        }
+
+        const response = await apiRequest(`${getApiBaseUrl()}/Customers/${currentCustomerId}/internal-notes`, {
+            method: 'POST',
+            body: JSON.stringify({ note }),
+        });
+
+        if (!response.success) {
+            showError(response.message || 'Failed to add internal note.');
+            return;
+        }
+
+        if (noteInput) {
+            noteInput.value = '';
+        }
+
+        showSuccess('Internal note added.');
+        await loadInternalNotes();
     };
 
     const saveContact = async (): Promise<void> => {
@@ -344,6 +480,7 @@
         }
 
         document.getElementById('customer-details-contact-create')?.addEventListener('click', openContactCreate);
+        document.getElementById('customer-details-add-note')?.addEventListener('click', () => { void addInternalNote(); });
         document.getElementById('customer-details-customer-edit')?.addEventListener('click', () => {
             document.dispatchEvent(new CustomEvent('customers:open-edit', { detail: { id: currentCustomerId } }));
         });
@@ -360,6 +497,8 @@
 
         await loadCustomer();
         await loadContacts();
+        await loadInternalNotes();
+        await loadChanges();
 
         document.getElementById('customer-details-loading')?.classList.add('d-none');
         document.getElementById('customer-details-content')?.classList.remove('d-none');
