@@ -18,6 +18,11 @@ public class RegisteredDomainHistoryDto
     public int RegisteredDomainId { get; set; }
 
     /// <summary>
+    /// Gets or sets the related registered domain name.
+    /// </summary>
+    public string? DomainName { get; set; }
+
+    /// <summary>
     /// Gets or sets the history action type.
     /// </summary>
     public RegisteredDomainHistoryActionType ActionType { get; set; }

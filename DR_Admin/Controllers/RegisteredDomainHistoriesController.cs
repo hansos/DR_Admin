@@ -27,6 +27,46 @@ public class RegisteredDomainHistoriesController : ControllerBase
     }
 
     /// <summary>
+    /// Retrieves DNS change history entries across all domains with optional filters.
+    /// </summary>
+    /// <param name="domainName">Optional domain name search filter.</param>
+    /// <param name="occurredFrom">Optional lower bound for occurrence timestamp (UTC).</param>
+    /// <param name="occurredTo">Optional upper bound for occurrence timestamp (UTC).</param>
+    /// <returns>DNS change history entries.</returns>
+    /// <response code="200">Returns DNS change history entries.</response>
+    /// <response code="401">If user is not authenticated.</response>
+    /// <response code="403">If user doesn't have required permission.</response>
+    /// <response code="500">If an internal server error occurs.</response>
+    [HttpGet("dns-changes")]
+    [Authorize(Policy = "DomainHistory.Read")]
+    [ProducesResponseType(typeof(IEnumerable<RegisteredDomainHistoryDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<IEnumerable<RegisteredDomainHistoryDto>>> GetDnsChanges(
+        [FromQuery] string? domainName = null,
+        [FromQuery] DateTime? occurredFrom = null,
+        [FromQuery] DateTime? occurredTo = null)
+    {
+        try
+        {
+            _log.Information("API: Get DNS change history called by user {User} with DomainName={DomainName}, OccurredFrom={OccurredFrom}, OccurredTo={OccurredTo}",
+                User.Identity?.Name,
+                domainName,
+                occurredFrom,
+                occurredTo);
+
+            var items = await _registeredDomainHistoryService.GetDnsChangesAsync(domainName, occurredFrom, occurredTo);
+            return Ok(items);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error getting DNS change history");
+            return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while retrieving DNS change history entries");
+        }
+    }
+
+    /// <summary>
     /// Retrieves all history entries for a specific registered domain.
     /// </summary>
     /// <param name="registeredDomainId">The registered domain identifier.</param>

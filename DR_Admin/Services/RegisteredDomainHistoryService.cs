@@ -1,4 +1,5 @@
 using ISPAdmin.Data;
+using ISPAdmin.Data.Enums;
 using ISPAdmin.DTOs;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -40,6 +41,7 @@ public class RegisteredDomainHistoryService : IRegisteredDomainHistoryService
             {
                 Id = x.Id,
                 RegisteredDomainId = x.RegisteredDomainId,
+                DomainName = x.RegisteredDomain.Name,
                 ActionType = x.ActionType,
                 Action = x.Action,
                 Details = x.Details,
@@ -72,6 +74,7 @@ public class RegisteredDomainHistoryService : IRegisteredDomainHistoryService
             {
                 Id = x.Id,
                 RegisteredDomainId = x.RegisteredDomainId,
+                DomainName = x.RegisteredDomain.Name,
                 ActionType = x.ActionType,
                 Action = x.Action,
                 Details = x.Details,
@@ -85,5 +88,63 @@ public class RegisteredDomainHistoryService : IRegisteredDomainHistoryService
             .FirstOrDefaultAsync();
 
         return item;
+    }
+
+    /// <summary>
+    /// Retrieves DNS change history entries across all domains with optional filters.
+    /// </summary>
+    /// <param name="domainName">Optional domain name search filter.</param>
+    /// <param name="occurredFrom">Optional lower bound for occurrence timestamp (UTC).</param>
+    /// <param name="occurredTo">Optional upper bound for occurrence timestamp (UTC).</param>
+    /// <returns>A collection of DNS change history entries ordered by occurrence date descending.</returns>
+    public async Task<IEnumerable<RegisteredDomainHistoryDto>> GetDnsChangesAsync(string? domainName, DateTime? occurredFrom, DateTime? occurredTo)
+    {
+        _log.Information("Fetching DNS change history with filters DomainName={DomainName}, OccurredFrom={OccurredFrom}, OccurredTo={OccurredTo}",
+            domainName,
+            occurredFrom,
+            occurredTo);
+
+        var query = _context.RegisteredDomainHistories
+            .AsNoTracking()
+            .Where(x => x.ActionType == RegisteredDomainHistoryActionType.DnsChange);
+
+        if (!string.IsNullOrWhiteSpace(domainName))
+        {
+            var normalizedDomainName = domainName.Trim().ToLower();
+            query = query.Where(x => x.RegisteredDomain.Name.ToLower().Contains(normalizedDomainName));
+        }
+
+        if (occurredFrom.HasValue)
+        {
+            query = query.Where(x => x.OccurredAt >= occurredFrom.Value);
+        }
+
+        if (occurredTo.HasValue)
+        {
+            query = query.Where(x => x.OccurredAt <= occurredTo.Value);
+        }
+
+        var items = await query
+            .OrderByDescending(x => x.OccurredAt)
+            .ThenByDescending(x => x.Id)
+            .Select(x => new RegisteredDomainHistoryDto
+            {
+                Id = x.Id,
+                RegisteredDomainId = x.RegisteredDomainId,
+                DomainName = x.RegisteredDomain.Name,
+                ActionType = x.ActionType,
+                Action = x.Action,
+                Details = x.Details,
+                OccurredAt = x.OccurredAt,
+                SourceEntityType = x.SourceEntityType,
+                SourceEntityId = x.SourceEntityId,
+                PerformedByUserId = x.PerformedByUserId,
+                CreatedAt = x.CreatedAt,
+                UpdatedAt = x.UpdatedAt
+            })
+            .ToListAsync();
+
+        _log.Information("Fetched {Count} DNS change history entries", items.Count);
+        return items;
     }
 }
