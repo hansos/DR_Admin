@@ -180,6 +180,9 @@ public static class AuthorizationPoliciesConfiguration
         options.AddPolicy("Domain.CheckAvailability", policy =>
             policy.RequireRole(ADMIN, SALES, CUSTOMER));
 
+        options.AddPolicy("DomainHistory.Read", policy =>
+            policy.RequireRole(ADMIN, SUPPORT, SALES));
+
         // DomainContact policies
         options.AddPolicy("DomainContact.Delete", policy =>
             policy.RequireRole(ADMIN, SUPPORT));

@@ -132,8 +132,7 @@
         setLoading(false);
         document.getElementById('domain-details-empty')?.classList.add('d-none');
         hideModal('domain-details-select-modal');
-        await loadDnsRecords();
-        await loadDomainContacts();
+        await Promise.all([loadDnsRecords(), loadDomainContacts(), loadDomainHistory()]);
     }
     function setLoading(isLoading) {
         const loading = document.getElementById('domain-details-loading');
@@ -200,8 +199,7 @@
         currentDomain = normalizeDomain(response.data);
         updateDomainFields(currentDomain);
         setLoading(false);
-        await loadDnsRecords();
-        await loadDomainContacts();
+        await Promise.all([loadDnsRecords(), loadDomainContacts(), loadDomainHistory()]);
     }
     function updateDomainFields(domain) {
         currentDomainName = domain.name || null;
@@ -367,6 +365,96 @@
         };
         return typeMap[contactType] ?? { icon: 'bi-person', color: 'text-secondary' };
     }
+    async function loadDomainHistory() {
+        const loading = document.getElementById('domain-history-loading');
+        const content = document.getElementById('domain-history-content');
+        const empty = document.getElementById('domain-history-empty');
+        loading?.classList.remove('d-none');
+        content?.classList.add('d-none');
+        empty?.classList.add('d-none');
+        if (!domainId) {
+            loading?.classList.add('d-none');
+            empty?.classList.remove('d-none');
+            setHistoryCount(0);
+            return;
+        }
+        const response = await apiRequest(`${getApiBaseUrl()}/RegisteredDomainHistories/domain/${domainId}`, { method: 'GET' });
+        if (!response.success) {
+            loading?.classList.add('d-none');
+            empty?.classList.remove('d-none');
+            setHistoryCount(0);
+            return;
+        }
+        const raw = response.data;
+        const historyEntries = Array.isArray(raw)
+            ? raw
+            : Array.isArray(raw?.data)
+                ? raw.data
+                : Array.isArray(raw?.Data)
+                    ? raw.Data
+                    : [];
+        renderDomainHistory(historyEntries);
+    }
+    function renderDomainHistory(entries) {
+        const loading = document.getElementById('domain-history-loading');
+        const content = document.getElementById('domain-history-content');
+        const empty = document.getElementById('domain-history-empty');
+        const tableBody = document.getElementById('domain-history-table-body');
+        loading?.classList.add('d-none');
+        if (!tableBody) {
+            return;
+        }
+        if (!entries.length) {
+            tableBody.innerHTML = '';
+            empty?.classList.remove('d-none');
+            content?.classList.add('d-none');
+            setHistoryCount(0);
+            return;
+        }
+        tableBody.innerHTML = entries.map((entry) => {
+            const actionTypeValue = typeof entry.actionType === 'number'
+                ? entry.actionType
+                : Number(entry.actionType ?? 0);
+            const actionTypeLabel = getHistoryActionTypeLabel(actionTypeValue);
+            const source = entry.sourceEntityType
+                ? `${entry.sourceEntityType}${entry.sourceEntityId ? ` #${entry.sourceEntityId}` : ''}`
+                : '-';
+            return `
+        <tr>
+            <td>${entry.occurredAt ? esc(formatDate(entry.occurredAt)) : '-'}</td>
+            <td><span class="badge ${getHistoryActionTypeBadgeClass(actionTypeValue)}">${esc(actionTypeLabel)}</span></td>
+            <td>${esc(entry.action || '-')}</td>
+            <td>${esc(entry.details || '-')}</td>
+            <td>${esc(source)}</td>
+            <td>${entry.performedByUserId ? `#${entry.performedByUserId}` : '-'}</td>
+        </tr>`;
+        }).join('');
+        setHistoryCount(entries.length);
+        empty?.classList.add('d-none');
+        content?.classList.remove('d-none');
+    }
+    function getHistoryActionTypeLabel(actionType) {
+        const labels = {
+            0: 'Registration',
+            1: 'Payment',
+            2: 'Message Sent',
+            3: 'DNS Change',
+            4: 'Contact Person Change',
+            5: 'Domain Change',
+        };
+        return labels[actionType] ?? 'Other';
+    }
+    function getHistoryActionTypeBadgeClass(actionType) {
+        const classes = {
+            0: 'bg-primary',
+            1: 'bg-success',
+            2: 'bg-info text-dark',
+            3: 'bg-warning text-dark',
+            4: 'bg-secondary',
+            5: 'bg-dark',
+        };
+        return classes[actionType] ?? 'bg-light text-dark';
+    }
     function renderDnsRecords(records) {
         const loading = document.getElementById('domain-dns-records-loading');
         const content = document.getElementById('domain-dns-records-content');
@@ -403,6 +491,12 @@
         const badge = document.getElementById('domain-dns-record-count');
         if (badge) {
             badge.textContent = `${count} record${count === 1 ? '' : 's'}`;
+        }
+    }
+    function setHistoryCount(count) {
+        const badge = document.getElementById('domain-history-count');
+        if (badge) {
+            badge.textContent = `${count} entr${count === 1 ? 'y' : 'ies'}`;
         }
     }
     function openDnsSyncModal() {

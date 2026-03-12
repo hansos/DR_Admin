@@ -14,6 +14,7 @@ public class ApplicationDbContext : DbContext
 
     public override int SaveChanges()
     {
+        TrackRegisteredDomainHistories();
         AssignCustomerReferenceNumbers();
         UpdateTimestamps();
         return base.SaveChanges();
@@ -21,9 +22,245 @@ public class ApplicationDbContext : DbContext
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
+        TrackRegisteredDomainHistories();
         await AssignCustomerReferenceNumbersAsync(cancellationToken);
         UpdateTimestamps();
         return await base.SaveChangesAsync(cancellationToken);
+    }
+
+    private void TrackRegisteredDomainHistories()
+    {
+        var entries = ChangeTracker.Entries()
+            .Where(e => e.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
+            .Where(e => e.Entity is not RegisteredDomainHistory)
+            .ToList();
+
+        if (entries.Count == 0)
+            return;
+
+        var occurredAt = DateTime.UtcNow;
+        var histories = new List<RegisteredDomainHistory>();
+
+        foreach (var entry in entries)
+        {
+            switch (entry.Entity)
+            {
+                case RegisteredDomain domain:
+                    AddRegisteredDomainLifecycleHistory(entry, domain, histories, occurredAt);
+                    break;
+
+                case DnsRecord dnsRecord:
+                    histories.Add(CreateHistoryEntry(
+                        dnsRecord.DomainId,
+                        RegisteredDomainHistoryActionType.DnsChange,
+                        $"DNS record {entry.State}",
+                        $"Record '{dnsRecord.Name}' with value '{dnsRecord.Value}' was {entry.State.ToString().ToLowerInvariant()}.",
+                        nameof(DnsRecord),
+                        dnsRecord.Id,
+                        occurredAt));
+                    break;
+
+                case DomainContact domainContact:
+                    histories.Add(CreateHistoryEntry(
+                        domainContact.DomainId,
+                        RegisteredDomainHistoryActionType.ContactPersonChange,
+                        $"Domain contact {entry.State}",
+                        $"Contact '{domainContact.FirstName} {domainContact.LastName}' ({domainContact.RoleType}) was {entry.State.ToString().ToLowerInvariant()}.",
+                        nameof(DomainContact),
+                        domainContact.Id,
+                        occurredAt));
+                    break;
+
+                case DomainContactAssignment domainContactAssignment:
+                    histories.Add(CreateHistoryEntry(
+                        domainContactAssignment.RegisteredDomainId,
+                        RegisteredDomainHistoryActionType.ContactPersonChange,
+                        $"Domain contact assignment {entry.State}",
+                        $"Contact assignment for role '{domainContactAssignment.RoleType}' was {entry.State.ToString().ToLowerInvariant()}.",
+                        nameof(DomainContactAssignment),
+                        domainContactAssignment.Id,
+                        occurredAt));
+                    break;
+
+                case PaymentTransaction paymentTransaction:
+                    foreach (var domainId in ResolveRegisteredDomainIdsByInvoiceId(paymentTransaction.InvoiceId))
+                    {
+                        histories.Add(CreateHistoryEntry(
+                            domainId,
+                            RegisteredDomainHistoryActionType.Payment,
+                            $"Payment transaction {entry.State}",
+                            $"Payment transaction '{paymentTransaction.TransactionId}' ({paymentTransaction.Status}) was {entry.State.ToString().ToLowerInvariant()} with amount {paymentTransaction.Amount} {paymentTransaction.CurrencyCode}.",
+                            nameof(PaymentTransaction),
+                            paymentTransaction.Id,
+                            occurredAt));
+                    }
+                    break;
+
+                case SentEmail sentEmail:
+                    AddSentEmailHistory(entry, sentEmail, histories, occurredAt);
+                    break;
+            }
+        }
+
+        if (histories.Count > 0)
+        {
+            RegisteredDomainHistories.AddRange(histories);
+        }
+    }
+
+    private void AddRegisteredDomainLifecycleHistory(
+        Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry entry,
+        RegisteredDomain domain,
+        List<RegisteredDomainHistory> histories,
+        DateTime occurredAt)
+    {
+        if (entry.State == EntityState.Added)
+        {
+            histories.Add(new RegisteredDomainHistory
+            {
+                RegisteredDomain = domain,
+                ActionType = RegisteredDomainHistoryActionType.Registration,
+                Action = "Domain registered",
+                Details = $"Domain '{domain.Name}' was registered in the system.",
+                SourceEntityType = nameof(RegisteredDomain),
+                SourceEntityId = domain.Id > 0 ? domain.Id : null,
+                OccurredAt = occurredAt,
+                CreatedAt = occurredAt,
+                UpdatedAt = occurredAt
+            });
+
+            return;
+        }
+
+        if (entry.State == EntityState.Modified || entry.State == EntityState.Deleted)
+        {
+            histories.Add(CreateHistoryEntry(
+                domain.Id,
+                RegisteredDomainHistoryActionType.DomainChange,
+                $"Domain {entry.State}",
+                $"Domain '{domain.Name}' was {entry.State.ToString().ToLowerInvariant()}.",
+                nameof(RegisteredDomain),
+                domain.Id,
+                occurredAt));
+        }
+    }
+
+    private void AddSentEmailHistory(
+        Microsoft.EntityFrameworkCore.ChangeTracking.EntityEntry entry,
+        SentEmail sentEmail,
+        List<RegisteredDomainHistory> histories,
+        DateTime occurredAt)
+    {
+        var wasSent = sentEmail.Status == EmailStatus.Sent;
+        var statusProperty = entry.Property(nameof(SentEmail.Status));
+        var changedToSent = entry.State == EntityState.Modified
+            && statusProperty.IsModified
+            && string.Equals(sentEmail.Status, EmailStatus.Sent, StringComparison.OrdinalIgnoreCase);
+
+        if (entry.State == EntityState.Added && !wasSent)
+            return;
+
+        if (entry.State == EntityState.Modified && !changedToSent)
+            return;
+
+        foreach (var domainId in ResolveRegisteredDomainIdsForRelatedEntity(sentEmail.RelatedEntityType, sentEmail.RelatedEntityId))
+        {
+            histories.Add(CreateHistoryEntry(
+                domainId,
+                RegisteredDomainHistoryActionType.MessageSent,
+                "Message sent",
+                $"Email '{sentEmail.Subject}' was sent to '{sentEmail.To}'.",
+                nameof(SentEmail),
+                sentEmail.Id,
+                occurredAt));
+        }
+    }
+
+    private RegisteredDomainHistory CreateHistoryEntry(
+        int registeredDomainId,
+        RegisteredDomainHistoryActionType actionType,
+        string action,
+        string details,
+        string sourceEntityType,
+        int? sourceEntityId,
+        DateTime occurredAt)
+    {
+        return new RegisteredDomainHistory
+        {
+            RegisteredDomainId = registeredDomainId,
+            ActionType = actionType,
+            Action = action,
+            Details = details,
+            SourceEntityType = sourceEntityType,
+            SourceEntityId = sourceEntityId,
+            OccurredAt = occurredAt,
+            CreatedAt = occurredAt,
+            UpdatedAt = occurredAt
+        };
+    }
+
+    private List<int> ResolveRegisteredDomainIdsForRelatedEntity(string? relatedEntityType, int? relatedEntityId)
+    {
+        if (string.IsNullOrWhiteSpace(relatedEntityType) || !relatedEntityId.HasValue)
+            return [];
+
+        return relatedEntityType.Trim().ToLowerInvariant() switch
+        {
+            "registereddomain" => [relatedEntityId.Value],
+            "dnsrecord" => DnsRecords
+                .AsNoTracking()
+                .Where(x => x.Id == relatedEntityId.Value)
+                .Select(x => x.DomainId)
+                .Distinct()
+                .ToList(),
+            "domaincontact" => DomainContacts
+                .AsNoTracking()
+                .Where(x => x.Id == relatedEntityId.Value)
+                .Select(x => x.DomainId)
+                .Distinct()
+                .ToList(),
+            "domaincontactassignment" => DomainContactAssignments
+                .AsNoTracking()
+                .Where(x => x.Id == relatedEntityId.Value)
+                .Select(x => x.RegisteredDomainId)
+                .Distinct()
+                .ToList(),
+            "invoice" => ResolveRegisteredDomainIdsByInvoiceId(relatedEntityId.Value),
+            "order" => ResolveRegisteredDomainIdsByOrderId(relatedEntityId.Value),
+            _ => []
+        };
+    }
+
+    private List<int> ResolveRegisteredDomainIdsByInvoiceId(int invoiceId)
+    {
+        var orderId = Invoices
+            .AsNoTracking()
+            .Where(i => i.Id == invoiceId)
+            .Select(i => i.OrderId)
+            .FirstOrDefault();
+
+        if (!orderId.HasValue)
+            return [];
+
+        return ResolveRegisteredDomainIdsByOrderId(orderId.Value);
+    }
+
+    private List<int> ResolveRegisteredDomainIdsByOrderId(int orderId)
+    {
+        var fromHostingPackages = SoldHostingPackages
+            .AsNoTracking()
+            .Where(x => x.OrderId == orderId && x.RegisteredDomainId.HasValue)
+            .Select(x => x.RegisteredDomainId!.Value);
+
+        var fromOptionalServices = SoldOptionalServices
+            .AsNoTracking()
+            .Where(x => x.OrderId == orderId && x.RegisteredDomainId.HasValue)
+            .Select(x => x.RegisteredDomainId!.Value);
+
+        return fromHostingPackages
+            .Concat(fromOptionalServices)
+            .Distinct()
+            .ToList();
     }
 
     private void AssignCustomerReferenceNumbers()
@@ -263,6 +500,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<PaymentInstrument> PaymentInstruments { get; set; }
     public DbSet<PaymentInstrumentGateway> PaymentInstrumentGateways { get; set; }
     public DbSet<RegisteredDomain> RegisteredDomains { get; set; }
+    public DbSet<RegisteredDomainHistory> RegisteredDomainHistories { get; set; }
     public DbSet<DomainContact> DomainContacts { get; set; }
     public DbSet<DomainContactAssignment> DomainContactAssignments { get; set; }
     public DbSet<Tld> Tlds { get; set; }
@@ -896,6 +1134,32 @@ public class ApplicationDbContext : DbContext
                 .WithMany(rt => rt.RegisteredDomains)
                 .HasForeignKey(e => e.RegistrarTldId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // RegisteredDomainHistory configuration
+        modelBuilder.Entity<RegisteredDomainHistory>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Action).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.ActionType)
+                .HasConversion<int>();
+            entity.Property(e => e.Details).HasMaxLength(4000);
+            entity.Property(e => e.SourceEntityType).HasMaxLength(200);
+
+            entity.HasIndex(e => e.RegisteredDomainId);
+            entity.HasIndex(e => e.ActionType);
+            entity.HasIndex(e => e.OccurredAt);
+            entity.HasIndex(e => new { e.RegisteredDomainId, e.OccurredAt });
+
+            entity.HasOne(e => e.RegisteredDomain)
+                .WithMany(d => d.RegisteredDomainHistories)
+                .HasForeignKey(e => e.RegisteredDomainId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.PerformedByUser)
+                .WithMany()
+                .HasForeignKey(e => e.PerformedByUserId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         // DomainContact configuration
