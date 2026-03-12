@@ -306,6 +306,10 @@ public static class AuthorizationPoliciesConfiguration
         options.AddPolicy("PaymentIntent.Write", policy =>
             policy.RequireRole(ADMIN, SUPPORT, CUSTOMER));
 
+        // PaymentTransaction policies
+        options.AddPolicy("PaymentTransaction.Read", policy =>
+            policy.RequireRole(ADMIN, SUPPORT, SALES, FINANCE));
+
 
         // Quote policies
         options.AddPolicy("Quote.Delete", policy =>

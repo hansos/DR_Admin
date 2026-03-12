@@ -27,6 +27,7 @@
         "currencies.ts",
         "invoices.ts",
         "orders.ts",
+        "payments.ts",
         "tax-jurisdictions.ts",
         "tax-registrations.ts",
         "tax-categories.ts",
