@@ -11,9 +11,14 @@ public class NameServerDto
     public int Id { get; set; }
     
     /// <summary>
-    /// Gets or sets the domain identifier this name server belongs to
+    /// Gets or sets the domain identifiers this name server is linked to
     /// </summary>
-    public int DomainId { get; set; }
+    public List<int> DomainIds { get; set; } = new();
+
+    /// <summary>
+    /// Gets or sets the optional server identifier this name server is connected to
+    /// </summary>
+    public int? ServerId { get; set; }
     
     /// <summary>
     /// Gets or sets the hostname of the name server
@@ -52,9 +57,14 @@ public class NameServerDto
 public class CreateNameServerDto
 {
     /// <summary>
-    /// Gets or sets the domain identifier this name server belongs to
+    /// Gets or sets the domain identifiers this name server should be linked to
     /// </summary>
-    public int DomainId { get; set; }
+    public List<int> DomainIds { get; set; } = new();
+
+    /// <summary>
+    /// Gets or sets the optional server identifier this name server should be connected to
+    /// </summary>
+    public int? ServerId { get; set; }
     
     /// <summary>
     /// Gets or sets the hostname of the name server
@@ -83,9 +93,14 @@ public class CreateNameServerDto
 public class UpdateNameServerDto
 {
     /// <summary>
-    /// Gets or sets the domain identifier this name server belongs to
+    /// Gets or sets the domain identifiers this name server should be linked to
     /// </summary>
-    public int DomainId { get; set; }
+    public List<int> DomainIds { get; set; } = new();
+
+    /// <summary>
+    /// Gets or sets the optional server identifier this name server should be connected to
+    /// </summary>
+    public int? ServerId { get; set; }
     
     /// <summary>
     /// Gets or sets the hostname of the name server

@@ -31,8 +31,8 @@ public class NameServerService : INameServerService
             
             var nameServers = await _context.NameServers
                 .AsNoTracking()
-                .Include(n => n.Domain)
-                .OrderBy(n => n.DomainId)
+                .Include(n => n.NameServerDomains)
+                .OrderBy(n => n.Hostname)
                 .ThenBy(n => n.SortOrder)
                 .ToListAsync();
 
@@ -66,8 +66,8 @@ public class NameServerService : INameServerService
 
             var nameServers = await _context.NameServers
                 .AsNoTracking()
-                .Include(n => n.Domain)
-                .OrderBy(n => n.DomainId)
+                .Include(n => n.NameServerDomains)
+                .OrderBy(n => n.Hostname)
                 .ThenBy(n => n.SortOrder)
                 .Skip((parameters.PageNumber - 1) * parameters.PageSize)
                 .Take(parameters.PageSize)
@@ -106,7 +106,7 @@ public class NameServerService : INameServerService
             
             var nameServer = await _context.NameServers
                 .AsNoTracking()
-                .Include(n => n.Domain)
+                .Include(n => n.NameServerDomains)
                 .FirstOrDefaultAsync(n => n.Id == id);
 
             if (nameServer == null)
@@ -138,8 +138,8 @@ public class NameServerService : INameServerService
             
             var nameServers = await _context.NameServers
                 .AsNoTracking()
-                .Include(n => n.Domain)
-                .Where(n => n.DomainId == domainId)
+                .Include(n => n.NameServerDomains)
+                .Where(n => n.NameServerDomains.Any(nd => nd.DomainId == domainId))
                 .OrderBy(n => n.SortOrder)
                 .ToListAsync();
 
@@ -164,14 +164,11 @@ public class NameServerService : INameServerService
     {
         try
         {
-            _log.Information("Creating new name server for domain ID: {DomainId}", createDto.DomainId);
+            _log.Information("Creating new name server for {DomainCount} domains", createDto.DomainIds.Count);
 
-            // Validate that the domain exists
-            var domainExists = await _context.RegisteredDomains.AnyAsync(d => d.Id == createDto.DomainId);
-            if (!domainExists)
-            {
-                throw new InvalidOperationException($"Domain with ID {createDto.DomainId} not found");
-            }
+            var domainIds = createDto.DomainIds.Distinct().ToList();
+            await ValidateDomainIdsAsync(domainIds);
+            await ValidateServerIdAsync(createDto.ServerId);
 
             // Validate hostname
             if (string.IsNullOrWhiteSpace(createDto.Hostname))
@@ -181,7 +178,7 @@ public class NameServerService : INameServerService
 
             var nameServer = new NameServer
             {
-                DomainId = createDto.DomainId,
+                ServerId = createDto.ServerId,
                 Hostname = createDto.Hostname.Trim(),
                 IpAddress = string.IsNullOrWhiteSpace(createDto.IpAddress) ? null : createDto.IpAddress.Trim(),
                 IsPrimary = createDto.IsPrimary,
@@ -189,6 +186,15 @@ public class NameServerService : INameServerService
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
+
+            foreach (var domainId in domainIds)
+            {
+                nameServer.NameServerDomains.Add(new NameServerDomain
+                {
+                    DomainId = domainId,
+                    NameServer = nameServer
+                });
+            }
 
             _context.NameServers.Add(nameServer);
             await _context.SaveChangesAsync();
@@ -198,7 +204,7 @@ public class NameServerService : INameServerService
             // Fetch the created record with navigation properties
             var createdRecord = await _context.NameServers
                 .AsNoTracking()
-                .Include(n => n.Domain)
+                .Include(n => n.NameServerDomains)
                 .FirstOrDefaultAsync(n => n.Id == nameServer.Id);
 
             return MapToDto(createdRecord!);
@@ -223,7 +229,7 @@ public class NameServerService : INameServerService
             _log.Information("Updating name server with ID: {NameServerId}", id);
 
             var nameServer = await _context.NameServers
-                .Include(n => n.Domain)
+                .Include(n => n.NameServerDomains)
                 .FirstOrDefaultAsync(n => n.Id == id);
 
             if (nameServer == null)
@@ -232,15 +238,9 @@ public class NameServerService : INameServerService
                 return null;
             }
 
-            // Validate that the domain exists if domain ID is being changed
-            if (nameServer.DomainId != updateDto.DomainId)
-            {
-                var domainExists = await _context.RegisteredDomains.AnyAsync(d => d.Id == updateDto.DomainId);
-                if (!domainExists)
-                {
-                    throw new InvalidOperationException($"Domain with ID {updateDto.DomainId} not found");
-                }
-            }
+            var domainIds = updateDto.DomainIds.Distinct().ToList();
+            await ValidateDomainIdsAsync(domainIds);
+            await ValidateServerIdAsync(updateDto.ServerId);
 
             // Validate hostname
             if (string.IsNullOrWhiteSpace(updateDto.Hostname))
@@ -248,12 +248,22 @@ public class NameServerService : INameServerService
                 throw new InvalidOperationException("Hostname is required");
             }
 
-            nameServer.DomainId = updateDto.DomainId;
+            nameServer.ServerId = updateDto.ServerId;
             nameServer.Hostname = updateDto.Hostname.Trim();
             nameServer.IpAddress = string.IsNullOrWhiteSpace(updateDto.IpAddress) ? null : updateDto.IpAddress.Trim();
             nameServer.IsPrimary = updateDto.IsPrimary;
             nameServer.SortOrder = updateDto.SortOrder;
             nameServer.UpdatedAt = DateTime.UtcNow;
+
+            nameServer.NameServerDomains.Clear();
+            foreach (var domainId in domainIds)
+            {
+                nameServer.NameServerDomains.Add(new NameServerDomain
+                {
+                    NameServerId = nameServer.Id,
+                    DomainId = domainId
+                });
+            }
 
             await _context.SaveChangesAsync();
 
@@ -304,7 +314,8 @@ public class NameServerService : INameServerService
         return new NameServerDto
         {
             Id = nameServer.Id,
-            DomainId = nameServer.DomainId,
+            DomainIds = nameServer.NameServerDomains.Select(nd => nd.DomainId).OrderBy(id => id).ToList(),
+            ServerId = nameServer.ServerId,
             Hostname = nameServer.Hostname,
             IpAddress = nameServer.IpAddress,
             IsPrimary = nameServer.IsPrimary,
@@ -312,5 +323,35 @@ public class NameServerService : INameServerService
             CreatedAt = nameServer.CreatedAt,
             UpdatedAt = nameServer.UpdatedAt
         };
+    }
+
+    private async Task ValidateDomainIdsAsync(IReadOnlyCollection<int> domainIds)
+    {
+        if (domainIds.Count == 0)
+        {
+            throw new InvalidOperationException("At least one domain ID is required");
+        }
+
+        var validCount = await _context.RegisteredDomains
+            .CountAsync(d => domainIds.Contains(d.Id));
+
+        if (validCount != domainIds.Count)
+        {
+            throw new InvalidOperationException("One or more domain IDs were not found");
+        }
+    }
+
+    private async Task ValidateServerIdAsync(int? serverId)
+    {
+        if (!serverId.HasValue)
+        {
+            return;
+        }
+
+        var exists = await _context.Servers.AnyAsync(s => s.Id == serverId.Value);
+        if (!exists)
+        {
+            throw new InvalidOperationException($"Server with ID {serverId.Value} not found");
+        }
     }
 }

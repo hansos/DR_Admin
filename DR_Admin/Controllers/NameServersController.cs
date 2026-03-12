@@ -254,7 +254,7 @@ public class NameServersController : ControllerBase
     /// <response code="404">If name server is not found</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Admin,Support")]
+    [Authorize(Policy = "NameServer.WriteOwn")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]

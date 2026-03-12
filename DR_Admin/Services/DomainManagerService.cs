@@ -46,7 +46,8 @@ public class DomainManagerService : IDomainManagerService
                 .Include(d => d.Registrar)
                 .Include(d => d.Customer)
                 .Include(d => d.DomainContacts)
-                .Include(d => d.NameServers)
+                .Include(d => d.NameServerDomains)
+                .ThenInclude(nd => nd.NameServer)
                 .FirstOrDefaultAsync(d => d.Id == registeredDomainId);
 
             if (registeredDomain == null)
@@ -71,7 +72,8 @@ public class DomainManagerService : IDomainManagerService
                 Years = CalculateYears(registeredDomain),
                 PrivacyProtection = registeredDomain.PrivacyProtection,
                 AutoRenew = registeredDomain.AutoRenew,
-                Nameservers = registeredDomain.NameServers
+                Nameservers = registeredDomain.NameServerDomains
+                    .Select(nd => nd.NameServer)
                     .OrderBy(ns => ns.SortOrder)
                     .Select(ns => ns.Hostname)
                     .ToList(),

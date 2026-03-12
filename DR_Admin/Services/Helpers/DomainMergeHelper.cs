@@ -649,10 +649,14 @@ public class DomainMergeHelper
 
             _log.Debug("Merging {Count} name servers for domain ID {DomainId}", nameservers.Count, domainId);
 
-            // Get existing name servers for this domain
-            var existingNameServers = await _context.NameServers
-                .Where(ns => ns.DomainId == domainId)
+            var existingNameServerDomains = await _context.NameServerDomains
+                .Include(nd => nd.NameServer)
+                .Where(nd => nd.DomainId == domainId)
                 .ToListAsync();
+
+            var existingNameServers = existingNameServerDomains
+                .Select(nd => nd.NameServer)
+                .ToList();
 
             // Process each nameserver from the registrar
             for (int i = 0; i < nameservers.Count; i++)
@@ -687,36 +691,65 @@ public class DomainMergeHelper
                 }
                 else
                 {
-                    // Create new nameserver
-                    _log.Debug("Creating new nameserver {Hostname} for domain {DomainId}", hostname, domainId);
-                    
-                    var newNameServer = new NameServer
+                    var nameServer = await _context.NameServers
+                        .FirstOrDefaultAsync(ns => ns.Hostname.ToLower() == hostname);
+
+                    if (nameServer == null)
                     {
-                        DomainId = domainId,
-                        Hostname = hostname,
-                        IpAddress = null, // IP address not provided by registrar list
-                        IsPrimary = (i == 0), // First nameserver is primary
-                        SortOrder = i,
-                        CreatedAt = DateTime.UtcNow,
-                        UpdatedAt = DateTime.UtcNow
-                    };
-                    
-                    _context.NameServers.Add(newNameServer);
+                        _log.Debug("Creating new nameserver {Hostname} for domain {DomainId}", hostname, domainId);
+                        nameServer = new NameServer
+                        {
+                            Hostname = hostname,
+                            IpAddress = null,
+                            IsPrimary = (i == 0),
+                            SortOrder = i,
+                            CreatedAt = DateTime.UtcNow,
+                            UpdatedAt = DateTime.UtcNow
+                        };
+
+                        _context.NameServers.Add(nameServer);
+                    }
+
+                    var alreadyLinked = existingNameServerDomains.Any(nd => nd.NameServerId == nameServer.Id);
+                    if (!alreadyLinked)
+                    {
+                        _context.NameServerDomains.Add(new NameServerDomain
+                        {
+                            NameServer = nameServer,
+                            DomainId = domainId
+                        });
+                    }
+
                     created++;
                 }
             }
 
             // Remove nameservers that are no longer in the registrar list
             var nameserverHostnames = nameservers.Select(ns => ns.Trim().ToLowerInvariant()).ToList();
-            var nameserversToRemove = existingNameServers
-                .Where(ns => !nameserverHostnames.Contains(ns.Hostname.ToLowerInvariant()))
+            var nameserverDomainsToRemove = existingNameServerDomains
+                .Where(nd => !nameserverHostnames.Contains(nd.NameServer.Hostname.ToLowerInvariant()))
                 .ToList();
 
-            if (nameserversToRemove.Any())
+            if (nameserverDomainsToRemove.Any())
             {
                 _log.Debug("Removing {Count} obsolete nameservers for domain {DomainId}", 
-                    nameserversToRemove.Count, domainId);
-                _context.NameServers.RemoveRange(nameserversToRemove);
+                    nameserverDomainsToRemove.Count, domainId);
+                _context.NameServerDomains.RemoveRange(nameserverDomainsToRemove);
+
+                var detachedNameServerIds = nameserverDomainsToRemove
+                    .Select(nd => nd.NameServerId)
+                    .Distinct()
+                    .ToList();
+
+                var nameServersWithoutDomains = await _context.NameServers
+                    .Where(ns => detachedNameServerIds.Contains(ns.Id))
+                    .Where(ns => !ns.NameServerDomains.Any())
+                    .ToListAsync();
+
+                if (nameServersWithoutDomains.Any())
+                {
+                    _context.NameServers.RemoveRange(nameServersWithoutDomains);
+                }
             }
 
             return (created, updated);

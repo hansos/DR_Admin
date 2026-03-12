@@ -21,4 +21,5 @@ public class Server : EntityBase
     public ICollection<ServerControlPanel> ControlPanels { get; set; } = new List<ServerControlPanel>();
     public ICollection<HostingAccount> HostingAccounts { get; set; } = new List<HostingAccount>();
     public ICollection<DnsZonePackageServer> DnsZonePackages { get; set; } = new List<DnsZonePackageServer>();
+    public ICollection<NameServer> NameServers { get; set; } = new List<NameServer>();
 }

@@ -271,6 +271,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<DnsRecordType> DnsRecordTypes { get; set; }
     public DbSet<DnsRecord> DnsRecords { get; set; }
     public DbSet<NameServer> NameServers { get; set; }
+    public DbSet<NameServerDomain> NameServerDomains { get; set; }
     public DbSet<DnsZonePackage> DnsZonePackages { get; set; }
     public DbSet<DnsZonePackageRecord> DnsZonePackageRecords { get; set; }
     public DbSet<DnsZonePackageControlPanel> DnsZonePackageControlPanels { get; set; }
@@ -1021,11 +1022,30 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Hostname).IsRequired().HasMaxLength(255);
             entity.Property(e => e.IpAddress).HasMaxLength(45); // To support IPv6
             
-            entity.HasIndex(e => e.DomainId);
-            entity.HasIndex(e => new { e.DomainId, e.SortOrder });
+            entity.HasIndex(e => e.ServerId);
+            entity.HasIndex(e => e.SortOrder);
+            entity.HasIndex(e => e.Hostname);
             
+            entity.HasOne(e => e.Server)
+                .WithMany(s => s.NameServers)
+                .HasForeignKey(e => e.ServerId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // NameServerDomain configuration
+        modelBuilder.Entity<NameServerDomain>(entity =>
+        {
+            entity.HasKey(e => new { e.NameServerId, e.DomainId });
+
+            entity.HasIndex(e => e.DomainId);
+
+            entity.HasOne(e => e.NameServer)
+                .WithMany(ns => ns.NameServerDomains)
+                .HasForeignKey(e => e.NameServerId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             entity.HasOne(e => e.Domain)
-                .WithMany(d => d.NameServers)
+                .WithMany(d => d.NameServerDomains)
                 .HasForeignKey(e => e.DomainId)
                 .OnDelete(DeleteBehavior.Cascade);
         });

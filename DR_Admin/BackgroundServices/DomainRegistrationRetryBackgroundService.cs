@@ -70,7 +70,8 @@ public class DomainRegistrationRetryBackgroundService : BackgroundService
         var dueDomains = await context.RegisteredDomains
             .Include(d => d.Registrar)
             .Include(d => d.Customer)
-            .Include(d => d.NameServers)
+            .Include(d => d.NameServerDomains)
+            .ThenInclude(nd => nd.NameServer)
             .Where(d => d.Status == DomainStatus.PendingRegistration.ToString() &&
                         (d.RegistrationStatus == DomainRegistrationStatus.PaidPendingRegistration ||
                          d.RegistrationStatus == DomainRegistrationStatus.RegistrationFailed) &&
@@ -126,7 +127,8 @@ public class DomainRegistrationRetryBackgroundService : BackgroundService
                 Years = ResolveRegistrationYears(domain),
                 PrivacyProtection = domain.PrivacyProtection,
                 AutoRenew = domain.AutoRenew,
-                Nameservers = domain.NameServers
+                Nameservers = domain.NameServerDomains
+                    .Select(nd => nd.NameServer)
                     .OrderBy(ns => ns.SortOrder)
                     .Select(ns => ns.Hostname)
                     .Where(ns => !string.IsNullOrWhiteSpace(ns))
