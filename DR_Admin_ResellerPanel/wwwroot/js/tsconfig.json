@@ -49,6 +49,7 @@
         "tlds.ts",
         "dns-zones.ts",
         "dns-history.ts",
+        "dns-troubleshoot.ts",
         "dns-nameservers.ts",
         "dns-templates.ts",
         "domain-details.ts",

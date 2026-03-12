@@ -377,6 +377,7 @@ function renderTable(): void {
             <td class="text-end">
                 <div class="btn-group btn-group-sm">
                     <button class="btn btn-outline-secondary" type="button" data-action="details" data-id="${domain.id}" title="Details"><i class="bi bi-box-arrow-up-right"></i></button>
+                    <button class="btn btn-outline-warning" type="button" data-action="troubleshoot" data-id="${domain.id}" title="Troubleshooting"><i class="bi bi-bug"></i></button>
                     <button class="btn btn-outline-primary" type="button" data-action="edit" data-id="${domain.id}" title="Edit"><i class="bi bi-pencil"></i></button>
                     <button class="btn btn-outline-danger" type="button" data-action="delete" data-id="${domain.id}" data-name="${esc(domain.name)}" title="Delete"><i class="bi bi-trash"></i></button>
                 </div>
@@ -691,6 +692,11 @@ function bindTableActions(): void {
             return;
         }
 
+        if (button.dataset.action === 'troubleshoot') {
+            openTroubleshoot(id);
+            return;
+        }
+
         if (button.dataset.action === 'delete') {
             openDelete(id, button.dataset.name ?? '');
         }
@@ -699,6 +705,10 @@ function bindTableActions(): void {
 
 function openDetails(id: number): void {
     window.location.href = `/domains/details?id=${encodeURIComponent(String(id))}`;
+}
+
+function openTroubleshoot(id: number): void {
+    window.location.href = `/dns/troubleshoot?domain-id=${encodeURIComponent(String(id))}`;
 }
 
 function esc(text: string): string {

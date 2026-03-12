@@ -271,6 +271,7 @@
             <td class="text-end">
                 <div class="btn-group btn-group-sm">
                     <button class="btn btn-outline-secondary" type="button" data-action="details" data-id="${domain.id}" title="Details"><i class="bi bi-box-arrow-up-right"></i></button>
+                    <button class="btn btn-outline-warning" type="button" data-action="troubleshoot" data-id="${domain.id}" title="Troubleshooting"><i class="bi bi-bug"></i></button>
                     <button class="btn btn-outline-primary" type="button" data-action="edit" data-id="${domain.id}" title="Edit"><i class="bi bi-pencil"></i></button>
                     <button class="btn btn-outline-danger" type="button" data-action="delete" data-id="${domain.id}" data-name="${esc(domain.name)}" title="Delete"><i class="bi bi-trash"></i></button>
                 </div>
@@ -528,6 +529,10 @@
                 openDetails(id);
                 return;
             }
+            if (button.dataset.action === 'troubleshoot') {
+                openTroubleshoot(id);
+                return;
+            }
             if (button.dataset.action === 'delete') {
                 openDelete(id, button.dataset.name ?? '');
             }
@@ -535,6 +540,9 @@
     }
     function openDetails(id) {
         window.location.href = `/domains/details?id=${encodeURIComponent(String(id))}`;
+    }
+    function openTroubleshoot(id) {
+        window.location.href = `/dns/troubleshoot?domain-id=${encodeURIComponent(String(id))}`;
     }
     function esc(text) {
         const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };

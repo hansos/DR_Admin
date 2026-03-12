@@ -182,6 +182,7 @@ builder.Services.AddTransient<ISystemSettingService, SystemSettingService>();
 builder.Services.AddTransient<IMyCompanyService, MyCompanyService>();
 builder.Services.AddTransient<IRegisteredDomainService, DomainRegistrationService>();
 builder.Services.AddTransient<IRegisteredDomainHistoryService, RegisteredDomainHistoryService>();
+builder.Services.AddTransient<IDnsTroubleshootService, DnsTroubleshootService>();
 builder.Services.AddTransient<IDomainManagerService, DomainManagerService>();
 
 // Hosting Management Services

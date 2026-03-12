@@ -1,0 +1,101 @@
+@page "/dns/troubleshoot"
+
+<div id="dns-troubleshoot-page" class="container-fluid">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+        <div>
+            <h2 class="h4 mb-1"><i class="bi bi-bug"></i> DNS Troubleshoot</h2>
+            <p class="text-muted mb-0">Run DNS diagnostic tests for a selected domain.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-primary" id="dns-troubleshoot-select-domain" type="button">
+                <i class="bi bi-search"></i> Select domain
+            </button>
+            <button class="btn btn-primary" id="dns-troubleshoot-run" type="button" disabled>
+                <i class="bi bi-play-circle"></i> Run tests
+            </button>
+        </div>
+    </div>
+
+    <div id="dns-troubleshoot-alert-success" class="alert alert-success d-none" role="alert"></div>
+    <div id="dns-troubleshoot-alert-error" class="alert alert-danger d-none" role="alert"></div>
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-globe2"></i> Selected Domain</h5>
+            <span class="badge bg-primary" id="dns-troubleshoot-generated-at">-</span>
+        </div>
+        <div class="card-body">
+            <div class="row g-2">
+                <div class="col-md-6">
+                    <div class="text-muted">Domain</div>
+                    <div class="fw-semibold" id="dns-troubleshoot-domain-name">No domain selected</div>
+                </div>
+                <div class="col-md-6">
+                    <div class="text-muted">Domain ID</div>
+                    <div class="fw-semibold" id="dns-troubleshoot-domain-id">-</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-clipboard2-pulse"></i> Test Results</h5>
+            <div class="d-flex gap-2">
+                <span class="badge bg-success" id="dns-troubleshoot-passed-count">0 passed</span>
+                <span class="badge bg-warning text-dark" id="dns-troubleshoot-warning-count">0 warnings</span>
+                <span class="badge bg-danger" id="dns-troubleshoot-error-count">0 errors</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <div id="dns-troubleshoot-no-selection" class="text-center py-5 text-muted">
+                <i class="bi bi-arrow-up-circle fs-1 d-block mb-2"></i>
+                Select a domain to run troubleshoot tests.
+            </div>
+            <div id="dns-troubleshoot-loading" class="text-center py-5 d-none">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="mt-2">Running DNS tests...</p>
+            </div>
+            <div id="dns-troubleshoot-table-wrap" class="d-none">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Status</th>
+                                <th>Test</th>
+                                <th>Message</th>
+                                <th>Details</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dns-troubleshoot-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div id="dns-troubleshoot-empty" class="alert alert-info d-none" role="alert">
+                <i class="bi bi-info-circle"></i> No troubleshoot results.
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="dns-troubleshoot-select-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Select Domain</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted">Enter the domain name to run troubleshoot tests.</p>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-globe"></i></span>
+                    <input type="text" class="form-control" id="dns-troubleshoot-domain-input" placeholder="example.com" />
+                    <button class="btn btn-primary" id="dns-troubleshoot-domain-load" type="button">
+                        <i class="bi bi-search"></i> Load
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
