@@ -81,15 +81,6 @@
             checkType: 'list',
         },
         {
-            key: 'order-tax-snapshots',
-            name: 'Order Tax Snapshots',
-            description: 'Verify finalized immutable tax snapshots are being created for orders.',
-            fixUrl: '/billing/order-tax-snapshots',
-            endpoint: '/OrderTaxSnapshots',
-            dependsOn: ['tax-rules'],
-            checkType: 'list',
-        },
-        {
             key: 'payment-gateways',
             name: 'Payment Gateways',
             description: 'Configure active payment providers used for transactions.',
