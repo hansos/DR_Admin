@@ -122,6 +122,8 @@ public class DnsZonePackageRecordService : IDnsZonePackageRecordService
                 DnsRecordTypeId = createDto.DnsRecordTypeId,
                 Name = createDto.Name,
                 Value = createDto.Value,
+                ValueSourceType = string.IsNullOrWhiteSpace(createDto.ValueSourceType) ? DnsTemplateValueSourceType.Manual : createDto.ValueSourceType,
+                ValueSourceReference = createDto.ValueSourceReference,
                 TTL = createDto.TTL,
                 Priority = createDto.Priority,
                 Weight = createDto.Weight,
@@ -166,6 +168,8 @@ public class DnsZonePackageRecordService : IDnsZonePackageRecordService
             record.DnsRecordTypeId = updateDto.DnsRecordTypeId;
             record.Name = updateDto.Name;
             record.Value = updateDto.Value;
+            record.ValueSourceType = string.IsNullOrWhiteSpace(updateDto.ValueSourceType) ? DnsTemplateValueSourceType.Manual : updateDto.ValueSourceType;
+            record.ValueSourceReference = updateDto.ValueSourceReference;
             record.TTL = updateDto.TTL;
             record.Priority = updateDto.Priority;
             record.Weight = updateDto.Weight;
@@ -225,6 +229,8 @@ public class DnsZonePackageRecordService : IDnsZonePackageRecordService
             DnsRecordTypeId = record.DnsRecordTypeId,
             Name = record.Name,
             Value = record.Value,
+            ValueSourceType = record.ValueSourceType,
+            ValueSourceReference = record.ValueSourceReference,
             TTL = record.TTL,
             Priority = record.Priority,
             Weight = record.Weight,

@@ -1079,6 +1079,8 @@ public class ApplicationDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Name).IsRequired().HasMaxLength(255);
             entity.Property(e => e.Value).IsRequired().HasMaxLength(1000);
+            entity.Property(e => e.ValueSourceType).IsRequired().HasMaxLength(50).HasDefaultValue(DnsTemplateValueSourceType.Manual);
+            entity.Property(e => e.ValueSourceReference).HasMaxLength(250);
             entity.Property(e => e.Notes).HasMaxLength(500);
 
             entity.HasIndex(e => e.DnsZonePackageId);

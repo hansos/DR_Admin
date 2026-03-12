@@ -84,6 +84,9 @@
         <div class="card-header bg-light d-flex justify-content-between align-items-center">
             <h5 class="mb-0"><i class="bi bi-globe2"></i> Selected Domain</h5>
             <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-sm btn-outline-primary" id="dns-zones-open-template-apply" type="button" disabled>
+                    <i class="bi bi-magic"></i> Apply template
+                </button>
                 <span class="badge bg-primary" id="dns-zones-record-count">0 records</span>
             </div>
         </div>
@@ -93,6 +96,35 @@
                     <div class="text-muted">Domain</div>
                     <div class="fw-semibold" id="dns-zones-selected-domain">No domain selected</div>
                 </div>
+
+<div class="modal fade" id="dns-zones-template-apply-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Apply DNS Template</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted">Select a DNS template to apply its records to the selected domain.</p>
+                <div class="mb-3">
+                    <label class="form-label" for="dns-zones-template-select">Template</label>
+                    <select class="form-select" id="dns-zones-template-select">
+                        <option value="">Select template</option>
+                    </select>
+                </div>
+                <div class="small text-muted">
+                    <strong>Domain:</strong> <span id="dns-zones-template-domain">-</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="dns-zones-template-apply-confirm">
+                    <i class="bi bi-check2-circle"></i> Apply Template
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
                 <div class="col-md-6">
                     <div class="text-muted">Domain ID</div>
                     <div class="fw-semibold" id="dns-zones-selected-id">-</div>

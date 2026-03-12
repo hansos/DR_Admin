@@ -112,6 +112,30 @@
                         <label for="servers-notes" class="form-label">Notes</label>
                         <textarea class="form-control" id="servers-notes" rows="2"></textarea>
                     </div>
+
+                    <div class="card border">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0"><i class="bi bi-window-stack"></i> Control Panel Instances</h6>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="servers-panels-manage-all">
+                                    <i class="bi bi-box-arrow-up-right"></i> Full manager
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-primary" id="servers-panels-add" disabled>
+                                    <i class="bi bi-plus-lg"></i> Add panel
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div id="servers-panels-new-server-hint" class="small text-muted">
+                                Save server first to add panel instances directly.
+                            </div>
+                            <div id="servers-panels-list-wrapper" class="d-none">
+                                <ul class="list-group" id="servers-panels-list">
+                                    <li class="list-group-item text-muted">No control panel instances configured.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
                 </form>
             </div>
             <div class="modal-footer">
@@ -122,6 +146,81 @@
             </div>
         </div>
     </div>
+
+<div class="modal fade" id="servers-panel-edit-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="servers-panel-modal-title">Add Control Panel Instance</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="servers-panel-form" novalidate>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label" for="servers-panel-control-panel-type-id">Panel Type <span class="text-danger">*</span></label>
+                            <select class="form-select" id="servers-panel-control-panel-type-id">
+                                <option value="">Select Panel Type...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="servers-panel-ip-address-id">Bound IP (optional)</label>
+                            <select class="form-select" id="servers-panel-ip-address-id">
+                                <option value="">No IP binding</option>
+                            </select>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label" for="servers-panel-api-url">API URL <span class="text-danger">*</span></label>
+                            <input class="form-control" id="servers-panel-api-url" type="text" placeholder="https://panel.example.com" />
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label" for="servers-panel-port">Port</label>
+                            <input class="form-control" id="servers-panel-port" type="number" min="1" max="65535" value="2087" />
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" id="servers-panel-use-https" checked />
+                                <label class="form-check-label" for="servers-panel-use-https">HTTPS</label>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="servers-panel-username">Username</label>
+                            <input class="form-control" id="servers-panel-username" type="text" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="servers-panel-api-token">API Token</label>
+                            <input class="form-control" id="servers-panel-api-token" type="text" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" for="servers-panel-api-key">API Key</label>
+                            <input class="form-control" id="servers-panel-api-key" type="text" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="servers-panel-password">Password</label>
+                            <input class="form-control" id="servers-panel-password" type="password" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="servers-panel-status">Status</label>
+                            <select class="form-select" id="servers-panel-status">
+                                <option value="Active">Active</option>
+                                <option value="Inactive">Inactive</option>
+                                <option value="Error">Error</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="servers-panel-notes">Notes</label>
+                            <textarea class="form-control" id="servers-panel-notes" rows="2"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="servers-panel-save"><i class="bi bi-check-lg"></i> Save</button>
+            </div>
+        </div>
+    </div>
+</div>
 </div>
 
 <div class="modal fade" id="servers-delete-modal" tabindex="-1" aria-hidden="true">

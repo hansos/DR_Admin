@@ -29,6 +29,16 @@ public class DnsZonePackageRecordDto
     /// Gets or sets the record value (e.g., IP address, hostname)
     /// </summary>
     public string Value { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the value source type (Manual, ServerIp, PanelIp, ServerHost, PanelHost)
+    /// </summary>
+    public string ValueSourceType { get; set; } = "Manual";
+
+    /// <summary>
+    /// Gets or sets optional structured value source reference data
+    /// </summary>
+    public string? ValueSourceReference { get; set; }
     
     /// <summary>
     /// Gets or sets the Time To Live in seconds
@@ -90,6 +100,16 @@ public class CreateDnsZonePackageRecordDto
     /// Gets or sets the record value (e.g., IP address, hostname)
     /// </summary>
     public string Value { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the value source type (Manual, ServerIp, PanelIp, ServerHost, PanelHost)
+    /// </summary>
+    public string ValueSourceType { get; set; } = "Manual";
+
+    /// <summary>
+    /// Gets or sets optional structured value source reference data
+    /// </summary>
+    public string? ValueSourceReference { get; set; }
     
     /// <summary>
     /// Gets or sets the Time To Live in seconds
@@ -136,6 +156,16 @@ public class UpdateDnsZonePackageRecordDto
     /// Gets or sets the record value (e.g., IP address, hostname)
     /// </summary>
     public string Value { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the value source type (Manual, ServerIp, PanelIp, ServerHost, PanelHost)
+    /// </summary>
+    public string ValueSourceType { get; set; } = "Manual";
+
+    /// <summary>
+    /// Gets or sets optional structured value source reference data
+    /// </summary>
+    public string? ValueSourceReference { get; set; }
     
     /// <summary>
     /// Gets or sets the Time To Live in seconds

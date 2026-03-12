@@ -333,6 +333,16 @@ public class DnsZonePackageService : IDnsZonePackageService
 
             var package = await _context.DnsZonePackages
                 .Include(p => p.Records)
+                .Include(p => p.Servers)
+                    .ThenInclude(ps => ps.Server)
+                        .ThenInclude(s => s.IpAddresses)
+                .Include(p => p.ControlPanels)
+                    .ThenInclude(pc => pc.ServerControlPanel)
+                        .ThenInclude(cp => cp.IpAddress)
+                .Include(p => p.ControlPanels)
+                    .ThenInclude(pc => pc.ServerControlPanel)
+                        .ThenInclude(cp => cp.Server)
+                            .ThenInclude(s => s.IpAddresses)
                 .FirstOrDefaultAsync(p => p.Id == packageId);
 
             if (package == null)
@@ -356,7 +366,7 @@ public class DnsZonePackageService : IDnsZonePackageService
                     DomainId = domainId,
                     DnsRecordTypeId = templateRecord.DnsRecordTypeId,
                     Name = templateRecord.Name,
-                    Value = templateRecord.Value,
+                    Value = ResolveTemplateRecordValue(templateRecord, package),
                     TTL = templateRecord.TTL,
                     Priority = templateRecord.Priority,
                     Weight = templateRecord.Weight,
@@ -432,6 +442,8 @@ public class DnsZonePackageService : IDnsZonePackageService
                 DnsRecordTypeId = r.DnsRecordTypeId,
                 Name = r.Name,
                 Value = r.Value,
+                ValueSourceType = r.ValueSourceType,
+                ValueSourceReference = r.ValueSourceReference,
                 TTL = r.TTL,
                 Priority = r.Priority,
                 Weight = r.Weight,
@@ -501,6 +513,94 @@ public class DnsZonePackageService : IDnsZonePackageService
             _log.Error(ex, "Error fetching DNS zone package with assignments, ID: {PackageId}", id);
             throw;
         }
+    }
+
+    private static string ResolveTemplateRecordValue(DnsZonePackageRecord record, DnsZonePackage package)
+    {
+        var sourceType = string.IsNullOrWhiteSpace(record.ValueSourceType)
+            ? DnsTemplateValueSourceType.Manual
+            : record.ValueSourceType;
+
+        if (sourceType.Equals(DnsTemplateValueSourceType.Manual, StringComparison.OrdinalIgnoreCase))
+        {
+            return record.Value;
+        }
+
+        var primaryServer = package.Servers
+            .Select(s => s.Server)
+            .FirstOrDefault(s => s != null);
+
+        var primaryPanel = package.ControlPanels
+            .Select(p => p.ServerControlPanel)
+            .FirstOrDefault(p => p != null);
+
+        if (sourceType.Equals(DnsTemplateValueSourceType.ServerIp, StringComparison.OrdinalIgnoreCase))
+        {
+            return GetPrimaryServerIp(primaryServer) ?? record.Value;
+        }
+
+        if (sourceType.Equals(DnsTemplateValueSourceType.PanelIp, StringComparison.OrdinalIgnoreCase))
+        {
+            return GetPanelIp(primaryPanel) ?? record.Value;
+        }
+
+        if (sourceType.Equals(DnsTemplateValueSourceType.ServerHost, StringComparison.OrdinalIgnoreCase))
+        {
+            return primaryServer?.Name ?? record.Value;
+        }
+
+        if (sourceType.Equals(DnsTemplateValueSourceType.PanelHost, StringComparison.OrdinalIgnoreCase))
+        {
+            return GetPanelHost(primaryPanel) ?? record.Value;
+        }
+
+        return record.Value;
+    }
+
+    private static string? GetPrimaryServerIp(Server? server)
+    {
+        if (server == null)
+        {
+            return null;
+        }
+
+        var primary = server.IpAddresses.FirstOrDefault(ip => ip.IsPrimary);
+        if (!string.IsNullOrWhiteSpace(primary?.IpAddress))
+        {
+            return primary.IpAddress;
+        }
+
+        return server.IpAddresses.FirstOrDefault()?.IpAddress;
+    }
+
+    private static string? GetPanelIp(ServerControlPanel? panel)
+    {
+        if (panel == null)
+        {
+            return null;
+        }
+
+        if (!string.IsNullOrWhiteSpace(panel.IpAddress?.IpAddress))
+        {
+            return panel.IpAddress.IpAddress;
+        }
+
+        return GetPrimaryServerIp(panel.Server);
+    }
+
+    private static string? GetPanelHost(ServerControlPanel? panel)
+    {
+        if (panel == null)
+        {
+            return null;
+        }
+
+        if (Uri.TryCreate(panel.ApiUrl, UriKind.Absolute, out var uri) && !string.IsNullOrWhiteSpace(uri.Host))
+        {
+            return uri.Host;
+        }
+
+        return panel.Server?.Name;
     }
 
     // ── M2M: Control Panel assignments ───────────────────────────────────────

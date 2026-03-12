@@ -23,6 +23,28 @@ interface LookupItem {
     displayName?: string;
 }
 
+interface ServerControlPanel {
+    id: number;
+    serverId: number;
+    controlPanelTypeId: number;
+    apiUrl: string;
+    port: number;
+    useHttps: boolean;
+    username?: string | null;
+    status: string;
+    ipAddressId?: number | null;
+    ipAddressValue?: string | null;
+    isConnectionHealthy?: boolean | null;
+    lastConnectionTest?: string | null;
+}
+
+interface ServerIpAddress {
+    id: number;
+    serverId: number;
+    ipAddress: string;
+    isPrimary: boolean;
+}
+
 interface ApiResponse<T> {
     success: boolean;
     data?: T;
@@ -37,8 +59,14 @@ let allServers: Server[] = [];
 let serverTypes: LookupItem[] = [];
 let operatingSystems: LookupItem[] = [];
 let hostProviders: LookupItem[] = [];
+let controlPanelTypes: LookupItem[] = [];
 let editingId: number | null = null;
 let pendingDeleteId: number | null = null;
+
+let serverPanels: ServerControlPanel[] = [];
+let serverIps: ServerIpAddress[] = [];
+let editingPanelId: number | null = null;
+let pendingPanelDeleteId: number | null = null;
 
 function getAuthToken(): string | null {
     const auth = (window as any).Auth;
@@ -92,27 +120,38 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
     }
 }
 
+function extractArray(data: any): any[] {
+    if (Array.isArray(data)) {
+        return data;
+    }
+    if (Array.isArray(data?.data)) {
+        return data.data;
+    }
+    if (Array.isArray(data?.Data)) {
+        return data.Data;
+    }
+    return [];
+}
+
 async function loadLookupData(): Promise<void> {
-    const [serverTypesRes, osRes, providersRes] = await Promise.all([
+    const [serverTypesRes, osRes, providersRes, panelTypesRes] = await Promise.all([
         apiRequest<LookupItem[]>(`${getApiBaseUrl()}/ServerTypes`, { method: 'GET' }),
         apiRequest<LookupItem[]>(`${getApiBaseUrl()}/OperatingSystems`, { method: 'GET' }),
         apiRequest<LookupItem[]>(`${getApiBaseUrl()}/HostProviders`, { method: 'GET' }),
+        apiRequest<LookupItem[]>(`${getApiBaseUrl()}/ControlPanelTypes/active`, { method: 'GET' }),
     ]);
 
-    serverTypes = extractArray(serverTypesRes.data);
-    operatingSystems = extractArray(osRes.data);
-    hostProviders = extractArray(providersRes.data);
+    serverTypes = normalizeLookupArray(serverTypesRes.data);
+    operatingSystems = normalizeLookupArray(osRes.data);
+    hostProviders = normalizeLookupArray(providersRes.data);
+    controlPanelTypes = normalizeLookupArray(panelTypesRes.data);
 
     populateDropdowns();
+    populatePanelTypeDropdown();
 }
 
-function extractArray(data: any): LookupItem[] {
-    const rawItems = Array.isArray(data)
-        ? data
-        : Array.isArray((data as any)?.data)
-            ? (data as any).data
-            : [];
-
+function normalizeLookupArray(data: any): LookupItem[] {
+    const rawItems = extractArray(data);
     return rawItems.map((item: any) => ({
         id: item.id ?? item.Id ?? 0,
         name: item.name ?? item.Name ?? '',
@@ -124,8 +163,8 @@ function populateDropdowns(): void {
     const serverTypeSelect = document.getElementById('servers-server-type-id') as HTMLSelectElement | null;
     if (serverTypeSelect) {
         const selected = serverTypeSelect.value;
-        serverTypeSelect.innerHTML = '<option value="">Select Server Type...</option>' + 
-            serverTypes.map(t => `<option value="${t.id}">${esc(t.displayName || t.name || '')}</option>`).join('');
+        serverTypeSelect.innerHTML = '<option value="">Select Server Type...</option>' +
+            serverTypes.map((t) => `<option value="${t.id}">${esc(t.displayName || t.name || '')}</option>`).join('');
         if (selected) {
             serverTypeSelect.value = selected;
         }
@@ -134,8 +173,8 @@ function populateDropdowns(): void {
     const osSelect = document.getElementById('servers-operating-system-id') as HTMLSelectElement | null;
     if (osSelect) {
         const selected = osSelect.value;
-        osSelect.innerHTML = '<option value="">Select OS...</option>' + 
-            operatingSystems.map(os => `<option value="${os.id}">${esc(os.displayName || os.name || '')}</option>`).join('');
+        osSelect.innerHTML = '<option value="">Select OS...</option>' +
+            operatingSystems.map((os) => `<option value="${os.id}">${esc(os.displayName || os.name || '')}</option>`).join('');
         if (selected) {
             osSelect.value = selected;
         }
@@ -144,24 +183,27 @@ function populateDropdowns(): void {
     const providerSelect = document.getElementById('servers-host-provider-id') as HTMLSelectElement | null;
     if (providerSelect) {
         const selected = providerSelect.value;
-        providerSelect.innerHTML = '<option value="">Select Provider...</option>' + 
-            hostProviders.map(p => `<option value="${p.id}">${esc(p.displayName || p.name || '')}</option>`).join('');
+        providerSelect.innerHTML = '<option value="">Select Provider...</option>' +
+            hostProviders.map((p) => `<option value="${p.id}">${esc(p.displayName || p.name || '')}</option>`).join('');
         if (selected) {
             providerSelect.value = selected;
         }
     }
 }
 
-function normalizeServerArray(data: any): any[] {
-    if (Array.isArray(data)) {
-        return data;
+function populatePanelTypeDropdown(): void {
+    const select = document.getElementById('servers-panel-control-panel-type-id') as HTMLSelectElement | null;
+    if (!select) {
+        return;
     }
 
-    if (Array.isArray(data?.data)) {
-        return data.data;
-    }
+    const selected = select.value;
+    select.innerHTML = '<option value="">Select Panel Type...</option>' +
+        controlPanelTypes.map((t) => `<option value="${t.id}">${esc(t.displayName || t.name || '')}</option>`).join('');
 
-    return [];
+    if (selected) {
+        select.value = selected;
+    }
 }
 
 async function loadServers(): Promise<void> {
@@ -179,17 +221,7 @@ async function loadServers(): Promise<void> {
         return;
     }
 
-    // Debug: Log the raw response structure
-    console.log('API Response structure:', response);
-    console.log('Response.data type:', Array.isArray(response.data) ? 'Array' : typeof response.data);
-    console.log('Response.data:', response.data);
-
-    const rawItems = normalizeServerArray(response.data);
-    console.log('Extracted array length:', rawItems.length);
-    if (rawItems.length > 0) {
-        console.log('First raw item from API:', rawItems[0]);
-    }
-
+    const rawItems = extractArray(response.data);
     allServers = rawItems.map((item: any) => {
         const rawStatus = item.status ?? item.Status;
         let statusValue: boolean | null = null;
@@ -199,7 +231,7 @@ async function loadServers(): Promise<void> {
             statusValue = rawStatus.toLowerCase() === 'active' ? true : rawStatus.toLowerCase() === 'inactive' ? false : null;
         }
 
-        const server: Server = {
+        return {
             id: item.id ?? item.Id ?? 0,
             name: item.name ?? item.Name ?? '',
             location: item.location ?? item.Location ?? null,
@@ -215,14 +247,6 @@ async function loadServers(): Promise<void> {
             diskSpaceGB: item.diskSpaceGB ?? item.DiskSpaceGB ?? item.diskSpaceGb ?? null,
             notes: item.notes ?? item.Notes ?? null,
         };
-
-        // Debug log for first item to verify data structure
-        if (rawItems.indexOf(item) === 0) {
-            console.log('First server after mapping:', server);
-            console.log('Raw status was:', rawStatus, 'Converted to:', statusValue);
-        }
-
-        return server;
     });
 
     renderTable();
@@ -294,18 +318,17 @@ function openCreate(): void {
         statusCheckbox.checked = true;
     }
 
+    resetServerPanelSectionForNewServer();
     populateDropdowns();
     showModal('servers-edit-modal');
 }
 
-function openEdit(id: number): void {
+async function openEdit(id: number): Promise<void> {
     const server = allServers.find((item) => item.id === id);
     if (!server) {
-        console.error('Server not found with ID:', id);
         return;
     }
 
-    console.log('Editing server:', server);
     editingId = id;
 
     const modalTitle = document.getElementById('servers-modal-title');
@@ -324,7 +347,6 @@ function openEdit(id: number): void {
     const diskSpaceGBInput = document.getElementById('servers-disk-space-gb') as HTMLInputElement | null;
     const notesInput = document.getElementById('servers-notes') as HTMLTextAreaElement | null;
 
-    // Set basic text fields
     if (nameInput) {
         nameInput.value = server.name || '';
     }
@@ -332,44 +354,35 @@ function openEdit(id: number): void {
         locationInput.value = server.location || '';
     }
 
-    // Populate dropdowns before setting values
     populateDropdowns();
 
-    // Set dropdown values - use empty string if null/undefined to reset to default
     if (serverTypeInput) {
         serverTypeInput.value = server.serverTypeId ? String(server.serverTypeId) : '';
-        console.log('Set serverTypeId to:', serverTypeInput.value);
     }
     if (osInput) {
         osInput.value = server.operatingSystemId ? String(server.operatingSystemId) : '';
-        console.log('Set operatingSystemId to:', osInput.value);
     }
     if (providerInput) {
         providerInput.value = server.hostProviderId ? String(server.hostProviderId) : '';
-        console.log('Set hostProviderId to:', providerInput.value);
     }
     if (statusInput) {
         statusInput.checked = server.status !== false;
-        console.log('Set status to:', statusInput.checked);
     }
 
-    // Set numeric fields - use empty string if null to clear the field
     if (cpuCoresInput) {
-        cpuCoresInput.value = server.cpuCores !== null && server.cpuCores !== undefined ? String(server.cpuCores) : '';
-        console.log('Set cpuCores to:', cpuCoresInput.value);
+        cpuCoresInput.value = server.cpuCores != null ? String(server.cpuCores) : '';
     }
     if (ramMBInput) {
-        ramMBInput.value = server.ramMB !== null && server.ramMB !== undefined ? String(server.ramMB) : '';
-        console.log('Set ramMB to:', ramMBInput.value);
+        ramMBInput.value = server.ramMB != null ? String(server.ramMB) : '';
     }
     if (diskSpaceGBInput) {
-        diskSpaceGBInput.value = server.diskSpaceGB !== null && server.diskSpaceGB !== undefined ? String(server.diskSpaceGB) : '';
-        console.log('Set diskSpaceGB to:', diskSpaceGBInput.value);
+        diskSpaceGBInput.value = server.diskSpaceGB != null ? String(server.diskSpaceGB) : '';
     }
     if (notesInput) {
         notesInput.value = server.notes || '';
     }
 
+    await loadServerPanelSection(id);
     showModal('servers-edit-modal');
 }
 
@@ -415,7 +428,7 @@ async function saveServer(): Promise<void> {
     if (response.success) {
         hideModal('servers-edit-modal');
         showSuccess(editingId ? 'Server updated successfully' : 'Server created successfully');
-        loadServers();
+        await loadServers();
     } else {
         showError(response.message || 'Save failed');
     }
@@ -442,12 +455,311 @@ async function doDelete(): Promise<void> {
 
     if (response.success) {
         showSuccess('Server deleted successfully');
-        loadServers();
+        await loadServers();
     } else {
         showError(response.message || 'Delete failed');
     }
 
     pendingDeleteId = null;
+}
+
+function resetServerPanelSectionForNewServer(): void {
+    const hint = document.getElementById('servers-panels-new-server-hint');
+    const wrapper = document.getElementById('servers-panels-list-wrapper');
+    const addButton = document.getElementById('servers-panels-add') as HTMLButtonElement | null;
+
+    hint?.classList.remove('d-none');
+    wrapper?.classList.add('d-none');
+
+    if (addButton) {
+        addButton.disabled = true;
+    }
+
+    serverPanels = [];
+    serverIps = [];
+    renderServerPanelList();
+}
+
+async function loadServerPanelSection(serverId: number): Promise<void> {
+    const hint = document.getElementById('servers-panels-new-server-hint');
+    const wrapper = document.getElementById('servers-panels-list-wrapper');
+    const addButton = document.getElementById('servers-panels-add') as HTMLButtonElement | null;
+
+    hint?.classList.add('d-none');
+    wrapper?.classList.remove('d-none');
+
+    if (addButton) {
+        addButton.disabled = false;
+    }
+
+    await Promise.all([
+        loadServerPanels(serverId),
+        loadServerIps(serverId),
+    ]);
+}
+
+async function loadServerPanels(serverId: number): Promise<void> {
+    const response = await apiRequest<ServerControlPanel[]>(`${getApiBaseUrl()}/ServerControlPanels/server/${serverId}`, { method: 'GET' });
+    if (!response.success) {
+        serverPanels = [];
+        renderServerPanelList();
+        return;
+    }
+
+    serverPanels = extractArray(response.data).map((item: any) => ({
+        id: item.id ?? item.Id ?? 0,
+        serverId: item.serverId ?? item.ServerId ?? 0,
+        controlPanelTypeId: item.controlPanelTypeId ?? item.ControlPanelTypeId ?? 0,
+        apiUrl: item.apiUrl ?? item.ApiUrl ?? '',
+        port: item.port ?? item.Port ?? 0,
+        useHttps: item.useHttps ?? item.UseHttps ?? true,
+        username: item.username ?? item.Username ?? null,
+        status: item.status ?? item.Status ?? 'Active',
+        ipAddressId: item.ipAddressId ?? item.IpAddressId ?? null,
+        ipAddressValue: item.ipAddressValue ?? item.IpAddressValue ?? null,
+        isConnectionHealthy: item.isConnectionHealthy ?? item.IsConnectionHealthy ?? null,
+        lastConnectionTest: item.lastConnectionTest ?? item.LastConnectionTest ?? null,
+    }));
+
+    renderServerPanelList();
+}
+
+async function loadServerIps(serverId: number): Promise<void> {
+    const response = await apiRequest<ServerIpAddress[]>(`${getApiBaseUrl()}/ServerIpAddresses/server/${serverId}`, { method: 'GET' });
+    if (!response.success) {
+        serverIps = [];
+        populatePanelIpDropdown();
+        return;
+    }
+
+    serverIps = extractArray(response.data).map((item: any) => ({
+        id: item.id ?? item.Id ?? 0,
+        serverId: item.serverId ?? item.ServerId ?? 0,
+        ipAddress: item.ipAddress ?? item.IpAddress ?? '',
+        isPrimary: item.isPrimary ?? item.IsPrimary ?? false,
+    }));
+
+    populatePanelIpDropdown();
+}
+
+function renderServerPanelList(): void {
+    const list = document.getElementById('servers-panels-list');
+    if (!list) {
+        return;
+    }
+
+    if (!serverPanels.length) {
+        list.innerHTML = '<li class="list-group-item text-muted">No control panel instances configured.</li>';
+        return;
+    }
+
+    list.innerHTML = serverPanels.map((panel) => {
+        const typeName = getControlPanelTypeName(panel.controlPanelTypeId);
+        const health = panel.isConnectionHealthy == null
+            ? '<span class="badge bg-secondary">Unknown</span>'
+            : panel.isConnectionHealthy
+                ? '<span class="badge bg-success">Healthy</span>'
+                : '<span class="badge bg-danger">Error</span>';
+
+        return `
+            <li class="list-group-item">
+                <div class="d-flex justify-content-between align-items-start gap-2">
+                    <div>
+                        <div class="fw-semibold">${esc(typeName)} <span class="text-muted">${esc(panel.apiUrl || '-')}</span></div>
+                        <div class="small text-muted">Port ${panel.port || '-'} · ${panel.useHttps ? 'HTTPS' : 'HTTP'}${panel.ipAddressValue ? ` · IP ${esc(panel.ipAddressValue)}` : ''} · Status ${esc(panel.status || '-')}</div>
+                    </div>
+                    <div class="d-flex gap-1">
+                        ${health}
+                        <button class="btn btn-sm btn-outline-secondary" type="button" data-action="panel-test" data-id="${panel.id}" title="Test"><i class="bi bi-plug"></i></button>
+                        <button class="btn btn-sm btn-outline-primary" type="button" data-action="panel-edit" data-id="${panel.id}" title="Edit"><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-sm btn-outline-danger" type="button" data-action="panel-delete" data-id="${panel.id}" title="Delete"><i class="bi bi-trash"></i></button>
+                    </div>
+                </div>
+            </li>`;
+    }).join('');
+}
+
+function getControlPanelTypeName(id: number): string {
+    const match = controlPanelTypes.find((item) => item.id === id);
+    return match?.displayName || match?.name || `Type #${id}`;
+}
+
+function populatePanelIpDropdown(): void {
+    const select = document.getElementById('servers-panel-ip-address-id') as HTMLSelectElement | null;
+    if (!select) {
+        return;
+    }
+
+    const selected = select.value;
+    select.innerHTML = '<option value="">No IP binding</option>' +
+        serverIps.map((ip) => `<option value="${ip.id}">${esc(ip.ipAddress)}${ip.isPrimary ? ' (Primary)' : ''}</option>`).join('');
+
+    if (selected) {
+        select.value = selected;
+    }
+}
+
+function openCreateServerPanel(): void {
+    if (!editingId) {
+        showError('Save the server before adding panel instances.');
+        return;
+    }
+
+    editingPanelId = null;
+
+    setText('servers-panel-modal-title', 'Add Control Panel Instance');
+    setInputValue('servers-panel-api-url', '');
+    setInputValue('servers-panel-port', '2087');
+    setInputValue('servers-panel-username', '');
+    setInputValue('servers-panel-api-token', '');
+    setInputValue('servers-panel-api-key', '');
+    setInputValue('servers-panel-password', '');
+    setInputValue('servers-panel-notes', '');
+    setSelectValue('servers-panel-status', 'Active');
+    setSelectValue('servers-panel-control-panel-type-id', '');
+    setSelectValue('servers-panel-ip-address-id', '');
+
+    const typeSelect = document.getElementById('servers-panel-control-panel-type-id') as HTMLSelectElement | null;
+    if (typeSelect) {
+        typeSelect.disabled = false;
+    }
+
+    const httpsInput = document.getElementById('servers-panel-use-https') as HTMLInputElement | null;
+    if (httpsInput) {
+        httpsInput.checked = true;
+    }
+
+    showModal('servers-panel-edit-modal');
+}
+
+function openEditServerPanel(id: number): void {
+    const panel = serverPanels.find((item) => item.id === id);
+    if (!panel) {
+        return;
+    }
+
+    editingPanelId = id;
+    setText('servers-panel-modal-title', 'Edit Control Panel Instance');
+
+    setInputValue('servers-panel-api-url', panel.apiUrl || '');
+    setInputValue('servers-panel-port', String(panel.port || 2087));
+    setInputValue('servers-panel-username', panel.username || '');
+    setInputValue('servers-panel-api-token', '');
+    setInputValue('servers-panel-api-key', '');
+    setInputValue('servers-panel-password', '');
+    setInputValue('servers-panel-notes', '');
+    setSelectValue('servers-panel-status', panel.status || 'Active');
+    setSelectValue('servers-panel-control-panel-type-id', String(panel.controlPanelTypeId));
+    setSelectValue('servers-panel-ip-address-id', panel.ipAddressId != null ? String(panel.ipAddressId) : '');
+
+    const httpsInput = document.getElementById('servers-panel-use-https') as HTMLInputElement | null;
+    if (httpsInput) {
+        httpsInput.checked = panel.useHttps !== false;
+    }
+
+    const typeSelect = document.getElementById('servers-panel-control-panel-type-id') as HTMLSelectElement | null;
+    if (typeSelect) {
+        typeSelect.disabled = true;
+    }
+
+    showModal('servers-panel-edit-modal');
+}
+
+async function saveServerPanel(): Promise<void> {
+    if (!editingId) {
+        return;
+    }
+
+    const controlPanelTypeId = getSelectNumberValue('servers-panel-control-panel-type-id');
+    const apiUrl = getInputValue('servers-panel-api-url');
+
+    if (!editingPanelId && !controlPanelTypeId) {
+        showError('Panel type is required.');
+        return;
+    }
+
+    if (!apiUrl) {
+        showError('API URL is required.');
+        return;
+    }
+
+    const commonPayload = {
+        apiUrl,
+        port: getNumberValue('servers-panel-port') || 2087,
+        useHttps: isChecked('servers-panel-use-https'),
+        apiToken: getInputValue('servers-panel-api-token') || null,
+        apiKey: getInputValue('servers-panel-api-key') || null,
+        username: getInputValue('servers-panel-username') || null,
+        password: getInputValue('servers-panel-password') || null,
+        additionalSettings: null,
+        status: getInputValue('servers-panel-status') || 'Active',
+        ipAddressId: getNullableNumberValue('servers-panel-ip-address-id'),
+        notes: getInputValue('servers-panel-notes') || null,
+    };
+
+    const response = editingPanelId
+        ? await apiRequest(`${getApiBaseUrl()}/ServerControlPanels/${editingPanelId}`, {
+            method: 'PUT',
+            body: JSON.stringify(commonPayload),
+        })
+        : await apiRequest(`${getApiBaseUrl()}/ServerControlPanels`, {
+            method: 'POST',
+            body: JSON.stringify({
+                serverId: editingId,
+                controlPanelTypeId,
+                ...commonPayload,
+            }),
+        });
+
+    if (!response.success) {
+        showError(response.message || 'Failed to save control panel instance.');
+        return;
+    }
+
+    hideModal('servers-panel-edit-modal');
+    showSuccess(editingPanelId ? 'Control panel instance updated.' : 'Control panel instance created.');
+
+    await loadServerPanelSection(editingId);
+}
+
+async function testServerPanel(id: number): Promise<void> {
+    const response = await apiRequest(`${getApiBaseUrl()}/ServerControlPanels/${id}/test-connection`, { method: 'POST' });
+    if (!response.success) {
+        showError(response.message || 'Connection test failed.');
+        return;
+    }
+
+    showSuccess('Connection test executed.');
+    if (editingId) {
+        await loadServerPanelSection(editingId);
+    }
+}
+
+async function deleteServerPanel(): Promise<void> {
+    if (!pendingPanelDeleteId) {
+        return;
+    }
+
+    const response = await apiRequest(`${getApiBaseUrl()}/ServerControlPanels/${pendingPanelDeleteId}`, { method: 'DELETE' });
+    if (!response.success) {
+        showError(response.message || 'Failed to delete control panel instance.');
+        return;
+    }
+
+    pendingPanelDeleteId = null;
+    showSuccess('Control panel instance deleted.');
+
+    if (editingId) {
+        await loadServerPanelSection(editingId);
+    }
+}
+
+function openManageAllPanelsPage(): void {
+    const target = editingId
+        ? `/infrastructure/server-control-panels?server-id=${encodeURIComponent(String(editingId))}`
+        : '/infrastructure/server-control-panels';
+
+    window.location.href = target;
 }
 
 function esc(text: string): string {
@@ -503,6 +815,58 @@ function hideModal(id: string): void {
     modal?.hide();
 }
 
+function setText(id: string, value: string): void {
+    const element = document.getElementById(id);
+    if (element) {
+        element.textContent = value;
+    }
+}
+
+function setInputValue(id: string, value: string): void {
+    const input = document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | null;
+    if (input) {
+        input.value = value;
+    }
+}
+
+function setSelectValue(id: string, value: string): void {
+    const input = document.getElementById(id) as HTMLSelectElement | null;
+    if (input) {
+        input.value = value;
+    }
+}
+
+function getInputValue(id: string): string {
+    const input = document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | null;
+    return (input?.value ?? '').trim();
+}
+
+function getNumberValue(id: string): number {
+    const parsed = Number(getInputValue(id));
+    return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function getNullableNumberValue(id: string): number | null {
+    const value = getInputValue(id);
+    if (!value) {
+        return null;
+    }
+
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+}
+
+function getSelectNumberValue(id: string): number {
+    const input = document.getElementById(id) as HTMLSelectElement | null;
+    const parsed = Number(input?.value ?? '0');
+    return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function isChecked(id: string): boolean {
+    const input = document.getElementById(id) as HTMLInputElement | null;
+    return !!input?.checked;
+}
+
 function bindTableActions(): void {
     const tableBody = document.getElementById('servers-table-body');
     if (!tableBody) {
@@ -522,12 +886,47 @@ function bindTableActions(): void {
         }
 
         if (button.dataset.action === 'edit') {
-            openEdit(id);
+            void openEdit(id);
             return;
         }
 
         if (button.dataset.action === 'delete') {
             openDelete(id, button.dataset.name ?? '');
+        }
+    });
+}
+
+function bindServerPanelActions(): void {
+    document.getElementById('servers-panels-add')?.addEventListener('click', openCreateServerPanel);
+    document.getElementById('servers-panels-manage-all')?.addEventListener('click', openManageAllPanelsPage);
+    document.getElementById('servers-panel-save')?.addEventListener('click', saveServerPanel);
+
+    const list = document.getElementById('servers-panels-list');
+    list?.addEventListener('click', (event) => {
+        const target = event.target as HTMLElement;
+        const button = target.closest('button[data-action]') as HTMLButtonElement | null;
+        if (!button) {
+            return;
+        }
+
+        const id = Number(button.dataset.id ?? '0');
+        if (!id) {
+            return;
+        }
+
+        if (button.dataset.action === 'panel-edit') {
+            openEditServerPanel(id);
+            return;
+        }
+
+        if (button.dataset.action === 'panel-test') {
+            void testServerPanel(id);
+            return;
+        }
+
+        if (button.dataset.action === 'panel-delete') {
+            pendingPanelDeleteId = id;
+            void deleteServerPanel();
         }
     });
 }
@@ -545,15 +944,15 @@ function initializeServersPage(): void {
     document.getElementById('servers-confirm-delete')?.addEventListener('click', doDelete);
 
     bindTableActions();
-    loadLookupData();
-    loadServers();
+    bindServerPanelActions();
+
+    void loadLookupData();
+    void loadServers();
 }
 
 function setupPageObserver(): void {
-    // Try immediate initialization
     initializeServersPage();
 
-    // Set up MutationObserver for Blazor navigation
     if (document.body) {
         const observer = new MutationObserver(() => {
             const page = document.getElementById('servers-page');
@@ -565,7 +964,6 @@ function setupPageObserver(): void {
     }
 }
 
-// Initialize when DOM is ready
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', setupPageObserver);
 } else {

@@ -157,11 +157,56 @@ public class DnsRecordTypeInitializationService
 
             foreach (var dnsRecordType in defaultDnsRecordTypes)
             {
-                var exists = await _context.DnsRecordTypes.AnyAsync(t => t.Type == dnsRecordType.Type);
-                if (!exists)
+                var existing = await _context.DnsRecordTypes.FirstOrDefaultAsync(t => t.Type == dnsRecordType.Type);
+                if (existing == null)
                 {
                     _context.DnsRecordTypes.Add(dnsRecordType);
                     _log.Information("Adding DNS record type: {Type}", dnsRecordType.Type);
+                    continue;
+                }
+
+                var changed = false;
+
+                if (existing.Description != dnsRecordType.Description)
+                {
+                    existing.Description = dnsRecordType.Description;
+                    changed = true;
+                }
+                if (existing.HasPriority != dnsRecordType.HasPriority)
+                {
+                    existing.HasPriority = dnsRecordType.HasPriority;
+                    changed = true;
+                }
+                if (existing.HasWeight != dnsRecordType.HasWeight)
+                {
+                    existing.HasWeight = dnsRecordType.HasWeight;
+                    changed = true;
+                }
+                if (existing.HasPort != dnsRecordType.HasPort)
+                {
+                    existing.HasPort = dnsRecordType.HasPort;
+                    changed = true;
+                }
+                if (existing.IsEditableByUser != dnsRecordType.IsEditableByUser)
+                {
+                    existing.IsEditableByUser = dnsRecordType.IsEditableByUser;
+                    changed = true;
+                }
+                if (existing.IsActive != dnsRecordType.IsActive)
+                {
+                    existing.IsActive = dnsRecordType.IsActive;
+                    changed = true;
+                }
+                if (existing.DefaultTTL != dnsRecordType.DefaultTTL)
+                {
+                    existing.DefaultTTL = dnsRecordType.DefaultTTL;
+                    changed = true;
+                }
+
+                if (changed)
+                {
+                    existing.UpdatedAt = DateTime.UtcNow;
+                    _log.Information("Updated DNS record type defaults: {Type}", existing.Type);
                 }
             }
 

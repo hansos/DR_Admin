@@ -6,6 +6,8 @@ public class DnsZonePackageRecord : EntityBase
     public int DnsRecordTypeId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Value { get; set; } = string.Empty;
+    public string ValueSourceType { get; set; } = DnsTemplateValueSourceType.Manual;
+    public string? ValueSourceReference { get; set; }
     public int TTL { get; set; } = 3600;
     public int? Priority { get; set; } // For MX and SRV records
     public int? Weight { get; set; } // For SRV records
@@ -14,4 +16,13 @@ public class DnsZonePackageRecord : EntityBase
 
     public DnsZonePackage DnsZonePackage { get; set; } = null!;
     public DnsRecordType DnsRecordType { get; set; } = null!;
+}
+
+public static class DnsTemplateValueSourceType
+{
+    public const string Manual = "Manual";
+    public const string ServerIp = "ServerIp";
+    public const string PanelIp = "PanelIp";
+    public const string ServerHost = "ServerHost";
+    public const string PanelHost = "PanelHost";
 }

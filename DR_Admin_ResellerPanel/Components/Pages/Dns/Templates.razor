@@ -1,0 +1,282 @@
+@page "/dns/templates"
+
+<div id="dns-templates-page" class="container-fluid">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+        <div>
+            <h2 class="h4 mb-1"><i class="bi bi-collection"></i> DNS Templates</h2>
+            <p class="text-muted mb-0">Manage DNS zone template packages, records, and server/control panel assignments.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <button class="btn btn-primary" id="dns-templates-create" type="button">
+                <i class="bi bi-plus-circle"></i> New template
+            </button>
+        </div>
+    </div>
+
+    <div id="dns-templates-alert-success" class="alert alert-success d-none" role="alert"></div>
+    <div id="dns-templates-alert-error" class="alert alert-danger d-none" role="alert"></div>
+
+    <div class="row g-3">
+        <div class="col-12 col-xl-5">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-list-ul"></i> Templates</h5>
+                    <span class="badge bg-primary" id="dns-templates-count">0 templates</span>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Status</th>
+                                    <th>Default</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dns-templates-table-body">
+                                <tr>
+                                    <td colspan="4" class="text-center">
+                                        <div class="spinner-border text-primary"></div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-xl-7">
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Selected Template</h5>
+                    <span class="badge bg-secondary" id="dns-templates-selected-name">None selected</span>
+                </div>
+                <div class="card-body">
+                    <div id="dns-templates-no-selection" class="text-muted">Select a template to manage records and assignments.</div>
+                    <div id="dns-templates-selected-wrapper" class="d-none">
+                        <div class="row g-2 small">
+                            <div class="col-md-6"><span class="text-muted">Description:</span> <span id="dns-templates-selected-description">-</span></div>
+                            <div class="col-md-3"><span class="text-muted">Sort:</span> <span id="dns-templates-selected-sort">0</span></div>
+                            <div class="col-md-3"><span class="text-muted">Active:</span> <span id="dns-templates-selected-active">No</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-diagram-3"></i> Template DNS Records</h5>
+                    <button class="btn btn-sm btn-outline-success" id="dns-templates-record-create" type="button" disabled>
+                        <i class="bi bi-plus-circle"></i> Add record
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Name</th>
+                                    <th>Value</th>
+                                    <th>TTL</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dns-templates-records-table-body">
+                                <tr><td colspan="5" class="text-center text-muted">Select a template to view records.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-12 col-lg-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0"><i class="bi bi-hdd-rack"></i> Servers</h6>
+                            <span class="badge bg-primary" id="dns-templates-server-count">0</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="input-group mb-3">
+                                <select class="form-select" id="dns-templates-server-select" disabled>
+                                    <option value="">Select server</option>
+                                </select>
+                                <button class="btn btn-outline-primary" id="dns-templates-server-assign" type="button" disabled>
+                                    <i class="bi bi-plus-lg"></i>
+                                </button>
+                            </div>
+                            <ul class="list-group" id="dns-templates-server-list">
+                                <li class="list-group-item text-muted">No servers assigned.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-lg-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0"><i class="bi bi-window-stack"></i> Control Panels</h6>
+                            <span class="badge bg-primary" id="dns-templates-panel-count">0</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="input-group mb-3">
+                                <select class="form-select" id="dns-templates-panel-select" disabled>
+                                    <option value="">Select control panel</option>
+                                </select>
+                                <button class="btn btn-outline-primary" id="dns-templates-panel-assign" type="button" disabled>
+                                    <i class="bi bi-plus-lg"></i>
+                                </button>
+                            </div>
+                            <ul class="list-group" id="dns-templates-panel-list">
+                                <li class="list-group-item text-muted">No control panels assigned.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="dns-templates-edit-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="dns-templates-edit-title">New Template</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="dns-templates-form" novalidate>
+                    <div class="mb-3">
+                        <label class="form-label" for="dns-templates-name">Name</label>
+                        <input class="form-control" id="dns-templates-name" type="text" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="dns-templates-description">Description</label>
+                        <textarea class="form-control" id="dns-templates-description" rows="2"></textarea>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <label class="form-label" for="dns-templates-sort-order">Sort order</label>
+                            <input class="form-control" id="dns-templates-sort-order" type="number" min="0" value="0" />
+                        </div>
+                        <div class="col-6 d-flex align-items-end">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" id="dns-templates-is-default" type="checkbox" />
+                                <label class="form-check-label" for="dns-templates-is-default">Default</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-check form-switch mt-3">
+                        <input class="form-check-input" id="dns-templates-is-active" type="checkbox" checked />
+                        <label class="form-check-label" for="dns-templates-is-active">Active</label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="dns-templates-save"><i class="bi bi-check-lg"></i> Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="dns-templates-delete-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Template</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Delete template <strong id="dns-templates-delete-name"></strong>?</p>
+                <p class="text-danger"><i class="bi bi-exclamation-triangle-fill"></i> This cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="dns-templates-confirm-delete"><i class="bi bi-trash"></i> Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="dns-templates-record-edit-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="dns-templates-record-edit-title">New Template Record</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="dns-templates-record-form" novalidate>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label" for="dns-templates-record-type">Type</label>
+                            <select class="form-select" id="dns-templates-record-type"></select>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label" for="dns-templates-record-name">Name</label>
+                            <input class="form-control" id="dns-templates-record-name" type="text" placeholder="@@, www, mail" />
+                        </div>
+                        <div class="col-md-6" id="dns-templates-record-value-source-wrapper">
+                            <label class="form-label" for="dns-templates-record-value-source">Value source</label>
+                            <select class="form-select" id="dns-templates-record-value-source"></select>
+                            <div class="form-text" id="dns-templates-record-value-source-help"></div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="dns-templates-record-value">Value</label>
+                            <input class="form-control" id="dns-templates-record-value" type="text" />
+                            <datalist id="dns-templates-a-record-name-list"></datalist>
+                            <div class="form-text" id="dns-templates-record-value-help">For A records, enter IP address. For other records, select an A-record name from suggestions or type manually.</div>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="dns-templates-record-ttl">TTL</label>
+                            <input class="form-control" id="dns-templates-record-ttl" type="number" min="0" value="3600" />
+                        </div>
+                        <div class="col-md-3" id="dns-templates-field-priority">
+                            <label class="form-label" for="dns-templates-record-priority">Priority</label>
+                            <input class="form-control" id="dns-templates-record-priority" type="number" min="0" />
+                        </div>
+                        <div class="col-md-3" id="dns-templates-field-weight">
+                            <label class="form-label" for="dns-templates-record-weight">Weight</label>
+                            <input class="form-control" id="dns-templates-record-weight" type="number" min="0" />
+                        </div>
+                        <div class="col-md-3" id="dns-templates-field-port">
+                            <label class="form-label" for="dns-templates-record-port">Port</label>
+                            <input class="form-control" id="dns-templates-record-port" type="number" min="0" />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="dns-templates-record-notes">Notes</label>
+                            <textarea class="form-control" id="dns-templates-record-notes" rows="2"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="dns-templates-record-save"><i class="bi bi-check-lg"></i> Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="dns-templates-record-delete-modal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Template Record</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Delete record <strong id="dns-templates-record-delete-name"></strong>?</p>
+                <p class="text-danger"><i class="bi bi-exclamation-triangle-fill"></i> This cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="dns-templates-record-confirm-delete"><i class="bi bi-trash"></i> Delete</button>
+            </div>
+        </div>
+    </div>
+</div>

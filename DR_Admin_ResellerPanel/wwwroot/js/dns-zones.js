@@ -56,6 +56,7 @@
     let pendingRecords = [];
     let editingRecordId = null;
     let pendingDeleteId = null;
+    let activeTemplates = [];
     function initializePage() {
         const page = document.getElementById('dns-zones-page');
         if (!page || page.dataset.initialized === 'true') {
@@ -70,6 +71,8 @@
         document.getElementById('dns-zones-record-type')?.addEventListener('change', updateFieldVisibility);
         document.getElementById('dns-zones-sync')?.addEventListener('click', openSyncModal);
         document.getElementById('dns-zones-sync-confirm')?.addEventListener('click', performSync);
+        document.getElementById('dns-zones-open-template-apply')?.addEventListener('click', openTemplateApplyModal);
+        document.getElementById('dns-zones-template-apply-confirm')?.addEventListener('click', applySelectedTemplate);
         const input = document.getElementById('dns-zones-domain-name');
         input?.addEventListener('keydown', (event) => {
             if (event.key === 'Enter') {
@@ -193,6 +196,7 @@
         setText('dns-zones-selected-domain', selectedDomainName);
         setText('dns-zones-selected-id', String(domain.id));
         setSelectButtonLabel(selectedDomainName);
+        setText('dns-zones-template-domain', selectedDomainName);
         updateSyncButtonState();
         updateAddButtonState();
         updateDomainSuffix();
@@ -440,6 +444,7 @@
         setText('dns-zones-selected-id', '-');
         setSelectButtonLabel(null);
         setText('dns-zones-record-count', '0 records');
+        setText('dns-zones-template-domain', '-');
         updateSyncButtonState();
         updateAddButtonState();
     }
@@ -454,6 +459,76 @@
         if (button) {
             button.disabled = !selectedDomainId;
         }
+        updateTemplateApplyButtonState();
+    }
+    function updateTemplateApplyButtonState() {
+        const button = document.getElementById('dns-zones-open-template-apply');
+        if (button) {
+            button.disabled = !selectedDomainId;
+        }
+    }
+    async function openTemplateApplyModal() {
+        if (!selectedDomainId) {
+            showError('Select a domain before applying templates.');
+            return;
+        }
+        const response = await apiRequest(`${getApiBaseUrl()}/DnsZonePackages/active`, { method: 'GET' });
+        if (!response.success) {
+            showError(response.message || 'Failed to load DNS templates.');
+            return;
+        }
+        const raw = response.data;
+        const items = Array.isArray(raw)
+            ? raw
+            : Array.isArray(raw?.data)
+                ? raw.data
+                : Array.isArray(raw?.Data)
+                    ? raw.Data
+                    : [];
+        activeTemplates = items.map((item) => ({
+            id: item.id ?? item.Id ?? 0,
+            name: item.name ?? item.Name ?? '',
+            isActive: item.isActive ?? item.IsActive ?? true,
+        })).filter((item) => item.id > 0 && !!item.name && item.isActive !== false);
+        const select = document.getElementById('dns-zones-template-select');
+        if (select) {
+            select.innerHTML = '<option value="">Select template</option>' + activeTemplates
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .map((template) => `<option value="${template.id}">${esc(template.name)}</option>`)
+                .join('');
+        }
+        setText('dns-zones-template-domain', selectedDomainName || '-');
+        showModal('dns-zones-template-apply-modal');
+    }
+    async function applySelectedTemplate() {
+        if (!selectedDomainId) {
+            return;
+        }
+        const select = document.getElementById('dns-zones-template-select');
+        const templateId = Number(select?.value ?? '0');
+        if (!Number.isFinite(templateId) || templateId <= 0) {
+            showError('Select a template to apply.');
+            return;
+        }
+        const button = document.getElementById('dns-zones-template-apply-confirm');
+        if (button) {
+            button.disabled = true;
+            button.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Applying...';
+        }
+        const response = await apiRequest(`${getApiBaseUrl()}/DnsZonePackages/${templateId}/apply-to-domain/${selectedDomainId}`, {
+            method: 'POST',
+        });
+        if (button) {
+            button.disabled = false;
+            button.innerHTML = '<i class="bi bi-check2-circle"></i> Apply Template';
+        }
+        if (!response.success) {
+            showError(response.message || 'Failed to apply DNS template.');
+            return;
+        }
+        hideModal('dns-zones-template-apply-modal');
+        showSuccess('DNS template applied successfully.');
+        await loadRecords();
     }
     function updatePendingSyncBadge() {
         const badge = document.getElementById('dns-zones-pending-count');
