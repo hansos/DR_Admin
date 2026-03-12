@@ -533,6 +533,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<SupportTicket> SupportTickets { get; set; }
     public DbSet<SupportTicketMessage> SupportTicketMessages { get; set; }
     public DbSet<SystemSetting> SystemSettings { get; set; }
+    public DbSet<ProfitMarginSetting> ProfitMarginSettings { get; set; }
     public DbSet<MyCompany> MyCompanies { get; set; }
     public DbSet<BackupSchedule> BackupSchedules { get; set; }
     public DbSet<Country> Countries { get; set; }
@@ -1676,6 +1677,16 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Description).HasMaxLength(500);
             entity.Property(e => e.IsSystemKey).HasDefaultValue(false);
             entity.HasIndex(e => e.Key).IsUnique();
+        });
+
+        // ProfitMarginSetting configuration
+        modelBuilder.Entity<ProfitMarginSetting>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.ProductClass).IsRequired();
+            entity.Property(e => e.ProfitPercent).HasPrecision(7, 2);
+            entity.Property(e => e.Notes).HasMaxLength(1000);
+            entity.HasIndex(e => e.ProductClass).IsUnique();
         });
 
         // MyCompany configuration

@@ -119,7 +119,7 @@ public class CurrenciesController : ControllerBase
     /// <response code="403">If user doesn't have required role (Admin, Finance)</response>
     /// <response code="404">If exchange rate is not found</response>
     /// <response code="500">If an internal server error occurs</response>
-    [HttpGet("rates/{id}")]
+    [HttpGet("rates/{id:int}")]
     [Authorize(Policy = "Currency.Read")]
     [ProducesResponseType(typeof(CurrencyExchangeRateDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -273,7 +273,7 @@ public class CurrenciesController : ControllerBase
     /// <response code="403">If user doesn't have required role (Admin, Finance)</response>
     /// <response code="404">If exchange rate is not found</response>
     /// <response code="500">If an internal server error occurs</response>
-    [HttpPut("rates/{id}")]
+    [HttpPut("rates/{id:int}")]
     [Authorize(Roles = "Admin,Finance")]
     [ProducesResponseType(typeof(CurrencyExchangeRateDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -312,6 +312,36 @@ public class CurrenciesController : ControllerBase
     }
 
     /// <summary>
+    /// Forces an immediate download and update of exchange rates from the configured provider.
+    /// </summary>
+    /// <returns>The number of rates that were added or updated.</returns>
+    /// <response code="200">Returns the number of changed rates.</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="403">If user does not have permission</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpPost("rates/force-update")]
+    [Authorize(Policy = "Currency.Write")]
+    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<object>> ForceUpdateRates(CancellationToken cancellationToken)
+    {
+        try
+        {
+            _log.Information("API: ForceUpdateRates called by user {User}", User.Identity?.Name);
+
+            var changedRates = await _currencyService.ForceUpdateRatesAsync(cancellationToken);
+            return Ok(new { changedRates });
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in ForceUpdateRates");
+            return StatusCode(500, "An error occurred while forcing exchange-rate update");
+        }
+    }
+
+    /// <summary>
     /// Deletes a currency exchange rate
     /// </summary>
     /// <param name="id">The unique identifier of the exchange rate to delete</param>
@@ -321,7 +351,7 @@ public class CurrenciesController : ControllerBase
     /// <response code="403">If user doesn't have required role (Admin)</response>
     /// <response code="404">If exchange rate is not found</response>
     /// <response code="500">If an internal server error occurs</response>
-    [HttpDelete("rates/{id}")]
+    [HttpDelete("rates/{id:int}")]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

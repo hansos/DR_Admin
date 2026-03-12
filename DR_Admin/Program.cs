@@ -176,6 +176,7 @@ builder.Services.AddTransient<IDocumentTemplateService, DocumentTemplateService>
 builder.Services.AddTransient<IReportTemplateService, ReportTemplateService>();
 builder.Services.AddTransient<ICurrencyService, CurrencyService>();
 builder.Services.AddTransient<IExchangeRateDownloadLogService, ExchangeRateDownloadLogService>();
+builder.Services.AddTransient<IProfitMarginSettingService, ProfitMarginSettingService>();
 builder.Services.AddTransient<ISystemService, SystemService>();
 builder.Services.AddTransient<ISystemSettingService, SystemSettingService>();
 builder.Services.AddTransient<IMyCompanyService, MyCompanyService>();

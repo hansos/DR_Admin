@@ -1,0 +1,89 @@
+@page "/billing/profit-margins"
+
+<div id="profit-margins-page" class="container-fluid">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+        <div>
+            <h2 class="h4 mb-1"><i class="bi bi-percent"></i> Profit Margins</h2>
+            <p class="text-muted mb-0">Manage default profit percentage by product class.</p>
+        </div>
+        <button class="btn btn-outline-primary" id="profit-margins-refresh" type="button">
+            <i class="bi bi-arrow-repeat"></i> Refresh
+        </button>
+    </div>
+
+    <div id="profit-margins-alert-success" class="alert alert-success d-none" role="alert"></div>
+    <div id="profit-margins-alert-error" class="alert alert-danger d-none" role="alert"></div>
+
+    <div class="row g-3">
+        <div class="col-12 col-xl-7">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="bi bi-table"></i> Product Class Profit Margins</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Product class</th>
+                                    <th>Profit %</th>
+                                    <th>Active</th>
+                                    <th>Updated</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="profit-margins-table-body">
+                                <tr>
+                                    <td colspan="5" class="text-center">
+                                        <div class="spinner-border text-primary"></div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-xl-5">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="bi bi-sliders"></i> Edit Profit Margin</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-2">
+                        <div class="col-12">
+                            <label class="form-label mb-1" for="profit-margins-product-class">Product class</label>
+                            <select class="form-select" id="profit-margins-product-class">
+                                <option value="1">TLD</option>
+                                <option value="2">Hosting</option>
+                                <option value="3">Additional Service</option>
+                                <option value="4">Domain Service</option>
+                                <option value="99">Other</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label mb-1" for="profit-margins-profit-percent">Profit %</label>
+                            <input class="form-control" id="profit-margins-profit-percent" type="number" min="0" step="0.01" value="20" />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label mb-1" for="profit-margins-notes">Notes</label>
+                            <input class="form-control" id="profit-margins-notes" type="text" />
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check form-switch mt-2">
+                                <input class="form-check-input" type="checkbox" id="profit-margins-is-active" checked />
+                                <label class="form-check-label" for="profit-margins-is-active">Active</label>
+                            </div>
+                        </div>
+                        <div class="col-12 d-flex justify-content-end gap-2">
+                            <button class="btn btn-outline-secondary" id="profit-margins-reset" type="button">Reset</button>
+                            <button class="btn btn-primary" id="profit-margins-save" type="button"><i class="bi bi-check-lg"></i> Save</button>
+                        </div>
+                    </div>
+                    <input id="profit-margins-current-id" type="hidden" value="" />
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

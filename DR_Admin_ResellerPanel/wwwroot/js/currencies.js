@@ -472,7 +472,35 @@
         pendingDeleteRateId = null;
         await loadRates();
     };
+    const forceUpdateRates = async () => {
+        const button = document.getElementById('currency-rates-force-update');
+        const originalHtml = button?.innerHTML ?? '';
+        if (button) {
+            button.disabled = true;
+            button.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Updating...';
+        }
+        try {
+            const response = await apiRequest(`${getApiBaseUrl()}/Currencies/rates/force-update`, {
+                method: 'POST',
+            });
+            if (!response.success) {
+                showError(response.message || 'Failed to force update exchange rates.');
+                return;
+            }
+            const changedRates = Number(response.data?.changedRates ?? 0);
+            const safeChangedRates = Number.isFinite(changedRates) && changedRates >= 0 ? changedRates : 0;
+            showSuccess(`Exchange rates updated. Changed rates: ${safeChangedRates}.`);
+            await loadRates();
+        }
+        finally {
+            if (button) {
+                button.disabled = false;
+                button.innerHTML = originalHtml;
+            }
+        }
+    };
     const bindEvents = () => {
+        document.getElementById('currency-rates-force-update')?.addEventListener('click', () => { void forceUpdateRates(); });
         document.getElementById('currency-rates-create')?.addEventListener('click', openCreate);
         document.getElementById('currency-rates-save')?.addEventListener('click', () => { void saveRate(); });
         document.getElementById('currency-rates-confirm-delete')?.addEventListener('click', () => { void doDelete(); });

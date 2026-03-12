@@ -1,0 +1,189 @@
+@page "/billing/pricing"
+
+<div id="pricing-page" class="container-fluid">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+        <div>
+            <h2 class="h4 mb-1"><i class="bi bi-tags"></i> Pricing</h2>
+            <p class="text-muted mb-0">Manage TLD sales pricing and calculate customer prices.</p>
+        </div>
+        <span id="pricing-scope-badge" class="badge bg-primary">TLD prices</span>
+    </div>
+
+    <div id="pricing-alert-success" class="alert alert-success d-none" role="alert"></div>
+    <div id="pricing-alert-error" class="alert alert-danger d-none" role="alert"></div>
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-header bg-light">
+            <div class="row g-2 align-items-end">
+                <div class="col-12 col-md-4">
+                    <label class="form-label mb-1" for="pricing-filter-extension">TLD filter</label>
+                    <input class="form-control" id="pricing-filter-extension" type="text" placeholder="e.g. com" />
+                </div>
+                <div class="col-12 col-md-2 ms-auto">
+                    <label class="form-label mb-1" for="pricing-page-size">Page size</label>
+                    <select class="form-select" id="pricing-page-size">
+                        <option value="10">10</option>
+                        <option value="25" selected>25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+                <div class="col-12 d-flex gap-2 justify-content-end">
+                    <button class="btn btn-outline-primary" id="pricing-apply" type="button"><i class="bi bi-funnel"></i> Apply</button>
+                    <button class="btn btn-outline-secondary" id="pricing-reset" type="button"><i class="bi bi-x-circle"></i> Reset</button>
+                    <button class="btn btn-outline-primary" id="pricing-refresh" type="button"><i class="bi bi-arrow-repeat"></i> Refresh</button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>TLD</th>
+                            <th>Registration</th>
+                            <th>Renewal</th>
+                            <th>Transfer</th>
+                            <th>Currency</th>
+                            <th>Valid from</th>
+                            <th>Valid to</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pricing-table-body">
+                        <tr>
+                            <td colspan="7" class="text-center">
+                                <div class="spinner-border text-primary"></div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div class="text-muted small" id="pricing-pagination-info"></div>
+                <div id="pricing-paging-controls" class="mt-3">
+                    <nav aria-label="Pricing pagination">
+                        <ul class="pagination justify-content-center mb-0" id="pricing-paging-controls-list"></ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-12 col-xl-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="bi bi-calculator"></i> Price Calculator</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-2">
+                        <div class="col-12 col-md-6">
+                            <label class="form-label mb-1" for="pricing-calc-tld">TLD</label>
+                            <select class="form-select" id="pricing-calc-tld"></select>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label mb-1" for="pricing-calc-operation">Operation</label>
+                            <select class="form-select" id="pricing-calc-operation">
+                                <option value="Registration">Registration</option>
+                                <option value="Renewal">Renewal</option>
+                                <option value="Transfer">Transfer</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label class="form-label mb-1" for="pricing-calc-years">Years</label>
+                            <input class="form-control" id="pricing-calc-years" type="number" min="1" max="20" value="1" />
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label class="form-label mb-1" for="pricing-calc-currency">Target currency</label>
+                            <select class="form-select" id="pricing-calc-currency">
+                                <option value="">Use pricing currency</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label class="form-label mb-1" for="pricing-calc-reseller-id">Reseller ID (optional)</label>
+                            <select class="form-select" id="pricing-calc-reseller-id">
+                                <option value="">None</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label class="form-label mb-1" for="pricing-calc-profit-percent">Profit %</label>
+                            <input class="form-control" id="pricing-calc-profit-percent" type="number" min="0" step="0.01" value="20" />
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check form-switch mt-2">
+                                <input class="form-check-input" type="checkbox" id="pricing-calc-first-year" checked />
+                                <label class="form-check-label" for="pricing-calc-first-year">First year pricing</label>
+                            </div>
+                        </div>
+                        <div class="col-12 d-flex justify-content-end gap-2">
+                            <button class="btn btn-outline-primary" id="pricing-transfer-recommended" type="button" disabled>
+                                <i class="bi bi-arrow-right-circle"></i> Transfer recommended
+                            </button>
+                            <button class="btn btn-primary" id="pricing-calc-run" type="button"><i class="bi bi-play-circle"></i> Calculate</button>
+                        </div>
+                    </div>
+
+                    <div id="pricing-calc-result" class="border rounded p-3 bg-light mt-3 d-none">
+                        <div class="row g-2">
+                            <div class="col-6"><span class="text-muted">TLD:</span> <strong id="pricing-calc-result-tld">-</strong></div>
+                            <div class="col-6"><span class="text-muted">Currency:</span> <strong id="pricing-calc-result-currency">-</strong></div>
+                            <div class="col-6"><span class="text-muted">Base price:</span> <strong id="pricing-calc-result-base">-</strong></div>
+                            <div class="col-6"><span class="text-muted">Discount:</span> <strong id="pricing-calc-result-discount">-</strong></div>
+                            <div class="col-6"><span class="text-muted">Final price:</span> <strong id="pricing-calc-result-final">-</strong></div>
+                            <div class="col-6"><span class="text-muted">Promotion:</span> <strong id="pricing-calc-result-promotion">-</strong></div>
+                            <div class="col-6"><span class="text-muted">Registrar inprice:</span> <strong id="pricing-calc-result-cost">-</strong></div>
+                            <div class="col-6"><span class="text-muted">Fortjeneste:</span> <strong id="pricing-calc-result-profit">-</strong></div>
+                            <div class="col-6"><span class="text-muted">Recommended:</span> <strong id="pricing-calc-result-recommended">-</strong></div>
+                            <div class="col-6"><span class="text-muted">Recommended (target currency):</span> <strong id="pricing-calc-result-recommended-target">-</strong></div>
+                            <div class="col-6"><span class="text-muted">Registrar:</span> <strong id="pricing-calc-result-registrar">-</strong></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-xl-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="bi bi-calendar-range"></i> Set TLD Sales Pricing</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-2">
+                        <div class="col-12 col-md-6">
+                            <label class="form-label mb-1" for="pricing-edit-tld">TLD</label>
+                            <select class="form-select" id="pricing-edit-tld"></select>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label mb-1" for="pricing-edit-currency">Currency</label>
+                            <select class="form-select" id="pricing-edit-currency"></select>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label class="form-label mb-1" for="pricing-edit-registration">Registration</label>
+                            <input class="form-control" id="pricing-edit-registration" type="number" min="0" step="0.0001" />
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label class="form-label mb-1" for="pricing-edit-renewal">Renewal</label>
+                            <input class="form-control" id="pricing-edit-renewal" type="number" min="0" step="0.0001" />
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label class="form-label mb-1" for="pricing-edit-transfer">Transfer</label>
+                            <input class="form-control" id="pricing-edit-transfer" type="number" min="0" step="0.0001" />
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label mb-1" for="pricing-edit-valid-from">Valid from</label>
+                            <input class="form-control" id="pricing-edit-valid-from" type="datetime-local" />
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label mb-1" for="pricing-edit-valid-to">Valid to</label>
+                            <input class="form-control" id="pricing-edit-valid-to" type="datetime-local" />
+                        </div>
+                        <div class="col-12 d-flex justify-content-end">
+                            <button class="btn btn-primary" id="pricing-save" type="button"><i class="bi bi-check-lg"></i> Save pricing</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

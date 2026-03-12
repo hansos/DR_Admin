@@ -1,8 +1,12 @@
 using ISPAdmin.Data;
 using ISPAdmin.Data.Entities;
+using ISPAdmin.Data.Enums;
 using ISPAdmin.DTOs;
+using ExchangeRateLib.Factories;
+using ExchangeRateLib.Infrastructure.Settings;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
+using System.Diagnostics;
 
 namespace ISPAdmin.Services;
 
@@ -12,11 +16,18 @@ namespace ISPAdmin.Services;
 public class CurrencyService : ICurrencyService
 {
     private readonly ApplicationDbContext _context;
+    private readonly ExchangeRateFactory _exchangeRateFactory;
+    private readonly ExchangeRateSettings _exchangeRateSettings;
     private static readonly Serilog.ILogger _log = Log.ForContext<CurrencyService>();
 
-    public CurrencyService(ApplicationDbContext context)
+    public CurrencyService(
+        ApplicationDbContext context,
+        ExchangeRateFactory exchangeRateFactory,
+        ExchangeRateSettings exchangeRateSettings)
     {
         _context = context;
+        _exchangeRateFactory = exchangeRateFactory;
+        _exchangeRateSettings = exchangeRateSettings;
     }
 
     /// <summary>
@@ -424,6 +435,233 @@ public class CurrencyService : ICurrencyService
             _log.Error(ex, "Error occurred while deactivating expired currency exchange rates");
             throw;
         }
+    }
+
+    /// <summary>
+    /// Forces an immediate download and update of active exchange rates from the configured provider.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The number of rates that were added or updated.</returns>
+    public async Task<int> ForceUpdateRatesAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            _log.Information("Starting forced exchange-rate update using provider {Provider}", _exchangeRateSettings.Provider);
+
+            var stopwatch = Stopwatch.StartNew();
+            var downloadTimestamp = DateTime.UtcNow;
+            var provider = _exchangeRateFactory.CreateProvider();
+            var source = MapProviderToSource(_exchangeRateSettings.Provider);
+            var now = DateTime.UtcNow;
+            var changeCount = 0;
+            var addedCount = 0;
+            var updatedCount = 0;
+
+            var activeCurrencies = await _context.Currencies
+                .AsNoTracking()
+                .Where(c => c.IsActive)
+                .OrderByDescending(c => c.IsDefault)
+                .ThenBy(c => c.SortOrder)
+                .ThenBy(c => c.Code)
+                .Select(c => c.Code.ToUpper())
+                .ToListAsync(cancellationToken);
+
+            if (activeCurrencies.Count < 2)
+            {
+                _log.Warning("Forced exchange-rate update skipped. At least two active currencies are required.");
+                _context.ExchangeRateDownloadLogs.Add(new ExchangeRateDownloadLog
+                {
+                    BaseCurrency = "N/A",
+                    TargetCurrency = null,
+                    Source = source,
+                    Success = false,
+                    DownloadTimestamp = downloadTimestamp,
+                    RatesDownloaded = 0,
+                    RatesAdded = 0,
+                    RatesUpdated = 0,
+                    ErrorMessage = "At least two active currencies are required.",
+                    ErrorCode = "NOT_ENOUGH_CURRENCIES",
+                    DurationMs = stopwatch.ElapsedMilliseconds,
+                    IsStartupDownload = false,
+                    IsScheduledDownload = false,
+                    Notes = "Manual force update"
+                });
+                await _context.SaveChangesAsync(cancellationToken);
+                return 0;
+            }
+
+            var anchorCurrency = activeCurrencies.First();
+
+            var existingPairs = await _context.CurrencyExchangeRates
+                .Where(r => r.IsActive)
+                .Select(r => new { BaseCurrency = r.BaseCurrency.ToUpper(), TargetCurrency = r.TargetCurrency.ToUpper() })
+                .Distinct()
+                .ToListAsync(cancellationToken);
+
+            var currencyPairs = existingPairs
+                .Select(x => (x.BaseCurrency, x.TargetCurrency))
+                .ToList();
+
+            if (!currencyPairs.Any())
+            {
+                currencyPairs = activeCurrencies
+                    .Where(code => !string.Equals(code, anchorCurrency, StringComparison.OrdinalIgnoreCase))
+                    .Select(code => (BaseCurrency: anchorCurrency, TargetCurrency: code))
+                    .ToList();
+            }
+
+            var pairCurrencies = currencyPairs
+                .SelectMany(x => new[] { x.BaseCurrency, x.TargetCurrency })
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (!pairCurrencies.Contains(anchorCurrency, StringComparer.OrdinalIgnoreCase))
+            {
+                pairCurrencies.Add(anchorCurrency);
+            }
+
+            var anchorTargets = pairCurrencies
+                .Where(code => !string.Equals(code, anchorCurrency, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            var providerResult = await provider.GetExchangeRatesAsync(anchorCurrency, anchorTargets);
+            if (!providerResult.Success || providerResult.Rates == null || providerResult.Rates.Count == 0)
+            {
+                _log.Warning(
+                    "Forced exchange-rate update failed for anchor {AnchorCurrency}. Message: {Message}",
+                    anchorCurrency,
+                    providerResult.Message);
+
+                _context.ExchangeRateDownloadLogs.Add(new ExchangeRateDownloadLog
+                {
+                    BaseCurrency = anchorCurrency,
+                    TargetCurrency = null,
+                    Source = source,
+                    Success = false,
+                    DownloadTimestamp = downloadTimestamp,
+                    RatesDownloaded = 0,
+                    RatesAdded = 0,
+                    RatesUpdated = 0,
+                    ErrorMessage = providerResult.Message,
+                    ErrorCode = providerResult.ErrorCode,
+                    DurationMs = stopwatch.ElapsedMilliseconds,
+                    IsStartupDownload = false,
+                    IsScheduledDownload = false,
+                    Notes = "Manual force update"
+                });
+                await _context.SaveChangesAsync(cancellationToken);
+                return 0;
+            }
+
+            var ratesDownloadedCount = providerResult.Rates.Count;
+
+            var anchorRates = new Dictionary<string, decimal>(StringComparer.OrdinalIgnoreCase)
+            {
+                [anchorCurrency] = 1m
+            };
+
+            foreach (var rate in providerResult.Rates)
+            {
+                if (rate.Value > 0)
+                {
+                    anchorRates[rate.Key.ToUpper()] = rate.Value;
+                }
+            }
+
+            foreach (var pair in currencyPairs)
+            {
+                if (!anchorRates.TryGetValue(pair.BaseCurrency, out var baseRate) ||
+                    !anchorRates.TryGetValue(pair.TargetCurrency, out var targetRate) ||
+                    baseRate <= 0m)
+                {
+                    _log.Warning(
+                        "Skipping forced update for pair {BaseCurrency}/{TargetCurrency} due to missing anchor rates",
+                        pair.BaseCurrency,
+                        pair.TargetCurrency);
+                    continue;
+                }
+
+                var exchangeRate = targetRate / baseRate;
+
+                var existingRate = await _context.CurrencyExchangeRates.FirstOrDefaultAsync(
+                    r => r.BaseCurrency == pair.BaseCurrency &&
+                         r.TargetCurrency == pair.TargetCurrency &&
+                         r.IsActive,
+                    cancellationToken);
+
+                if (existingRate != null)
+                {
+                    existingRate.Rate = exchangeRate;
+                    existingRate.EffectiveDate = now;
+                    existingRate.Source = source;
+                    existingRate.EffectiveRate = exchangeRate * (1 + existingRate.Markup / 100);
+                    existingRate.UpdatedAt = now;
+                    changeCount++;
+                    updatedCount++;
+                    continue;
+                }
+
+                _context.CurrencyExchangeRates.Add(new CurrencyExchangeRate
+                {
+                    BaseCurrency = pair.BaseCurrency,
+                    TargetCurrency = pair.TargetCurrency,
+                    Rate = exchangeRate,
+                    EffectiveDate = now,
+                    Source = source,
+                    IsActive = true,
+                    Markup = 0m,
+                    EffectiveRate = exchangeRate,
+                    CreatedAt = now,
+                    UpdatedAt = now
+                });
+
+                changeCount++;
+                addedCount++;
+            }
+
+            _context.ExchangeRateDownloadLogs.Add(new ExchangeRateDownloadLog
+            {
+                BaseCurrency = anchorCurrency,
+                TargetCurrency = null,
+                Source = source,
+                Success = true,
+                DownloadTimestamp = downloadTimestamp,
+                RatesDownloaded = ratesDownloadedCount,
+                RatesAdded = addedCount,
+                RatesUpdated = updatedCount,
+                ErrorMessage = null,
+                ErrorCode = null,
+                DurationMs = stopwatch.ElapsedMilliseconds,
+                IsStartupDownload = false,
+                IsScheduledDownload = false,
+                Notes = "Manual force update"
+            });
+
+            await _context.SaveChangesAsync(cancellationToken);
+
+            _log.Information("Forced exchange-rate update finished with {ChangeCount} changes", changeCount);
+            return changeCount;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while forcing exchange-rate update");
+            throw;
+        }
+    }
+
+    private static CurrencyRateSource MapProviderToSource(string providerCode)
+    {
+        return providerCode.Trim().ToLowerInvariant() switch
+        {
+            "exchangeratehost" => CurrencyRateSource.ExchangeRateHost,
+            "frankfurter" => CurrencyRateSource.Frankfurter,
+            "openexchangerates" => CurrencyRateSource.OpenExchangeRates,
+            "currencylayer" => CurrencyRateSource.CurrencyLayer,
+            "fixer" => CurrencyRateSource.Fixer,
+            "xe" => CurrencyRateSource.XE,
+            "oanda" => CurrencyRateSource.OANDA,
+            _ => CurrencyRateSource.Other
+        };
     }
 
     private static CurrencyExchangeRateDto MapToDto(CurrencyExchangeRate rate)

@@ -28,6 +28,8 @@
         "invoices.ts",
         "orders.ts",
         "payments.ts",
+        "pricing.ts",
+        "profit-margins.ts",
         "tax-jurisdictions.ts",
         "tax-registrations.ts",
         "tax-categories.ts",

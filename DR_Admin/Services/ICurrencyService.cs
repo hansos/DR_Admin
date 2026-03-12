@@ -86,4 +86,11 @@ public interface ICurrencyService
     /// </summary>
     /// <returns>The number of rates that were deactivated</returns>
     Task<int> DeactivateExpiredRatesAsync();
+
+    /// <summary>
+    /// Forces an immediate download and update of active exchange rates from the configured provider.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The number of rates that were added or updated.</returns>
+    Task<int> ForceUpdateRatesAsync(CancellationToken cancellationToken = default);
 }

@@ -72,6 +72,16 @@ public static class AuthorizationPoliciesConfiguration
         options.AddPolicy("Currency.Write", policy =>
             policy.RequireRole(ADMIN, FINANCE));
 
+        // ProfitMargin policies
+        options.AddPolicy("ProfitMargin.Delete", policy =>
+            policy.RequireRole(ADMIN));
+
+        options.AddPolicy("ProfitMargin.Read", policy =>
+            policy.RequireRole(ADMIN, FINANCE, SALES));
+
+        options.AddPolicy("ProfitMargin.Write", policy =>
+            policy.RequireRole(ADMIN, FINANCE));
+
         // Customer policies
         options.AddPolicy("Customer.Delete", policy =>
             policy.RequireRole(ADMIN));

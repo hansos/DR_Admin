@@ -6,9 +6,14 @@
             <h2 class="h4 mb-1"><i class="bi bi-currency-exchange"></i> Currency Management</h2>
             <p class="text-muted mb-0">Manage supported currencies and exchange rates used for billing and conversions.</p>
         </div>
-        <button class="btn btn-primary" id="currency-rates-create" type="button">
-            <i class="bi bi-plus-circle"></i> New Exchange Rate
-        </button>
+        <div class="d-flex flex-wrap gap-2">
+            <button class="btn btn-outline-primary" id="currency-rates-force-update" type="button">
+                <i class="bi bi-cloud-download"></i> Force update
+            </button>
+            <button class="btn btn-primary" id="currency-rates-create" type="button">
+                <i class="bi bi-plus-circle"></i> New Exchange Rate
+            </button>
+        </div>
     </div>
 
     <div id="currency-management-alert-success" class="alert alert-success d-none" role="alert"></div>
