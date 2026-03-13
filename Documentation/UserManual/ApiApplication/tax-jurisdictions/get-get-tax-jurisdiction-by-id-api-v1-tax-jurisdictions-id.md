@@ -22,9 +22,12 @@ Requires authentication. Policy: **TaxJurisdiction.Read**.
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `TaxJurisdictionDto` |
+| 200 | OK | `[TaxJurisdictionDto](../dtos/tax-jurisdiction-dto.md)` |
 | 404 | Not Found | - |
 | 401 | Unauthorized | - |
 | 403 | Forbidden | - |
 
 [Back to API Manual index](../index.md)
+
+
+

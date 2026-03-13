@@ -23,9 +23,12 @@ Requires authentication. Policy: **Pricing.Read**.
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `RegistrarTldCostPricingDto` |
+| 200 | OK | `[RegistrarTldCostPricingDto](../dtos/registrar-tld-cost-pricing-dto.md)` |
 | 404 | Not Found | - |
 | 401 | Unauthorized | - |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
+
+

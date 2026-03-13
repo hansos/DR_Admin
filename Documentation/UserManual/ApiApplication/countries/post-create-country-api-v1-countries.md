@@ -16,16 +16,19 @@ Requires authentication. Policy: **Geographical.Write**.
 
 | Name | Source | Type |
 |------|--------|------|
-| `createDto` | Body | `CreateCountryDto` |
+| `createDto` | Body | `[CreateCountryDto](../dtos/create-country-dto.md)` |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 201 | Created | `CountryDto` |
+| 201 | Created | `[CountryDto](../dtos/country-dto.md)` |
 | 400 | Bad Request | - |
 | 401 | Unauthorized | - |
 | 403 | Forbidden | - |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
+
+

@@ -17,13 +17,13 @@ Requires authentication. Policy: **Role.Write**.
 | Name | Source | Type |
 |------|--------|------|
 | `id` | Route | `int` |
-| `updateDto` | Body | `UpdateRoleDto` |
+| `updateDto` | Body | `[UpdateRoleDto](../dtos/update-role-dto.md)` |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `RoleDto` |
+| 200 | OK | `[RoleDto](../dtos/role-dto.md)` |
 | 400 | Bad Request | - |
 | 401 | Unauthorized | - |
 | 403 | Forbidden | - |
@@ -31,3 +31,6 @@ Requires authentication. Policy: **Role.Write**.
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
+
+

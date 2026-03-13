@@ -16,6 +16,9 @@ Requires authentication. Policy: **DnsRecordType.Write**.
 
 | Name | Source | Type |
 |------|--------|------|
-| `createDto` | Body | `CreateDnsRecordTypeDto` |
+| `createDto` | Body | `[CreateDnsRecordTypeDto](../dtos/create-dns-record-type-dto.md)` |
 
 [Back to API Manual index](../index.md)
+
+
+

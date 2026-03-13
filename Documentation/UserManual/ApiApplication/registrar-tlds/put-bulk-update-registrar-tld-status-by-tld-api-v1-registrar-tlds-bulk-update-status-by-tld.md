@@ -16,16 +16,19 @@ Requires authentication. Policy: **Authenticated**.
 
 | Name | Source | Type |
 |------|--------|------|
-| `statusDto` | Body | `BulkUpdateRegistrarTldStatusByTldDto` |
+| `statusDto` | Body | `[BulkUpdateRegistrarTldStatusByTldDto](../dtos/bulk-update-registrar-tld-status-by-tld-dto.md)` |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `BulkUpdateResultDto` |
+| 200 | OK | `[BulkUpdateResultDto](../dtos/bulk-update-result-dto.md)` |
 | 400 | Bad Request | - |
 | 401 | Unauthorized | - |
 | 403 | Forbidden | - |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
+
+

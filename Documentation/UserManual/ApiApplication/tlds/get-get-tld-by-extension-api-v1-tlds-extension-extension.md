@@ -22,9 +22,12 @@ This endpoint does not require authentication.
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `TldDto` |
+| 200 | OK | `[TldDto](../dtos/tld-dto.md)` |
 | 401 | Unauthorized | - |
 | 404 | Not Found | - |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
+
+

@@ -12,7 +12,7 @@ POST /api/v1/my-account/change-password
 
 | Name | Source | Type |
 |------|--------|------|
-| `request` | Body | `ChangePasswordRequestDto` |
+| `request` | Body | `[ChangePasswordRequestDto](../dtos/change-password-request-dto.md)` |
 
 ## Responses
 
@@ -24,3 +24,6 @@ POST /api/v1/my-account/change-password
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
+
+

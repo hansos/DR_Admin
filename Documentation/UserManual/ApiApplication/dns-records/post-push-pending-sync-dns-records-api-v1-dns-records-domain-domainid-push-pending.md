@@ -22,10 +22,13 @@ Requires authentication. Policy: **DnsRecord.Write**.
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `DnsPushPendingResult` |
+| 200 | OK | `[DnsPushPendingResult](../dtos/dns-push-pending-result.md)` |
 | 401 | Unauthorized | - |
 | 403 | Forbidden | - |
 | 404 | Not Found | - |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
+
+

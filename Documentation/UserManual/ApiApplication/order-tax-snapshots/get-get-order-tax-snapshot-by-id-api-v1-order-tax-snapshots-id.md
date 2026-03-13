@@ -22,9 +22,12 @@ Requires authentication. Policy: **OrderTaxSnapshot.Read**.
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `OrderTaxSnapshotDto` |
+| 200 | OK | `[OrderTaxSnapshotDto](../dtos/order-tax-snapshot-dto.md)` |
 | 404 | Not Found | - |
 | 401 | Unauthorized | - |
 | 403 | Forbidden | - |
 
 [Back to API Manual index](../index.md)
+
+
+

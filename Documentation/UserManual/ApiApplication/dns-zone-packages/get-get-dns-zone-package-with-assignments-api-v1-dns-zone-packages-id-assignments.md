@@ -22,8 +22,11 @@ Requires authentication. Policy: **DnsZonePackage.Read**.
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `DnsZonePackageDto` |
+| 200 | OK | `[DnsZonePackageDto](../dtos/dns-zone-package-dto.md)` |
 | 404 | Not Found | - |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
+
+

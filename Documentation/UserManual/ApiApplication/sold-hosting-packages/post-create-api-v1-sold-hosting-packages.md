@@ -16,12 +16,15 @@ Requires authentication. Policy: **Authenticated**.
 
 | Name | Source | Type |
 |------|--------|------|
-| `createDto` | Body | `CreateSoldHostingPackageDto` |
+| `createDto` | Body | `[CreateSoldHostingPackageDto](../dtos/create-sold-hosting-package-dto.md)` |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 201 | Created | `SoldHostingPackageDto` |
+| 201 | Created | `[SoldHostingPackageDto](../dtos/sold-hosting-package-dto.md)` |
 
 [Back to API Manual index](../index.md)
+
+
+

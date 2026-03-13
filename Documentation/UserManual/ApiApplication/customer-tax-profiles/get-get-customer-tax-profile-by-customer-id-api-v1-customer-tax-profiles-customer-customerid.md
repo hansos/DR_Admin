@@ -22,10 +22,13 @@ Requires authentication. Policy: **Authenticated**.
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `CustomerTaxProfileDto` |
+| 200 | OK | `[CustomerTaxProfileDto](../dtos/customer-tax-profile-dto.md)` |
 | 404 | Not Found | - |
 | 401 | Unauthorized | - |
 | 403 | Forbidden | - |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
+
+

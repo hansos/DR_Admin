@@ -23,9 +23,12 @@ Requires authentication. Policy: **Authenticated**.
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `DomainPricingDto` |
+| 200 | OK | `[DomainPricingDto](../dtos/domain-pricing-dto.md)` |
 | 404 | Not Found | - |
 | 401 | Unauthorized | - |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
+
+

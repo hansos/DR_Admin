@@ -17,13 +17,13 @@ Requires authentication. Policy: **Authenticated**.
 | Name | Source | Type |
 |------|--------|------|
 | `id` | Route | `int` |
-| `updateDto` | Body | `UpdateServerControlPanelDto` |
+| `updateDto` | Body | `[UpdateServerControlPanelDto](../dtos/update-server-control-panel-dto.md)` |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `ServerControlPanelDto` |
+| 200 | OK | `[ServerControlPanelDto](../dtos/server-control-panel-dto.md)` |
 | 400 | Bad Request | - |
 | 401 | Unauthorized | - |
 | 403 | Forbidden | - |
@@ -31,3 +31,6 @@ Requires authentication. Policy: **Authenticated**.
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
+
+

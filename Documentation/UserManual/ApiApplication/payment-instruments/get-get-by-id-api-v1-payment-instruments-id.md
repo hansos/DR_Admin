@@ -22,7 +22,10 @@ Requires authentication. Policy: **PaymentGateway.Read**.
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `PaymentInstrumentDto` |
+| 200 | OK | `[PaymentInstrumentDto](../dtos/payment-instrument-dto.md)` |
 | 404 | Not Found | - |
 
 [Back to API Manual index](../index.md)
+
+
+

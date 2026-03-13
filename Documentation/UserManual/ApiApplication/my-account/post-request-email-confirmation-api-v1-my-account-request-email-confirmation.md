@@ -12,7 +12,7 @@ POST /api/v1/my-account/request-email-confirmation
 
 | Name | Source | Type |
 |------|--------|------|
-| `request` | Body | `RequestEmailConfirmationDto?` |
+| `request` | Body | `[RequestEmailConfirmationDto](../dtos/request-email-confirmation-dto.md)?` |
 
 ## Responses
 
@@ -25,3 +25,6 @@ POST /api/v1/my-account/request-email-confirmation
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
+
+

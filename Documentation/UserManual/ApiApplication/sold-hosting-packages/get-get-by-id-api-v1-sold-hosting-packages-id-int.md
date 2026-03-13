@@ -22,7 +22,10 @@ Requires authentication. Policy: **Authenticated**.
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `SoldHostingPackageDto` |
+| 200 | OK | `[SoldHostingPackageDto](../dtos/sold-hosting-package-dto.md)` |
 | 404 | Not Found | - |
 
 [Back to API Manual index](../index.md)
+
+
+

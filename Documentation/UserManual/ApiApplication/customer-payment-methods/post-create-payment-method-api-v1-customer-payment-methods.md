@@ -16,15 +16,18 @@ Requires authentication. Policy: **Authenticated**.
 
 | Name | Source | Type |
 |------|--------|------|
-| `createDto` | Body | `CreateCustomerPaymentMethodDto` |
+| `createDto` | Body | `[CreateCustomerPaymentMethodDto](../dtos/create-customer-payment-method-dto.md)` |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 201 | Created | `CustomerPaymentMethodDto` |
+| 201 | Created | `[CustomerPaymentMethodDto](../dtos/customer-payment-method-dto.md)` |
 | 400 | Bad Request | - |
 | 401 | Unauthorized | - |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
+
+

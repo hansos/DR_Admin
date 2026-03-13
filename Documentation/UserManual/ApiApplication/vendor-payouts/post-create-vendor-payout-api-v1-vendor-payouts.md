@@ -16,13 +16,16 @@ Requires authentication. Policy: **Authenticated**.
 
 | Name | Source | Type |
 |------|--------|------|
-| `createDto` | Body | `CreateVendorPayoutDto` |
+| `createDto` | Body | `[CreateVendorPayoutDto](../dtos/create-vendor-payout-dto.md)` |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 201 | Created | `VendorPayoutDto` |
+| 201 | Created | `[VendorPayoutDto](../dtos/vendor-payout-dto.md)` |
 | 400 | Bad Request | - |
 
 [Back to API Manual index](../index.md)
+
+
+

@@ -17,13 +17,13 @@ Requires authentication. Policy: **Tld.Write**.
 | Name | Source | Type |
 |------|--------|------|
 | `id` | Route | `int` |
-| `updateDto` | Body | `UpdateTldRegistryRuleDto` |
+| `updateDto` | Body | `[UpdateTldRegistryRuleDto](../dtos/update-tld-registry-rule-dto.md)` |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `TldRegistryRuleDto` |
+| 200 | OK | `[TldRegistryRuleDto](../dtos/tld-registry-rule-dto.md)` |
 | 400 | Bad Request | - |
 | 401 | Unauthorized | - |
 | 403 | Forbidden | - |
@@ -31,3 +31,6 @@ Requires authentication. Policy: **Tld.Write**.
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
+
+

@@ -16,16 +16,19 @@ Requires authentication. Policy: **ServerIpAddress.Write**.
 
 | Name | Source | Type |
 |------|--------|------|
-| `createDto` | Body | `CreateServerIpAddressDto` |
+| `createDto` | Body | `[CreateServerIpAddressDto](../dtos/create-server-ip-address-dto.md)` |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 201 | Created | `ServerIpAddressDto` |
+| 201 | Created | `[ServerIpAddressDto](../dtos/server-ip-address-dto.md)` |
 | 400 | Bad Request | - |
 | 401 | Unauthorized | - |
 | 403 | Forbidden | - |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
+
+

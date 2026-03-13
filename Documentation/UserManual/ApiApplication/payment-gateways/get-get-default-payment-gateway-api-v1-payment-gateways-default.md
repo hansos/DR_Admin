@@ -16,9 +16,12 @@ Requires authentication. Policy: **Authenticated**.
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `PaymentGatewayDto` |
+| 200 | OK | `[PaymentGatewayDto](../dtos/payment-gateway-dto.md)` |
 | 401 | Unauthorized | - |
 | 404 | Not Found | - |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
+
+

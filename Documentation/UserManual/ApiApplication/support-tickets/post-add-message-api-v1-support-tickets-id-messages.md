@@ -17,15 +17,18 @@ Requires authentication. Policy: **SupportTicket.Write**.
 | Name | Source | Type |
 |------|--------|------|
 | `id` | Route | `int` |
-| `dto` | Body | `CreateSupportTicketMessageDto` |
+| `dto` | Body | `[CreateSupportTicketMessageDto](../dtos/create-support-ticket-message-dto.md)` |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `SupportTicketDto` |
+| 200 | OK | `[SupportTicketDto](../dtos/support-ticket-dto.md)` |
 | 400 | Bad Request | - |
 | 404 | Not Found | - |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
+
+

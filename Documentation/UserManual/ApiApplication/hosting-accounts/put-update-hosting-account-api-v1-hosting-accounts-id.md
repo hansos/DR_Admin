@@ -17,17 +17,20 @@ Requires authentication. Policy: **Hosting.Write**.
 | Name | Source | Type |
 |------|--------|------|
 | `id` | Route | `int` |
-| `dto` | Body | `HostingAccountUpdateDto` |
+| `dto` | Body | `[HostingAccountUpdateDto](../dtos/hosting-account-update-dto.md)` |
 | `syncToServer` | Query | `bool` |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `HostingAccountDto` |
+| 200 | OK | `[HostingAccountDto](../dtos/hosting-account-dto.md)` |
 | 400 | Bad Request | - |
 | 401 | Unauthorized | - |
 | 404 | Not Found | - |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
+
+

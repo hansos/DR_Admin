@@ -22,9 +22,12 @@ Requires authentication. Policy: **TaxRegistration.Read**.
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `TaxRegistrationDto` |
+| 200 | OK | `[TaxRegistrationDto](../dtos/tax-registration-dto.md)` |
 | 404 | Not Found | - |
 | 401 | Unauthorized | - |
 | 403 | Forbidden | - |
 
 [Back to API Manual index](../index.md)
+
+
+

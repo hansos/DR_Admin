@@ -12,7 +12,7 @@ POST /api/v1/my-account/2fa/authenticator/confirm
 
 | Name | Source | Type |
 |------|--------|------|
-| `request` | Body | `ConfirmAuthenticatorSetupRequestDto` |
+| `request` | Body | `[ConfirmAuthenticatorSetupRequestDto](../dtos/confirm-authenticator-setup-request-dto.md)` |
 
 ## Responses
 
@@ -24,3 +24,6 @@ POST /api/v1/my-account/2fa/authenticator/confirm
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
+
+

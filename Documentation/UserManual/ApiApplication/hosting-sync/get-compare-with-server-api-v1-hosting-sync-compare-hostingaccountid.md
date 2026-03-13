@@ -22,9 +22,12 @@ Requires authentication. Policy: **Hosting.Read**.
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `SyncComparisonDto` |
+| 200 | OK | `[SyncComparisonDto](../dtos/sync-comparison-dto.md)` |
 | 401 | Unauthorized | - |
 | 404 | Not Found | - |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
+
+

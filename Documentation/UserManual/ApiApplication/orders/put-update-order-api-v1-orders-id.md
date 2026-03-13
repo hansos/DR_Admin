@@ -17,13 +17,13 @@ Requires authentication. Policy: **Order.Write**.
 | Name | Source | Type |
 |------|--------|------|
 | `id` | Route | `int` |
-| `updateDto` | Body | `UpdateOrderDto` |
+| `updateDto` | Body | `[UpdateOrderDto](../dtos/update-order-dto.md)` |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `OrderDto` |
+| 200 | OK | `[OrderDto](../dtos/order-dto.md)` |
 | 400 | Bad Request | - |
 | 401 | Unauthorized | - |
 | 403 | Forbidden | - |
@@ -31,3 +31,6 @@ Requires authentication. Policy: **Order.Write**.
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
+
+

@@ -16,16 +16,19 @@ Requires authentication. Policy: **Authenticated**.
 
 | Name | Source | Type |
 |------|--------|------|
-| `createDto` | Form | `CreateDocumentTemplateDto` |
+| `createDto` | Form | `[CreateDocumentTemplateDto](../dtos/create-document-template-dto.md)` |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 201 | Created | `DocumentTemplateDto` |
+| 201 | Created | `[DocumentTemplateDto](../dtos/document-template-dto.md)` |
 | 400 | Bad Request | - |
 | 401 | Unauthorized | - |
 | 403 | Forbidden | - |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
+
+

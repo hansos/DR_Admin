@@ -17,13 +17,13 @@ Requires authentication. Policy: **Customer.Write**.
 | Name        | Source | Type                            |
 | ----------- | ------ | ------------------------------- |
 | `id`        | Route  | `int`                           |
-| `createDto` | Body   | `CreateCustomerInternalNoteDto` |
+| `createDto` | Body   | `[CreateCustomerInternalNoteDto](../dtos/create-customer-internal-note-dto.md)` |
 
 ## Responses
 
 | Code | Description           | Body                      |
 | ---- | --------------------- | ------------------------- |
-| 201  | Created               | `CustomerInternalNoteDto` |
+| 201  | Created               | `[CustomerInternalNoteDto](../dtos/customer-internal-note-dto.md)` |
 | 400  | Bad Request           | -                         |
 | 401  | Unauthorized          | -                         |
 | 403  | Forbidden             | -                         |
@@ -31,3 +31,6 @@ Requires authentication. Policy: **Customer.Write**.
 | 500  | Internal Server Error | -                         |
 
 [Back to API Manual index](../index.md)
+
+
+

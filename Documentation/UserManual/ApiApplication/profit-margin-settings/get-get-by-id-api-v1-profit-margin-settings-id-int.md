@@ -22,7 +22,10 @@ Requires authentication. Policy: **ProfitMargin.Read**.
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `ProfitMarginSettingDto` |
+| 200 | OK | `[ProfitMarginSettingDto](../dtos/profit-margin-setting-dto.md)` |
 | 404 | Not Found | - |
 
 [Back to API Manual index](../index.md)
+
+
+

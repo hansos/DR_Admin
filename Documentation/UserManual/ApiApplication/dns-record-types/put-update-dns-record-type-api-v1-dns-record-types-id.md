@@ -17,6 +17,9 @@ Requires authentication. Policy: **Authenticated**.
 | Name | Source | Type |
 |------|--------|------|
 | `id` | Route | `int` |
-| `updateDto` | Body | `UpdateDnsRecordTypeDto` |
+| `updateDto` | Body | `[UpdateDnsRecordTypeDto](../dtos/update-dns-record-type-dto.md)` |
 
 [Back to API Manual index](../index.md)
+
+
+

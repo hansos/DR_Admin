@@ -18,13 +18,13 @@ Requires authentication. Policy: **Customer.Write**.
 |------|--------|------|
 | `customerId` | Route | `int` |
 | `id` | Route | `int` |
-| `updateDto` | Body | `UpdateRegistrarMailAddressDto` |
+| `updateDto` | Body | `[UpdateRegistrarMailAddressDto](../dtos/update-registrar-mail-address-dto.md)` |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `RegistrarMailAddressDto` |
+| 200 | OK | `[RegistrarMailAddressDto](../dtos/registrar-mail-address-dto.md)` |
 | 400 | Bad Request | - |
 | 401 | Unauthorized | - |
 | 403 | Forbidden | - |
@@ -32,3 +32,6 @@ Requires authentication. Policy: **Customer.Write**.
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
+
+

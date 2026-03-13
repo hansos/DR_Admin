@@ -22,10 +22,13 @@ Requires authentication. Policy: **Invoice.Read**.
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `InvoiceDto` |
+| 200 | OK | `[InvoiceDto](../dtos/invoice-dto.md)` |
 | 401 | Unauthorized | - |
 | 403 | Forbidden | - |
 | 404 | Not Found | - |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
+
+

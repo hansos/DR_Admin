@@ -22,10 +22,13 @@ Requires authentication. Policy: **Token.Read**.
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `TokenDto` |
+| 200 | OK | `[TokenDto](../dtos/token-dto.md)` |
 | 401 | Unauthorized | - |
 | 403 | Forbidden | - |
 | 404 | Not Found | - |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
+
+

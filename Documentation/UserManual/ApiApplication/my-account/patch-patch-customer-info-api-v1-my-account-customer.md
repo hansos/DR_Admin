@@ -12,6 +12,9 @@ PATCH /api/v1/my-account/customer
 
 | Name | Source | Type |
 |------|--------|------|
-| `request` | Body | `PatchCustomerInfoRequestDto` |
+| `request` | Body | `[PatchCustomerInfoRequestDto](../dtos/patch-customer-info-request-dto.md)` |
 
 [Back to API Manual index](../index.md)
+
+
+

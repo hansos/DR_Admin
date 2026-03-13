@@ -22,10 +22,13 @@ Requires authentication. Policy: **PaymentIntent.Read**.
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `PaymentIntentDto` |
+| 200 | OK | `[PaymentIntentDto](../dtos/payment-intent-dto.md)` |
 | 404 | Not Found | - |
 | 401 | Unauthorized | - |
 | 403 | Forbidden | - |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
+
+

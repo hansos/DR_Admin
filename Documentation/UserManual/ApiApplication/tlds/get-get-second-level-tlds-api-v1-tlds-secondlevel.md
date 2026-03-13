@@ -23,9 +23,12 @@ Requires authentication. Policy: **Authenticated**.
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `IEnumerable<TldDto>` |
-| 200 | OK | `PagedResult<TldDto>` |
+| 200 | OK | `IEnumerable<[TldDto](../dtos/tld-dto.md)>` |
+| 200 | OK | `[PagedResult](../dtos/paged-result.md)<[TldDto](../dtos/tld-dto.md)>` |
 | 401 | Unauthorized | - |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
+
+

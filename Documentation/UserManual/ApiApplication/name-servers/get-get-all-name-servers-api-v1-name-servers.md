@@ -23,10 +23,13 @@ Requires authentication. Policy: **NameServer.Read**.
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `IEnumerable<NameServerDto>` |
-| 200 | OK | `PagedResult<NameServerDto>` |
+| 200 | OK | `IEnumerable<[NameServerDto](../dtos/name-server-dto.md)>` |
+| 200 | OK | `[PagedResult](../dtos/paged-result.md)<[NameServerDto](../dtos/name-server-dto.md)>` |
 | 401 | Unauthorized | - |
 | 403 | Forbidden | - |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
+
+

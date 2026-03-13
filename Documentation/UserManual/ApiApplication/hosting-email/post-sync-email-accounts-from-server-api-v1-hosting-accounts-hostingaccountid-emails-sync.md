@@ -22,6 +22,9 @@ Requires authentication. Policy: **Hosting.Write**.
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `SyncResultDto` |
+| 200 | OK | `[SyncResultDto](../dtos/sync-result-dto.md)` |
 
 [Back to API Manual index](../index.md)
+
+
+

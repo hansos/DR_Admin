@@ -17,13 +17,16 @@ Requires authentication. Policy: **Authenticated**.
 | Name | Source | Type |
 |------|--------|------|
 | `id` | Route | `int` |
-| `updateDto` | Body | `UpdateSoldHostingPackageDto` |
+| `updateDto` | Body | `[UpdateSoldHostingPackageDto](../dtos/update-sold-hosting-package-dto.md)` |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `SoldHostingPackageDto` |
+| 200 | OK | `[SoldHostingPackageDto](../dtos/sold-hosting-package-dto.md)` |
 | 404 | Not Found | - |
 
 [Back to API Manual index](../index.md)
+
+
+

@@ -17,6 +17,9 @@ Requires authentication. Policy: **Geographical.Write**.
 | Name | Source | Type |
 |------|--------|------|
 | `id` | Route | `int` |
-| `updateDto` | Body | `UpdateCountryDto` |
+| `updateDto` | Body | `[UpdateCountryDto](../dtos/update-country-dto.md)` |
 
 [Back to API Manual index](../index.md)
+
+
+

@@ -16,7 +16,7 @@ This endpoint does not require authentication.
 
 | Name | Source | Type |
 |------|--------|------|
-| `request` | Body | `SetPasswordRequestDto` |
+| `request` | Body | `[SetPasswordRequestDto](../dtos/set-password-request-dto.md)` |
 
 ## Responses
 
@@ -27,3 +27,6 @@ This endpoint does not require authentication.
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
+
+

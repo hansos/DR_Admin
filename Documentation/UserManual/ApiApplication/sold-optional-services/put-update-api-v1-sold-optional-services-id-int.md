@@ -17,13 +17,16 @@ Requires authentication. Policy: **Authenticated**.
 | Name | Source | Type |
 |------|--------|------|
 | `id` | Route | `int` |
-| `updateDto` | Body | `UpdateSoldOptionalServiceDto` |
+| `updateDto` | Body | `[UpdateSoldOptionalServiceDto](../dtos/update-sold-optional-service-dto.md)` |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `SoldOptionalServiceDto` |
+| 200 | OK | `[SoldOptionalServiceDto](../dtos/sold-optional-service-dto.md)` |
 | 404 | Not Found | - |
 
 [Back to API Manual index](../index.md)
+
+
+

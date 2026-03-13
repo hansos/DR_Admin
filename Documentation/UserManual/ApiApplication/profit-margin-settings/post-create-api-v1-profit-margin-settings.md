@@ -16,13 +16,16 @@ Requires authentication. Policy: **ProfitMargin.Write**.
 
 | Name | Source | Type |
 |------|--------|------|
-| `dto` | Body | `CreateProfitMarginSettingDto` |
+| `dto` | Body | `[CreateProfitMarginSettingDto](../dtos/create-profit-margin-setting-dto.md)` |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 201 | Created | `ProfitMarginSettingDto` |
+| 201 | Created | `[ProfitMarginSettingDto](../dtos/profit-margin-setting-dto.md)` |
 | 400 | Bad Request | - |
 
 [Back to API Manual index](../index.md)
+
+
+

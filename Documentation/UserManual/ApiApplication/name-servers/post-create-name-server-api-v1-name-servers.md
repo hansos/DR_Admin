@@ -16,16 +16,19 @@ Requires authentication. Policy: **NameServer.WriteOwn**.
 
 | Name | Source | Type |
 |------|--------|------|
-| `createDto` | Body | `CreateNameServerDto` |
+| `createDto` | Body | `[CreateNameServerDto](../dtos/create-name-server-dto.md)` |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 201 | Created | `NameServerDto` |
+| 201 | Created | `[NameServerDto](../dtos/name-server-dto.md)` |
 | 400 | Bad Request | - |
 | 401 | Unauthorized | - |
 | 403 | Forbidden | - |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
+
+

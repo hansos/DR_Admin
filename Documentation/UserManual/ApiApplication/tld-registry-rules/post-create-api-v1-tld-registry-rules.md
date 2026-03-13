@@ -16,16 +16,19 @@ Requires authentication. Policy: **Tld.Write**.
 
 | Name | Source | Type |
 |------|--------|------|
-| `createDto` | Body | `CreateTldRegistryRuleDto` |
+| `createDto` | Body | `[CreateTldRegistryRuleDto](../dtos/create-tld-registry-rule-dto.md)` |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 201 | Created | `TldRegistryRuleDto` |
+| 201 | Created | `[TldRegistryRuleDto](../dtos/tld-registry-rule-dto.md)` |
 | 400 | Bad Request | - |
 | 401 | Unauthorized | - |
 | 403 | Forbidden | - |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
+
+

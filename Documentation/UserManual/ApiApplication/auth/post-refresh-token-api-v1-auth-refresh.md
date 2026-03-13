@@ -16,6 +16,9 @@ This endpoint does not require authentication.
 
 | Name | Source | Type |
 |------|--------|------|
-| `request` | Body | `RefreshTokenRequestDto` |
+| `request` | Body | `[RefreshTokenRequestDto](../dtos/refresh-token-request-dto.md)` |
 
 [Back to API Manual index](../index.md)
+
+
+

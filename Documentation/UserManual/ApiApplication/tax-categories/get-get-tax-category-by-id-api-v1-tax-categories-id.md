@@ -22,7 +22,10 @@ Requires authentication. Policy: **TaxCategory.Read**.
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `TaxCategoryDto` |
+| 200 | OK | `[TaxCategoryDto](../dtos/tax-category-dto.md)` |
 | 404 | Not Found | - |
 
 [Back to API Manual index](../index.md)
+
+
+

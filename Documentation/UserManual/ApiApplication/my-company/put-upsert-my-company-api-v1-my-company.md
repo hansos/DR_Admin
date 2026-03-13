@@ -16,16 +16,19 @@ Requires authentication. Policy: **MyCompany.Write**.
 
 | Name | Source | Type |
 |------|--------|------|
-| `dto` | Body | `UpsertMyCompanyDto` |
+| `dto` | Body | `[UpsertMyCompanyDto](../dtos/upsert-my-company-dto.md)` |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `MyCompanyDto` |
+| 200 | OK | `[MyCompanyDto](../dtos/my-company-dto.md)` |
 | 400 | Bad Request | - |
 | 401 | Unauthorized | - |
 | 403 | Forbidden | - |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
+
+

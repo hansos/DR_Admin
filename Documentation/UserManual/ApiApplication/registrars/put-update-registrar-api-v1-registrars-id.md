@@ -17,6 +17,9 @@ Requires authentication. Policy: **Authenticated**.
 | Name | Source | Type |
 |------|--------|------|
 | `id` | Route | `int` |
-| `updateDto` | Body | `UpdateRegistrarDto` |
+| `updateDto` | Body | `[UpdateRegistrarDto](../dtos/update-registrar-dto.md)` |
 
 [Back to API Manual index](../index.md)
+
+
+

@@ -16,16 +16,19 @@ Requires authentication. Policy: **TaxRule.Write**.
 
 | Name | Source | Type |
 |------|--------|------|
-| `createDto` | Body | `CreateTaxRuleDto` |
+| `createDto` | Body | `[CreateTaxRuleDto](../dtos/create-tax-rule-dto.md)` |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 201 | Created | `TaxRuleDto` |
+| 201 | Created | `[TaxRuleDto](../dtos/tax-rule-dto.md)` |
 | 400 | Bad Request | - |
 | 401 | Unauthorized | - |
 | 403 | Forbidden | - |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
+
+

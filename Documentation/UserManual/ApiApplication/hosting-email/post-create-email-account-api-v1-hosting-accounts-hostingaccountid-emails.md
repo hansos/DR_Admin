@@ -17,13 +17,16 @@ Requires authentication. Policy: **Hosting.Write**.
 | Name | Source | Type |
 |------|--------|------|
 | `hostingAccountId` | Route | `int` |
-| `dto` | Body | `HostingEmailAccountCreateDto` |
+| `dto` | Body | `[HostingEmailAccountCreateDto](../dtos/hosting-email-account-create-dto.md)` |
 | `syncToServer` | Query | `bool` |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 201 | Created | `HostingEmailAccountDto` |
+| 201 | Created | `[HostingEmailAccountDto](../dtos/hosting-email-account-dto.md)` |
 
 [Back to API Manual index](../index.md)
+
+
+

@@ -16,7 +16,7 @@ This endpoint does not require authentication.
 
 | Name | Source | Type |
 |------|--------|------|
-| `request` | Body | `ResendMailTwoFactorRequestDto` |
+| `request` | Body | `[ResendMailTwoFactorRequestDto](../dtos/resend-mail-two-factor-request-dto.md)` |
 
 ## Responses
 
@@ -27,3 +27,6 @@ This endpoint does not require authentication.
 | 401 | Unauthorized | - |
 
 [Back to API Manual index](../index.md)
+
+
+

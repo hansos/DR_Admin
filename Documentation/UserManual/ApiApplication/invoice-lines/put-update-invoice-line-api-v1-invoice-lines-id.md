@@ -17,6 +17,9 @@ Requires authentication. Policy: **Authenticated**.
 | Name | Source | Type |
 |------|--------|------|
 | `id` | Route | `int` |
-| `updateDto` | Body | `UpdateInvoiceLineDto` |
+| `updateDto` | Body | `[UpdateInvoiceLineDto](../dtos/update-invoice-line-dto.md)` |
 
 [Back to API Manual index](../index.md)
+
+
+

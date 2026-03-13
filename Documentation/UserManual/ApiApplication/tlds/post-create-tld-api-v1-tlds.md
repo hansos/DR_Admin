@@ -16,6 +16,9 @@ Requires authentication. Policy: **Tld.Write**.
 
 | Name | Source | Type |
 |------|--------|------|
-| `createDto` | Body | `CreateTldDto` |
+| `createDto` | Body | `[CreateTldDto](../dtos/create-tld-dto.md)` |
 
 [Back to API Manual index](../index.md)
+
+
+

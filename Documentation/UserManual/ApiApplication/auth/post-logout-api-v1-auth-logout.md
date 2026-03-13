@@ -12,7 +12,7 @@ POST /api/v1/auth/logout
 
 | Name | Source | Type |
 |------|--------|------|
-| `request` | Body | `RefreshTokenRequestDto` |
+| `request` | Body | `[RefreshTokenRequestDto](../dtos/refresh-token-request-dto.md)` |
 
 ## Responses
 
@@ -23,3 +23,6 @@ POST /api/v1/auth/logout
 | 401 | Unauthorized | - |
 
 [Back to API Manual index](../index.md)
+
+
+

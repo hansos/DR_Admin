@@ -22,7 +22,10 @@ Requires authentication. Policy: **Authenticated**.
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `VendorPayoutSummaryDto` |
+| 200 | OK | `[VendorPayoutSummaryDto](../dtos/vendor-payout-summary-dto.md)` |
 | 404 | Not Found | - |
 
 [Back to API Manual index](../index.md)
+
+
+

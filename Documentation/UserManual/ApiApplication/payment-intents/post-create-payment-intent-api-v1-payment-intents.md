@@ -16,15 +16,18 @@ Requires authentication. Policy: **PaymentIntent.Write**.
 
 | Name | Source | Type |
 |------|--------|------|
-| `createDto` | Body | `CreatePaymentIntentDto` |
+| `createDto` | Body | `[CreatePaymentIntentDto](../dtos/create-payment-intent-dto.md)` |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 201 | Created | `PaymentIntentDto` |
+| 201 | Created | `[PaymentIntentDto](../dtos/payment-intent-dto.md)` |
 | 400 | Bad Request | - |
 | 401 | Unauthorized | - |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
+
+

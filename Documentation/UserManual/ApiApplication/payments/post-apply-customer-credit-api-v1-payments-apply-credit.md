@@ -16,12 +16,15 @@ Requires authentication. Policy: **Authenticated**.
 
 | Name | Source | Type |
 |------|--------|------|
-| `dto` | Body | `ApplyCustomerCreditDto` |
+| `dto` | Body | `[ApplyCustomerCreditDto](../dtos/apply-customer-credit-dto.md)` |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `PaymentResultDto` |
+| 200 | OK | `[PaymentResultDto](../dtos/payment-result-dto.md)` |
 
 [Back to API Manual index](../index.md)
+
+
+

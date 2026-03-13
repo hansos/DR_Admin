@@ -17,14 +17,17 @@ Requires authentication. Policy: **Authenticated**.
 | Name | Source | Type |
 |------|--------|------|
 | `id` | Route | `int` |
-| `dto` | Body | `UpdatePaymentInstrumentDto` |
+| `dto` | Body | `[UpdatePaymentInstrumentDto](../dtos/update-payment-instrument-dto.md)` |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `PaymentInstrumentDto` |
+| 200 | OK | `[PaymentInstrumentDto](../dtos/payment-instrument-dto.md)` |
 | 404 | Not Found | - |
 | 400 | Bad Request | - |
 
 [Back to API Manual index](../index.md)
+
+
+

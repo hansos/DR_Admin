@@ -16,13 +16,16 @@ Requires authentication. Policy: **Authenticated**.
 
 | Name | Source | Type |
 |------|--------|------|
-| `createDto` | Body | `CreateVendorTaxProfileDto` |
+| `createDto` | Body | `[CreateVendorTaxProfileDto](../dtos/create-vendor-tax-profile-dto.md)` |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 201 | Created | `VendorTaxProfileDto` |
+| 201 | Created | `[VendorTaxProfileDto](../dtos/vendor-tax-profile-dto.md)` |
 | 400 | Bad Request | - |
 
 [Back to API Manual index](../index.md)
+
+
+

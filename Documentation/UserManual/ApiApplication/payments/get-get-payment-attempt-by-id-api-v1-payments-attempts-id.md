@@ -22,7 +22,10 @@ Requires authentication. Policy: **Authenticated**.
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `PaymentAttemptDto` |
+| 200 | OK | `[PaymentAttemptDto](../dtos/payment-attempt-dto.md)` |
 | 404 | Not Found | - |
 
 [Back to API Manual index](../index.md)
+
+
+

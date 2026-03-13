@@ -22,6 +22,9 @@ Requires authentication. Policy: **Authenticated**.
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `PaymentResultDto` |
+| 200 | OK | `[PaymentResultDto](../dtos/payment-result-dto.md)` |
 
 [Back to API Manual index](../index.md)
+
+
+

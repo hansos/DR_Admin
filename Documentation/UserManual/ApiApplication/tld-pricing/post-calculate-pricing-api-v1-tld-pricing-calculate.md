@@ -16,12 +16,15 @@ This endpoint does not require authentication.
 
 | Name | Source | Type |
 |------|--------|------|
-| `request` | Body | `CalculatePricingRequest` |
+| `request` | Body | `[CalculatePricingRequest](../dtos/calculate-pricing-request.md)` |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `CalculatePricingResponse` |
+| 200 | OK | `[CalculatePricingResponse](../dtos/calculate-pricing-response.md)` |
 
 [Back to API Manual index](../index.md)
+
+
+

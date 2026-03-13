@@ -16,12 +16,15 @@ Requires authentication. Policy: **Pricing.Write**.
 
 | Name | Source | Type |
 |------|--------|------|
-| `createDto` | Body | `CreateTldSalesPricingDto` |
+| `createDto` | Body | `[CreateTldSalesPricingDto](../dtos/create-tld-sales-pricing-dto.md)` |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 201 | Created | `TldSalesPricingDto` |
+| 201 | Created | `[TldSalesPricingDto](../dtos/tld-sales-pricing-dto.md)` |
 
 [Back to API Manual index](../index.md)
+
+
+

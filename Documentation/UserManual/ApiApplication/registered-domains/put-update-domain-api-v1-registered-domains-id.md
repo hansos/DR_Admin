@@ -17,13 +17,13 @@ Requires authentication. Policy: **Domain.Write**.
 | Name | Source | Type |
 |------|--------|------|
 | `id` | Route | `int` |
-| `updateDto` | Body | `UpdateRegisteredDomainDto` |
+| `updateDto` | Body | `[UpdateRegisteredDomainDto](../dtos/update-registered-domain-dto.md)` |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `RegisteredDomainDto` |
+| 200 | OK | `[RegisteredDomainDto](../dtos/registered-domain-dto.md)` |
 | 400 | Bad Request | - |
 | 401 | Unauthorized | - |
 | 403 | Forbidden | - |
@@ -31,3 +31,6 @@ Requires authentication. Policy: **Domain.Write**.
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
+
+

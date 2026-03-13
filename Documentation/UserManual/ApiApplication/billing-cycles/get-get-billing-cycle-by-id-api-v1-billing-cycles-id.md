@@ -22,10 +22,13 @@ Requires authentication. Policy: **BillingCycle.Read**.
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `BillingCycleDto` |
+| 200 | OK | `[BillingCycleDto](../dtos/billing-cycle-dto.md)` |
 | 401 | Unauthorized | - |
 | 403 | Forbidden | - |
 | 404 | Not Found | - |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
+
+
