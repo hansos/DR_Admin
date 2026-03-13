@@ -48,6 +48,13 @@ public interface IRegistrarService
     Task<RegisteredDomainsResult> GetRegisteredDomainsAsync(int registrarId);
 
     /// <summary>
+    /// Gets all registrant contacts available in the registrar account.
+    /// </summary>
+    /// <param name="registrarId">The registrar ID.</param>
+    /// <returns>A collection of registrant contacts.</returns>
+    Task<IEnumerable<DomainContactInfo>> GetRegistrantContactsAsync(int registrarId);
+
+    /// <summary>
     /// Sets a registrar as the default registrar
     /// </summary>
     /// <param name="id">The registrar ID</param>

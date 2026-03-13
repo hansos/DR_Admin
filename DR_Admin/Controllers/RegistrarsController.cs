@@ -746,6 +746,46 @@ public class RegistrarsController : ControllerBase
     }
 
     /// <summary>
+    /// Gets all registrant contacts available in the registrar account.
+    /// </summary>
+    /// <param name="registrarId">The unique identifier of the registrar.</param>
+    /// <returns>List of registrant contacts from registrar domains.</returns>
+    /// <response code="200">Returns the list of registrant contacts.</response>
+    /// <response code="400">If the registrar is not found, inactive, or the request is invalid.</response>
+    /// <response code="401">If user is not authenticated.</response>
+    /// <response code="403">If user doesn't have required permissions.</response>
+    /// <response code="500">If an internal server error occurs.</response>
+    [HttpGet("{registrarId}/contacts/registrants")]
+    [Authorize(Policy = "Registrar.Read")]
+    [ProducesResponseType(typeof(IEnumerable<DomainContactInfo>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<IEnumerable<DomainContactInfo>>> GetRegistrantContacts(int registrarId)
+    {
+        try
+        {
+            _log.Information("API: GetRegistrantContacts called for registrar {RegistrarId} by user {User}",
+                registrarId,
+                User.Identity?.Name);
+
+            var contacts = await _registrarService.GetRegistrantContactsAsync(registrarId);
+            return Ok(contacts);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _log.Warning(ex, "API: Invalid operation in GetRegistrantContacts for registrar {RegistrarId}", registrarId);
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in GetRegistrantContacts for registrar {RegistrarId}", registrarId);
+            return StatusCode(500, "An error occurred while retrieving registrant contacts for the registrar");
+        }
+    }
+
+    /// <summary>
     /// Sets a registrar as the default registrar
     /// </summary>
     /// <param name="id">The unique identifier of the registrar</param>

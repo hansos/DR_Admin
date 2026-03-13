@@ -1095,6 +1095,59 @@ public class RegistrarService : IRegistrarService
     }
 
     /// <summary>
+    /// Gets all registrant contacts available in the registrar account.
+    /// </summary>
+    /// <param name="registrarId">The unique identifier of the registrar.</param>
+    /// <returns>A collection of registrant contacts.</returns>
+    public async Task<IEnumerable<DomainContactInfo>> GetRegistrantContactsAsync(int registrarId)
+    {
+        try
+        {
+            _log.Information("Getting registrant contacts for registrar {RegistrarId}", registrarId);
+
+            var result = await GetRegisteredDomainsAsync(registrarId);
+            if (!result.Success)
+            {
+                var errorMessage = string.IsNullOrWhiteSpace(result.Message)
+                    ? "Failed to retrieve registered domains from registrar"
+                    : result.Message;
+
+                throw new InvalidOperationException(errorMessage);
+            }
+
+            var contacts = result.Domains
+                .SelectMany(d => d.Contacts ?? [])
+                .Where(c => string.Equals(c.ContactType, "registrant", StringComparison.OrdinalIgnoreCase))
+                .GroupBy(c => new
+                {
+                    Email = (c.Email ?? string.Empty).Trim().ToLowerInvariant(),
+                    FirstName = (c.FirstName ?? string.Empty).Trim().ToLowerInvariant(),
+                    LastName = (c.LastName ?? string.Empty).Trim().ToLowerInvariant(),
+                    Organization = (c.Organization ?? string.Empty).Trim().ToLowerInvariant(),
+                    Phone = (c.Phone ?? string.Empty).Trim().ToLowerInvariant(),
+                    Address1 = (c.Address1 ?? string.Empty).Trim().ToLowerInvariant(),
+                    Address2 = (c.Address2 ?? string.Empty).Trim().ToLowerInvariant(),
+                    City = (c.City ?? string.Empty).Trim().ToLowerInvariant(),
+                    State = (c.State ?? string.Empty).Trim().ToLowerInvariant(),
+                    PostalCode = (c.PostalCode ?? string.Empty).Trim().ToLowerInvariant(),
+                    CountryCode = (c.CountryCode ?? string.Empty).Trim().ToLowerInvariant()
+                })
+                .Select(g => g.First())
+                .OrderBy(c => c.LastName)
+                .ThenBy(c => c.FirstName)
+                .ToList();
+
+            _log.Information("Retrieved {Count} unique registrant contacts for registrar {RegistrarId}", contacts.Count, registrarId);
+            return contacts;
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "Error occurred while getting registrant contacts for registrar {RegistrarId}", registrarId);
+            throw;
+        }
+    }
+
+    /// <summary>
     /// Sets a registrar as the default registrar
     /// </summary>
     /// <param name="id">The unique identifier of the registrar to set as default</param>
