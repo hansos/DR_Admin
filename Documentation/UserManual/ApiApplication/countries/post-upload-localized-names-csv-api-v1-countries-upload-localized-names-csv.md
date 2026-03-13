@@ -16,7 +16,7 @@ Requires authentication. Policy: **Geographical.Write**.
 
 | Name | Source | Type |
 |------|--------|------|
-| `dto` | Form | `DTOs.[UploadCountriesCsvDto](../dtos/upload-countries-csv-dto.md)` |
+| `dto` | Form | DTOs.[UploadCountriesCsvDto](../dtos/upload-countries-csv-dto.md) |
 
 ## Responses
 
@@ -28,6 +28,7 @@ Requires authentication. Policy: **Geographical.Write**.
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 

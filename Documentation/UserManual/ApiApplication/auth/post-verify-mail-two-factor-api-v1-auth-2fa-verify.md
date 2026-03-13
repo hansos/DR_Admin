@@ -16,17 +16,18 @@ This endpoint does not require authentication.
 
 | Name | Source | Type |
 |------|--------|------|
-| `request` | Body | `[VerifyMailTwoFactorRequestDto](../dtos/verify-mail-two-factor-request-dto.md)` |
+| `request` | Body | [VerifyMailTwoFactorRequestDto](../dtos/verify-mail-two-factor-request-dto.md) |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `[LoginResponseDto](../dtos/login-response-dto.md)` |
+| 200 | OK | [LoginResponseDto](../dtos/login-response-dto.md) |
 | 400 | Bad Request | - |
 | 401 | Unauthorized | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 

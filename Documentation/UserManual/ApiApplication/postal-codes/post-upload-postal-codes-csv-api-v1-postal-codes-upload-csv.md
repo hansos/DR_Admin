@@ -16,19 +16,20 @@ Requires authentication. Policy: **Authenticated**.
 
 | Name | Source | Type |
 |------|--------|------|
-| `dto` | Form | `[UploadPostalCodesCsvDto](../dtos/upload-postal-codes-csv-dto.md)` |
+| `dto` | Form | [UploadPostalCodesCsvDto](../dtos/upload-postal-codes-csv-dto.md) |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `[ImportPostalCodesResultDto](../dtos/import-postal-codes-result-dto.md)` |
+| 200 | OK | [ImportPostalCodesResultDto](../dtos/import-postal-codes-result-dto.md) |
 | 400 | Bad Request | - |
 | 401 | Unauthorized | - |
 | 403 | Forbidden | - |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 

@@ -16,9 +16,10 @@ This endpoint does not require authentication.
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `[InitializationStatusDto](../dtos/initialization-status-dto.md)` |
+| 200 | OK | [InitializationStatusDto](../dtos/initialization-status-dto.md) |
 
 [Back to API Manual index](../index.md)
+
 
 
 

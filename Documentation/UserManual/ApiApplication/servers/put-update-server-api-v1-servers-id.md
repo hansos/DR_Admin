@@ -17,13 +17,13 @@ Requires authentication. Policy: **Server.Write**.
 | Name | Source | Type |
 |------|--------|------|
 | `id` | Route | `int` |
-| `updateDto` | Body | `[UpdateServerDto](../dtos/update-server-dto.md)` |
+| `updateDto` | Body | [UpdateServerDto](../dtos/update-server-dto.md) |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `[ServerDto](../dtos/server-dto.md)` |
+| 200 | OK | [ServerDto](../dtos/server-dto.md) |
 | 400 | Bad Request | - |
 | 401 | Unauthorized | - |
 | 403 | Forbidden | - |
@@ -31,6 +31,7 @@ Requires authentication. Policy: **Server.Write**.
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 

@@ -22,7 +22,7 @@ Requires authentication. Policy: **Order.Checkout**.
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `[OrderDto](../dtos/order-dto.md)` |
+| 200 | OK | [OrderDto](../dtos/order-dto.md) |
 | 400 | Bad Request | - |
 | 401 | Unauthorized | - |
 | 404 | Not Found | - |
@@ -30,6 +30,7 @@ Requires authentication. Policy: **Order.Checkout**.
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 

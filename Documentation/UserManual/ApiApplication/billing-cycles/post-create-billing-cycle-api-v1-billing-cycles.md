@@ -16,19 +16,20 @@ Requires authentication. Policy: **BillingCycle.Write**.
 
 | Name | Source | Type |
 |------|--------|------|
-| `createDto` | Body | `[CreateBillingCycleDto](../dtos/create-billing-cycle-dto.md)` |
+| `createDto` | Body | [CreateBillingCycleDto](../dtos/create-billing-cycle-dto.md) |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 201 | Created | `[BillingCycleDto](../dtos/billing-cycle-dto.md)` |
+| 201 | Created | [BillingCycleDto](../dtos/billing-cycle-dto.md) |
 | 400 | Bad Request | - |
 | 401 | Unauthorized | - |
 | 403 | Forbidden | - |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 

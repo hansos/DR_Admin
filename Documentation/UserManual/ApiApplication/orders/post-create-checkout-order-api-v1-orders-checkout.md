@@ -16,18 +16,19 @@ Requires authentication. Policy: **Order.Checkout**.
 
 | Name | Source | Type |
 |------|--------|------|
-| `createDto` | Body | `[CreateOrderDto](../dtos/create-order-dto.md)` |
+| `createDto` | Body | [CreateOrderDto](../dtos/create-order-dto.md) |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 201 | Created | `[OrderDto](../dtos/order-dto.md)` |
+| 201 | Created | [OrderDto](../dtos/order-dto.md) |
 | 400 | Bad Request | - |
 | 401 | Unauthorized | - |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 

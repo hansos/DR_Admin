@@ -16,19 +16,20 @@ Requires authentication. Policy: **Authenticated**.
 
 | Name | Source | Type |
 |------|--------|------|
-| `createDto` | Body | `[CreateRefundDto](../dtos/create-refund-dto.md)` |
+| `createDto` | Body | [CreateRefundDto](../dtos/create-refund-dto.md) |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 201 | Created | `[RefundDto](../dtos/refund-dto.md)` |
+| 201 | Created | [RefundDto](../dtos/refund-dto.md) |
 | 400 | Bad Request | - |
 | 401 | Unauthorized | - |
 | 403 | Forbidden | - |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 

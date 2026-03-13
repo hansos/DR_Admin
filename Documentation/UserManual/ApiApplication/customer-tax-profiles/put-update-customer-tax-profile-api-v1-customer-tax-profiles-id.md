@@ -17,13 +17,13 @@ Requires authentication. Policy: **Authenticated**.
 | Name | Source | Type |
 |------|--------|------|
 | `id` | Route | `int` |
-| `updateDto` | Body | `[UpdateCustomerTaxProfileDto](../dtos/update-customer-tax-profile-dto.md)` |
+| `updateDto` | Body | [UpdateCustomerTaxProfileDto](../dtos/update-customer-tax-profile-dto.md) |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `[CustomerTaxProfileDto](../dtos/customer-tax-profile-dto.md)` |
+| 200 | OK | [CustomerTaxProfileDto](../dtos/customer-tax-profile-dto.md) |
 | 400 | Bad Request | - |
 | 404 | Not Found | - |
 | 401 | Unauthorized | - |
@@ -31,6 +31,7 @@ Requires authentication. Policy: **Authenticated**.
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 

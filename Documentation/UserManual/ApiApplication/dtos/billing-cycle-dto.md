@@ -23,16 +23,16 @@ export interface BillingCycleDto {
 
 ## Fields
 
-| Property | C# Type | TypeScript Type |
-|----------|---------|-----------------|
-| `Id` | `int` | `number` |
-| `Code` | `string` | `string` |
-| `Name` | `string` | `string` |
-| `DurationInDays` | `int` | `number` |
-| `Description` | `string` | `string` |
-| `SortOrder` | `int` | `number` |
-| `CreatedAt` | `DateTime` | `string` |
-| `UpdatedAt` | `DateTime` | `string` |
+| Property         | C# Type    | TypeScript Type |
+| ---------------- | ---------- | --------------- |
+| `Id`             | `int`      | `number`        |
+| `Code`           | `string`   | `string`        |
+| `Name`           | `string`   | `string`        |
+| `DurationInDays` | `int`      | `number`        |
+| `Description`    | `string`   | `string`        |
+| `SortOrder`      | `int`      | `number`        |
+| `CreatedAt`      | `DateTime` | `string`        |
+| `UpdatedAt`      | `DateTime` | `string`        |
 
 [Back to DTO index](index.md)
 

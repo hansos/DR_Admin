@@ -17,13 +17,13 @@ Requires authentication. Policy: **BillingCycle.Write**.
 | Name | Source | Type |
 |------|--------|------|
 | `id` | Route | `int` |
-| `updateDto` | Body | `[UpdateBillingCycleDto](../dtos/update-billing-cycle-dto.md)` |
+| `updateDto` | Body | [UpdateBillingCycleDto](../dtos/update-billing-cycle-dto.md) |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `[BillingCycleDto](../dtos/billing-cycle-dto.md)` |
+| 200 | OK | [BillingCycleDto](../dtos/billing-cycle-dto.md) |
 | 400 | Bad Request | - |
 | 401 | Unauthorized | - |
 | 403 | Forbidden | - |
@@ -31,6 +31,7 @@ Requires authentication. Policy: **BillingCycle.Write**.
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 

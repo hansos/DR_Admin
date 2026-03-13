@@ -17,9 +17,10 @@ Requires authentication. Policy: **Authenticated**.
 | Name | Source | Type |
 |------|--------|------|
 | `id` | Route | `int` |
-| `updateDto` | Body | `[UpdateTldDto](../dtos/update-tld-dto.md)` |
+| `updateDto` | Body | [UpdateTldDto](../dtos/update-tld-dto.md) |
 
 [Back to API Manual index](../index.md)
+
 
 
 

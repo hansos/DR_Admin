@@ -17,13 +17,13 @@ Requires authentication. Policy: **ReportTemplate.Update**.
 | Name | Source | Type |
 |------|--------|------|
 | `id` | Route | `int` |
-| `updateDto` | Form | `[UpdateReportTemplateDto](../dtos/update-report-template-dto.md)` |
+| `updateDto` | Form | [UpdateReportTemplateDto](../dtos/update-report-template-dto.md) |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `[ReportTemplateDto](../dtos/report-template-dto.md)` |
+| 200 | OK | [ReportTemplateDto](../dtos/report-template-dto.md) |
 | 400 | Bad Request | - |
 | 404 | Not Found | - |
 | 401 | Unauthorized | - |
@@ -31,6 +31,7 @@ Requires authentication. Policy: **ReportTemplate.Update**.
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 

@@ -16,16 +16,17 @@ Requires authentication. Policy: **Authenticated**.
 
 | Name | Source | Type |
 |------|--------|------|
-| `createDto` | Body | `[CreateRefundLossAuditDto](../dtos/create-refund-loss-audit-dto.md)` |
+| `createDto` | Body | [CreateRefundLossAuditDto](../dtos/create-refund-loss-audit-dto.md) |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 201 | Created | `[RefundLossAuditDto](../dtos/refund-loss-audit-dto.md)` |
+| 201 | Created | [RefundLossAuditDto](../dtos/refund-loss-audit-dto.md) |
 | 400 | Bad Request | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 

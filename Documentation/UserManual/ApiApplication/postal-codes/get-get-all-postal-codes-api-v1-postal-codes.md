@@ -23,13 +23,14 @@ Requires authentication. Policy: **Geographical.Read**.
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `IEnumerable<[PostalCodeDto](../dtos/postal-code-dto.md)>` |
-| 200 | OK | `[PagedResult](../dtos/paged-result.md)<[PostalCodeDto](../dtos/postal-code-dto.md)>` |
+| 200 | OK | IEnumerable<[PostalCodeDto](../dtos/postal-code-dto.md)> |
+| 200 | OK | [PagedResult](../dtos/paged-result.md)<[PostalCodeDto](../dtos/postal-code-dto.md)> |
 | 401 | Unauthorized | - |
 | 403 | Forbidden | - |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 

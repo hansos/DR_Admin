@@ -16,18 +16,19 @@ Requires authentication. Policy: **EmailQueue.Write**.
 
 | Name | Source | Type |
 |------|--------|------|
-| `queueEmailDto` | Body | `[QueueEmailDto](../dtos/queue-email-dto.md)` |
+| `queueEmailDto` | Body | [QueueEmailDto](../dtos/queue-email-dto.md) |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 201 | Created | `[QueueEmailResponseDto](../dtos/queue-email-response-dto.md)` |
+| 201 | Created | [QueueEmailResponseDto](../dtos/queue-email-response-dto.md) |
 | 400 | Bad Request | - |
 | 401 | Unauthorized | - |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 

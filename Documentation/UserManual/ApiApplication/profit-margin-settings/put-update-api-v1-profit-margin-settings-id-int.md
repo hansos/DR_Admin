@@ -17,16 +17,17 @@ Requires authentication. Policy: **ProfitMargin.Write**.
 | Name | Source | Type |
 |------|--------|------|
 | `id` | Route | `int` |
-| `dto` | Body | `[UpdateProfitMarginSettingDto](../dtos/update-profit-margin-setting-dto.md)` |
+| `dto` | Body | [UpdateProfitMarginSettingDto](../dtos/update-profit-margin-setting-dto.md) |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `[ProfitMarginSettingDto](../dtos/profit-margin-setting-dto.md)` |
+| 200 | OK | [ProfitMarginSettingDto](../dtos/profit-margin-setting-dto.md) |
 | 404 | Not Found | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 

@@ -17,13 +17,13 @@ Requires authentication. Policy: **TaxRule.Write**.
 | Name | Source | Type |
 |------|--------|------|
 | `id` | Route | `int` |
-| `updateDto` | Body | `[UpdateTaxRuleDto](../dtos/update-tax-rule-dto.md)` |
+| `updateDto` | Body | [UpdateTaxRuleDto](../dtos/update-tax-rule-dto.md) |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `[TaxRuleDto](../dtos/tax-rule-dto.md)` |
+| 200 | OK | [TaxRuleDto](../dtos/tax-rule-dto.md) |
 | 400 | Bad Request | - |
 | 404 | Not Found | - |
 | 401 | Unauthorized | - |
@@ -31,6 +31,7 @@ Requires authentication. Policy: **TaxRule.Write**.
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 

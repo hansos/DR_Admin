@@ -27,20 +27,20 @@ export interface VendorCostSummaryDto {
 
 ## Fields
 
-| Property | C# Type | TypeScript Type |
-|----------|---------|-----------------|
-| `InvoiceId` | `int` | `number` |
-| `InvoiceNumber` | `string` | `string` |
-| `InvoiceTotal` | `decimal` | `number` |
-| `CurrencyCode` | `string` | `string` |
-| `TotalVendorCosts` | `decimal` | `number` |
-| `TotalPaidVendorCosts` | `decimal` | `number` |
-| `TotalUnpaidVendorCosts` | `decimal` | `number` |
-| `TotalRefundableVendorCosts` | `decimal` | `number` |
-| `TotalNonRefundableVendorCosts` | `decimal` | `number` |
-| `GrossProfit` | `decimal` | `number` |
-| `GrossProfitMargin` | `decimal` | `number` |
-| `VendorCosts` | `List<VendorCostDto>` | `VendorCostDto[]` |
+| Property                        | C# Type               | TypeScript Type   |
+| ------------------------------- | --------------------- | ----------------- |
+| `InvoiceId`                     | `int`                 | `number`          |
+| `InvoiceNumber`                 | `string`              | `string`          |
+| `InvoiceTotal`                  | `decimal`             | `number`          |
+| `CurrencyCode`                  | `string`              | `string`          |
+| `TotalVendorCosts`              | `decimal`             | `number`          |
+| `TotalPaidVendorCosts`          | `decimal`             | `number`          |
+| `TotalUnpaidVendorCosts`        | `decimal`             | `number`          |
+| `TotalRefundableVendorCosts`    | `decimal`             | `number`          |
+| `TotalNonRefundableVendorCosts` | `decimal`             | `number`          |
+| `GrossProfit`                   | `decimal`             | `number`          |
+| `GrossProfitMargin`             | `decimal`             | `number`          |
+| `VendorCosts`                   | `List<VendorCostDto>` | `VendorCostDto[]` |
 
 [Back to DTO index](index.md)
 

@@ -23,10 +23,11 @@ This endpoint does not require authentication.
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `[TldSalesPricingDto](../dtos/tld-sales-pricing-dto.md)` |
+| 200 | OK | [TldSalesPricingDto](../dtos/tld-sales-pricing-dto.md) |
 | 404 | Not Found | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 

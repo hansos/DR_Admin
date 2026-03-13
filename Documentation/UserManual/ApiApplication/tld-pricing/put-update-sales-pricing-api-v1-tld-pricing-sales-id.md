@@ -17,16 +17,17 @@ Requires authentication. Policy: **Pricing.Write**.
 | Name | Source | Type |
 |------|--------|------|
 | `id` | Route | `int` |
-| `updateDto` | Body | `[UpdateTldSalesPricingDto](../dtos/update-tld-sales-pricing-dto.md)` |
+| `updateDto` | Body | [UpdateTldSalesPricingDto](../dtos/update-tld-sales-pricing-dto.md) |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `[TldSalesPricingDto](../dtos/tld-sales-pricing-dto.md)` |
+| 200 | OK | [TldSalesPricingDto](../dtos/tld-sales-pricing-dto.md) |
 | 404 | Not Found | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 

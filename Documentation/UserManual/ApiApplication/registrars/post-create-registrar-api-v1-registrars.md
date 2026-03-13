@@ -16,9 +16,10 @@ Requires authentication. Policy: **Authenticated**.
 
 | Name | Source | Type |
 |------|--------|------|
-| `createDto` | Body | `[CreateRegistrarDto](../dtos/create-registrar-dto.md)` |
+| `createDto` | Body | [CreateRegistrarDto](../dtos/create-registrar-dto.md) |
 
 [Back to API Manual index](../index.md)
+
 
 
 

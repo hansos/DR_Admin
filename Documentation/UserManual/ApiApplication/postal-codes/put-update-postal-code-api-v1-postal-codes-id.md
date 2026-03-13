@@ -17,9 +17,10 @@ Requires authentication. Policy: **Authenticated**.
 | Name | Source | Type |
 |------|--------|------|
 | `id` | Route | `int` |
-| `updateDto` | Body | `[UpdatePostalCodeDto](../dtos/update-postal-code-dto.md)` |
+| `updateDto` | Body | [UpdatePostalCodeDto](../dtos/update-postal-code-dto.md) |
 
 [Back to API Manual index](../index.md)
+
 
 
 

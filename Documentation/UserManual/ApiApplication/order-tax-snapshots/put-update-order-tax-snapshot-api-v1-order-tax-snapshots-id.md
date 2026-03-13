@@ -17,19 +17,20 @@ Requires authentication. Policy: **OrderTaxSnapshot.Write**.
 | Name | Source | Type |
 |------|--------|------|
 | `id` | Route | `int` |
-| `dto` | Body | `[UpdateOrderTaxSnapshotDto](../dtos/update-order-tax-snapshot-dto.md)` |
+| `dto` | Body | [UpdateOrderTaxSnapshotDto](../dtos/update-order-tax-snapshot-dto.md) |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `[OrderTaxSnapshotDto](../dtos/order-tax-snapshot-dto.md)` |
+| 200 | OK | [OrderTaxSnapshotDto](../dtos/order-tax-snapshot-dto.md) |
 | 400 | Bad Request | - |
 | 404 | Not Found | - |
 | 401 | Unauthorized | - |
 | 403 | Forbidden | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 

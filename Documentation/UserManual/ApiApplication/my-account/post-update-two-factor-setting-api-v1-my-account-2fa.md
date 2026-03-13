@@ -12,7 +12,7 @@ POST /api/v1/my-account/2fa
 
 | Name | Source | Type |
 |------|--------|------|
-| `request` | Body | `[UpdateTwoFactorSettingsRequestDto](../dtos/update-two-factor-settings-request-dto.md)` |
+| `request` | Body | [UpdateTwoFactorSettingsRequestDto](../dtos/update-two-factor-settings-request-dto.md) |
 
 ## Responses
 
@@ -24,6 +24,7 @@ POST /api/v1/my-account/2fa
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 

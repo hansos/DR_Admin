@@ -27,11 +27,12 @@ Requires authentication. Policy: **User.Read**.
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `IEnumerable<[LoginHistoryDto](../dtos/login-history-dto.md)>` |
-| 200 | OK | `[PagedResult](../dtos/paged-result.md)<[LoginHistoryDto](../dtos/login-history-dto.md)>` |
+| 200 | OK | IEnumerable<[LoginHistoryDto](../dtos/login-history-dto.md)> |
+| 200 | OK | [PagedResult](../dtos/paged-result.md)<[LoginHistoryDto](../dtos/login-history-dto.md)> |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 

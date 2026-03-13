@@ -22,11 +22,12 @@ Requires authentication. Policy: **User.Read**.
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `[LoginHistoryDto](../dtos/login-history-dto.md)` |
+| 200 | OK | [LoginHistoryDto](../dtos/login-history-dto.md) |
 | 404 | Not Found | - |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 

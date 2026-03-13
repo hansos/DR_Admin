@@ -17,13 +17,13 @@ Requires authentication. Policy: **Pricing.Write**.
 | Name | Source | Type |
 |------|--------|------|
 | `id` | Route | `int` |
-| `updateDto` | Body | `[UpdateRegistrarTldCostPricingDto](../dtos/update-registrar-tld-cost-pricing-dto.md)` |
+| `updateDto` | Body | [UpdateRegistrarTldCostPricingDto](../dtos/update-registrar-tld-cost-pricing-dto.md) |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `[RegistrarTldCostPricingDto](../dtos/registrar-tld-cost-pricing-dto.md)` |
+| 200 | OK | [RegistrarTldCostPricingDto](../dtos/registrar-tld-cost-pricing-dto.md) |
 | 400 | Bad Request | - |
 | 404 | Not Found | - |
 | 401 | Unauthorized | - |
@@ -31,6 +31,7 @@ Requires authentication. Policy: **Pricing.Write**.
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 

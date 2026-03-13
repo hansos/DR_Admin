@@ -16,16 +16,17 @@ Requires authentication. Policy: **TaxCategory.Write**.
 
 | Name | Source | Type |
 |------|--------|------|
-| `dto` | Body | `[CreateTaxCategoryDto](../dtos/create-tax-category-dto.md)` |
+| `dto` | Body | [CreateTaxCategoryDto](../dtos/create-tax-category-dto.md) |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 201 | Created | `[TaxCategoryDto](../dtos/tax-category-dto.md)` |
+| 201 | Created | [TaxCategoryDto](../dtos/tax-category-dto.md) |
 | 400 | Bad Request | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 

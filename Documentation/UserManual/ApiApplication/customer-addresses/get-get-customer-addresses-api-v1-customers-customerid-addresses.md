@@ -22,12 +22,13 @@ Requires authentication. Policy: **Customer.Read**.
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `IEnumerable<[CustomerAddressDto](../dtos/customer-address-dto.md)>` |
+| 200 | OK | IEnumerable<[CustomerAddressDto](../dtos/customer-address-dto.md)> |
 | 401 | Unauthorized | - |
 | 403 | Forbidden | - |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 

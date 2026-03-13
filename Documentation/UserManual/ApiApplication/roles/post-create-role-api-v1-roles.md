@@ -16,19 +16,20 @@ Requires authentication. Policy: **Role.Write**.
 
 | Name | Source | Type |
 |------|--------|------|
-| `createDto` | Body | `[CreateRoleDto](../dtos/create-role-dto.md)` |
+| `createDto` | Body | [CreateRoleDto](../dtos/create-role-dto.md) |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 201 | Created | `[RoleDto](../dtos/role-dto.md)` |
+| 201 | Created | [RoleDto](../dtos/role-dto.md) |
 | 400 | Bad Request | - |
 | 401 | Unauthorized | - |
 | 403 | Forbidden | - |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 

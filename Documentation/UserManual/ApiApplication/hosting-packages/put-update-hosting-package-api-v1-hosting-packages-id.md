@@ -17,13 +17,13 @@ Requires authentication. Policy: **HostingPackage.Write**.
 | Name | Source | Type |
 |------|--------|------|
 | `id` | Route | `int` |
-| `updateDto` | Body | `[UpdateHostingPackageDto](../dtos/update-hosting-package-dto.md)` |
+| `updateDto` | Body | [UpdateHostingPackageDto](../dtos/update-hosting-package-dto.md) |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `[HostingPackageDto](../dtos/hosting-package-dto.md)` |
+| 200 | OK | [HostingPackageDto](../dtos/hosting-package-dto.md) |
 | 400 | Bad Request | - |
 | 401 | Unauthorized | - |
 | 403 | Forbidden | - |
@@ -31,6 +31,7 @@ Requires authentication. Policy: **HostingPackage.Write**.
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 

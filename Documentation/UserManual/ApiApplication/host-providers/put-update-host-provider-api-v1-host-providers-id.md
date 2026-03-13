@@ -17,13 +17,13 @@ Requires authentication. Policy: **HostProvider.Write**.
 | Name | Source | Type |
 |------|--------|------|
 | `id` | Route | `int` |
-| `updateDto` | Body | `[UpdateHostProviderDto](../dtos/update-host-provider-dto.md)` |
+| `updateDto` | Body | [UpdateHostProviderDto](../dtos/update-host-provider-dto.md) |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `[HostProviderDto](../dtos/host-provider-dto.md)` |
+| 200 | OK | [HostProviderDto](../dtos/host-provider-dto.md) |
 | 400 | Bad Request | - |
 | 401 | Unauthorized | - |
 | 403 | Forbidden | - |
@@ -31,6 +31,7 @@ Requires authentication. Policy: **HostProvider.Write**.
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 

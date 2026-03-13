@@ -17,16 +17,17 @@ Requires authentication. Policy: **Hosting.Write**.
 | Name | Source | Type |
 |------|--------|------|
 | `hostingAccountId` | Route | `int` |
-| `dto` | Body | `[HostingDatabaseCreateDto](../dtos/hosting-database-create-dto.md)` |
+| `dto` | Body | [HostingDatabaseCreateDto](../dtos/hosting-database-create-dto.md) |
 | `syncToServer` | Query | `bool` |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 201 | Created | `[HostingDatabaseDto](../dtos/hosting-database-dto.md)` |
+| 201 | Created | [HostingDatabaseDto](../dtos/hosting-database-dto.md) |
 
 [Back to API Manual index](../index.md)
+
 
 
 

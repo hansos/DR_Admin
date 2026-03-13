@@ -22,13 +22,14 @@ Requires authentication. Policy: **ServerIpAddress.Read**.
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `[ServerIpAddressDto](../dtos/server-ip-address-dto.md)` |
+| 200 | OK | [ServerIpAddressDto](../dtos/server-ip-address-dto.md) |
 | 401 | Unauthorized | - |
 | 403 | Forbidden | - |
 | 404 | Not Found | - |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 

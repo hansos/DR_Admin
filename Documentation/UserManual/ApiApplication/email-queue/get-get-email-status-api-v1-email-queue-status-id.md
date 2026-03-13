@@ -22,12 +22,13 @@ Requires authentication. Policy: **EmailQueue.Read**.
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `[SentEmailDto](../dtos/sent-email-dto.md)` |
+| 200 | OK | [SentEmailDto](../dtos/sent-email-dto.md) |
 | 404 | Not Found | - |
 | 401 | Unauthorized | - |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 

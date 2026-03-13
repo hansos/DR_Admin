@@ -16,17 +16,18 @@ Requires authentication. Policy: **Authenticated**.
 
 | Name | Source | Type |
 |------|--------|------|
-| `resolveDto` | Body | `[ResolvePayoutInterventionDto](../dtos/resolve-payout-intervention-dto.md)` |
+| `resolveDto` | Body | [ResolvePayoutInterventionDto](../dtos/resolve-payout-intervention-dto.md) |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `[VendorPayoutDto](../dtos/vendor-payout-dto.md)` |
+| 200 | OK | [VendorPayoutDto](../dtos/vendor-payout-dto.md) |
 | 400 | Bad Request | - |
 | 404 | Not Found | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 

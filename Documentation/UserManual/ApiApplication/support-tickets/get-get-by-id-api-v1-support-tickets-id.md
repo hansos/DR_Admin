@@ -22,11 +22,12 @@ Requires authentication. Policy: **SupportTicket.Read**.
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `[SupportTicketDto](../dtos/support-ticket-dto.md)` |
+| 200 | OK | [SupportTicketDto](../dtos/support-ticket-dto.md) |
 | 404 | Not Found | - |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 

@@ -12,7 +12,7 @@ PATCH /api/v1/my-account/email
 
 | Name | Source | Type |
 |------|--------|------|
-| `request` | Body | `[PatchEmailRequestDto](../dtos/patch-email-request-dto.md)` |
+| `request` | Body | [PatchEmailRequestDto](../dtos/patch-email-request-dto.md) |
 
 ## Responses
 
@@ -24,6 +24,7 @@ PATCH /api/v1/my-account/email
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 

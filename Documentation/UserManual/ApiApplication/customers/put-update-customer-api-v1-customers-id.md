@@ -17,13 +17,13 @@ Requires authentication. Policy: **Customer.Write**.
 | Name | Source | Type |
 |------|--------|------|
 | `id` | Route | `int` |
-| `updateDto` | Body | `[UpdateCustomerDto](../dtos/update-customer-dto.md)` |
+| `updateDto` | Body | [UpdateCustomerDto](../dtos/update-customer-dto.md) |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `[CustomerDto](../dtos/customer-dto.md)` |
+| 200 | OK | [CustomerDto](../dtos/customer-dto.md) |
 | 400 | Bad Request | - |
 | 401 | Unauthorized | - |
 | 403 | Forbidden | - |
@@ -31,6 +31,7 @@ Requires authentication. Policy: **Customer.Write**.
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 

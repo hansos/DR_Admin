@@ -16,9 +16,10 @@ This endpoint does not require authentication.
 
 | Name | Source | Type |
 |------|--------|------|
-| `loginRequest` | Body | `[LoginRequestDto](../dtos/login-request-dto.md)` |
+| `loginRequest` | Body | [LoginRequestDto](../dtos/login-request-dto.md) |
 
 [Back to API Manual index](../index.md)
+
 
 
 

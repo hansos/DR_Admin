@@ -17,13 +17,13 @@ Requires authentication. Policy: **Domain.Write**.
 | Name | Source | Type |
 |------|--------|------|
 | `id` | Route | `int` |
-| `updateDto` | Body | `[UpdateDomainContactDto](../dtos/update-domain-contact-dto.md)` |
+| `updateDto` | Body | [UpdateDomainContactDto](../dtos/update-domain-contact-dto.md) |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `[DomainContactDto](../dtos/domain-contact-dto.md)` |
+| 200 | OK | [DomainContactDto](../dtos/domain-contact-dto.md) |
 | 400 | Bad Request | - |
 | 401 | Unauthorized | - |
 | 403 | Forbidden | - |
@@ -31,6 +31,7 @@ Requires authentication. Policy: **Domain.Write**.
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 

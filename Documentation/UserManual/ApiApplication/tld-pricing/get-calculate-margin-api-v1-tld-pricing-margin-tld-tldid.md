@@ -24,9 +24,10 @@ Requires authentication. Policy: **Pricing.Read**.
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `[MarginAnalysisResult](../dtos/margin-analysis-result.md)` |
+| 200 | OK | [MarginAnalysisResult](../dtos/margin-analysis-result.md) |
 
 [Back to API Manual index](../index.md)
+
 
 
 

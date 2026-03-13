@@ -22,13 +22,14 @@ Requires authentication. Policy: **Currency.Read**.
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `[CurrencyExchangeRateDto](../dtos/currency-exchange-rate-dto.md)` |
+| 200 | OK | [CurrencyExchangeRateDto](../dtos/currency-exchange-rate-dto.md) |
 | 401 | Unauthorized | - |
 | 403 | Forbidden | - |
 | 404 | Not Found | - |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 

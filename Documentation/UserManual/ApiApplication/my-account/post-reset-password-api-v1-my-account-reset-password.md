@@ -16,7 +16,7 @@ This endpoint does not require authentication.
 
 | Name | Source | Type |
 |------|--------|------|
-| `request` | Body | `[ResetPasswordWithTokenRequestDto](../dtos/reset-password-with-token-request-dto.md)` |
+| `request` | Body | [ResetPasswordWithTokenRequestDto](../dtos/reset-password-with-token-request-dto.md) |
 
 ## Responses
 
@@ -27,6 +27,7 @@ This endpoint does not require authentication.
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 

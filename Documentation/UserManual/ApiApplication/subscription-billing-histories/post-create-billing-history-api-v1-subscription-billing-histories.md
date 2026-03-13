@@ -16,19 +16,20 @@ Requires authentication. Policy: **Authenticated**.
 
 | Name | Source | Type |
 |------|--------|------|
-| `createDto` | Body | `[CreateSubscriptionBillingHistoryDto](../dtos/create-subscription-billing-history-dto.md)` |
+| `createDto` | Body | [CreateSubscriptionBillingHistoryDto](../dtos/create-subscription-billing-history-dto.md) |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 201 | Created | `[SubscriptionBillingHistoryDto](../dtos/subscription-billing-history-dto.md)` |
+| 201 | Created | [SubscriptionBillingHistoryDto](../dtos/subscription-billing-history-dto.md) |
 | 400 | Bad Request | - |
 | 401 | Unauthorized | - |
 | 403 | Forbidden | - |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 

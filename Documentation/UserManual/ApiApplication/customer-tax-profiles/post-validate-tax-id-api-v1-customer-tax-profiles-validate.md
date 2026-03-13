@@ -16,13 +16,13 @@ Requires authentication. Policy: **Authenticated**.
 
 | Name | Source | Type |
 |------|--------|------|
-| `validateDto` | Body | `[ValidateTaxIdDto](../dtos/validate-tax-id-dto.md)` |
+| `validateDto` | Body | [ValidateTaxIdDto](../dtos/validate-tax-id-dto.md) |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `[TaxIdValidationResultDto](../dtos/tax-id-validation-result-dto.md)` |
+| 200 | OK | [TaxIdValidationResultDto](../dtos/tax-id-validation-result-dto.md) |
 | 400 | Bad Request | - |
 | 404 | Not Found | - |
 | 401 | Unauthorized | - |
@@ -30,6 +30,7 @@ Requires authentication. Policy: **Authenticated**.
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 

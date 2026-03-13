@@ -23,10 +23,11 @@ Requires authentication. Policy: **Authenticated**.
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `[ExchangeRateDownloadSummaryDto](../dtos/exchange-rate-download-summary-dto.md)` |
+| 200 | OK | [ExchangeRateDownloadSummaryDto](../dtos/exchange-rate-download-summary-dto.md) |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 

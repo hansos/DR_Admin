@@ -16,15 +16,16 @@ Requires authentication. Policy: **Authenticated**.
 
 | Name | Source | Type |
 |------|--------|------|
-| `createDto` | Body | `[CreateSoldOptionalServiceDto](../dtos/create-sold-optional-service-dto.md)` |
+| `createDto` | Body | [CreateSoldOptionalServiceDto](../dtos/create-sold-optional-service-dto.md) |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 201 | Created | `[SoldOptionalServiceDto](../dtos/sold-optional-service-dto.md)` |
+| 201 | Created | [SoldOptionalServiceDto](../dtos/sold-optional-service-dto.md) |
 
 [Back to API Manual index](../index.md)
+
 
 
 

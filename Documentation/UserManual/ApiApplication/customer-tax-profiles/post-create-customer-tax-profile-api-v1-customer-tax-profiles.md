@@ -16,19 +16,20 @@ Requires authentication. Policy: **Authenticated**.
 
 | Name | Source | Type |
 |------|--------|------|
-| `createDto` | Body | `[CreateCustomerTaxProfileDto](../dtos/create-customer-tax-profile-dto.md)` |
+| `createDto` | Body | [CreateCustomerTaxProfileDto](../dtos/create-customer-tax-profile-dto.md) |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 201 | Created | `[CustomerTaxProfileDto](../dtos/customer-tax-profile-dto.md)` |
+| 201 | Created | [CustomerTaxProfileDto](../dtos/customer-tax-profile-dto.md) |
 | 400 | Bad Request | - |
 | 401 | Unauthorized | - |
 | 403 | Forbidden | - |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 

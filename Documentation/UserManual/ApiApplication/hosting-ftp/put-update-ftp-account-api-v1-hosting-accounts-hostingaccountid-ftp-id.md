@@ -18,16 +18,17 @@ Requires authentication. Policy: **Hosting.Write**.
 |------|--------|------|
 | `hostingAccountId` | Route | `int` |
 | `id` | Route | `int` |
-| `dto` | Body | `[HostingFtpAccountUpdateDto](../dtos/hosting-ftp-account-update-dto.md)` |
+| `dto` | Body | [HostingFtpAccountUpdateDto](../dtos/hosting-ftp-account-update-dto.md) |
 | `syncToServer` | Query | `bool` |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `[HostingFtpAccountDto](../dtos/hosting-ftp-account-dto.md)` |
+| 200 | OK | [HostingFtpAccountDto](../dtos/hosting-ftp-account-dto.md) |
 
 [Back to API Manual index](../index.md)
+
 
 
 

@@ -16,16 +16,17 @@ Requires authentication. Policy: **Authenticated**.
 
 | Name | Source | Type |
 |------|--------|------|
-| `dto` | Body | `[CreatePaymentInstrumentDto](../dtos/create-payment-instrument-dto.md)` |
+| `dto` | Body | [CreatePaymentInstrumentDto](../dtos/create-payment-instrument-dto.md) |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 201 | Created | `[PaymentInstrumentDto](../dtos/payment-instrument-dto.md)` |
+| 201 | Created | [PaymentInstrumentDto](../dtos/payment-instrument-dto.md) |
 | 400 | Bad Request | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 

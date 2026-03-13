@@ -23,9 +23,10 @@ Requires authentication. Policy: **Hosting.Read**.
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `[HostingEmailAccountDto](../dtos/hosting-email-account-dto.md)` |
+| 200 | OK | [HostingEmailAccountDto](../dtos/hosting-email-account-dto.md) |
 
 [Back to API Manual index](../index.md)
+
 
 
 

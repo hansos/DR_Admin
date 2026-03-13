@@ -22,13 +22,14 @@ Requires authentication. Policy: **OperatingSystem.Read**.
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `[OperatingSystemDto](../dtos/operating-system-dto.md)` |
+| 200 | OK | [OperatingSystemDto](../dtos/operating-system-dto.md) |
 | 401 | Unauthorized | - |
 | 403 | Forbidden | - |
 | 404 | Not Found | - |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 

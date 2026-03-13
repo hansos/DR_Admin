@@ -17,9 +17,10 @@ Requires authentication. Policy: **Authenticated**.
 | Name | Source | Type |
 |------|--------|------|
 | `id` | Route | `int` |
-| `updateDto` | Body | `[UpdateUnitDto](../dtos/update-unit-dto.md)` |
+| `updateDto` | Body | [UpdateUnitDto](../dtos/update-unit-dto.md) |
 
 [Back to API Manual index](../index.md)
+
 
 
 

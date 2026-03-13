@@ -23,13 +23,14 @@ Requires authentication. Policy: **InvoiceLine.Read**.
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `IEnumerable<[InvoiceLineDto](../dtos/invoice-line-dto.md)>` |
-| 200 | OK | `[PagedResult](../dtos/paged-result.md)<[InvoiceLineDto](../dtos/invoice-line-dto.md)>` |
+| 200 | OK | IEnumerable<[InvoiceLineDto](../dtos/invoice-line-dto.md)> |
+| 200 | OK | [PagedResult](../dtos/paged-result.md)<[InvoiceLineDto](../dtos/invoice-line-dto.md)> |
 | 401 | Unauthorized | - |
 | 403 | Forbidden | - |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 

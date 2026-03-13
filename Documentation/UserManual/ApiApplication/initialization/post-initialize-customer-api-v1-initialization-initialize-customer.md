@@ -16,17 +16,18 @@ This endpoint does not require authentication.
 
 | Name | Source | Type |
 |------|--------|------|
-| `request` | Body | `[UserPanelInitializationRequestDto](../dtos/user-panel-initialization-request-dto.md)` |
+| `request` | Body | [UserPanelInitializationRequestDto](../dtos/user-panel-initialization-request-dto.md) |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `[UserPanelInitializationResponseDto](../dtos/user-panel-initialization-response-dto.md)` |
+| 200 | OK | [UserPanelInitializationResponseDto](../dtos/user-panel-initialization-response-dto.md) |
 | 400 | Bad Request | - |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 

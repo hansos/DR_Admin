@@ -17,13 +17,13 @@ Requires authentication. Policy: **Authenticated**.
 | Name | Source | Type |
 |------|--------|------|
 | `id` | Route | `int` |
-| `updateDto` | Body | `[UpdateDnsZonePackageDto](../dtos/update-dns-zone-package-dto.md)` |
+| `updateDto` | Body | [UpdateDnsZonePackageDto](../dtos/update-dns-zone-package-dto.md) |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `[DnsZonePackageDto](../dtos/dns-zone-package-dto.md)` |
+| 200 | OK | [DnsZonePackageDto](../dtos/dns-zone-package-dto.md) |
 | 400 | Bad Request | - |
 | 401 | Unauthorized | - |
 | 403 | Forbidden | - |
@@ -31,6 +31,7 @@ Requires authentication. Policy: **Authenticated**.
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 

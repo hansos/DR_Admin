@@ -23,9 +23,10 @@ Requires authentication. Policy: **Hosting.Read**.
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `[HostingDatabaseDto](../dtos/hosting-database-dto.md)` |
+| 200 | OK | [HostingDatabaseDto](../dtos/hosting-database-dto.md) |
 
 [Back to API Manual index](../index.md)
+
 
 
 

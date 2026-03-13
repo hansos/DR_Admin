@@ -16,19 +16,20 @@ Requires authentication. Policy: **ControlPanelType.Write**.
 
 | Name | Source | Type |
 |------|--------|------|
-| `createDto` | Body | `[CreateControlPanelTypeDto](../dtos/create-control-panel-type-dto.md)` |
+| `createDto` | Body | [CreateControlPanelTypeDto](../dtos/create-control-panel-type-dto.md) |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 201 | Created | `[ControlPanelTypeDto](../dtos/control-panel-type-dto.md)` |
+| 201 | Created | [ControlPanelTypeDto](../dtos/control-panel-type-dto.md) |
 | 400 | Bad Request | - |
 | 401 | Unauthorized | - |
 | 403 | Forbidden | - |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 

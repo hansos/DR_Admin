@@ -24,11 +24,12 @@ Requires authentication. Policy: **Authenticated**.
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `[ExchangeRateDownloadLogDto](../dtos/exchange-rate-download-log-dto.md)` |
+| 200 | OK | [ExchangeRateDownloadLogDto](../dtos/exchange-rate-download-log-dto.md) |
 | 404 | Not Found | - |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)
+
 
 
 
