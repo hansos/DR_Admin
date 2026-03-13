@@ -19,6 +19,7 @@ using ISPAdmin.Workflow.Domain.Events.DomainEvents;
 using ISPAdmin.Workflow.Domain.Events.InvoiceEvents;
 using ISPAdmin.Workflow.Domain.Events.OrderEvents;
 using EmailSenderLib.Plugins.Email;
+using EmailReceiverLib.Plugins.Email;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -312,6 +313,64 @@ foreach (var pluginKey in configuredEmailPluginKeys
 }
 
 builder.Services.AddSingleton<EmailSenderLib.Factories.EmailSenderFactory>();
+
+// Email Receiver Library - Settings and Factory
+var emailReceiverSettings = builder.Configuration.GetSection("EmailReceiverSettings").Get<EmailReceiverLib.Infrastructure.Settings.EmailReceiverSettings>()
+    ?? new EmailReceiverLib.Infrastructure.Settings.EmailReceiverSettings();
+builder.Services.AddSingleton(emailReceiverSettings);
+
+var configuredEmailReceiverPluginKeys = emailReceiverSettings.Selection.EnabledPluginKeys ?? [];
+if (configuredEmailReceiverPluginKeys.Count == 0)
+{
+    configuredEmailReceiverPluginKeys = [];
+
+    if (!string.IsNullOrWhiteSpace(emailReceiverSettings.Provider))
+    {
+        configuredEmailReceiverPluginKeys.Add(emailReceiverSettings.Provider);
+    }
+
+    if (!string.IsNullOrWhiteSpace(emailReceiverSettings.Selection.DefaultPluginKey))
+    {
+        configuredEmailReceiverPluginKeys.Add(emailReceiverSettings.Selection.DefaultPluginKey);
+    }
+
+    configuredEmailReceiverPluginKeys.AddRange(emailReceiverSettings.Selection.FallbackPluginKeys ?? []);
+}
+
+foreach (var pluginKey in configuredEmailReceiverPluginKeys
+    .Where(k => !string.IsNullOrWhiteSpace(k))
+    .Select(k => k.Trim().ToLowerInvariant())
+    .Distinct())
+{
+    var pluginTypeName = pluginKey switch
+    {
+        "office365" => "EmailReceiverProviders.Office365.Plugins.Email.Office365EmailReceiverPlugin, EmailReceiverProvider.Office365",
+        "exchange" => "EmailReceiverProviders.Office365.Plugins.Email.Office365EmailReceiverPlugin, EmailReceiverProvider.Office365",
+        _ => null
+    };
+
+    if (pluginTypeName is null)
+    {
+        throw new InvalidOperationException($"Unsupported email receiver plugin key configured: '{pluginKey}'.");
+    }
+
+    var pluginType = Type.GetType(pluginTypeName, throwOnError: false);
+
+    if (pluginType is null)
+    {
+        log.Warning("Email receiver plugin assembly/type not found for key '{PluginKey}' ({PluginTypeName}). Skipping registration.", pluginKey, pluginTypeName);
+        continue;
+    }
+
+    if (!typeof(IEmailReceiverPlugin).IsAssignableFrom(pluginType))
+    {
+        throw new InvalidOperationException($"Configured email receiver plugin type '{pluginTypeName}' does not implement IEmailReceiverPlugin.");
+    }
+
+    builder.Services.AddSingleton(typeof(IEmailReceiverPlugin), pluginType);
+}
+
+builder.Services.AddSingleton<EmailReceiverLib.Factories.EmailReceiverFactory>();
 
 // Payment Gateway Library - Stripe settings
 var stripeSettings = builder.Configuration.GetSection("Stripe").Get<PaymentGatewayLib.Infrastructure.Settings.StripeSettings>()

@@ -1,12 +1,14 @@
 # Email Template Configuration - Complete Guide
 
 ## Problem Solved
+
 **Error**: `Template not found: Templates\EmailConfirmation\email.html.txt`  
 **Root Cause**: Template path was hard-coded in `Program.cs` instead of being configurable through `appsettings.json`
 
 ## Solution Implemented
 
 ### 1. Added `TemplatesPath` to `EmailSettings` Class
+
 **File**: `EmailSenderLib\Infrastructure\Settings\EmailSettings.cs`
 
 ```csharp
@@ -22,6 +24,7 @@ public class EmailSettings
 **Default Value**: `"Templates"` - Relative path from the application's working directory
 
 ### 2. Updated `appsettings.Development.json`
+
 **File**: `DR_Admin\appsettings.Development.json`
 
 ```json
@@ -39,9 +42,11 @@ public class EmailSettings
 ```
 
 ### 3. Updated `Program.cs` to Use Configured Path
+
 **File**: `DR_Admin\Program.cs`
 
 **Before**:
+
 ```csharp
 builder.Services.AddSingleton(sp => new MessagingTemplateLib.Templating.TemplateLoader(
     sp.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>(),
@@ -50,6 +55,7 @@ builder.Services.AddSingleton(sp => new MessagingTemplateLib.Templating.Template
 ```
 
 **After**:
+
 ```csharp
 builder.Services.AddSingleton(sp => new MessagingTemplateLib.Templating.TemplateLoader(
     sp.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>(),
@@ -87,12 +93,15 @@ DR_Admin/
 ## Template File Naming Convention
 
 ### Format
+
 `{channel}.txt` where channel is:
+
 - `email.html` - HTML email template
 - `email.text` - Plain text email template
 - `sms` - SMS template
 
 ### Examples
+
 - `Templates/EmailConfirmation/email.html.txt`
 - `Templates/PasswordReset/email.text.txt`
 - `Templates/DomainRegistered/sms.txt`
@@ -100,6 +109,7 @@ DR_Admin/
 ## How Templates Are Loaded
 
 ### 1. Template Loader Initialization
+
 ```csharp
 public TemplateLoader(IMemoryCache cache, string templateBasePath = "Templates")
 {
@@ -110,17 +120,21 @@ public TemplateLoader(IMemoryCache cache, string templateBasePath = "Templates")
 ```
 
 ### 2. Template Loading
+
 ```csharp
 var templateFile = Path.Combine(_templateBasePath, messageType, $"{channel}.txt");
 ```
 
 **Example**:
+
 - Message Type: `"EmailConfirmation"`
 - Channel: `"email.html"`
 - Full Path: `Templates/EmailConfirmation/email.html.txt`
 
 ### 3. Caching
+
 Templates are cached in memory for 10 minutes to improve performance:
+
 ```csharp
 entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10);
 ```
@@ -128,6 +142,7 @@ entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10);
 ## Template Models
 
 ### EmailConfirmationModel
+
 Used in: `MyAccountService.QueueEmailConfirmationAsync()`
 
 ```csharp
@@ -140,11 +155,13 @@ var model = new EmailConfirmationModel
 ```
 
 **Template Placeholders**:
+
 - `{{ConfirmationUrl}}` - Full URL to confirm email
 - `{{ExpirationDays}}` - Number of days until token expires
 - `{{Email}}` - User's email address (optional, for reference)
 
 ### PasswordResetModel
+
 Used in: `MyAccountService.QueuePasswordResetEmailAsync()`
 
 ```csharp
@@ -157,6 +174,7 @@ var model = new PasswordResetModel
 ```
 
 **Template Placeholders**:
+
 - `{{ResetUrl}}` - Full URL to reset password
 - `{{ExpirationHours}}` - Number of hours until token expires
 - `{{Email}}` - User's email address
@@ -164,6 +182,7 @@ var model = new PasswordResetModel
 ## Environment-Specific Configuration
 
 ### Development
+
 ```json
 {
   "EmailSettings": {
@@ -171,9 +190,11 @@ var model = new PasswordResetModel
   }
 }
 ```
+
 Relative path - looks in `DR_Admin/Templates/`
 
 ### Production (if templates are in a different location)
+
 ```json
 {
   "EmailSettings": {
@@ -181,9 +202,11 @@ Relative path - looks in `DR_Admin/Templates/`
   }
 }
 ```
+
 Absolute path - useful if templates are stored separately
 
 ### Docker/Container (if needed)
+
 ```json
 {
   "EmailSettings": {
@@ -195,11 +218,14 @@ Absolute path - useful if templates are stored separately
 ## Working Directory Considerations
 
 The template path is relative to the application's **working directory**, which is typically:
+
 - **Development**: `DR_Admin/bin/Debug/net10.0/`
 - **Published**: Where the app is deployed
 
 ### Option 1: Copy Templates to Output Directory
+
 Add to `DR_Admin.csproj`:
+
 ```xml
 <ItemGroup>
   <Content Include="Templates\**\*.txt">
@@ -209,6 +235,7 @@ Add to `DR_Admin.csproj`:
 ```
 
 ### Option 2: Use Absolute Path
+
 ```json
 {
   "EmailSettings": {
@@ -218,15 +245,19 @@ Add to `DR_Admin.csproj`:
 ```
 
 ### Option 3: Use Path Relative to Content Root
+
 Modify `TemplateLoader` to use `IWebHostEnvironment.ContentRootPath`
 
 ## Troubleshooting
 
 ### Error: Template not found
+
 **Symptoms**: `FileNotFoundException: Template not found: Templates\EmailConfirmation\email.html.txt`
 
 **Solutions**:
+
 1. **Check template path in appsettings**:
+   
    ```json
    "EmailSettings": {
      "TemplatesPath": "Templates"  // Verify this path
@@ -234,35 +265,43 @@ Modify `TemplateLoader` to use `IWebHostEnvironment.ContentRootPath`
    ```
 
 2. **Verify templates exist**:
+   
    ```bash
    Test-Path "DR_Admin\Templates\EmailConfirmation\email.html.txt"
    ```
 
 3. **Check working directory**:
+   
    ```csharp
    _log.Information("Current directory: {Directory}", Directory.GetCurrentDirectory());
    ```
 
 4. **Ensure templates are copied to output**:
+   
    - Add `<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>` to `.csproj`
 
 5. **Use absolute path** (temporary workaround):
+   
    ```json
    "TemplatesPath": "C:\\Source2\\DR_Admin\\DR_Admin\\Templates"
    ```
 
 ### Error: Template has wrong placeholders
+
 **Symptoms**: Email sent but placeholders like `{{ConfirmationUrl}}` are not replaced
 
 **Solutions**:
+
 1. Verify model property names match template placeholders
 2. Check template uses `{{PropertyName}}` syntax (double braces)
 3. Ensure model is passed to `RenderMessage` correctly
 
 ### Error: Templates not updated
+
 **Symptoms**: Changes to templates don't appear in emails
 
 **Solutions**:
+
 1. Wait for cache to expire (10 minutes)
 2. Restart application to clear cache
 3. Call `TemplateLoader.ClearCache()` (if exposed)
@@ -270,6 +309,7 @@ Modify `TemplateLoader` to use `IWebHostEnvironment.ContentRootPath`
 ## Best Practices
 
 ### ✅ DO
+
 - Define template path in `EmailSettings` section of `appsettings.json`
 - Use relative paths for development (e.g., `"Templates"`)
 - Use absolute paths for production if needed
@@ -278,6 +318,7 @@ Modify `TemplateLoader` to use `IWebHostEnvironment.ContentRootPath`
 - Test template rendering before deploying
 
 ### ❌ DON'T
+
 - Hard-code template paths in code
 - Store templates in database (makes versioning difficult)
 - Mix template concerns with other settings
@@ -287,30 +328,35 @@ Modify `TemplateLoader` to use `IWebHostEnvironment.ContentRootPath`
 ## Verification Steps
 
 ### 1. Check Configuration
+
 ```bash
 # Verify appsettings.Development.json has TemplatesPath
 cat DR_Admin\appsettings.Development.json | Select-String "TemplatesPath"
 ```
 
 ### 2. Check Templates Exist
+
 ```bash
 # List all template files
 Get-ChildItem -Path "DR_Admin\Templates" -Recurse -File | Select-Object FullName
 ```
 
 ### 3. Test Template Loading
+
 ```bash
 # Run the application and check logs
 # Look for: "TemplateLoader initialized with base path: Templates"
 ```
 
 ### 4. Test Email Sending
+
 ```bash
 # Register a new user and check email queue
 # Verify confirmation email is queued with rendered template
 ```
 
 ## Related Files
+
 - `EmailSenderLib\Infrastructure\Settings\EmailSettings.cs`
 - `DR_Admin\appsettings.Development.json`
 - `DR_Admin\Program.cs`
@@ -324,6 +370,7 @@ Get-ChildItem -Path "DR_Admin\Templates" -Recurse -File | Select-Object FullName
 The template path is now properly configured in `EmailSettings` and can be changed per environment through `appsettings.json` files. This follows the principle that "path to template files should be defined in the appsettings.Development.json settings file and EmailSettings class."
 
 **Key Changes**:
+
 1. ✅ Added `TemplatesPath` property to `EmailSettings` class
 2. ✅ Added `TemplatesPath` configuration to `appsettings.Development.json`
 3. ✅ Updated `Program.cs` to use configured path instead of hard-coded value

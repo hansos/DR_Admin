@@ -4,6 +4,7 @@ namespace PluginLib.Plugins
     {
         Email = 1,
         Sms = 2,
-        PaymentGateway = 3
+        PaymentGateway = 3,
+        EmailReceiver = 4
     }
 }

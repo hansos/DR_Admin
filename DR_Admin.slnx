@@ -14,6 +14,9 @@
     <File Path="Documentation/FlowDiagrams/ResellerAdminClient-QuoteToPayment-Flow.md" />
   </Folder>
   <Folder Name="/PluginProviders/" />
+  <Folder Name="/PluginProviders/EmailReceiverProviders/">
+    <Project Path="PluginProviders/EmailReceiverProviders/EmailReceiverProvider.Office365/EmailReceiverProvider.Office365.csproj" />
+  </Folder>
   <Folder Name="/PluginProviders/EmailSenderProviders/">
     <Project Path="PluginProviders/EmailSenderProviders/EmailSenderProvider.AmazonSes/EmailSenderProvider.AmazonSes.csproj" />
     <Project Path="PluginProviders/EmailSenderProviders/EmailSenderProvider.Exchange/EmailSenderProvider.Exchange.csproj" />
