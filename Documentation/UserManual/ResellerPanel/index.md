@@ -29,6 +29,7 @@
 ## Customers
 
 - [Customer List](customers/customer-list.md) — Browse, search, and manage all customer accounts in your reseller portfolio.
+- [Customer Details](customers/customer-details.md) — View and manage the complete profile for a specific customer, including contact persons, domains, internal notes, and change history. *(not in menu — reached from Customer List)*
 - [Contact Persons](customers/contact-persons.md) — Manage contact persons associated with customer accounts.
 - [Communication](customers/communication.md) — View and send communications to customers, including emails and internal notes.
 
@@ -124,4 +125,4 @@
 - [Registry Manuals](help/registry-manuals.md) — Access registry-specific documentation, policies, and technical guidelines.
 - [Support Tickets](help/support-tickets.md) — Create and manage support requests with the DR Admin support team.
 - [System Status](help/system-status.md) — View current system health, uptime, and service status.
-- [Debug](help/debug.md) — Access diagnostic tools and debug information (visible to administrators only).
+- [Debug](help/debug.md) — Access diagnostic tools and debug information (only visible in Debug builds).

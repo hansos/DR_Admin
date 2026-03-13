@@ -1,10 +1,10 @@
 ﻿# Debug
 
-Access diagnostic tools and debug information (visible to administrators only).
+Access diagnostic tools and debug information. This page is only visible when the application is built in **Debug** configuration.
 
 ## How to Access
 
-Navigate to **Help & Support > Debug** from the side menu. This page is only visible to users with administrator privileges.
+Navigate to **Help & Support > Debug** from the side menu. This menu item is only present when the app is running a Debug build.
 
 ## Available Tools
 
@@ -18,7 +18,7 @@ Navigate to **Help & Support > Debug** from the side menu. This page is only vis
 
 ## Important Notes
 
-- This page contains sensitive diagnostic information. Access is restricted to administrators.
+- This page contains sensitive diagnostic information and is only available in Debug builds. It is not present in Release/production builds.
 - Use the **API Health Check** to quickly verify all external integrations are functioning.
 
 ## Related Pages
