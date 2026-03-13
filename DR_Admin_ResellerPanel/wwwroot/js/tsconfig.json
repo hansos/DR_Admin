@@ -46,6 +46,7 @@
         "new-sale-offer.ts",
         "dashboard-summary.ts",
         "domains.ts",
+        "domain-registrants.ts",
         "tlds.ts",
         "dns-zones.ts",
         "dns-history.ts",

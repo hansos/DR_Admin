@@ -225,7 +225,7 @@ async function loadDomainFromManualInput(): Promise<void> {
 
     document.getElementById('domain-details-empty')?.classList.add('d-none');
     hideModal('domain-details-select-modal');
-    await Promise.all([loadDnsRecords(), loadDomainContacts(), loadDomainHistory()]);
+    await Promise.all([loadDnsRecords(), loadDomainContacts(), loadCustomerDomains(), loadDomainHistory()]);
 }
 
 function setLoading(isLoading: boolean): void {
@@ -308,7 +308,97 @@ async function loadDomainDetails(): Promise<void> {
     updateDomainFields(currentDomain);
     setLoading(false);
 
-    await Promise.all([loadDnsRecords(), loadDomainContacts(), loadDomainHistory()]);
+    await Promise.all([loadDnsRecords(), loadDomainContacts(), loadCustomerDomains(), loadDomainHistory()]);
+}
+
+async function loadCustomerDomains(): Promise<void> {
+    const loading = document.getElementById('domain-customer-domains-loading');
+    const content = document.getElementById('domain-customer-domains-content');
+    const empty = document.getElementById('domain-customer-domains-empty');
+
+    loading?.classList.remove('d-none');
+    content?.classList.add('d-none');
+    empty?.classList.add('d-none');
+
+    if (!currentDomain || !currentDomain.customerId) {
+        loading?.classList.add('d-none');
+        empty?.classList.remove('d-none');
+        setCustomerDomainsCount(0);
+        return;
+    }
+
+    const response = await apiRequest<Domain[]>(`${getApiBaseUrl()}/RegisteredDomains/customer/${currentDomain.customerId}`, { method: 'GET' });
+    if (!response.success) {
+        loading?.classList.add('d-none');
+        empty?.classList.remove('d-none');
+        setCustomerDomainsCount(0);
+        return;
+    }
+
+    const raw = response.data as any;
+    const items = Array.isArray(raw)
+        ? raw
+        : Array.isArray(raw?.data)
+            ? raw.data
+            : Array.isArray(raw?.Data)
+                ? raw.Data
+                : [];
+
+    const domains = items
+        .map(normalizeDomain)
+        .filter((item) => item.id > 0 && item.id !== currentDomain?.id)
+        .sort((a, b) => a.name.localeCompare(b.name));
+
+    renderCustomerDomains(domains);
+}
+
+function renderCustomerDomains(domains: Domain[]): void {
+    const loading = document.getElementById('domain-customer-domains-loading');
+    const content = document.getElementById('domain-customer-domains-content');
+    const empty = document.getElementById('domain-customer-domains-empty');
+    const body = document.getElementById('domain-customer-domains-table-body');
+
+    loading?.classList.add('d-none');
+
+    if (!body) {
+        return;
+    }
+
+    if (!domains.length) {
+        body.innerHTML = '';
+        content?.classList.add('d-none');
+        empty?.classList.remove('d-none');
+        setCustomerDomainsCount(0);
+        return;
+    }
+
+    setCustomerDomainsCount(domains.length);
+
+    body.innerHTML = domains.map((item) => `
+        <tr>
+            <td><code>${esc(item.name || '-')}</code></td>
+            <td>${esc(item.status || '-')}</td>
+            <td>${esc(item.registrationDate ? formatDate(item.registrationDate) : '-')}</td>
+            <td>${esc(item.expirationDate ? formatDate(item.expirationDate) : '-')}</td>
+            <td class="text-end">
+                <a class="btn btn-sm btn-outline-primary" href="/domains/details?id=${encodeURIComponent(String(item.id))}">
+                    <i class="bi bi-box-arrow-up-right"></i> Open
+                </a>
+            </td>
+        </tr>
+    `).join('');
+
+    empty?.classList.add('d-none');
+    content?.classList.remove('d-none');
+}
+
+function setCustomerDomainsCount(count: number): void {
+    const badge = document.getElementById('domain-customer-domains-count');
+    if (!badge) {
+        return;
+    }
+
+    badge.textContent = `${count} domain${count === 1 ? '' : 's'}`;
 }
 
 function updateDomainFields(domain: Domain): void {
