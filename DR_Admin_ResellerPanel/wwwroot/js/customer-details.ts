@@ -62,11 +62,37 @@
         changedAt?: string;
     }
 
+    interface RegisteredDomain {
+        id: number;
+        name: string;
+        status?: string;
+        expirationDate?: string;
+    }
+
+    interface SoldHostingPackage {
+        id: number;
+        registeredDomainId?: number | null;
+        hostingPackageId: number;
+        status?: string;
+        connectedDomainName?: string | null;
+    }
+
+    interface SoldOptionalService {
+        id: number;
+        registeredDomainId?: number | null;
+        serviceName?: string | null;
+        status?: string;
+        connectedDomainName?: string | null;
+    }
+
     let currentCustomerId = 0;
     let editingContactId: number | null = null;
     let allContacts: ContactPerson[] = [];
     let allInternalNotes: CustomerInternalNote[] = [];
     let allChanges: CustomerChange[] = [];
+    let allDomains: RegisteredDomain[] = [];
+    let allSoldHostingPackages: SoldHostingPackage[] = [];
+    let allSoldOptionalServices: SoldOptionalService[] = [];
 
     const getApiBaseUrl = (): string => ((window as Window & { AppSettings?: AppSettings }).AppSettings?.apiBaseUrl ?? '');
 
@@ -221,6 +247,29 @@
         changedAt: String(item.changedAt ?? item.ChangedAt ?? ''),
     });
 
+    const normalizeRegisteredDomain = (item: any): RegisteredDomain => ({
+        id: Number(item.id ?? item.Id ?? 0),
+        name: String(item.name ?? item.Name ?? ''),
+        status: String(item.status ?? item.Status ?? ''),
+        expirationDate: String(item.expirationDate ?? item.ExpirationDate ?? ''),
+    });
+
+    const normalizeSoldHostingPackage = (item: any): SoldHostingPackage => ({
+        id: Number(item.id ?? item.Id ?? 0),
+        registeredDomainId: item.registeredDomainId ?? item.RegisteredDomainId ?? null,
+        hostingPackageId: Number(item.hostingPackageId ?? item.HostingPackageId ?? 0),
+        status: String(item.status ?? item.Status ?? ''),
+        connectedDomainName: String(item.connectedDomainName ?? item.ConnectedDomainName ?? '') || null,
+    });
+
+    const normalizeSoldOptionalService = (item: any): SoldOptionalService => ({
+        id: Number(item.id ?? item.Id ?? 0),
+        registeredDomainId: item.registeredDomainId ?? item.RegisteredDomainId ?? null,
+        serviceName: String(item.serviceName ?? item.ServiceName ?? '') || null,
+        status: String(item.status ?? item.Status ?? ''),
+        connectedDomainName: String(item.connectedDomainName ?? item.ConnectedDomainName ?? '') || null,
+    });
+
     const renderContacts = (): void => {
         const body = document.getElementById('customer-details-contacts-body');
         if (!body) return;
@@ -294,6 +343,110 @@
 
         allContacts = (Array.isArray(response.data) ? response.data : []).map(normalizeContact);
         renderContacts();
+    };
+
+    const renderDomains = (): void => {
+        const body = document.getElementById('customer-details-domains-body');
+        if (!body) {
+            return;
+        }
+
+        setText('customer-details-domains-count', String(allDomains.length));
+
+        if (!allDomains.length) {
+            body.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No domains found for this customer.</td></tr>';
+            return;
+        }
+
+        const hostingByDomain = new Map<number, SoldHostingPackage[]>();
+        for (const item of allSoldHostingPackages) {
+            const domainId = Number(item.registeredDomainId ?? 0);
+            if (!domainId) {
+                continue;
+            }
+
+            const existing = hostingByDomain.get(domainId) ?? [];
+            existing.push(item);
+            hostingByDomain.set(domainId, existing);
+        }
+
+        const optionalByDomain = new Map<number, SoldOptionalService[]>();
+        for (const item of allSoldOptionalServices) {
+            const domainId = Number(item.registeredDomainId ?? 0);
+            if (!domainId) {
+                continue;
+            }
+
+            const existing = optionalByDomain.get(domainId) ?? [];
+            existing.push(item);
+            optionalByDomain.set(domainId, existing);
+        }
+
+        const renderHosting = (domainId: number): string => {
+            const items = hostingByDomain.get(domainId) ?? [];
+            if (!items.length) {
+                return '-';
+            }
+
+            return items.map((item) => esc(`Hosting #${item.hostingPackageId}${item.status ? ` (${item.status})` : ''}`)).join('<br/>');
+        };
+
+        const renderOptional = (domainId: number): string => {
+            const items = optionalByDomain.get(domainId) ?? [];
+            if (!items.length) {
+                return '-';
+            }
+
+            return items
+                .map((item) => esc(`${item.serviceName || `Service #${item.id}`}${item.status ? ` (${item.status})` : ''}`))
+                .join('<br/>');
+        };
+
+        body.innerHTML = allDomains
+            .slice()
+            .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+            .map((domain) => `
+                <tr>
+                    <td><code>${esc(domain.name || '-')}</code></td>
+                    <td>${esc(domain.status || '-')}</td>
+                    <td>${esc(formatDate(domain.expirationDate))}</td>
+                    <td>${renderHosting(domain.id)}</td>
+                    <td>${renderOptional(domain.id)}</td>
+                    <td class="text-end">
+                        <a class="btn btn-sm btn-outline-primary" href="/domains/details?id=${domain.id}" title="Open domain">
+                            <i class="bi bi-box-arrow-up-right"></i>
+                        </a>
+                    </td>
+                </tr>
+            `)
+            .join('');
+    };
+
+    const loadDomainsWithServices = async (): Promise<void> => {
+        const [domainsResponse, hostingResponse, optionalResponse] = await Promise.all([
+            apiRequest<any[]>(`${getApiBaseUrl()}/RegisteredDomains/customer/${currentCustomerId}`, { method: 'GET' }),
+            apiRequest<any[]>(`${getApiBaseUrl()}/SoldHostingPackages/customer/${currentCustomerId}`, { method: 'GET' }),
+            apiRequest<any[]>(`${getApiBaseUrl()}/SoldOptionalServices/customer/${currentCustomerId}`, { method: 'GET' }),
+        ]);
+
+        if (!domainsResponse.success) {
+            showError(domainsResponse.message || 'Failed to load customer domains.');
+            allDomains = [];
+            renderDomains();
+            return;
+        }
+
+        allDomains = (Array.isArray(domainsResponse.data) ? domainsResponse.data : []).map(normalizeRegisteredDomain);
+
+        allSoldHostingPackages = hostingResponse.success
+            ? (Array.isArray(hostingResponse.data) ? hostingResponse.data : []).map(normalizeSoldHostingPackage)
+            : [];
+
+        allSoldOptionalServices = optionalResponse.success
+            ? (Array.isArray(optionalResponse.data) ? optionalResponse.data : []).map(normalizeSoldOptionalService)
+            : [];
+
+        renderDomains();
     };
 
     const renderInternalNotes = (): void => {
@@ -497,6 +650,7 @@
 
         await loadCustomer();
         await loadContacts();
+        await loadDomainsWithServices();
         await loadInternalNotes();
         await loadChanges();
 
