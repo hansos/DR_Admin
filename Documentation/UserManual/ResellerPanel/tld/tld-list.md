@@ -8,15 +8,15 @@ Navigate to **TLD & Registry > TLD List** from the side menu.
 
 ## Page Layout
 
-| Column | Description |
-|--------|-------------|
-| TLD | The top-level domain extension (e.g., .com, .no, .eu). |
-| Registry | The registry operator. |
-| Type | gTLD, ccTLD, or newTLD. |
-| Status | Available, Restricted, or Disabled. |
-| Registration Price | Starting registration price. |
-| Renewal Price | Starting renewal price. |
-| Actions | View Details, Edit Pricing, Disable/Enable. |
+| Column             | Description                                            |
+| ------------------ | ------------------------------------------------------ |
+| TLD                | The top-level domain extension (e.g., .com, .no, .eu). |
+| Registry           | The registry operator.                                 |
+| Type               | gTLD, ccTLD, or newTLD.                                |
+| Status             | Available, Restricted, or Disabled.                    |
+| Registration Price | Starting registration price.                           |
+| Renewal Price      | Starting renewal price.                                |
+| Actions            | View Details, Edit Pricing, Disable/Enable.            |
 
 ## Filtering & Search
 

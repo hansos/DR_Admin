@@ -1,0 +1,373 @@
+﻿# DTO Reference
+
+Reference pages for Data Transfer Objects used by API endpoints.
+
+- [AddressTypeDto](address-type-dto.md) — Data transfer object representing an address type
+- [ApplyCustomerCreditDto](apply-customer-credit-dto.md) — Request to apply customer credit to invoice
+- [ApproveRefundLossDto](approve-refund-loss-dto.md) — Data transfer object for approving refund loss audits
+- [AuditLogDto](audit-log-dto.md) — Data transfer object for AuditLogDto.
+- [AuthenticatorSetupDto](authenticator-setup-dto.md) — Response DTO for authenticator app setup details.
+- [AvailableTldDto](available-tld-dto.md) — DTO for listing available TLDs
+- [BackupScheduleDto](backup-schedule-dto.md) — Data transfer object for BackupScheduleDto.
+- [BillingCycleDto](billing-cycle-dto.md) — Data transfer object representing a billing cycle
+- [BulkUpdateRegistrarTldStatusByTldDto](bulk-update-registrar-tld-status-by-tld-dto.md) — Data transfer object for bulk updating the active status of specific registrar-TLD offerings by TLD extensions
+- [BulkUpdateRegistrarTldStatusDto](bulk-update-registrar-tld-status-dto.md) — Data transfer object for bulk updating the active status of all registrar-TLD offerings
+- [BulkUpdateResultDto](bulk-update-result-dto.md) — Data transfer object representing the result of a bulk update operation
+- [CalculatePricingRequest](calculate-pricing-request.md) — Request for calculating pricing with discounts
+- [CalculatePricingResponse](calculate-pricing-response.md) — Response with calculated pricing
+- [CancelSubscriptionDto](cancel-subscription-dto.md) — Data transfer object for cancelling a subscription
+- [CategorizedContactPersonDto](categorized-contact-person-dto.md) — Contact person with categorization for role-based selection
+- [CategorizedContactPersonListResponse](categorized-contact-person-list-response.md) — Response containing categorized contact persons
+- [ChangePasswordRequestDto](change-password-request-dto.md) — Request DTO for changing password (authenticated user)
+- [CheckDomainAvailabilityDto](check-domain-availability-dto.md) — DTO for checking domain availability
+- [CodeTablesResponseDto](code-tables-response-dto.md) — Data transfer object for code tables check and update response
+- [ConfirmAuthenticatorSetupRequestDto](confirm-authenticator-setup-request-dto.md) — Request DTO for confirming authenticator app setup.
+- [ConfirmEmailRequestDto](confirm-email-request-dto.md) — Request DTO for email confirmation
+- [ContactPersonDto](contact-person-dto.md) — Data transfer object representing a contact person
+- [ControlPanelTypeDto](control-panel-type-dto.md) — Data transfer object representing a control panel type
+- [ConvertCurrencyDto](convert-currency-dto.md) — Data transfer object for currency conversion request
+- [CountryDto](country-dto.md) — Data transfer object representing a country
+- [CouponDto](coupon-dto.md) — Data transfer object representing a coupon
+- [CouponUsageDto](coupon-usage-dto.md) — Data transfer object representing a coupon usage entry
+- [CouponValidationResultDto](coupon-validation-result-dto.md) — Data transfer object representing coupon validation result
+- [CreateAddressTypeDto](create-address-type-dto.md) — Data transfer object for creating a new address type
+- [CreateAuditLogDto](create-audit-log-dto.md) — Data transfer object for CreateAuditLogDto.
+- [CreateBackupScheduleDto](create-backup-schedule-dto.md) — Data transfer object for CreateBackupScheduleDto.
+- [CreateBillingCycleDto](create-billing-cycle-dto.md) — Data transfer object for creating a new billing cycle
+- [CreateContactPersonDto](create-contact-person-dto.md) — Data transfer object for creating a new contact person
+- [CreateControlPanelTypeDto](create-control-panel-type-dto.md) — Data transfer object for creating a new control panel type
+- [CreateCountryDto](create-country-dto.md) — Data transfer object for creating a new country
+- [CreateCouponDto](create-coupon-dto.md) — Data transfer object for creating a coupon
+- [CreateCreditTransactionDto](create-credit-transaction-dto.md) — Data transfer object for creating a credit transaction
+- [CreateCurrencyExchangeRateDto](create-currency-exchange-rate-dto.md) — Data transfer object for creating a currency exchange rate
+- [CreateCustomerAddressDto](create-customer-address-dto.md) — Data transfer object for creating a new customer address
+- [CreateCustomerDto](create-customer-dto.md) — Data transfer object for creating a new customer
+- [CreateCustomerInternalNoteDto](create-customer-internal-note-dto.md) — Request for creating an internal customer note.
+- [CreateCustomerPaymentMethodDto](create-customer-payment-method-dto.md) — Data transfer object for creating a customer payment method
+- [CreateCustomerStatusDto](create-customer-status-dto.md) — Data transfer object for creating a new customer status
+- [CreateCustomerTaxProfileDto](create-customer-tax-profile-dto.md) — Data transfer object for creating customer tax profiles
+- [CreateDnsRecordDto](create-dns-record-dto.md) — Data transfer object for creating a new DNS record.
+- [CreateDnsRecordTypeDto](create-dns-record-type-dto.md) — Data transfer object for creating a new DNS record type
+- [CreateDnsZonePackageDto](create-dns-zone-package-dto.md) — Data transfer object for creating a new DNS zone package
+- [CreateDnsZonePackageRecordDto](create-dns-zone-package-record-dto.md) — Data transfer object for creating a new DNS zone package record
+- [CreateDocumentTemplateDto](create-document-template-dto.md) — Data transfer object for creating a new document template
+- [CreateDomainContactAssignmentDto](create-domain-contact-assignment-dto.md) — Data transfer object for creating a new domain contact assignment
+- [CreateDomainContactDto](create-domain-contact-dto.md) — Data transfer object for creating a new domain contact
+- [CreateDomainProviderDto](create-domain-provider-dto.md) — Data transfer object for CreateDomainProviderDto.
+- [CreateExchangeRateDownloadLogDto](create-exchange-rate-download-log-dto.md) — DTO for creating an exchange rate download log entry
+- [CreateHostingAccountDto](create-hosting-account-dto.md) — Data transfer object for CreateHostingAccountDto.
+- [CreateHostingPackageDto](create-hosting-package-dto.md) — Data transfer object for creating a new hosting package
+- [CreateHostProviderDto](create-host-provider-dto.md) — Data transfer object for creating a new host provider
+- [CreateInvoiceDto](create-invoice-dto.md) — Data transfer object for creating a new invoice
+- [CreateInvoiceLineDto](create-invoice-line-dto.md) — Data transfer object for creating a new invoice line item
+- [CreateLoginHistoryDto](create-login-history-dto.md) — Data transfer object for creating a login history entry.
+- [CreateNameServerDto](create-name-server-dto.md) — Data transfer object for creating a new name server
+- [CreateOperatingSystemDto](create-operating-system-dto.md) — Data transfer object for creating a new operating system
+- [CreateOrderDto](create-order-dto.md) — Data transfer object for creating a new order
+- [CreateOrderLineDto](create-order-line-dto.md) — Data transfer object for creating a new order line
+- [CreateOrderTaxSnapshotDto](create-order-tax-snapshot-dto.md) — Data transfer object for creating an order tax snapshot.
+- [CreatePaymentGatewayDto](create-payment-gateway-dto.md) — Data transfer object for creating a new payment gateway
+- [CreatePaymentInstrumentDto](create-payment-instrument-dto.md) — DTO for creating payment instrument
+- [CreatePaymentIntentDto](create-payment-intent-dto.md) — Data transfer object for creating a payment intent
+- [CreatePaymentTransactionDto](create-payment-transaction-dto.md) — Data transfer object for CreatePaymentTransactionDto.
+- [CreatePostalCodeDto](create-postal-code-dto.md) — Data transfer object for creating a new postal code
+- [CreateProfitMarginSettingDto](create-profit-margin-setting-dto.md) — Data transfer object for creating a profit margin setting.
+- [CreateQuoteDto](create-quote-dto.md) — Data transfer object for creating a new quote
+- [CreateQuoteLineDto](create-quote-line-dto.md) — Data transfer object for creating a quote line item
+- [CreateRefundDto](create-refund-dto.md) — Data transfer object for creating a refund
+- [CreateRefundLossAuditDto](create-refund-loss-audit-dto.md) — Data transfer object for creating refund loss audits
+- [CreateRegisteredDomainDto](create-registered-domain-dto.md) — Represents the payload for creating a registered domain.
+- [CreateRegistrarDto](create-registrar-dto.md) — Data transfer object for creating a new registrar
+- [CreateRegistrarMailAddressDto](create-registrar-mail-address-dto.md) — Data transfer object for creating a new registrar mail address
+- [CreateRegistrarSelectionPreferenceDto](create-registrar-selection-preference-dto.md) — DTO for creating new registrar selection preference
+- [CreateRegistrarTldCostPricingDto](create-registrar-tld-cost-pricing-dto.md) — DTO for creating new registrar TLD cost pricing
+- [CreateRegistrarTldDto](create-registrar-tld-dto.md) — Data transfer object for creating a new registrar-TLD offering
+- [CreateReportTemplateDto](create-report-template-dto.md) — Data transfer object for creating a new report template
+- [CreateResellerCompanyDto](create-reseller-company-dto.md) — Data transfer object for creating a new reseller company
+- [CreateResellerTldDiscountDto](create-reseller-tld-discount-dto.md) — DTO for creating new reseller TLD discount
+- [CreateRoleDto](create-role-dto.md) — Data transfer object for creating a new role
+- [CreateSalesAgentDto](create-sales-agent-dto.md) — Data transfer object for creating a new sales agent
+- [CreateSentEmailDto](create-sent-email-dto.md) — Data transfer object for creating a new sent email record
+- [CreateServerControlPanelDto](create-server-control-panel-dto.md) — Data transfer object for creating a new server control panel
+- [CreateServerDto](create-server-dto.md) — Data transfer object for creating a new server
+- [CreateServerIpAddressDto](create-server-ip-address-dto.md) — Data transfer object for creating a new server IP address
+- [CreateServerTypeDto](create-server-type-dto.md) — Data transfer object for creating a new server type
+- [CreateServiceDto](create-service-dto.md) — Data transfer object for creating a new service
+- [CreateServiceTypeDto](create-service-type-dto.md) — Data transfer object for creating a new service type
+- [CreateSoldHostingPackageDto](create-sold-hosting-package-dto.md) — Data transfer object for CreateSoldHostingPackageDto.
+- [CreateSoldOptionalServiceDto](create-sold-optional-service-dto.md) — Data transfer object for CreateSoldOptionalServiceDto.
+- [CreateSubscriptionBillingHistoryDto](create-subscription-billing-history-dto.md) — Data transfer object for creating a new subscription billing history record
+- [CreateSubscriptionDto](create-subscription-dto.md) — Data transfer object for creating a new subscription
+- [CreateSupportTicketDto](create-support-ticket-dto.md) — Data transfer object used when creating a support ticket.
+- [CreateSupportTicketMessageDto](create-support-ticket-message-dto.md) — Data transfer object used when posting a ticket message.
+- [CreateSystemSettingDto](create-system-setting-dto.md) — Data transfer object for creating a new system setting
+- [CreateTaxCategoryDto](create-tax-category-dto.md) — Data transfer object for creating a tax category.
+- [CreateTaxJurisdictionDto](create-tax-jurisdiction-dto.md) — Data transfer object for creating a tax jurisdiction.
+- [CreateTaxRegistrationDto](create-tax-registration-dto.md) — Data transfer object for creating a seller tax registration.
+- [CreateTaxRuleDto](create-tax-rule-dto.md) — Data transfer object for creating a tax rule
+- [CreateTldDto](create-tld-dto.md) — Data transfer object for creating a new TLD
+- [CreateTldRegistryRuleDto](create-tld-registry-rule-dto.md) — Data transfer object for creating TLD registry policy rules.
+- [CreateTldSalesPricingDto](create-tld-sales-pricing-dto.md) — DTO for creating new TLD sales pricing
+- [CreateTokenDto](create-token-dto.md) — Data transfer object for creating a new token
+- [CreateUnitDto](create-unit-dto.md) — Data transfer object for creating a new unit of measurement
+- [CreateUserDto](create-user-dto.md) — Data transfer object for creating a new user
+- [CreateVendorCostDto](create-vendor-cost-dto.md) — Data transfer object for creating vendor costs
+- [CreateVendorPayoutDto](create-vendor-payout-dto.md) — Data transfer object for creating vendor payouts
+- [CreateVendorTaxProfileDto](create-vendor-tax-profile-dto.md) — Data transfer object for creating vendor tax profiles
+- [CreditTransactionDto](credit-transaction-dto.md) — Data transfer object representing a credit transaction
+- [CurrencyConversionResultDto](currency-conversion-result-dto.md) — Data transfer object for currency conversion result
+- [CurrencyDto](currency-dto.md) — Data transfer object representing a supported currency.
+- [CurrencyExchangeRateDto](currency-exchange-rate-dto.md) — Data transfer object for currency exchange rate
+- [CustomerAccountDto](customer-account-dto.md) — DTO for customer information in account context
+- [CustomerAddressDto](customer-address-dto.md) — Data transfer object representing a customer address
+- [CustomerChangeDto](customer-change-dto.md) — Represents a tracked customer change.
+- [CustomerCreditDto](customer-credit-dto.md) — Data transfer object representing customer credit
+- [CustomerDto](customer-dto.md) — Data transfer object representing a customer
+- [CustomerInternalNoteDto](customer-internal-note-dto.md) — Represents an internal customer note.
+- [CustomerPaymentMethodDto](customer-payment-method-dto.md) — Data transfer object representing a customer payment method
+- [CustomerStatusDto](customer-status-dto.md) — Data transfer object representing a customer status
+- [CustomerTaxProfileDto](customer-tax-profile-dto.md) — Data transfer object representing customer tax identification and validation information
+- [DnsBulkSyncResult](dns-bulk-sync-result.md) — Result of a bulk DNS record sync operation across all domains for a registrar.
+- [DnsPushPendingResult](dns-push-pending-result.md) — Result of pushing all pending-sync DNS records for a domain to the registrar's DNS server.
+- [DnsPushRecordResult](dns-push-record-result.md) — Result of pushing a single DNS record to the registrar's DNS server.
+- [DnsRecordDto](dns-record-dto.md) — Data transfer object representing a DNS record for a domain.
+- [DnsRecordSyncResult](dns-record-sync-result.md) — Result of a DNS record sync operation for a single domain.
+- [DnsRecordTypeDto](dns-record-type-dto.md) — Data transfer object representing a DNS record type (e.g., A, AAAA, CNAME, MX, TXT)
+- [DnsTroubleshootReportDto](dns-troubleshoot-report-dto.md) — Represents the troubleshooting report for DNS checks on a domain.
+- [DnsTroubleshootTestResultDto](dns-troubleshoot-test-result-dto.md) — Represents a single DNS troubleshoot test result.
+- [DnsZonePackageControlPanelSummaryDto](dns-zone-package-control-panel-summary-dto.md) — Summary of a control panel assigned to a DNS zone package
+- [DnsZonePackageDto](dns-zone-package-dto.md) — Data transfer object representing a DNS zone package
+- [DnsZonePackageRecordDto](dns-zone-package-record-dto.md) — Data transfer object representing a DNS zone package record
+- [DnsZonePackageServerSummaryDto](dns-zone-package-server-summary-dto.md) — Summary of a server assigned to a DNS zone package
+- [DocumentTemplateDto](document-template-dto.md) — Data transfer object representing a document template
+- [DomainAvailabilityResponseDto](domain-availability-response-dto.md) — Response DTO for domain availability check
+- [DomainContactAssignmentDto](domain-contact-assignment-dto.md) — Data transfer object representing a domain contact assignment
+- [DomainContactDto](domain-contact-dto.md) — Data transfer object representing a domain contact person
+- [DomainNameAlternativesResponseDto](domain-name-alternatives-response-dto.md) — Response data transfer object containing generated alternative domain names.
+- [DomainPricingDto](domain-pricing-dto.md) — DTO for getting domain pricing
+- [DomainProviderDto](domain-provider-dto.md) — Data transfer object for DomainProviderDto.
+- [DomainRegistrationResponseDto](domain-registration-response-dto.md) — Response DTO for domain registration request
+- [EmailExistsDto](email-exists-dto.md) — Data transfer object for email existence check response
+- [ExchangeRateDownloadLogDto](exchange-rate-download-log-dto.md) — DTO for exchange rate download log
+- [ExchangeRateDownloadSummaryDto](exchange-rate-download-summary-dto.md) — DTO for summary statistics of exchange rate downloads
+- [HostingAccountCreateDto](hosting-account-create-dto.md) — Data transfer object for HostingAccountCreateDto.
+- [HostingAccountDto](hosting-account-dto.md) — Data transfer object for HostingAccountDto.
+- [HostingAccountUpdateDto](hosting-account-update-dto.md) — Data transfer object for HostingAccountUpdateDto.
+- [HostingDatabaseCreateDto](hosting-database-create-dto.md) — Data transfer object for HostingDatabaseCreateDto.
+- [HostingDatabaseDto](hosting-database-dto.md) — Data transfer object for HostingDatabaseDto.
+- [HostingDatabaseUpdateDto](hosting-database-update-dto.md) — Data transfer object for HostingDatabaseUpdateDto.
+- [HostingDatabaseUserCreateDto](hosting-database-user-create-dto.md) — Data transfer object for HostingDatabaseUserCreateDto.
+- [HostingDatabaseUserDto](hosting-database-user-dto.md) — Data transfer object for HostingDatabaseUserDto.
+- [HostingDomainCreateDto](hosting-domain-create-dto.md) — Data transfer object for HostingDomainCreateDto.
+- [HostingDomainDto](hosting-domain-dto.md) — Data transfer object for HostingDomainDto.
+- [HostingDomainUpdateDto](hosting-domain-update-dto.md) — Data transfer object for HostingDomainUpdateDto.
+- [HostingEmailAccountCreateDto](hosting-email-account-create-dto.md) — Data transfer object for HostingEmailAccountCreateDto.
+- [HostingEmailAccountDto](hosting-email-account-dto.md) — Data transfer object for HostingEmailAccountDto.
+- [HostingEmailAccountUpdateDto](hosting-email-account-update-dto.md) — Data transfer object for HostingEmailAccountUpdateDto.
+- [HostingFtpAccountCreateDto](hosting-ftp-account-create-dto.md) — Data transfer object for HostingFtpAccountCreateDto.
+- [HostingFtpAccountDto](hosting-ftp-account-dto.md) — Data transfer object for HostingFtpAccountDto.
+- [HostingFtpAccountUpdateDto](hosting-ftp-account-update-dto.md) — Data transfer object for HostingFtpAccountUpdateDto.
+- [HostingPackageDto](hosting-package-dto.md) — Data transfer object representing a hosting package
+- [HostProviderDto](host-provider-dto.md) — Data transfer object representing a hosting provider
+- [ImportPostalCodeItemDto](import-postal-code-item-dto.md) — Data transfer object for a postal code import item
+- [ImportPostalCodesDto](import-postal-codes-dto.md) — Data transfer object for importing postal codes
+- [ImportPostalCodesResultDto](import-postal-codes-result-dto.md) — Result of postal codes import operation
+- [ImportRegistrarTldsDto](import-registrar-tlds-dto.md) — Data transfer object for importing TLDs for a registrar from form data
+- [ImportRegistrarTldsResponseDto](import-registrar-tlds-response-dto.md) — Response data transfer object for TLD import operation
+- [InitializationRequestDto](initialization-request-dto.md) — Data transfer object for system initialization request with first admin user credentials
+- [InitializationResponseDto](initialization-response-dto.md) — Data transfer object for system initialization response
+- [InitializationStatusDto](initialization-status-dto.md) — Data transfer object for reporting initialization state.
+- [InvoiceDto](invoice-dto.md) — Data transfer object representing an invoice
+- [InvoiceLineDto](invoice-line-dto.md) — Data transfer object representing a line item on an invoice
+- [InvoicePaymentDto](invoice-payment-dto.md) — Invoice payment DTO
+- [LoginHistoryDto](login-history-dto.md) — Data transfer object representing a login attempt.
+- [LoginRequestDto](login-request-dto.md) — Data transfer object for user login requests
+- [LoginResponseDto](login-response-dto.md) — Data transfer object for login response containing authentication tokens and user information
+- [MarginAnalysisResult](margin-analysis-result.md) — Result of margin analysis calculation
+- [MyCompanyDto](my-company-dto.md) — Data transfer object representing the reseller's own company profile.
+- [NameServerDto](name-server-dto.md) — Data transfer object representing a name server for a domain
+- [OperatingSystemDto](operating-system-dto.md) — Data transfer object representing an operating system
+- [OrderDto](order-dto.md) — Data transfer object representing a customer order for a service
+- [OrderLineDto](order-line-dto.md) — Data transfer object representing a line item in an order
+- [OrderTaxSnapshotDto](order-tax-snapshot-dto.md) — Data transfer object representing an immutable order tax snapshot.
+- [PagedResult](paged-result.md) — Generic wrapper for paginated results
+- [PaginationParameters](pagination-parameters.md) — Parameters for pagination requests
+- [PatchCustomerInfoRequestDto](patch-customer-info-request-dto.md) — Request DTO for updating customer information
+- [PatchEmailRequestDto](patch-email-request-dto.md) — Request DTO for updating email address
+- [PauseSubscriptionDto](pause-subscription-dto.md) — Data transfer object for pausing a subscription
+- [PaymentAttemptDto](payment-attempt-dto.md) — Data transfer object representing a payment attempt
+- [PaymentGatewayDto](payment-gateway-dto.md) — Data transfer object representing a payment gateway
+- [PaymentInstrumentDto](payment-instrument-dto.md) — Payment instrument data transfer object
+- [PaymentIntentDto](payment-intent-dto.md) — Data transfer object representing a payment intent
+- [PaymentMethodTokenDto](payment-method-token-dto.md) — Payment method token DTO
+- [PaymentResultDto](payment-result-dto.md) — Result from payment processing
+- [PaymentTransactionAllocationDto](payment-transaction-allocation-dto.md) — Represents an invoice allocation row linked to a payment transaction.
+- [PaymentTransactionDto](payment-transaction-dto.md) — Data transfer object for PaymentTransactionDto.
+- [PaymentTransactionListDto](payment-transaction-list-dto.md) — Represents a payment transaction item for list views.
+- [PostalCodeDto](postal-code-dto.md) — Data transfer object representing a postal code with geographic information
+- [ProcessInvoicePaymentDto](process-invoice-payment-dto.md) — Request to process an invoice payment
+- [ProcessPartialPaymentDto](process-partial-payment-dto.md) — Request for partial payment
+- [ProcessVendorPayoutDto](process-vendor-payout-dto.md) — Data transfer object for processing vendor payouts
+- [ProfitMarginSettingDto](profit-margin-setting-dto.md) — Data transfer object for profit margin settings.
+- [QueueEmailDto](queue-email-dto.md) — DTO for queuing an email to be sent
+- [QueueEmailResponseDto](queue-email-response-dto.md) — DTO for email queue response
+- [QuoteDto](quote-dto.md) — Data transfer object representing a quote
+- [QuoteLineDto](quote-line-dto.md) — Data transfer object representing a quote line item
+- [RefreshTokenRequestDto](refresh-token-request-dto.md) — Request DTO for refreshing access token
+- [RefreshTokenResponseDto](refresh-token-response-dto.md) — Response DTO for token refresh
+- [RefundDto](refund-dto.md) — Data transfer object representing a refund
+- [RefundLossAuditDto](refund-loss-audit-dto.md) — Data transfer object representing financial losses from refunds
+- [RegisterAccountRequestDto](register-account-request-dto.md) — Request DTO for new account registration
+- [RegisterAccountResponseDto](register-account-response-dto.md) — Response DTO for successful registration
+- [RegisterDomainDto](register-domain-dto.md) — DTO for customer self-service domain registration
+- [RegisterDomainForCustomerDto](register-domain-for-customer-dto.md) — DTO for sales/admin registering domain for a specific customer
+- [RegisteredDomainDto](registered-domain-dto.md) — Represents a registered domain.
+- [RegisteredDomainHistoryDto](registered-domain-history-dto.md) — Data transfer object representing a registered domain history entry.
+- [RegistrarCurrentCostByTldDto](registrar-current-cost-by-tld-dto.md) — DTO for displaying current registrar cost pricing rows for a specific TLD.
+- [RegistrarDto](registrar-dto.md) — Data transfer object representing a domain registrar
+- [RegistrarMailAddressDto](registrar-mail-address-dto.md) — Data transfer object representing a registrar mail address
+- [RegistrarSelectionPreferenceDto](registrar-selection-preference-dto.md) — DTO for displaying registrar selection preference information
+- [RegistrarTldCostPricingDto](registrar-tld-cost-pricing-dto.md) — DTO for displaying registrar TLD cost pricing information
+- [RegistrarTldDto](registrar-tld-dto.md) — Data transfer object representing a registrar's TLD offering with pricing information
+- [ReportTemplateDto](report-template-dto.md) — Data transfer object representing a report template
+- [RequestEmailConfirmationDto](request-email-confirmation-dto.md) — Request DTO for requesting an email verification message
+- [RequestPasswordResetDto](request-password-reset-dto.md) — Request DTO for requesting a password reset
+- [ResellerCompanyDto](reseller-company-dto.md) — Data transfer object representing a reseller company
+- [ResellerTldDiscountDto](reseller-tld-discount-dto.md) — DTO for displaying reseller TLD discount information
+- [ResendMailTwoFactorRequestDto](resend-mail-two-factor-request-dto.md) — Request DTO for resending a mail two-factor authentication code.
+- [ResetPasswordWithTokenRequestDto](reset-password-with-token-request-dto.md) — Request DTO for resetting password with token
+- [ResolvePayoutInterventionDto](resolve-payout-intervention-dto.md) — Data transfer object for resolving vendor payout manual interventions
+- [ResourceUsageDto](resource-usage-dto.md) — Data transfer object for ResourceUsageDto.
+- [RoleDto](role-dto.md) — Data transfer object representing a user role
+- [SalesAgentDto](sales-agent-dto.md) — Data transfer object representing a sales agent
+- [SecondLevelDomainSyncResponseDto](second-level-domain-sync-response-dto.md) — Data transfer object for second-level domain synchronization response
+- [SentEmailDto](sent-email-dto.md) — Data transfer object representing a sent email
+- [ServerControlPanelDto](server-control-panel-dto.md) — Data transfer object representing a server control panel installation
+- [ServerDto](server-dto.md) — Data transfer object representing a server
+- [ServerIpAddressDto](server-ip-address-dto.md) — Data transfer object representing a server IP address
+- [ServerTypeDto](server-type-dto.md) — Data transfer object representing a server type
+- [ServiceDto](service-dto.md) — Data transfer object representing a service offered to customers
+- [ServiceTypeDto](service-type-dto.md) — Data transfer object representing a service type category
+- [SetPasswordRequestDto](set-password-request-dto.md) — Request DTO for setting password (first time or after reset)
+- [SoldHostingPackageDto](sold-hosting-package-dto.md) — Data transfer object for SoldHostingPackageDto.
+- [SoldOptionalServiceDto](sold-optional-service-dto.md) — Data transfer object for SoldOptionalServiceDto.
+- [SubscriptionBillingHistoryDto](subscription-billing-history-dto.md) — Data transfer object representing a subscription billing history record
+- [SubscriptionDto](subscription-dto.md) — Data transfer object representing a subscription
+- [SupportTicketDto](support-ticket-dto.md) — Data transfer object representing a support ticket.
+- [SupportTicketMessageDto](support-ticket-message-dto.md) — Data transfer object representing a support ticket message.
+- [SyncComparisonDto](sync-comparison-dto.md) — Data transfer object for SyncComparisonDto.
+- [SyncResultDto](sync-result-dto.md) — Data transfer object for SyncResultDto.
+- [SyncStatusDto](sync-status-dto.md) — Data transfer object for SyncStatusDto.
+- [SystemSettingDto](system-setting-dto.md) — Data transfer object representing a system setting
+- [TaxCategoryDto](tax-category-dto.md) — Data transfer object representing a tax category.
+- [TaxIdValidationResultDto](tax-id-validation-result-dto.md) — Data transfer object representing tax ID validation results
+- [TaxJurisdictionDto](tax-jurisdiction-dto.md) — Data transfer object representing a tax jurisdiction.
+- [TaxQuoteLineRequestDto](tax-quote-line-request-dto.md) — Represents an input line for tax quote or finalize calculation.
+- [TaxQuoteLineResultDto](tax-quote-line-result-dto.md) — Represents tax calculation result for a single line.
+- [TaxQuoteRequestDto](tax-quote-request-dto.md) — Represents tax quote or finalize input payload.
+- [TaxQuoteResultDto](tax-quote-result-dto.md) — Represents tax calculation quote or finalization output.
+- [TaxRegistrationDto](tax-registration-dto.md) — Data transfer object representing a seller tax registration.
+- [TaxRuleDto](tax-rule-dto.md) — Data transfer object representing a tax rule
+- [TestDebugRuntimeInfoDto](test-debug-runtime-info-dto.md) — Provides debug-only runtime details used by the reseller debug help page.
+- [TldDto](tld-dto.md) — Data transfer object representing a Top-Level Domain (TLD)
+- [TldRegistryRuleDto](tld-registry-rule-dto.md) — Data transfer object representing TLD registry policy rules.
+- [TldSalesPricingDto](tld-sales-pricing-dto.md) — DTO for displaying TLD sales pricing information
+- [TldSyncRequestDto](tld-sync-request-dto.md) — Data transfer object for TLD synchronization request
+- [TldSyncResponseDto](tld-sync-response-dto.md) — Data transfer object for TLD synchronization response
+- [TokenDto](token-dto.md) — Data transfer object representing an authentication or refresh token
+- [TwoFactorStatusDto](two-factor-status-dto.md) — DTO for two-factor authentication status.
+- [UnitDto](unit-dto.md) — Data transfer object representing a unit of measurement
+- [UpdateAddressTypeDto](update-address-type-dto.md) — Data transfer object for updating an existing address type
+- [UpdateAuditLogDto](update-audit-log-dto.md) — Data transfer object for UpdateAuditLogDto.
+- [UpdateBackupScheduleDto](update-backup-schedule-dto.md) — Data transfer object for UpdateBackupScheduleDto.
+- [UpdateBillingCycleDto](update-billing-cycle-dto.md) — Data transfer object for updating an existing billing cycle
+- [UpdateContactPersonDto](update-contact-person-dto.md) — Data transfer object for updating an existing contact person
+- [UpdateContactPersonIsDomainGlobalDto](update-contact-person-is-domain-global-dto.md) — Data transfer object for updating the domain global flag for an existing contact person
+- [UpdateControlPanelTypeDto](update-control-panel-type-dto.md) — Data transfer object for updating an existing control panel type
+- [UpdateCountryDto](update-country-dto.md) — Data transfer object for updating an existing country
+- [UpdateCouponDto](update-coupon-dto.md) — Data transfer object for updating a coupon
+- [UpdateCurrencyExchangeRateDto](update-currency-exchange-rate-dto.md) — Data transfer object for updating a currency exchange rate
+- [UpdateCustomerAddressDto](update-customer-address-dto.md) — Data transfer object for updating an existing customer address
+- [UpdateCustomerDto](update-customer-dto.md) — Data transfer object for updating an existing customer
+- [UpdateCustomerPaymentMethodDto](update-customer-payment-method-dto.md) — Data transfer object for updating a customer payment method
+- [UpdateCustomerStatusDto](update-customer-status-dto.md) — Data transfer object for updating an existing customer status
+- [UpdateCustomerTaxProfileDto](update-customer-tax-profile-dto.md) — Data transfer object for updating customer tax profiles
+- [UpdateDnsRecordDto](update-dns-record-dto.md) — Data transfer object for updating an existing DNS record. Updating a record automatically marks it as pending synchronisation.
+- [UpdateDnsRecordTypeDto](update-dns-record-type-dto.md) — Data transfer object for updating an existing DNS record type
+- [UpdateDnsZonePackageDto](update-dns-zone-package-dto.md) — Data transfer object for updating an existing DNS zone package
+- [UpdateDnsZonePackageRecordDto](update-dns-zone-package-record-dto.md) — Data transfer object for updating an existing DNS zone package record
+- [UpdateDocumentTemplateDto](update-document-template-dto.md) — Data transfer object for updating an existing document template
+- [UpdateDomainContactAssignmentDto](update-domain-contact-assignment-dto.md) — Data transfer object for updating an existing domain contact assignment
+- [UpdateDomainContactDto](update-domain-contact-dto.md) — Data transfer object for updating an existing domain contact
+- [UpdateDomainProviderDto](update-domain-provider-dto.md) — Data transfer object for UpdateDomainProviderDto.
+- [UpdateHostingAccountDto](update-hosting-account-dto.md) — Data transfer object for UpdateHostingAccountDto.
+- [UpdateHostingPackageDto](update-hosting-package-dto.md) — Data transfer object for updating an existing hosting package
+- [UpdateHostProviderDto](update-host-provider-dto.md) — Data transfer object for updating an existing host provider
+- [UpdateInvoiceDto](update-invoice-dto.md) — Data transfer object for updating an existing invoice
+- [UpdateInvoiceLineDto](update-invoice-line-dto.md) — Data transfer object for creating a new invoice line item
+- [UpdateNameServerDto](update-name-server-dto.md) — Data transfer object for updating an existing name server
+- [UpdateOperatingSystemDto](update-operating-system-dto.md) — Data transfer object for updating an existing operating system
+- [UpdateOrderDto](update-order-dto.md) — Data transfer object for updating an existing order
+- [UpdateOrderTaxSnapshotDto](update-order-tax-snapshot-dto.md) — Data transfer object for updating an order tax snapshot.
+- [UpdatePaymentGatewayDto](update-payment-gateway-dto.md) — Data transfer object for updating an existing payment gateway
+- [UpdatePaymentInstrumentDto](update-payment-instrument-dto.md) — DTO for updating payment instrument
+- [UpdatePaymentTransactionDto](update-payment-transaction-dto.md) — Data transfer object for UpdatePaymentTransactionDto.
+- [UpdatePostalCodeDto](update-postal-code-dto.md) — Data transfer object for updating an existing postal code
+- [UpdateProfitMarginSettingDto](update-profit-margin-setting-dto.md) — Data transfer object for updating a profit margin setting.
+- [UpdateQuoteDto](update-quote-dto.md) — Data transfer object for updating an existing quote
+- [UpdateQuoteLineDto](update-quote-line-dto.md) — Data transfer object for updating a quote line item
+- [UpdateRegisteredDomainDto](update-registered-domain-dto.md) — Represents the payload for updating a registered domain.
+- [UpdateRegistrarDto](update-registrar-dto.md) — Data transfer object for updating an existing registrar
+- [UpdateRegistrarMailAddressDto](update-registrar-mail-address-dto.md) — Data transfer object for updating an existing registrar mail address
+- [UpdateRegistrarSelectionPreferenceDto](update-registrar-selection-preference-dto.md) — DTO for updating existing registrar selection preference
+- [UpdateRegistrarTldCostPricingDto](update-registrar-tld-cost-pricing-dto.md) — DTO for updating existing registrar TLD cost pricing
+- [UpdateRegistrarTldDto](update-registrar-tld-dto.md) — Data transfer object for updating an existing registrar-TLD offering
+- [UpdateReportTemplateDto](update-report-template-dto.md) — Data transfer object for updating an existing report template
+- [UpdateResellerCompanyDto](update-reseller-company-dto.md) — Data transfer object for updating an existing reseller company
+- [UpdateResellerTldDiscountDto](update-reseller-tld-discount-dto.md) — DTO for updating existing reseller TLD discount
+- [UpdateRoleDto](update-role-dto.md) — Data transfer object for updating an existing role
+- [UpdateSalesAgentDto](update-sales-agent-dto.md) — Data transfer object for updating an existing sales agent
+- [UpdateSentEmailDto](update-sent-email-dto.md) — Data transfer object for updating an existing sent email record
+- [UpdateServerControlPanelDto](update-server-control-panel-dto.md) — Data transfer object for updating an existing server control panel
+- [UpdateServerDto](update-server-dto.md) — Data transfer object for updating an existing server
+- [UpdateServerIpAddressDto](update-server-ip-address-dto.md) — Data transfer object for updating an existing server IP address
+- [UpdateServerTypeDto](update-server-type-dto.md) — Data transfer object for updating an existing server type
+- [UpdateServiceDto](update-service-dto.md) — Data transfer object for updating an existing service
+- [UpdateServiceTypeDto](update-service-type-dto.md) — Data transfer object for updating an existing service type
+- [UpdateSoldHostingPackageDto](update-sold-hosting-package-dto.md) — Data transfer object for UpdateSoldHostingPackageDto.
+- [UpdateSoldOptionalServiceDto](update-sold-optional-service-dto.md) — Data transfer object for UpdateSoldOptionalServiceDto.
+- [UpdateSubscriptionDto](update-subscription-dto.md) — Data transfer object for updating an existing subscription
+- [UpdateSupportTicketStatusDto](update-support-ticket-status-dto.md) — Data transfer object used when updating a support ticket status.
+- [UpdateSystemSettingDto](update-system-setting-dto.md) — Data transfer object for updating an existing system setting
+- [UpdateTaxCategoryDto](update-tax-category-dto.md) — Data transfer object for updating a tax category.
+- [UpdateTaxJurisdictionDto](update-tax-jurisdiction-dto.md) — Data transfer object for updating a tax jurisdiction.
+- [UpdateTaxRegistrationDto](update-tax-registration-dto.md) — Data transfer object for updating a seller tax registration.
+- [UpdateTaxRuleDto](update-tax-rule-dto.md) — Data transfer object for updating a tax rule
+- [UpdateTldDto](update-tld-dto.md) — Data transfer object for updating an existing TLD
+- [UpdateTldRegistryRuleDto](update-tld-registry-rule-dto.md) — Data transfer object for updating TLD registry policy rules.
+- [UpdateTldSalesPricingDto](update-tld-sales-pricing-dto.md) — DTO for updating existing TLD sales pricing
+- [UpdateTokenDto](update-token-dto.md) — Data transfer object for updating an existing token (primarily for revocation)
+- [UpdateTwoFactorSettingsRequestDto](update-two-factor-settings-request-dto.md) — Request DTO for updating two-factor authentication settings.
+- [UpdateUnitDto](update-unit-dto.md) — Data transfer object for updating an existing unit of measurement
+- [UpdateUserDto](update-user-dto.md) — Data transfer object for updating an existing user
+- [UpdateVendorCostDto](update-vendor-cost-dto.md) — Data transfer object for updating vendor costs
+- [UpdateVendorPayoutDto](update-vendor-payout-dto.md) — Data transfer object for updating vendor payouts
+- [UpdateVendorTaxProfileDto](update-vendor-tax-profile-dto.md) — Data transfer object for updating vendor tax profiles
+- [UploadCountriesCsvDto](upload-countries-csv-dto.md) — Data transfer object for uploading a CSV file with countries
+- [UploadPostalCodesCsvDto](upload-postal-codes-csv-dto.md) — Data transfer object for uploading postal codes CSV file
+- [UploadRegistrarTldsCsvDto](upload-registrar-tlds-csv-dto.md) — Data transfer object for uploading a CSV file with TLDs for a registrar
+- [UpsertMyCompanyDto](upsert-my-company-dto.md) — Data transfer object for creating or updating the reseller's own company profile.
+- [UserAccountDto](user-account-dto.md) — DTO for user account information
+- [UserDto](user-dto.md) — Data transfer object representing a user
+- [UserPanelInitializationRequestDto](user-panel-initialization-request-dto.md) — Data transfer object for user panel initialization request.
+- [UserPanelInitializationResponseDto](user-panel-initialization-response-dto.md) — Data transfer object for user panel initialization response.
+- [ValidateCouponDto](validate-coupon-dto.md) — Data transfer object for validating a coupon
+- [ValidateTaxIdDto](validate-tax-id-dto.md) — Data transfer object for tax ID validation requests
+- [VendorCostDto](vendor-cost-dto.md) — Data transfer object representing vendor costs for invoice line items
+- [VendorCostSummaryDto](vendor-cost-summary-dto.md) — Data transfer object representing vendor cost summary for an invoice
+- [VendorPayoutDto](vendor-payout-dto.md) — Data transfer object representing an outbound payment to a vendor
+- [VendorPayoutSummaryDto](vendor-payout-summary-dto.md) — Data transfer object representing vendor payout summary
+- [VendorTaxProfileDto](vendor-tax-profile-dto.md) — Data transfer object representing vendor tax information
+- [VerifyMailTwoFactorRequestDto](verify-mail-two-factor-request-dto.md) — Request DTO for verifying a two-factor authentication code.
+
+[Back to API Manual index](../index.md)

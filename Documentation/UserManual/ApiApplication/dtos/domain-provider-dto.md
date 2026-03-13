@@ -1,0 +1,33 @@
+﻿# DomainProviderDto
+
+Data transfer object for DomainProviderDto.
+
+## Source
+
+`DR_Admin/DTOs/DomainProviderDto.cs`
+
+## TypeScript Interface
+
+```ts
+export interface DomainProviderDto {
+  id: number;
+  name: string;
+  apiEndpoint: string;
+  apiKey: string;
+  apiSecret: string;
+}
+```
+
+## Fields
+
+| Property | C# Type | TypeScript Type |
+|----------|---------|-----------------|
+| `Id` | `int` | `number` |
+| `Name` | `string` | `string` |
+| `ApiEndpoint` | `string` | `string` |
+| `ApiKey` | `string` | `string` |
+| `ApiSecret` | `string` | `string` |
+
+[Back to DTO index](index.md)
+
+[Back to API Manual index](../index.md)
