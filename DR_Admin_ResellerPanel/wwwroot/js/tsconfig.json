@@ -48,6 +48,7 @@
         "domains.ts",
         "domain-registrants.ts",
         "tlds.ts",
+        "tld-registry-rules.ts",
         "dns-zones.ts",
         "dns-history.ts",
         "dns-troubleshoot.ts",

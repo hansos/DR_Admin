@@ -147,6 +147,7 @@ builder.Services.AddTransient<IUnitService, UnitService>();
 builder.Services.AddTransient<ICountryService, CountryService>();
 builder.Services.AddTransient<IPostalCodeService, PostalCodeService>();
 builder.Services.AddTransient<ITldService, TldService>();
+builder.Services.AddTransient<ITldRegistryRuleService, TldRegistryRuleService>();
 builder.Services.AddTransient<IRegistrarService, RegistrarService>();
 builder.Services.AddTransient<IRegistrarTldPriceSyncService, RegistrarTldPriceSyncService>();
 builder.Services.AddTransient<IRegistrarTldService, RegistrarTldService>();

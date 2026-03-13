@@ -506,6 +506,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<DomainContact> DomainContacts { get; set; }
     public DbSet<DomainContactAssignment> DomainContactAssignments { get; set; }
     public DbSet<Tld> Tlds { get; set; }
+    public DbSet<TldRegistryRule> TldRegistryRules { get; set; }
     public DbSet<Registrar> Registrars { get; set; }
     public DbSet<RegistrarTld> RegistrarTlds { get; set; }
     public DbSet<DnsRecordType> DnsRecordTypes { get; set; }
@@ -642,6 +643,21 @@ public class ApplicationDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(e => e.CustomerStatusId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // TldRegistryRule configuration
+        modelBuilder.Entity<TldRegistryRule>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Notes).HasMaxLength(2000);
+
+            entity.HasIndex(e => e.TldId);
+            entity.HasIndex(e => e.IsActive);
+
+            entity.HasOne(e => e.Tld)
+                .WithMany(t => t.RegistryRules)
+                .HasForeignKey(e => e.TldId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         // CustomerInternalNote configuration
