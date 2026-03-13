@@ -20,7 +20,8 @@
             name: 'DNS Templates',
             description: 'Create reusable DNS templates for faster and safer zone setup.',
             fixUrl: '/dns/templates',
-            checkType: 'static-not-created',
+            endpoint: '/DnsZonePackages',
+            checkType: 'list',
         },
         {
             key: 'billing-cycles',
