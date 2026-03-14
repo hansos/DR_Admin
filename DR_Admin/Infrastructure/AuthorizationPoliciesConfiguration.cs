@@ -195,10 +195,10 @@ public static class AuthorizationPoliciesConfiguration
 
         // Communication policies
         options.AddPolicy("Communication.Read", policy =>
-            policy.RequireRole(ADMIN, SUPPORT, SALES));
+            policy.RequireRole(ADMIN, SUPPORT, SALES, CUSTOMER));
 
         options.AddPolicy("Communication.Write", policy =>
-            policy.RequireRole(ADMIN, SUPPORT, SALES));
+            policy.RequireRole(ADMIN, SUPPORT, SALES, CUSTOMER));
 
         // DomainContact policies
         options.AddPolicy("DomainContact.Delete", policy =>

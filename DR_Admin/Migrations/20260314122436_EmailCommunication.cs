@@ -53,6 +53,7 @@ namespace ISPAdmin.Migrations
                     CommunicationThreadId = table.Column<int>(type: "INTEGER", nullable: false),
                     Direction = table.Column<string>(type: "TEXT", maxLength: 20, nullable: false),
                     ExternalMessageId = table.Column<string>(type: "TEXT", maxLength: 255, nullable: true),
+                    InternetMessageId = table.Column<string>(type: "TEXT", maxLength: 255, nullable: true),
                     FromAddress = table.Column<string>(type: "TEXT", maxLength: 320, nullable: false),
                     ToAddresses = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: false),
                     CcAddresses = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: true),
@@ -176,6 +177,11 @@ namespace ISPAdmin.Migrations
                 name: "IX_CommunicationMessages_ExternalMessageId",
                 table: "CommunicationMessages",
                 column: "ExternalMessageId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CommunicationMessages_InternetMessageId",
+                table: "CommunicationMessages",
+                column: "InternetMessageId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_CommunicationMessages_IsRead",

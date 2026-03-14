@@ -1,0 +1,113 @@
+@page "/customers/communication"
+
+<div id="customer-communication-page" class="container-fluid">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+        <div>
+            <h2 class="h4 mb-1"><i class="bi bi-chat-dots-fill"></i> Customer Communication</h2>
+            <p class="text-muted mb-0">Browse communication threads, inspect messages, and send replies.</p>
+        </div>
+        <button class="btn btn-outline-secondary" id="customer-communication-refresh" type="button">
+            <i class="bi bi-arrow-clockwise"></i> Refresh
+        </button>
+    </div>
+
+    <div id="customer-communication-alert-success" class="alert alert-success d-none" role="alert"></div>
+    <div id="customer-communication-alert-error" class="alert alert-danger d-none" role="alert"></div>
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-header bg-light">
+            <div class="row g-2 align-items-end">
+                <div class="col-12 col-md-3">
+                    <label class="form-label mb-1" for="customer-communication-filter-customer-id">Customer ID</label>
+                    <input class="form-control" id="customer-communication-filter-customer-id" type="number" min="1" placeholder="e.g. 123" />
+                </div>
+                <div class="col-12 col-md-3">
+                    <label class="form-label mb-1" for="customer-communication-filter-entity-type">Related Entity Type</label>
+                    <input class="form-control" id="customer-communication-filter-entity-type" type="text" placeholder="Invoice / Order / RegisteredDomain" />
+                </div>
+                <div class="col-12 col-md-3">
+                    <label class="form-label mb-1" for="customer-communication-filter-status">Status</label>
+                    <select class="form-select" id="customer-communication-filter-status">
+                        <option value="">All</option>
+                        <option value="Open">Open</option>
+                        <option value="Closed">Closed</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-3">
+                    <label class="form-label mb-1" for="customer-communication-filter-search">Search</label>
+                    <input class="form-control" id="customer-communication-filter-search" type="text" placeholder="Subject or participant" />
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Subject</th>
+                            <th>Customer</th>
+                            <th>Status</th>
+                            <th>Unread</th>
+                            <th>Last Message</th>
+                        </tr>
+                    </thead>
+                    <tbody id="customer-communication-table-body">
+                        <tr>
+                            <td colspan="6" class="text-center py-4">
+                                <div class="spinner-border text-primary"></div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center gap-2">
+            <h5 class="mb-0" id="customer-communication-details-title">Thread Details</h5>
+            <button id="customer-communication-close-thread" class="btn btn-sm btn-outline-secondary" type="button" disabled>
+                <i class="bi bi-lock"></i> Close Thread
+            </button>
+        </div>
+        <div class="card-body">
+            <div id="customer-communication-details-empty" class="text-muted">Select a thread to inspect messages and send a reply.</div>
+
+            <div id="customer-communication-details-panel" class="d-none">
+                <div id="customer-communication-participants" class="small text-muted mb-3"></div>
+                <div id="customer-communication-messages" class="border rounded p-3 bg-light-subtle mb-3" style="min-height: 220px; max-height: 420px; overflow-y: auto;"></div>
+
+                <form id="customer-communication-reply-form" novalidate>
+                    <div class="row g-2">
+                        <div class="col-12 col-md-6">
+                            <label class="form-label mb-1" for="customer-communication-reply-to">To</label>
+                            <input class="form-control" id="customer-communication-reply-to" type="text" placeholder="user@example.com" />
+                        </div>
+                        <div class="col-12 col-md-3">
+                            <label class="form-label mb-1" for="customer-communication-reply-cc">Cc</label>
+                            <input class="form-control" id="customer-communication-reply-cc" type="text" placeholder="optional" />
+                        </div>
+                        <div class="col-12 col-md-3">
+                            <label class="form-label mb-1" for="customer-communication-reply-bcc">Bcc</label>
+                            <input class="form-control" id="customer-communication-reply-bcc" type="text" placeholder="optional" />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label mb-1" for="customer-communication-reply-subject">Subject</label>
+                            <input class="form-control" id="customer-communication-reply-subject" type="text" />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label mb-1" for="customer-communication-reply-body">Message</label>
+                            <textarea class="form-control" id="customer-communication-reply-body" rows="4"></textarea>
+                        </div>
+                        <div class="col-12 d-flex justify-content-end">
+                            <button class="btn btn-primary" id="customer-communication-reply-send" type="submit">
+                                <i class="bi bi-send"></i> Queue Reply
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

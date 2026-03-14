@@ -1,0 +1,61 @@
+@page "/support/communication"
+
+<div class="container py-4" id="user-communication-page">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <h1 class="h4 mb-1">Communication Center</h1>
+            <p class="text-muted mb-0">Read incoming communication and send replies to support.</p>
+        </div>
+        <button id="user-communication-refresh" class="btn btn-outline-secondary btn-sm" type="button">Refresh</button>
+    </div>
+
+    <div id="user-communication-alert-success" class="alert alert-success d-none" role="alert"></div>
+    <div id="user-communication-alert-error" class="alert alert-danger d-none" role="alert"></div>
+
+    <div class="card shadow-sm mb-3">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Thread</th>
+                            <th>Status</th>
+                            <th>Unread</th>
+                            <th>Last Message</th>
+                        </tr>
+                    </thead>
+                    <tbody id="user-communication-table-body">
+                        <tr><td colspan="4" class="text-center text-muted py-4">Loading communication threads...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-light">
+            <h5 class="mb-0" id="user-communication-title">Conversation</h5>
+        </div>
+        <div class="card-body">
+            <div id="user-communication-empty" class="text-muted">Select a thread to view conversation.</div>
+
+            <div id="user-communication-panel" class="d-none">
+                <div id="user-communication-thread" class="border rounded p-3 bg-light-subtle mb-3" style="min-height: 220px; max-height: 420px; overflow-y: auto;"></div>
+
+                <form id="user-communication-reply-form" novalidate>
+                    <div class="mb-2">
+                        <label for="user-communication-reply-to" class="form-label">To</label>
+                        <input id="user-communication-reply-to" class="form-control" type="text" placeholder="support@example.com" />
+                    </div>
+                    <div class="mb-2">
+                        <label for="user-communication-reply-body" class="form-label">Reply</label>
+                        <textarea id="user-communication-reply-body" class="form-control" rows="4"></textarea>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button id="user-communication-send" class="btn btn-primary" type="submit">Send reply</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

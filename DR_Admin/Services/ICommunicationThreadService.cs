@@ -49,4 +49,13 @@ public interface ICommunicationThreadService
     /// <param name="isRead">The target read state.</param>
     /// <returns><see langword="true"/> if the message was updated; otherwise <see langword="false"/>.</returns>
     Task<bool> UpdateMessageReadStateAsync(int messageId, bool isRead);
+
+    /// <summary>
+    /// Determines whether a communication message belongs to a thread accessible by customer/user scope.
+    /// </summary>
+    /// <param name="messageId">The communication message identifier.</param>
+    /// <param name="customerId">The scoped customer identifier.</param>
+    /// <param name="userId">The scoped user identifier.</param>
+    /// <returns><see langword="true"/> when accessible in scope; otherwise <see langword="false"/>.</returns>
+    Task<bool> CanAccessMessageAsync(int messageId, int customerId, int userId);
 }

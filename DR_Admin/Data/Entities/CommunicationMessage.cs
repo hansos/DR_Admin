@@ -5,6 +5,7 @@ public class CommunicationMessage : EntityBase
     public int CommunicationThreadId { get; set; }
     public string Direction { get; set; } = CommunicationMessageDirection.Outbound;
     public string? ExternalMessageId { get; set; }
+    public string? InternetMessageId { get; set; }
     public string FromAddress { get; set; } = string.Empty;
     public string ToAddresses { get; set; } = string.Empty;
     public string? CcAddresses { get; set; }

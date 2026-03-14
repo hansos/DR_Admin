@@ -432,6 +432,7 @@ public class EmailQueueService : IEmailQueueService
                 CommunicationThreadId = thread.Id,
                 Direction = CommunicationMessageDirection.Outbound,
                 ExternalMessageId = email.MessageId,
+                InternetMessageId = email.MessageId,
                 FromAddress = email.From,
                 ToAddresses = email.To,
                 CcAddresses = email.Cc,
@@ -488,6 +489,7 @@ public class EmailQueueService : IEmailQueueService
             var now = DateTime.UtcNow;
             message.SentAtUtc = now;
             message.ExternalMessageId = providerMessageId;
+            message.InternetMessageId ??= providerMessageId;
             message.IsRead = true;
             message.UpdatedAt = now;
 

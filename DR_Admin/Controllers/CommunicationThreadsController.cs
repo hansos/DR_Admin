@@ -1,8 +1,10 @@
 using ISPAdmin.DTOs;
+using ISPAdmin.Infrastructure;
 using ISPAdmin.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
+using System.Security.Claims;
 
 namespace ISPAdmin.Controllers;
 
@@ -16,6 +18,7 @@ public class CommunicationThreadsController : ControllerBase
 {
     private readonly ICommunicationThreadService _communicationThreadService;
     private readonly IEmailQueueService _emailQueueService;
+    private readonly IMyAccountService _myAccountService;
     private static readonly Serilog.ILogger _log = Log.ForContext<CommunicationThreadsController>();
 
     /// <summary>
@@ -23,10 +26,15 @@ public class CommunicationThreadsController : ControllerBase
     /// </summary>
     /// <param name="communicationThreadService">The communication thread service.</param>
     /// <param name="emailQueueService">The email queue service.</param>
-    public CommunicationThreadsController(ICommunicationThreadService communicationThreadService, IEmailQueueService emailQueueService)
+    /// <param name="myAccountService">The current-account service used for customer scoping.</param>
+    public CommunicationThreadsController(
+        ICommunicationThreadService communicationThreadService,
+        IEmailQueueService emailQueueService,
+        IMyAccountService myAccountService)
     {
         _communicationThreadService = communicationThreadService;
         _emailQueueService = emailQueueService;
+        _myAccountService = myAccountService;
     }
 
     /// <summary>
@@ -61,6 +69,18 @@ public class CommunicationThreadsController : ControllerBase
     {
         try
         {
+            if (User.IsInRole(RoleNames.CUSTOMER))
+            {
+                var scope = await ResolveCurrentScopeAsync();
+                if (!scope.HasValue)
+                {
+                    return Unauthorized();
+                }
+
+                customerId = scope.Value.customerId;
+                userId = scope.Value.userId;
+            }
+
             _log.Information("API: GetThreads called by user {User}", User.Identity?.Name);
 
             var items = await _communicationThreadService.GetThreadsAsync(
@@ -110,6 +130,21 @@ public class CommunicationThreadsController : ControllerBase
                 return NotFound($"Communication thread with ID {id} not found");
             }
 
+            if (User.IsInRole(RoleNames.CUSTOMER))
+            {
+                var scope = await ResolveCurrentScopeAsync();
+                if (!scope.HasValue)
+                {
+                    return Unauthorized();
+                }
+
+                var isOwnThread = IsOwnCustomerThread(item, scope.Value.customerId, scope.Value.userId);
+                if (!isOwnThread)
+                {
+                    return Forbid();
+                }
+            }
+
             return Ok(item);
         }
         catch (Exception ex)
@@ -149,6 +184,26 @@ public class CommunicationThreadsController : ControllerBase
             }
 
             _log.Information("API: UpdateThreadStatus called for thread {ThreadId} by user {User}", id, User.Identity?.Name);
+
+            if (User.IsInRole(RoleNames.CUSTOMER))
+            {
+                var scope = await ResolveCurrentScopeAsync();
+                if (!scope.HasValue)
+                {
+                    return Unauthorized();
+                }
+
+                var thread = await _communicationThreadService.GetThreadByIdAsync(id);
+                if (thread == null)
+                {
+                    return NotFound($"Communication thread with ID {id} not found");
+                }
+
+                if (!IsOwnCustomerThread(thread, scope.Value.customerId, scope.Value.userId))
+                {
+                    return Forbid();
+                }
+            }
 
             var updated = await _communicationThreadService.UpdateThreadStatusAsync(id, dto.Status);
             if (!updated)
@@ -195,6 +250,25 @@ public class CommunicationThreadsController : ControllerBase
             }
 
             _log.Information("API: UpdateMessageReadState called for message {MessageId} by user {User}", messageId, User.Identity?.Name);
+
+            if (User.IsInRole(RoleNames.CUSTOMER))
+            {
+                var scope = await ResolveCurrentScopeAsync();
+                if (!scope.HasValue)
+                {
+                    return Unauthorized();
+                }
+
+                var hasAccess = await _communicationThreadService.CanAccessMessageAsync(
+                    messageId,
+                    scope.Value.customerId,
+                    scope.Value.userId);
+
+                if (!hasAccess)
+                {
+                    return Forbid();
+                }
+            }
 
             var updated = await _communicationThreadService.UpdateMessageReadStateAsync(messageId, dto.IsRead);
             if (!updated)
@@ -256,6 +330,20 @@ public class CommunicationThreadsController : ControllerBase
                 return NotFound($"Communication thread with ID {id} not found");
             }
 
+            if (User.IsInRole(RoleNames.CUSTOMER))
+            {
+                var scope = await ResolveCurrentScopeAsync();
+                if (!scope.HasValue)
+                {
+                    return Unauthorized();
+                }
+
+                if (!IsOwnCustomerThread(thread, scope.Value.customerId, scope.Value.userId))
+                {
+                    return Forbid();
+                }
+            }
+
             var subject = ResolveReplySubject(thread.Subject, dto.Subject);
             var response = await _emailQueueService.QueueEmailAsync(new QueueEmailDto
             {
@@ -295,5 +383,28 @@ public class CommunicationThreadsController : ControllerBase
         }
 
         return $"Re: {threadSubject}";
+    }
+
+    private async Task<(int customerId, int userId)?> ResolveCurrentScopeAsync()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrWhiteSpace(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+        {
+            return null;
+        }
+
+        var account = await _myAccountService.GetMyAccountAsync(userId);
+        var customerId = account?.Customer?.Id ?? 0;
+        if (customerId <= 0)
+        {
+            return null;
+        }
+
+        return (customerId, userId);
+    }
+
+    private static bool IsOwnCustomerThread(CommunicationThreadDetailsDto thread, int customerId, int userId)
+    {
+        return thread.CustomerId == customerId || thread.UserId == userId;
     }
 }

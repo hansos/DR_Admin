@@ -232,4 +232,20 @@ public class CommunicationThreadService : ICommunicationThreadService
         await _context.SaveChangesAsync();
         return true;
     }
+
+    /// <summary>
+    /// Determines whether a communication message belongs to a thread accessible by customer/user scope.
+    /// </summary>
+    /// <param name="messageId">The communication message identifier.</param>
+    /// <param name="customerId">The scoped customer identifier.</param>
+    /// <param name="userId">The scoped user identifier.</param>
+    /// <returns><see langword="true"/> when accessible in scope; otherwise <see langword="false"/>.</returns>
+    public async Task<bool> CanAccessMessageAsync(int messageId, int customerId, int userId)
+    {
+        return await _context.CommunicationMessages
+            .AsNoTracking()
+            .Where(m => m.Id == messageId)
+            .AnyAsync(m => m.CommunicationThread != null
+                && (m.CommunicationThread.CustomerId == customerId || m.CommunicationThread.UserId == userId));
+    }
 }

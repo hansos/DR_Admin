@@ -2020,6 +2020,7 @@ public class ApplicationDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Direction).IsRequired().HasMaxLength(20);
             entity.Property(e => e.ExternalMessageId).HasMaxLength(255);
+            entity.Property(e => e.InternetMessageId).HasMaxLength(255);
             entity.Property(e => e.FromAddress).IsRequired().HasMaxLength(320);
             entity.Property(e => e.ToAddresses).IsRequired().HasMaxLength(2000);
             entity.Property(e => e.CcAddresses).HasMaxLength(2000);
@@ -2033,6 +2034,7 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => e.CommunicationThreadId);
             entity.HasIndex(e => e.SentEmailId);
             entity.HasIndex(e => e.ExternalMessageId);
+            entity.HasIndex(e => e.InternetMessageId);
             entity.HasIndex(e => e.IsRead);
             entity.HasIndex(e => e.ReceivedAtUtc);
             entity.HasIndex(e => e.SentAtUtc);

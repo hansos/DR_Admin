@@ -48,7 +48,8 @@ public class CommunicationIngestionService : ICommunicationIngestionService
             var exists = await _context.CommunicationMessages
                 .AsNoTracking()
                 .AnyAsync(m => m.Direction == CommunicationMessageDirection.Inbound
-                    && m.ExternalMessageId == inbound.ExternalMessageId);
+                    && (m.ExternalMessageId == inbound.ExternalMessageId
+                        || (inbound.InternetMessageId != null && m.InternetMessageId == inbound.InternetMessageId)));
 
             if (exists)
             {
@@ -114,6 +115,7 @@ public class CommunicationIngestionService : ICommunicationIngestionService
                 CommunicationThreadId = thread.Id,
                 Direction = CommunicationMessageDirection.Inbound,
                 ExternalMessageId = inbound.ExternalMessageId,
+                InternetMessageId = inbound.InternetMessageId,
                 FromAddress = fromAddress,
                 ToAddresses = toAddresses,
                 Subject = subject,
