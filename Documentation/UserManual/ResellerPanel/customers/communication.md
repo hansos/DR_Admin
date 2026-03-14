@@ -1,33 +1,23 @@
 ﻿# Communication
 
-View and send communications to customers, including emails and internal notes.
+Browse communication threads, inspect inbound/outbound timelines, and queue replies to customers.
 
 ## How to Access
 
 Navigate to **Customers > Communication** from the side menu.
 
-## Page Layout
+## Main actions
 
-| Column | Description |
-|--------|-------------|
-| Date | Date and time the message was sent or logged. |
-| Customer | Recipient customer. |
-| Subject | Message subject line. |
-| Type | Email, SMS, or Internal Note. |
-| Status | Sent, Failed, or Draft. |
-| Actions | View, Resend, Delete. |
+- Filter threads by customer, related entity type, status, and text search.
+- Open a thread to view participants and message timeline.
+- Queue a reply from the selected thread.
+- Mark inbound messages as read.
+- Close a thread when communication is complete.
 
-## Sending a Message
+## Delivery notes
 
-1. Click **New Message**.
-2. Select the recipient customer and contact person.
-3. Choose the communication type (Email or SMS).
-4. Optionally use a template from [Templates](../alerts/templates.md).
-5. Compose the message and click **Send**.
-
-## Internal Notes
-
-Use the **Add Note** button to log internal notes on a customer's record that are not sent to the customer.
+- Replies are queued and sent asynchronously through the email queue.
+- Timeline status reflects queue/provider lifecycle events.
 
 ## Related Pages
 

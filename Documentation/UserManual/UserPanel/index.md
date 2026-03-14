@@ -31,3 +31,4 @@
 
 - [About](help/about.md) — View application information and version details.
 - [Support](help/support.md) — Track support requests and create new tickets.
+- [Communication](help/communication.md) — Read communication threads and send scoped replies.
