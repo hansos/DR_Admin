@@ -130,4 +130,88 @@ public class EmailQueueController : ControllerBase
             return StatusCode(500, "An error occurred while retrieving email status");
         }
     }
+
+    /// <summary>
+    /// Queues an existing failed or pending email for immediate retry.
+    /// </summary>
+    /// <param name="id">Email ID</param>
+    /// <returns>No content when retry was queued.</returns>
+    /// <response code="204">Email retry queued successfully</response>
+    /// <response code="404">Email not found or cannot be retried</response>
+    /// <response code="401">If user is not authenticated</response>
+    /// <response code="500">If an internal server error occurs</response>
+    [HttpPost("retry/{id}")]
+    [Authorize(Policy = "EmailQueue.Write")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult> RetryEmail(int id)
+    {
+        try
+        {
+            _log.Information("API: RetryEmail called for email ID {EmailId} by user {User}", id, User.Identity?.Name);
+
+            var retried = await _emailQueueService.RetryEmailAsync(id);
+            if (!retried)
+            {
+                return NotFound($"Email with ID {id} not found or cannot be retried");
+            }
+
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in RetryEmail for email ID {EmailId}", id);
+            return StatusCode(500, "An error occurred while retrying the email");
+        }
+    }
+
+    /// <summary>
+    /// Applies a provider delivery event to email queue and communication status.
+    /// </summary>
+    /// <param name="providerEventDto">Provider event payload.</param>
+    /// <returns>No content when event was applied.</returns>
+    /// <response code="204">Provider event applied successfully.</response>
+    /// <response code="400">Invalid provider event payload.</response>
+    /// <response code="404">Matching email message was not found.</response>
+    /// <response code="401">If user is not authenticated.</response>
+    /// <response code="500">If an internal server error occurs.</response>
+    [HttpPost("events/provider")]
+    [Authorize(Policy = "EmailQueue.Write")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult> ApplyProviderEvent([FromBody] EmailProviderEventDto providerEventDto)
+    {
+        try
+        {
+            if (providerEventDto == null
+                || string.IsNullOrWhiteSpace(providerEventDto.ProviderMessageId)
+                || string.IsNullOrWhiteSpace(providerEventDto.EventType))
+            {
+                return BadRequest("ProviderMessageId and EventType are required.");
+            }
+
+            _log.Information("API: ApplyProviderEvent called by user {User} for message {MessageId} event {EventType}",
+                User.Identity?.Name,
+                providerEventDto.ProviderMessageId,
+                providerEventDto.EventType);
+
+            var applied = await _emailQueueService.ApplyProviderEventAsync(providerEventDto);
+            if (!applied)
+            {
+                return NotFound($"Email with provider message id '{providerEventDto.ProviderMessageId}' not found.");
+            }
+
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            _log.Error(ex, "API: Error in ApplyProviderEvent for message {MessageId}", providerEventDto.ProviderMessageId);
+            return StatusCode(500, "An error occurred while applying provider event");
+        }
+    }
 }

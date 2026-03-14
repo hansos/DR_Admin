@@ -38,6 +38,7 @@ Reference pages for Data Transfer Objects used by API endpoints.
 - [CreateAuditLogDto](create-audit-log-dto.md) — Data transfer object for CreateAuditLogDto.
 - [CreateBackupScheduleDto](create-backup-schedule-dto.md) — Data transfer object for CreateBackupScheduleDto.
 - [CreateBillingCycleDto](create-billing-cycle-dto.md) — Data transfer object for creating a new billing cycle
+- [CreateCommunicationReplyDto](create-communication-reply-dto.md) — Represents the payload used to queue a reply from a communication thread
 - [CreateContactPersonDto](create-contact-person-dto.md) — Data transfer object for creating a new contact person
 - [CreateControlPanelTypeDto](create-control-panel-type-dto.md) — Data transfer object for creating a new control panel type
 - [CreateCountryDto](create-country-dto.md) — Data transfer object for creating a new country
@@ -151,6 +152,7 @@ Reference pages for Data Transfer Objects used by API endpoints.
 - [DomainPricingDto](domain-pricing-dto.md) — DTO for getting domain pricing
 - [DomainProviderDto](domain-provider-dto.md) — Data transfer object for DomainProviderDto.
 - [DomainRegistrationResponseDto](domain-registration-response-dto.md) — Response DTO for domain registration request
+- [EmailProviderEventDto](email-provider-event-dto.md) — Represents a provider webhook event for email delivery lifecycle updates
 - [EmailExistsDto](email-exists-dto.md) — Data transfer object for email existence check response
 - [ExchangeRateDownloadLogDto](exchange-rate-download-log-dto.md) — DTO for exchange rate download log
 - [ExchangeRateDownloadSummaryDto](exchange-rate-download-summary-dto.md) — DTO for summary statistics of exchange rate downloads

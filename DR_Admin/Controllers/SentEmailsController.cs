@@ -127,7 +127,7 @@ public class SentEmailsController : ControllerBase
     /// <response code="403">If user doesn't have required role</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("by-entity/{entityType}/{entityId}")]
-    [Authorize(Roles = "Admin,Support,Sales")]
+    [Authorize(Policy = "Customer.Read")]
     [ProducesResponseType(typeof(IEnumerable<SentEmailDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -161,7 +161,7 @@ public class SentEmailsController : ControllerBase
     /// <response code="403">If user doesn't have required role</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("by-date-range")]
-    [Authorize(Roles = "Admin,Support")]
+    [Authorize(Policy = "SentEmail.Read")]
     [ProducesResponseType(typeof(IEnumerable<SentEmailDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -197,7 +197,7 @@ public class SentEmailsController : ControllerBase
     /// <response code="404">If sent email is not found</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("by-message-id/{messageId}")]
-    [Authorize(Roles = "Admin,Support")]
+    [Authorize(Policy = "SentEmail.Read")]
     [ProducesResponseType(typeof(SentEmailDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -237,7 +237,7 @@ public class SentEmailsController : ControllerBase
     /// <response code="404">If sent email is not found</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpGet("{id}")]
-    [Authorize(Roles = "Admin,Support")]
+    [Authorize(Policy = "SentEmail.Read")]
     [ProducesResponseType(typeof(SentEmailDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -277,7 +277,7 @@ public class SentEmailsController : ControllerBase
     /// <response code="403">If user doesn't have required role</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpPost]
-    [Authorize(Roles = "Admin,Support")]
+    [Authorize(Policy = "SentEmail.Write")]
     [ProducesResponseType(typeof(SentEmailDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -321,7 +321,7 @@ public class SentEmailsController : ControllerBase
     /// <response code="404">If sent email is not found</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpPut("{id}")]
-    [Authorize(Roles = "Admin,Support")]
+    [Authorize(Policy = "SentEmail.Write")]
     [ProducesResponseType(typeof(SentEmailDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -367,7 +367,7 @@ public class SentEmailsController : ControllerBase
     /// <response code="404">If sent email is not found</response>
     /// <response code="500">If an internal server error occurs</response>
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = "SentEmail.Delete")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]

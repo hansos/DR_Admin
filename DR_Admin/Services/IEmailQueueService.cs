@@ -50,4 +50,18 @@ public interface IEmailQueueService
     /// <param name="emailId">The email ID</param>
     /// <returns>Sent email entity or null if not found</returns>
     Task<Data.Entities.SentEmail?> GetEmailByIdAsync(int emailId);
+
+    /// <summary>
+    /// Reschedules an existing email for immediate retry.
+    /// </summary>
+    /// <param name="emailId">The email identifier.</param>
+    /// <returns>True when retry was queued; otherwise false.</returns>
+    Task<bool> RetryEmailAsync(int emailId);
+
+    /// <summary>
+    /// Applies a provider delivery event to queued email and communication state.
+    /// </summary>
+    /// <param name="providerEventDto">The provider event payload.</param>
+    /// <returns>True when the related email/message was found and updated; otherwise false.</returns>
+    Task<bool> ApplyProviderEventAsync(EmailProviderEventDto providerEventDto);
 }

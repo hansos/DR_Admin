@@ -193,6 +193,13 @@ public static class AuthorizationPoliciesConfiguration
         options.AddPolicy("DomainHistory.Read", policy =>
             policy.RequireRole(ADMIN, SUPPORT, SALES));
 
+        // Communication policies
+        options.AddPolicy("Communication.Read", policy =>
+            policy.RequireRole(ADMIN, SUPPORT, SALES));
+
+        options.AddPolicy("Communication.Write", policy =>
+            policy.RequireRole(ADMIN, SUPPORT, SALES));
+
         // DomainContact policies
         options.AddPolicy("DomainContact.Delete", policy =>
             policy.RequireRole(ADMIN, SUPPORT));
@@ -231,6 +238,13 @@ public static class AuthorizationPoliciesConfiguration
             policy.RequireRole(ADMIN, SUPPORT, SALES));
 
         options.AddPolicy("EmailQueue.Write", policy =>
+            policy.RequireRole(ADMIN, SUPPORT, SALES));
+
+        // EmailReceiver policies
+        options.AddPolicy("EmailReceiver.Read", policy =>
+            policy.RequireRole(ADMIN, SUPPORT, SALES));
+
+        options.AddPolicy("EmailReceiver.Write", policy =>
             policy.RequireRole(ADMIN, SUPPORT, SALES));
 
         // ExchangeRateDownloadLog policies
@@ -394,6 +408,12 @@ public static class AuthorizationPoliciesConfiguration
         // SentEmail policies
         options.AddPolicy("SentEmail.Read", policy =>
             policy.RequireRole(ADMIN, SUPPORT));
+
+        options.AddPolicy("SentEmail.Write", policy =>
+            policy.RequireRole(ADMIN, SUPPORT));
+
+        options.AddPolicy("SentEmail.Delete", policy =>
+            policy.RequireRole(ADMIN));
 
         // Server policies
         options.AddPolicy("Server.Delete", policy =>

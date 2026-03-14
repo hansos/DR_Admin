@@ -2,6 +2,7 @@ using EmailReceiverLib.Factories;
 using EmailReceiverLib.Infrastructure.Settings;
 using EmailReceiverLib.Interfaces;
 using EmailReceiverLib.Models;
+using ISPAdmin.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
@@ -20,6 +21,7 @@ public class EmailReceiverController : ControllerBase
     private static readonly HttpClient HttpClient = new();
     private readonly EmailReceiverFactory _emailReceiverFactory;
     private readonly EmailReceiverSettings _emailReceiverSettings;
+    private readonly ICommunicationIngestionService _communicationIngestionService;
     private static readonly Serilog.ILogger Log = Serilog.Log.ForContext<EmailReceiverController>();
 
     /// <summary>
@@ -27,10 +29,15 @@ public class EmailReceiverController : ControllerBase
     /// </summary>
     /// <param name="emailReceiverFactory">Factory used to resolve the configured email receiver plugin.</param>
     /// <param name="emailReceiverSettings">Email receiver settings from configuration.</param>
-    public EmailReceiverController(EmailReceiverFactory emailReceiverFactory, EmailReceiverSettings emailReceiverSettings)
+    /// <param name="communicationIngestionService">Service used to persist inbound mailbox messages into communication threads.</param>
+    public EmailReceiverController(
+        EmailReceiverFactory emailReceiverFactory,
+        EmailReceiverSettings emailReceiverSettings,
+        ICommunicationIngestionService communicationIngestionService)
     {
         _emailReceiverFactory = emailReceiverFactory;
         _emailReceiverSettings = emailReceiverSettings;
+        _communicationIngestionService = communicationIngestionService;
     }
 
     /// <summary>
@@ -44,7 +51,7 @@ public class EmailReceiverController : ControllerBase
     /// <response code="403">Returned when user has insufficient permissions.</response>
     /// <response code="500">Returned when an unexpected server error occurs.</response>
     [HttpPost("token/test")]
-    [Authorize(Policy = "EmailQueue.Read")]
+    [Authorize(Policy = "EmailReceiver.Read")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -130,7 +137,7 @@ public class EmailReceiverController : ControllerBase
     /// <response code="403">Returned when user has insufficient permissions.</response>
     /// <response code="500">Returned when an unexpected server error occurs.</response>
     [HttpGet("messages")]
-    [Authorize(Policy = "EmailQueue.Read")]
+    [Authorize(Policy = "EmailReceiver.Read")]
     [ProducesResponseType(typeof(MailReadResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -156,6 +163,11 @@ public class EmailReceiverController : ControllerBase
                 ReceivedAfterUtc = receivedAfterUtc
             }, cancellationToken);
 
+            if (result.Success && result.Messages.Count > 0)
+            {
+                await _communicationIngestionService.PersistInboundMessagesAsync(result.Messages);
+            }
+
             return Ok(result);
         }
         catch (InvalidOperationException ex)
@@ -167,6 +179,57 @@ public class EmailReceiverController : ControllerBase
         {
             Log.Error(ex, "Unexpected error while reading inbound emails");
             return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while reading inbound emails.");
+        }
+    }
+
+    /// <summary>
+    /// Marks a mailbox message as read by external message identifier.
+    /// </summary>
+    /// <param name="externalMessageId">Provider-specific external message identifier.</param>
+    /// <param name="cancellationToken">Cancellation token for aborting the operation.</param>
+    /// <returns>No content when updated successfully.</returns>
+    /// <response code="204">Message was marked as read.</response>
+    /// <response code="400">External message id is missing or invalid.</response>
+    /// <response code="401">Returned when user is not authenticated.</response>
+    /// <response code="403">Returned when user has insufficient permissions.</response>
+    /// <response code="404">Message was not found or could not be updated.</response>
+    /// <response code="500">Returned when an unexpected server error occurs.</response>
+    [HttpPatch("messages/{externalMessageId}/read")]
+    [Authorize(Policy = "EmailReceiver.Write")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult> MarkMessageAsRead(string externalMessageId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(externalMessageId))
+            {
+                return BadRequest("External message id is required.");
+            }
+
+            var receiver = _emailReceiverFactory.CreateEmailReceiver();
+            var marked = await receiver.MarkAsReadAsync(externalMessageId, cancellationToken);
+
+            if (!marked)
+            {
+                return NotFound($"Message with external id '{externalMessageId}' was not found or could not be marked as read.");
+            }
+
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            Log.Warning(ex, "Email receiver configuration issue while marking message as read");
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Unexpected error while marking message {ExternalMessageId} as read", externalMessageId);
+            return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while marking the message as read.");
         }
     }
 
@@ -186,7 +249,7 @@ public class EmailReceiverController : ControllerBase
     /// <response code="403">Returned when user has insufficient permissions.</response>
     /// <response code="500">Returned when an unexpected server error occurs.</response>
     [HttpGet("diagnostics")]
-    [Authorize(Policy = "EmailQueue.Read")]
+    [Authorize(Policy = "EmailReceiver.Read")]
     [ProducesResponseType(typeof(EmailReceiverDiagnosticsResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

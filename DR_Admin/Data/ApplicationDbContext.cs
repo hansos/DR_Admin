@@ -596,6 +596,13 @@ public class ApplicationDbContext : DbContext
     // Domain Lifecycle Workflow entities
     public DbSet<OutboxEvent> OutboxEvents { get; set; }
 
+    // Email communication entities
+    public DbSet<CommunicationThread> CommunicationThreads { get; set; }
+    public DbSet<CommunicationMessage> CommunicationMessages { get; set; }
+    public DbSet<CommunicationParticipant> CommunicationParticipants { get; set; }
+    public DbSet<CommunicationAttachment> CommunicationAttachments { get; set; }
+    public DbSet<CommunicationStatusEvent> CommunicationStatusEvents { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -1980,6 +1987,120 @@ public class ApplicationDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(e => e.UserId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // CommunicationThread configuration
+        modelBuilder.Entity<CommunicationThread>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Subject).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.RelatedEntityType).HasMaxLength(100);
+            entity.Property(e => e.Status).IsRequired().HasMaxLength(50).HasDefaultValue(CommunicationThreadStatus.Open);
+
+            entity.HasIndex(e => e.CustomerId);
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.LastMessageAtUtc);
+            entity.HasIndex(e => new { e.RelatedEntityType, e.RelatedEntityId });
+
+            entity.HasOne(e => e.Customer)
+                .WithMany()
+                .HasForeignKey(e => e.CustomerId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // CommunicationMessage configuration
+        modelBuilder.Entity<CommunicationMessage>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Direction).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.ExternalMessageId).HasMaxLength(255);
+            entity.Property(e => e.FromAddress).IsRequired().HasMaxLength(320);
+            entity.Property(e => e.ToAddresses).IsRequired().HasMaxLength(2000);
+            entity.Property(e => e.CcAddresses).HasMaxLength(2000);
+            entity.Property(e => e.BccAddresses).HasMaxLength(2000);
+            entity.Property(e => e.Subject).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.BodyText).HasMaxLength(int.MaxValue);
+            entity.Property(e => e.BodyHtml).HasMaxLength(int.MaxValue);
+            entity.Property(e => e.Provider).HasMaxLength(100);
+            entity.Property(e => e.IsRead).HasDefaultValue(false);
+
+            entity.HasIndex(e => e.CommunicationThreadId);
+            entity.HasIndex(e => e.SentEmailId);
+            entity.HasIndex(e => e.ExternalMessageId);
+            entity.HasIndex(e => e.IsRead);
+            entity.HasIndex(e => e.ReceivedAtUtc);
+            entity.HasIndex(e => e.SentAtUtc);
+
+            entity.HasOne(e => e.CommunicationThread)
+                .WithMany(t => t.Messages)
+                .HasForeignKey(e => e.CommunicationThreadId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.SentEmail)
+                .WithMany()
+                .HasForeignKey(e => e.SentEmailId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // CommunicationParticipant configuration
+        modelBuilder.Entity<CommunicationParticipant>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.EmailAddress).IsRequired().HasMaxLength(320);
+            entity.Property(e => e.DisplayName).HasMaxLength(200);
+            entity.Property(e => e.Role).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.IsPrimary).HasDefaultValue(false);
+
+            entity.HasIndex(e => e.CommunicationThreadId);
+            entity.HasIndex(e => e.EmailAddress);
+            entity.HasIndex(e => e.Role);
+            entity.HasIndex(e => new { e.CommunicationThreadId, e.EmailAddress, e.Role });
+
+            entity.HasOne(e => e.CommunicationThread)
+                .WithMany(t => t.Participants)
+                .HasForeignKey(e => e.CommunicationThreadId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // CommunicationAttachment configuration
+        modelBuilder.Entity<CommunicationAttachment>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.FileName).IsRequired().HasMaxLength(260);
+            entity.Property(e => e.ContentType).HasMaxLength(200);
+            entity.Property(e => e.StoragePath).HasMaxLength(1000);
+            entity.Property(e => e.InlineContentId).HasMaxLength(255);
+
+            entity.HasIndex(e => e.CommunicationMessageId);
+
+            entity.HasOne(e => e.CommunicationMessage)
+                .WithMany(m => m.Attachments)
+                .HasForeignKey(e => e.CommunicationMessageId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // CommunicationStatusEvent configuration
+        modelBuilder.Entity<CommunicationStatusEvent>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Status).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Details).HasMaxLength(2000);
+            entity.Property(e => e.Source).HasMaxLength(100);
+
+            entity.HasIndex(e => e.CommunicationMessageId);
+            entity.HasIndex(e => e.OccurredAtUtc);
+            entity.HasIndex(e => e.Status);
+
+            entity.HasOne(e => e.CommunicationMessage)
+                .WithMany(m => m.StatusEvents)
+                .HasForeignKey(e => e.CommunicationMessageId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         // CurrencyExchangeRate configuration

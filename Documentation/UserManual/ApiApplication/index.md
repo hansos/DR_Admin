@@ -263,6 +263,8 @@ Manages email queue operations for sending emails asynchronously
 
 - [POST /api/v1/email-queue/queue](email-queue/post-queue-email-api-v1-email-queue-queue.md) — Manages email queue operations for sending emails asynchronously
 - [GET /api/v1/email-queue/status/{id}](email-queue/get-get-email-status-api-v1-email-queue-status-id.md) — Gets the status of a queued email
+- [POST /api/v1/email-queue/retry/{id}](email-queue/post-retry-email-api-v1-email-queue-retry-id.md) — Queues an existing failed or pending email for immediate retry.
+- [POST /api/v1/email-queue/events/provider](email-queue/post-apply-provider-event-api-v1-email-queue-events-provider.md) — Applies a provider delivery event to email queue and communication status.
 
 ## Email Receiver
 
@@ -281,6 +283,7 @@ Provides read operations for communication threads.
 - [GET /api/v1/communication-threads/{id:int}](communication-threads/get-get-thread-by-id-api-v1-communication-threads-id-int.md) — Retrieves a communication thread by identifier including participants and messages.
 - [PATCH /api/v1/communication-threads/{id:int}/status](communication-threads/patch-update-thread-status-api-v1-communication-threads-id-int-status.md) — Updates the status of a communication thread.
 - [PATCH /api/v1/communication-threads/messages/{messageId:int}/read-state](communication-threads/patch-update-message-read-state-api-v1-communication-threads-messages-messageid-int-read-state.md) — Updates the read state of a communication message.
+- [POST /api/v1/communication-threads/{id:int}/reply](communication-threads/post-queue-reply-api-v1-communication-threads-id-int-reply.md) — Queues a reply email for a communication thread.
 
 ## Exchange Rate Download Logs
 

@@ -184,6 +184,8 @@ builder.Services.AddTransient<ISystemSettingService, SystemSettingService>();
 builder.Services.AddTransient<IMyCompanyService, MyCompanyService>();
 builder.Services.AddTransient<IRegisteredDomainService, DomainRegistrationService>();
 builder.Services.AddTransient<IRegisteredDomainHistoryService, RegisteredDomainHistoryService>();
+builder.Services.AddTransient<ICommunicationThreadService, CommunicationThreadService>();
+builder.Services.AddTransient<ICommunicationIngestionService, CommunicationIngestionService>();
 builder.Services.AddTransient<IDnsTroubleshootService, DnsTroubleshootService>();
 builder.Services.AddTransient<IDomainManagerService, DomainManagerService>();
 
