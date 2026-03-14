@@ -279,6 +279,8 @@ Provides read operations for communication threads.
 
 - [GET /api/v1/communication-threads](communication-threads/get-get-threads-api-v1-communication-threads.md) — Retrieves communication threads with optional filters.
 - [GET /api/v1/communication-threads/{id:int}](communication-threads/get-get-thread-by-id-api-v1-communication-threads-id-int.md) — Retrieves a communication thread by identifier including participants and messages.
+- [PATCH /api/v1/communication-threads/{id:int}/status](communication-threads/patch-update-thread-status-api-v1-communication-threads-id-int-status.md) — Updates the status of a communication thread.
+- [PATCH /api/v1/communication-threads/messages/{messageId:int}/read-state](communication-threads/patch-update-message-read-state-api-v1-communication-threads-messages-messageid-int-read-state.md) — Updates the read state of a communication message.
 
 ## Exchange Rate Download Logs
 

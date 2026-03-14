@@ -285,6 +285,8 @@ Reference pages for Data Transfer Objects used by API endpoints.
 - [UpdateAuditLogDto](update-audit-log-dto.md) — Data transfer object for UpdateAuditLogDto.
 - [UpdateBackupScheduleDto](update-backup-schedule-dto.md) — Data transfer object for UpdateBackupScheduleDto.
 - [UpdateBillingCycleDto](update-billing-cycle-dto.md) — Data transfer object for updating an existing billing cycle
+- [UpdateCommunicationMessageReadStateDto](update-communication-message-read-state-dto.md) — Represents the payload used to update a communication message read state
+- [UpdateCommunicationThreadStatusDto](update-communication-thread-status-dto.md) — Represents the payload used to update a communication thread status
 - [UpdateContactPersonDto](update-contact-person-dto.md) — Data transfer object for updating an existing contact person
 - [UpdateContactPersonIsDomainGlobalDto](update-contact-person-is-domain-global-dto.md) — Data transfer object for updating the domain global flag for an existing contact person
 - [UpdateControlPanelTypeDto](update-control-panel-type-dto.md) — Data transfer object for updating an existing control panel type
