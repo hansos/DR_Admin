@@ -1,36 +1,33 @@
-﻿# GET ReadMessages
+# PATCH MarkMessageAsRead
 
-Reads messages from the configured Office365 mailbox.
+Marks a mailbox message as read by external message identifier.
 
 ## Endpoint
 
 ```
-GET /api/v1/email-receiver/messages
+PATCH /api/v1/email-receiver/messages/{externalMessageId}/read
 ```
 
 ## Authorization
 
-Requires authentication. Policy: **EmailReceiver.Read**.
+Requires authentication. Policy: **EmailReceiver.Write**.
 
 ## Parameters
 
 | Name | Source | Type |
 |------|--------|------|
-| `folder` | Query | `string?` |
-| `unreadOnly` | Query | `bool` |
-| `maxItems` | Query | `int` |
-| `aliasRecipient` | Query | `string?` |
-| `receivedAfterUtc` | Query | `DateTime?` |
+| `externalMessageId` | Route | `string` |
 | `cancellationToken` | Route | `CancellationToken` |
 
 ## Responses
 
 | Code | Description | Body |
 |------|-------------|------|
-| 200 | OK | `MailReadResult` |
+| 204 | No Content | - |
 | 400 | Bad Request | - |
 | 401 | Unauthorized | - |
 | 403 | Forbidden | - |
+| 404 | Not Found | - |
 | 500 | Internal Server Error | - |
 
 [Back to API Manual index](../index.md)

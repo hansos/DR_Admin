@@ -10,7 +10,7 @@ POST /api/v1/email-receiver/token/test
 
 ## Authorization
 
-Requires authentication. Policy: **EmailQueue.Read**.
+Requires authentication. Policy: **EmailReceiver.Read**.
 
 ## Parameters
 

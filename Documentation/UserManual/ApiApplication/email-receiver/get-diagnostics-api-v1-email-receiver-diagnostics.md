@@ -10,7 +10,7 @@ GET /api/v1/email-receiver/diagnostics
 
 ## Authorization
 
-Requires authentication. Policy: **EmailQueue.Read**.
+Requires authentication. Policy: **EmailReceiver.Read**.
 
 ## Parameters
 

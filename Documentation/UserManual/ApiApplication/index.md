@@ -270,6 +270,7 @@ Provides endpoints for reading inbound emails through configured receiver plugin
 
 - [POST /api/v1/email-receiver/token/test](email-receiver/post-test-office365-token-api-v1-email-receiver-token-test.md) — Provides endpoints for reading inbound emails through configured receiver plugins.
 - [GET /api/v1/email-receiver/messages](email-receiver/get-read-messages-api-v1-email-receiver-messages.md) — Reads messages from the configured Office365 mailbox.
+- [PATCH /api/v1/email-receiver/messages/{externalMessageId}/read](email-receiver/patch-mark-message-as-read-api-v1-email-receiver-messages-externalmessageid-read.md) — Marks a mailbox message as read by external message identifier.
 - [GET /api/v1/email-receiver/diagnostics](email-receiver/get-diagnostics-api-v1-email-receiver-diagnostics.md) — Temporary diagnostics endpoint for Office365 receiver configuration and token claims.
 
 ## Exchange Rate Download Logs
