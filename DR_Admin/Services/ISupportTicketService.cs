@@ -32,10 +32,11 @@ public interface ISupportTicketService
     /// Creates a support ticket with an initial customer message.
     /// </summary>
     /// <param name="userId">The current authenticated user identifier.</param>
-    /// <param name="customerId">The customer identifier linked to the current user.</param>
+    /// <param name="customerId">The customer identifier linked to the ticket.</param>
+    /// <param name="isSupportUser">Indicates whether the creator is support staff.</param>
     /// <param name="dto">Ticket creation payload.</param>
     /// <returns>The created support ticket.</returns>
-    Task<SupportTicketDto> CreateTicketAsync(int userId, int customerId, CreateSupportTicketDto dto);
+    Task<SupportTicketDto> CreateTicketAsync(int userId, int customerId, bool isSupportUser, CreateSupportTicketDto dto);
 
     /// <summary>
     /// Appends a new message to an existing ticket thread.
@@ -53,7 +54,8 @@ public interface ISupportTicketService
     /// </summary>
     /// <param name="ticketId">Support ticket identifier.</param>
     /// <param name="status">New ticket status.</param>
+    /// <param name="assignedDepartment">Optional assigned support department.</param>
     /// <param name="assignedToUserId">Optional assigned support user identifier.</param>
     /// <returns>The updated support ticket, or null when not found.</returns>
-    Task<SupportTicketDto?> UpdateStatusAsync(int ticketId, string status, int? assignedToUserId);
+    Task<SupportTicketDto?> UpdateStatusAsync(int ticketId, string status, string? assignedDepartment, int? assignedToUserId);
 }

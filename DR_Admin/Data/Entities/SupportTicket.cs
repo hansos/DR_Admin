@@ -21,6 +21,11 @@ public class SupportTicket : EntityBase
     public int? AssignedToUserId { get; set; }
 
     /// <summary>
+    /// Gets or sets the support department assigned to the ticket.
+    /// </summary>
+    public string? AssignedDepartment { get; set; }
+
+    /// <summary>
     /// Gets or sets the ticket subject.
     /// </summary>
     public string Subject { get; set; } = string.Empty;
@@ -34,6 +39,11 @@ public class SupportTicket : EntityBase
     /// Gets or sets the ticket priority.
     /// </summary>
     public string Priority { get; set; } = "Normal";
+
+    /// <summary>
+    /// Gets or sets the ticket intake source.
+    /// </summary>
+    public string Source { get; set; } = SupportTicketSource.CustomerWeb;
 
     /// <summary>
     /// Gets or sets the timestamp of the latest message in the ticket thread.
@@ -64,4 +74,15 @@ public class SupportTicket : EntityBase
     /// Gets or sets the collection of messages in the ticket thread.
     /// </summary>
     public ICollection<SupportTicketMessage> Messages { get; set; } = new List<SupportTicketMessage>();
+}
+
+/// <summary>
+/// Well-known support ticket intake sources.
+/// </summary>
+public static class SupportTicketSource
+{
+    public const string CustomerWeb = "CustomerWeb";
+    public const string Phone = "Phone";
+    public const string InPerson = "InPerson";
+    public const string Email = "Email";
 }

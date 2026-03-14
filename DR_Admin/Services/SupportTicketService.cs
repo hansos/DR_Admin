@@ -14,6 +14,13 @@ public class SupportTicketService : ISupportTicketService
     private static readonly Serilog.ILogger _log = Log.ForContext<SupportTicketService>();
     private static readonly HashSet<string> AllowedStatuses = new(StringComparer.OrdinalIgnoreCase) { "Open", "InProgress", "WaitingForCustomer", "Closed" };
     private static readonly HashSet<string> AllowedPriorities = new(StringComparer.OrdinalIgnoreCase) { "Low", "Normal", "High" };
+    private static readonly HashSet<string> AllowedSources = new(StringComparer.OrdinalIgnoreCase)
+    {
+        SupportTicketSource.CustomerWeb,
+        SupportTicketSource.Phone,
+        SupportTicketSource.InPerson,
+        SupportTicketSource.Email
+    };
 
     private readonly ApplicationDbContext _context;
 
@@ -71,7 +78,7 @@ public class SupportTicketService : ISupportTicketService
     }
 
     /// <inheritdoc />
-    public async Task<SupportTicketDto> CreateTicketAsync(int userId, int customerId, CreateSupportTicketDto dto)
+    public async Task<SupportTicketDto> CreateTicketAsync(int userId, int customerId, bool isSupportUser, CreateSupportTicketDto dto)
     {
         if (string.IsNullOrWhiteSpace(dto.Subject))
         {
@@ -84,6 +91,7 @@ public class SupportTicketService : ISupportTicketService
         }
 
         var normalizedPriority = NormalizePriority(dto.Priority);
+        var normalizedSource = NormalizeSource(dto.Source);
         var now = DateTime.UtcNow;
 
         var ticket = new SupportTicket
@@ -92,6 +100,7 @@ public class SupportTicketService : ISupportTicketService
             CreatedByUserId = userId,
             Subject = dto.Subject.Trim(),
             Priority = normalizedPriority,
+            Source = normalizedSource,
             Status = "Open",
             LastMessageAt = now,
             CreatedAt = now,
@@ -101,7 +110,7 @@ public class SupportTicketService : ISupportTicketService
                 new SupportTicketMessage
                 {
                     SenderUserId = userId,
-                    SenderRole = "Customer",
+                    SenderRole = isSupportUser ? "Support" : "Customer",
                     Message = dto.Message.Trim(),
                     CreatedAt = now,
                     UpdatedAt = now
@@ -183,7 +192,7 @@ public class SupportTicketService : ISupportTicketService
     }
 
     /// <inheritdoc />
-    public async Task<SupportTicketDto?> UpdateStatusAsync(int ticketId, string status, int? assignedToUserId)
+    public async Task<SupportTicketDto?> UpdateStatusAsync(int ticketId, string status, string? assignedDepartment, int? assignedToUserId)
     {
         if (!AllowedStatuses.Contains(status))
         {
@@ -199,6 +208,7 @@ public class SupportTicketService : ISupportTicketService
         }
 
         ticket.Status = status;
+        ticket.AssignedDepartment = NormalizeDepartment(assignedDepartment);
         ticket.AssignedToUserId = assignedToUserId;
         ticket.ClosedAt = status.Equals("Closed", StringComparison.OrdinalIgnoreCase) ? DateTime.UtcNow : null;
         ticket.UpdatedAt = DateTime.UtcNow;
@@ -253,6 +263,39 @@ public class SupportTicketService : ISupportTicketService
         return "Normal";
     }
 
+    private static string NormalizeSource(string? source)
+    {
+        if (string.IsNullOrWhiteSpace(source))
+        {
+            return SupportTicketSource.CustomerWeb;
+        }
+
+        if (AllowedSources.Contains(source))
+        {
+            if (source.Equals(SupportTicketSource.Phone, StringComparison.OrdinalIgnoreCase))
+            {
+                return SupportTicketSource.Phone;
+            }
+
+            if (source.Equals(SupportTicketSource.InPerson, StringComparison.OrdinalIgnoreCase))
+            {
+                return SupportTicketSource.InPerson;
+            }
+
+            if (source.Equals(SupportTicketSource.Email, StringComparison.OrdinalIgnoreCase))
+            {
+                return SupportTicketSource.Email;
+            }
+        }
+
+        return SupportTicketSource.CustomerWeb;
+    }
+
+    private static string? NormalizeDepartment(string? department)
+    {
+        return string.IsNullOrWhiteSpace(department) ? null : department.Trim();
+    }
+
     private static SupportTicketDto MapToDto(SupportTicket ticket)
     {
         return new SupportTicketDto
@@ -263,10 +306,12 @@ public class SupportTicketService : ISupportTicketService
             CreatedByUserId = ticket.CreatedByUserId,
             CreatedByUsername = ticket.CreatedByUser?.Username ?? string.Empty,
             AssignedToUserId = ticket.AssignedToUserId,
+            AssignedDepartment = ticket.AssignedDepartment,
             AssignedToUsername = ticket.AssignedToUser?.Username,
             Subject = ticket.Subject,
             Status = ticket.Status,
             Priority = ticket.Priority,
+            Source = ticket.Source,
             CreatedAt = ticket.CreatedAt,
             UpdatedAt = ticket.UpdatedAt,
             LastMessageAt = ticket.LastMessageAt,

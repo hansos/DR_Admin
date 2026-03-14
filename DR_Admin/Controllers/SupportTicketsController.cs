@@ -117,12 +117,13 @@ public class SupportTicketsController : ControllerBase
         try
         {
             var userContext = await GetCurrentUserContextAsync();
-            if (userContext.CustomerId == null)
+            var customerId = userContext.IsSupportUser ? dto.CustomerId : userContext.CustomerId;
+            if (customerId == null)
             {
                 return Forbid();
             }
 
-            var created = await _supportTicketService.CreateTicketAsync(userContext.UserId, userContext.CustomerId.Value, dto);
+            var created = await _supportTicketService.CreateTicketAsync(userContext.UserId, customerId.Value, userContext.IsSupportUser, dto);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
         catch (ArgumentException ex)
@@ -197,7 +198,7 @@ public class SupportTicketsController : ControllerBase
         try
         {
             var userContext = await GetCurrentUserContextAsync();
-            var updated = await _supportTicketService.UpdateStatusAsync(id, dto.Status, userContext.UserId);
+            var updated = await _supportTicketService.UpdateStatusAsync(id, dto.Status, dto.AssignedDepartment, userContext.UserId);
             if (updated == null)
             {
                 return NotFound($"Support ticket with ID {id} not found");

@@ -36,6 +36,11 @@ public class SupportTicketDto
     public int? AssignedToUserId { get; set; }
 
     /// <summary>
+    /// Gets or sets the assigned support department.
+    /// </summary>
+    public string? AssignedDepartment { get; set; }
+
+    /// <summary>
     /// Gets or sets the username of the assigned support user.
     /// </summary>
     public string? AssignedToUsername { get; set; }
@@ -54,6 +59,11 @@ public class SupportTicketDto
     /// Gets or sets the ticket priority.
     /// </summary>
     public string Priority { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the ticket intake source.
+    /// </summary>
+    public string Source { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the creation timestamp in UTC.
@@ -141,6 +151,16 @@ public class CreateSupportTicketDto
     /// Gets or sets the ticket priority.
     /// </summary>
     public string Priority { get; set; } = "Normal";
+
+    /// <summary>
+    /// Gets or sets the ticket intake source.
+    /// </summary>
+    public string? Source { get; set; }
+
+    /// <summary>
+    /// Gets or sets an optional customer identifier for support-initiated ticket creation.
+    /// </summary>
+    public int? CustomerId { get; set; }
 }
 
 /// <summary>
@@ -163,4 +183,9 @@ public class UpdateSupportTicketStatusDto
     /// Gets or sets the new status value.
     /// </summary>
     public string Status { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the support department assignment.
+    /// </summary>
+    public string? AssignedDepartment { get; set; }
 }

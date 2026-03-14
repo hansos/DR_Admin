@@ -1693,10 +1693,14 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Subject).IsRequired().HasMaxLength(150);
             entity.Property(e => e.Status).IsRequired().HasMaxLength(30);
             entity.Property(e => e.Priority).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.AssignedDepartment).HasMaxLength(100);
+            entity.Property(e => e.Source).IsRequired().HasMaxLength(30);
 
             entity.HasIndex(e => e.CustomerId);
             entity.HasIndex(e => e.Status);
             entity.HasIndex(e => e.Priority);
+            entity.HasIndex(e => e.AssignedDepartment);
+            entity.HasIndex(e => e.Source);
             entity.HasIndex(e => e.LastMessageAt);
 
             entity.HasOne(e => e.Customer)
