@@ -273,6 +273,13 @@ Provides endpoints for reading inbound emails through configured receiver plugin
 - [PATCH /api/v1/email-receiver/messages/{externalMessageId}/read](email-receiver/patch-mark-message-as-read-api-v1-email-receiver-messages-externalmessageid-read.md) — Marks a mailbox message as read by external message identifier.
 - [GET /api/v1/email-receiver/diagnostics](email-receiver/get-diagnostics-api-v1-email-receiver-diagnostics.md) — Temporary diagnostics endpoint for Office365 receiver configuration and token claims.
 
+## Communication Threads
+
+Provides read operations for communication threads.
+
+- [GET /api/v1/communication-threads](communication-threads/get-get-threads-api-v1-communication-threads.md) — Retrieves communication threads with optional filters.
+- [GET /api/v1/communication-threads/{id:int}](communication-threads/get-get-thread-by-id-api-v1-communication-threads-id-int.md) — Retrieves a communication thread by identifier including participants and messages.
+
 ## Exchange Rate Download Logs
 
 Controller for managing exchange rate download logs

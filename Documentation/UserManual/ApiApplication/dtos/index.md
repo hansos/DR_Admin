@@ -23,6 +23,10 @@ Reference pages for Data Transfer Objects used by API endpoints.
 - [CodeTablesResponseDto](code-tables-response-dto.md) — Data transfer object for code tables check and update response
 - [ConfirmAuthenticatorSetupRequestDto](confirm-authenticator-setup-request-dto.md) — Request DTO for confirming authenticator app setup.
 - [ConfirmEmailRequestDto](confirm-email-request-dto.md) — Request DTO for email confirmation
+- [CommunicationMessageDto](communication-message-dto.md) — Represents a communication message in thread responses
+- [CommunicationParticipantDto](communication-participant-dto.md) — Represents a communication participant in thread responses
+- [CommunicationThreadDetailsDto](communication-thread-details-dto.md) — Represents detailed communication thread data including messages and participants
+- [CommunicationThreadDto](communication-thread-dto.md) — Represents a communication thread summary for list views
 - [ContactPersonDto](contact-person-dto.md) — Data transfer object representing a contact person
 - [ControlPanelTypeDto](control-panel-type-dto.md) — Data transfer object representing a control panel type
 - [ConvertCurrencyDto](convert-currency-dto.md) — Data transfer object for currency conversion request
