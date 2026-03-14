@@ -62,6 +62,14 @@ export interface ResellerCompanyDto {
 | `CreatedAt` | `DateTime` | `string` |
 | `UpdatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetDefaultResellerCompany](../reseller-companies/get-get-default-reseller-company-api-v1-reseller-companies-default.md)
+- [GET GetResellerCompanyById](../reseller-companies/get-get-reseller-company-by-id-api-v1-reseller-companies-id.md)
+- [POST CreateResellerCompany](../reseller-companies/post-create-reseller-company-api-v1-reseller-companies.md)
+- [PUT UpdateResellerCompany](../reseller-companies/put-update-reseller-company-api-v1-reseller-companies-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

@@ -40,6 +40,11 @@ export interface CreateVendorTaxProfileDto {
 | `TaxTreatyCountry` | `string?` | `string | null` |
 | `TaxNotes` | `string` | `string` |
 
+## Used By Endpoints
+
+- [POST CreateVendorTaxProfile](../vendor-tax-profiles/post-create-vendor-tax-profile-api-v1-vendor-tax-profiles.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

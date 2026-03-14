@@ -36,6 +36,11 @@ export interface CreateDnsRecordDto {
 | `Port` | `int?` | `number | null` |
 | `IsPendingSync` | `bool` | `boolean` |
 
+## Used By Endpoints
+
+- [POST CreateDnsRecord](../dns-records/post-create-dns-record-api-v1-dns-records.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

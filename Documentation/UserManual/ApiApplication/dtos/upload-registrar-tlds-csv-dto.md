@@ -38,6 +38,11 @@ export interface UploadRegistrarTldsCsvDto {
 | `ActivateNewTlds` | `bool` | `boolean` |
 | `Currency` | `string` | `string` |
 
+## Used By Endpoints
+
+- [POST UploadRegistrarTldsCsv](../registrar-tlds/post-upload-registrar-tlds-csv-api-v1-registrar-tlds-registrar-registrarid-upload-csv.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

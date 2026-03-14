@@ -42,6 +42,11 @@ export interface RegisterAccountRequestDto {
 | `ContactFirstName` | `string` | `string` |
 | `ContactLastName` | `string` | `string` |
 
+## Used By Endpoints
+
+- [POST Register](../my-account/post-register-api-v1-my-account-register.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

@@ -24,6 +24,11 @@ export interface UpdateSentEmailDto {
 | `ErrorMessage` | `string?` | `string | null` |
 | `RetryCount` | `int` | `number` |
 
+## Used By Endpoints
+
+- [PUT UpdateSentEmail](../sent-emails/put-update-sent-email-api-v1-sent-emails-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

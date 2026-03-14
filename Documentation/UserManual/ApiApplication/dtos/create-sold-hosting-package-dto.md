@@ -50,6 +50,11 @@ export interface CreateSoldHostingPackageDto {
 | `ConfigurationSnapshotJson` | `string` | `string` |
 | `Notes` | `string` | `string` |
 
+## Used By Endpoints
+
+- [POST Create](../sold-hosting-packages/post-create-api-v1-sold-hosting-packages.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

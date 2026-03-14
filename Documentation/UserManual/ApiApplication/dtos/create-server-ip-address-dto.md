@@ -32,6 +32,11 @@ export interface CreateServerIpAddressDto {
 | `AssignedTo` | `string?` | `string | null` |
 | `Notes` | `string?` | `string | null` |
 
+## Used By Endpoints
+
+- [POST CreateServerIpAddress](../server-ip-addresses/post-create-server-ip-address-api-v1-server-ip-addresses.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

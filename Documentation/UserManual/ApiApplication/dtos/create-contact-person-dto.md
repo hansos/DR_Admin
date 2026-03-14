@@ -48,6 +48,11 @@ export interface CreateContactPersonDto {
 | `IsDefaultAdministrator` | `bool` | `boolean` |
 | `IsDomainGlobal` | `bool` | `boolean` |
 
+## Used By Endpoints
+
+- [POST CreateContactPerson](../contact-persons/post-create-contact-person-api-v1-contact-persons.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

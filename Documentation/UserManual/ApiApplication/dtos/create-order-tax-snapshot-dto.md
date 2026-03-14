@@ -62,6 +62,11 @@ export interface CreateOrderTaxSnapshotDto {
 | `IdempotencyKey` | `string?` | `string | null` |
 | `CalculationInputsJson` | `string` | `string` |
 
+## Used By Endpoints
+
+- [POST CreateOrderTaxSnapshot](../order-tax-snapshots/post-create-order-tax-snapshot-api-v1-order-tax-snapshots.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

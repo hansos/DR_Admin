@@ -60,6 +60,11 @@ export interface UpdateOrderTaxSnapshotDto {
 | `IdempotencyKey` | `string?` | `string | null` |
 | `CalculationInputsJson` | `string` | `string` |
 
+## Used By Endpoints
+
+- [PUT UpdateOrderTaxSnapshot](../order-tax-snapshots/put-update-order-tax-snapshot-api-v1-order-tax-snapshots-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

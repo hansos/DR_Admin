@@ -48,6 +48,11 @@ export interface CreateInvoiceLineDto {
 | `AccountingCode` | `string` | `string` |
 | `Notes` | `string` | `string` |
 
+## Used By Endpoints
+
+- [POST CreateInvoiceLine](../invoice-lines/post-create-invoice-line-api-v1-invoice-lines.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

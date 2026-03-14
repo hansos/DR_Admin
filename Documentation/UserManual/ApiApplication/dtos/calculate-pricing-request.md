@@ -30,6 +30,11 @@ export interface CalculatePricingRequest {
 | `IsFirstYear` | `bool` | `boolean` |
 | `TargetCurrency` | `string?` | `string | null` |
 
+## Used By Endpoints
+
+- [POST CalculatePricing](../tld-pricing/post-calculate-pricing-api-v1-tld-pricing-calculate.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

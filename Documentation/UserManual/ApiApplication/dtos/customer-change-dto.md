@@ -34,6 +34,11 @@ export interface CustomerChangeDto {
 | `ChangedAt` | `DateTime` | `string` |
 | `ChangedByUserId` | `int?` | `number | null` |
 
+## Used By Endpoints
+
+No endpoint pages currently reference this DTO.
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

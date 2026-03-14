@@ -30,6 +30,11 @@ export interface UserPanelInitializationResponseDto {
 | `Email` | `string` | `string` |
 | `CompanyName` | `string` | `string` |
 
+## Used By Endpoints
+
+- [POST InitializeCustomer](../initialization/post-initialize-customer-api-v1-initialization-initialize-customer.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

@@ -46,6 +46,13 @@ export interface HostingDomainDto {
 | `SyncStatus` | `string?` | `string | null` |
 | `CreatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetDomain](../hosting-domains/get-get-domain-api-v1-hosting-accounts-hostingaccountid-domains-id.md)
+- [POST CreateDomain](../hosting-domains/post-create-domain-api-v1-hosting-accounts-hostingaccountid-domains.md)
+- [PUT UpdateDomain](../hosting-domains/put-update-domain-api-v1-hosting-accounts-hostingaccountid-domains-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

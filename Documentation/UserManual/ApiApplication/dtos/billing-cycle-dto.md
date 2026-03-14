@@ -34,6 +34,12 @@ export interface BillingCycleDto {
 | `CreatedAt`      | `DateTime` | `string`        |
 | `UpdatedAt`      | `DateTime` | `string`        |
 
+## Used By Endpoints
+
+- [GET GetBillingCycleById](../billing-cycles/get-get-billing-cycle-by-id-api-v1-billing-cycles-id.md)
+- [POST CreateBillingCycle](../billing-cycles/post-create-billing-cycle-api-v1-billing-cycles.md)
+- [PUT UpdateBillingCycle](../billing-cycles/put-update-billing-cycle-api-v1-billing-cycles-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)

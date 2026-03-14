@@ -56,6 +56,12 @@ export interface TaxQuoteResultDto {
 | `TaxDeterminationEvidenceId` | `int?` | `number | null` |
 | `Lines` | `ICollection<TaxQuoteLineResultDto>` | `TaxQuoteLineResultDto[]` |
 
+## Used By Endpoints
+
+- [POST Finalize](../tax-calculation/post-finalize-api-v1-tax-finalize.md)
+- [POST Quote](../tax-calculation/post-quote-api-v1-tax-quote.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

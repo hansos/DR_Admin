@@ -30,6 +30,11 @@ export interface HostingEmailAccountUpdateDto {
 | `SpamFilterEnabled` | `bool?` | `boolean | null` |
 | `SpamScoreThreshold` | `int?` | `number | null` |
 
+## Used By Endpoints
+
+- [PUT UpdateEmailAccount](../hosting-email/put-update-email-account-api-v1-hosting-accounts-hostingaccountid-emails-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

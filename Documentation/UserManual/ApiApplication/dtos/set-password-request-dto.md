@@ -26,6 +26,11 @@ export interface SetPasswordRequestDto {
 | `NewPassword` | `string` | `string` |
 | `ConfirmPassword` | `string` | `string` |
 
+## Used By Endpoints
+
+- [POST SetPassword](../my-account/post-set-password-api-v1-my-account-set-password.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

@@ -46,6 +46,11 @@ export interface CreateExchangeRateDownloadLogDto {
 | `IsStartupDownload` | `bool` | `boolean` |
 | `IsScheduledDownload` | `bool` | `boolean` |
 
+## Used By Endpoints
+
+- [POST CreateLog](../exchange-rate-download-logs/post-create-log-api-exchange-rate-download-logs.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

@@ -30,6 +30,11 @@ export interface CreateTaxCategoryDto {
 | `Description` | `string` | `string` |
 | `IsActive` | `bool` | `boolean` |
 
+## Used By Endpoints
+
+- [POST CreateTaxCategory](../tax-categories/post-create-tax-category-api-v1-tax-categories.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

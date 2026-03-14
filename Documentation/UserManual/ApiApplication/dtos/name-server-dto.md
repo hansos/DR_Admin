@@ -36,6 +36,14 @@ export interface NameServerDto {
 | `CreatedAt` | `DateTime` | `string` |
 | `UpdatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetAllNameServers](../name-servers/get-get-all-name-servers-api-v1-name-servers.md)
+- [GET GetNameServerById](../name-servers/get-get-name-server-by-id-api-v1-name-servers-id.md)
+- [POST CreateNameServer](../name-servers/post-create-name-server-api-v1-name-servers.md)
+- [PUT UpdateNameServer](../name-servers/put-update-name-server-api-v1-name-servers-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

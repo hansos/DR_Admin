@@ -26,6 +26,11 @@ export interface ConvertCurrencyDto {
 | `ToCurrency` | `string` | `string` |
 | `RateDate` | `DateTime?` | `string | null` |
 
+## Used By Endpoints
+
+- [POST ConvertCurrency](../currencies/post-convert-currency-api-v1-currencies-convert.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

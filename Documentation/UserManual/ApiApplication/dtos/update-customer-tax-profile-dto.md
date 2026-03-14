@@ -32,6 +32,11 @@ export interface UpdateCustomerTaxProfileDto {
 | `TaxExemptionReason` | `string?` | `string | null` |
 | `TaxExemptionCertificateUrl` | `string?` | `string | null` |
 
+## Used By Endpoints
+
+- [PUT UpdateCustomerTaxProfile](../customer-tax-profiles/put-update-customer-tax-profile-api-v1-customer-tax-profiles-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

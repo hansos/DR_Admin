@@ -24,6 +24,11 @@ export interface InitializationResponseDto {
 | `Message` | `string` | `string` |
 | `Username` | `string` | `string` |
 
+## Used By Endpoints
+
+- [POST InitializeAdmin](../initialization/post-initialize-admin-api-v1-initialization-initialize-admin.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

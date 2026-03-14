@@ -46,6 +46,11 @@ export interface CreateVendorCostDto {
 | `RefundDeadline` | `DateTime?` | `string | null` |
 | `Notes` | `string` | `string` |
 
+## Used By Endpoints
+
+- [POST CreateVendorCost](../vendor-costs/post-create-vendor-cost-api-v1-vendor-costs.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

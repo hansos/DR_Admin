@@ -20,6 +20,11 @@ export interface InitializationStatusDto {
 |----------|---------|-----------------|
 | `IsInitialized` | `bool` | `boolean` |
 
+## Used By Endpoints
+
+- [GET Status](../initialization/get-status-api-v1-initialization-status.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

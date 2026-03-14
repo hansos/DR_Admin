@@ -28,6 +28,11 @@ export interface HostingFtpAccountUpdateDto {
 | `SftpEnabled` | `bool?` | `boolean | null` |
 | `FtpsEnabled` | `bool?` | `boolean | null` |
 
+## Used By Endpoints
+
+- [PUT UpdateFtpAccount](../hosting-ftp/put-update-ftp-account-api-v1-hosting-accounts-hostingaccountid-ftp-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

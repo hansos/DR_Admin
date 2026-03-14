@@ -26,6 +26,11 @@ export interface UpdateUnitDto {
 | `Description` | `string` | `string` |
 | `IsActive` | `bool` | `boolean` |
 
+## Used By Endpoints
+
+- [PUT UpdateUnit](../units/put-update-unit-api-v1-units-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

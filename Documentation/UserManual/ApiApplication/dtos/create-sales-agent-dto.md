@@ -34,6 +34,11 @@ export interface CreateSalesAgentDto {
 | `IsActive` | `bool` | `boolean` |
 | `Notes` | `string?` | `string | null` |
 
+## Used By Endpoints
+
+- [POST CreateSalesAgent](../sales-agents/post-create-sales-agent-api-v1-sales-agents.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

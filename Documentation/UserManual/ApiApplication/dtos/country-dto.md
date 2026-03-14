@@ -38,6 +38,15 @@ export interface CountryDto {
 | `CreatedAt` | `DateTime` | `string` |
 | `UpdatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetActiveCountries](../countries/get-get-active-countries-api-v1-countries-active.md)
+- [GET GetAllCountries](../countries/get-get-all-countries-api-v1-countries.md)
+- [GET GetCountryByCode](../countries/get-get-country-by-code-api-v1-countries-code-code.md)
+- [GET GetCountryById](../countries/get-get-country-by-id-api-v1-countries-id.md)
+- [POST CreateCountry](../countries/post-create-country-api-v1-countries.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

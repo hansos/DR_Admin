@@ -46,6 +46,13 @@ export interface HostingEmailAccountDto {
 | `SyncStatus` | `string?` | `string | null` |
 | `CreatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetEmailAccount](../hosting-email/get-get-email-account-api-v1-hosting-accounts-hostingaccountid-emails-id.md)
+- [POST CreateEmailAccount](../hosting-email/post-create-email-account-api-v1-hosting-accounts-hostingaccountid-emails.md)
+- [PUT UpdateEmailAccount](../hosting-email/put-update-email-account-api-v1-hosting-accounts-hostingaccountid-emails-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

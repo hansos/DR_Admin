@@ -56,6 +56,15 @@ export interface SentEmailDto {
 | `CreatedAt` | `DateTime` | `string` |
 | `UpdatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetEmailStatus](../email-queue/get-get-email-status-api-v1-email-queue-status-id.md)
+- [GET GetSentEmailById](../sent-emails/get-get-sent-email-by-id-api-v1-sent-emails-id.md)
+- [GET GetSentEmailByMessageId](../sent-emails/get-get-sent-email-by-message-id-api-v1-sent-emails-by-message-id-messageid.md)
+- [POST CreateSentEmail](../sent-emails/post-create-sent-email-api-v1-sent-emails.md)
+- [PUT UpdateSentEmail](../sent-emails/put-update-sent-email-api-v1-sent-emails-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

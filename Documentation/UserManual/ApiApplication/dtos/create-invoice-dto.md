@@ -60,6 +60,11 @@ export interface CreateInvoiceDto {
 | `Notes` | `string` | `string` |
 | `InternalComment` | `string` | `string` |
 
+## Used By Endpoints
+
+- [POST CreateInvoice](../invoices/post-create-invoice-api-v1-invoices.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

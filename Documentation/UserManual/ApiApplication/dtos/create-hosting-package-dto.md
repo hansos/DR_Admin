@@ -48,6 +48,11 @@ export interface CreateHostingPackageDto {
 | `YearlyPrice` | `decimal` | `number` |
 | `IsActive` | `bool` | `boolean` |
 
+## Used By Endpoints
+
+- [POST CreateHostingPackage](../hosting-packages/post-create-hosting-package-api-v1-hosting-packages.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

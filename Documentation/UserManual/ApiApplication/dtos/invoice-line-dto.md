@@ -56,6 +56,13 @@ export interface InvoiceLineDto {
 | `DeletedAt` | `DateTime?` | `string | null` |
 | `Notes` | `string` | `string` |
 
+## Used By Endpoints
+
+- [GET GetAllInvoiceLines](../invoice-lines/get-get-all-invoice-lines-api-v1-invoice-lines.md)
+- [GET GetInvoiceLineById](../invoice-lines/get-get-invoice-line-by-id-api-v1-invoice-lines-id.md)
+- [POST CreateInvoiceLine](../invoice-lines/post-create-invoice-line-api-v1-invoice-lines.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

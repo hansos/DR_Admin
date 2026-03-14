@@ -34,6 +34,11 @@ export interface UpdateTaxJurisdictionDto {
 | `IsActive` | `bool` | `boolean` |
 | `Notes` | `string` | `string` |
 
+## Used By Endpoints
+
+- [PUT UpdateTaxJurisdiction](../tax-jurisdictions/put-update-tax-jurisdiction-api-v1-tax-jurisdictions-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

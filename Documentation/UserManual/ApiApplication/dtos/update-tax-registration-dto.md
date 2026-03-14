@@ -32,6 +32,11 @@ export interface UpdateTaxRegistrationDto {
 | `IsActive` | `bool` | `boolean` |
 | `Notes` | `string` | `string` |
 
+## Used By Endpoints
+
+- [PUT UpdateTaxRegistration](../tax-registrations/put-update-tax-registration-api-v1-tax-registrations-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

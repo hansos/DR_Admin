@@ -40,6 +40,11 @@ export interface CreateRegistrarTldCostPricingDto {
 | `IsActive` | `bool` | `boolean` |
 | `Notes` | `string?` | `string | null` |
 
+## Used By Endpoints
+
+- [POST CreateCostPricing](../registrar-tld-cost-pricing/post-create-cost-pricing-api-v1-registrar-tld-cost-pricing.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

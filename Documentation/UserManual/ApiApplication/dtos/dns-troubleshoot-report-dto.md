@@ -26,6 +26,11 @@ export interface DnsTroubleshootReportDto {
 | `GeneratedAtUtc` | `DateTime` | `string` |
 | `Tests` | `List<DnsTroubleshootTestResultDto>` | `DnsTroubleshootTestResultDto[]` |
 
+## Used By Endpoints
+
+- [GET RunForDomain](../dns-troubleshoot/get-run-for-domain-api-v1-dns-troubleshoot-domain-domainid-int.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

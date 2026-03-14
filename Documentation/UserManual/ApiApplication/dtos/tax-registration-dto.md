@@ -38,6 +38,13 @@ export interface TaxRegistrationDto {
 | `CreatedAt` | `DateTime` | `string` |
 | `UpdatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetTaxRegistrationById](../tax-registrations/get-get-tax-registration-by-id-api-v1-tax-registrations-id.md)
+- [POST CreateTaxRegistration](../tax-registrations/post-create-tax-registration-api-v1-tax-registrations.md)
+- [PUT UpdateTaxRegistration](../tax-registrations/put-update-tax-registration-api-v1-tax-registrations-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

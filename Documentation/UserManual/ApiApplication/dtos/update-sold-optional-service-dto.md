@@ -44,6 +44,11 @@ export interface UpdateSoldOptionalServiceDto {
 | `ConfigurationSnapshotJson` | `string?` | `string | null` |
 | `Notes` | `string?` | `string | null` |
 
+## Used By Endpoints
+
+- [PUT Update](../sold-optional-services/put-update-api-v1-sold-optional-services-id-int.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

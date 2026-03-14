@@ -40,6 +40,12 @@ export interface DnsRecordTypeDto {
 | `CreatedAt` | `DateTime` | `string` |
 | `UpdatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetDnsRecordTypeById](../dns-record-types/get-get-dns-record-type-by-id-api-v1-dns-record-types-id.md)
+- [GET GetDnsRecordTypeByType](../dns-record-types/get-get-dns-record-type-by-type-api-v1-dns-record-types-type-type.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

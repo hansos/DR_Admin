@@ -22,6 +22,11 @@ export interface UpdateServiceTypeDto {
 | `Name` | `string` | `string` |
 | `Description` | `string` | `string` |
 
+## Used By Endpoints
+
+- [PUT UpdateServiceType](../service-types/put-update-service-type-api-v1-service-types-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

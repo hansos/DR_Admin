@@ -42,6 +42,11 @@ export interface UpdateRegisteredDomainDto {
 | `RegistrationError` | `string?` | `string | null` |
 | `ExpirationDate` | `DateTime?` | `string | null` |
 
+## Used By Endpoints
+
+- [PUT UpdateDomain](../registered-domains/put-update-domain-api-v1-registered-domains-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

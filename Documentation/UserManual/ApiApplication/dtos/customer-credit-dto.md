@@ -30,6 +30,11 @@ export interface CustomerCreditDto {
 | `CreatedAt` | `DateTime` | `string` |
 | `UpdatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetCustomerCredit](../customer-credits/get-get-customer-credit-api-v1-customer-credits-customer-customerid.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

@@ -44,6 +44,11 @@ export interface ResourceUsageDto {
 | `DomainCount` | `int` | `number` |
 | `MaxSubdomains` | `int?` | `number | null` |
 
+## Used By Endpoints
+
+- [GET GetResourceUsage](../hosting-accounts/get-get-resource-usage-api-v1-hosting-accounts-id-resource-usage.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

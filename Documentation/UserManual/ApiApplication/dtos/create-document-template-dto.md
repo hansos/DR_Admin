@@ -32,6 +32,11 @@ export interface CreateDocumentTemplateDto {
 | `IsDefault` | `bool` | `boolean` |
 | `PlaceholderVariables` | `string` | `string` |
 
+## Used By Endpoints
+
+- [POST UploadTemplate](../document-templates/post-upload-template-api-v1-document-templates-upload.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

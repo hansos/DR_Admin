@@ -42,6 +42,11 @@ export interface VendorCostSummaryDto {
 | `GrossProfitMargin`             | `decimal`             | `number`          |
 | `VendorCosts`                   | `List<VendorCostDto>` | `VendorCostDto[]` |
 
+## Used By Endpoints
+
+- [GET GetVendorCostSummaryByInvoiceId](../vendor-costs/get-get-vendor-cost-summary-by-invoice-id-api-v1-vendor-costs-summary-invoice-invoiceid.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

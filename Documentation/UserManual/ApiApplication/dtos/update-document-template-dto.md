@@ -32,6 +32,11 @@ export interface UpdateDocumentTemplateDto {
 | `IsDefault` | `bool` | `boolean` |
 | `PlaceholderVariables` | `string` | `string` |
 
+## Used By Endpoints
+
+- [PUT UpdateTemplate](../document-templates/put-update-template-api-v1-document-templates-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

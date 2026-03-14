@@ -30,6 +30,11 @@ export interface DnsRecordSyncResult {
 | `Updated` | `int` | `number` |
 | `Skipped` | `int` | `number` |
 
+## Used By Endpoints
+
+- [POST SyncDnsRecordsForDomain](../domain-manager/post-sync-dns-records-for-domain-api-v1-domain-manager-registrar-registrarcode-domain-name-domainname-dns-records-sync.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

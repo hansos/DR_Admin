@@ -20,6 +20,11 @@ export interface CreateCustomerInternalNoteDto {
 |----------|---------|-----------------|
 | `Note` | `string` | `string` |
 
+## Used By Endpoints
+
+- [POST CreateInternalNote](../customers/post-create-internal-note-api-v1-customers-id-internal-notes.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

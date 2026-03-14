@@ -30,6 +30,11 @@ export interface InitializationRequestDto {
 | `CompanyEmail` | `string?` | `string | null` |
 | `CompanyPhone` | `string?` | `string | null` |
 
+## Used By Endpoints
+
+- [POST InitializeAdmin](../initialization/post-initialize-admin-api-v1-initialization-initialize-admin.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

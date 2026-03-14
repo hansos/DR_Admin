@@ -44,6 +44,14 @@ export interface CustomerTaxProfileDto {
 | `CreatedAt` | `DateTime` | `string` |
 | `UpdatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetCustomerTaxProfileByCustomerId](../customer-tax-profiles/get-get-customer-tax-profile-by-customer-id-api-v1-customer-tax-profiles-customer-customerid.md)
+- [GET GetCustomerTaxProfileById](../customer-tax-profiles/get-get-customer-tax-profile-by-id-api-v1-customer-tax-profiles-id.md)
+- [POST CreateCustomerTaxProfile](../customer-tax-profiles/post-create-customer-tax-profile-api-v1-customer-tax-profiles.md)
+- [PUT UpdateCustomerTaxProfile](../customer-tax-profiles/put-update-customer-tax-profile-api-v1-customer-tax-profiles-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

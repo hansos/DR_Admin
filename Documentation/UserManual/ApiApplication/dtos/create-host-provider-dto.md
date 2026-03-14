@@ -28,6 +28,11 @@ export interface CreateHostProviderDto {
 | `WebsiteUrl` | `string?` | `string | null` |
 | `IsActive` | `bool` | `boolean` |
 
+## Used By Endpoints
+
+- [POST CreateHostProvider](../host-providers/post-create-host-provider-api-v1-host-providers.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

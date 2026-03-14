@@ -42,6 +42,12 @@ export interface CreateOrderDto {
 | `AutoRenew` | `bool` | `boolean` |
 | `OrderLines` | `List<CreateOrderLineDto>` | `CreateOrderLineDto[]` |
 
+## Used By Endpoints
+
+- [POST CreateCheckoutOrder](../orders/post-create-checkout-order-api-v1-orders-checkout.md)
+- [POST CreateOrder](../orders/post-create-order-api-v1-orders.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

@@ -42,6 +42,11 @@ export interface VendorPayoutSummaryDto {
 | `NextScheduledDate` | `DateTime?` | `string | null` |
 | `RecentPayouts` | `List<VendorPayoutDto>` | `VendorPayoutDto[]` |
 
+## Used By Endpoints
+
+- [GET GetVendorPayoutSummaryByVendorId](../vendor-payouts/get-get-vendor-payout-summary-by-vendor-id-api-v1-vendor-payouts-summary-vendor-vendorid.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

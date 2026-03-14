@@ -46,6 +46,13 @@ export interface DnsZonePackageRecordDto {
 | `CreatedAt` | `DateTime` | `string` |
 | `UpdatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetDnsZonePackageRecordById](../dns-zone-package-records/get-get-dns-zone-package-record-by-id-api-v1-dns-zone-package-records-id.md)
+- [POST CreateDnsZonePackageRecord](../dns-zone-package-records/post-create-dns-zone-package-record-api-v1-dns-zone-package-records.md)
+- [PUT UpdateDnsZonePackageRecord](../dns-zone-package-records/put-update-dns-zone-package-record-api-v1-dns-zone-package-records-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

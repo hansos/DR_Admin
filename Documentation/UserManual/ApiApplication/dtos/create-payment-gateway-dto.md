@@ -56,6 +56,11 @@ export interface CreatePaymentGatewayDto {
 | `FixedFee` | `decimal` | `number` |
 | `Notes` | `string` | `string` |
 
+## Used By Endpoints
+
+- [POST CreatePaymentGateway](../payment-gateways/post-create-payment-gateway-api-v1-payment-gateways.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

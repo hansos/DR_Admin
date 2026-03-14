@@ -56,6 +56,16 @@ export interface DnsRecordDto {
 | `CreatedAt` | `DateTime` | `string` |
 | `UpdatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetAllDnsRecords](../dns-records/get-get-all-dns-records-api-v1-dns-records.md)
+- [GET GetDnsRecordById](../dns-records/get-get-dns-record-by-id-api-v1-dns-records-id.md)
+- [POST CreateDnsRecord](../dns-records/post-create-dns-record-api-v1-dns-records.md)
+- [POST MarkDnsRecordAsSynced](../dns-records/post-mark-dns-record-as-synced-api-v1-dns-records-id-mark-synced.md)
+- [POST RestoreDnsRecord](../dns-records/post-restore-dns-record-api-v1-dns-records-id-restore.md)
+- [PUT UpdateDnsRecord](../dns-records/put-update-dns-record-api-v1-dns-records-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

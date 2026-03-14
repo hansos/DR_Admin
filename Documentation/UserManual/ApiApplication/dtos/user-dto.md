@@ -36,6 +36,14 @@ export interface UserDto {
 | `CreatedAt` | `DateTime` | `string` |
 | `UpdatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetAllUsers](../users/get-get-all-users-api-v1-users.md)
+- [GET GetUserById](../users/get-get-user-by-id-api-v1-users-id.md)
+- [POST CreateUser](../users/post-create-user-api-v1-users.md)
+- [PUT UpdateUser](../users/put-update-user-api-v1-users-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

@@ -74,6 +74,13 @@ export interface QuoteDto {
 | `CreatedAt` | `DateTime` | `string` |
 | `UpdatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetQuoteById](../quotes/get-get-quote-by-id-api-v1-quotes-id.md)
+- [POST CreateQuote](../quotes/post-create-quote-api-v1-quotes.md)
+- [PUT UpdateQuote](../quotes/put-update-quote-api-v1-quotes-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

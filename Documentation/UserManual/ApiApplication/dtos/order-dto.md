@@ -62,6 +62,15 @@ export interface OrderDto {
 | `UpdatedAt` | `DateTime` | `string` |
 | `OrderLines` | `List<OrderLineDto>` | `OrderLineDto[]` |
 
+## Used By Endpoints
+
+- [GET GetOrderById](../orders/get-get-order-by-id-api-v1-orders-id.md)
+- [POST CancelCheckoutOrder](../orders/post-cancel-checkout-order-api-v1-orders-checkout-id-int-cancel.md)
+- [POST CreateCheckoutOrder](../orders/post-create-checkout-order-api-v1-orders-checkout.md)
+- [POST CreateOrder](../orders/post-create-order-api-v1-orders.md)
+- [PUT UpdateOrder](../orders/put-update-order-api-v1-orders-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

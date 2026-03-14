@@ -38,6 +38,11 @@ export interface UpdateServerDto {
 | `DiskSpaceGB` | `int?` | `number | null` |
 | `Notes` | `string?` | `string | null` |
 
+## Used By Endpoints
+
+- [PUT UpdateServer](../servers/put-update-server-api-v1-servers-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

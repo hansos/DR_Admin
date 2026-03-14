@@ -40,6 +40,11 @@ export interface UpdateReportTemplateDto {
 | `Tags` | `string` | `string` |
 | `DefaultExportFormat` | `string` | `string` |
 
+## Used By Endpoints
+
+- [PUT UpdateTemplate](../report-templates/put-update-template-api-v1-report-templates-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

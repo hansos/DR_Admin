@@ -36,6 +36,12 @@ export interface DomainRegistrationResponseDto {
 | `RequiresApproval` | `bool` | `boolean` |
 | `ApprovalStatus` | `string?` | `string | null` |
 
+## Used By Endpoints
+
+- [POST RegisterDomain](../registered-domains/post-register-domain-api-v1-registered-domains-register.md)
+- [POST RegisterDomainForCustomer](../registered-domains/post-register-domain-for-customer-api-v1-registered-domains-register-for-customer.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

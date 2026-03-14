@@ -24,6 +24,11 @@ export interface DomainNameAlternativesResponseDto {
 | `Count` | `int` | `number` |
 | `Suggestions` | `List<string>` | `string[]` |
 
+## Used By Endpoints
+
+- [GET GetAlternativeDomainNames](../domain-manager/get-get-alternative-domain-names-api-v1-domain-manager-domain-name-domainname-alternatives.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

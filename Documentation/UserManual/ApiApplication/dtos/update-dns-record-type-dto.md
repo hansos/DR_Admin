@@ -34,6 +34,11 @@ export interface UpdateDnsRecordTypeDto {
 | `IsActive` | `bool` | `boolean` |
 | `DefaultTTL` | `int` | `number` |
 
+## Used By Endpoints
+
+- [PUT UpdateDnsRecordType](../dns-record-types/put-update-dns-record-type-api-v1-dns-record-types-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

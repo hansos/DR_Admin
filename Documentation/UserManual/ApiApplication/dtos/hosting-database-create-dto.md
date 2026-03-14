@@ -28,6 +28,11 @@ export interface HostingDatabaseCreateDto {
 | `CharacterSet` | `string?` | `string | null` |
 | `Collation` | `string?` | `string | null` |
 
+## Used By Endpoints
+
+- [POST CreateDatabase](../hosting-databases/post-create-database-api-v1-hosting-accounts-hostingaccountid-databases.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

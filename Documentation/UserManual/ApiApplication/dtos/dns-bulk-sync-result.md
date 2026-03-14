@@ -36,6 +36,12 @@ export interface DnsBulkSyncResult {
 | `TotalSkipped` | `int` | `number` |
 | `DomainResults` | `List<DnsRecordSyncResult>` | `DnsRecordSyncResult[]` |
 
+## Used By Endpoints
+
+- [POST SyncDnsRecordsForAllDomains](../domain-manager/post-sync-dns-records-for-all-domains-api-v1-domain-manager-registrar-registrarcode-dns-records-sync.md)
+- [POST SyncDnsRecordsForRegistrarDomains](../registrars/post-sync-dns-records-for-registrar-domains-api-v1-registrars-registrarid-domains-dns-records-sync.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

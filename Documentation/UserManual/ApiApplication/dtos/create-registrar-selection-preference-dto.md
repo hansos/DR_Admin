@@ -38,6 +38,11 @@ export interface CreateRegistrarSelectionPreferenceDto {
 | `IsActive` | `bool` | `boolean` |
 | `Notes` | `string?` | `string | null` |
 
+## Used By Endpoints
+
+No endpoint pages currently reference this DTO.
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

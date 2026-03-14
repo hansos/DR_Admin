@@ -20,6 +20,11 @@ export interface UpdateSupportTicketStatusDto {
 |----------|---------|-----------------|
 | `Status` | `string` | `string` |
 
+## Used By Endpoints
+
+- [PATCH UpdateStatus](../support-tickets/patch-update-status-api-v1-support-tickets-id-status.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

@@ -42,6 +42,13 @@ export interface HostingFtpAccountDto {
 | `SyncStatus` | `string?` | `string | null` |
 | `CreatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetFtpAccount](../hosting-ftp/get-get-ftp-account-api-v1-hosting-accounts-hostingaccountid-ftp-id.md)
+- [POST CreateFtpAccount](../hosting-ftp/post-create-ftp-account-api-v1-hosting-accounts-hostingaccountid-ftp.md)
+- [PUT UpdateFtpAccount](../hosting-ftp/put-update-ftp-account-api-v1-hosting-accounts-hostingaccountid-ftp-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

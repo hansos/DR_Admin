@@ -26,6 +26,11 @@ export interface ValidateCouponDto {
 | `TotalAmount` | `decimal` | `number` |
 | `ServiceTypeIds` | `List<int>` | `number[]` |
 
+## Used By Endpoints
+
+- [POST ValidateCoupon](../coupons/post-validate-coupon-api-v1-coupons-validate.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

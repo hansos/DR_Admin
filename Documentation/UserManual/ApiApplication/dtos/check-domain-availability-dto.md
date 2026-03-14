@@ -20,6 +20,11 @@ export interface CheckDomainAvailabilityDto {
 |----------|---------|-----------------|
 | `DomainName` | `string` | `string` |
 
+## Used By Endpoints
+
+- [POST CheckDomainAvailability](../registered-domains/post-check-domain-availability-api-v1-registered-domains-check-availability.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

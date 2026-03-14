@@ -44,6 +44,11 @@ export interface CreateServerControlPanelDto {
 | `IpAddressId` | `int?` | `number | null` |
 | `Notes` | `string?` | `string | null` |
 
+## Used By Endpoints
+
+- [POST CreateServerControlPanel](../server-control-panels/post-create-server-control-panel-api-v1-server-control-panels.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

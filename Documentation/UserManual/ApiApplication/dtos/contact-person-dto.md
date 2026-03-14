@@ -54,6 +54,15 @@ export interface ContactPersonDto {
 | `IsDefaultAdministrator` | `bool` | `boolean` |
 | `IsDomainGlobal` | `bool` | `boolean` |
 
+## Used By Endpoints
+
+- [GET GetAllContactPersons](../contact-persons/get-get-all-contact-persons-api-v1-contact-persons.md)
+- [GET GetContactPersonById](../contact-persons/get-get-contact-person-by-id-api-v1-contact-persons-id.md)
+- [PATCH PatchContactPersonIsDomainGlobal](../contact-persons/patch-patch-contact-person-is-domain-global-api-v1-contact-persons-id-domain-global.md)
+- [POST CreateContactPerson](../contact-persons/post-create-contact-person-api-v1-contact-persons.md)
+- [PUT UpdateContactPerson](../contact-persons/put-update-contact-person-api-v1-contact-persons-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

@@ -40,6 +40,11 @@ export interface CreateReportTemplateDto {
 | `Tags` | `string` | `string` |
 | `DefaultExportFormat` | `string` | `string` |
 
+## Used By Endpoints
+
+- [POST CreateTemplate](../report-templates/post-create-template-api-v1-report-templates.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

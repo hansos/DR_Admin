@@ -36,6 +36,11 @@ export interface CreateRefundLossAuditDto {
 | `Reason` | `string` | `string` |
 | `InternalNotes` | `string` | `string` |
 
+## Used By Endpoints
+
+- [POST CreateRefundLossAudit](../refund-loss-audits/post-create-refund-loss-audit-api-v1-refund-loss-audits.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

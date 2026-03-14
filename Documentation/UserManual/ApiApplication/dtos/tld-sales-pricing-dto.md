@@ -54,6 +54,13 @@ export interface TldSalesPricingDto {
 | `CreatedAt` | `DateTime` | `string` |
 | `UpdatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetCurrentSalesPricing](../tld-pricing/get-get-current-sales-pricing-api-v1-tld-pricing-sales-tld-tldid-current.md)
+- [POST CreateSalesPricing](../tld-pricing/post-create-sales-pricing-api-v1-tld-pricing-sales.md)
+- [PUT UpdateSalesPricing](../tld-pricing/put-update-sales-pricing-api-v1-tld-pricing-sales-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

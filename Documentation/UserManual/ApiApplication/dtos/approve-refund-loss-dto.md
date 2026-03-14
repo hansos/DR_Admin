@@ -28,6 +28,11 @@ export interface ApproveRefundLossDto {
 | `DenialReason` | `string?` | `string | null` |
 | `Notes` | `string?` | `string | null` |
 
+## Used By Endpoints
+
+- [POST ApproveRefundLoss](../refund-loss-audits/post-approve-refund-loss-api-v1-refund-loss-audits-approve.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

@@ -26,6 +26,11 @@ export interface SyncStatusDto {
 | `LastSyncedAt` | `DateTime?` | `string | null` |
 | `ExternalAccountId` | `string?` | `string | null` |
 
+## Used By Endpoints
+
+- [GET GetSyncStatus](../hosting-accounts/get-get-sync-status-api-v1-hosting-accounts-id-sync-status.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

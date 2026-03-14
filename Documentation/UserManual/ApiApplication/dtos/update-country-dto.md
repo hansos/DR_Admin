@@ -32,6 +32,11 @@ export interface UpdateCountryDto {
 | `LocalName` | `string` | `string` |
 | `IsActive` | `bool` | `boolean` |
 
+## Used By Endpoints
+
+- [PUT UpdateCountry](../countries/put-update-country-api-v1-countries-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

@@ -48,6 +48,13 @@ export interface TldRegistryRuleDto {
 | `CreatedAt` | `DateTime` | `string` |
 | `UpdatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetById](../tld-registry-rules/get-get-by-id-api-v1-tld-registry-rules-id-int.md)
+- [POST Create](../tld-registry-rules/post-create-api-v1-tld-registry-rules.md)
+- [PUT Update](../tld-registry-rules/put-update-api-v1-tld-registry-rules-id-int.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

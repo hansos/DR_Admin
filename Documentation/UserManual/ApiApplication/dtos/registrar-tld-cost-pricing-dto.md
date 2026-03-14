@@ -52,6 +52,13 @@ export interface RegistrarTldCostPricingDto {
 | `CreatedAt` | `DateTime` | `string` |
 | `UpdatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetCurrentCostPricing](../registrar-tld-cost-pricing/get-get-current-cost-pricing-api-v1-registrar-tld-cost-pricing-registrar-tld-registrartldid-current.md)
+- [POST CreateCostPricing](../registrar-tld-cost-pricing/post-create-cost-pricing-api-v1-registrar-tld-cost-pricing.md)
+- [PUT UpdateCostPricing](../registrar-tld-cost-pricing/put-update-cost-pricing-api-v1-registrar-tld-cost-pricing-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

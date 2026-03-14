@@ -44,6 +44,14 @@ export interface DocumentTemplateDto {
 | `UpdatedAt` | `DateTime` | `string` |
 | `DeletedAt` | `DateTime?` | `string | null` |
 
+## Used By Endpoints
+
+- [GET GetDefaultTemplate](../document-templates/get-get-default-template-api-v1-document-templates-default-type.md)
+- [GET GetTemplateById](../document-templates/get-get-template-by-id-api-v1-document-templates-id.md)
+- [POST UploadTemplate](../document-templates/post-upload-template-api-v1-document-templates-upload.md)
+- [PUT UpdateTemplate](../document-templates/put-update-template-api-v1-document-templates-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

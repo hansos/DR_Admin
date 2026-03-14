@@ -56,6 +56,11 @@ export interface UpdatePaymentGatewayDto {
 | `FixedFee` | `decimal` | `number` |
 | `Notes` | `string` | `string` |
 
+## Used By Endpoints
+
+- [PUT UpdatePaymentGateway](../payment-gateways/put-update-payment-gateway-api-v1-payment-gateways-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

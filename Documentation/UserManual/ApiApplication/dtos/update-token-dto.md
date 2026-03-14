@@ -20,6 +20,11 @@ export interface UpdateTokenDto {
 |----------|---------|-----------------|
 | `RevokedAt` | `DateTime?` | `string | null` |
 
+## Used By Endpoints
+
+- [PUT UpdateToken](../tokens/put-update-token-api-v1-tokens-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

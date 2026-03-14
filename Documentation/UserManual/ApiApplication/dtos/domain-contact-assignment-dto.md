@@ -38,6 +38,11 @@ export interface DomainContactAssignmentDto {
 | `UpdatedAt` | `DateTime` | `string` |
 | `ContactPerson` | `ContactPersonDto?` | `ContactPersonDto | null` |
 
+## Used By Endpoints
+
+No endpoint pages currently reference this DTO.
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

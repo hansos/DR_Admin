@@ -28,6 +28,11 @@ export interface CreateBillingCycleDto {
 | `Description` | `string` | `string` |
 | `SortOrder` | `int` | `number` |
 
+## Used By Endpoints
+
+- [POST CreateBillingCycle](../billing-cycles/post-create-billing-cycle-api-v1-billing-cycles.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

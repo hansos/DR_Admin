@@ -20,6 +20,11 @@ export interface ResendMailTwoFactorRequestDto {
 |----------|---------|-----------------|
 | `ChallengeToken` | `string` | `string` |
 
+## Used By Endpoints
+
+- [POST ResendMailTwoFactor](../auth/post-resend-mail-two-factor-api-v1-auth-2fa-resend.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

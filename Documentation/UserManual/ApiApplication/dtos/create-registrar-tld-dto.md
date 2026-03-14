@@ -50,6 +50,11 @@ export interface CreateRegistrarTldDto {
 | `MaxRegistrationYears` | `int?` | `number | null` |
 | `Notes` | `string?` | `string | null` |
 
+## Used By Endpoints
+
+- [POST CreateRegistrarTld](../registrar-tlds/post-create-registrar-tld-api-v1-registrar-tlds.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

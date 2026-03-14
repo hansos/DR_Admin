@@ -26,6 +26,11 @@ export interface ResolvePayoutInterventionDto {
 | `ResolutionNotes` | `string` | `string` |
 | `ProceedWithPayout` | `bool` | `boolean` |
 
+## Used By Endpoints
+
+- [POST ResolvePayoutIntervention](../vendor-payouts/post-resolve-payout-intervention-api-v1-vendor-payouts-resolve-intervention.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

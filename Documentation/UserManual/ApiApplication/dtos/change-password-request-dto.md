@@ -24,6 +24,11 @@ export interface ChangePasswordRequestDto {
 | `NewPassword` | `string` | `string` |
 | `ConfirmPassword` | `string` | `string` |
 
+## Used By Endpoints
+
+- [POST ChangePassword](../my-account/post-change-password-api-v1-my-account-change-password.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

@@ -58,6 +58,11 @@ export interface CreateDomainContactDto {
 | `RegistrarType` | `string?` | `string | null` |
 | `IsPrivacyProtected` | `bool` | `boolean` |
 
+## Used By Endpoints
+
+- [POST CreateDomainContact](../domain-contacts/post-create-domain-contact-api-v1-domain-contacts.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

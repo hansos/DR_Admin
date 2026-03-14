@@ -22,6 +22,11 @@ export interface CancelSubscriptionDto {
 | `CancellationReason` | `string` | `string` |
 | `CancelImmediately` | `bool` | `boolean` |
 
+## Used By Endpoints
+
+- [POST CancelSubscription](../subscriptions/post-cancel-subscription-api-v1-subscriptions-id-cancel.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

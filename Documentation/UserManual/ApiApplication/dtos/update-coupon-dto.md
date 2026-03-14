@@ -52,6 +52,11 @@ export interface UpdateCouponDto {
 | `AllowedServiceTypeIds` | `List<int>?` | `number[] | null` |
 | `InternalNotes` | `string` | `string` |
 
+## Used By Endpoints
+
+- [PUT UpdateCoupon](../coupons/put-update-coupon-api-v1-coupons-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

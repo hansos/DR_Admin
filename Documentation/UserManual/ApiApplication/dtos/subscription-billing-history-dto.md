@@ -54,6 +54,12 @@ export interface SubscriptionBillingHistoryDto {
 | `CreatedAt` | `DateTime` | `string` |
 | `UpdatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetBillingHistoryById](../subscription-billing-histories/get-get-billing-history-by-id-api-v1-subscription-billing-histories-id.md)
+- [POST CreateBillingHistory](../subscription-billing-histories/post-create-billing-history-api-v1-subscription-billing-histories.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

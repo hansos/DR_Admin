@@ -30,6 +30,11 @@ export interface UpdateTaxCategoryDto {
 | `Description` | `string` | `string` |
 | `IsActive` | `bool` | `boolean` |
 
+## Used By Endpoints
+
+- [PUT UpdateTaxCategory](../tax-categories/put-update-tax-category-api-v1-tax-categories-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

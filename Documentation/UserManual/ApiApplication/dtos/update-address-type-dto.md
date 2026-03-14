@@ -30,6 +30,11 @@ export interface UpdateAddressTypeDto {
 | `IsDefault` | `bool` | `boolean` |
 | `SortOrder` | `int` | `number` |
 
+## Used By Endpoints
+
+- [PUT UpdateAddressType](../address-types/put-update-address-type-api-v1-address-types-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

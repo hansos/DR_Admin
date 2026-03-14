@@ -38,6 +38,11 @@ export interface ImportRegistrarTldsDto {
 | `ActivateNewTlds` | `bool` | `boolean` |
 | `Currency` | `string` | `string` |
 
+## Used By Endpoints
+
+- [POST ImportRegistrarTlds](../registrar-tlds/post-import-registrar-tlds-api-v1-registrar-tlds-registrar-registrarid-import.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

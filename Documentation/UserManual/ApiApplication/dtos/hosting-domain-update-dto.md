@@ -28,6 +28,11 @@ export interface HostingDomainUpdateDto {
 | `SslEnabled` | `bool?` | `boolean | null` |
 | `Notes` | `string?` | `string | null` |
 
+## Used By Endpoints
+
+- [PUT UpdateDomain](../hosting-domains/put-update-domain-api-v1-hosting-accounts-hostingaccountid-domains-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

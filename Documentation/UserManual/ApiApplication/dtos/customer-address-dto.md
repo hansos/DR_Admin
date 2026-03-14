@@ -56,6 +56,16 @@ export interface CustomerAddressDto {
 | `CreatedAt` | `DateTime` | `string` |
 | `UpdatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetCustomerAddressById](../customer-addresses/get-get-customer-address-by-id-api-v1-customers-customerid-addresses-id.md)
+- [GET GetCustomerAddresses](../customer-addresses/get-get-customer-addresses-api-v1-customers-customerid-addresses.md)
+- [GET GetPrimaryAddress](../customer-addresses/get-get-primary-address-api-v1-customers-customerid-addresses-primary.md)
+- [POST CreateCustomerAddress](../customer-addresses/post-create-customer-address-api-v1-customers-customerid-addresses.md)
+- [PUT SetPrimaryAddress](../customer-addresses/put-set-primary-address-api-v1-customers-customerid-addresses-id-set-primary.md)
+- [PUT UpdateCustomerAddress](../customer-addresses/put-update-customer-address-api-v1-customers-customerid-addresses-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

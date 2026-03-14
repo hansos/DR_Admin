@@ -26,6 +26,11 @@ export interface TestDebugRuntimeInfoDto {
 | `UserJsonImportFilePath` | `string` | `string` |
 | `AdminJsonImportFilePath` | `string` | `string` |
 
+## Used By Endpoints
+
+- [GET GetDebugRuntimeInfo](../test/get-get-debug-runtime-info-api-v1-test-debug-runtime-info.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

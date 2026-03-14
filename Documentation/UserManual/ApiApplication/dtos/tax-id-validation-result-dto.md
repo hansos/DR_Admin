@@ -32,6 +32,11 @@ export interface TaxIdValidationResultDto {
 | `RawResponse` | `string` | `string` |
 | `ErrorMessage` | `string?` | `string | null` |
 
+## Used By Endpoints
+
+- [POST ValidateTaxId](../customer-tax-profiles/post-validate-tax-id-api-v1-customer-tax-profiles-validate.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

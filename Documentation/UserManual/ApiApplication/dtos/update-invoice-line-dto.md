@@ -48,6 +48,11 @@ export interface UpdateInvoiceLineDto {
 | `AccountingCode` | `string` | `string` |
 | `Notes` | `string` | `string` |
 
+## Used By Endpoints
+
+- [PUT UpdateInvoiceLine](../invoice-lines/put-update-invoice-line-api-v1-invoice-lines-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

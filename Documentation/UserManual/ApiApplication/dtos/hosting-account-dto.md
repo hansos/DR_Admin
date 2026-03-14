@@ -78,6 +78,15 @@ export interface HostingAccountDto {
 | `CreatedAt` | `DateTime` | `string` |
 | `UpdatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetHostingAccount](../hosting-accounts/get-get-hosting-account-api-v1-hosting-accounts-id.md)
+- [GET GetHostingAccountWithDetails](../hosting-accounts/get-get-hosting-account-with-details-api-v1-hosting-accounts-id-details.md)
+- [POST CreateHostingAccountAndSync](../hosting-accounts/post-create-hosting-account-and-sync-api-v1-hosting-accounts-create-and-sync.md)
+- [POST CreateHostingAccount](../hosting-accounts/post-create-hosting-account-api-v1-hosting-accounts.md)
+- [PUT UpdateHostingAccount](../hosting-accounts/put-update-hosting-account-api-v1-hosting-accounts-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

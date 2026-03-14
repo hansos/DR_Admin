@@ -30,6 +30,11 @@ export interface CreateControlPanelTypeDto {
 | `WebsiteUrl` | `string?` | `string | null` |
 | `IsActive` | `bool` | `boolean` |
 
+## Used By Endpoints
+
+- [POST CreateControlPanelType](../control-panel-types/post-create-control-panel-type-api-v1-control-panel-types.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

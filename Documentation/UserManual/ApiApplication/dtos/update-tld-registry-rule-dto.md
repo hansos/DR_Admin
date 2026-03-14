@@ -40,6 +40,11 @@ export interface UpdateTldRegistryRuleDto {
 | `Notes` | `string?` | `string | null` |
 | `IsActive` | `bool` | `boolean` |
 
+## Used By Endpoints
+
+- [PUT Update](../tld-registry-rules/put-update-api-v1-tld-registry-rules-id-int.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

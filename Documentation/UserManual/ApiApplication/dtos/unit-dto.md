@@ -34,6 +34,13 @@ export interface UnitDto {
 | `UpdatedAt` | `DateTime` | `string` |
 | `DeletedAt` | `DateTime?` | `string | null` |
 
+## Used By Endpoints
+
+- [GET GetUnitByCode](../units/get-get-unit-by-code-api-v1-units-code-code.md)
+- [GET GetUnitById](../units/get-get-unit-by-id-api-v1-units-id.md)
+- [POST CreateUnit](../units/post-create-unit-api-v1-units.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

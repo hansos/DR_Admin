@@ -20,6 +20,11 @@ export interface UpdateContactPersonIsDomainGlobalDto {
 |----------|---------|-----------------|
 | `IsDomainGlobal` | `bool` | `boolean` |
 
+## Used By Endpoints
+
+- [PATCH PatchContactPersonIsDomainGlobal](../contact-persons/patch-patch-contact-person-is-domain-global-api-v1-contact-persons-id-domain-global.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

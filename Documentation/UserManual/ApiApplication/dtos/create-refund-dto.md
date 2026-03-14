@@ -26,6 +26,11 @@ export interface CreateRefundDto {
 | `Reason` | `string` | `string` |
 | `InternalNotes` | `string` | `string` |
 
+## Used By Endpoints
+
+- [POST CreateRefund](../refunds/post-create-refund-api-v1-refunds.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

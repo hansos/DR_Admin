@@ -30,6 +30,11 @@ export interface CurrencyConversionResultDto {
 | `ConvertedAmount` | `decimal` | `number` |
 | `RateDate` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [POST ConvertCurrency](../currencies/post-convert-currency-api-v1-currencies-convert.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

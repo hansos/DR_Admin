@@ -36,6 +36,13 @@ export interface ControlPanelTypeDto {
 | `CreatedAt` | `DateTime` | `string` |
 | `UpdatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetControlPanelTypeById](../control-panel-types/get-get-control-panel-type-by-id-api-v1-control-panel-types-id.md)
+- [POST CreateControlPanelType](../control-panel-types/post-create-control-panel-type-api-v1-control-panel-types.md)
+- [PUT UpdateControlPanelType](../control-panel-types/put-update-control-panel-type-api-v1-control-panel-types-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

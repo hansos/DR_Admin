@@ -24,6 +24,11 @@ export interface UpdateProfitMarginSettingDto {
 | `IsActive` | `bool` | `boolean` |
 | `Notes` | `string?` | `string | null` |
 
+## Used By Endpoints
+
+- [PUT Update](../profit-margin-settings/put-update-api-v1-profit-margin-settings-id-int.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

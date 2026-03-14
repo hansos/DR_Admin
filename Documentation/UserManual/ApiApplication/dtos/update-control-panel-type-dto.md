@@ -30,6 +30,11 @@ export interface UpdateControlPanelTypeDto {
 | `WebsiteUrl` | `string?` | `string | null` |
 | `IsActive` | `bool` | `boolean` |
 
+## Used By Endpoints
+
+- [PUT UpdateControlPanelType](../control-panel-types/put-update-control-panel-type-api-v1-control-panel-types-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

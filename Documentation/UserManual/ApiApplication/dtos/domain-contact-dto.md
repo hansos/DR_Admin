@@ -70,6 +70,14 @@ export interface DomainContactDto {
 | `CreatedAt` | `DateTime` | `string` |
 | `UpdatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetAllDomainContacts](../domain-contacts/get-get-all-domain-contacts-api-v1-domain-contacts.md)
+- [GET GetDomainContactById](../domain-contacts/get-get-domain-contact-by-id-api-v1-domain-contacts-id.md)
+- [POST CreateDomainContact](../domain-contacts/post-create-domain-contact-api-v1-domain-contacts.md)
+- [PUT UpdateDomainContact](../domain-contacts/put-update-domain-contact-api-v1-domain-contacts-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

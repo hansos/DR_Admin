@@ -34,6 +34,11 @@ export interface CreateCustomerTaxProfileDto {
 | `TaxExemptionReason` | `string?` | `string | null` |
 | `TaxExemptionCertificateUrl` | `string?` | `string | null` |
 
+## Used By Endpoints
+
+- [POST CreateCustomerTaxProfile](../customer-tax-profiles/post-create-customer-tax-profile-api-v1-customer-tax-profiles.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

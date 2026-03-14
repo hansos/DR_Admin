@@ -30,6 +30,11 @@ export interface UpdatePaymentInstrumentDto {
 | `DisplayOrder` | `int` | `number` |
 | `DefaultGatewayId` | `int?` | `number | null` |
 
+## Used By Endpoints
+
+- [PUT Update](../payment-instruments/put-update-api-v1-payment-instruments-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

@@ -34,6 +34,13 @@ export interface HostProviderDto {
 | `CreatedAt` | `DateTime` | `string` |
 | `UpdatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetHostProviderById](../host-providers/get-get-host-provider-by-id-api-v1-host-providers-id.md)
+- [POST CreateHostProvider](../host-providers/post-create-host-provider-api-v1-host-providers.md)
+- [PUT UpdateHostProvider](../host-providers/put-update-host-provider-api-v1-host-providers-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

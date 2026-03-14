@@ -54,6 +54,13 @@ export interface HostingPackageDto {
 | `CreatedAt` | `DateTime` | `string` |
 | `UpdatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetHostingPackageById](../hosting-packages/get-get-hosting-package-by-id-api-v1-hosting-packages-id.md)
+- [POST CreateHostingPackage](../hosting-packages/post-create-hosting-package-api-v1-hosting-packages.md)
+- [PUT UpdateHostingPackage](../hosting-packages/put-update-hosting-package-api-v1-hosting-packages-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

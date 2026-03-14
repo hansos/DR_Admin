@@ -38,6 +38,11 @@ export interface ExchangeRateDownloadSummaryDto {
 | `AverageDurationMs` | `long` | `number` |
 | `SuccessRate` | `double` | `number` |
 
+## Used By Endpoints
+
+- [GET GetSummary](../exchange-rate-download-logs/get-get-summary-api-exchange-rate-download-logs-summary.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

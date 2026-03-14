@@ -62,6 +62,13 @@ export interface SoldOptionalServiceDto {
 | `CreatedAt` | `DateTime` | `string` |
 | `UpdatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetById](../sold-optional-services/get-get-by-id-api-v1-sold-optional-services-id-int.md)
+- [POST Create](../sold-optional-services/post-create-api-v1-sold-optional-services.md)
+- [PUT Update](../sold-optional-services/put-update-api-v1-sold-optional-services-id-int.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

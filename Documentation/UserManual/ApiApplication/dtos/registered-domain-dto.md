@@ -52,6 +52,15 @@ export interface RegisteredDomainDto {
 | `Customer` | `CustomerDto?` | `CustomerDto | null` |
 | `Registrar` | `RegistrarDto?` | `RegistrarDto | null` |
 
+## Used By Endpoints
+
+- [GET GetAllDomains](../registered-domains/get-get-all-domains-api-v1-registered-domains.md)
+- [GET GetDomainById](../registered-domains/get-get-domain-by-id-api-v1-registered-domains-id.md)
+- [GET GetDomainByName](../registered-domains/get-get-domain-by-name-api-v1-registered-domains-name-name.md)
+- [POST CreateDomain](../registered-domains/post-create-domain-api-v1-registered-domains.md)
+- [PUT UpdateDomain](../registered-domains/put-update-domain-api-v1-registered-domains-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

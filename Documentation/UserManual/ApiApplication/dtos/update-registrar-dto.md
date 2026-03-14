@@ -34,6 +34,11 @@ export interface UpdateRegistrarDto {
 | `Notes` | `string?` | `string | null` |
 | `IsDefault` | `bool` | `boolean` |
 
+## Used By Endpoints
+
+- [PUT UpdateRegistrar](../registrars/put-update-registrar-api-v1-registrars-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

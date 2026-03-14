@@ -40,6 +40,11 @@ export interface CreateDnsZonePackageRecordDto {
 | `Port` | `int?` | `number | null` |
 | `Notes` | `string?` | `string | null` |
 
+## Used By Endpoints
+
+- [POST CreateDnsZonePackageRecord](../dns-zone-package-records/post-create-dns-zone-package-record-api-v1-dns-zone-package-records.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

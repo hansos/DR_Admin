@@ -24,6 +24,11 @@ export interface UpdateSystemSettingDto {
 | `Description` | `string` | `string` |
 | `IsSystemKey` | `bool` | `boolean` |
 
+## Used By Endpoints
+
+- [PUT UpdateSystemSetting](../system-settings/put-update-system-setting-api-v1-system-settings-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

@@ -44,6 +44,11 @@ export interface UpdateSubscriptionDto {
 | `SendEmailNotifications` | `bool?` | `boolean | null` |
 | `AutoRetryFailedPayments` | `bool?` | `boolean | null` |
 
+## Used By Endpoints
+
+- [PUT UpdateSubscription](../subscriptions/put-update-subscription-api-v1-subscriptions-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

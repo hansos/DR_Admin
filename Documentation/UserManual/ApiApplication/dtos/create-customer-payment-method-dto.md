@@ -28,6 +28,12 @@ export interface CreateCustomerPaymentMethodDto {
 | `PaymentMethodToken` | `string` | `string` |
 | `IsDefault` | `bool` | `boolean` |
 
+## Used By Endpoints
+
+- [POST CreateMyPaymentMethod](../customer-payment-methods/post-create-my-payment-method-api-v1-customer-payment-methods-mine.md)
+- [POST CreatePaymentMethod](../customer-payment-methods/post-create-payment-method-api-v1-customer-payment-methods.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

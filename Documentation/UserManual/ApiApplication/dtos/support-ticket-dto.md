@@ -48,6 +48,15 @@ export interface SupportTicketDto {
 | `ClosedAt` | `DateTime?` | `string | null` |
 | `Messages` | `List<SupportTicketMessageDto>` | `SupportTicketMessageDto[]` |
 
+## Used By Endpoints
+
+- [GET GetById](../support-tickets/get-get-by-id-api-v1-support-tickets-id.md)
+- [GET GetTickets](../support-tickets/get-get-tickets-api-v1-support-tickets.md)
+- [PATCH UpdateStatus](../support-tickets/patch-update-status-api-v1-support-tickets-id-status.md)
+- [POST AddMessage](../support-tickets/post-add-message-api-v1-support-tickets-id-messages.md)
+- [POST Create](../support-tickets/post-create-api-v1-support-tickets.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

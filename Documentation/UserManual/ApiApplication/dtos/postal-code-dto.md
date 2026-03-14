@@ -42,6 +42,15 @@ export interface PostalCodeDto {
 | `CreatedAt` | `DateTime` | `string` |
 | `UpdatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetAllPostalCodes](../postal-codes/get-get-all-postal-codes-api-v1-postal-codes.md)
+- [GET GetPostalCodeByCodeAndCountry](../postal-codes/get-get-postal-code-by-code-and-country-api-v1-postal-codes-code-country-countrycode.md)
+- [GET GetPostalCodeById](../postal-codes/get-get-postal-code-by-id-api-v1-postal-codes-id.md)
+- [GET LookupPostalCode](../postal-codes/get-lookup-postal-code-api-v1-postal-codes-lookup.md)
+- [POST CreatePostalCode](../postal-codes/post-create-postal-code-api-v1-postal-codes.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

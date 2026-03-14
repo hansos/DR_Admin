@@ -32,6 +32,11 @@ export interface UpdateCurrencyExchangeRateDto {
 | `Markup` | `decimal` | `number` |
 | `Notes` | `string?` | `string | null` |
 
+## Used By Endpoints
+
+- [PUT UpdateRate](../currencies/put-update-rate-api-v1-currencies-rates-id-int.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

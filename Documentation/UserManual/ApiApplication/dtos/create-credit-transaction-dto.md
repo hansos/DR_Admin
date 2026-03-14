@@ -28,6 +28,11 @@ export interface CreateCreditTransactionDto {
 | `Description` | `string` | `string` |
 | `InternalNotes` | `string` | `string` |
 
+## Used By Endpoints
+
+- [POST CreateCreditTransaction](../customer-credits/post-create-credit-transaction-api-v1-customer-credits-transactions.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

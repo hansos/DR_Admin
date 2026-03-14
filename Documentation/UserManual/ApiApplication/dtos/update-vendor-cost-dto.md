@@ -28,6 +28,11 @@ export interface UpdateVendorCostDto {
 | `Status` | `VendorCostStatus` | `VendorCostStatus` |
 | `Notes` | `string` | `string` |
 
+## Used By Endpoints
+
+- [PUT UpdateVendorCost](../vendor-costs/put-update-vendor-cost-api-v1-vendor-costs-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

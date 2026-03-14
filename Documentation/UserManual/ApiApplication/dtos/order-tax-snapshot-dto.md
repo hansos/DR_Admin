@@ -68,6 +68,13 @@ export interface OrderTaxSnapshotDto {
 | `CreatedAt` | `DateTime` | `string` |
 | `UpdatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetOrderTaxSnapshotById](../order-tax-snapshots/get-get-order-tax-snapshot-by-id-api-v1-order-tax-snapshots-id.md)
+- [POST CreateOrderTaxSnapshot](../order-tax-snapshots/post-create-order-tax-snapshot-api-v1-order-tax-snapshots.md)
+- [PUT UpdateOrderTaxSnapshot](../order-tax-snapshots/put-update-order-tax-snapshot-api-v1-order-tax-snapshots-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

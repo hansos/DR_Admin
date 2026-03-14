@@ -46,6 +46,14 @@ export interface VendorTaxProfileDto {
 | `CreatedAt` | `DateTime` | `string` |
 | `UpdatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetVendorTaxProfileById](../vendor-tax-profiles/get-get-vendor-tax-profile-by-id-api-v1-vendor-tax-profiles-id.md)
+- [GET GetVendorTaxProfileByVendorId](../vendor-tax-profiles/get-get-vendor-tax-profile-by-vendor-id-api-v1-vendor-tax-profiles-vendor-vendorid.md)
+- [POST CreateVendorTaxProfile](../vendor-tax-profiles/post-create-vendor-tax-profile-api-v1-vendor-tax-profiles.md)
+- [PUT UpdateVendorTaxProfile](../vendor-tax-profiles/put-update-vendor-tax-profile-api-v1-vendor-tax-profiles-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

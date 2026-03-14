@@ -32,6 +32,11 @@ export interface UpdateVendorPayoutDto {
 | `InterventionReason` | `string` | `string` |
 | `InternalNotes` | `string` | `string` |
 
+## Used By Endpoints
+
+- [PUT UpdateVendorPayout](../vendor-payouts/put-update-vendor-payout-api-v1-vendor-payouts-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

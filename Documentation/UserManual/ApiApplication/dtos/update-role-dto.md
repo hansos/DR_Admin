@@ -24,6 +24,11 @@ export interface UpdateRoleDto {
 | `Description` | `string` | `string` |
 | `Code` | `string` | `string` |
 
+## Used By Endpoints
+
+- [PUT UpdateRole](../roles/put-update-role-api-v1-roles-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

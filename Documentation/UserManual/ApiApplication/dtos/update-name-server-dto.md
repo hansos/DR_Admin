@@ -30,6 +30,11 @@ export interface UpdateNameServerDto {
 | `IsPrimary` | `bool` | `boolean` |
 | `SortOrder` | `int` | `number` |
 
+## Used By Endpoints
+
+- [PUT UpdateNameServer](../name-servers/put-update-name-server-api-v1-name-servers-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

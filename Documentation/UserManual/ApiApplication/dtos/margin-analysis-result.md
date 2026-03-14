@@ -46,6 +46,11 @@ export interface MarginAnalysisResult {
 | `IsLowMargin` | `bool` | `boolean` |
 | `AlertMessage` | `string?` | `string | null` |
 
+## Used By Endpoints
+
+- [GET CalculateMargin](../tld-pricing/get-calculate-margin-api-v1-tld-pricing-margin-tld-tldid.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

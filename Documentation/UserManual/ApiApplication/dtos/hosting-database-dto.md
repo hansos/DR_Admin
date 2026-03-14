@@ -42,6 +42,12 @@ export interface HostingDatabaseDto {
 | `DatabaseUsers` | `List<HostingDatabaseUserDto>?` | `HostingDatabaseUserDto[] | null` |
 | `CreatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetDatabase](../hosting-databases/get-get-database-api-v1-hosting-accounts-hostingaccountid-databases-id.md)
+- [POST CreateDatabase](../hosting-databases/post-create-database-api-v1-hosting-accounts-hostingaccountid-databases.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

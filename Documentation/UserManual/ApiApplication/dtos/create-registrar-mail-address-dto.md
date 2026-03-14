@@ -24,6 +24,11 @@ export interface CreateRegistrarMailAddressDto {
 | `IsDefault` | `bool` | `boolean` |
 | `IsActive` | `bool` | `boolean` |
 
+## Used By Endpoints
+
+- [POST CreateRegistrarMailAddress](../registrar-mail-addresses/post-create-registrar-mail-address-api-v1-customers-customerid-registrar-mail-addresses.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

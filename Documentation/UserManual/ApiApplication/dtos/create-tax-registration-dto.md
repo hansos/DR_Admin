@@ -32,6 +32,11 @@ export interface CreateTaxRegistrationDto {
 | `IsActive` | `bool` | `boolean` |
 | `Notes` | `string` | `string` |
 
+## Used By Endpoints
+
+- [POST CreateTaxRegistration](../tax-registrations/post-create-tax-registration-api-v1-tax-registrations.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

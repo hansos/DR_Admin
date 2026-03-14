@@ -28,6 +28,11 @@ export interface ProcessVendorPayoutDto {
 | `IsSuccessful` | `bool` | `boolean` |
 | `FailureReason` | `string?` | `string | null` |
 
+## Used By Endpoints
+
+- [POST ProcessVendorPayout](../vendor-payouts/post-process-vendor-payout-api-v1-vendor-payouts-process.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

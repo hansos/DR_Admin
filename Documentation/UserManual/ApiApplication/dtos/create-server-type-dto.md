@@ -26,6 +26,11 @@ export interface CreateServerTypeDto {
 | `Description` | `string?` | `string | null` |
 | `IsActive` | `bool` | `boolean` |
 
+## Used By Endpoints
+
+- [POST CreateServerType](../server-types/post-create-server-type-api-v1-server-types.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

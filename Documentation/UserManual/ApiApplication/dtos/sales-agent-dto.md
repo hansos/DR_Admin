@@ -40,6 +40,13 @@ export interface SalesAgentDto {
 | `CreatedAt` | `DateTime` | `string` |
 | `UpdatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetSalesAgentById](../sales-agents/get-get-sales-agent-by-id-api-v1-sales-agents-id.md)
+- [POST CreateSalesAgent](../sales-agents/post-create-sales-agent-api-v1-sales-agents.md)
+- [PUT UpdateSalesAgent](../sales-agents/put-update-sales-agent-api-v1-sales-agents-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

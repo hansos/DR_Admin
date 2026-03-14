@@ -52,6 +52,11 @@ export interface UpdateCustomerDto {
 | `PreferredCurrency` | `string` | `string` |
 | `AllowCurrencyOverride` | `bool` | `boolean` |
 
+## Used By Endpoints
+
+- [PUT UpdateCustomer](../customers/put-update-customer-api-v1-customers-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

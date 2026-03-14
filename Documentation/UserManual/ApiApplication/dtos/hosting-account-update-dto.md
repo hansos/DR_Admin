@@ -38,6 +38,11 @@ export interface HostingAccountUpdateDto {
 | `MaxSubdomains` | `int?` | `number | null` |
 | `ExpirationDate` | `DateTime?` | `string | null` |
 
+## Used By Endpoints
+
+- [PUT UpdateHostingAccount](../hosting-accounts/put-update-hosting-account-api-v1-hosting-accounts-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

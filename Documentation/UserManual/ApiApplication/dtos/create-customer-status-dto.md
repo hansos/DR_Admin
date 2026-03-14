@@ -36,6 +36,11 @@ export interface CreateCustomerStatusDto {
 | `Priority` | `int?` | `number | null` |
 | `IsSystem` | `bool` | `boolean` |
 
+## Used By Endpoints
+
+- [POST CreateCustomerStatus](../customer-statuses/post-create-customer-status-api-v1-customer-statuses.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

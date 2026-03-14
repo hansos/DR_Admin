@@ -24,6 +24,11 @@ export interface CreateRoleDto {
 | `Description` | `string` | `string` |
 | `Code` | `string` | `string` |
 
+## Used By Endpoints
+
+- [POST CreateRole](../roles/post-create-role-api-v1-roles.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

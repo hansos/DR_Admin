@@ -50,6 +50,13 @@ export interface ServerControlPanelDto {
 | `CreatedAt` | `DateTime` | `string` |
 | `UpdatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetServerControlPanelById](../server-control-panels/get-get-server-control-panel-by-id-api-v1-server-control-panels-id.md)
+- [POST CreateServerControlPanel](../server-control-panels/post-create-server-control-panel-api-v1-server-control-panels.md)
+- [PUT UpdateServerControlPanel](../server-control-panels/put-update-server-control-panel-api-v1-server-control-panels-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

@@ -42,6 +42,15 @@ export interface CustomerStatusDto {
 | `CreatedAt` | `DateTime` | `string` |
 | `UpdatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetCustomerStatusByCode](../customer-statuses/get-get-customer-status-by-code-api-v1-customer-statuses-code-code.md)
+- [GET GetCustomerStatusById](../customer-statuses/get-get-customer-status-by-id-api-v1-customer-statuses-id.md)
+- [GET GetDefaultCustomerStatus](../customer-statuses/get-get-default-customer-status-api-v1-customer-statuses-default.md)
+- [POST CreateCustomerStatus](../customer-statuses/post-create-customer-status-api-v1-customer-statuses.md)
+- [PUT UpdateCustomerStatus](../customer-statuses/put-update-customer-status-api-v1-customer-statuses-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

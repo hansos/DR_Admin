@@ -36,6 +36,13 @@ export interface PaymentInstrumentDto {
 | `CreatedAt` | `DateTime` | `string` |
 | `UpdatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetById](../payment-instruments/get-get-by-id-api-v1-payment-instruments-id.md)
+- [POST Create](../payment-instruments/post-create-api-v1-payment-instruments.md)
+- [PUT Update](../payment-instruments/put-update-api-v1-payment-instruments-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

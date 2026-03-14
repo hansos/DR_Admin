@@ -40,6 +40,11 @@ export interface CalculatePricingResponse {
 | `SelectedRegistrarId` | `int?` | `number | null` |
 | `SelectedRegistrarName` | `string?` | `string | null` |
 
+## Used By Endpoints
+
+- [POST CalculatePricing](../tld-pricing/post-calculate-pricing-api-v1-tld-pricing-calculate.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

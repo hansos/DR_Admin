@@ -28,6 +28,11 @@ export interface ProcessInvoicePaymentDto {
 | `UserAgent` | `string` | `string` |
 | `ReturnUrl` | `string` | `string` |
 
+## Used By Endpoints
+
+- [POST ProcessInvoicePayment](../payments/post-process-invoice-payment-api-v1-payments-process.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

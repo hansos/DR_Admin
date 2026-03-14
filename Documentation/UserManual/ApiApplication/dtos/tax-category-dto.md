@@ -36,6 +36,13 @@ export interface TaxCategoryDto {
 | `CreatedAt` | `DateTime` | `string` |
 | `UpdatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetTaxCategoryById](../tax-categories/get-get-tax-category-by-id-api-v1-tax-categories-id.md)
+- [POST CreateTaxCategory](../tax-categories/post-create-tax-category-api-v1-tax-categories.md)
+- [PUT UpdateTaxCategory](../tax-categories/put-update-tax-category-api-v1-tax-categories-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

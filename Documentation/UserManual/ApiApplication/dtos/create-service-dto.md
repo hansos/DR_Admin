@@ -32,6 +32,11 @@ export interface CreateServiceDto {
 | `ResellerCompanyId` | `int?` | `number | null` |
 | `SalesAgentId` | `int?` | `number | null` |
 
+## Used By Endpoints
+
+- [POST CreateService](../services/post-create-service-api-v1-services.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

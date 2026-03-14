@@ -32,6 +32,11 @@ export interface HostingDomainCreateDto {
 | `PhpVersion` | `string?` | `string | null` |
 | `Notes` | `string?` | `string | null` |
 
+## Used By Endpoints
+
+- [POST CreateDomain](../hosting-domains/post-create-domain-api-v1-hosting-accounts-hostingaccountid-domains.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

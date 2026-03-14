@@ -42,6 +42,11 @@ export interface CreateRegisteredDomainDto {
 | `RegistrationError` | `string?` | `string | null` |
 | `ExpirationDate` | `DateTime?` | `string | null` |
 
+## Used By Endpoints
+
+- [POST CreateDomain](../registered-domains/post-create-domain-api-v1-registered-domains.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

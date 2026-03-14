@@ -54,6 +54,13 @@ export interface ExchangeRateDownloadLogDto {
 | `CreatedAt` | `DateTime` | `string` |
 | `UpdatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetLastDownload](../exchange-rate-download-logs/get-get-last-download-api-exchange-rate-download-logs-last-download-basecurrency-source.md)
+- [GET GetLogById](../exchange-rate-download-logs/get-get-log-by-id-api-exchange-rate-download-logs-id.md)
+- [POST CreateLog](../exchange-rate-download-logs/post-create-log-api-exchange-rate-download-logs.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

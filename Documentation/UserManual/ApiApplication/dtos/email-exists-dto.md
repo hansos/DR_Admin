@@ -22,6 +22,11 @@ export interface EmailExistsDto {
 | `Email` | `string` | `string` |
 | `Exists` | `bool` | `boolean` |
 
+## Used By Endpoints
+
+- [GET CheckEmailExists](../customers/get-check-email-exists-api-v1-customers-check-email.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

@@ -38,6 +38,13 @@ export interface ServerIpAddressDto {
 | `CreatedAt` | `DateTime` | `string` |
 | `UpdatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetServerIpAddressById](../server-ip-addresses/get-get-server-ip-address-by-id-api-v1-server-ip-addresses-id.md)
+- [POST CreateServerIpAddress](../server-ip-addresses/post-create-server-ip-address-api-v1-server-ip-addresses.md)
+- [PUT UpdateServerIpAddress](../server-ip-addresses/put-update-server-ip-address-api-v1-server-ip-addresses-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

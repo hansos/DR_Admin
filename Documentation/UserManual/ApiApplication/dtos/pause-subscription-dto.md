@@ -20,6 +20,11 @@ export interface PauseSubscriptionDto {
 |----------|---------|-----------------|
 | `PauseReason` | `string` | `string` |
 
+## Used By Endpoints
+
+- [POST PauseSubscription](../subscriptions/post-pause-subscription-api-v1-subscriptions-id-pause.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

@@ -34,6 +34,11 @@ export interface UpdateSalesAgentDto {
 | `IsActive` | `bool` | `boolean` |
 | `Notes` | `string?` | `string | null` |
 
+## Used By Endpoints
+
+- [PUT UpdateSalesAgent](../sales-agents/put-update-sales-agent-api-v1-sales-agents-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

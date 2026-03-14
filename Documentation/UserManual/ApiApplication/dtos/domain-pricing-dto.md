@@ -32,6 +32,11 @@ export interface DomainPricingDto {
 | `TransferPrice` | `decimal` | `number` |
 | `Currency` | `string` | `string` |
 
+## Used By Endpoints
+
+- [GET GetDomainPricing](../registered-domains/get-get-domain-pricing-api-v1-registered-domains-pricing-tld.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

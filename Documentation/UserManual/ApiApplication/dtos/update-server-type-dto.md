@@ -26,6 +26,11 @@ export interface UpdateServerTypeDto {
 | `Description` | `string?` | `string | null` |
 | `IsActive` | `bool` | `boolean` |
 
+## Used By Endpoints
+
+- [PUT UpdateServerType](../server-types/put-update-server-type-api-v1-server-types-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

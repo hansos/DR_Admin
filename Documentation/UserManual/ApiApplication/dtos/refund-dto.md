@@ -44,6 +44,12 @@ export interface RefundDto {
 | `InitiatedByUserId` | `int?` | `number | null` |
 | `CreatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetRefundById](../refunds/get-get-refund-by-id-api-v1-refunds-id.md)
+- [POST CreateRefund](../refunds/post-create-refund-api-v1-refunds.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

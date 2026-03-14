@@ -40,6 +40,11 @@ export interface HostingEmailAccountCreateDto {
 | `SpamFilterEnabled` | `bool` | `boolean` |
 | `SpamScoreThreshold` | `int?` | `number | null` |
 
+## Used By Endpoints
+
+- [POST CreateEmailAccount](../hosting-email/post-create-email-account-api-v1-hosting-accounts-hostingaccountid-emails.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

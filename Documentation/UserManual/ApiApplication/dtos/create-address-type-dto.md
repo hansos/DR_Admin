@@ -30,6 +30,11 @@ export interface CreateAddressTypeDto {
 | `IsDefault` | `bool` | `boolean` |
 | `SortOrder` | `int` | `number` |
 
+## Used By Endpoints
+
+- [POST CreateAddressType](../address-types/post-create-address-type-api-v1-address-types.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

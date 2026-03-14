@@ -50,6 +50,14 @@ export interface RefundLossAuditDto {
 | `CreatedAt` | `DateTime` | `string` |
 | `UpdatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetRefundLossAuditById](../refund-loss-audits/get-get-refund-loss-audit-by-id-api-v1-refund-loss-audits-id.md)
+- [GET GetRefundLossAuditByRefundId](../refund-loss-audits/get-get-refund-loss-audit-by-refund-id-api-v1-refund-loss-audits-refund-refundid.md)
+- [POST ApproveRefundLoss](../refund-loss-audits/post-approve-refund-loss-api-v1-refund-loss-audits-approve.md)
+- [POST CreateRefundLossAudit](../refund-loss-audits/post-create-refund-loss-audit-api-v1-refund-loss-audits.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

@@ -48,6 +48,11 @@ export interface CreateSubscriptionBillingHistoryDto {
 | `Notes` | `string` | `string` |
 | `Metadata` | `string` | `string` |
 
+## Used By Endpoints
+
+- [POST CreateBillingHistory](../subscription-billing-histories/post-create-billing-history-api-v1-subscription-billing-histories.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

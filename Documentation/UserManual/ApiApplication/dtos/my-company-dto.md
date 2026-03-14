@@ -58,6 +58,12 @@ export interface MyCompanyDto {
 | `CreatedAt` | `DateTime` | `string` |
 | `UpdatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetMyCompany](../my-company/get-get-my-company-api-v1-my-company.md)
+- [PUT UpsertMyCompany](../my-company/put-upsert-my-company-api-v1-my-company.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

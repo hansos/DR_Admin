@@ -36,6 +36,11 @@ export interface CreatePostalCodeDto {
 | `Longitude` | `decimal?` | `number | null` |
 | `IsActive` | `bool` | `boolean` |
 
+## Used By Endpoints
+
+- [POST CreatePostalCode](../postal-codes/post-create-postal-code-api-v1-postal-codes.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

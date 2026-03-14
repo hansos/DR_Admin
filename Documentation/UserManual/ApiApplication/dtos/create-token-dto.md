@@ -26,6 +26,11 @@ export interface CreateTokenDto {
 | `TokenValue` | `string` | `string` |
 | `Expiry` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [POST CreateToken](../tokens/post-create-token-api-v1-tokens.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

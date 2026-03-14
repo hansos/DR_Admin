@@ -24,6 +24,11 @@ export interface UpdateRegistrarMailAddressDto {
 | `IsDefault` | `bool` | `boolean` |
 | `IsActive` | `bool` | `boolean` |
 
+## Used By Endpoints
+
+- [PUT UpdateRegistrarMailAddress](../registrar-mail-addresses/put-update-registrar-mail-address-api-v1-customers-customerid-registrar-mail-addresses-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

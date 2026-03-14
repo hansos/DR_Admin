@@ -50,6 +50,11 @@ export interface UpdateRegistrarTldDto {
 | `MaxRegistrationYears` | `int?` | `number | null` |
 | `Notes` | `string?` | `string | null` |
 
+## Used By Endpoints
+
+- [PUT UpdateRegistrarTld](../registrar-tlds/put-update-registrar-tld-api-v1-registrar-tlds-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

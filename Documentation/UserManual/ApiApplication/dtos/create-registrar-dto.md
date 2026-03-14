@@ -34,6 +34,11 @@ export interface CreateRegistrarDto {
 | `Notes` | `string?` | `string | null` |
 | `IsDefault` | `bool` | `boolean` |
 
+## Used By Endpoints
+
+- [POST CreateRegistrar](../registrars/post-create-registrar-api-v1-registrars.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

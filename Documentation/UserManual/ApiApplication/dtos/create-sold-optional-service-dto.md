@@ -52,6 +52,11 @@ export interface CreateSoldOptionalServiceDto {
 | `ConfigurationSnapshotJson` | `string` | `string` |
 | `Notes` | `string` | `string` |
 
+## Used By Endpoints
+
+- [POST Create](../sold-optional-services/post-create-api-v1-sold-optional-services.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

@@ -60,6 +60,14 @@ export interface CouponDto {
 | `CreatedAt` | `DateTime` | `string` |
 | `UpdatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetCouponByCode](../coupons/get-get-coupon-by-code-api-v1-coupons-code-code.md)
+- [GET GetCouponById](../coupons/get-get-coupon-by-id-api-v1-coupons-id.md)
+- [POST CreateCoupon](../coupons/post-create-coupon-api-v1-coupons.md)
+- [PUT UpdateCoupon](../coupons/put-update-coupon-api-v1-coupons-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

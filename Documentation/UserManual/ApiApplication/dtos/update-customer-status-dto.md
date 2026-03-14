@@ -34,6 +34,11 @@ export interface UpdateCustomerStatusDto {
 | `Priority` | `int?` | `number | null` |
 | `IsSystem` | `bool` | `boolean` |
 
+## Used By Endpoints
+
+- [PUT UpdateCustomerStatus](../customer-statuses/put-update-customer-status-api-v1-customer-statuses-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

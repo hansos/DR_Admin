@@ -34,6 +34,13 @@ export interface OperatingSystemDto {
 | `CreatedAt` | `DateTime` | `string` |
 | `UpdatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetOperatingSystemById](../operating-systems/get-get-operating-system-by-id-api-v1-operating-systems-id.md)
+- [POST CreateOperatingSystem](../operating-systems/post-create-operating-system-api-v1-operating-systems.md)
+- [PUT UpdateOperatingSystem](../operating-systems/put-update-operating-system-api-v1-operating-systems-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

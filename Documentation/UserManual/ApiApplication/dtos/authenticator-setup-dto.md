@@ -22,6 +22,11 @@ export interface AuthenticatorSetupDto {
 | `SharedKey` | `string` | `string` |
 | `QrCodeUri` | `string` | `string` |
 
+## Used By Endpoints
+
+- [POST BeginAuthenticatorSetup](../my-account/post-begin-authenticator-setup-api-v1-my-account-2fa-authenticator-setup.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

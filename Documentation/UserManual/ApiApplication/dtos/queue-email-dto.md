@@ -42,6 +42,11 @@ export interface QueueEmailDto {
 | `RelatedEntityId` | `int?` | `number | null` |
 | `AttachmentPaths` | `List<string>?` | `string[] | null` |
 
+## Used By Endpoints
+
+- [POST QueueEmail](../email-queue/post-queue-email-api-v1-email-queue-queue.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

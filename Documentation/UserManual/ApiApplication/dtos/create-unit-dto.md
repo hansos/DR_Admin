@@ -26,6 +26,11 @@ export interface CreateUnitDto {
 | `Description` | `string` | `string` |
 | `IsActive` | `bool` | `boolean` |
 
+## Used By Endpoints
+
+- [POST CreateUnit](../units/post-create-unit-api-v1-units.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

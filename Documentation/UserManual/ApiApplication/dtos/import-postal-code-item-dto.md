@@ -34,6 +34,11 @@ export interface ImportPostalCodeItemDto {
 | `Longitude` | `decimal?` | `number | null` |
 | `IsActive` | `bool` | `boolean` |
 
+## Used By Endpoints
+
+No endpoint pages currently reference this DTO.
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

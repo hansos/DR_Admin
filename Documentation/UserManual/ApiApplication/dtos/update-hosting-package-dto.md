@@ -48,6 +48,11 @@ export interface UpdateHostingPackageDto {
 | `YearlyPrice` | `decimal` | `number` |
 | `IsActive` | `bool` | `boolean` |
 
+## Used By Endpoints
+
+- [PUT UpdateHostingPackage](../hosting-packages/put-update-hosting-package-api-v1-hosting-packages-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

@@ -32,6 +32,11 @@ export interface UpdateOrderDto {
 | `AutoRenew` | `bool` | `boolean` |
 | `Notes` | `string` | `string` |
 
+## Used By Endpoints
+
+- [PUT UpdateOrder](../orders/put-update-order-api-v1-orders-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

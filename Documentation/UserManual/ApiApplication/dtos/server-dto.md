@@ -50,6 +50,13 @@ export interface ServerDto {
 | `CreatedAt` | `DateTime` | `string` |
 | `UpdatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetServerById](../servers/get-get-server-by-id-api-v1-servers-id.md)
+- [POST CreateServer](../servers/post-create-server-api-v1-servers.md)
+- [PUT UpdateServer](../servers/put-update-server-api-v1-servers-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

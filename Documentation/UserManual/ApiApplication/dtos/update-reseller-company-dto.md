@@ -56,6 +56,11 @@ export interface UpdateResellerCompanyDto {
 | `ApplyCurrencyMarkup` | `bool` | `boolean` |
 | `DefaultCurrencyMarkup` | `decimal` | `number` |
 
+## Used By Endpoints
+
+- [PUT UpdateResellerCompany](../reseller-companies/put-update-reseller-company-api-v1-reseller-companies-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

@@ -28,6 +28,11 @@ export interface UpdateQuoteDto {
 | `InternalComment` | `string` | `string` |
 | `Lines` | `List<UpdateQuoteLineDto>` | `UpdateQuoteLineDto[]` |
 
+## Used By Endpoints
+
+- [PUT UpdateQuote](../quotes/put-update-quote-api-v1-quotes-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

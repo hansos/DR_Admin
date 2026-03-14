@@ -50,6 +50,12 @@ export interface HostingAccountCreateDto {
 | `MaxFtpAccounts` | `int?` | `number | null` |
 | `MaxSubdomains` | `int?` | `number | null` |
 
+## Used By Endpoints
+
+- [POST CreateHostingAccountAndSync](../hosting-accounts/post-create-hosting-account-and-sync-api-v1-hosting-accounts-create-and-sync.md)
+- [POST CreateHostingAccount](../hosting-accounts/post-create-hosting-account-api-v1-hosting-accounts.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

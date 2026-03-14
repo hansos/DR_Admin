@@ -56,6 +56,11 @@ export interface CreateResellerCompanyDto {
 | `ApplyCurrencyMarkup` | `bool` | `boolean` |
 | `DefaultCurrencyMarkup` | `decimal` | `number` |
 
+## Used By Endpoints
+
+- [POST CreateResellerCompany](../reseller-companies/post-create-reseller-company-api-v1-reseller-companies.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

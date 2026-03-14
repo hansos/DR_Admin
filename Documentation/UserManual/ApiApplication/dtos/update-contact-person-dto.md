@@ -48,6 +48,11 @@ export interface UpdateContactPersonDto {
 | `IsDefaultAdministrator` | `bool` | `boolean` |
 | `IsDomainGlobal` | `bool` | `boolean` |
 
+## Used By Endpoints
+
+- [PUT UpdateContactPerson](../contact-persons/put-update-contact-person-api-v1-contact-persons-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

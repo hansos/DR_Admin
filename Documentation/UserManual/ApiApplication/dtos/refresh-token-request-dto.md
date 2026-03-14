@@ -20,6 +20,12 @@ export interface RefreshTokenRequestDto {
 |----------|---------|-----------------|
 | `RefreshToken` | `string` | `string` |
 
+## Used By Endpoints
+
+- [POST Logout](../auth/post-logout-api-v1-auth-logout.md)
+- [POST RefreshToken](../auth/post-refresh-token-api-v1-auth-refresh.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

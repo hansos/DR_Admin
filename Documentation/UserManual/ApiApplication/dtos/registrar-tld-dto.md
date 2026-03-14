@@ -60,6 +60,18 @@ export interface RegistrarTldDto {
 | `CreatedAt` | `DateTime` | `string` |
 | `UpdatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [POST AssignTldToRegistrarByDto](../registrars/post-assign-tld-to-registrar-by-dto-api-v1-registrars-registrarid-tld.md)
+- [POST AssignTldToRegistrarByIds](../registrars/post-assign-tld-to-registrar-by-ids-api-v1-registrars-registrarid-tld-tldid.md)
+- [GET GetAllRegistrarTlds](../registrar-tlds/get-get-all-registrar-tlds-api-v1-registrar-tlds.md)
+- [GET GetRegistrarTldById](../registrar-tlds/get-get-registrar-tld-by-id-api-v1-registrar-tlds-id.md)
+- [GET GetRegistrarTldByRegistrarAndTld](../registrar-tlds/get-get-registrar-tld-by-registrar-and-tld-api-v1-registrar-tlds-registrar-registrarid-tld-tldid.md)
+- [GET GetRegistrarTldsByRegistrar](../registrar-tlds/get-get-registrar-tlds-by-registrar-api-v1-registrar-tlds-registrar-registrarid.md)
+- [POST CreateRegistrarTld](../registrar-tlds/post-create-registrar-tld-api-v1-registrar-tlds.md)
+- [PUT UpdateRegistrarTld](../registrar-tlds/put-update-registrar-tld-api-v1-registrar-tlds-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

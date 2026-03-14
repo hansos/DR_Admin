@@ -84,6 +84,16 @@ export interface InvoiceDto {
 | `UpdatedAt` | `DateTime` | `string` |
 | `DeletedAt` | `DateTime?` | `string | null` |
 
+## Used By Endpoints
+
+- [GET GetAllInvoices](../invoices/get-get-all-invoices-api-v1-invoices.md)
+- [GET GetInvoiceById](../invoices/get-get-invoice-by-id-api-v1-invoices-id.md)
+- [GET GetInvoiceByNumber](../invoices/get-get-invoice-by-number-api-v1-invoices-number-invoicenumber.md)
+- [GET GetInvoicesByCustomerId](../invoices/get-get-invoices-by-customer-id-api-v1-invoices-customer-customerid.md)
+- [POST CreateInvoice](../invoices/post-create-invoice-api-v1-invoices.md)
+- [PUT UpdateInvoice](../invoices/put-update-invoice-api-v1-invoices-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

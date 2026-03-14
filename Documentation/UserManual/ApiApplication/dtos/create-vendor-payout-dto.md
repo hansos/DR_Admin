@@ -44,6 +44,11 @@ export interface CreateVendorPayoutDto {
 | `InternalNotes` | `string` | `string` |
 | `VendorCostIds` | `List<int>` | `number[]` |
 
+## Used By Endpoints
+
+- [POST CreateVendorPayout](../vendor-payouts/post-create-vendor-payout-api-v1-vendor-payouts.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

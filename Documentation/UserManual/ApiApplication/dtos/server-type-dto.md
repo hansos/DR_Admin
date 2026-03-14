@@ -32,6 +32,13 @@ export interface ServerTypeDto {
 | `CreatedAt` | `DateTime` | `string` |
 | `UpdatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetServerTypeById](../server-types/get-get-server-type-by-id-api-v1-server-types-id.md)
+- [POST CreateServerType](../server-types/post-create-server-type-api-v1-server-types.md)
+- [PUT UpdateServerType](../server-types/put-update-server-type-api-v1-server-types-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

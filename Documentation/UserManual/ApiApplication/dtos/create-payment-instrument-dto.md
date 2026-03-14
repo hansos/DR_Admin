@@ -30,6 +30,11 @@ export interface CreatePaymentInstrumentDto {
 | `DisplayOrder` | `int` | `number` |
 | `DefaultGatewayId` | `int?` | `number | null` |
 
+## Used By Endpoints
+
+- [POST Create](../payment-instruments/post-create-api-v1-payment-instruments.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

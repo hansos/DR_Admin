@@ -54,6 +54,12 @@ export interface PaymentIntentDto {
 | `FailureReason` | `string` | `string` |
 | `CreatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetPaymentIntentById](../payment-intents/get-get-payment-intent-by-id-api-v1-payment-intents-id.md)
+- [POST CreatePaymentIntent](../payment-intents/post-create-payment-intent-api-v1-payment-intents.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

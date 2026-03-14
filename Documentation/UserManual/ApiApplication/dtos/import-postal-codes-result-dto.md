@@ -28,6 +28,11 @@ export interface ImportPostalCodesResultDto {
 | `Skipped` | `int` | `number` |
 | `Errors` | `List<string>` | `string[]` |
 
+## Used By Endpoints
+
+- [POST UploadPostalCodesCsv](../postal-codes/post-upload-postal-codes-csv-api-v1-postal-codes-upload-csv.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

@@ -44,6 +44,11 @@ export interface CreateTldSalesPricingDto {
 | `IsActive` | `bool` | `boolean` |
 | `Notes` | `string?` | `string | null` |
 
+## Used By Endpoints
+
+- [POST CreateSalesPricing](../tld-pricing/post-create-sales-pricing-api-v1-tld-pricing-sales.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

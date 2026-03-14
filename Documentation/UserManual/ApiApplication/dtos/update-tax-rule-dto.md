@@ -46,6 +46,11 @@ export interface UpdateTaxRuleDto {
 | `Priority` | `int` | `number` |
 | `InternalNotes` | `string` | `string` |
 
+## Used By Endpoints
+
+- [PUT UpdateTaxRule](../tax-rules/put-update-tax-rule-api-v1-tax-rules-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

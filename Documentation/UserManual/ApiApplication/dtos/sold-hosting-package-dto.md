@@ -58,6 +58,13 @@ export interface SoldHostingPackageDto {
 | `CreatedAt` | `DateTime` | `string` |
 | `UpdatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetById](../sold-hosting-packages/get-get-by-id-api-v1-sold-hosting-packages-id-int.md)
+- [POST Create](../sold-hosting-packages/post-create-api-v1-sold-hosting-packages.md)
+- [PUT Update](../sold-hosting-packages/put-update-api-v1-sold-hosting-packages-id-int.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

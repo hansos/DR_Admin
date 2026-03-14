@@ -52,6 +52,11 @@ export interface CreateSentEmailDto {
 | `RelatedEntityId` | `int?` | `number | null` |
 | `Attachments` | `string?` | `string | null` |
 
+## Used By Endpoints
+
+- [POST CreateSentEmail](../sent-emails/post-create-sent-email-api-v1-sent-emails.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

@@ -24,6 +24,11 @@ export interface BulkUpdateRegistrarTldStatusByTldDto {
 | `TldExtensions` | `string` | `string` |
 | `IsActive` | `bool` | `boolean` |
 
+## Used By Endpoints
+
+- [PUT BulkUpdateRegistrarTldStatusByTld](../registrar-tlds/put-bulk-update-registrar-tld-status-by-tld-api-v1-registrar-tlds-bulk-update-status-by-tld.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

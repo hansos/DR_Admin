@@ -36,6 +36,11 @@ export interface CreateCurrencyExchangeRateDto {
 | `Markup` | `decimal` | `number` |
 | `Notes` | `string?` | `string | null` |
 
+## Used By Endpoints
+
+- [POST CreateRate](../currencies/post-create-rate-api-v1-currencies-rates.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

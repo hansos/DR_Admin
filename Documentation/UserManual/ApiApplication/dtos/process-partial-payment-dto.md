@@ -28,6 +28,11 @@ export interface ProcessPartialPaymentDto {
 | `IpAddress` | `string` | `string` |
 | `UserAgent` | `string` | `string` |
 
+## Used By Endpoints
+
+- [POST ProcessPartialPayment](../payments/post-process-partial-payment-api-v1-payments-partial.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

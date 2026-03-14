@@ -30,6 +30,11 @@ export interface CreateNameServerDto {
 | `IsPrimary` | `bool` | `boolean` |
 | `SortOrder` | `int` | `number` |
 
+## Used By Endpoints
+
+- [POST CreateNameServer](../name-servers/post-create-name-server-api-v1-name-servers.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

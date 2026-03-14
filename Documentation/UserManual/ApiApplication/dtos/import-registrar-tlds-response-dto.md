@@ -34,6 +34,12 @@ export interface ImportRegistrarTldsResponseDto {
 | `LinesSkipped` | `int` | `number` |
 | `ImportTimestamp` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [POST ImportRegistrarTlds](../registrar-tlds/post-import-registrar-tlds-api-v1-registrar-tlds-registrar-registrarid-import.md)
+- [POST UploadRegistrarTldsCsv](../registrar-tlds/post-upload-registrar-tlds-csv-api-v1-registrar-tlds-registrar-registrarid-upload-csv.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

@@ -36,6 +36,11 @@ export interface HostingDatabaseUserDto {
 | `SyncStatus` | `string?` | `string | null` |
 | `CreatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [POST CreateDatabaseUser](../hosting-databases/post-create-database-user-api-v1-hosting-accounts-hostingaccountid-databases-databaseid-users.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

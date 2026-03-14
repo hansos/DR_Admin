@@ -34,6 +34,11 @@ export interface CreateTaxJurisdictionDto {
 | `IsActive` | `bool` | `boolean` |
 | `Notes` | `string` | `string` |
 
+## Used By Endpoints
+
+- [POST CreateTaxJurisdiction](../tax-jurisdictions/post-create-tax-jurisdiction-api-v1-tax-jurisdictions.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

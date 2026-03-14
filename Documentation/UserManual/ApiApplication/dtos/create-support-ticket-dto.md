@@ -24,6 +24,11 @@ export interface CreateSupportTicketDto {
 | `Message` | `string` | `string` |
 | `Priority` | `string` | `string` |
 
+## Used By Endpoints
+
+- [POST Create](../support-tickets/post-create-api-v1-support-tickets.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

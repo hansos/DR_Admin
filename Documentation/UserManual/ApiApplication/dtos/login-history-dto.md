@@ -36,6 +36,12 @@ export interface LoginHistoryDto {
 | `UserAgent` | `string` | `string` |
 | `FailureReason` | `string?` | `string | null` |
 
+## Used By Endpoints
+
+- [GET GetAll](../login-histories/get-get-all-api-v1-login-histories.md)
+- [GET GetById](../login-histories/get-get-by-id-api-v1-login-histories-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

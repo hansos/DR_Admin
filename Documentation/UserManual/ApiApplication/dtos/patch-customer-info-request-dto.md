@@ -54,6 +54,11 @@ export interface PatchCustomerInfoRequestDto {
 | `PreferredCurrency` | `string?` | `string | null` |
 | `AllowCurrencyOverride` | `bool?` | `boolean | null` |
 
+## Used By Endpoints
+
+- [PATCH PatchCustomerInfo](../my-account/patch-patch-customer-info-api-v1-my-account-customer.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

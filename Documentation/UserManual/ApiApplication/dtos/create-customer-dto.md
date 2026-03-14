@@ -52,6 +52,11 @@ export interface CreateCustomerDto {
 | `PreferredCurrency` | `string` | `string` |
 | `AllowCurrencyOverride` | `bool` | `boolean` |
 
+## Used By Endpoints
+
+- [POST CreateCustomer](../customers/post-create-customer-api-v1-customers.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

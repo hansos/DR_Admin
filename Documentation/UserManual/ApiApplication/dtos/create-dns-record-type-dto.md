@@ -34,6 +34,11 @@ export interface CreateDnsRecordTypeDto {
 | `IsActive` | `bool` | `boolean` |
 | `DefaultTTL` | `int` | `number` |
 
+## Used By Endpoints
+
+- [POST CreateDnsRecordType](../dns-record-types/post-create-dns-record-type-api-v1-dns-record-types.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

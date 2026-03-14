@@ -26,6 +26,11 @@ export interface SyncComparisonDto {
 | `Differences` | `List<string>` | `string[]` |
 | `LastChecked` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET CompareWithServer](../hosting-sync/get-compare-with-server-api-v1-hosting-sync-compare-hostingaccountid.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

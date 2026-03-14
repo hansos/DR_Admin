@@ -26,6 +26,11 @@ export interface CreateSystemSettingDto {
 | `Description` | `string` | `string` |
 | `IsSystemKey` | `bool` | `boolean` |
 
+## Used By Endpoints
+
+- [POST CreateSystemSetting](../system-settings/post-create-system-setting-api-v1-system-settings.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

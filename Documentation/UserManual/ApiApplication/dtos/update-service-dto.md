@@ -32,6 +32,11 @@ export interface UpdateServiceDto {
 | `ResellerCompanyId` | `int?` | `number | null` |
 | `SalesAgentId` | `int?` | `number | null` |
 
+## Used By Endpoints
+
+- [PUT UpdateService](../services/put-update-service-api-v1-services-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

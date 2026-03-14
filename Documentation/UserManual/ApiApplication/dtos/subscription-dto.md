@@ -84,6 +84,16 @@ export interface SubscriptionDto {
 | `CreatedAt` | `DateTime` | `string` |
 | `UpdatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetSubscriptionById](../subscriptions/get-get-subscription-by-id-api-v1-subscriptions-id.md)
+- [POST CancelSubscription](../subscriptions/post-cancel-subscription-api-v1-subscriptions-id-cancel.md)
+- [POST CreateSubscription](../subscriptions/post-create-subscription-api-v1-subscriptions.md)
+- [POST PauseSubscription](../subscriptions/post-pause-subscription-api-v1-subscriptions-id-pause.md)
+- [POST ResumeSubscription](../subscriptions/post-resume-subscription-api-v1-subscriptions-id-resume.md)
+- [PUT UpdateSubscription](../subscriptions/put-update-subscription-api-v1-subscriptions-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

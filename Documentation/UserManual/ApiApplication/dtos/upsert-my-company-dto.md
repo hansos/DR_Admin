@@ -52,6 +52,11 @@ export interface UpsertMyCompanyDto {
 | `LogoUrl` | `string?` | `string | null` |
 | `LetterheadFooter` | `string?` | `string | null` |
 
+## Used By Endpoints
+
+- [PUT UpsertMyCompany](../my-company/put-upsert-my-company-api-v1-my-company.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

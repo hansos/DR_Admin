@@ -54,6 +54,13 @@ export interface TaxRuleDto {
 | `CreatedAt` | `DateTime` | `string` |
 | `UpdatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetTaxRuleById](../tax-rules/get-get-tax-rule-by-id-api-v1-tax-rules-id.md)
+- [POST CreateTaxRule](../tax-rules/post-create-tax-rule-api-v1-tax-rules.md)
+- [PUT UpdateTaxRule](../tax-rules/put-update-tax-rule-api-v1-tax-rules-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

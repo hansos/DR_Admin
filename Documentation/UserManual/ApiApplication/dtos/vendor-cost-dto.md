@@ -56,6 +56,13 @@ export interface VendorCostDto {
 | `CreatedAt` | `DateTime` | `string` |
 | `UpdatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetVendorCostById](../vendor-costs/get-get-vendor-cost-by-id-api-v1-vendor-costs-id.md)
+- [POST CreateVendorCost](../vendor-costs/post-create-vendor-cost-api-v1-vendor-costs.md)
+- [PUT UpdateVendorCost](../vendor-costs/put-update-vendor-cost-api-v1-vendor-costs-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

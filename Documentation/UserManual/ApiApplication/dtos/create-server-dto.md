@@ -38,6 +38,11 @@ export interface CreateServerDto {
 | `DiskSpaceGB` | `int?` | `number | null` |
 | `Notes` | `string?` | `string | null` |
 
+## Used By Endpoints
+
+- [POST CreateServer](../servers/post-create-server-api-v1-servers.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

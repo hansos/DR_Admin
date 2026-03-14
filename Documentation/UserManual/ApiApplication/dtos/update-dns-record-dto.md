@@ -34,6 +34,11 @@ export interface UpdateDnsRecordDto {
 | `Weight` | `int?` | `number | null` |
 | `Port` | `int?` | `number | null` |
 
+## Used By Endpoints
+
+- [PUT UpdateDnsRecord](../dns-records/put-update-dns-record-api-v1-dns-records-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

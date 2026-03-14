@@ -28,6 +28,11 @@ export interface RegisterDomainDto {
 | `PrivacyProtection` | `bool` | `boolean` |
 | `Notes` | `string?` | `string | null` |
 
+## Used By Endpoints
+
+- [POST RegisterDomain](../registered-domains/post-register-domain-api-v1-registered-domains-register.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

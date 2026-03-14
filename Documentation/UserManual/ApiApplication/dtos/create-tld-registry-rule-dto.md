@@ -40,6 +40,11 @@ export interface CreateTldRegistryRuleDto {
 | `Notes` | `string?` | `string | null` |
 | `IsActive` | `bool` | `boolean` |
 
+## Used By Endpoints
+
+- [POST Create](../tld-registry-rules/post-create-api-v1-tld-registry-rules.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

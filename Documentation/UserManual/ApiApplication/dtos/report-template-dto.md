@@ -50,6 +50,14 @@ export interface ReportTemplateDto {
 | `CreatedAt` | `DateTime` | `string` |
 | `UpdatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetDefaultTemplate](../report-templates/get-get-default-template-api-v1-report-templates-default-type.md)
+- [GET GetTemplateById](../report-templates/get-get-template-by-id-api-v1-report-templates-id.md)
+- [POST CreateTemplate](../report-templates/post-create-template-api-v1-report-templates.md)
+- [PUT UpdateTemplate](../report-templates/put-update-template-api-v1-report-templates-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

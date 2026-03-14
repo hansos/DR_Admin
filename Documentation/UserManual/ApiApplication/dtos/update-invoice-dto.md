@@ -62,6 +62,11 @@ export interface UpdateInvoiceDto {
 | `Notes` | `string` | `string` |
 | `InternalComment` | `string` | `string` |
 
+## Used By Endpoints
+
+- [PUT UpdateInvoice](../invoices/put-update-invoice-api-v1-invoices-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

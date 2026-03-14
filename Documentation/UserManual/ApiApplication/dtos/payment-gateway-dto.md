@@ -58,6 +58,15 @@ export interface PaymentGatewayDto {
 | `UpdatedAt` | `DateTime` | `string` |
 | `DeletedAt` | `DateTime?` | `string | null` |
 
+## Used By Endpoints
+
+- [GET GetDefaultPaymentGateway](../payment-gateways/get-get-default-payment-gateway-api-v1-payment-gateways-default.md)
+- [GET GetPaymentGatewayById](../payment-gateways/get-get-payment-gateway-by-id-api-v1-payment-gateways-id.md)
+- [GET GetPaymentGatewayByProvider](../payment-gateways/get-get-payment-gateway-by-provider-api-v1-payment-gateways-provider-providercode.md)
+- [POST CreatePaymentGateway](../payment-gateways/post-create-payment-gateway-api-v1-payment-gateways.md)
+- [PUT UpdatePaymentGateway](../payment-gateways/put-update-payment-gateway-api-v1-payment-gateways-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

@@ -36,6 +36,11 @@ export interface UpdateVendorTaxProfileDto {
 | `TaxTreatyCountry` | `string?` | `string | null` |
 | `TaxNotes` | `string` | `string` |
 
+## Used By Endpoints
+
+- [PUT UpdateVendorTaxProfile](../vendor-tax-profiles/put-update-vendor-tax-profile-api-v1-vendor-tax-profiles-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

@@ -68,6 +68,14 @@ export interface CustomerDto {
 | `CreatedAt` | `DateTime` | `string` |
 | `UpdatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetAllCustomers](../customers/get-get-all-customers-api-v1-customers.md)
+- [GET GetCustomerById](../customers/get-get-customer-by-id-api-v1-customers-id.md)
+- [POST CreateCustomer](../customers/post-create-customer-api-v1-customers.md)
+- [PUT UpdateCustomer](../customers/put-update-customer-api-v1-customers-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

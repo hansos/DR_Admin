@@ -30,6 +30,11 @@ export interface UpdateServerIpAddressDto {
 | `AssignedTo` | `string?` | `string | null` |
 | `Notes` | `string?` | `string | null` |
 
+## Used By Endpoints
+
+- [PUT UpdateServerIpAddress](../server-ip-addresses/put-update-server-ip-address-api-v1-server-ip-addresses-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

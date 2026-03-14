@@ -32,6 +32,11 @@ export interface CreateQuoteDto {
 | `CouponCode` | `string?` | `string | null` |
 | `Lines` | `List<CreateQuoteLineDto>` | `CreateQuoteLineDto[]` |
 
+## Used By Endpoints
+
+- [POST CreateQuote](../quotes/post-create-quote-api-v1-quotes.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

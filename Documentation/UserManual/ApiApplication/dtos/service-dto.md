@@ -38,6 +38,13 @@ export interface ServiceDto {
 | `CreatedAt` | `DateTime` | `string` |
 | `UpdatedAt` | `DateTime` | `string` |
 
+## Used By Endpoints
+
+- [GET GetServiceById](../services/get-get-service-by-id-api-v1-services-id.md)
+- [POST CreateService](../services/post-create-service-api-v1-services.md)
+- [PUT UpdateService](../services/put-update-service-api-v1-services-id.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

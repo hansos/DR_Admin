@@ -50,6 +50,11 @@ export interface CreateTaxRuleDto {
 | `Priority` | `int` | `number` |
 | `InternalNotes` | `string` | `string` |
 
+## Used By Endpoints
+
+- [POST CreateTaxRule](../tax-rules/post-create-tax-rule-api-v1-tax-rules.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

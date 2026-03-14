@@ -32,6 +32,11 @@ export interface CreateDnsZonePackageDto {
 | `ResellerCompanyId` | `int?` | `number | null` |
 | `SalesAgentId` | `int?` | `number | null` |
 
+## Used By Endpoints
+
+- [POST CreateDnsZonePackage](../dns-zone-packages/post-create-dns-zone-package-api-v1-dns-zone-packages.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+

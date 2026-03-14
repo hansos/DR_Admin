@@ -22,6 +22,11 @@ export interface UpdateTwoFactorSettingsRequestDto {
 | `Enabled` | `bool` | `boolean` |
 | `Method` | `string?` | `string | null` |
 
+## Used By Endpoints
+
+- [POST UpdateTwoFactorSetting](../my-account/post-update-two-factor-setting-api-v1-my-account-2fa.md)
+
 [Back to DTO index](index.md)
 
 [Back to API Manual index](../index.md)
+
