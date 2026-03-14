@@ -31,6 +31,11 @@ public class SupportTicket : EntityBase
     public string Subject { get; set; } = string.Empty;
 
     /// <summary>
+    /// Gets or sets the ticket description.
+    /// </summary>
+    public string Description { get; set; } = string.Empty;
+
+    /// <summary>
     /// Gets or sets the ticket status.
     /// </summary>
     public string Status { get; set; } = "Open";

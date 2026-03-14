@@ -188,4 +188,9 @@ public class UpdateSupportTicketStatusDto
     /// Gets or sets the support department assignment.
     /// </summary>
     public string? AssignedDepartment { get; set; }
+
+    /// <summary>
+    /// Gets or sets the support user assignment.
+    /// </summary>
+    public int? AssignedToUserId { get; set; }
 }

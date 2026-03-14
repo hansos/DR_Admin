@@ -91,7 +91,7 @@ public class SupportTicketService : ISupportTicketService
         }
 
         var normalizedPriority = NormalizePriority(dto.Priority);
-        var normalizedSource = NormalizeSource(dto.Source);
+        var normalizedSource = NormalizeSource(dto.Source, isSupportUser);
         var now = DateTime.UtcNow;
 
         var ticket = new SupportTicket
@@ -194,7 +194,9 @@ public class SupportTicketService : ISupportTicketService
     /// <inheritdoc />
     public async Task<SupportTicketDto?> UpdateStatusAsync(int ticketId, string status, string? assignedDepartment, int? assignedToUserId)
     {
-        if (!AllowedStatuses.Contains(status))
+        var normalizedStatus = NormalizeStatus(status);
+
+        if (!AllowedStatuses.Contains(normalizedStatus))
         {
             throw new ArgumentException("Invalid support ticket status.", nameof(status));
         }
@@ -207,10 +209,28 @@ public class SupportTicketService : ISupportTicketService
             return null;
         }
 
-        ticket.Status = status;
-        ticket.AssignedDepartment = NormalizeDepartment(assignedDepartment);
-        ticket.AssignedToUserId = assignedToUserId;
-        ticket.ClosedAt = status.Equals("Closed", StringComparison.OrdinalIgnoreCase) ? DateTime.UtcNow : null;
+        var normalizedDepartment = NormalizeDepartment(assignedDepartment) ?? ticket.AssignedDepartment;
+        var effectiveAssignedToUserId = assignedToUserId ?? ticket.AssignedToUserId;
+
+        if (normalizedStatus.Equals("InProgress", StringComparison.OrdinalIgnoreCase)
+            || normalizedStatus.Equals("WaitingForCustomer", StringComparison.OrdinalIgnoreCase)
+            || normalizedStatus.Equals("Closed", StringComparison.OrdinalIgnoreCase))
+        {
+            if (string.IsNullOrWhiteSpace(normalizedDepartment))
+            {
+                throw new ArgumentException("AssignedDepartment is required when moving ticket beyond Open.", nameof(assignedDepartment));
+            }
+
+            if (!effectiveAssignedToUserId.HasValue)
+            {
+                throw new ArgumentException("AssignedToUserId is required when moving ticket beyond Open.", nameof(assignedToUserId));
+            }
+        }
+
+        ticket.Status = normalizedStatus;
+        ticket.AssignedDepartment = normalizedDepartment;
+        ticket.AssignedToUserId = effectiveAssignedToUserId;
+        ticket.ClosedAt = normalizedStatus.Equals("Closed", StringComparison.OrdinalIgnoreCase) ? DateTime.UtcNow : null;
         ticket.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
@@ -263,8 +283,13 @@ public class SupportTicketService : ISupportTicketService
         return "Normal";
     }
 
-    private static string NormalizeSource(string? source)
+    private static string NormalizeSource(string? source, bool isSupportUser)
     {
+        if (!isSupportUser)
+        {
+            return SupportTicketSource.CustomerWeb;
+        }
+
         if (string.IsNullOrWhiteSpace(source))
         {
             return SupportTicketSource.CustomerWeb;
@@ -272,6 +297,11 @@ public class SupportTicketService : ISupportTicketService
 
         if (AllowedSources.Contains(source))
         {
+            if (source.Equals(SupportTicketSource.CustomerWeb, StringComparison.OrdinalIgnoreCase))
+            {
+                return SupportTicketSource.CustomerWeb;
+            }
+
             if (source.Equals(SupportTicketSource.Phone, StringComparison.OrdinalIgnoreCase))
             {
                 return SupportTicketSource.Phone;
@@ -288,7 +318,37 @@ public class SupportTicketService : ISupportTicketService
             }
         }
 
-        return SupportTicketSource.CustomerWeb;
+        throw new ArgumentException("Invalid support ticket source.", nameof(source));
+    }
+
+    private static string NormalizeStatus(string? status)
+    {
+        if (string.IsNullOrWhiteSpace(status))
+        {
+            return string.Empty;
+        }
+
+        if (status.Equals("Open", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Open";
+        }
+
+        if (status.Equals("InProgress", StringComparison.OrdinalIgnoreCase))
+        {
+            return "InProgress";
+        }
+
+        if (status.Equals("WaitingForCustomer", StringComparison.OrdinalIgnoreCase))
+        {
+            return "WaitingForCustomer";
+        }
+
+        if (status.Equals("Closed", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Closed";
+        }
+
+        return status.Trim();
     }
 
     private static string? NormalizeDepartment(string? department)

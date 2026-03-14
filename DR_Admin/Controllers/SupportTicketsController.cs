@@ -197,8 +197,7 @@ public class SupportTicketsController : ControllerBase
     {
         try
         {
-            var userContext = await GetCurrentUserContextAsync();
-            var updated = await _supportTicketService.UpdateStatusAsync(id, dto.Status, dto.AssignedDepartment, userContext.UserId);
+            var updated = await _supportTicketService.UpdateStatusAsync(id, dto.Status, dto.AssignedDepartment, dto.AssignedToUserId);
             if (updated == null)
             {
                 return NotFound($"Support ticket with ID {id} not found");
