@@ -51,6 +51,11 @@ public class SupportTicketDto
     public string Subject { get; set; } = string.Empty;
 
     /// <summary>
+    /// Gets or sets the ticket description.
+    /// </summary>
+    public string Description { get; set; } = string.Empty;
+
+    /// <summary>
     /// Gets or sets the ticket status.
     /// </summary>
     public string Status { get; set; } = string.Empty;
@@ -143,7 +148,7 @@ public class CreateSupportTicketDto
     public string Subject { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the initial message body.
+    /// Gets or sets the ticket description body.
     /// </summary>
     public string Message { get; set; } = string.Empty;
 

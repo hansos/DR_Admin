@@ -3,7 +3,7 @@ using ISPAdmin.DTOs;
 namespace ISPAdmin.Services;
 
 /// <summary>
-/// Service interface for support ticket and conversation management.
+/// Service interface for support ticket management.
 /// </summary>
 public interface ISupportTicketService
 {
@@ -37,17 +37,6 @@ public interface ISupportTicketService
     /// <param name="dto">Ticket creation payload.</param>
     /// <returns>The created support ticket.</returns>
     Task<SupportTicketDto> CreateTicketAsync(int userId, int customerId, bool isSupportUser, CreateSupportTicketDto dto);
-
-    /// <summary>
-    /// Appends a new message to an existing ticket thread.
-    /// </summary>
-    /// <param name="ticketId">Support ticket identifier.</param>
-    /// <param name="userId">The current authenticated user identifier.</param>
-    /// <param name="customerId">The customer identifier linked to the current user, if any.</param>
-    /// <param name="isSupportUser">Indicates whether the caller is support staff.</param>
-    /// <param name="dto">Message payload.</param>
-    /// <returns>The updated support ticket, or null when not found or unauthorized.</returns>
-    Task<SupportTicketDto?> AddMessageAsync(int ticketId, int userId, int? customerId, bool isSupportUser, CreateSupportTicketMessageDto dto);
 
     /// <summary>
     /// Updates ticket status.

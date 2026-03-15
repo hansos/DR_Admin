@@ -1691,6 +1691,7 @@ public class ApplicationDbContext : DbContext
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Subject).IsRequired().HasMaxLength(150);
+            entity.Property(e => e.Description).IsRequired().HasMaxLength(4000);
             entity.Property(e => e.Status).IsRequired().HasMaxLength(30);
             entity.Property(e => e.Priority).IsRequired().HasMaxLength(20);
             entity.Property(e => e.AssignedDepartment).HasMaxLength(100);

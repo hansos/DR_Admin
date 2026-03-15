@@ -4,6 +4,7 @@ interface SupportTicketDto {
     customerId: number;
     customerName: string;
     subject: string;
+    description: string;
     status: string;
     priority: string;
     messages: SupportTicketMessageDto[];
@@ -71,7 +72,8 @@ function initializeSupportTicketsPage(): void {
 
     document.getElementById('support-ticket-reply-form')?.addEventListener('submit', (event: Event) => {
         event.preventDefault();
-        void sendSupportTicketMessage();
+        const typedWindow = window as SupportTicketsWindow;
+        typedWindow.UserPanelAlerts?.showError('support-tickets-alert-error', 'Ticket replies are deprecated. Use the communication center for message exchange.');
     });
 
     clearConversation();
@@ -204,15 +206,17 @@ function renderConversation(ticket: SupportTicketDto): void {
     const send = document.getElementById('support-ticket-send') as HTMLButtonElement | null;
 
     if (title) {
-        title.textContent = `Conversation for #${ticket.id}: ${ticket.subject}`;
+        title.textContent = `Ticket #${ticket.id}: ${ticket.subject}`;
     }
 
     if (reply) {
-        reply.disabled = false;
+        reply.disabled = true;
+        reply.value = '';
+        reply.placeholder = 'Reply moved to communication center.';
     }
 
     if (send) {
-        send.disabled = false;
+        send.disabled = true;
     }
 
     if (!thread) {

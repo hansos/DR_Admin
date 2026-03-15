@@ -13,6 +13,7 @@ interface SupportTicket {
     customerId: number;
     customerName: string;
     subject: string;
+    description: string;
     status: string;
     priority: string;
     updatedAt: string;
@@ -113,6 +114,7 @@ function normalizeTicket(item: SupportTicket): SupportTicket {
         customerId: Number(raw.customerId ?? raw.CustomerId ?? 0),
         customerName: String(raw.customerName ?? raw.CustomerName ?? ''),
         subject: String(raw.subject ?? raw.Subject ?? ''),
+        description: String(raw.description ?? raw.Description ?? ''),
         status: String(raw.status ?? raw.Status ?? ''),
         priority: String(raw.priority ?? raw.Priority ?? ''),
         updatedAt: String(raw.updatedAt ?? raw.UpdatedAt ?? ''),
@@ -300,31 +302,26 @@ function renderDetails(ticket: SupportTicket): void {
     }
 
     if (reply) {
-        reply.disabled = false;
+        reply.disabled = true;
+        reply.value = '';
+        reply.placeholder = 'Replies moved to communication system.';
     }
 
     if (send) {
-        send.disabled = false;
+        send.disabled = true;
     }
 
     if (!thread) {
         return;
     }
 
-    if (ticket.messages.length === 0) {
-        thread.innerHTML = '<p class="text-muted mb-0">No messages yet.</p>';
-        return;
-    }
-
-    thread.innerHTML = ticket.messages.map((message) => {
-        const senderClass = message.senderRole.toLowerCase() === 'support' ? 'text-primary' : 'text-success';
-        return `<div class="mb-3">
-            <div class="small ${senderClass}"><strong>${escapeHtml(message.senderRole)}</strong> · ${escapeHtml(message.senderUsername)} · ${formatDate(message.createdAt)}</div>
-            <div class="mt-1">${escapeHtml(message.message).replace(/\n/g, '<br />')}</div>
-        </div>`;
-    }).join('');
-
-    thread.scrollTop = thread.scrollHeight;
+    const description = escapeHtml(ticket.description).replace(/\n/g, '<br />');
+    thread.innerHTML = `
+        <div class="mb-3">
+            <div class="small text-muted"><strong>Description</strong></div>
+            <div class="mt-1">${description || '<span class="text-muted">No description</span>'}</div>
+        </div>
+        <p class="text-muted mb-0">Replies are deprecated for support tickets. Use communication endpoints.</p>`;
 }
 
 function clearDetailPane(): void {
@@ -380,32 +377,7 @@ async function updateStatus(newStatus: string): Promise<void> {
 
 async function sendReply(event: Event): Promise<void> {
     event.preventDefault();
-    const ticketId = selectedTicketId;
-    const reply = document.getElementById('reseller-support-reply') as HTMLTextAreaElement | null;
-    const message = reply?.value.trim() ?? '';
-
-    if (!ticketId || !message) {
-        showError('Reply message is required.');
-        return;
-    }
-
-    const response = await apiRequest<SupportTicket>(`${getApiBaseUrl()}/SupportTickets/${ticketId}/messages`, {
-        method: 'POST',
-        body: JSON.stringify({ message })
-    });
-
-    if (!response.success) {
-        showError(response.message ?? 'Could not send reply.');
-        return;
-    }
-
-    if (reply) {
-        reply.value = '';
-    }
-
-    showSuccess('Reply sent.');
-    await loadTickets();
-    await openTicket(ticketId);
+    showError('Ticket replies are deprecated. Use communication endpoints.');
 }
 
 function onPaginationClick(event: Event): void {

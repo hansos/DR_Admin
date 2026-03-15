@@ -32,7 +32,8 @@
         });
         document.getElementById('support-ticket-reply-form')?.addEventListener('submit', (event) => {
             event.preventDefault();
-            void sendSupportTicketMessage();
+            const typedWindow = window;
+            typedWindow.UserPanelAlerts?.showError('support-tickets-alert-error', 'Ticket replies are deprecated. Use the communication center for message exchange.');
         });
         clearConversation();
         void loadSupportTickets();
@@ -141,13 +142,15 @@
         const reply = document.getElementById('support-ticket-reply');
         const send = document.getElementById('support-ticket-send');
         if (title) {
-            title.textContent = `Conversation for #${ticket.id}: ${ticket.subject}`;
+            title.textContent = `Ticket #${ticket.id}: ${ticket.subject}`;
         }
         if (reply) {
-            reply.disabled = false;
+            reply.disabled = true;
+            reply.value = '';
+            reply.placeholder = 'Reply moved to communication center.';
         }
         if (send) {
-            send.disabled = false;
+            send.disabled = true;
         }
         if (!thread) {
             return;

@@ -99,23 +99,12 @@ public class SupportTicketService : ISupportTicketService
             CustomerId = customerId,
             CreatedByUserId = userId,
             Subject = dto.Subject.Trim(),
+            Description = dto.Message.Trim(),
             Priority = normalizedPriority,
             Source = normalizedSource,
             Status = "Open",
-            LastMessageAt = now,
             CreatedAt = now,
-            UpdatedAt = now,
-            Messages =
-            [
-                new SupportTicketMessage
-                {
-                    SenderUserId = userId,
-                    SenderRole = isSupportUser ? "Support" : "Customer",
-                    Message = dto.Message.Trim(),
-                    CreatedAt = now,
-                    UpdatedAt = now
-                }
-            ]
+            UpdatedAt = now
         };
 
         _context.SupportTickets.Add(ticket);
@@ -126,69 +115,6 @@ public class SupportTicketService : ISupportTicketService
 
         _log.Information("Created support ticket {SupportTicketId} by user {UserId}", ticket.Id, userId);
         return MapToDto(created);
-    }
-
-    /// <inheritdoc />
-    public async Task<SupportTicketDto?> AddMessageAsync(int ticketId, int userId, int? customerId, bool isSupportUser, CreateSupportTicketMessageDto dto)
-    {
-        if (string.IsNullOrWhiteSpace(dto.Message))
-        {
-            throw new ArgumentException("Message is required.", nameof(dto));
-        }
-
-        var ticket = await _context.SupportTickets
-            .Include(t => t.Messages)
-            .FirstOrDefaultAsync(t => t.Id == ticketId);
-
-        if (ticket == null)
-        {
-            return null;
-        }
-
-        if (!isSupportUser && ticket.CustomerId != customerId)
-        {
-            return null;
-        }
-
-        if (ticket.Status.Equals("Closed", StringComparison.OrdinalIgnoreCase))
-        {
-            ticket.Status = "InProgress";
-            ticket.ClosedAt = null;
-        }
-
-        var now = DateTime.UtcNow;
-        ticket.Messages.Add(new SupportTicketMessage
-        {
-            SupportTicketId = ticket.Id,
-            SenderUserId = userId,
-            SenderRole = isSupportUser ? "Support" : "Customer",
-            Message = dto.Message.Trim(),
-            CreatedAt = now,
-            UpdatedAt = now
-        });
-
-        ticket.LastMessageAt = now;
-        ticket.UpdatedAt = now;
-
-        if (isSupportUser)
-        {
-            ticket.AssignedToUserId ??= userId;
-            if (ticket.Status.Equals("Open", StringComparison.OrdinalIgnoreCase))
-            {
-                ticket.Status = "InProgress";
-            }
-        }
-        else if (ticket.Status.Equals("WaitingForCustomer", StringComparison.OrdinalIgnoreCase))
-        {
-            ticket.Status = "InProgress";
-        }
-
-        await _context.SaveChangesAsync();
-
-        var updated = await BuildScopedTicketQuery(isSupportUser: true, customerId: null)
-            .FirstAsync(t => t.Id == ticket.Id);
-
-        return MapToDto(updated);
     }
 
     /// <inheritdoc />
@@ -248,8 +174,6 @@ public class SupportTicketService : ISupportTicketService
             .Include(t => t.Customer)
             .Include(t => t.CreatedByUser)
             .Include(t => t.AssignedToUser)
-            .Include(t => t.Messages.OrderBy(m => m.CreatedAt))
-                .ThenInclude(m => m.SenderUser)
             .AsQueryable();
 
         if (!isSupportUser)
@@ -369,6 +293,7 @@ public class SupportTicketService : ISupportTicketService
             AssignedDepartment = ticket.AssignedDepartment,
             AssignedToUsername = ticket.AssignedToUser?.Username,
             Subject = ticket.Subject,
+            Description = ticket.Description,
             Status = ticket.Status,
             Priority = ticket.Priority,
             Source = ticket.Source,
@@ -376,19 +301,7 @@ public class SupportTicketService : ISupportTicketService
             UpdatedAt = ticket.UpdatedAt,
             LastMessageAt = ticket.LastMessageAt,
             ClosedAt = ticket.ClosedAt,
-            Messages = ticket.Messages
-                .OrderBy(m => m.CreatedAt)
-                .Select(m => new SupportTicketMessageDto
-                {
-                    Id = m.Id,
-                    SupportTicketId = m.SupportTicketId,
-                    SenderUserId = m.SenderUserId,
-                    SenderUsername = m.SenderUser?.Username ?? string.Empty,
-                    SenderRole = m.SenderRole,
-                    Message = m.Message,
-                    CreatedAt = m.CreatedAt
-                })
-                .ToList()
+            Messages = []
         };
     }
 }

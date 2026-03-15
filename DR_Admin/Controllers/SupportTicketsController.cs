@@ -138,43 +138,22 @@ public class SupportTicketsController : ControllerBase
     }
 
     /// <summary>
-    /// Adds a message to a support ticket conversation.
+    /// Deprecated endpoint. Support ticket messaging has moved to the communication system.
     /// </summary>
     /// <param name="id">Support ticket identifier.</param>
-    /// <param name="dto">Message payload.</param>
-    /// <returns>The updated support ticket.</returns>
-    /// <response code="200">Returns updated support ticket with messages.</response>
-    /// <response code="400">If input data is invalid.</response>
-    /// <response code="404">If support ticket is not found.</response>
-    /// <response code="500">If an internal server error occurs.</response>
+    /// <param name="dto">Unused legacy payload.</param>
+    /// <returns>A gone response indicating endpoint deprecation.</returns>
+    /// <response code="410">Support ticket messaging endpoint is deprecated.</response>
     [HttpPost("{id}/messages")]
     [Authorize(Policy = "SupportTicket.Write")]
-    [ProducesResponseType(typeof(SupportTicketDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<SupportTicketDto>> AddMessage(int id, [FromBody] CreateSupportTicketMessageDto dto)
+    [Obsolete("Deprecated. Use communication endpoints for message exchange.")]
+    [ProducesResponseType(StatusCodes.Status410Gone)]
+    public ActionResult AddMessage(int id, [FromBody] CreateSupportTicketMessageDto dto)
     {
-        try
+        return StatusCode(StatusCodes.Status410Gone, new
         {
-            var userContext = await GetCurrentUserContextAsync();
-            var updated = await _supportTicketService.AddMessageAsync(id, userContext.UserId, userContext.CustomerId, userContext.IsSupportUser, dto);
-            if (updated == null)
-            {
-                return NotFound($"Support ticket with ID {id} not found");
-            }
-
-            return Ok(updated);
-        }
-        catch (ArgumentException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
-        catch (Exception ex)
-        {
-            _log.Error(ex, "Error while adding message to support ticket {SupportTicketId}", id);
-            return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while adding support message");
-        }
+            message = "Support ticket messaging endpoint is deprecated. Use communication endpoints for message exchange."
+        });
     }
 
     /// <summary>
