@@ -158,8 +158,11 @@ Database connection string used by Entity Framework Core.
 | SQLite     | `Data Source=C:\\Tmp\\DR_Admin.db`                                                                  |
 | SQL Server | `Server=localhost;Database=DR_Admin;Trusted_Connection=True;TrustServerCertificate=True;`          |
 | PostgreSQL | `Host=localhost;Port=5432;Database=DR_Admin;Username=postgres;Password=secret;`                     |
+| MySQL      | `Server=localhost;Port=3306;Database=DR_Admin;User=root;Password=secret;`                          |
 
 > **Note:** The SQLite database file is created automatically on first startup.
+>
+> **⚠ MySQL:** The MySQL connection string format is shown for reference, but MySQL is **not currently supported** — see [DbSettings](#dbsettings) for details.
 
 ---
 
@@ -173,9 +176,22 @@ Selects the database provider used by Entity Framework Core.
 }
 ```
 
-| Key            | Type   | Default    | Allowed Values                       | Description                   |
-| -------------- | ------ | ---------- | ------------------------------------ | ----------------------------- |
-| `DatabaseType` | string | `"SQLITE"` | `"SQLITE"`, `"SQLSERVER"`, `"POSTGRESQL"` | The database engine to use |
+| Key            | Type   | Default    | Description                   |
+| -------------- | ------ | ---------- | ----------------------------- |
+| `DatabaseType` | string | `"SQLITE"` | The database engine to use. See the table below for recognised values. |
+
+### Recognised `DatabaseType` values
+
+| Value          | Alias         | EF Core Provider                        | Status            |
+| -------------- | ------------- | --------------------------------------- | ----------------- |
+| `SQLITE`       | `LITESQL`     | `Microsoft.EntityFrameworkCore.Sqlite`  | ✅ Supported       |
+| `SQLSERVER`    | `MSSQL`       | `Microsoft.EntityFrameworkCore.SqlServer` | ✅ Supported     |
+| `POSTGRESQL`   | `POSTGRE`     | `Npgsql.EntityFrameworkCore.PostgreSQL` | ✅ Supported       |
+| `MYSQL`        | —             | `Pomelo.EntityFrameworkCore.MySql`      | ❌ Not yet supported |
+
+> **⚠ MySQL note:** The `MYSQL` value is recognised by the configuration parser, but it currently throws a `NotSupportedException` at startup. The [Pomelo.EntityFrameworkCore.MySql](https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql) package is not yet compatible with **EF Core 10** (used by this project). Once Pomelo publishes a compatible release, MySQL support will be enabled. Until then, use one of the three supported providers above.
+
+Either the primary value or its alias can be used — they are treated identically (case-insensitive).
 
 ---
 
