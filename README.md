@@ -3,32 +3,43 @@
 A comprehensive ISP/Domain Reseller administration system built with .NET 10. This solution provides a complete backend API and web interface for managing domain registrations, hosting services, billing, invoicing, and customer management.
 
 ---
+
 ⚠️  
 DR_Admin is currently under active development.   
 Several features are not yet implemented, and the system requires extensive testing.   
 Functionality may change frequently, and the API is not considered stable.   
 Use at your own discretion for development and testing purposes only.
+
 ---
 
 [See developer's documentation](Documentation/Index.md)
 
 ## Solution Structure
 
-| Project | Description |
-|---------|-------------|
-| **DR_Admin** | Core Web API with REST endpoints, Entity Framework Core database, and business logic |
-| **DR_Admin_Web** | Blazor web frontend application |
-| **DomainRegistrationLib** | Domain registrar integrations (Namecheap, GoDaddy, Cloudflare, AWS, and more) |
-| **PaymentGatewayLib** | Payment gateway integrations (Stripe, PayPal, Braintree, Adyen, and 25+ providers) |
-| **EmailSenderLib** | Email delivery integrations (SMTP, SendGrid, Mailgun, Amazon SES, Postmark, Microsoft Graph) |
-| **SMSSenderLib** | SMS sender integrations (Twilio, Vonage, MessageBird, Africa's Talking, and more) |
-| **HostingPanelLib** | Hosting control panel integrations (cPanel, Plesk, DirectAdmin, Virtualmin, CyberPanel) |
-| **ExchangeRateLib** | Currency exchange rate provider integrations |
-| **DR_Admin.IntegrationTests** | Integration test suite |
+| Project                                        | Description                                                                                                            |
+| ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| **DR_Admin**                                   | Core Web API with REST endpoints, Entity Framework Core database, and business logic                                   |
+| **DR_Admin_UserPanel**                         | Blazor web frontend for end-user / customer self-service                                                               |
+| **DR_Admin_ResellerPanel**                     | Blazor web frontend for reseller management                                                                            |
+| **DR_Amin_Mobile**                             | .NET MAUI mobile application (Android, iOS, macOS, Windows)                                                            |
+| **DomainRegistrationLib**                      | Domain registrar integrations (Namecheap, GoDaddy, Cloudflare, AWS, and more)                                          |
+| **PaymentGatewayLib**                          | Payment gateway integrations (Stripe, PayPal, Braintree, Adyen, and 25+ providers)                                     |
+| **EmailSenderLib**                             | Email delivery abstraction layer built on the plugin model                                                             |
+| **SMSSenderLib**                               | SMS sender integrations (Twilio, Vonage, MessageBird, Africa's Talking, and more)                                      |
+| **HostingPanelLib**                            | Hosting control panel integrations (cPanel, Plesk, DirectAdmin, Virtualmin, CyberPanel)                                |
+| **ExchangeRateLib**                            | Currency exchange rate provider integrations                                                                           |
+| **ReportGeneratorLib**                         | Report generation library (QuestPDF, FastReport)                                                                       |
+| **MessagingTemplateLib**                       | Messaging template engine with caching support                                                                         |
+| **PluginLib**                                  | Generic plugin infrastructure — contracts, registry, and selection logic                                               |
+| **PluginProviders\\EmailSenderProviders\\***   | Concrete email sender plugin implementations (SMTP, MailKit, SendGrid, Mailgun, Amazon SES, Postmark, Microsoft Graph) |
+| **PluginProviders\\EmailReceiverProviders\\*** | Concrete email receiver plugin implementations (Office 365)                                                            |
+| **Tool_PostalCodeNormalizer**                  | Standalone CLI tool for postal code normalization                                                                      |
+| **DR_Admin.IntegrationTests**                  | Integration test suite                                                                                                 |
 
 ## Features
 
 ### Core Functionality
+
 - **Customer Management** - Full customer lifecycle with contact persons, credit management, and payment methods
 - **Order Processing** - Quote-to-order workflow with state machine-based lifecycle
 - **Invoicing** - Invoice generation, payment tracking, and refund processing
@@ -36,6 +47,7 @@ Use at your own discretion for development and testing purposes only.
 - **Multi-Currency** - Currency exchange rate management with automatic updates
 
 ### Domain Services
+
 - Domain availability checking
 - Domain registration and renewal workflows
 - Domain transfers
@@ -43,17 +55,20 @@ Use at your own discretion for development and testing purposes only.
 - TLD and registrar configuration
 
 ### Hosting Services
+
 - Hosting account provisioning
 - Server and IP address management
 - Control panel integration
 - Hosting package management
 
 ### Communication
+
 - Email queue with background processing
 - SMS notifications
 - Document templates for automated communications
 
 ### System Features
+
 - JWT-based authentication with role-based authorization
 - Configurable CORS policies
 - Structured logging with Serilog
@@ -70,6 +85,7 @@ Use at your own discretion for development and testing purposes only.
 ## Getting Started
 
 ### Prerequisites
+
 - [.NET 10 SDK](https://dotnet.microsoft.com/download)
 
 ### Configuration
@@ -110,11 +126,13 @@ dotnet run --project DR_Admin_Web
 ### API Documentation
 
 Once running, Swagger UI is available at:
+
 - `https://localhost:{port}/swagger`
 
 ## Integrations
 
 ### Domain Registrars
+
 - Namecheap
 - GoDaddy
 - Cloudflare
@@ -128,6 +146,7 @@ Once running, Swagger UI is available at:
 - AWS Route 53
 
 ### Payment Gateways
+
 - Stripe
 - PayPal
 - Braintree
@@ -146,6 +165,7 @@ Once running, Swagger UI is available at:
 - And more...
 
 ### Email Providers
+
 - SMTP
 - MailKit
 - SendGrid
@@ -156,6 +176,7 @@ Once running, Swagger UI is available at:
 - Exchange
 
 ### SMS Providers
+
 - Twilio
 - Vonage
 - MessageBird
@@ -166,6 +187,7 @@ Once running, Swagger UI is available at:
 - GatewayAPI
 
 ### Hosting Panels
+
 - cPanel
 - Plesk
 - DirectAdmin
@@ -190,6 +212,7 @@ This software is licensed under **AGPL-3.0**.
 - Commercial licenses are available.
 
 For full details, see:
+
 - `LICENSE.txt` (AGPL-3.0-only)
 - `COMMERCIAL-LICENSE.md` (commercial license summary)
 - `LICENSE-SUMMARY.md` (dual licensing overview)
