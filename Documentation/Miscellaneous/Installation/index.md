@@ -13,3 +13,4 @@ This section covers everything needed to get DR_Admin running: obtaining the sou
 | [AppSettings Reference](AppSettings.md)    | Detailed reference for every section in `appsettings.json`                                                               |
 | [Build](Build.md)                          | Build the solution using Visual Studio or the dotnet CLI                                                                 |
 | [Email Plugins](Email_Plugins.md)          | Install and configure email sender plugins (SMTP, MailKit, Graph API, Exchange, SendGrid, Mailgun, Amazon SES, Postmark) |
+| [Forking and Cloning](ForkAndClone.md)     | Fork the repository on GitHub and pull it to a local directory — essential for API developers                             |
