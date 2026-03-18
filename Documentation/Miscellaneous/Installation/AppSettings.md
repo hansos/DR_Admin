@@ -182,12 +182,12 @@ Selects the database provider used by Entity Framework Core.
 
 ### Recognised `DatabaseType` values
 
-| Value          | Alias         | EF Core Provider                        | Status            |
-| -------------- | ------------- | --------------------------------------- | ----------------- |
-| `SQLITE`       | `LITESQL`     | `Microsoft.EntityFrameworkCore.Sqlite`  | ✅ Supported       |
+| Value          | Alias         | EF Core Provider                          | Status            |
+| -------------- | ------------- | ----------------------------------------- | ----------------- |
+| `SQLITE`       | `LITESQL`     | `Microsoft.EntityFrameworkCore.Sqlite`    | ✅ Supported       |
 | `SQLSERVER`    | `MSSQL`       | `Microsoft.EntityFrameworkCore.SqlServer` | ✅ Supported     |
-| `POSTGRESQL`   | `POSTGRE`     | `Npgsql.EntityFrameworkCore.PostgreSQL` | ✅ Supported       |
-| `MYSQL`        | —             | `Pomelo.EntityFrameworkCore.MySql`      | ❌ Not yet supported |
+| `POSTGRESQL`   | `POSTGRE`     | `Npgsql.EntityFrameworkCore.PostgreSQL`   | ✅ Supported       |
+| `MYSQL`        | `MYSQL`       | `Pomelo.EntityFrameworkCore.MySql`        | ❌ Not yet supported |
 
 > **⚠ MySQL note:** The `MYSQL` value is recognised by the configuration parser, but it currently throws a `NotSupportedException` at startup. The [Pomelo.EntityFrameworkCore.MySql](https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql) package is not yet compatible with **EF Core 10** (used by this project). Once Pomelo publishes a compatible release, MySQL support will be enabled. Until then, use one of the three supported providers above.
 
