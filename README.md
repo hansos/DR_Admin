@@ -12,8 +12,8 @@ Use at your own discretion for development and testing purposes only.
 
 ---
 
-[See developer's documentation](Documentation/Miscellaneous/Index.md)
-[See user's manual](Documentation/UserManual/index.md)
+- [See developer's documentation](Documentation/Miscellaneous/Index.md)
+- [See user's manual](Documentation/UserManual/index.md)
 
 ## Solution Structure
 
