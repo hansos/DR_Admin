@@ -96,11 +96,80 @@ git push origin master
 
 ```mermaid
 flowchart TD
-    A[Upstream Repository\nhansos/DR_Admin] -->|Fork| B[Your Fork\nyour-username/DR_Admin]
-    B -->|git clone| C[Local Repository\nC:\Source2\DR_Admin]
-    C -->|git push origin| B
-    A -->|git fetch upstream| C
-    C -->|Pull Request| A
+    A[Upstream Repository\nhansos/DR_Admin] -->|1 · Fork| B[Contributor Fork\nguest-username/DR_Admin]
+    B -->|2 · git clone| C[Contributor Local Machine]
+    C -->|3 · git push origin| B
+    B -->|4 · Open Pull Request| A
+    A -->|5 · Review & Merge PR| A
+    A -->|6 · git fetch upstream| C
+```
+
+## How the Repository Owner Reviews and Merges Contributions
+
+When a contributor (the "guest") pushes commits, those commits go to **their fork** — not to the upstream repository. The upstream repository is only updated when the owner explicitly merges those changes.
+
+The standard way to move changes from a fork into the upstream repository is through a **Pull Request (PR)**.
+
+### Where Pushes Go
+
+| Actor        | `git push origin` sends to …                          |
+| ------------ | ------------------------------------------------------ |
+| Contributor  | `https://github.com/guest-username/DR_Admin` (fork)    |
+| Owner        | `https://github.com/hansos/DR_Admin` (upstream)        |
+
+The contributor **never** pushes directly to `hansos/DR_Admin`.
+
+### Contributor — Opening a Pull Request
+
+1. Push the feature branch to **their fork**:
+
+   ```powershell
+   git checkout -b feature/my-change
+   # … make changes and commit …
+   git push origin feature/my-change
+   ```
+
+2. On GitHub, navigate to the fork and click **Compare & pull request**.
+3. Ensure the base repository is `hansos/DR_Admin` and the base branch is `master` (or the appropriate target branch).
+4. Add a descriptive title and description, then click **Create pull request**.
+
+### Owner — Reviewing and Merging
+
+1. Navigate to the **Pull requests** tab on `https://github.com/hansos/DR_Admin`.
+2. Open the contributor's PR to see the list of changed files and commits.
+3. Review the code:
+   - Use the **Files changed** tab to leave inline comments.
+   - Request changes if something needs work, or approve if everything looks good.
+4. Once satisfied, click **Merge pull request** (or choose *Squash and merge* / *Rebase and merge* as preferred).
+5. The contributor's changes are now part of the upstream repository.
+
+> **Tip — GitHub CLI shortcut:**
+>
+> ```powershell
+> # List open PRs
+> gh pr list --repo hansos/DR_Admin
+>
+> # Review a specific PR locally
+> gh pr checkout <pr-number> --repo hansos/DR_Admin
+>
+> # Merge after review
+> gh pr merge <pr-number> --repo hansos/DR_Admin --merge
+> ```
+
+### Pull Request Flow Diagram
+
+```mermaid
+sequenceDiagram
+    participant C as Contributor
+    participant F as Fork (guest-username/DR_Admin)
+    participant U as Upstream (hansos/DR_Admin)
+    participant O as Owner
+
+    C->>F: git push origin feature/my-change
+    F->>U: Open Pull Request
+    O->>U: Review changed files & comments
+    O->>U: Merge Pull Request
+    U-->>C: git fetch upstream (to sync)
 ```
 
 ## Importance for API Development
