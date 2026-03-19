@@ -29,15 +29,18 @@ public static class DbContextConfiguration
                 break;
 
             case "MYSQL":
-                throw new NotSupportedException(
-                    "MySQL is not currently supported with EF Core 10. " +
-                    "The Pomelo.EntityFrameworkCore.MySql package is not yet compatible with EF Core 10. " +
-                    "Supported database types are: MSSQL, POSTGRE, SQLITE");
+                options.UseMySQL(connectionString);
+                break;
+
+            case "MARIADB":
+            case "MARIA":
+                options.UseMariaDb(connectionString);
+                break;
 
             default:
                 throw new InvalidOperationException(
                     $"Unsupported database type: {databaseType}. " +
-                    "Supported types are: MSSQL, POSTGRE, SQLITE");
+                    "Supported types are: MSSQL, POSTGRE, SQLITE, MYSQL, MARIADB");
         }
     }
 }
