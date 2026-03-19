@@ -1799,7 +1799,11 @@ public class ApplicationDbContext : DbContext
         modelBuilder.Entity<Country>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.Code).IsRequired().HasMaxLength(2);
+            entity.Property(e => e.Code)
+                .IsRequired()
+                .HasMaxLength(2)
+                .IsUnicode(false)
+                .HasColumnType("varchar(2)");
             entity.Property(e => e.Tld).IsRequired().HasMaxLength(10);
             entity.Property(e => e.EnglishName).IsRequired().HasMaxLength(100);
             entity.Property(e => e.LocalName).IsRequired().HasMaxLength(100);
@@ -1868,7 +1872,11 @@ public class ApplicationDbContext : DbContext
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Code).IsRequired().HasMaxLength(20);
-            entity.Property(e => e.CountryCode).IsRequired().HasMaxLength(2);
+            entity.Property(e => e.CountryCode)
+                .IsRequired()
+                .HasMaxLength(2)
+                .IsUnicode(false)
+                .HasColumnType("varchar(2)");
             entity.Property(e => e.City).IsRequired().HasMaxLength(100);
             entity.Property(e => e.State).HasMaxLength(100);
             entity.Property(e => e.Region).HasMaxLength(100);
@@ -2067,7 +2075,7 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => e.CommunicationThreadId);
             entity.HasIndex(e => e.EmailAddress);
             entity.HasIndex(e => e.Role);
-            entity.HasIndex(e => new { e.CommunicationThreadId, e.EmailAddress, e.Role });
+            //entity.HasIndex(e => new { e.CommunicationThreadId, e.EmailAddress, e.Role });
 
             entity.HasOne(e => e.CommunicationThread)
                 .WithMany(t => t.Participants)
@@ -2123,7 +2131,7 @@ public class ApplicationDbContext : DbContext
             
             // Indexes for performance
             entity.HasIndex(e => new { e.BaseCurrency, e.TargetCurrency, e.EffectiveDate })
-                .HasDatabaseName("IX_CurrencyExchangeRates_BaseCurrency_TargetCurrency_EffectiveDate");
+                 .HasDatabaseName("IX_CurrencyExchangeRates_BaseCurrency_TargetCurrency_EffectiveDate");
             entity.HasIndex(e => e.IsActive);
         });
 
@@ -2554,5 +2562,54 @@ public class ApplicationDbContext : DbContext
                 .HasForeignKey(e => e.SelectedPaymentGatewayId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
+
+        ApplyDatabaseSpecificIndexRules(modelBuilder);
+    }
+
+    private void ApplyDatabaseSpecificIndexRules(ModelBuilder modelBuilder)
+    {
+        var providerName = Database.ProviderName ?? string.Empty;
+        Console.WriteLine($"[DbContext] Provider detected: {providerName}");
+
+        // Apply index/key string limits only for MySQL providers.
+        var isMySqlFamilyProvider =
+            providerName.Contains("MySql", StringComparison.OrdinalIgnoreCase)
+            || providerName.Contains("MariaDb", StringComparison.OrdinalIgnoreCase)
+            || providerName.Contains("Maria", StringComparison.OrdinalIgnoreCase);
+
+        if (!isMySqlFamilyProvider)
+        {
+            Console.WriteLine("[DbContext] Skipping MySQL/MariaDB index length adjustments.");
+            return;
+        }
+
+        // utf8mb4-safe default for indexed string columns in MySQL.
+        const int mysqlIndexedStringMaxLength = 191;
+        var adjustedPropertyCount = 0;
+
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            var indexedProperties = entityType.GetIndexes()
+                .SelectMany(index => index.Properties)
+                .Concat(entityType.GetKeys().SelectMany(key => key.Properties))
+                .Distinct();
+
+            foreach (var property in indexedProperties)
+            {
+                if (property.ClrType != typeof(string))
+                {
+                    continue;
+                }
+
+                var currentMaxLength = property.GetMaxLength();
+                if (!currentMaxLength.HasValue || currentMaxLength.Value > mysqlIndexedStringMaxLength)
+                {
+                    property.SetMaxLength(mysqlIndexedStringMaxLength);
+                    adjustedPropertyCount++;
+                }
+            }
+        }
+
+        Console.WriteLine($"[DbContext] Applied MySQL/MariaDB index length adjustments to {adjustedPropertyCount} string property/properties.");
     }
 }
