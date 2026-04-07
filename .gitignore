@@ -380,3 +380,6 @@ FodyWeavers.xsd
 /DR_Admin_UserPanel/PHASE-3-MVP.md
 /.github/copilot-instructions.md
 /TODO.txt
+/DR_Admin/appsettings.publish.json
+/DR_Admin/Data/DR_Admin.db-shm
+/DR_Admin/Data/DR_Admin.db-wal
