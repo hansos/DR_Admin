@@ -448,6 +448,13 @@ builder.Services.AddCors(options =>
         {
             policy.WithOrigins(allowedOrigins);
         }
+        else if (allowCredentials)
+        {
+            // When AllowCredentials is true, AllowAnyOrigin (*) is not allowed by browsers.
+            // Using SetIsOriginAllowed with a function that returns true echoes the request origin
+            // back to the client, satisfying the security requirement.
+            policy.SetIsOriginAllowed(_ => true);
+        }
         else
         {
             policy.AllowAnyOrigin();

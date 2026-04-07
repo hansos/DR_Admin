@@ -27,8 +27,8 @@ public class MessagingService
     {
         try
         {
-            _log.Information("Rendering message - Type: {MessageType}, Channel: {Channel}", 
-                messageType, channel);
+            _log.Information("Rendering message - Type: {MessageType}, Channel: {Channel}, ModelType: {ModelType}", 
+                messageType, channel, model.GetType().Name);
 
             var channelFileName = channel switch
             {
@@ -41,13 +41,23 @@ public class MessagingService
             var contentTemplate = _loader.LoadTemplate(messageType, channelFileName);
             var masterTemplate = _loader.LoadMasterTemplate(channel);
 
+            _log.Information("Templates loaded - Content length: {ContentLen}, Master length: {MasterLen}, ContentIsNull: {ContentNull}, MasterIsNull: {MasterNull}",
+                contentTemplate?.Length ?? -1, masterTemplate?.Length ?? -1,
+                contentTemplate is null, masterTemplate is null);
+
             var values = TemplateRenderer.ModelToDictionary(model);
 
+            _log.Information("Model values ({Count}): [{Values}]",
+                values.Count,
+                string.Join(", ", values.Select(kv => $"{kv.Key}='{kv.Value}'")));
+
             var result = TemplateRenderer.RenderWithMaster(contentTemplate, masterTemplate, values);
-            
-            _log.Debug("Message rendered successfully - Type: {MessageType}, Length: {Length}", 
-                messageType, result.Length);
-            
+
+            _log.Information("Message rendered - Type: {MessageType}, ResultLength: {Length}, HasUnreplacedPlaceholders: {HasUnreplaced}, ResultSnippet: {Snippet}", 
+                messageType, result.Length,
+                result.Contains("{{"),
+                result.Length > 300 ? result[..300] : result);
+
             return result;
         }
         catch (Exception ex)

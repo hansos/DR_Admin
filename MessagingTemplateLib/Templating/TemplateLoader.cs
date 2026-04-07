@@ -28,20 +28,25 @@ public class TemplateLoader
     public string LoadTemplate(string messageType, string channel)
     {
         var templateFile = Path.Combine(_templateBasePath, messageType, $"{channel}.txt");
-        
-        return _cache.GetOrCreate(templateFile, entry =>
+
+        if (_cache.TryGetValue(templateFile, out string? cached) && cached is not null)
         {
-            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10);
-            
-            if (!File.Exists(templateFile))
-            {
-                _log.Warning("Template file not found: {TemplatePath}", templateFile);
-                throw new FileNotFoundException($"Template not found: {templateFile}");
-            }
-            
-            _log.Debug("Loading template from: {TemplatePath}", templateFile);
-            return File.ReadAllText(templateFile);
-        });
+            _log.Debug("Template cache hit: {TemplatePath} (Length={Length})", templateFile, cached.Length);
+            return cached;
+        }
+
+        if (!File.Exists(templateFile))
+        {
+            _log.Warning("Template file not found: {TemplatePath}", templateFile);
+            throw new FileNotFoundException($"Template not found: {templateFile}");
+        }
+
+        var content = File.ReadAllText(templateFile);
+        _log.Information("Loaded template from disk: {TemplatePath} (Length={Length}, Snippet={Snippet})",
+            templateFile, content.Length, content.Length > 120 ? content[..120] : content);
+
+        _cache.Set(templateFile, content, TimeSpan.FromMinutes(10));
+        return content;
     }
 
     /// <summary>
@@ -59,19 +64,24 @@ public class TemplateLoader
             _ => throw new ArgumentOutOfRangeException(nameof(channel))
         };
 
-        return _cache.GetOrCreate(masterFile, entry =>
+        if (_cache.TryGetValue(masterFile, out string? cached) && cached is not null)
         {
-            entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10);
-            
-            if (!File.Exists(masterFile))
-            {
-                _log.Warning("Master template file not found: {MasterPath}", masterFile);
-                throw new FileNotFoundException($"Master template not found: {masterFile}");
-            }
-            
-            _log.Debug("Loading master template from: {MasterPath}", masterFile);
-            return File.ReadAllText(masterFile);
-        });
+            _log.Debug("Master template cache hit: {MasterPath} (Length={Length})", masterFile, cached.Length);
+            return cached;
+        }
+
+        if (!File.Exists(masterFile))
+        {
+            _log.Warning("Master template file not found: {MasterPath}", masterFile);
+            throw new FileNotFoundException($"Master template not found: {masterFile}");
+        }
+
+        var content = File.ReadAllText(masterFile);
+        _log.Information("Loaded master template from disk: {MasterPath} (Length={Length}, Snippet={Snippet})",
+            masterFile, content.Length, content.Length > 120 ? content[..120] : content);
+
+        _cache.Set(masterFile, content, TimeSpan.FromMinutes(10));
+        return content;
     }
 
     /// <summary>

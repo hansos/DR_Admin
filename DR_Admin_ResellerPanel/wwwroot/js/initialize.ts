@@ -303,7 +303,7 @@ async function submitInitialization(): Promise<void> {
     }
 
     hideForm();
-    showMessage('success', 'Initialization completed successfully.');
+    showMessage('success', response.data?.message ?? 'Initialization completed successfully.');
     renderSetupResult();
     document.getElementById('initialization-proceed-info')?.classList.remove('d-none');
     showLoginSection();

@@ -25,7 +25,7 @@ namespace DR_Admin_ResellerPanel
 
             app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
             app.UseHttpsRedirection();
-
+            app.UseStaticFiles();
             app.UseAntiforgery();
 
             app.MapStaticAssets();

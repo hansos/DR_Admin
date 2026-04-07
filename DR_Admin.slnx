@@ -15,33 +15,37 @@
   </Folder>
   <Folder Name="/PluginProviders/" />
   <Folder Name="/PluginProviders/EmailReceiverProviders/">
-    <Project Path="PluginProviders/EmailReceiverProviders/EmailReceiverProvider.Office365/EmailReceiverProvider.Office365.csproj" />
+    <Project Path="../../../../../../../../Source2/DR_Admin/PluginProviders/EmailReceiverProviders/EmailReceiverProvider.Office365/EmailReceiverProvider.Office365.csproj" />
   </Folder>
   <Folder Name="/PluginProviders/EmailSenderProviders/">
-    <Project Path="PluginProviders/EmailSenderProviders/EmailSenderProvider.AmazonSes/EmailSenderProvider.AmazonSes.csproj" />
-    <Project Path="PluginProviders/EmailSenderProviders/EmailSenderProvider.Exchange/EmailSenderProvider.Exchange.csproj" />
-    <Project Path="PluginProviders/EmailSenderProviders/EmailSenderProvider.GraphApi/EmailSenderProvider.GraphApi.csproj" />
-    <Project Path="PluginProviders/EmailSenderProviders/EmailSenderProvider.Mailgun/EmailSenderProvider.Mailgun.csproj" />
-    <Project Path="PluginProviders/EmailSenderProviders/EmailSenderProvider.MailKit/EmailSenderProvider.MailKit.csproj" />
-    <Project Path="PluginProviders/EmailSenderProviders/EmailSenderProvider.Postmark/EmailSenderProvider.Postmark.csproj" />
-    <Project Path="PluginProviders/EmailSenderProviders/EmailSenderProvider.SendGrid/EmailSenderProvider.SendGrid.csproj" />
-    <Project Path="PluginProviders/EmailSenderProviders/EmailSenderProvider.Smtp/EmailSenderProvider.Smtp.csproj" />
+    <Project Path="../../../../../../../../Source2/DR_Admin/PluginProviders/EmailSenderProviders/EmailSenderProvider.AmazonSes/EmailSenderProvider.AmazonSes.csproj" />
+    <Project Path="../../../../../../../../Source2/DR_Admin/PluginProviders/EmailSenderProviders/EmailSenderProvider.Exchange/EmailSenderProvider.Exchange.csproj" />
+    <Project Path="../../../../../../../../Source2/DR_Admin/PluginProviders/EmailSenderProviders/EmailSenderProvider.GraphApi/EmailSenderProvider.GraphApi.csproj" />
+    <Project Path="../../../../../../../../Source2/DR_Admin/PluginProviders/EmailSenderProviders/EmailSenderProvider.Mailgun/EmailSenderProvider.Mailgun.csproj" />
+    <Project Path="../../../../../../../../Source2/DR_Admin/PluginProviders/EmailSenderProviders/EmailSenderProvider.MailKit/EmailSenderProvider.MailKit.csproj" />
+    <Project Path="../../../../../../../../Source2/DR_Admin/PluginProviders/EmailSenderProviders/EmailSenderProvider.Postmark/EmailSenderProvider.Postmark.csproj" />
+    <Project Path="../../../../../../../../Source2/DR_Admin/PluginProviders/EmailSenderProviders/EmailSenderProvider.SendGrid/EmailSenderProvider.SendGrid.csproj" />
+    <Project Path="../../../../../../../../Source2/DR_Admin/PluginProviders/EmailSenderProviders/EmailSenderProvider.Smtp/EmailSenderProvider.Smtp.csproj" />
   </Folder>
-  <Project Path="DomainRegistrationLib/DomainRegistrationLib.csproj" />
-  <Project Path="DR_Admin.IntegrationTests/DR_Admin.IntegrationTests.csproj" />
-  <Project Path="DR_Admin/DR_Admin.csproj" />
-  <Project Path="DR_Admin_ResellerPanel/DR_Admin_ResellerPanel.csproj" Id="56dcd999-e302-421f-8814-1c65d9fefd80" />
-  <Project Path="DR_Admin_UserPanel/DR_Admin_UserPanel.csproj" Id="e36486b0-ce16-4d6c-a481-c51c0b2e09b8" />
-  <Project Path="DR_Amin_Mobile/DR_Amin_Mobile.csproj" Id="0bd52d87-44f8-42f9-9a91-333f88e08b06">
+  <Folder Name="/StageFIles/" />
+  <Folder Name="/StageFIles/reseller/" />
+  <Folder Name="/StageFIles/reseller/wwwRoot/" />
+  <Folder Name="/StageFIles/reseller/wwwRoot/js/" />
+  <Project Path="../../../../../../../../Source2/DR_Admin/DomainRegistrationLib/DomainRegistrationLib.csproj" />
+  <Project Path="../../../../../../../../Source2/DR_Admin/DR_Admin.IntegrationTests/DR_Admin.IntegrationTests.csproj" />
+  <Project Path="../../../../../../../../Source2/DR_Admin/DR_Admin/DR_Admin.csproj" />
+  <Project Path="../../../../../../../../Source2/DR_Admin/DR_Admin_ResellerPanel/DR_Admin_ResellerPanel.csproj" Id="56dcd999-e302-421f-8814-1c65d9fefd80" />
+  <Project Path="../../../../../../../../Source2/DR_Admin/DR_Admin_UserPanel/DR_Admin_UserPanel.csproj" Id="e36486b0-ce16-4d6c-a481-c51c0b2e09b8" />
+  <Project Path="../../../../../../../../Source2/DR_Admin/DR_Amin_Mobile/DR_Amin_Mobile.csproj" Id="0bd52d87-44f8-42f9-9a91-333f88e08b06">
     <Deploy Solution="Debug|*" />
   </Project>
-  <Project Path="EmailSenderLib/EmailSenderLib.csproj" Id="70cada2c-63e7-4433-b4d9-3003b17354f3" />
-  <Project Path="ExchangeRateLib/ExchangeRateLib.csproj" Id="af2e6ab9-5586-4008-9371-f7446947a59b" />
-  <Project Path="HostingPanelLib/HostingPanelLib.csproj" Id="5062074a-d52e-48c5-9b37-ae0509b39aad" />
-  <Project Path="MessagingTemplateLib/MessagingTemplateLib.csproj" />
-  <Project Path="PaymentGatewayLib/PaymentGatewayLib.csproj" Id="643cbbc6-669f-43e2-8679-1fa9bd020d40" />
-  <Project Path="PluginLib/PluginLib.csproj" />
-  <Project Path="ReportGeneratorLib/ReportGeneratorLib.csproj" Id="9a7fe4b1-1a5a-4485-9a39-744f14cbf5b3" />
-  <Project Path="SMSSenderLib/SMSSenderLib.csproj" />
-  <Project Path="Tool_PostalCodeNormalizer/Tool_PostalCodeNormalizer.csproj" Id="cdc1d636-ed90-48b1-921b-46624a890137" />
+  <Project Path="../../../../../../../../Source2/DR_Admin/EmailSenderLib/EmailSenderLib.csproj" Id="70cada2c-63e7-4433-b4d9-3003b17354f3" />
+  <Project Path="../../../../../../../../Source2/DR_Admin/ExchangeRateLib/ExchangeRateLib.csproj" Id="af2e6ab9-5586-4008-9371-f7446947a59b" />
+  <Project Path="../../../../../../../../Source2/DR_Admin/HostingPanelLib/HostingPanelLib.csproj" Id="5062074a-d52e-48c5-9b37-ae0509b39aad" />
+  <Project Path="../../../../../../../../Source2/DR_Admin/MessagingTemplateLib/MessagingTemplateLib.csproj" />
+  <Project Path="../../../../../../../../Source2/DR_Admin/PaymentGatewayLib/PaymentGatewayLib.csproj" Id="643cbbc6-669f-43e2-8679-1fa9bd020d40" />
+  <Project Path="../../../../../../../../Source2/DR_Admin/PluginLib/PluginLib.csproj" />
+  <Project Path="../../../../../../../../Source2/DR_Admin/ReportGeneratorLib/ReportGeneratorLib.csproj" Id="9a7fe4b1-1a5a-4485-9a39-744f14cbf5b3" />
+  <Project Path="../../../../../../../../Source2/DR_Admin/SMSSenderLib/SMSSenderLib.csproj" />
+  <Project Path="../../../../../../../../Source2/DR_Admin/Tool_PostalCodeNormalizer/Tool_PostalCodeNormalizer.csproj" Id="cdc1d636-ed90-48b1-921b-46624a890137" />
 </Solution>

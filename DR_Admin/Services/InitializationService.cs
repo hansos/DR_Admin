@@ -213,6 +213,11 @@ public class InitializationService : IInitializationService
         }
     }
 
+    /// <summary>
+    /// Initializes the reseller panel by creating the first administrator and queuing an email confirmation message.
+    /// </summary>
+    /// <param name="request">Initialization data for the first administrator account.</param>
+    /// <returns>Initialization result when successful; otherwise <c>null</c>.</returns>
     public async Task<InitializationResponseDto?> InitializeAdminAsync(InitializationRequestDto request)
     {
         try
@@ -304,12 +309,20 @@ public class InitializationService : IInitializationService
                 }
             }
 
+            var confirmationEmailQueued = await _myAccountService.RequestEmailConfirmationAsync(user.Id, "reseller");
+            if (!confirmationEmailQueued)
+            {
+                _log.Warning("Initial admin user created, but confirmation email could not be queued for user: {UserId}", user.Id);
+            }
+
             _log.Information("Initial admin user created: {Username}", user.Username);
 
             return new InitializationResponseDto
             {
                 Success = true,
-                Message = "System initialized successfully with admin user",
+                Message = confirmationEmailQueued
+                    ? "System initialized successfully with admin user. A confirmation email has been sent."
+                    : "System initialized successfully with admin user.",
                 Username = user.Username
             };
         }
