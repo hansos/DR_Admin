@@ -15,11 +15,13 @@ namespace ISPAdmin.Controllers;
 public class UsersController : ControllerBase
 {
     private readonly IUserService _userService;
+    private readonly IMyAccountService _myAccountService;
     private static readonly Serilog.ILogger _log = Log.ForContext<UsersController>();
 
-    public UsersController(IUserService userService)
+    public UsersController(IUserService userService, IMyAccountService myAccountService)
     {
         _userService = userService;
+        _myAccountService = myAccountService;
     }
 
     /// <summary>
@@ -142,11 +144,22 @@ public class UsersController : ControllerBase
             }
 
             var user = await _userService.CreateUserAsync(createDto);
-            
+
+            // Send email confirmation to the new user
+            var emailSent = await _myAccountService.RequestEmailConfirmationAsync(user.Id, "reseller");
+            if (emailSent)
+            {
+                _log.Information("API: Email confirmation sent to new user {UserId} ({Email})", user.Id, user.Email);
+            }
+            else
+            {
+                _log.Warning("API: Failed to send email confirmation to new user {UserId} ({Email})", user.Id, user.Email);
+            }
+
             return CreatedAtAction(
                 nameof(GetUserById),
                 new { id = user.Id },
-                user);
+                new { data = user, message = emailSent ? "User created. A confirmation email has been sent." : "User created, but confirmation email could not be sent." });
         }
         catch (Exception ex)
         {

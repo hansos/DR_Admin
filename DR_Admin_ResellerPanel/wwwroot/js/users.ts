@@ -482,7 +482,10 @@ async function saveUser(): Promise<void> {
 
     if (response.success) {
         hideModal('users-edit-modal');
-        showSuccess(editingId ? 'User updated successfully' : 'User created successfully');
+        const msg = !editingId && response.message
+            ? response.message
+            : editingId ? 'User updated successfully' : 'User created successfully';
+        showSuccess(msg);
         loadUsers();
     } else {
         showError(response.message || 'Save failed');
