@@ -1,4 +1,5 @@
-# Bootstrap Handover (Client)
+# Quick Start: API Usage
+Bootstrap Handover (Client programmers)
 
 This document describes what must be entered up to and including first admin user registration, and which endpoints are used.
 

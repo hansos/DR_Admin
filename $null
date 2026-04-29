@@ -1,0 +1,2 @@
+13:02:50.635540 exec-cmd.c:266          trace: resolved executable dir: C:/Program Files/Git/mingw64/bin
+13:02:50.650555 git.c:502               trace: built-in: git commit -m 'Ignore appsettings.publish.json'
