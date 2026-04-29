@@ -9,6 +9,7 @@ using ReportGeneratorLib.Implementations;
 using ReportGeneratorLib.Infrastructure.Enums;
 using ReportGeneratorLib.Models;
 using Serilog;
+using System.Diagnostics;
 using System.Security.Cryptography;
 using System.IO;
 using System.Linq;
@@ -430,6 +431,23 @@ public class SystemController : ControllerBase
             Timestamp = DateTime.UtcNow,
             Service = "SystemController"
         });
+    }
+
+    /// <summary>
+    /// Gets formatted application uptime since process startup
+    /// </summary>
+    /// <returns>Formatted uptime string with days, hours and minutes</returns>
+    /// <response code="200">Returns formatted uptime</response>
+    [HttpGet("uptime")]
+    [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public ActionResult<string> GetUptime()
+    {
+        var processStartUtc = Process.GetCurrentProcess().StartTime.ToUniversalTime();
+        var uptime = DateTime.UtcNow - processStartUtc;
+        var formattedUptime = $"{(int)uptime.TotalDays} days, {uptime.Hours:D2} hours, {uptime.Minutes:D2} minutes";
+
+        return Ok(formattedUptime);
     }
 
     /// <summary>
