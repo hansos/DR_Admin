@@ -384,3 +384,7 @@ FodyWeavers.xsd
 /DR_Admin/Data/DR_Admin.db-shm
 /DR_Admin/Data/DR_Admin.db-wal
 /DR_Admin/appsettings.publish.json
+
+DR_Admin/appsettings.publish.json
+
+DR_Admin/appsettings.publish.json
